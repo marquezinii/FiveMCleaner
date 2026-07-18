@@ -1,0 +1,58 @@
+name: CI Windows .NET 10
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  NUGET_XMLDOC_MODE: skip
+
+jobs:
+  build-and-test:
+    name: Build and test
+    runs-on: windows-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          global-json-file: global.json
+
+      - name: Show SDK information
+        run: dotnet --info
+
+      - name: Safety verification, build and unit tests
+        shell: pwsh
+        run: ./scripts/Verify-Safety.ps1
+
+      - name: Test
+        run: >-
+          dotnet test tests/FiveMCleaner.Tests/FiveMCleaner.Tests.csproj
+          --configuration Release
+          --no-build
+          --logger "trx;LogFileName=tests.trx"
+          --results-directory TestResults
+          --collect:"XPlat Code Coverage"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-results-${{ github.run_id }}
+          path: TestResults/**
+          if-no-files-found: ignore
+          retention-days: 14

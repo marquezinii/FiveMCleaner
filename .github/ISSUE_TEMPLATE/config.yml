@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Suporte oficial Cfx.re
+    url: https://support.cfx.re/
+    about: Use para problemas do cliente FiveM, conta ou plataforma Cfx.re.
+  - name: Documentação oficial do FiveM
+    url: https://docs.fivem.net/
+    about: Consulte instalação, comandos e solução de problemas do FiveM.

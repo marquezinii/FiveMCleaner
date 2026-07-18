@@ -1,0 +1,114 @@
+name: Relatar um bug
+description: Informe um comportamento reproduzível do FiveMCleaner.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado pelo relato. Este formulário é para o **FiveMCleaner**, não para bugs do FiveM ou de servidores.
+        Remova nomes de usuário, tokens, caminhos pessoais e endereços de servidor dos logs. Vulnerabilidades seguem `SECURITY.md`.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Verificações iniciais
+      options:
+        - label: Procurei issues abertas e fechadas e não encontrei o mesmo problema.
+          required: true
+        - label: Não desativei antivírus, firewall ou outras proteções para reproduzir o problema.
+          required: true
+        - label: Posso reproduzir o problema com os passos abaixo.
+          required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Versão ou commit
+      description: "Exemplo: 0.1.0 ou os primeiros caracteres do commit."
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: edition
+    attributes:
+      label: Edição detectada
+      options:
+        - FiveM para GTAV Legacy
+        - GTAV Enhanced detectado e bloqueado
+        - Não foi possível detectar
+        - Não sei
+    validations:
+      required: true
+
+  - type: input
+    id: windows
+    attributes:
+      label: Windows
+      description: Informe edição, versão e build; execute `winver` se necessário.
+      placeholder: Windows 11 24H2, build 26100
+    validations:
+      required: true
+
+  - type: textarea
+    id: hardware
+    attributes:
+      label: Hardware relevante
+      description: CPU, GPU e driver, RAM, tipo de unidade e espaço livre.
+      placeholder: |
+        CPU:
+        GPU / driver:
+        RAM:
+        Armazenamento / espaço livre:
+    validations:
+      required: true
+
+  - type: input
+    id: action
+    attributes:
+      label: Perfil ou ação
+      description: Qual perfil, diagnóstico, limpeza ou restauração estava em execução?
+      placeholder: Médio / restaurar snapshot
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Passos para reproduzir
+      placeholder: |
+        1. Abrir...
+        2. Selecionar...
+        3. Confirmar...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Resultado esperado
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Resultado observado
+      description: Inclua a mensagem exata e diga se o rollback foi oferecido ou concluído.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs sanitizados
+      description: Cole somente o trecho relevante ou arraste o arquivo após remover dados pessoais.
+      render: text
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Capturas, frequência, alterações recentes e qualquer detalhe útil.

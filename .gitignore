@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+.idea/
+*.user
+*.suo
+artifacts/
+publish/
+tmp/
+TestResults/
+*.trx
+*.userprefs
+Thumbs.db
+.DS_Store

@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/FiveMCleaner.App/FiveMCleaner.App.csproj" />
+    <Project Path="src/FiveMCleaner.Broker/FiveMCleaner.Broker.csproj" />
+    <Project Path="src/FiveMCleaner.Contracts/FiveMCleaner.Contracts.csproj" />
+    <Project Path="src/FiveMCleaner.Core/FiveMCleaner.Core.csproj" />
+    <Project Path="src/FiveMCleaner.Windows/FiveMCleaner.Windows.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/FiveMCleaner.Tests/FiveMCleaner.Tests.csproj" />
+  </Folder>
+</Solution>

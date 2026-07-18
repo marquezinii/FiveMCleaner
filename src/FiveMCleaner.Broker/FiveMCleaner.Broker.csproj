@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <RootNamespace>FiveMCleaner.Broker</RootNamespace>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>../FiveMCleaner.App/Assets/FiveMCleaner.ico</ApplicationIcon>
+    <AssemblyName>FiveMCleaner.Broker</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../FiveMCleaner.Contracts/FiveMCleaner.Contracts.csproj" />
+    <ProjectReference Include="../FiveMCleaner.Core/FiveMCleaner.Core.csproj" />
+    <ProjectReference Include="../FiveMCleaner.Windows/FiveMCleaner.Windows.csproj" />
+  </ItemGroup>
+</Project>

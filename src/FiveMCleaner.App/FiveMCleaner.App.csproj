@@ -1,0 +1,27 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>FiveMCleaner.App</RootNamespace>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets/FiveMCleaner.ico</ApplicationIcon>
+    <AssemblyName>FiveMCleaner</AssemblyName>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../FiveMCleaner.Contracts/FiveMCleaner.Contracts.csproj" />
+    <ProjectReference Include="../FiveMCleaner.Core/FiveMCleaner.Core.csproj" />
+    <ProjectReference Include="../FiveMCleaner.Windows/FiveMCleaner.Windows.csproj" />
+    <ProjectReference Include="../FiveMCleaner.Broker/FiveMCleaner.Broker.csproj" ReferenceOutputAssembly="false" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Assets/FiveMCleaner.png" />
+  </ItemGroup>
+  <Target Name="CopyBroker" AfterTargets="Build">
+    <ItemGroup>
+      <BrokerFiles Include="$(MSBuildThisFileDirectory)..\FiveMCleaner.Broker\bin\$(Configuration)\net10.0-windows10.0.19041.0\**\*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(BrokerFiles)" DestinationFiles="@(BrokerFiles->'$(OutDir)broker\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

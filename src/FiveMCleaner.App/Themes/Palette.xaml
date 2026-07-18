@@ -1,0 +1,47 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Color x:Key="ColorBackground">#0A0B0D</Color>
+    <Color x:Key="ColorSurface">#111317</Color>
+    <Color x:Key="ColorSurfaceRaised">#17191E</Color>
+    <Color x:Key="ColorSurfaceHover">#1D2026</Color>
+    <Color x:Key="ColorBorder">#282B32</Color>
+    <Color x:Key="ColorBorderSoft">#1F2228</Color>
+    <Color x:Key="ColorText">#F4F5F7</Color>
+    <Color x:Key="ColorTextMuted">#9A9FA9</Color>
+    <Color x:Key="ColorTextSubtle">#676C76</Color>
+    <Color x:Key="ColorOrange">#FF7A18</Color>
+    <Color x:Key="ColorOrangeLight">#FFAA62</Color>
+    <Color x:Key="ColorOrangeDark">#C94E00</Color>
+    <Color x:Key="ColorGreen">#37C889</Color>
+    <Color x:Key="ColorBlue">#62A8FF</Color>
+    <Color x:Key="ColorYellow">#EAB64D</Color>
+    <Color x:Key="ColorRed">#F26B6B</Color>
+
+    <SolidColorBrush x:Key="BackgroundBrush" Color="{StaticResource ColorBackground}" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="{StaticResource ColorSurface}" />
+    <SolidColorBrush x:Key="SurfaceRaisedBrush" Color="{StaticResource ColorSurfaceRaised}" />
+    <SolidColorBrush x:Key="SurfaceHoverBrush" Color="{StaticResource ColorSurfaceHover}" />
+    <SolidColorBrush x:Key="BorderBrush" Color="{StaticResource ColorBorder}" />
+    <SolidColorBrush x:Key="BorderSoftBrush" Color="{StaticResource ColorBorderSoft}" />
+    <SolidColorBrush x:Key="TextBrush" Color="{StaticResource ColorText}" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="{StaticResource ColorTextMuted}" />
+    <SolidColorBrush x:Key="TextSubtleBrush" Color="{StaticResource ColorTextSubtle}" />
+    <SolidColorBrush x:Key="OrangeBrush" Color="{StaticResource ColorOrange}" />
+    <SolidColorBrush x:Key="OrangeLightBrush" Color="{StaticResource ColorOrangeLight}" />
+    <SolidColorBrush x:Key="GreenBrush" Color="{StaticResource ColorGreen}" />
+    <SolidColorBrush x:Key="BlueBrush" Color="{StaticResource ColorBlue}" />
+    <SolidColorBrush x:Key="YellowBrush" Color="{StaticResource ColorYellow}" />
+    <SolidColorBrush x:Key="RedBrush" Color="{StaticResource ColorRed}" />
+
+    <LinearGradientBrush x:Key="OrangeGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#FF9A44" Offset="0" />
+        <GradientStop Color="#FF6A00" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="HeroGradientBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#1B1715" Offset="0" />
+        <GradientStop Color="#141519" Offset="0.56" />
+        <GradientStop Color="#101115" Offset="1" />
+    </LinearGradientBrush>
+
+    <FontFamily x:Key="AppFont">Segoe UI</FontFamily>
+</ResourceDictionary>

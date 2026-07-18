@@ -1,0 +1,67 @@
+name: Sugerir uma melhoria
+description: Proponha uma capacidade segura, mensurável e reversível.
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        O escopo atual é FiveM para GTAV Legacy. Propostas de ação no sistema precisam de evidência, prévia e rollback; promessas universais de FPS não serão aceitas.
+
+  - type: checkboxes
+    id: scope
+    attributes:
+      label: Confirmação de escopo
+      options:
+        - label: A proposta não desativa proteções, não injeta código e não altera binários do jogo ou do Windows.
+          required: true
+        - label: A proposta preserva o bloqueio de GTAV Enhanced ou trata a edição explicitamente.
+          required: true
+        - label: Procurei sugestões existentes antes de abrir esta issue.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema
+      description: Qual problema real do usuário precisa ser resolvido? Separe FPS, stutter, rede, espaço e reparo.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Solução proposta
+      description: Descreva detecção, prévia, mudança exata, validação e experiência de restauração.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidências
+      description: Inclua documentação primária, código oficial ou benchmark reproduzível. Diga claramente o que é inferência.
+      placeholder: Links, método, hardware e resultados antes/depois.
+    validations:
+      required: true
+
+  - type: textarea
+    id: safety
+    attributes:
+      label: Segurança e rollback
+      description: Quais dados podem ser afetados, que privilégio é necessário e como a ação será revertida?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternativas consideradas
+      description: Inclua a opção de não alterar o sistema.
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto adicional
+      description: Mockups, exemplos ou limitações conhecidas.
