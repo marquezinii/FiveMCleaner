@@ -5,6 +5,29 @@ param(
 
 $ErrorActionPreference = 'Stop'
 $workspace = Split-Path -Parent $PSScriptRoot
+
+function Find-CSharpSourceMatches {
+    param(
+        [Parameter(Mandatory)]
+        [string[]]$Roots,
+
+        [Parameter(Mandatory)]
+        [string]$Pattern
+    )
+
+    foreach ($root in $Roots) {
+        foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File -Filter '*.cs') {
+            if ($file.FullName -match '[\\/](bin|obj)[\\/]') {
+                continue
+            }
+
+            foreach ($matchInfo in Select-String -LiteralPath $file.FullName -Pattern $Pattern) {
+                "$($matchInfo.Path):$($matchInfo.LineNumber):$($matchInfo.Line.Trim())"
+            }
+        }
+    }
+}
+
 Push-Location $workspace
 try {
     $forbiddenPattern = @(
@@ -26,31 +49,22 @@ try {
         'src/FiveMCleaner.Windows',
         'src/FiveMCleaner.Broker'
     )
-    $matches = & rg -n -i --glob '*.cs' --glob '!bin/**' --glob '!obj/**' -- $forbiddenPattern @scanRoots 2>$null
-    if ($LASTEXITCODE -eq 0) {
-        throw "Forbidden tweak or security-bypass pattern found:`n$($matches -join [Environment]::NewLine)"
-    }
-    if ($LASTEXITCODE -ne 1) {
-        throw "Safety scan could not run (rg exit code $LASTEXITCODE)."
+    $forbiddenMatches = @(Find-CSharpSourceMatches -Roots $scanRoots -Pattern $forbiddenPattern)
+    if ($forbiddenMatches.Count -gt 0) {
+        throw "Forbidden tweak or security-bypass pattern found:`n$($forbiddenMatches -join [Environment]::NewLine)"
     }
 
-    $contractScanArguments = @(
-        '-n',
-        '-i',
-        '--glob', '*.cs',
-        '--glob', '!bin/**',
-        '--glob', '!obj/**',
-        '--',
-        '(public|required|init).*\b(command|script|arguments?|registryPath|executablePath)\b',
+    $contractRoots = @(
         'src/FiveMCleaner.Contracts',
         'src/FiveMCleaner.Core'
     )
-    $commandFields = & rg @contractScanArguments 2>$null
-    if ($LASTEXITCODE -eq 0) {
+    $commandFields = @(
+        Find-CSharpSourceMatches `
+            -Roots $contractRoots `
+            -Pattern '(public|required|init).*\b(command|script|arguments?|registryPath|executablePath)\b'
+    )
+    if ($commandFields.Count -gt 0) {
         throw "A command-like field leaked into plan contracts:`n$($commandFields -join [Environment]::NewLine)"
-    }
-    if ($LASTEXITCODE -ne 1) {
-        throw "Contract scan could not run (rg exit code $LASTEXITCODE)."
     }
 
     dotnet build '.\FiveMCleaner.slnx' --configuration Release
