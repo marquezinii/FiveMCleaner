@@ -139,6 +139,23 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
 
 ## Comandos de desenvolvimento e validação
 
+## Validação e handoff atual
+
+- Commit local da revisão de interface: `0668e26 feat: refine interface
+  preferences and hardware diagnostics`.
+- O checkout canônico está em `C:\Projetos\FiveMCleaner`, no branch `main`,
+  e este commit é a unidade pronta para o próximo agente continuar.
+- Última validação do app: `dotnet build` Release sem avisos/erros, 215 testes
+  .NET aprovados e `scripts\Verify-Safety.ps1` aprovado. O executável real
+  abriu e encerrou normalmente em smoke test com `--demo-synthetic`.
+- Última validação do site: lint, build e testes renderizados aprovados. O
+  typecheck continua limitado pelos tipos ausentes do runtime Cloudflare,
+  conforme descrito acima; não mascarar esse erro nem substituir por comandos
+  que ignorem tipos.
+- Não há alterações pendentes nem artefatos locais versionáveis esperados. O
+  commit ainda precisa ser sincronizado com `origin/main` quando o push desta
+  tarefa terminar.
+
 Na raiz do repositório:
 
 ```powershell
