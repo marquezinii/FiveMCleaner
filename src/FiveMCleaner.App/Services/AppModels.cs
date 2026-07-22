@@ -92,6 +92,15 @@ public sealed record AppProgressUpdate
     public required string Detail { get; init; }
 
     public string? ActionId { get; init; }
+
+    /// <summary>1-based index of the current step, or 0 when not step-based.</summary>
+    public int CompletedSteps { get; init; }
+
+    /// <summary>Total number of steps in the current run, or 0 when unknown.</summary>
+    public int TotalSteps { get; init; }
+
+    /// <summary>Outcome of the step this update refers to, when applicable.</summary>
+    public ActionExecutionOutcome? Outcome { get; init; }
 }
 
 public sealed record AppOptimizationResult
@@ -107,6 +116,9 @@ public sealed record AppOptimizationResult
     public required int CompletedActions { get; init; }
 
     public required long BytesFreed { get; init; }
+
+    /// <summary>Structured report of the run, when a journal was produced.</summary>
+    public OptimizationReportDto? Report { get; init; }
 }
 
 public sealed record AppHistoryRecord

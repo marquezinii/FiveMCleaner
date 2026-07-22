@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Windows.Threading;
 using FiveMCleaner.App.Services;
 using FiveMCleaner.Contracts;
+using FiveMCleaner.Core.Catalog;
 using FiveMCleaner.Core.Planning;
 
 namespace FiveMCleaner.App.ViewModels;
@@ -68,6 +69,17 @@ public sealed class MainViewModel : BindableBase
     private bool profileInitializedFromDiagnostic;
     private Stopwatch? operationStopwatch;
     private DispatcherTimer? operationTimer;
+    private string stepCounterLabel = string.Empty;
+    private OptimizationReportDto? lastReport;
+    private string reportSummaryLabel = string.Empty;
+    private string reportRestartLabel = string.Empty;
+    private bool isReportAvailable;
+    private string profilePresentationBenefits = string.Empty;
+    private string profilePresentationImpact = string.Empty;
+    private string profilePresentationRisks = string.Empty;
+    private string profilePresentationReversibility = string.Empty;
+    private string profilePresentationCategories = string.Empty;
+    private string profilePresentationVariability = string.Empty;
 
     public MainViewModel(
         IAppOptimizationService service,
@@ -81,7 +93,9 @@ public sealed class MainViewModel : BindableBase
         this.localization = localization ?? LocalizationService.Current;
         this.startupRegistration = startupRegistration ?? new WindowsStartupRegistrationService();
         this.releaseUpdateService = releaseUpdateService;
+        StepLedger.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasStepLedgerItems));
         ResetLocalizedPlaceholders();
+        RefreshProfilePresentation();
         ActivityLog.Add(new ActivityLogItem(
             DateTime.Now.ToString("HH:mm:ss"),
             this.localization.GetString("Log.StartedStandardUser")));
@@ -94,6 +108,32 @@ public sealed class MainViewModel : BindableBase
     public ObservableCollection<HistoryDisplayItem> HistoryItems { get; } = [];
 
     public ObservableCollection<StreamingReadinessDisplayItem> StreamingReadinessItems { get; } = [];
+
+    public ObservableCollection<StepLedgerItem> StepLedger { get; } = [];
+
+    public ObservableCollection<ReportLineDisplayItem> ReportLines { get; } = [];
+
+    public string StepCounterLabel { get => stepCounterLabel; private set => SetProperty(ref stepCounterLabel, value); }
+
+    public bool HasStepLedgerItems => StepLedger.Count > 0;
+
+    public string ReportSummaryLabel { get => reportSummaryLabel; private set => SetProperty(ref reportSummaryLabel, value); }
+
+    public string ReportRestartLabel { get => reportRestartLabel; private set => SetProperty(ref reportRestartLabel, value); }
+
+    public bool IsReportAvailable { get => isReportAvailable; private set => SetProperty(ref isReportAvailable, value); }
+
+    public string ProfilePresentationBenefits { get => profilePresentationBenefits; private set => SetProperty(ref profilePresentationBenefits, value); }
+
+    public string ProfilePresentationImpact { get => profilePresentationImpact; private set => SetProperty(ref profilePresentationImpact, value); }
+
+    public string ProfilePresentationRisks { get => profilePresentationRisks; private set => SetProperty(ref profilePresentationRisks, value); }
+
+    public string ProfilePresentationReversibility { get => profilePresentationReversibility; private set => SetProperty(ref profilePresentationReversibility, value); }
+
+    public string ProfilePresentationCategories { get => profilePresentationCategories; private set => SetProperty(ref profilePresentationCategories, value); }
+
+    public string ProfilePresentationVariability { get => profilePresentationVariability; private set => SetProperty(ref profilePresentationVariability, value); }
 
     public string CpuName { get => cpuName; private set => SetProperty(ref cpuName, value); }
 
@@ -577,6 +617,9 @@ public sealed class MainViewModel : BindableBase
         ProgressStateLabel = localization.GetString("Status.Preparing");
         StartOperationTiming();
         ActivityLog.Clear();
+        StepLedger.Clear();
+        StepCounterLabel = string.Empty;
+        ApplyReport(null);
         AddLog(localization.Format("Log.StartingProfile", SelectedProfileLabel.ToLower(localization.CurrentCulture)));
         foreach (var notice in currentPlan.Notices.Where(item =>
                      item.Severity == PlanNoticeSeverity.Warning))
@@ -609,6 +652,7 @@ public sealed class MainViewModel : BindableBase
                     result.CompletedActions,
                     result.Summary);
             AddLog(result.Summary);
+            ApplyReport(result.Report);
             ApplyHistory(await service.LoadHistoryAsync());
         }
         catch (OperationCanceledException)
@@ -986,7 +1030,25 @@ public sealed class MainViewModel : BindableBase
         OnPropertyChanged(nameof(PlanNoticesText));
         OnPropertyChanged(nameof(SafetySummary));
         OnPropertyChanged(nameof(AboutVersionDeveloper));
+        RefreshProfilePresentation();
         RaiseCommandState();
+    }
+
+    private void RefreshProfilePresentation()
+    {
+        var presentation = ProfilePresentationProvider.For(selectedProfile);
+        ProfilePresentationBenefits = localization.GetString($"Profiles.Presentation.{selectedProfile}.Benefits");
+        ProfilePresentationImpact = localization.GetString($"Profiles.Presentation.Impact.{presentation.ImpactLevel}");
+        ProfilePresentationRisks = localization.GetString($"Profiles.Presentation.{selectedProfile}.Risks");
+        ProfilePresentationReversibility = localization.GetString(
+            presentation.ContainsNonReversible
+                ? "Profiles.Presentation.Reversibility.Mixed"
+                : "Profiles.Presentation.Reversibility.FullyReversible");
+        ProfilePresentationCategories = string.Join(
+            "  •  ",
+            presentation.AnalyzedCategories.Select(category =>
+                localization.GetString($"Category.{category}")));
+        ProfilePresentationVariability = localization.GetString("Profiles.Presentation.VariabilityNote");
     }
 
     private void SettingsChanged(bool refreshPlan = true)
@@ -1049,8 +1111,125 @@ public sealed class MainViewModel : BindableBase
             AppProgressKind.Failed => localization.GetString("Status.SafeFailure"),
             _ => localization.GetString("Status.InProgress")
         };
+
+        if (update.TotalSteps > 0)
+        {
+            StepCounterLabel = localization.Format(
+                "Progress.StepCounter",
+                update.CompletedSteps,
+                update.TotalSteps);
+        }
+
+        if (update.ActionId is not null && update.Outcome is { } outcome
+            && outcome != ActionExecutionOutcome.Pending)
+        {
+            UpsertStepLedgerItem(update.ActionId, outcome);
+        }
+
         UpdateOperationTiming();
         AddLog(update.Detail);
+    }
+
+    private void UpsertStepLedgerItem(string actionId, ActionExecutionOutcome outcome)
+    {
+        var name = GetLocalizedActionName(actionId, actionId);
+        var (label, glyph, brushKey) = DescribeOutcome(outcome);
+        var item = new StepLedgerItem(actionId, name, outcome, label, glyph, brushKey);
+        var existingIndex = -1;
+        for (var index = 0; index < StepLedger.Count; index++)
+        {
+            if (StepLedger[index].ActionId == actionId)
+            {
+                existingIndex = index;
+                break;
+            }
+        }
+
+        if (existingIndex >= 0)
+        {
+            StepLedger[existingIndex] = item;
+        }
+        else
+        {
+            StepLedger.Add(item);
+        }
+    }
+
+    private string GetLocalizedActionName(string actionId, string fallback)
+    {
+        var key = $"Actions.{actionId}.Name";
+        var value = localization.GetString(key);
+        return value == key ? fallback : value;
+    }
+
+    private (string Label, string Glyph, string BrushKey) DescribeOutcome(ActionExecutionOutcome outcome)
+    {
+        return outcome switch
+        {
+            ActionExecutionOutcome.Verified => (localization.GetString("Outcome.Verified"), "", "GreenBrush"),
+            ActionExecutionOutcome.Applied => (localization.GetString("Outcome.Applied"), "", "GreenBrush"),
+            ActionExecutionOutcome.Skipped => (localization.GetString("Outcome.Skipped"), "", "TextMutedBrush"),
+            ActionExecutionOutcome.Warning => (localization.GetString("Outcome.Warning"), "", "YellowBrush"),
+            ActionExecutionOutcome.Failed => (localization.GetString("Outcome.Failed"), "", "RedBrush"),
+            ActionExecutionOutcome.RolledBack => (localization.GetString("Outcome.RolledBack"), "", "YellowBrush"),
+            ActionExecutionOutcome.RollbackFailed => (localization.GetString("Outcome.RollbackFailed"), "", "RedBrush"),
+            ActionExecutionOutcome.NotRun => (localization.GetString("Outcome.NotRun"), "", "TextMutedBrush"),
+            _ => (localization.GetString("Outcome.Running"), "", "BlueBrush")
+        };
+    }
+
+    private void ApplyReport(OptimizationReportDto? report)
+    {
+        lastReport = report;
+        IsReportAvailable = report is not null;
+        ReportLines.Clear();
+        if (report is null)
+        {
+            ReportSummaryLabel = string.Empty;
+            ReportRestartLabel = string.Empty;
+            return;
+        }
+
+        ReportSummaryLabel = localization.Format(
+            "Report.SummaryFormat",
+            report.VerifiedCount,
+            report.ChangedCount,
+            report.SkippedCount,
+            report.WarningCount,
+            report.FailedCount);
+        ReportRestartLabel = localization.GetString(
+            report.RequiresRestart ? "Report.RestartNeeded" : "Report.RestartNotNeeded");
+
+        foreach (var line in report.Lines)
+        {
+            var (label, glyph, brushKey) = DescribeOutcome(line.Outcome);
+            ReportLines.Add(new ReportLineDisplayItem(
+                GetLocalizedActionName(line.ActionId, line.ActionName),
+                label,
+                glyph,
+                brushKey,
+                line.Reason));
+        }
+    }
+
+    public void CopyTechnicalReport()
+    {
+        if (lastReport is null)
+        {
+            return;
+        }
+
+        var text = TechnicalReportBuilder.Build(lastReport, diagnostic, localization);
+        try
+        {
+            System.Windows.Clipboard.SetText(text);
+            AddLog(localization.GetString("Log.ReportCopied"));
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            AddLog(localization.Format("Log.ReportCopyFailed", exception.Message));
+        }
     }
 
     private void StartOperationTiming()

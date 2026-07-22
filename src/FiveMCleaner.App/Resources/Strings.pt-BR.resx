@@ -420,4 +420,64 @@
   <data name="BugReport.Service.Unconfirmed" xml:space="preserve"><value>O serviço de entrega não confirmou o recebimento. Copie o relato e tente novamente depois.</value></data>
   <data name="BugReport.Service.UnexpectedResponse" xml:space="preserve"><value>O serviço respondeu em um formato inesperado. Copie o relato e tente novamente depois.</value></data>
   <data name="BugReport.Service.Accepted" xml:space="preserve"><value>Relato aceito pelo serviço de entrega.</value></data>
+  <data name="Runtime.PlanCompletedWithErrors" xml:space="preserve"><value>Otimização concluída com pendências</value></data>
+  <data name="Runtime.PlanCompletedWithErrorsDetail" xml:space="preserve"><value>Uma ou mais ações falharam ou não puderam ser confirmadas. Veja o relatório abaixo.</value></data>
+  <data name="Runtime.ActionVerified" xml:space="preserve"><value>Já estava configurado: {0}</value></data>
+  <data name="Runtime.ActionSkipped" xml:space="preserve"><value>Ignorada: {0}</value></data>
+  <data name="Runtime.ActionFailed" xml:space="preserve"><value>Falhou: {0}</value></data>
+  <data name="Runtime.ActionRolledBack" xml:space="preserve"><value>Revertida após falha: {0}</value></data>
+  <data name="Progress.StepCounter" xml:space="preserve"><value>Etapa {0} de {1}</value></data>
+  <data name="Outcome.Verified" xml:space="preserve"><value>Verificado</value></data>
+  <data name="Outcome.Applied" xml:space="preserve"><value>Alterado</value></data>
+  <data name="Outcome.Skipped" xml:space="preserve"><value>Ignorado</value></data>
+  <data name="Outcome.Warning" xml:space="preserve"><value>Aviso</value></data>
+  <data name="Outcome.Failed" xml:space="preserve"><value>Falhou</value></data>
+  <data name="Outcome.RolledBack" xml:space="preserve"><value>Revertido</value></data>
+  <data name="Outcome.RollbackFailed" xml:space="preserve"><value>Erro na reversão</value></data>
+  <data name="Outcome.NotRun" xml:space="preserve"><value>Não executado</value></data>
+  <data name="Outcome.Running" xml:space="preserve"><value>Em andamento</value></data>
+  <data name="Report.Title" xml:space="preserve"><value>Relatório técnico</value></data>
+  <data name="Report.Field.Transaction" xml:space="preserve"><value>Transação</value></data>
+  <data name="Report.Field.Date" xml:space="preserve"><value>Data</value></data>
+  <data name="Report.Field.Profile" xml:space="preserve"><value>Modo</value></data>
+  <data name="Report.Field.System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Report.Verified" xml:space="preserve"><value>Verificadas</value></data>
+  <data name="Report.Changed" xml:space="preserve"><value>Alteradas</value></data>
+  <data name="Report.Skipped" xml:space="preserve"><value>Ignoradas</value></data>
+  <data name="Report.Warnings" xml:space="preserve"><value>Avisos</value></data>
+  <data name="Report.Failed" xml:space="preserve"><value>Falharam</value></data>
+  <data name="Report.RequiresRestart" xml:space="preserve"><value>Reinício necessário</value></data>
+  <data name="Report.RestorePossible" xml:space="preserve"><value>Restauração possível</value></data>
+  <data name="Report.SummaryFormat" xml:space="preserve"><value>Verificadas {0} · Alteradas {1} · Ignoradas {2} · Avisos {3} · Falharam {4}</value></data>
+  <data name="Report.RestartNeeded" xml:space="preserve"><value>Recomendamos reiniciar o Windows para aplicar totalmente as alterações.</value></data>
+  <data name="Report.RestartNotNeeded" xml:space="preserve"><value>Não é necessário reiniciar.</value></data>
+  <data name="Report.CopyButton" xml:space="preserve"><value>Copiar relatório técnico</value></data>
+  <data name="Common.Yes" xml:space="preserve"><value>Sim</value></data>
+  <data name="Common.No" xml:space="preserve"><value>Não</value></data>
+  <data name="Log.ReportCopied" xml:space="preserve"><value>Relatório técnico copiado para a área de transferência.</value></data>
+  <data name="Log.ReportCopyFailed" xml:space="preserve"><value>Não foi possível copiar o relatório: {0}</value></data>
+  <data name="Profiles.Presentation.Light.Benefits" xml:space="preserve"><value>Libera espaço e aplica ajustes leves de baixo impacto, preservando quase toda a qualidade visual.</value></data>
+  <data name="Profiles.Presentation.Balanced.Benefits" xml:space="preserve"><value>Equilibra qualidade visual, uso de GPU e estabilidade de quadros com ajustes moderados e totalmente reversíveis.</value></data>
+  <data name="Profiles.Presentation.Aggressive.Benefits" xml:space="preserve"><value>Prioriza FPS e responsividade em vez de qualidade visual, aplicando todos os ajustes seguros disponíveis.</value></data>
+  <data name="Profiles.Presentation.Light.Risks" xml:space="preserve"><value>Risco muito baixo: apenas ajustes bem conhecidos, totalmente reversíveis e de impacto visual mínimo.</value></data>
+  <data name="Profiles.Presentation.Balanced.Risks" xml:space="preserve"><value>Risco moderado: pode solicitar uma confirmação de administrador para o plano de energia de desempenho.</value></data>
+  <data name="Profiles.Presentation.Aggressive.Risks" xml:space="preserve"><value>Risco maior: a qualidade visual cai de forma perceptível e os efeitos visuais do Windows são reduzidos.</value></data>
+  <data name="Profiles.Presentation.Impact.Low" xml:space="preserve"><value>Impacto baixo</value></data>
+  <data name="Profiles.Presentation.Impact.Moderate" xml:space="preserve"><value>Impacto moderado</value></data>
+  <data name="Profiles.Presentation.Impact.High" xml:space="preserve"><value>Impacto alto</value></data>
+  <data name="Profiles.Presentation.Reversibility.Mixed" xml:space="preserve"><value>Majoritariamente reversível; algumas limpezas liberam espaço em disco de forma permanente.</value></data>
+  <data name="Profiles.Presentation.Reversibility.FullyReversible" xml:space="preserve"><value>Totalmente reversível pelo histórico.</value></data>
+  <data name="Profiles.Presentation.VariabilityNote" xml:space="preserve"><value>Os resultados variam conforme o computador, os drivers e o servidor; nenhum ganho específico de FPS é garantido.</value></data>
+  <data name="Profiles.Presentation.Benefits.Label" xml:space="preserve"><value>Benefícios esperados</value></data>
+  <data name="Profiles.Presentation.Impact.Label" xml:space="preserve"><value>Nível de impacto</value></data>
+  <data name="Profiles.Presentation.Risks.Label" xml:space="preserve"><value>Riscos possíveis</value></data>
+  <data name="Profiles.Presentation.Reversibility.Label" xml:space="preserve"><value>Reversibilidade</value></data>
+  <data name="Profiles.Presentation.Categories.Label" xml:space="preserve"><value>Categorias analisadas</value></data>
+  <data name="Category.Safety" xml:space="preserve"><value>Segurança</value></data>
+  <data name="Category.Storage" xml:space="preserve"><value>Armazenamento</value></data>
+  <data name="Category.WindowsGaming" xml:space="preserve"><value>Jogos no Windows</value></data>
+  <data name="Category.Power" xml:space="preserve"><value>Energia</value></data>
+  <data name="Category.Appearance" xml:space="preserve"><value>Aparência</value></data>
+  <data name="Category.FiveMGraphics" xml:space="preserve"><value>Gráficos do FiveM/GTA V</value></data>
+  <data name="Optimizer.StepLedger.Title" xml:space="preserve"><value>Resultado das etapas</value></data>
 </root>

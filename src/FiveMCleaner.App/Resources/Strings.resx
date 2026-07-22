@@ -420,4 +420,64 @@
   <data name="BugReport.Service.Unconfirmed" xml:space="preserve"><value>The delivery service did not confirm receipt. Copy the report and try again later.</value></data>
   <data name="BugReport.Service.UnexpectedResponse" xml:space="preserve"><value>The service returned an unexpected response. Copy the report and try again later.</value></data>
   <data name="BugReport.Service.Accepted" xml:space="preserve"><value>Report accepted by the delivery service.</value></data>
+  <data name="Runtime.PlanCompletedWithErrors" xml:space="preserve"><value>Optimization finished with issues</value></data>
+  <data name="Runtime.PlanCompletedWithErrorsDetail" xml:space="preserve"><value>One or more actions failed or could not be confirmed. Check the report below.</value></data>
+  <data name="Runtime.ActionVerified" xml:space="preserve"><value>Already configured: {0}</value></data>
+  <data name="Runtime.ActionSkipped" xml:space="preserve"><value>Skipped: {0}</value></data>
+  <data name="Runtime.ActionFailed" xml:space="preserve"><value>Failed: {0}</value></data>
+  <data name="Runtime.ActionRolledBack" xml:space="preserve"><value>Reverted after failure: {0}</value></data>
+  <data name="Progress.StepCounter" xml:space="preserve"><value>Step {0} of {1}</value></data>
+  <data name="Outcome.Verified" xml:space="preserve"><value>Verified</value></data>
+  <data name="Outcome.Applied" xml:space="preserve"><value>Changed</value></data>
+  <data name="Outcome.Skipped" xml:space="preserve"><value>Skipped</value></data>
+  <data name="Outcome.Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="Outcome.Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="Outcome.RolledBack" xml:space="preserve"><value>Reverted</value></data>
+  <data name="Outcome.RollbackFailed" xml:space="preserve"><value>Rollback error</value></data>
+  <data name="Outcome.NotRun" xml:space="preserve"><value>Not run</value></data>
+  <data name="Outcome.Running" xml:space="preserve"><value>Running</value></data>
+  <data name="Report.Title" xml:space="preserve"><value>Technical report</value></data>
+  <data name="Report.Field.Transaction" xml:space="preserve"><value>Transaction</value></data>
+  <data name="Report.Field.Date" xml:space="preserve"><value>Date</value></data>
+  <data name="Report.Field.Profile" xml:space="preserve"><value>Mode</value></data>
+  <data name="Report.Field.System" xml:space="preserve"><value>System</value></data>
+  <data name="Report.Verified" xml:space="preserve"><value>Verified</value></data>
+  <data name="Report.Changed" xml:space="preserve"><value>Changed</value></data>
+  <data name="Report.Skipped" xml:space="preserve"><value>Skipped</value></data>
+  <data name="Report.Warnings" xml:space="preserve"><value>Warnings</value></data>
+  <data name="Report.Failed" xml:space="preserve"><value>Failed</value></data>
+  <data name="Report.RequiresRestart" xml:space="preserve"><value>Restart needed</value></data>
+  <data name="Report.RestorePossible" xml:space="preserve"><value>Restore possible</value></data>
+  <data name="Report.SummaryFormat" xml:space="preserve"><value>Verified {0} · Changed {1} · Skipped {2} · Warnings {3} · Failed {4}</value></data>
+  <data name="Report.RestartNeeded" xml:space="preserve"><value>Restarting Windows is recommended to fully apply the changes.</value></data>
+  <data name="Report.RestartNotNeeded" xml:space="preserve"><value>No restart is required.</value></data>
+  <data name="Report.CopyButton" xml:space="preserve"><value>Copy technical report</value></data>
+  <data name="Common.Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="Common.No" xml:space="preserve"><value>No</value></data>
+  <data name="Log.ReportCopied" xml:space="preserve"><value>Technical report copied to the clipboard.</value></data>
+  <data name="Log.ReportCopyFailed" xml:space="preserve"><value>Could not copy the report: {0}</value></data>
+  <data name="Profiles.Presentation.Light.Benefits" xml:space="preserve"><value>Frees space and applies light adjustments with minimal footprint, keeping visual quality nearly untouched.</value></data>
+  <data name="Profiles.Presentation.Balanced.Benefits" xml:space="preserve"><value>Balances visual quality, GPU usage and frame stability with moderate, fully reversible adjustments.</value></data>
+  <data name="Profiles.Presentation.Aggressive.Benefits" xml:space="preserve"><value>Prioritizes FPS and responsiveness over visual quality, applying every safe adjustment available.</value></data>
+  <data name="Profiles.Presentation.Light.Risks" xml:space="preserve"><value>Very low risk: only well-known, fully reversible adjustments with minimal visual impact.</value></data>
+  <data name="Profiles.Presentation.Balanced.Risks" xml:space="preserve"><value>Moderate risk: may request one administrator confirmation for the performance power plan.</value></data>
+  <data name="Profiles.Presentation.Aggressive.Risks" xml:space="preserve"><value>Higher risk: visual quality drops noticeably and Windows visual effects are reduced.</value></data>
+  <data name="Profiles.Presentation.Impact.Low" xml:space="preserve"><value>Low impact</value></data>
+  <data name="Profiles.Presentation.Impact.Moderate" xml:space="preserve"><value>Moderate impact</value></data>
+  <data name="Profiles.Presentation.Impact.High" xml:space="preserve"><value>High impact</value></data>
+  <data name="Profiles.Presentation.Reversibility.Mixed" xml:space="preserve"><value>Mostly reversible; some cleanups free disk space permanently.</value></data>
+  <data name="Profiles.Presentation.Reversibility.FullyReversible" xml:space="preserve"><value>Fully reversible from history.</value></data>
+  <data name="Profiles.Presentation.VariabilityNote" xml:space="preserve"><value>Results vary by computer, drivers and server; no specific FPS gain is guaranteed.</value></data>
+  <data name="Profiles.Presentation.Benefits.Label" xml:space="preserve"><value>Expected benefits</value></data>
+  <data name="Profiles.Presentation.Impact.Label" xml:space="preserve"><value>Impact level</value></data>
+  <data name="Profiles.Presentation.Risks.Label" xml:space="preserve"><value>Possible risks</value></data>
+  <data name="Profiles.Presentation.Reversibility.Label" xml:space="preserve"><value>Reversibility</value></data>
+  <data name="Profiles.Presentation.Categories.Label" xml:space="preserve"><value>Categories analyzed</value></data>
+  <data name="Category.Safety" xml:space="preserve"><value>Safety</value></data>
+  <data name="Category.Storage" xml:space="preserve"><value>Storage</value></data>
+  <data name="Category.WindowsGaming" xml:space="preserve"><value>Windows gaming</value></data>
+  <data name="Category.Power" xml:space="preserve"><value>Power</value></data>
+  <data name="Category.Appearance" xml:space="preserve"><value>Appearance</value></data>
+  <data name="Category.FiveMGraphics" xml:space="preserve"><value>FiveM/GTA V graphics</value></data>
+  <data name="Optimizer.StepLedger.Title" xml:space="preserve"><value>Step results</value></data>
 </root>

@@ -444,11 +444,12 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 Percent = Math.Clamp(percent, 5, 70),
                 Headline = localization.GetString("Runtime.OptimizingSafely"),
                 Detail = localization.Format(
-                    update.Message.StartsWith("Concluído:", StringComparison.Ordinal)
-                        ? "Runtime.ActionCompleted"
-                        : "Runtime.ApplyingAction",
+                    DetailKeyFor(update.Outcome),
                     GetLocalizedActionName(update.ActionId)),
-                ActionId = update.ActionId
+                ActionId = update.ActionId,
+                CompletedSteps = update.CompletedSteps,
+                TotalSteps = update.TotalSteps,
+                Outcome = update.Outcome
             });
         });
         var context = new WindowsActionContext
@@ -465,16 +466,18 @@ public sealed class AppOptimizationService : IAppOptimizationService
             {
                 IncludeStandardUserActions = true,
                 IncludeAdministratorActions = false,
-                RollbackOnFailure = true
+                IsolateFailures = true
             },
             cancellationToken).ConfigureAwait(false);
 
         if (localResult.State is not (
             WindowsTransactionState.Committed
+            or WindowsTransactionState.CommittedWithErrors
             or WindowsTransactionState.AwaitingElevation))
         {
             return await CreateResultFromJournalAsync(
                 plan.PlanId,
+                plan.Profile,
                 succeeded: false,
                 wasCancelled: false,
                 localResult.Error ?? localization.GetString("Runtime.LocalChangesReverted"),
@@ -504,6 +507,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                     .ConfigureAwait(false);
                 return await CreateResultFromJournalAsync(
                     plan.PlanId,
+                    plan.Profile,
                     succeeded: false,
                     wasCancelled: true,
                     DescribeInterruptedBroker(
@@ -518,6 +522,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                     .ConfigureAwait(false);
                 return await CreateResultFromJournalAsync(
                     plan.PlanId,
+                    plan.Profile,
                     succeeded: false,
                     wasCancelled: false,
                     DescribeInterruptedBroker(
@@ -547,6 +552,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
                 return await CreateResultFromJournalAsync(
                     plan.PlanId,
+                    plan.Profile,
                     succeeded: false,
                     wasCancelled: elevated.WasCancelled,
                     summary,
@@ -554,22 +560,44 @@ public sealed class AppOptimizationService : IAppOptimizationService
             }
         }
 
+        // O sucesso final é decidido pelo relatório do journal: uma run com
+        // qualquer ação falhada nunca é reportada como totalmente concluída.
+        var finalJournal = await LoadJournalAsync(plan.PlanId, cancellationToken).ConfigureAwait(false);
+        var finalReport = finalJournal is null
+            ? null
+            : OptimizationReportBuilder.Build(finalJournal, plan.Profile);
+        var runSucceeded = finalReport?.Succeeded ?? true;
+
         progress.Report(new AppProgressUpdate
         {
             Timestamp = DateTimeOffset.Now,
-            Kind = AppProgressKind.Completed,
+            Kind = runSucceeded ? AppProgressKind.Completed : AppProgressKind.Warning,
             Percent = 100,
-            Headline = localization.GetString("Runtime.PlanCompleted"),
-            Detail = localization.GetString("Runtime.PlanCompletedDetail")
+            Headline = localization.GetString(
+                runSucceeded ? "Runtime.PlanCompleted" : "Runtime.PlanCompletedWithErrors"),
+            Detail = localization.GetString(
+                runSucceeded ? "Runtime.PlanCompletedDetail" : "Runtime.PlanCompletedWithErrorsDetail")
         });
         return await CreateResultFromJournalAsync(
             plan.PlanId,
-            succeeded: true,
+            plan.Profile,
+            succeeded: runSucceeded,
             wasCancelled: false,
-            $"{localization.GetString("Runtime.PlanCompleted")}. "
-                + localization.GetString("Runtime.PlanCompletedDetail"),
+            $"{localization.GetString(runSucceeded ? "Runtime.PlanCompleted" : "Runtime.PlanCompletedWithErrors")}. "
+                + localization.GetString(
+                    runSucceeded ? "Runtime.PlanCompletedDetail" : "Runtime.PlanCompletedWithErrorsDetail"),
             cancellationToken).ConfigureAwait(false);
     }
+
+    private static string DetailKeyFor(ActionExecutionOutcome outcome) => outcome switch
+    {
+        ActionExecutionOutcome.Verified => "Runtime.ActionVerified",
+        ActionExecutionOutcome.Applied => "Runtime.ActionCompleted",
+        ActionExecutionOutcome.Skipped => "Runtime.ActionSkipped",
+        ActionExecutionOutcome.Failed => "Runtime.ActionFailed",
+        ActionExecutionOutcome.RolledBack => "Runtime.ActionRolledBack",
+        _ => "Runtime.ApplyingAction"
+    };
 
     private async Task<bool> RollbackCoreAsync(
         Guid transactionId,
@@ -717,6 +745,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
     private async Task<AppOptimizationResult> CreateResultFromJournalAsync(
         Guid transactionId,
+        OptimizationProfile profile,
         bool succeeded,
         bool wasCancelled,
         string summary,
@@ -731,7 +760,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Summary = summary,
             CompletedActions = journal?.Actions.Count(action =>
                 action.State == WindowsActionJournalState.Committed) ?? 0,
-            BytesFreed = journal is null ? 0 : SumCommittedCleanupBytes(journal)
+            BytesFreed = journal is null ? 0 : SumCommittedCleanupBytes(journal),
+            Report = journal is null ? null : OptimizationReportBuilder.Build(journal, profile)
         };
     }
 

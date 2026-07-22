@@ -64,6 +64,35 @@
             </Grid>
         </DataTemplate>
 
+        <DataTemplate x:Key="StepLedgerTemplate">
+            <Grid Margin="0,0,0,6">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding Name}" FontSize="10.5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                <Border Grid.Column="1" Padding="7,2" Background="{DynamicResource ChipBrush}" CornerRadius="6" Margin="8,0,0,0">
+                    <TextBlock Text="{Binding OutcomeLabel}" FontSize="9" FontWeight="SemiBold" Foreground="{Binding OutcomeBrushKey, Converter={StaticResource BrushKeyConverter}}" />
+                </Border>
+            </Grid>
+        </DataTemplate>
+
+        <DataTemplate x:Key="ReportLineTemplate">
+            <Grid Margin="0,0,0,5">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel>
+                    <TextBlock Text="{Binding ActionName}" FontSize="10.5" TextTrimming="CharacterEllipsis" />
+                    <TextBlock Text="{Binding Reason}" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" TextWrapping="Wrap" Visibility="{Binding Reason, Converter={StaticResource StringToVisibilityConverter}}" />
+                </StackPanel>
+                <Border Grid.Column="1" Padding="7,2" Background="{DynamicResource ChipBrush}" CornerRadius="6" Margin="8,0,0,0" VerticalAlignment="Top">
+                    <TextBlock Text="{Binding OutcomeLabel}" FontSize="9" FontWeight="SemiBold" Foreground="{Binding OutcomeBrushKey, Converter={StaticResource BrushKeyConverter}}" />
+                </Border>
+            </Grid>
+        </DataTemplate>
+
         <DataTemplate x:Key="HistoryTemplate">
             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Padding="17">
                 <Grid>
@@ -377,6 +406,32 @@
                             </Grid>
 
                             <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding [Profiles.Presentation.Benefits.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
+                                    <TextBlock Text="{Binding ProfilePresentationBenefits}" Margin="0,4,0,0" FontSize="11.5" TextWrapping="Wrap" />
+                                    <primitives:UniformGrid Columns="2" Margin="0,12,0,0">
+                                        <StackPanel Margin="0,0,10,10">
+                                            <TextBlock Text="{Binding [Profiles.Presentation.Impact.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
+                                            <TextBlock Text="{Binding ProfilePresentationImpact}" Margin="0,4,0,0" FontSize="11" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <StackPanel Margin="0,0,0,10">
+                                            <TextBlock Text="{Binding [Profiles.Presentation.Reversibility.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
+                                            <TextBlock Text="{Binding ProfilePresentationReversibility}" Margin="0,4,0,0" FontSize="11" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <StackPanel Margin="0,0,10,0">
+                                            <TextBlock Text="{Binding [Profiles.Presentation.Risks.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
+                                            <TextBlock Text="{Binding ProfilePresentationRisks}" Margin="0,4,0,0" FontSize="11" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding [Profiles.Presentation.Categories.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
+                                            <TextBlock Text="{Binding ProfilePresentationCategories}" Margin="0,4,0,0" FontSize="11" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </primitives:UniformGrid>
+                                    <TextBlock Text="{Binding ProfilePresentationVariability}" Margin="0,10,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" FontStyle="Italic" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0" Padding="16">
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                     <StackPanel VerticalAlignment="Center">
@@ -411,7 +466,7 @@
                                 </Grid>
                             </Border>
                             <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="20">
-                                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                     <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,12,0"><TextBlock Text="{Binding [Progress.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="{Binding ProgressStateLabel}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" TextWrapping="Wrap" /></StackPanel><TextBlock Grid.Column="1" Text="{Binding ProgressPercent, Mode=OneWay, StringFormat={}{0:0}%}" HorizontalAlignment="Right" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" /></Grid>
                                     <StackPanel Grid.Row="1" Margin="0,18,0,15">
                                         <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100" />
@@ -420,11 +475,27 @@
                                             <TextBlock Text="{Binding ElapsedTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" TextTrimming="CharacterEllipsis" />
                                             <TextBlock Grid.Column="1" Text="{Binding RemainingTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" HorizontalAlignment="Right" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
                                         </Grid>
-                                        <TextBlock Text="{Binding ProgressHeadline}" Margin="0,11,0,0" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding ProgressDetail}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding StepCounterLabel}" Margin="0,7,0,0" Foreground="{DynamicResource OrangeLightBrush}" FontSize="10" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock Text="{Binding ProgressHeadline}" Margin="0,11,0,0" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
+                                        <TextBlock Text="{Binding ProgressDetail}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
                                     </StackPanel>
-                                    <Border Grid.Row="2" Background="{DynamicResource InsetBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Padding="13"><ScrollViewer VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding ActivityLog}" ItemTemplate="{StaticResource LogTemplate}" /></ScrollViewer></Border>
-                                    <Button Grid.Row="3" Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,13,0,0" HorizontalAlignment="Stretch" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />
+                                    <Border Grid.Row="2" Margin="0,0,0,11" MaxHeight="120" Visibility="{Binding HasStepLedgerItems, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding [Optimizer.StepLedger.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,6" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
+                                            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="96"><ItemsControl ItemsSource="{Binding StepLedger}" ItemTemplate="{StaticResource StepLedgerTemplate}" /></ScrollViewer>
+                                        </StackPanel>
+                                    </Border>
+                                    <Border Grid.Row="3" Background="{DynamicResource InsetBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Padding="13"><ScrollViewer VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding ActivityLog}" ItemTemplate="{StaticResource LogTemplate}" /></ScrollViewer></Border>
+                                    <Border Grid.Row="4" Margin="0,13,0,0" Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Visibility="{Binding IsReportAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding [Report.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding ReportSummaryLabel}" Margin="0,6,0,0" FontSize="10.5" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" />
+                                            <TextBlock Text="{Binding ReportRestartLabel}" Margin="0,4,0,0" FontSize="10" TextWrapping="Wrap" Foreground="{DynamicResource TextSubtleBrush}" />
+                                            <ScrollViewer MaxHeight="140" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding ReportLines}" ItemTemplate="{StaticResource ReportLineTemplate}" /></ScrollViewer>
+                                            <Button Content="{Binding [Report.CopyButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,10,0,0" HorizontalAlignment="Stretch" Click="CopyTechnicalReport_Click" />
+                                        </StackPanel>
+                                    </Border>
+                                    <Button Grid.Row="5" Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,13,0,0" HorizontalAlignment="Stretch" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />
                                 </Grid>
                             </Border>
                         </Grid>

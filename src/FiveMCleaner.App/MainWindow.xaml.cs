@@ -229,6 +229,8 @@ public partial class MainWindow : Window
 
     private void CancelOptimization_Click(object sender, RoutedEventArgs e) => viewModel.CancelOptimization();
 
+    private void CopyTechnicalReport_Click(object sender, RoutedEventArgs e) => viewModel.CopyTechnicalReport();
+
     private async void RollbackHistory_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: HistoryDisplayItem item } || !item.CanRollback)
