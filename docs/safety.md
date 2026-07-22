@@ -16,6 +16,9 @@ Uma ação aceita pelo produto precisa respeitar todos os itens abaixo:
 8. **Registro local** — início, resultado, falha e restauração ficam auditáveis, sem dados sensíveis.
 9. **Cancelamento seguro** — somente entre passos atômicos; nunca no meio de uma escrita crítica.
 10. **Sem promessa universal** — a interface informa efeito esperado, não FPS garantido.
+11. **Isolamento sem mascarar falha** — uma ação com falha genuína nunca é
+    reportada como concluída, e sua reversão nunca é aplicada a outra ação
+    que não falhou; ver "Execução isolada por ação" abaixo.
 
 ## Ações proibidas
 
@@ -72,6 +75,40 @@ Cada execução segue o mesmo protocolo:
 Descobrir → Planejar → Validar → Criar snapshot → Aplicar → Verificar → Confirmar
                                           ↘ falha → Restaurar → Relatar
 ```
+
+### Execução isolada por ação
+
+A execução do usuário padrão (`AppOptimizationService`) roda o motor com
+`IsolateFailures = true`. Cada ação do plano é uma mini-transação
+independente — verifica, aplica, valida e registra o próprio resultado —
+mas os invariantes acima continuam valendo integralmente:
+
+- **rollback atômico por ação é preservado**: uma falha reverte somente a
+  ação que falhou, usando exatamente o mesmo par aplicar/reverter já
+  existente; nenhuma ação nunca fica com escrita parcial;
+- **dependência declarada é respeitada**: uma ação com pré-requisito não
+  atendido (por exemplo, uma ação de gráficos sem a verificação de processo
+  encerrado bem-sucedida) é marcada `Skipped`, nunca executada às cegas;
+- **falha crítica aborta com segurança**: ações marcadas `IsCritical`
+  (as verificações de processo do FiveM/GTA V) que falham interrompem as
+  ações independentes restantes, que ficam `NotRun` — a run nunca continua
+  escrevendo depois que uma pré-condição de segurança não pôde ser
+  confirmada;
+- **nenhum sucesso parcial é relatado como sucesso total**: o resultado
+  final da transação (`CommittedWithErrors` vs. `Committed`) e o relatório
+  estruturado (`OptimizationReportDto`) só marcam sucesso quando nenhuma
+  ação terminou como `Failed` ou `RollbackFailed`;
+- **cancelamento seguro é preservado**: o cancelamento entre etapas continua
+  aceito apenas entre ações atômicas, nunca no meio de uma escrita.
+
+O **broker elevado** continua executando no modo estrito original
+(tudo‑ou‑nada com rollback total em falha), pois cada plano tipicamente
+delega apenas uma ação administrativa por vez (o plano de energia de
+desempenho); a superfície de falha isolada não se aplica lá.
+
+Esse modelo atende ao requisito de "tratar erro sem interromper
+inutilmente todo o processo" sem abrir mão de nenhum dos invariantes de
+segurança documentados nesta página.
 
 ### Descobrir
 
@@ -161,6 +198,14 @@ O diagnóstico permanece local por padrão. Relatórios exportados devem:
 - indicar que ETW e dumps podem conter dados sensíveis.
 
 O formulário de bug é uma exceção explícita ao processamento apenas local: depois do clique em **Enviar**, os campos autorizados e a imagem opcional são encaminhados ao serviço externo FormSubmit. O app não envia esse conteúdo em segundo plano, não repete automaticamente uma falha e oferece cópia local do texto. Consulte [Relatos de bug e privacidade](bug-reports.md) antes de usar o canal.
+
+O relatório técnico do otimizador (botão "Copiar relatório técnico" ao final
+de uma execução) segue a mesma política: `ReportSanitizer` substitui
+`%LOCALAPPDATA%`, `%APPDATA%` e `%USERPROFILE%` reais por seus nomes de
+variável antes de qualquer texto ser copiado, e o modelo do relatório
+(`OptimizationReportDto`) nunca carrega tokens, credenciais, conteúdo de
+chat ou dados de autenticação — apenas IDs de ação, resultado e contagens.
+A cópia é sempre uma ação explícita do usuário; nada é enviado pela rede.
 
 ## Comunicação de vulnerabilidades
 

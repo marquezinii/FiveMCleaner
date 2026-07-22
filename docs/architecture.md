@@ -65,14 +65,16 @@ Cada ação tem contrato equivalente a:
 id + versão
 descrição e evidência
 escopo de leitura/escrita
-pré-condições
+pré-condições (incluindo pré-requisitos de outras ações, quando existem)
 estado atual e estado desejado
-risco e privilégio
+risco, privilégio e criticidade (aborta o restante da execução se falhar?)
 aplicar + verificar + restaurar
 progresso por etapas
+versões do Windows suportadas
+documentação: como detectar, como confirmar, como desfazer, riscos/limitações
 ```
 
-IDs são estáveis para que relatórios e snapshots continuem interpretáveis entre versões.
+IDs são estáveis para que relatórios e snapshots continuem interpretáveis entre versões. Os campos de pré-requisito, criticidade, versões do Windows e documentação vivem em `ActionMetadataDto`/`OptimizationActionDefinition` e alimentam tanto o motor de execução quanto a revisão do plano na interface.
 
 ### Plano
 
@@ -85,15 +87,21 @@ Um plano é uma lista ordenada e imutável de ações resolvidas para aquele dia
 
 ### Resultado
 
-Estados mínimos:
+`ActionExecutionOutcome` (`FiveMCleaner.Contracts`) é o estado semântico usado por progresso e relatório:
 
-- `Skipped` — pré-condição não satisfeita sem erro;
+- `Verified` — máquina já estava no estado desejado; nenhuma escrita ocorreu;
 - `Applied` — alteração e pós-condição confirmadas;
-- `NoChange` — máquina já estava no estado desejado;
-- `Failed` — alteração não confirmada;
-- `RolledBack` — estado anterior restaurado;
-- `RollbackFailed` — requer atenção e relatório destacado;
-- `Blocked` — edição/segurança não suportada.
+- `Skipped` — pré-condição, opção ou pré-requisito ausente, sem erro;
+- `Warning` — aplicado com ressalva reportável;
+- `Failed` — erro genuíno; a própria ação foi revertida;
+- `RolledBack` — revertida com sucesso após falha;
+- `RollbackFailed` — requer atenção e fica destacado no relatório;
+- `Blocked` — edição/segurança não suportada;
+- `NotRun` — não executada porque uma falha crítica anterior abortou o restante da run.
+
+Esse enum é independente do estado transacional interno do journal
+(`WindowsActionJournalState`), que continua controlando elegibilidade de
+rollback e resumo de transação.
 
 ## Perfis
 
@@ -140,7 +148,15 @@ Quando o suporte for implementado, ele deve ser um adaptador separado e passar p
 
 ## Execução, progresso e cancelamento
 
-Progresso é calculado por passos concluídos e pesos declarados. Mensagens devem descrever ações reais, por exemplo “Validando snapshot gráfico”, não frases genéricas.
+Progresso é calculado por passos concluídos e pesos declarados. Mensagens devem descrever ações reais, por exemplo “Validando snapshot gráfico”, não frases genéricas. O progresso também expõe etapa atual / total de etapas (`CompletedSteps`/`TotalSteps` em `WindowsActionProgress` e `AppProgressUpdate`) e o outcome de cada etapa, permitindo à interface manter um livro-razão ao vivo (ver `MainViewModel.StepLedger`).
+
+A execução do usuário padrão roda com `WindowsTransactionOptions.IsolateFailures = true`: cada ação do plano é aplicada, validada e registrada como uma mini-transação independente.
+
+- uma falha genuína reverte somente a própria ação (rollback atômico existente, sem afetar as demais);
+- uma ação cujo pré-requisito não teve sucesso (`Prerequisites` em `ActionMetadataDto`) é marcada `Skipped`, nunca executada;
+- uma ação crítica (`IsCritical`, hoje as verificações de processo FiveM/GTA V) que falha aborta as ações independentes restantes, que ficam `NotRun`;
+- a transação final é `Committed` somente se nenhuma ação falhou; caso contrário `CommittedWithErrors`, e o relatório (`OptimizationReportDto`, construído por `OptimizationReportBuilder`) nunca marca a run como bem-sucedida.
+- o broker elevado continua no modo estrito (tudo-ou-nada), pois normalmente delega uma única ação administrativa por vez.
 
 Cancelamento:
 
@@ -174,7 +190,12 @@ Adaptadores de sistema ficam atrás de interfaces. Testes devem cobrir:
 - falta de espaço para snapshot/quarentena;
 - broker rejeitando ação, versão ou alvo desconhecido;
 - composição de perfis sem cache implícito;
-- mensagens de progresso e cancelamento.
+- mensagens de progresso e cancelamento;
+- execução isolada: falha não crítica não afeta ações independentes; falha
+  crítica aborta o restante (`NotRun`); pré-requisito não atendido gera
+  `Skipped`; falha de commit reverte só a própria ação;
+- construção do relatório estruturado e sanitização do relatório técnico
+  copiável (sem nome de usuário em caminhos, sem segredos).
 
 Testes de integração que alteram Windows ou FiveM devem ser opt-in, isolados e nunca rodar automaticamente na máquina do contribuidor.
 

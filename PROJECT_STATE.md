@@ -80,7 +80,14 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
 - Cada ação de sistema precisa ter escopo conhecido, pré-condições,
   pós-validação, resultado tipado e estratégia de rollback quando possível.
 - Perfis Leve, Médio e Agressivo são composições de ações versionadas; eles não
-  executam operações diretamente.
+  executam operações diretamente. O usuário nunca vê nem marca uma lista de
+  tweaks individuais — apenas escolhe o modo.
+- A execução do fluxo padrão do app é isolada por ação (verificar → aplicar →
+  validar → registrar, uma falha reverte só a própria ação); falhas críticas
+  abortam o restante com segurança e nenhum sucesso parcial é relatado como
+  total. Ver `docs/safety.md` (seção "Execução isolada por ação") e
+  `docs/architecture.md`. O catálogo de ações está na versão 3
+  (`ActionCatalog.CurrentVersion`).
 - Caches e arquivos sensíveis são tratados por allowlist e condições
   explícitas. Dados de autenticação, `game-storage`, NUI storage,
   configurações e plugins não são lixo automático.
@@ -100,11 +107,38 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
 
 - Diagnóstico de FiveM Legacy, GTA, CPU, GPU, memória, armazenamento, cache e
   processos relevantes.
-- Modos de otimização Leve, Médio e Agressivo, com planejamento e progresso por
-  etapas.
+- Modos de otimização Leve, Médio e Agressivo, escolhidos apenas pelo modo (o
+  usuário nunca marca tweaks individuais); a `MainViewModel` deriva as opções
+  técnicas do perfil selecionado e do diagnóstico.
 - Ações reversíveis e restritas para configurações gráficas Legacy, Game Mode,
   preferências de GPU, energia de sessão, captura em segundo plano, efeitos
   visuais e limpezas condicionadas.
+- Motor de execução **isolada por ação** (`WindowsTransactionOptions.
+  IsolateFailures`, usado pelo fluxo padrão do app): cada ação verifica,
+  aplica, valida e registra separadamente; uma falha reverte só a própria
+  ação; pré-requisito não atendido gera `Skipped`; falha crítica (verificação
+  de processo FiveM/GTA V) aborta as ações independentes restantes
+  (`NotRun`); a run nunca é reportada como sucesso total se qualquer ação
+  falhou (`ActionExecutionOutcome`, `WindowsTransactionState.
+  CommittedWithErrors`). O broker elevado continua no modo estrito original
+  (poucas ações administrativas, tipicamente uma).
+- Progresso estruturado: etapa X de N, outcome por etapa e livro-razão ao vivo
+  na interface (`MainViewModel.StepLedger`), além de percentual, tempo
+  decorrido e estimativa de tempo restante já existentes.
+- Relatório final estruturado (`OptimizationReportDto`/
+  `OptimizationReportBuilder`, construído a partir do journal local) com
+  contagens de verificado/alterado/ignorado/aviso/falha, necessidade de
+  reinício e possibilidade de restauração; botão "Copiar relatório técnico"
+  gera texto sanitizado (`TechnicalReportBuilder`/`ReportSanitizer`, sem nomes
+  de usuário em caminhos, sem tokens/credenciais) via área de transferência.
+- Apresentação estruturada de cada modo (benefícios, nível de impacto, riscos,
+  reversibilidade, categorias analisadas e aviso de variação por computador),
+  derivada do catálogo por `ProfilePresentationProvider` para nunca divergir
+  do plano real.
+- Documentação por ação de primeira classe no catálogo (`ActionMetadataDto`):
+  pré-requisitos, criticidade, versões do Windows suportadas, detecção,
+  confirmação, desfazer e riscos/limitações; usada pelo motor (dependência e
+  gating por versão do Windows) e disponível para a revisão de plano.
 - Journal transacional, snapshots e rollback por ação.
 - Broker elevado de escopo mínimo, atualização opcional por GitHub Releases,
   atalho de desenvolvimento, ícone oficial, bandeja, inicialização opcional,
@@ -129,6 +163,14 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
 - Não há suporte operacional para GTAV Enhanced.
 - Testes que alterariam uma instalação real de Windows/FiveM são opt-in; a
   suíte padrão usa doubles e diretórios temporários.
+- O broker elevado (ações administrativas) continua no modo estrito
+  tudo-ou-nada; a execução isolada por ação vale para o fluxo padrão do app
+  (`AppOptimizationService`), que é onde está a maioria das ações do plano.
+- Nenhuma otimização nova foi adicionada nesta etapa; o trabalho foi
+  inteiramente sobre motor de execução, progresso, relatório e apresentação
+  das otimizações já existentes e pesquisadas em `docs/research.md`.
+- O instalador público e o sistema de atualização automática continuam fora
+  do escopo desta etapa, conforme combinado; ficam para uma tarefa futura.
 - O build, lint e testes renderizados do site passam, mas `npx tsc --noEmit`
   atualmente reporta tipos ausentes do runtime Cloudflare (`cloudflare:workers`,
   `Fetcher` e `D1Database`). Isso deve ser tratado como uma limitação conhecida
@@ -141,20 +183,37 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
 
 ## Validação e handoff atual
 
-- Commit local da revisão de interface: `0668e26 feat: refine interface
-  preferences and hardware diagnostics`.
-- O checkout canônico está em `C:\Projetos\FiveMCleaner`, no branch `main`,
-  e este commit é a unidade pronta para o próximo agente continuar.
-- Última validação do app: `dotnet build` Release sem avisos/erros, 215 testes
-  .NET aprovados e `scripts\Verify-Safety.ps1` aprovado. O executável real
-  abriu e encerrou normalmente em smoke test com `--demo-synthetic`.
+- Esta etapa (motor de otimização resiliente, progresso estruturado,
+  relatório e apresentação de modos) está pronta e integrada em `main`.
+  Commits locais desta tarefa, do mais antigo ao mais recente:
+  - `f530afb` docs: especificação do motor de otimização resiliente
+  - `f782e59` feat(core,engine): execução isolada por ação, outcomes e relatório
+  - `991856b` feat(app): progresso estruturado, relatório final e apresentação de modos
+  - este commit (docs: atualiza safety/architecture/PROJECT_STATE) fecha a
+    etapa; use `git log --oneline -6` para conferir o hash exato.
+- O checkout canônico está em `C:\Projetos\FiveMCleaner`, no branch `main`.
+- Especificação completa da tarefa em
+  `docs/superpowers/specs/2026-07-22-motor-otimizacao-resiliente-design.md`.
+- Última validação do app: `dotnet build` Release sem avisos/erros, **235
+  testes .NET aprovados** (215 anteriores + 20 novos cobrindo isolamento,
+  dependência, aborto crítico, outcome, relatório, sanitização e apresentação
+  de modos) e `scripts\Verify-Safety.ps1` aprovado. O executável real abriu e
+  permaneceu estável por smoke test manual (`Start-Process` + `--demo-synthetic`,
+  5s, sem novas entradas em `crash.log`) exercitando as novas telas de
+  progresso/relatório/apresentação de modo.
+- Área ainda não coberta por teste automatizado nesta etapa: a integração fim
+  a fim `AppOptimizationService → runtime real do Windows` (só é exercitada
+  por doubles no motor; o serviço de app em si depende de Windows real). É um
+  bom próximo passo para o agente seguinte, se quiser reforçar cobertura.
 - Última validação do site: lint, build e testes renderizados aprovados. O
   typecheck continua limitado pelos tipos ausentes do runtime Cloudflare,
   conforme descrito acima; não mascarar esse erro nem substituir por comandos
   que ignorem tipos.
-- Não há alterações pendentes nem artefatos locais versionáveis esperados. O
-  commit ainda precisa ser sincronizado com `origin/main` quando o push desta
-  tarefa terminar.
+- O push desta tarefa para `origin/main` foi autorizado explicitamente pelo
+  usuário e realizado ao final desta etapa, sem PR — confira `git log
+  origin/main` para confirmar que o HEAD local e o remoto coincidem antes de
+  iniciar trabalho novo. Não há alterações pendentes nem artefatos locais
+  versionáveis esperados após o push.
 
 Na raiz do repositório:
 
