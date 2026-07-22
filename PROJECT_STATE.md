@@ -7,6 +7,12 @@ transparente, reversível e orientada por diagnóstico do FiveM para GTAV Legacy
 Ele prioriza mudanças pequenas, verificáveis e com rollback, sem prometer ganho
 universal de FPS nem comprometer proteções do sistema.
 
+O checkout de desenvolvimento canônico fica em `C:\Projetos\FiveMCleaner`.
+O atalho de área de trabalho **FiveMCleaner - Desenvolvimento** usa o launcher
+versionado em `scripts\Start-DevelopmentApp.ps1`: a cada abertura ele recompila
+o build Release atual e inicia o executável normal, sem argumentos de simulação.
+Isso permite acompanhar as mudanças locais sem manter uma cópia congelada do app.
+
 ## Tecnologias
 
 - C# / .NET SDK 10.0.302, definido em `global.json`;
@@ -127,6 +133,8 @@ dotnet build FiveMCleaner.slnx --configuration Release --no-restore
 dotnet test FiveMCleaner.slnx --configuration Release --no-build
 .\scripts\Verify-Safety.ps1
 dotnet run --project src\FiveMCleaner.App\FiveMCleaner.App.csproj
+.\scripts\Start-DevelopmentApp.ps1
+.\scripts\Install-DevelopmentShortcut.ps1
 .\scripts\Build-Portable.ps1
 .\scripts\Build-Installer.ps1 -Version <versão>
 ```
