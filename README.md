@@ -29,9 +29,9 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 > Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
 
 > [!NOTE]
-> Os builds locais desta primeira rodada ainda não possuem assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, o Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Releases oficiais deverão ser assinadas; nunca crie uma exclusão de antivírus apenas para executar o app.
+> A `v0.2.0-preview` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
 
-## Estado da primeira rodada
+## Estado da v0.2.0-preview
 
 - interface WPF funcional com os modos **Leve**, **Médio** e **Agressivo**;
 - diagnóstico local de FiveM Legacy, CPU, GPU, memória, armazenamento e processo ativo;
@@ -39,7 +39,21 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 - broker administrativo efêmero, sem shell ou comandos recebidos da interface;
 - journal por ação, rollback por privilégio e restauração que preserva mudanças posteriores do usuário;
 - pacote portátil autossuficiente para `win-x64`, acompanhado de checksums SHA-256;
+- formulário de bug explícito, sem nome/e-mail obrigatório e com imagem opcional sanitizada;
 - GTAV Enhanced bloqueado até uma integração separada ser documentada e testada.
+
+## Download e integridade
+
+Os binários oficiais são publicados somente em [GitHub Releases](https://github.com/marquezinii/FiveMCleaner/releases). Para `win-x64`, baixe `FiveMCleaner-win-x64.zip` e `FiveMCleaner-win-x64.zip.sha256` da mesma release e valide o arquivo antes de abrir:
+
+```powershell
+$archive = Resolve-Path .\FiveMCleaner-win-x64.zip
+$expected = ((Get-Content "$archive.sha256" -Raw).Trim() -split '\s+')[0].ToLowerInvariant()
+$actual = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+if ($actual -ne $expected) { throw "SHA-256 divergente. Não execute este arquivo." }
+```
+
+O hash detecta corrupção ou troca do pacote, mas não substitui assinatura de código. Se uma política de segurança bloquear a preview unsigned, a opção segura é não executá-la, revisar/compilar o código ou aguardar uma release assinada. Consulte [release, integridade e simulação](docs/release-preview.md).
 
 ## Visão do produto
 
@@ -58,6 +72,16 @@ Os perfis são composições de ações independentes. O usuário pode revisar c
 </p>
 
 > A captura é gerada pelo próprio executável em modo de demonstração sem escrita. Ela não publica os modelos de hardware nem o histórico da máquina usada no desenvolvimento.
+
+### Atalho de simulação
+
+No checkout do repositório, desenvolvedores podem criar um atalho vivo na Área de Trabalho para o build `Release` atual. O script não acompanha o ZIP portátil. O atalho abre diretamente o executável WPF com `--demo`, usa o ícone oficial e não cria janela de console:
+
+```powershell
+.\scripts\Install-DevelopmentShortcut.ps1 -Build
+```
+
+O atalho não copia um executável congelado: novas builds Release continuam usando o mesmo destino. O modo demo não aplica otimizações nem salva suas opções; um envio de bug só acessa a rede após clique explícito. Detalhes e limitações estão em [docs/release-preview.md](docs/release-preview.md).
 
 ## Cache inteligente
 
@@ -107,6 +131,7 @@ dotnet build FiveMCleaner.slnx --configuration Release --no-restore
 dotnet test FiveMCleaner.slnx --configuration Release --no-build
 dotnet run --project src/FiveMCleaner.App/FiveMCleaner.App.csproj
 ./scripts/Build-Portable.ps1
+./scripts/Install-DevelopmentShortcut.ps1
 ```
 
 ## Estrutura
@@ -122,7 +147,9 @@ tests/
 └── FiveMCleaner.Tests/      # testes de política, segurança e execução
 docs/
 ├── architecture.md
+├── bug-reports.md
 ├── research.md
+├── release-preview.md
 └── safety.md
 ```
 
@@ -134,6 +161,7 @@ As decisões do projeto priorizam documentação do Cfx.re, suporte oficial, rep
 
 ## Contribuindo e segurança
 
+- Bugs comuns podem ser enviados pelo app ou pelo GitHub; leia antes [Relatos de bug e privacidade](docs/bug-reports.md).
 - Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de propor uma ação de sistema.
 - Vulnerabilidades devem seguir [SECURITY.md](SECURITY.md), sem issue pública.
 - Toda contribuição está sujeita ao [Código de Conduta](CODE_OF_CONDUCT.md).

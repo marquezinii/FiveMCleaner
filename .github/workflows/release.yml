@@ -1,0 +1,210 @@
+name: Build installer and publish release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Exact tag to build (vX.Y.Z or vX.Y.Z-preview)
+        required: true
+        type: string
+      channel:
+        description: Release channel
+        required: true
+        default: preview
+        type: choice
+        options:
+          - preview
+          - stable
+      publish:
+        description: Create the public GitHub release after every check passes
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+env:
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1"
+  DOTNET_NOLOGO: "1"
+  NUGET_XMLDOC_MODE: skip
+
+jobs:
+  build_audit:
+    name: Build and audit installer
+    runs-on: windows-latest
+    timeout-minutes: 35
+    outputs:
+      asset_version: ${{ steps.release.outputs.asset_version }}
+
+    steps:
+      - name: Checkout exact tag
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          ref: ${{ inputs.release_tag }}
+          fetch-depth: 0
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@26b0ec14cb23fa6904739307f278c14f94c95bf1 # v5
+        with:
+          global-json-file: global.json
+
+      - name: Validate tag and channel
+        id: release
+        shell: pwsh
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        run: |
+          [xml]$props = Get-Content -LiteralPath ./Directory.Build.props -Raw
+          $version = [string](@($props.Project.PropertyGroup.Version) |
+            Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) } |
+            Select-Object -First 1)
+          if ($version -notmatch '^\d+\.\d+\.\d+$') {
+            throw "Directory.Build.props Version must be numeric SemVer: $version"
+          }
+
+          $assetVersion = if ($env:RELEASE_CHANNEL -eq 'preview') { "$version-preview" } else { $version }
+          $expectedTag = "v$assetVersion"
+          if ($env:RELEASE_TAG -ne $expectedTag) {
+            throw "Tag/channel mismatch. Expected '$expectedTag', got '$env:RELEASE_TAG'."
+          }
+
+          $tagCommit = (git rev-list -n 1 --verify $env:RELEASE_TAG).Trim()
+          $headCommit = (git rev-parse HEAD).Trim()
+          if ($tagCommit -ne $headCommit) {
+            throw 'Checked out commit does not match the requested tag.'
+          }
+          if (git status --porcelain=v1 --untracked-files=all) {
+            throw 'Release checkout is not clean.'
+          }
+
+          "asset_version=$assetVersion" >> $env:GITHUB_OUTPUT
+
+      - name: Safety verification and tests
+        shell: pwsh
+        run: |
+          ./scripts/Verify-Safety.ps1
+          dotnet test tests/FiveMCleaner.Tests/FiveMCleaner.Tests.csproj `
+            --configuration Release `
+            --no-build
+
+      - name: Build self-contained package and installer
+        shell: pwsh
+        env:
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
+        run: ./scripts/Build-Installer.ps1 -Version $env:ASSET_VERSION
+
+      - name: Install and uninstall smoke test
+        shell: pwsh
+        env:
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
+        run: |
+          $installer = Resolve-Path "./artifacts/installer/FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe"
+          ./scripts/Test-Installer.ps1 `
+            -InstallerPath $installer `
+            -PublishDirectory ./artifacts/FiveMCleaner-win-x64 `
+            -ExpectedVersion $env:ASSET_VERSION
+
+      - name: Stage release assets
+        shell: pwsh
+        env:
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        run: |
+          New-Item -ItemType Directory -Force -Path ./artifacts/release | Out-Null
+          Copy-Item -LiteralPath "./artifacts/installer/FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe" -Destination ./artifacts/release
+          Copy-Item -LiteralPath "./artifacts/installer/FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe.sha256" -Destination ./artifacts/release
+          Copy-Item -LiteralPath "./artifacts/installer/FiveMCleaner-release-manifest-$env:ASSET_VERSION.json" -Destination ./artifacts/release
+          Copy-Item -LiteralPath ./artifacts/FiveMCleaner-win-x64.zip -Destination ./artifacts/release
+          Copy-Item -LiteralPath ./artifacts/FiveMCleaner-win-x64.zip.sha256 -Destination ./artifacts/release
+
+          $installerName = "FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe"
+          $downloadUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:RELEASE_TAG/$installerName"
+          $channelText = if ($env:RELEASE_CHANNEL -eq 'preview') { 'prévia / preview' } else { 'estável / stable' }
+          @"
+          ## FiveMCleaner $env:ASSET_VERSION ($channelText)
+
+          **[Download do instalador / Download installer]($downloadUrl)**
+
+          O instalador inclui o runtime .NET e funciona sem baixar dependências durante a instalação.
+          The installer includes the .NET runtime and does not download dependencies during setup.
+
+          Confira o arquivo `.sha256` e o manifesto JSON antes de executar. Esta build ainda não possui
+          assinatura Authenticode; SmartScreen pode solicitar confirmação. Nunca desative o antivírus,
+          o UAC ou o SmartScreen para instalar o FiveMCleaner.
+
+          Verify the `.sha256` file and JSON manifest before running. This build is not Authenticode-signed
+          yet, so SmartScreen may request confirmation. Never disable antivirus, UAC, or SmartScreen to
+          install FiveMCleaner.
+          "@ | Set-Content -LiteralPath ./artifacts/release/RELEASE_NOTES.md -Encoding utf8
+
+      - name: Upload audited release candidate
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: FiveMCleaner-${{ steps.release.outputs.asset_version }}
+          path: artifacts/release/**
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    name: Publish GitHub release
+    if: ${{ inputs.publish }}
+    needs: build_audit
+    runs-on: windows-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+
+    steps:
+      - name: Download audited candidate
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: FiveMCleaner-${{ needs.build_audit.outputs.asset_version }}
+          path: release
+
+      - name: Attest installer provenance
+        uses: actions/attest-build-provenance@78e6cbd37d0ac1a40113c04f2037dacf1ea3f12e # v4
+        with:
+          subject-path: release/FiveMCleaner-Setup-*-win-x64.exe
+
+      - name: Create public release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+        run: |
+          if (gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY 2>$null) {
+            throw "Release '$env:RELEASE_TAG' already exists; refusing to overwrite it."
+          }
+
+          $assets = @(
+            (Resolve-Path ./release/FiveMCleaner-Setup-*-win-x64.exe).Path,
+            (Resolve-Path ./release/FiveMCleaner-Setup-*-win-x64.exe.sha256).Path,
+            (Resolve-Path ./release/FiveMCleaner-release-manifest-*.json).Path,
+            (Resolve-Path ./release/FiveMCleaner-win-x64.zip).Path,
+            (Resolve-Path ./release/FiveMCleaner-win-x64.zip.sha256).Path
+          )
+          $arguments = @(
+            'release', 'create', $env:RELEASE_TAG
+          ) + $assets + @(
+            '--repo', $env:GITHUB_REPOSITORY,
+            '--verify-tag',
+            '--title', "FiveMCleaner $env:RELEASE_TAG",
+            '--notes-file', (Resolve-Path ./release/RELEASE_NOTES.md).Path
+          )
+          if ($env:RELEASE_CHANNEL -eq 'preview') {
+            $arguments += '--prerelease'
+          } else {
+            $arguments += '--latest'
+          }
+
+          gh @arguments

@@ -19,10 +19,13 @@ public sealed class PlanBuilderTests
         Assert.Equal(
             [
                 OptimizationActionIds.VerifyFiveMIsStopped,
+                OptimizationActionIds.VerifyGtaVIsStopped,
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 OptimizationActionIds.PruneLegacyCrashDumps,
                 OptimizationActionIds.EnableGameMode,
-                OptimizationActionIds.PreferHighPerformanceGpu
+                OptimizationActionIds.PreferHighPerformanceGpu,
+                OptimizationActionIds.ApplyLightLegacyGraphics,
+                OptimizationActionIds.ApplyLightGtaVGraphics
             ],
             Ids(plan));
         Assert.All(plan.Actions, action =>
@@ -40,7 +43,9 @@ public sealed class PlanBuilderTests
         Assert.Contains(OptimizationActionIds.DisableBackgroundCapture, Ids(plan));
         Assert.Contains(OptimizationActionIds.EnableSessionPerformancePowerPlan, Ids(plan));
         Assert.Contains(OptimizationActionIds.ApplyBalancedLegacyGraphics, Ids(plan));
+        Assert.Contains(OptimizationActionIds.ApplyBalancedGtaVGraphics, Ids(plan));
         Assert.DoesNotContain(OptimizationActionIds.ApplyAggressiveLegacyGraphics, Ids(plan));
+        Assert.DoesNotContain(OptimizationActionIds.ApplyAggressiveGtaVGraphics, Ids(plan));
         Assert.DoesNotContain(OptimizationActionIds.ReduceWindowsVisualEffects, Ids(plan));
     }
 
@@ -53,9 +58,22 @@ public sealed class PlanBuilderTests
         Assert.True(plan.RequiresElevation);
         Assert.Equal(ActionRisk.High, plan.MaximumRisk);
         Assert.Contains(OptimizationActionIds.ApplyAggressiveLegacyGraphics, Ids(plan));
+        Assert.Contains(OptimizationActionIds.ApplyAggressiveGtaVGraphics, Ids(plan));
         Assert.Contains(OptimizationActionIds.ReduceWindowsVisualEffects, Ids(plan));
         Assert.DoesNotContain(OptimizationActionIds.ApplyBalancedLegacyGraphics, Ids(plan));
+        Assert.DoesNotContain(OptimizationActionIds.ApplyBalancedGtaVGraphics, Ids(plan));
         Assert.Contains(plan.Notices, notice => notice.Code == "aggressive-prioritizes-performance");
+    }
+
+    [Fact]
+    public void GtaVGraphics_AreOffByDefaultUntilInstallationIsConfirmed()
+    {
+        var plan = Build(OptimizationProfile.Balanced, new OptimizationOptionsDto());
+
+        Assert.DoesNotContain(
+            OptimizationActionIds.ApplyBalancedGtaVGraphics,
+            Ids(plan));
+        Assert.Contains(OptimizationActionIds.ApplyBalancedLegacyGraphics, Ids(plan));
     }
 
     [Theory]
@@ -87,6 +105,7 @@ public sealed class PlanBuilderTests
             DisableBackgroundCapture = false,
             UseSessionPerformancePowerPlan = false,
             ApplyLegacyGraphicsPreset = false,
+            ApplyGtaVGraphicsPreset = false,
             ReduceWindowsVisualEffects = false
         };
 
@@ -191,7 +210,7 @@ public sealed class PlanBuilderTests
         {
             Profile = profile,
             Edition = FiveMEdition.Legacy,
-            Options = options ?? new OptimizationOptionsDto()
+            Options = options ?? new OptimizationOptionsDto { ApplyGtaVGraphicsPreset = true }
         });
     }
 

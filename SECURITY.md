@@ -18,6 +18,8 @@ Atualize para a versão mais recente antes de relatar um problema já corrigido.
 
 Não abra uma issue pública, não publique prova de conceito e não anexe logs com dados pessoais.
 
+O formulário **Relatar um bug** do aplicativo usa o serviço externo FormSubmit e é destinado apenas a bugs comuns. Não envie por ele vulnerabilidades, credenciais, provas de conceito, dumps ou outros dados sensíveis. O fluxo e os dados processados estão descritos em [docs/bug-reports.md](docs/bug-reports.md).
+
 1. Abra a aba **Security** do repositório.
 2. Escolha **Report a vulnerability** para iniciar um relato privado.
 3. Informe versão ou commit, impacto, pré-condições, passos mínimos para reprodução e uma sugestão de correção, se houver.

@@ -16,29 +16,38 @@ public sealed class AppOptimizationService : IAppOptimizationService
 {
     private readonly string appDataDirectory;
     private readonly string journalDirectory;
+    private readonly string logsDirectory;
     private readonly string settingsPath;
     private readonly JsonSerializerOptions indentedJson;
     private readonly ElevatedBrokerClient brokerClient;
+    private readonly ILocalizationService localization;
     private readonly bool demoMode;
+    private readonly bool useSyntheticDiagnostic;
     private string? detectedLegacyRoot;
 
-    public AppOptimizationService(bool demoMode = false)
+    public AppOptimizationService(
+        bool demoMode = false,
+        bool useSyntheticDiagnostic = false,
+        ILocalizationService? localization = null)
     {
         this.demoMode = demoMode;
+        this.useSyntheticDiagnostic = useSyntheticDiagnostic;
+        this.localization = localization ?? LocalizationService.Current;
         appDataDirectory = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             ProductIdentity.Name);
         journalDirectory = Path.Combine(appDataDirectory, "Transactions");
+        logsDirectory = Path.Combine(appDataDirectory, "Logs");
         settingsPath = Path.Combine(appDataDirectory, "settings.json");
         indentedJson = new JsonSerializerOptions(FiveMCleanerJson.Options) { WriteIndented = true };
         brokerClient = new ElevatedBrokerClient(appDataDirectory);
     }
 
-    public string LogsDirectory => appDataDirectory;
+    public string LogsDirectory => logsDirectory;
 
     public async Task<AppDiagnostic> DiagnoseAsync(CancellationToken cancellationToken = default)
     {
-        if (demoMode)
+        if (demoMode && useSyntheticDiagnostic)
         {
             cancellationToken.ThrowIfCancellationRequested();
             return CreateDemoDiagnostic();
@@ -48,6 +57,9 @@ public sealed class AppOptimizationService : IAppOptimizationService
         {
             cancellationToken.ThrowIfCancellationRequested();
             var installation = DetectFiveMInstallation();
+            var gtaV = GtaVLocator.Detect(installation.Root);
+            var gtaVIsRunning = new WindowsGtaVProcessInspector()
+                .IsRunningFrom(gtaV.InstallationRoot);
             detectedLegacyRoot = installation.Edition == FiveMEdition.Legacy
                 ? installation.Root
                 : null;
@@ -56,24 +68,26 @@ public sealed class AppOptimizationService : IAppOptimizationService
             var cacheBytes = installation.Edition == FiveMEdition.Legacy && installation.Root is not null
                 ? GetLegacyServerCacheBytes(installation.Root, cancellationToken)
                 : 0L;
-            var gpuName = GetGpuName();
+            var gpuName = GetGpuName(out var gpuWasIdentified);
+            var streamingSoftware = DetectStreamingSoftware(cancellationToken);
             var memoryGiB = memoryStatus.TotalPhysical / 1024d / 1024d / 1024d;
+            var availableMemoryGiB = memoryStatus.AvailablePhysical / 1024d / 1024d / 1024d;
+            var logicalProcessorCount = Math.Max(1, Environment.ProcessorCount);
             var freeDiskGiB = systemDrive.AvailableFreeSpace / 1024d / 1024d / 1024d;
             var running = IsFiveMRunning();
 
-            var score = 15;
-            score += memoryGiB >= 16 ? 25 : memoryGiB >= 8 ? 16 : 6;
-            score += freeDiskGiB >= 25 ? 20 : freeDiskGiB >= 10 ? 11 : 3;
-            score += installation.Edition == FiveMEdition.Legacy ? 25 : installation.Edition == FiveMEdition.Enhanced ? 10 : 0;
-            score += cacheBytes < 8L * 1024 * 1024 * 1024 ? 15 : 6;
-            score = Math.Clamp(score, 0, 100);
-
-            var recommendation = memoryGiB <= 8 || freeDiskGiB < 12
-                ? OptimizationProfile.Aggressive
-                : memoryGiB >= 24 && freeDiskGiB >= 30
-                    ? OptimizationProfile.Light
-                    : OptimizationProfile.Balanced;
+            var assessment = HardwareProfileAdvisor.Assess(
+                memoryGiB,
+                availableMemoryGiB,
+                logicalProcessorCount,
+                freeDiskGiB,
+                installation.Edition,
+                cacheBytes,
+                gpuWasIdentified);
             var notices = new List<string>();
+            notices.Add(gtaV.IsInstalled
+                ? "GTA V Legacy detectado; executável e settings.xml entrarão nas ações compatíveis."
+                : "O executável do GTA V Legacy não foi confirmado automaticamente.");
             if (cacheBytes >= 8L * 1024 * 1024 * 1024)
             {
                 notices.Add("O cache regenerável de servidores está acima de 8 GB; o reparo inteligente pode liberar espaço.");
@@ -92,14 +106,22 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 Edition = installation.Edition,
                 IsFiveMRunning = running,
                 FiveMRoot = installation.Root,
+                GtaVDetected = gtaV.IsInstalled,
+                GtaVIsRunning = gtaVIsRunning,
+                GtaVExecutablePath = gtaV.ExecutablePath,
+                GtaVGraphicsSettingsPath = gtaV.GraphicsSettingsPath,
                 CpuName = GetCpuName(),
                 GpuName = gpuName,
                 TotalMemoryGiB = memoryGiB,
+                AvailableMemoryGiB = availableMemoryGiB,
+                LogicalProcessorCount = logicalProcessorCount,
                 FreeDiskGiB = freeDiskGiB,
                 LegacyCacheBytes = cacheBytes,
                 OsLabel = RuntimeInformation.OSDescription,
-                ReadinessScore = score,
-                RecommendedProfile = recommendation,
+                ReadinessScore = assessment.ReadinessScore,
+                RecommendedProfile = assessment.RecommendedProfile,
+                PerformancePressure = assessment.PerformancePressure,
+                StreamingSoftware = streamingSoftware,
                 Notices = notices
             };
         }, cancellationToken).ConfigureAwait(false);
@@ -118,15 +140,24 @@ public sealed class AppOptimizationService : IAppOptimizationService
             return new AppSettings();
         }
 
-        await using var stream = new FileStream(
-            settingsPath,
-            FileMode.Open,
-            FileAccess.Read,
-            FileShare.Read,
-            16 * 1024,
-            FileOptions.Asynchronous | FileOptions.SequentialScan);
-        return await JsonSerializer.DeserializeAsync<AppSettings>(stream, indentedJson, cancellationToken)
-            .ConfigureAwait(false) ?? new AppSettings();
+        try
+        {
+            await using var stream = new FileStream(
+                settingsPath,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.Read,
+                16 * 1024,
+                FileOptions.Asynchronous | FileOptions.SequentialScan);
+            return await JsonSerializer.DeserializeAsync<AppSettings>(stream, indentedJson, cancellationToken)
+                .ConfigureAwait(false) ?? new AppSettings();
+        }
+        catch (Exception exception) when (exception is JsonException
+            or NotSupportedException
+            or IOException)
+        {
+            return new AppSettings();
+        }
     }
 
     public async Task SaveSettingsAsync(AppSettings settings, CancellationToken cancellationToken = default)
@@ -175,11 +206,74 @@ public sealed class AppOptimizationService : IAppOptimizationService
         ArgumentNullException.ThrowIfNull(progress);
         if (demoMode)
         {
-            throw new InvalidOperationException(
-                "O modo de demonstração usado nas capturas públicas nunca executa alterações no Windows.");
+            return SimulatePlanAsync(plan, progress, cancellationToken);
         }
 
         return ExecutePlanCoreAsync(plan, progress, cancellationToken);
+    }
+
+    private async Task<AppOptimizationResult> SimulatePlanAsync(
+        OptimizationPlanDto plan,
+        IProgress<AppProgressUpdate> progress,
+        CancellationToken cancellationToken)
+    {
+        progress.Report(new AppProgressUpdate
+        {
+            Timestamp = DateTimeOffset.Now,
+            Kind = AppProgressKind.Preparing,
+            Percent = 2,
+            Headline = localization.GetString("Runtime.PreparingSimulation"),
+            Detail = localization.GetString("Runtime.SimulationSafe")
+        });
+
+        await Task.Delay(180, cancellationToken).ConfigureAwait(false);
+        var actions = plan.Actions.OrderBy(action => action.Sequence).ToArray();
+        for (var index = 0; index < actions.Length; index++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var action = actions[index];
+            progress.Report(new AppProgressUpdate
+            {
+                Timestamp = DateTimeOffset.Now,
+                Kind = AppProgressKind.Applying,
+                Percent = 5d + (85d * (index + 1) / Math.Max(1, actions.Length)),
+                Headline = localization.GetString("Runtime.SimulatingPlan"),
+                Detail = localization.Format(
+                    "Runtime.SimulationAction",
+                    GetLocalizedActionName(action.Metadata)),
+                ActionId = action.Metadata.Id
+            });
+            await Task.Delay(180, cancellationToken).ConfigureAwait(false);
+        }
+
+        progress.Report(new AppProgressUpdate
+        {
+            Timestamp = DateTimeOffset.Now,
+            Kind = AppProgressKind.Verifying,
+            Percent = 96,
+            Headline = localization.GetString("Runtime.ValidatingSimulation"),
+            Detail = localization.GetString("Runtime.SimulationNoWrites")
+        });
+        await Task.Delay(220, cancellationToken).ConfigureAwait(false);
+        progress.Report(new AppProgressUpdate
+        {
+            Timestamp = DateTimeOffset.Now,
+            Kind = AppProgressKind.Completed,
+            Percent = 100,
+            Headline = localization.GetString("Runtime.SimulationCompleted"),
+            Detail = localization.GetString("Runtime.NoChangesApplied")
+        });
+
+        return new AppOptimizationResult
+        {
+            TransactionId = plan.PlanId,
+            Succeeded = true,
+            WasCancelled = false,
+            Summary = $"{localization.GetString("Runtime.SimulationCompleted")}. "
+                + localization.GetString("Runtime.NoChangesApplied"),
+            CompletedActions = actions.Length,
+            BytesFreed = 0
+        };
     }
 
     public async Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(
@@ -253,29 +347,65 @@ public sealed class AppOptimizationService : IAppOptimizationService
         if (demoMode)
         {
             throw new InvalidOperationException(
-                "O modo de demonstração não acessa o histórico real do computador.");
+                localization.GetString("Runtime.DemoHistoryDisabled"));
         }
 
         return RollbackCoreAsync(transactionId, progress, cancellationToken);
     }
 
-    private static AppDiagnostic CreateDemoDiagnostic()
+    private AppDiagnostic CreateDemoDiagnostic()
     {
         return new AppDiagnostic
         {
             Edition = FiveMEdition.Legacy,
             IsFiveMRunning = false,
             FiveMRoot = null,
-            CpuName = "Processador de 6 núcleos",
-            GpuName = "GPU dedicada • 8 GB",
+            GtaVDetected = true,
+            GtaVIsRunning = false,
+            GtaVExecutablePath = @"C:\Jogos\Grand Theft Auto V\GTA5.exe",
+            GtaVGraphicsSettingsPath = @"C:\User\Documents\Rockstar Games\GTA V\settings.xml",
+            CpuName = localization.GetString("Demo.Cpu"),
+            GpuName = localization.GetString("Demo.Gpu"),
             TotalMemoryGiB = 16,
+            AvailableMemoryGiB = 8,
+            LogicalProcessorCount = 12,
             FreeDiskGiB = 128,
             LegacyCacheBytes = 3L * 1024 * 1024 * 1024,
             OsLabel = "Windows 11",
             ReadinessScore = 88,
             RecommendedProfile = OptimizationProfile.Balanced,
-            Notices = ["Configuração equilibrada; o perfil médio preserva qualidade e prioriza consistência."]
+            PerformancePressure = PerformancePressureLevel.Moderate,
+            StreamingSoftware = StreamingSoftwareClassifier.CreateSnapshot(
+                [],
+                [],
+                [],
+                DateTimeOffset.UtcNow),
+            Notices = [localization.GetString("Demo.Notice")]
         };
+    }
+
+    private static StreamingSoftwareSnapshot DetectStreamingSoftware(
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            return new StreamingSoftwareDetector().Detect(cancellationToken);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            return StreamingSoftwareClassifier.CreateSnapshot(
+                [],
+                [],
+                [],
+                DateTimeOffset.UtcNow,
+                processScanComplete: false,
+                installationScanComplete: false);
+        }
     }
 
     private async Task<AppOptimizationResult> ExecutePlanCoreAsync(
@@ -289,8 +419,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Timestamp = DateTimeOffset.Now,
             Kind = AppProgressKind.Preparing,
             Percent = 2,
-            Headline = "Validando o plano",
-            Detail = "Conferindo versão, edição e ações permitidas."
+            Headline = localization.GetString("Runtime.ValidatingPlan"),
+            Detail = localization.GetString("Runtime.ValidatingPlanDetail")
         });
 
         var runtime = CreateRuntimeForDetectedInstallation();
@@ -304,8 +434,12 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 Timestamp = DateTimeOffset.Now,
                 Kind = AppProgressKind.Applying,
                 Percent = Math.Clamp(percent, 5, 70),
-                Headline = "Otimizando com segurança",
-                Detail = update.Message,
+                Headline = localization.GetString("Runtime.OptimizingSafely"),
+                Detail = localization.Format(
+                    update.Message.StartsWith("Concluído:", StringComparison.Ordinal)
+                        ? "Runtime.ActionCompleted"
+                        : "Runtime.ApplyingAction",
+                    GetLocalizedActionName(update.ActionId)),
                 ActionId = update.ActionId
             });
         });
@@ -335,7 +469,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 plan.PlanId,
                 succeeded: false,
                 wasCancelled: false,
-                localResult.Error ?? "As alterações locais não foram confirmadas e foram revertidas.",
+                localResult.Error ?? localization.GetString("Runtime.LocalChangesReverted"),
                 cancellationToken).ConfigureAwait(false);
         }
 
@@ -346,8 +480,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 Timestamp = DateTimeOffset.Now,
                 Kind = AppProgressKind.Preparing,
                 Percent = 71,
-                Headline = "Confirmação do Windows necessária",
-                Detail = "O broker limitado solicitará UAC somente para o plano de energia allowlisted."
+                Headline = localization.GetString("Runtime.WindowsConfirmation"),
+                Detail = localization.GetString("Runtime.WindowsConfirmationDetail")
             });
 
             ElevatedBrokerResult elevated;
@@ -365,7 +499,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                     succeeded: false,
                     wasCancelled: true,
                     DescribeInterruptedBroker(
-                        "A confirmação administrativa foi cancelada antes de começar.",
+                        localization.GetString("Runtime.AdminConfirmationCancelled"),
                         rollback),
                     CancellationToken.None).ConfigureAwait(false);
             }
@@ -379,7 +513,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                     succeeded: false,
                     wasCancelled: false,
                     DescribeInterruptedBroker(
-                        $"O componente administrativo não confirmou o resultado: {exception.Message}",
+                        localization.Format("Runtime.BrokerResultUnconfirmed", exception.Message),
                         rollback),
                     CancellationToken.None).ConfigureAwait(false);
             }
@@ -396,11 +530,11 @@ public sealed class AppOptimizationService : IAppOptimizationService
                     },
                     CancellationToken.None).ConfigureAwait(false);
                 var summary = elevated.WasCancelled
-                    ? "UAC cancelado. Ajustes reversíveis já aplicados foram restaurados; limpezas concluídas permanecem registradas."
-                    : $"A fase administrativa falhou com segurança: {elevated.Message}";
+                    ? localization.GetString("Runtime.UacCancelledRestored")
+                    : localization.Format("Runtime.AdminPhaseFailed", elevated.Message);
                 if (rollback.State == WindowsTransactionState.RollbackFailed)
                 {
-                    summary += " O journal preservou um erro de rollback para diagnóstico.";
+                    summary += " " + localization.GetString("Runtime.RollbackJournalError");
                 }
 
                 return await CreateResultFromJournalAsync(
@@ -417,14 +551,15 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Timestamp = DateTimeOffset.Now,
             Kind = AppProgressKind.Completed,
             Percent = 100,
-            Headline = "Plano concluído",
-            Detail = "Alterações verificadas e registradas para rollback."
+            Headline = localization.GetString("Runtime.PlanCompleted"),
+            Detail = localization.GetString("Runtime.PlanCompletedDetail")
         });
         return await CreateResultFromJournalAsync(
             plan.PlanId,
             succeeded: true,
             wasCancelled: false,
-            "Otimização concluída e registrada no histórico local.",
+            $"{localization.GetString("Runtime.PlanCompleted")}. "
+                + localization.GetString("Runtime.PlanCompletedDetail"),
             cancellationToken).ConfigureAwait(false);
     }
 
@@ -439,8 +574,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Timestamp = DateTimeOffset.Now,
             Kind = AppProgressKind.RollingBack,
             Percent = 5,
-            Headline = "Preparando restauração",
-            Detail = $"Validando transação {transactionId:N}."
+            Headline = localization.GetString("Runtime.PreparingRestore"),
+            Detail = localization.Format("Runtime.ValidatingTransaction", transactionId.ToString("N"))
         });
 
         var runtime = CreateRuntimeForDetectedInstallation();
@@ -455,8 +590,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
             cancellationToken).ConfigureAwait(false);
         if (localResult.State == WindowsTransactionState.RollbackFailed)
         {
-            throw new InvalidOperationException(
-                "O rollback local encontrou um conflito e preservou o estado mais recente do usuário.");
+            throw new InvalidOperationException(localization.GetString("Runtime.RollbackConflict"));
         }
 
         if (localResult.State == WindowsTransactionState.AwaitingElevationRollback)
@@ -466,8 +600,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 Timestamp = DateTimeOffset.Now,
                 Kind = AppProgressKind.RollingBack,
                 Percent = 70,
-                Headline = "Confirme a restauração no Windows",
-                Detail = "O plano de energia anterior requer o broker elevado para ser restaurado."
+                Headline = localization.GetString("Runtime.ConfirmRestore"),
+                Detail = localization.GetString("Runtime.ConfirmRestoreDetail")
             });
             var elevated = await brokerClient.RollbackAsync(
                 transactionId,
@@ -482,8 +616,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
                         Timestamp = DateTimeOffset.Now,
                         Kind = AppProgressKind.Warning,
                         Percent = 72,
-                        Headline = "Restauração administrativa pendente",
-                        Detail = "Confirme o UAC pelo histórico quando quiser concluir o rollback."
+                        Headline = localization.GetString("Runtime.AdminRestorePending"),
+                        Detail = localization.GetString("Runtime.AdminRestorePendingDetail")
                     });
                     return false;
                 }
@@ -497,8 +631,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Timestamp = DateTimeOffset.Now,
             Kind = AppProgressKind.Completed,
             Percent = 100,
-            Headline = "Configurações restauradas",
-            Detail = "O rollback respeitou mudanças mais recentes e não tentou recuperar limpezas permanentes."
+            Headline = localization.GetString("Runtime.RestoreCompleted"),
+            Detail = localization.GetString("Runtime.RestoreCompletedDetail")
         });
         return true;
     }
@@ -514,11 +648,15 @@ public sealed class AppOptimizationService : IAppOptimizationService
             var executable = Path.Combine(fullRoot, "FiveM.exe");
             if (Directory.Exists(appRoot))
             {
+                var gtaV = GtaVLocator.Detect(fullRoot);
                 environment = environment with
                 {
                     FiveMInstallationRoot = fullRoot,
                     FiveMAppRoot = appRoot,
-                    FiveMExecutablePath = executable
+                    FiveMExecutablePath = executable,
+                    GtaVInstallationRoot = gtaV.InstallationRoot,
+                    GtaVExecutablePath = gtaV.ExecutablePath,
+                    GtaVGraphicsSettingsPath = gtaV.GraphicsSettingsPath
                 };
             }
         }
@@ -550,22 +688,22 @@ public sealed class AppOptimizationService : IAppOptimizationService
         }
     }
 
-    private static string DescribeInterruptedBroker(
+    private string DescribeInterruptedBroker(
         string reason,
         WindowsTransactionResult? rollback)
     {
         return rollback?.State switch
         {
             WindowsTransactionState.RolledBack =>
-                $"{reason} Ajustes reversíveis locais foram restaurados; limpezas já confirmadas permanecem no histórico.",
+                localization.Format("Runtime.Interrupted.RolledBack", reason),
             WindowsTransactionState.AwaitingElevationRollback =>
-                $"{reason} O histórico indica uma restauração administrativa pendente; use Desfazer para concluí-la com UAC.",
+                localization.Format("Runtime.Interrupted.AdminPending", reason),
             WindowsTransactionState.RollbackFailed =>
-                $"{reason} O rollback local encontrou um conflito e o journal foi preservado para diagnóstico.",
+                localization.Format("Runtime.Interrupted.RollbackFailed", reason),
             null =>
-                $"{reason} O estado final não pôde ser confirmado; consulte o journal antes de tentar novamente.",
+                localization.Format("Runtime.Interrupted.Unconfirmed", reason),
             _ =>
-                $"{reason} Consulte o histórico local para confirmar o estado final da transação."
+                localization.Format("Runtime.Interrupted.CheckHistory", reason)
         };
     }
 
@@ -777,27 +915,64 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
     private static bool IsFiveMRunning()
     {
-        return Process.GetProcesses().Any(process =>
+        Process[] processes;
+        try
         {
+            processes = Process.GetProcesses();
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            return false;
+        }
+
+        foreach (var process in processes)
+        {
+            using (process)
             try
             {
-                return WindowsFiveMProcessInspector.LooksLikeFiveMProcessName(
-                    process.ProcessName);
+                if (WindowsFiveMProcessInspector.LooksLikeFiveMProcessName(process.ProcessName))
+                {
+                    return true;
+                }
             }
-            finally
+            catch (Exception exception) when (exception is InvalidOperationException
+                or System.ComponentModel.Win32Exception
+                or NotSupportedException)
             {
-                process.Dispose();
             }
-        });
+        }
+
+        return false;
     }
 
-    private static string GetCpuName()
+    private string GetLocalizedActionName(ActionMetadataDto action)
+    {
+        return GetLocalizedActionName(action.Id, action.Name);
+    }
+
+    private string GetLocalizedActionName(string actionId)
+    {
+        var fallback = ActionCatalog.Current.TryGet(actionId, out var definition)
+            ? definition!.Name
+            : actionId;
+        return GetLocalizedActionName(actionId, fallback);
+    }
+
+    private string GetLocalizedActionName(string actionId, string fallback)
+    {
+        var key = $"Actions.{actionId}.Name";
+        var value = localization.GetString(key);
+        return value == key ? fallback : value;
+    }
+
+    private string GetCpuName()
     {
         using var key = Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0");
-        return (key?.GetValue("ProcessorNameString") as string)?.Trim() ?? "Processador não identificado";
+        return (key?.GetValue("ProcessorNameString") as string)?.Trim()
+            ?? localization.GetString("Diagnosis.CpuUnknown");
     }
 
-    private static string GetGpuName()
+    private string GetGpuName(out bool wasIdentified)
     {
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         try
@@ -806,7 +981,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 @"SYSTEM\CurrentControlSet\Control\Video");
             if (video is null)
             {
-                return "GPU detectada pelo Windows";
+                wasIdentified = false;
+                return localization.GetString("Diagnosis.GpuFallback");
             }
 
             foreach (var deviceKeyName in video.GetSubKeyNames())
@@ -835,17 +1011,18 @@ public sealed class AppOptimizationService : IAppOptimizationService
             // O diagnóstico continua sem iniciar PowerShell, WMI ou ferramentas externas.
         }
 
-        return names.Count > 0
+        wasIdentified = names.Count > 0;
+        return wasIdentified
             ? string.Join(" / ", names.Order(StringComparer.OrdinalIgnoreCase))
-            : "GPU detectada pelo Windows";
+            : localization.GetString("Diagnosis.GpuFallback");
     }
 
-    private static MemoryStatusEx GetMemoryStatus()
+    private MemoryStatusEx GetMemoryStatus()
     {
         var status = new MemoryStatusEx();
         if (!GlobalMemoryStatusEx(status))
         {
-            throw new InvalidOperationException("O Windows não retornou o estado da memória física.");
+            throw new InvalidOperationException(localization.GetString("Diagnosis.MemoryUnavailable"));
         }
 
         return status;
@@ -862,17 +1039,17 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 : OptimizationProfile.Light;
     }
 
-    private static string TranslateState(WindowsTransactionState state) => state switch
+    private string TranslateState(WindowsTransactionState state) => localization.GetString(state switch
     {
-        WindowsTransactionState.Committed => "Concluído",
-        WindowsTransactionState.AwaitingElevation => "Aguardando confirmação UAC",
-        WindowsTransactionState.AwaitingElevationRollback => "Rollback administrativo pendente",
-        WindowsTransactionState.AwaitingStandardRollback => "Rollback local pendente",
-        WindowsTransactionState.RolledBack => "Restaurado",
-        WindowsTransactionState.RollbackFailed => "Rollback com erro",
-        WindowsTransactionState.Failed => "Falhou com segurança",
-        _ => "Interrompido"
-    };
+        WindowsTransactionState.Committed => "History.State.Committed",
+        WindowsTransactionState.AwaitingElevation => "History.State.AwaitingUac",
+        WindowsTransactionState.AwaitingElevationRollback => "History.State.AdminRollbackPending",
+        WindowsTransactionState.AwaitingStandardRollback => "History.State.LocalRollbackPending",
+        WindowsTransactionState.RolledBack => "History.State.RolledBack",
+        WindowsTransactionState.RollbackFailed => "History.State.RollbackFailed",
+        WindowsTransactionState.Failed => "History.State.FailedSafely",
+        _ => "History.State.Interrupted"
+    });
 
     private sealed class InlineProgress<T> : IProgress<T>
     {

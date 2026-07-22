@@ -169,6 +169,7 @@ public sealed class PlanBuilder : IPlanBuilder
             ActionOptionGate.DisableBackgroundCapture => options.DisableBackgroundCapture,
             ActionOptionGate.UseSessionPerformancePowerPlan => options.UseSessionPerformancePowerPlan,
             ActionOptionGate.ApplyLegacyGraphicsPreset => options.ApplyLegacyGraphicsPreset,
+            ActionOptionGate.ApplyGtaVGraphicsPreset => options.ApplyGtaVGraphicsPreset,
             ActionOptionGate.ReduceWindowsVisualEffects => options.ReduceWindowsVisualEffects,
             _ => throw new ArgumentOutOfRangeException(nameof(gate), gate, "Unknown option gate value.")
         };

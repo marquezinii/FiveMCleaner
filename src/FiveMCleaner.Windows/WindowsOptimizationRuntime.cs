@@ -17,6 +17,12 @@ public sealed record WindowsOptimizationEnvironment
 
     public required string LegacyGraphicsSettingsPath { get; init; }
 
+    public string? GtaVInstallationRoot { get; init; }
+
+    public string? GtaVExecutablePath { get; init; }
+
+    public required string GtaVGraphicsSettingsPath { get; init; }
+
     public required string UserTemporaryDirectory { get; init; }
 
     public required string JournalDirectory { get; init; }
@@ -33,6 +39,7 @@ public sealed record WindowsOptimizationEnvironment
         }
 
         var installationRoot = Path.Combine(localAppData, "FiveM");
+        var gtaV = GtaVLocator.Detect(installationRoot);
         return new WindowsOptimizationEnvironment
         {
             FiveMInstallationRoot = installationRoot,
@@ -42,6 +49,9 @@ public sealed record WindowsOptimizationEnvironment
                 roamingAppData,
                 "CitizenFX",
                 "gta5_settings.xml"),
+            GtaVInstallationRoot = gtaV.InstallationRoot,
+            GtaVExecutablePath = gtaV.ExecutablePath,
+            GtaVGraphicsSettingsPath = gtaV.GraphicsSettingsPath,
             UserTemporaryDirectory = Path.Combine(localAppData, "Temp"),
             JournalDirectory = Path.Combine(localAppData, "FiveMCleaner", "Transactions")
         };
@@ -53,6 +63,8 @@ public sealed record WindowsOptimizationDependencies
     public required IRegistryStore Registry { get; init; }
 
     public required IFiveMProcessInspector ProcessInspector { get; init; }
+
+    public required IGtaVProcessInspector GtaVProcessInspector { get; init; }
 
     public required SafeFileTree FileTree { get; init; }
 
@@ -73,6 +85,7 @@ public sealed record WindowsOptimizationDependencies
         {
             Registry = new WindowsRegistryStore(),
             ProcessInspector = new WindowsFiveMProcessInspector(),
+            GtaVProcessInspector = new WindowsGtaVProcessInspector(),
             FileTree = new SafeFileTree(),
             VisualEffects = new WindowsVisualEffectsController(),
             PowerPlans = new PowerCfgController(commandRunner),
@@ -113,6 +126,9 @@ public sealed class WindowsOptimizationActionFactory
             new VerifyFiveMStoppedAction(
                 environment.FiveMInstallationRoot,
                 dependencies.ProcessInspector),
+            new VerifyGtaVStoppedAction(
+                environment.GtaVInstallationRoot,
+                dependencies.GtaVProcessInspector),
             new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(defaults.TemporaryFileMinimumAgeDays),
@@ -142,13 +158,45 @@ public sealed class WindowsOptimizationActionFactory
             new LegacyGraphicsPresetAction(
                 environment.LegacyGraphicsSettingsPath,
                 environment.FiveMInstallationRoot,
+                OptimizationProfile.Light,
+                GraphicsSettingsTarget.FiveM,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            new LegacyGraphicsPresetAction(
+                environment.LegacyGraphicsSettingsPath,
+                environment.FiveMInstallationRoot,
                 OptimizationProfile.Balanced,
-                dependencies.ProcessInspector),
+                GraphicsSettingsTarget.FiveM,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
             new LegacyGraphicsPresetAction(
                 environment.LegacyGraphicsSettingsPath,
                 environment.FiveMInstallationRoot,
                 OptimizationProfile.Aggressive,
-                dependencies.ProcessInspector),
+                GraphicsSettingsTarget.FiveM,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            new LegacyGraphicsPresetAction(
+                environment.GtaVGraphicsSettingsPath,
+                environment.GtaVInstallationRoot,
+                OptimizationProfile.Light,
+                GraphicsSettingsTarget.GtaV,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            new LegacyGraphicsPresetAction(
+                environment.GtaVGraphicsSettingsPath,
+                environment.GtaVInstallationRoot,
+                OptimizationProfile.Balanced,
+                GraphicsSettingsTarget.GtaV,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            new LegacyGraphicsPresetAction(
+                environment.GtaVGraphicsSettingsPath,
+                environment.GtaVInstallationRoot,
+                OptimizationProfile.Aggressive,
+                GraphicsSettingsTarget.GtaV,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
             new VisualEffectsAction(dependencies.VisualEffects)
         ];
     }
@@ -162,6 +210,9 @@ public sealed class WindowsOptimizationActionFactory
             OptimizationActionIds.VerifyFiveMIsStopped => new VerifyFiveMStoppedAction(
                 environment.FiveMInstallationRoot,
                 dependencies.ProcessInspector),
+            OptimizationActionIds.VerifyGtaVIsStopped => new VerifyGtaVStoppedAction(
+                environment.GtaVInstallationRoot,
+                dependencies.GtaVProcessInspector),
             OptimizationActionIds.CleanUserTemporaryFiles => new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(plan.Options.TemporaryFileMinimumAgeDays),
@@ -191,16 +242,48 @@ public sealed class WindowsOptimizationActionFactory
                 new SessionPerformancePowerPlanAction(
                     dependencies.PowerPlans,
                     dependencies.PowerStatus),
+            OptimizationActionIds.ApplyLightLegacyGraphics => new LegacyGraphicsPresetAction(
+                environment.LegacyGraphicsSettingsPath,
+                environment.FiveMInstallationRoot,
+                OptimizationProfile.Light,
+                GraphicsSettingsTarget.FiveM,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
             OptimizationActionIds.ApplyBalancedLegacyGraphics => new LegacyGraphicsPresetAction(
                 environment.LegacyGraphicsSettingsPath,
                 environment.FiveMInstallationRoot,
                 OptimizationProfile.Balanced,
-                dependencies.ProcessInspector),
+                GraphicsSettingsTarget.FiveM,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
             OptimizationActionIds.ApplyAggressiveLegacyGraphics => new LegacyGraphicsPresetAction(
                 environment.LegacyGraphicsSettingsPath,
                 environment.FiveMInstallationRoot,
                 OptimizationProfile.Aggressive,
-                dependencies.ProcessInspector),
+                GraphicsSettingsTarget.FiveM,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyLightGtaVGraphics => new LegacyGraphicsPresetAction(
+                environment.GtaVGraphicsSettingsPath,
+                environment.GtaVInstallationRoot,
+                OptimizationProfile.Light,
+                GraphicsSettingsTarget.GtaV,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyBalancedGtaVGraphics => new LegacyGraphicsPresetAction(
+                environment.GtaVGraphicsSettingsPath,
+                environment.GtaVInstallationRoot,
+                OptimizationProfile.Balanced,
+                GraphicsSettingsTarget.GtaV,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyAggressiveGtaVGraphics => new LegacyGraphicsPresetAction(
+                environment.GtaVGraphicsSettingsPath,
+                environment.GtaVInstallationRoot,
+                OptimizationProfile.Aggressive,
+                GraphicsSettingsTarget.GtaV,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
             OptimizationActionIds.ReduceWindowsVisualEffects => new VisualEffectsAction(
                 dependencies.VisualEffects),
             _ => throw new InvalidOperationException(
@@ -286,12 +369,46 @@ public sealed class WindowsOptimizationActionFactory
                 nameof(environment));
         }
 
+        var gtaSettings = Path.GetFullPath(environment.GtaVGraphicsSettingsPath);
+        if (!Path.GetFileName(gtaSettings).Equals("settings.xml", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException(
+                "GtaVGraphicsSettingsPath deve apontar para settings.xml.",
+                nameof(environment));
+        }
+
+        string? gtaRoot = null;
+        string? gtaExecutable = null;
+        if (environment.GtaVInstallationRoot is not null
+            || environment.GtaVExecutablePath is not null)
+        {
+            if (string.IsNullOrWhiteSpace(environment.GtaVInstallationRoot)
+                || string.IsNullOrWhiteSpace(environment.GtaVExecutablePath))
+            {
+                throw new ArgumentException(
+                    "A raiz e o executável do GTA V devem ser informados juntos.",
+                    nameof(environment));
+            }
+
+            gtaRoot = SafePath.Normalize(environment.GtaVInstallationRoot);
+            gtaExecutable = SafePath.EnsureDescendant(gtaRoot, environment.GtaVExecutablePath);
+            if (!Path.GetFileName(gtaExecutable).Equals("GTA5.exe", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new ArgumentException(
+                    "GtaVExecutablePath deve apontar para GTA5.exe.",
+                    nameof(environment));
+            }
+        }
+
         return environment with
         {
             FiveMInstallationRoot = installationRoot,
             FiveMAppRoot = appRoot,
             FiveMExecutablePath = executable,
             LegacyGraphicsSettingsPath = settings,
+            GtaVInstallationRoot = gtaRoot,
+            GtaVExecutablePath = gtaExecutable,
+            GtaVGraphicsSettingsPath = gtaSettings,
             UserTemporaryDirectory = SafePath.Normalize(environment.UserTemporaryDirectory),
             JournalDirectory = SafePath.Normalize(environment.JournalDirectory)
         };

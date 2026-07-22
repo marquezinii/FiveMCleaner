@@ -5,7 +5,7 @@ using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.App;
 
-public partial class App : Application
+public partial class App : System.Windows.Application
 {
     private static int isHandlingFatalError;
 
@@ -45,7 +45,7 @@ public partial class App : Application
 
         try
         {
-            MessageBox.Show(
+            System.Windows.MessageBox.Show(
                 $"O FiveMCleaner encontrou um erro inesperado. Nenhuma nova alteração será aplicada.\n\n{exception.Message}",
                 ProductIdentity.Name,
                 MessageBoxButton.OK,
@@ -63,7 +63,8 @@ public partial class App : Application
         {
             var directory = Path.Combine(
                 Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                ProductIdentity.Name);
+                ProductIdentity.Name,
+                "Logs");
             Directory.CreateDirectory(directory);
             File.AppendAllText(
                 Path.Combine(directory, "crash.log"),

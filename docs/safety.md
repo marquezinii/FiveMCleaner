@@ -146,6 +146,8 @@ Não é possível garantir ausência de falsos positivos em todos os produtos. O
 - manifesto do broker com escopo mínimo;
 - comunicação clara de cada alteração administrativa.
 
+A `v0.2.0-preview` ainda é unsigned e pode não possuir reputação no SmartScreen. O usuário deve conferir o GitHub Release e o SHA-256, mas essa conferência não autoriza evasão: o FiveMCleaner não desativa proteções, não cria exclusões e não recomenda renomear, reempacotar ou ofuscar binários para evitar detecção. Se a política do computador bloquear a preview, a alternativa segura é não executá-la, compilar o código revisado ou aguardar uma release assinada. Veja [release, integridade e simulação](release-preview.md).
+
 Uma exceção de antivírus recomendada pelo suporte do FiveM para um erro específico não autoriza o FiveMCleaner a criar essa exceção automaticamente.
 
 ## Dados e privacidade
@@ -157,6 +159,8 @@ O diagnóstico permanece local por padrão. Relatórios exportados devem:
 - não anexar dumps, ETW traces ou logs sem seleção explícita;
 - mostrar uma prévia do pacote antes de salvar ou compartilhar;
 - indicar que ETW e dumps podem conter dados sensíveis.
+
+O formulário de bug é uma exceção explícita ao processamento apenas local: depois do clique em **Enviar**, os campos autorizados e a imagem opcional são encaminhados ao serviço externo FormSubmit. O app não envia esse conteúdo em segundo plano, não repete automaticamente uma falha e oferece cópia local do texto. Consulte [Relatos de bug e privacidade](bug-reports.md) antes de usar o canal.
 
 ## Comunicação de vulnerabilidades
 

@@ -39,8 +39,15 @@ public sealed class WindowsOptimizationRuntimeTests
         Assert.Equal(
             plan.Actions.Select(action => action.Metadata.Id),
             actions.Select(action => action.Metadata.Id));
-        var graphics = Assert.Single(actions.OfType<LegacyGraphicsPresetAction>());
-        Assert.Equal(OptimizationActionIds.ApplyBalancedLegacyGraphics, graphics.Metadata.Id);
+        var graphics = actions.OfType<LegacyGraphicsPresetAction>().ToArray();
+        Assert.Collection(
+            graphics,
+            action => Assert.Equal(
+                OptimizationActionIds.ApplyBalancedLegacyGraphics,
+                action.Metadata.Id),
+            action => Assert.Equal(
+                OptimizationActionIds.ApplyBalancedGtaVGraphics,
+                action.Metadata.Id));
     }
 
     [Fact]
@@ -95,6 +102,7 @@ public sealed class WindowsOptimizationRuntimeTests
         {
             Registry = new FakeRegistryStore(),
             ProcessInspector = new FakeProcessInspector(),
+            GtaVProcessInspector = new FakeGtaVProcessInspector(),
             FileTree = new FiveMCleaner.Windows.Infrastructure.SafeFileTree(),
             VisualEffects = new FakeVisualEffectsController(),
             PowerPlans = new FakePowerPlanController(),
@@ -127,7 +135,8 @@ public sealed class WindowsOptimizationRuntimeTests
             Edition = FiveMEdition.Legacy,
             Options = new OptimizationOptionsDto
             {
-                ServerCacheRepair = CacheRepairPolicy.RepairNow
+                ServerCacheRepair = CacheRepairPolicy.RepairNow,
+                ApplyGtaVGraphicsPreset = true
             }
         });
     }

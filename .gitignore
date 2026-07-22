@@ -39,6 +39,7 @@ credentials.json
 *.sqlite3
 *.log
 *.cache
+*.tsbuildinfo
 coverage/
 .nuget/
 

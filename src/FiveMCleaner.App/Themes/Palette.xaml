@@ -32,6 +32,21 @@
     <SolidColorBrush x:Key="BlueBrush" Color="{StaticResource ColorBlue}" />
     <SolidColorBrush x:Key="YellowBrush" Color="{StaticResource ColorYellow}" />
     <SolidColorBrush x:Key="RedBrush" Color="{StaticResource ColorRed}" />
+    <SolidColorBrush x:Key="ChromeBrush" Color="#0E1013" />
+    <SolidColorBrush x:Key="SidebarBrush" Color="#0D0F12" />
+    <SolidColorBrush x:Key="PanelBrush" Color="#101216" />
+    <SolidColorBrush x:Key="InsetBrush" Color="#0C0E11" />
+    <SolidColorBrush x:Key="ChipBrush" Color="#24272D" />
+    <SolidColorBrush x:Key="StrongBorderBrush" Color="#2A2D33" />
+    <SolidColorBrush x:Key="RingBrush" Color="#383B42" />
+    <SolidColorBrush x:Key="ToolTipBackgroundBrush" Color="#F0222429" />
+    <SolidColorBrush x:Key="WindowHoverBrush" Color="#26292F" />
+    <SolidColorBrush x:Key="WindowPressedBrush" Color="#33363D" />
+    <SolidColorBrush x:Key="ToggleTrackBrush" Color="#34373E" />
+    <SolidColorBrush x:Key="ToggleTrackBorderBrush" Color="#484B53" />
+    <SolidColorBrush x:Key="ToggleThumbBrush" Color="#D9DBDF" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#50545D" />
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#737985" />
 
     <LinearGradientBrush x:Key="OrangeGradientBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#FF9A44" Offset="0" />

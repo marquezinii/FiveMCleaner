@@ -109,9 +109,9 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   atualmente reporta tipos ausentes do runtime Cloudflare (`cloudflare:workers`,
   `Fetcher` e `D1Database`). Isso deve ser tratado como uma limitação conhecida
   do site, não mascarado por uma cadeia de comandos.
-- `website/` possui metadados Git próprios no estado de trabalho atual. Antes
-  de incluí-lo em um commit do repositório principal, confira se deve continuar
-  independente ou se a metadata aninhada deve ser resolvida explicitamente.
+- O conteúdo de `website/` faz parte do repositório principal. Seus artefatos
+  gerados e credenciais locais são ignorados tanto pela raiz quanto pelo
+  `.gitignore` específico do site.
 
 ## Comandos de desenvolvimento e validação
 

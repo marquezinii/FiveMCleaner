@@ -1,0 +1,14 @@
+FiveMCleaner includes the .NET runtime and every dependency required to run the
+application on Windows 10 version 2004 (build 19041) or later and Windows 11 on
+x64-compatible systems. No additional runtime, script, or package is downloaded
+during installation.
+
+Setup runs per user and does not request administrative access. FiveMCleaner
+asks for elevation only when a selected optimization needs to change a protected
+Windows setting.
+
+Optional desktop and Windows startup shortcuts can be selected on the next page.
+Both can be changed later and are removed during uninstall.
+
+Download the installer only from:
+https://github.com/marquezinii/FiveMCleaner/releases

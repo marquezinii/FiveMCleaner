@@ -66,6 +66,49 @@ public sealed class VerifyFiveMStoppedAction : WindowsOptimizationAction
     }
 }
 
+public sealed class VerifyGtaVStoppedAction : WindowsOptimizationAction
+{
+    private readonly string? installationRoot;
+    private readonly IGtaVProcessInspector processInspector;
+
+    public VerifyGtaVStoppedAction(
+        string? installationRoot,
+        IGtaVProcessInspector processInspector)
+    {
+        this.installationRoot = string.IsNullOrWhiteSpace(installationRoot)
+            ? null
+            : SafePath.Normalize(installationRoot);
+        this.processInspector = processInspector
+            ?? throw new ArgumentNullException(nameof(processInspector));
+    }
+
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.VerifyGtaVIsStopped);
+
+    public override Task<WindowsActionApplyResult> ApplyAsync(
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (processInspector.IsRunningFrom(installationRoot))
+        {
+            throw new InvalidOperationException(
+                "O GTA V está em execução. Feche-o antes de iniciar a otimização.");
+        }
+
+        return Task.FromResult(WindowsActionApplyResult.NoChange(
+            "GTA V fechado; é seguro continuar."));
+    }
+
+    public override Task RollbackAsync(
+        WindowsActionContext context,
+        string? snapshotJson,
+        CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+}
+
 public sealed class UserTemporaryFilesCleanupAction : QuarantineCleanupAction
 {
     private readonly string temporaryDirectory;
