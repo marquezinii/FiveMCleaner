@@ -5,7 +5,7 @@ namespace FiveMCleaner.Core.Catalog;
 
 public sealed class ActionCatalog
 {
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     private static readonly OptimizationProfile[] AllProfiles =
     [
@@ -64,6 +64,19 @@ public sealed class ActionCatalog
                 expectedImpact: "Protege a integridade dos arquivos do FiveM.",
                 ActionOptionGate.Always),
             Define(
+                OptimizationActionIds.VerifyGtaVIsStopped,
+                "Verificar estado do GTA V",
+                "Confirma que o GTA V Legacy está fechado antes de qualquer alteração no settings.xml dele.",
+                ActionCategory.Safety,
+                ActionRisk.Informational,
+                ActionReversibility.ReadOnly,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 2,
+                expectedImpact: "Evita uma execução parcial quando a otimização do GTA V está habilitada.",
+                ActionOptionGate.ApplyGtaVGraphicsPreset),
+            Define(
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 "Limpar temporários antigos",
                 "Remove somente arquivos temporários do usuário que ultrapassaram o período de retenção configurado.",
@@ -118,7 +131,7 @@ public sealed class ActionCatalog
             Define(
                 OptimizationActionIds.PreferHighPerformanceGpu,
                 "Preferir GPU de alto desempenho",
-                "Define a preferência gráfica do Windows para o executável detectado do FiveM Legacy.",
+                "Define a preferência gráfica do Windows para o launcher e os renderizadores detectados do FiveM Legacy.",
                 ActionCategory.WindowsGaming,
                 ActionRisk.Low,
                 ActionReversibility.FullyReversible,
@@ -156,6 +169,19 @@ public sealed class ActionCatalog
                 ActionOptionGate.UseSessionPerformancePowerPlan,
                 requiresAcPower: true),
             Define(
+                OptimizationActionIds.ApplyLightLegacyGraphics,
+                "Ajustar gráficos leves do FiveM",
+                "Desliga apenas antialiasing de maior custo no arquivo existente do FiveM, com backup.",
+                ActionCategory.FiveMGraphics,
+                ActionRisk.Low,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                [OptimizationProfile.Light],
+                requiresFiveMStopped: true,
+                progressWeight: 7,
+                expectedImpact: "Remove custos altos preservando texturas, resolução e a maior parte da qualidade visual.",
+                ActionOptionGate.ApplyLegacyGraphicsPreset),
+            Define(
                 OptimizationActionIds.ApplyBalancedLegacyGraphics,
                 "Aplicar gráficos equilibrados",
                 "Ajusta somente opções existentes do arquivo gráfico do FiveM Legacy e cria backup antes da gravação.",
@@ -181,6 +207,45 @@ public sealed class ActionCatalog
                 progressWeight: 14,
                 expectedImpact: "Prioriza FPS e responsividade em vez de qualidade visual.",
                 ActionOptionGate.ApplyLegacyGraphicsPreset),
+            Define(
+                OptimizationActionIds.ApplyLightGtaVGraphics,
+                "Ajustar gráficos leves do GTA V",
+                "Detecta o settings.xml do GTA V Legacy, reduz somente opções caras já existentes e cria backup.",
+                ActionCategory.FiveMGraphics,
+                ActionRisk.Low,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                [OptimizationProfile.Light],
+                requiresFiveMStopped: true,
+                progressWeight: 7,
+                expectedImpact: "Preserva resolução e qualidade geral enquanto reduz antialiasing caro.",
+                ActionOptionGate.ApplyGtaVGraphicsPreset),
+            Define(
+                OptimizationActionIds.ApplyBalancedGtaVGraphics,
+                "Equilibrar gráficos do GTA V",
+                "Aplica limites equilibrados somente em opções existentes do settings.xml do GTA V Legacy, com backup.",
+                ActionCategory.FiveMGraphics,
+                ActionRisk.Moderate,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                [OptimizationProfile.Balanced],
+                requiresFiveMStopped: true,
+                progressWeight: 11,
+                expectedImpact: "Equilibra qualidade, uso de GPU e estabilidade de quadros também no GTA V base.",
+                ActionOptionGate.ApplyGtaVGraphicsPreset),
+            Define(
+                OptimizationActionIds.ApplyAggressiveGtaVGraphics,
+                "Priorizar FPS no GTA V",
+                "Reduz opções gráficas pesadas do settings.xml do GTA V Legacy sem alterar resolução, tela ou adaptador.",
+                ActionCategory.FiveMGraphics,
+                ActionRisk.High,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                [OptimizationProfile.Aggressive],
+                requiresFiveMStopped: true,
+                progressWeight: 13,
+                expectedImpact: "Prioriza FPS sem forçar resolução, taxa de atualização, DirectX ou textura mínima.",
+                ActionOptionGate.ApplyGtaVGraphicsPreset),
             Define(
                 OptimizationActionIds.ReduceWindowsVisualEffects,
                 "Reduzir efeitos visuais do Windows",

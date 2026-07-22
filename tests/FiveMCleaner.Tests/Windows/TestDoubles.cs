@@ -58,9 +58,44 @@ internal sealed class FakeProcessInspector(bool running = false) : IFiveMProcess
 {
     public bool Running { get; set; } = running;
 
+    public int CallCount { get; private set; }
+
+    public string? LastInstallationRoot { get; private set; }
+
     public bool IsRunningFrom(string installationRoot)
     {
+        CallCount++;
+        LastInstallationRoot = installationRoot;
         return Running;
+    }
+}
+
+internal sealed class FakeGtaVProcessInspector(bool running = false) : IGtaVProcessInspector
+{
+    public bool Running { get; set; } = running;
+
+    public int CallCount { get; private set; }
+
+    public string? LastInstallationRoot { get; private set; }
+
+    public bool IsRunningFrom(string? installationRoot)
+    {
+        CallCount++;
+        LastInstallationRoot = installationRoot;
+        return Running;
+    }
+}
+
+internal sealed class SequencedGtaVProcessInspector(params bool[] runningStates) : IGtaVProcessInspector
+{
+    private readonly Queue<bool> states = new(runningStates);
+
+    public int CallCount { get; private set; }
+
+    public bool IsRunningFrom(string? installationRoot)
+    {
+        CallCount++;
+        return states.Count > 0 && states.Dequeue();
     }
 }
 
@@ -144,6 +179,7 @@ internal static class WindowsTestRuntime
         InMemoryJournalStore Journals) Create(TemporaryDirectory temporaryDirectory)
     {
         var installation = temporaryDirectory.Combine("FiveM");
+        var gtaVInstallation = temporaryDirectory.Combine("Grand Theft Auto V");
         var environment = new WindowsOptimizationEnvironment
         {
             FiveMInstallationRoot = installation,
@@ -153,6 +189,13 @@ internal static class WindowsTestRuntime
                 "Roaming",
                 "CitizenFX",
                 "gta5_settings.xml"),
+            GtaVInstallationRoot = gtaVInstallation,
+            GtaVExecutablePath = System.IO.Path.Combine(gtaVInstallation, "GTA5.exe"),
+            GtaVGraphicsSettingsPath = temporaryDirectory.Combine(
+                "Documents",
+                "Rockstar Games",
+                "GTA V",
+                "settings.xml"),
             UserTemporaryDirectory = temporaryDirectory.Combine("UserTemp"),
             JournalDirectory = temporaryDirectory.Combine("Journals")
         };
@@ -161,6 +204,7 @@ internal static class WindowsTestRuntime
         {
             Registry = new FakeRegistryStore(),
             ProcessInspector = new FakeProcessInspector(),
+            GtaVProcessInspector = new FakeGtaVProcessInspector(),
             FileTree = new SafeFileTree(),
             VisualEffects = new FakeVisualEffectsController(),
             PowerPlans = new FakePowerPlanController(),

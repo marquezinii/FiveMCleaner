@@ -24,5 +24,7 @@ public sealed record OptimizationOptionsDto
 
     public bool ApplyLegacyGraphicsPreset { get; init; } = true;
 
+    public bool ApplyGtaVGraphicsPreset { get; init; }
+
     public bool ReduceWindowsVisualEffects { get; init; } = true;
 }

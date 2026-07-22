@@ -2,6 +2,20 @@ using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.App.Services;
 
+public enum AppThemePreference
+{
+    System,
+    Dark,
+    Light
+}
+
+public enum PerformancePressureLevel
+{
+    Low,
+    Moderate,
+    High
+}
+
 public sealed record AppDiagnostic
 {
     public required FiveMEdition Edition { get; init; }
@@ -10,11 +24,23 @@ public sealed record AppDiagnostic
 
     public string? FiveMRoot { get; init; }
 
+    public required bool GtaVDetected { get; init; }
+
+    public required bool GtaVIsRunning { get; init; }
+
+    public string? GtaVExecutablePath { get; init; }
+
+    public required string GtaVGraphicsSettingsPath { get; init; }
+
     public required string CpuName { get; init; }
 
     public required string GpuName { get; init; }
 
     public required double TotalMemoryGiB { get; init; }
+
+    public required double AvailableMemoryGiB { get; init; }
+
+    public required int LogicalProcessorCount { get; init; }
 
     public required double FreeDiskGiB { get; init; }
 
@@ -25,6 +51,10 @@ public sealed record AppDiagnostic
     public required int ReadinessScore { get; init; }
 
     public required OptimizationProfile RecommendedProfile { get; init; }
+
+    public required PerformancePressureLevel PerformancePressure { get; init; }
+
+    public required StreamingSoftwareSnapshot StreamingSoftware { get; init; }
 
     public IReadOnlyList<string> Notices { get; init; } = [];
 }
@@ -87,15 +117,13 @@ public sealed record AppHistoryRecord
 
 public sealed record AppSettings
 {
-    public bool CleanTemporaryFiles { get; init; } = true;
+    public AppLanguagePreference Language { get; init; } = AppLanguagePreference.Automatic;
 
-    public bool RemoveOldDiagnostics { get; init; } = true;
+    public AppThemePreference Theme { get; init; } = AppThemePreference.System;
 
-    public bool SmartCacheRepair { get; init; }
+    public bool MinimizeToTrayOnClose { get; init; }
 
-    public bool EnableGameMode { get; init; } = true;
+    public bool LaunchAtStartup { get; init; }
 
-    public bool DisableBackgroundCapture { get; init; } = true;
-
-    public bool UsePerformancePowerPlan { get; init; } = true;
+    public bool CheckForUpdates { get; init; } = true;
 }

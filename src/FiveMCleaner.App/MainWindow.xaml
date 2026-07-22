@@ -7,21 +7,26 @@
         mc:Ignorable="d"
         Title="FiveMCleaner"
         Icon="Assets/FiveMCleaner.png"
-        Width="1240"
-        Height="800"
-        MinWidth="1080"
-        MinHeight="690"
+        Width="1160"
+        Height="680"
+        MinWidth="940"
+        MinHeight="540"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None"
         ResizeMode="CanResize"
-        Background="{StaticResource BackgroundBrush}">
+        FontFamily="Segoe UI Variable Text, Segoe UI"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        Background="{DynamicResource BackgroundBrush}">
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="7" CornerRadius="0" GlassFrameThickness="0" />
     </shell:WindowChrome.WindowChrome>
 
     <Window.Resources>
         <DataTemplate x:Key="ActionTemplate">
-            <Border Margin="0,0,0,9" Padding="14" Background="#111317" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
+            <Border Margin="0,0,0,9" Padding="14" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="38" />
@@ -29,17 +34,17 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <Border Width="30" Height="30" CornerRadius="8" Background="#20FF7A18" VerticalAlignment="Top">
-                        <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{StaticResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel Grid.Column="1" Margin="8,0,14,0">
                         <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding Description}" Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Description}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
                     </StackPanel>
                     <StackPanel Grid.Column="2" HorizontalAlignment="Right">
-                        <Border Padding="8,3" Background="#24272D" CornerRadius="8">
-                            <TextBlock Text="{Binding RiskLabel}" FontSize="10" Foreground="{StaticResource TextMutedBrush}" />
+                        <Border Padding="8,3" Background="{DynamicResource ChipBrush}" CornerRadius="8">
+                            <TextBlock Text="{Binding RiskLabel}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" />
                         </Border>
-                        <TextBlock Text="{Binding PrivilegeLabel}" Margin="0,7,0,0" FontSize="10" Foreground="{StaticResource TextSubtleBrush}" HorizontalAlignment="Right" />
+                        <TextBlock Text="{Binding PrivilegeLabel}" Margin="0,7,0,0" FontSize="10" Foreground="{DynamicResource TextSubtleBrush}" HorizontalAlignment="Right" />
                     </StackPanel>
                 </Grid>
             </Border>
@@ -52,9 +57,9 @@
                     <ColumnDefinition Width="12" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <TextBlock Text="{Binding Time}" Foreground="{StaticResource TextSubtleBrush}" FontSize="10.5" VerticalAlignment="Center" />
-                <Ellipse Grid.Column="1" Width="5" Height="5" Fill="{StaticResource OrangeBrush}" VerticalAlignment="Center" />
-                <TextBlock Grid.Column="2" Text="{Binding Message}" Margin="8,0,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding Time}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" VerticalAlignment="Center" />
+                <Ellipse Grid.Column="1" Width="5" Height="5" Fill="{DynamicResource OrangeBrush}" VerticalAlignment="Center" />
+                <TextBlock Grid.Column="2" Text="{Binding Message}" Margin="8,0,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
             </Grid>
         </DataTemplate>
 
@@ -67,28 +72,28 @@
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
                     <Border Width="38" Height="38" CornerRadius="10" Background="#1C37C889">
-                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource GreenBrush}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource GreenBrush}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
                     <StackPanel Grid.Column="1" Margin="4,0,18,0" VerticalAlignment="Center">
                         <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="SemiBold" />
-                        <TextBlock Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="11.5">
+                        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5">
                             <Run Text="{Binding DateLabel, Mode=OneWay}" /><Run Text="  •  " /><Run Text="{Binding Summary, Mode=OneWay}" />
                         </TextBlock>
                     </StackPanel>
-                    <Button Grid.Column="2" Content="Desfazer" Style="{StaticResource SecondaryButtonStyle}" Height="36" Padding="16,0" Tag="{Binding}" Click="RollbackHistory_Click" IsEnabled="{Binding CanRollback}" />
+                    <Button Grid.Column="2" Content="{Binding [History.Undo], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Padding="16,0" Tag="{Binding}" Click="RollbackHistory_Click" IsEnabled="{Binding CanRollback}" />
                 </Grid>
             </Border>
         </DataTemplate>
     </Window.Resources>
 
-    <Border BorderBrush="#2A2D33" BorderThickness="1" Background="{StaticResource BackgroundBrush}">
+    <Border BorderBrush="{DynamicResource StrongBorderBrush}" BorderThickness="1" Background="{DynamicResource BackgroundBrush}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="54" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Background="#0E1013" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Border Grid.Row="0" Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="0,0,0,1" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
                 <Grid Margin="14,0,8,0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -97,114 +102,190 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Image Source="Assets/FiveMCleaner.png" Width="32" Height="32" Stretch="Uniform" />
                         <TextBlock Margin="10,0,0,0" FontSize="15" FontWeight="Bold" VerticalAlignment="Center">
-                            <Run Text="FiveM" /><Run Text="Cleaner" Foreground="{StaticResource OrangeBrush}" />
+                            <Run Text="FiveM" /><Run Text="Cleaner" Foreground="{DynamicResource OrangeBrush}" />
                         </TextBlock>
-                        <Border Margin="12,0,0,0" Padding="8,3" Background="#1937C889" CornerRadius="7">
-                            <TextBlock Text="LEGACY" FontSize="9" FontWeight="Bold" Foreground="{StaticResource GreenBrush}" />
+                        <Border Margin="12,0,0,0" Padding="8,3" Background="{DynamicResource ChipBrush}" CornerRadius="7">
+                            <TextBlock Text="{Binding EditionBadgeLabel}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
                         </Border>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
-                        <Button Style="{StaticResource WindowButtonStyle}" Click="Minimize_Click" ToolTip="Minimizar"><TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10" /></Button>
-                        <Button Style="{StaticResource WindowButtonStyle}" Click="Maximize_Click" ToolTip="Maximizar"><TextBlock Text="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10" /></Button>
-                        <Button Style="{StaticResource WindowButtonStyle}" Click="Close_Click" ToolTip="Fechar"><TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" /></Button>
+                        <Button Style="{StaticResource WindowButtonStyle}" Click="Minimize_Click" ToolTip="{Binding [Window.Minimize], Source={StaticResource LocalizedStrings}}"><TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10" /></Button>
+                        <Button x:Name="MaximizeButton" Style="{StaticResource WindowButtonStyle}" Click="Maximize_Click" ToolTip="{Binding [Window.Maximize], Source={StaticResource LocalizedStrings}}"><TextBlock x:Name="MaximizeGlyph" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10" /></Button>
+                        <Button Style="{StaticResource WindowButtonStyle}" Click="Close_Click" ToolTip="{Binding [Window.Close], Source={StaticResource LocalizedStrings}}"><TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" /></Button>
                     </StackPanel>
                 </Grid>
             </Border>
 
             <Grid Grid.Row="1">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="222" />
+                    <ColumnDefinition Width="210" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Background="#0D0F12" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="0,0,1,0">
+                <Border Grid.Column="0" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="0,0,1,0">
                     <Grid Margin="14,22,14,16">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
-                        <TextBlock Text="NAVEGAÇÃO" Margin="14,0,0,10" FontSize="9.5" FontWeight="Bold" Foreground="{StaticResource TextSubtleBrush}" />
+                        <TextBlock Text="{Binding [Navigation.Section], Source={StaticResource LocalizedStrings}}" Margin="14,0,0,10" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
                         <StackPanel Grid.Row="1">
                             <Button x:Name="DashboardNav" Style="{StaticResource NavButtonStyle}" Tag="Selected" Click="DashboardNav_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE80F;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" Width="29" />
-                                    <TextBlock Text="Visão geral" FontSize="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" />
+                                    <TextBlock Text="{Binding [Navigation.Overview], Source={StaticResource LocalizedStrings}}" FontSize="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" />
                                 </StackPanel>
                             </Button>
                             <Button x:Name="OptimizerNav" Style="{StaticResource NavButtonStyle}" Click="OptimizerNav_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" Width="29" />
-                                    <TextBlock Text="Otimizador" FontSize="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" />
+                                    <TextBlock Text="{Binding [Navigation.Optimizer], Source={StaticResource LocalizedStrings}}" FontSize="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" />
                                 </StackPanel>
                             </Button>
                             <Button x:Name="HistoryNav" Style="{StaticResource NavButtonStyle}" Click="HistoryNav_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE81C;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" Width="29" />
-                                    <TextBlock Text="Histórico" FontSize="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" />
+                                    <TextBlock Text="{Binding [Navigation.History], Source={StaticResource LocalizedStrings}}" FontSize="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" />
                                 </StackPanel>
                             </Button>
                             <Button x:Name="SettingsNav" Style="{StaticResource NavButtonStyle}" Click="SettingsNav_Click">
                                 <StackPanel Orientation="Horizontal">
                                     <TextBlock Text="&#xE713;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" Width="29" />
-                                    <TextBlock Text="Configurações" FontSize="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" />
+                                    <TextBlock Text="{Binding [Navigation.Settings], Source={StaticResource LocalizedStrings}}" FontSize="13" Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}" />
                                 </StackPanel>
                             </Button>
                         </StackPanel>
 
-                        <Border Grid.Row="2" Padding="13" Background="#101216" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" CornerRadius="11">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="30" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <Border Width="25" Height="25" Background="#1C37C889" CornerRadius="7" VerticalAlignment="Top">
-                                    <TextBlock Text="&#xEA18;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource GreenBrush}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                </Border>
-                                <StackPanel Grid.Column="1" Margin="7,0,0,0">
-                                    <TextBlock Text="Proteção ativa" FontSize="11.5" FontWeight="SemiBold" />
-                                    <TextBlock Text="Snapshot e rollback antes de ajustes." Margin="0,4,0,0" Foreground="{StaticResource TextSubtleBrush}" FontSize="10" TextWrapping="Wrap" />
+                        <StackPanel Grid.Row="2">
+                            <Border Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="11">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="30" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="25" Height="25" Background="#1C37C889" CornerRadius="7" VerticalAlignment="Top">
+                                        <TextBlock Text="&#xEA18;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource GreenBrush}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="7,0,0,0">
+                                        <TextBlock Text="{Binding [Safety.Active], Source={StaticResource LocalizedStrings}}" FontSize="11.5" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding [Safety.SnapshotRollback], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                            <Button Style="{StaticResource LinkButtonStyle}" Margin="0,10,0,0" HorizontalAlignment="Center" Click="ReportBug_Click" ToolTip="{Binding [BugReport.LinkTooltip], Source={StaticResource LocalizedStrings}}">
+                                <StackPanel Orientation="Horizontal">
+                                    <TextBlock Text="&#xE74C;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource OrangeLightBrush}" Margin="0,0,6,0" />
+                                    <TextBlock Text="{Binding [BugReport.Link], Source={StaticResource LocalizedStrings}}" FontSize="10.5" TextDecorations="Underline" Foreground="{DynamicResource TextMutedBrush}" />
                                 </StackPanel>
-                            </Grid>
-                        </Border>
+                            </Button>
+                            <TextBlock Text="{Binding [Brand.FooterCopyright], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" HorizontalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" FontSize="8.5" />
+                        </StackPanel>
                     </Grid>
                 </Border>
 
-                <Grid Grid.Column="1" Margin="30,24,30,26">
+                <Grid Grid.Column="1" Margin="26,22,26,24">
                     <!-- Dashboard -->
                     <ScrollViewer x:Name="DashboardPage" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
                             <Grid Margin="0,0,0,18">
-                                <StackPanel>
-                                    <TextBlock Text="Visão geral" FontSize="25" FontWeight="Bold" />
-                                    <TextBlock Text="Diagnóstico local e otimização transparente para o seu FiveM." Margin="0,6,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="13" />
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,18,0">
+                                    <TextBlock Text="{Binding [Dashboard.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding [Dashboard.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" TextWrapping="Wrap" />
                                 </StackPanel>
-                                <Button Content="Reanalisar PC" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right" Height="38" Padding="15,0" Click="RefreshDiagnostic_Click" IsEnabled="{Binding CanRefresh}" />
+                                <Button Grid.Column="1" Content="{Binding [Dashboard.Refresh], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right" Height="38" Padding="15,0" Click="RefreshDiagnostic_Click" IsEnabled="{Binding CanRefresh}" />
                             </Grid>
 
-                            <Border Style="{StaticResource CardStyle}" Background="{StaticResource HeroGradientBrush}" Padding="23" Margin="0,0,0,16">
+                            <Border Margin="0,0,0,16"
+                                    Padding="16,14"
+                                    Background="#16FF7A18"
+                                    BorderBrush="#56FF7A18"
+                                    BorderThickness="1"
+                                    CornerRadius="11"
+                                    Visibility="{Binding IsUpdateBannerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="Auto" />
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="34" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="27" Height="27" CornerRadius="8" Background="#25FF7A18" VerticalAlignment="Top">
+                                        <TextBlock Text="&#xE895;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="7,0,18,0">
+                                        <TextBlock Text="{Binding UpdateBannerTitle}" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding UpdateBannerDetail}" Margin="0,4,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2"
+                                            Content="{Binding UpdateActionLabel}"
+                                            Style="{StaticResource PrimaryButtonStyle}"
+                                            Height="36"
+                                            MinWidth="132"
+                                            Padding="15,0"
+                                            VerticalAlignment="Center"
+                                            IsEnabled="{Binding CanDownloadUpdate}"
+                                            Click="DownloadUpdate_Click" />
+                                    <ProgressBar Grid.Row="1"
+                                                 Grid.Column="1"
+                                                 Grid.ColumnSpan="2"
+                                                 Height="3"
+                                                 Margin="7,10,0,0"
+                                                 Minimum="0"
+                                                 Maximum="100"
+                                                 Value="{Binding UpdateDownloadPercent}"
+                                                 Visibility="{Binding IsUpdateDownloading, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </Grid>
+                            </Border>
+
+                            <Border Style="{StaticResource CardStyle}" Background="{DynamicResource HeroGradientBrush}" Padding="23" Margin="0,0,0,16">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
                                     <StackPanel VerticalAlignment="Center" MaxWidth="600" HorizontalAlignment="Left">
-                                        <Border Padding="9,4" HorizontalAlignment="Left" Background="#1FFF7A18" CornerRadius="8">
-                                            <TextBlock Text="{Binding EditionLabel}" Foreground="{StaticResource OrangeLightBrush}" FontSize="10" FontWeight="Bold" />
-                                        </Border>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Border Padding="9,4" Background="#1FFF7A18" CornerRadius="8">
+                                                <TextBlock Text="{Binding EditionLabel}" Foreground="{DynamicResource OrangeLightBrush}" FontSize="10" FontWeight="Bold" />
+                                            </Border>
+                                            <Border Margin="7,0,0,0" Padding="9,4" Background="{DynamicResource ChipBrush}" CornerRadius="8">
+                                                <TextBlock Text="{Binding GtaStatusLabel}" Foreground="{DynamicResource TextMutedBrush}" FontSize="10" FontWeight="SemiBold" />
+                                            </Border>
+                                        </StackPanel>
                                         <TextBlock Text="{Binding RecommendationTitle}" Margin="0,14,0,0" FontSize="20" FontWeight="Bold" />
-                                        <TextBlock Text="{Binding RecommendationText}" Margin="0,7,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="12.5" TextWrapping="Wrap" MaxWidth="600" />
+                                        <TextBlock Text="{Binding RecommendationText}" Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12.5" TextWrapping="Wrap" MaxWidth="600" />
                                     </StackPanel>
-                                    <Grid Grid.Column="1" Width="122" Height="92" Margin="30,0,4,0">
-                                        <Ellipse Stroke="#383B42" StrokeThickness="8" />
-                                        <Ellipse Stroke="{StaticResource OrangeBrush}" StrokeThickness="8" StrokeDashArray="4.7,1.7" StrokeStartLineCap="Round" StrokeEndLineCap="Round" RenderTransformOrigin="0.5,0.5">
-                                            <Ellipse.RenderTransform><RotateTransform Angle="-88" /></Ellipse.RenderTransform>
-                                        </Ellipse>
+                                    <Grid Grid.Column="1" Width="96" Height="96" Margin="30,0,4,0" HorizontalAlignment="Center" VerticalAlignment="Center">
+                                        <Ellipse Width="92" Height="92" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Uniform" Stroke="{DynamicResource RingBrush}" StrokeThickness="7" />
                                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                             <TextBlock Text="{Binding ReadinessScore}" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center" />
-                                            <TextBlock Text="PRONTIDÃO" FontSize="8" Foreground="{StaticResource TextSubtleBrush}" FontWeight="Bold" />
+                                            <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" FontSize="8" Foreground="{DynamicResource TextSubtleBrush}" FontWeight="Bold" HorizontalAlignment="Center" />
                                         </StackPanel>
                                     </Grid>
+                                </Grid>
+                            </Border>
+
+                            <Border Style="{StaticResource CardStyle}" Padding="14" Margin="0,0,0,16">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="38" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="30" Height="30" CornerRadius="8" Background="#1C62A8FF" VerticalAlignment="Top">
+                                        <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource BlueBrush}" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                        <TextBlock Text="{Binding StreamingProtectionTitle}" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding StreamingProtectionDetail}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                    </StackPanel>
                                 </Grid>
                             </Border>
 
@@ -219,22 +300,23 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="15">
-                                    <StackPanel><TextBlock Text="PROCESSADOR" FontSize="8.5" FontWeight="Bold" Foreground="{StaticResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuName}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding CpuName}" /></StackPanel>
+                                    <StackPanel><TextBlock Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuName}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding CpuName}" /></StackPanel>
                                 </Border>
                                 <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="15">
-                                    <StackPanel><TextBlock Text="PLACA DE VÍDEO" FontSize="8.5" FontWeight="Bold" Foreground="{StaticResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuName}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding GpuName}" /></StackPanel>
+                                    <StackPanel><TextBlock Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuName}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" ToolTip="{Binding GpuName}" /></StackPanel>
                                 </Border>
                                 <Border Grid.Column="4" Style="{StaticResource CardStyle}" Padding="15">
-                                    <StackPanel><TextBlock Text="MEMÓRIA" FontSize="8.5" FontWeight="Bold" Foreground="{StaticResource TextSubtleBrush}" /><TextBlock Text="{Binding RamLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" /></StackPanel>
+                                    <StackPanel><TextBlock Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding RamLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" /></StackPanel>
                                 </Border>
                                 <Border Grid.Column="6" Style="{StaticResource CardStyle}" Padding="15">
-                                    <StackPanel><TextBlock Text="ARMAZENAMENTO" FontSize="8.5" FontWeight="Bold" Foreground="{StaticResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" /></StackPanel>
+                                    <StackPanel><TextBlock Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" /></StackPanel>
                                 </Border>
                             </Grid>
 
                             <Grid Margin="0,2,0,9">
-                                <TextBlock Text="Escolha o nível" FontSize="15" FontWeight="SemiBold" />
-                                <TextBlock Text="Médio é o recomendado para a maioria dos PCs." HorizontalAlignment="Right" Foreground="{StaticResource TextSubtleBrush}" FontSize="11" />
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                <TextBlock Text="{Binding [Profiles.Choose], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
+                                <TextBlock Grid.Column="1" Text="{Binding [Profiles.RecommendedHint], Source={StaticResource LocalizedStrings}}" Margin="16,0,0,0" HorizontalAlignment="Right" Foreground="{DynamicResource TextSubtleBrush}" FontSize="11" TextWrapping="Wrap" />
                             </Grid>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -246,23 +328,26 @@
                                 </Grid.ColumnDefinitions>
                                 <RadioButton Grid.Column="0" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsLightSelected}" Checked="LightProfile_Checked">
                                     <StackPanel>
-                                        <Grid><Border Width="31" Height="31" CornerRadius="8" Background="#1C62A8FF" HorizontalAlignment="Left"><TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource BlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Padding="7,3" Background="#1A62A8FF" CornerRadius="7" HorizontalAlignment="Right"><TextBlock Text="VISUAL PRESERVADO" FontSize="8" FontWeight="Bold" Foreground="{StaticResource BlueBrush}" /></Border></Grid>
-                                        <TextBlock Text="Leve" Margin="0,13,0,0" FontSize="16" FontWeight="Bold" />
-                                        <TextBlock Text="Ajustes suaves, temporários antigos e nenhuma redução gráfica." Margin="0,6,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        <Grid><Border Width="31" Height="31" CornerRadius="8" Background="#1C62A8FF" HorizontalAlignment="Left"><TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource BlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Padding="7,3" Background="#1A62A8FF" CornerRadius="7" HorizontalAlignment="Right"><TextBlock Text="{Binding [Profiles.Light.Badge], Source={StaticResource LocalizedStrings}}" FontSize="8" FontWeight="Bold" Foreground="{DynamicResource BlueBrush}" /></Border></Grid>
+                                        <TextBlock Text="{Binding [Profiles.Light.Name], Source={StaticResource LocalizedStrings}}" Margin="0,13,0,0" FontSize="16" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding [Profiles.Light.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding LightImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource BlueBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </RadioButton>
                                 <RadioButton Grid.Column="2" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsBalancedSelected}" Checked="BalancedProfile_Checked">
                                     <StackPanel>
-                                        <Grid><Border Width="31" Height="31" CornerRadius="8" Background="#20FF7A18" HorizontalAlignment="Left"><TextBlock Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Padding="7,3" Background="#24FF7A18" CornerRadius="7" HorizontalAlignment="Right"><TextBlock Text="RECOMENDADO" FontSize="8" FontWeight="Bold" Foreground="{StaticResource OrangeLightBrush}" /></Border></Grid>
-                                        <TextBlock Text="Médio" Margin="0,13,0,0" FontSize="16" FontWeight="Bold" />
-                                        <TextBlock Text="Equilíbrio entre qualidade, energia, captura e responsividade." Margin="0,6,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        <Grid><Border Width="31" Height="31" CornerRadius="8" Background="#20FF7A18" HorizontalAlignment="Left"><TextBlock Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Padding="7,3" Background="#24FF7A18" CornerRadius="7" HorizontalAlignment="Right"><TextBlock Text="{Binding [Profiles.Balanced.Badge], Source={StaticResource LocalizedStrings}}" FontSize="8" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" /></Border></Grid>
+                                        <TextBlock Text="{Binding [Profiles.Balanced.Name], Source={StaticResource LocalizedStrings}}" Margin="0,13,0,0" FontSize="16" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding [Profiles.Balanced.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding BalancedImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource OrangeLightBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </RadioButton>
                                 <RadioButton Grid.Column="4" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsAggressiveSelected}" Checked="AggressiveProfile_Checked">
                                     <StackPanel>
-                                        <Grid><Border Width="31" Height="31" CornerRadius="8" Background="#1CF26B6B" HorizontalAlignment="Left"><TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{StaticResource RedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Padding="7,3" Background="#1CF26B6B" CornerRadius="7" HorizontalAlignment="Right"><TextBlock Text="FPS PRIMEIRO" FontSize="8" FontWeight="Bold" Foreground="{StaticResource RedBrush}" /></Border></Grid>
-                                        <TextBlock Text="Agressivo" Margin="0,13,0,0" FontSize="16" FontWeight="Bold" />
-                                        <TextBlock Text="Reduz efeitos e opções pesadas para computadores limitados." Margin="0,6,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        <Grid><Border Width="31" Height="31" CornerRadius="8" Background="#1CF26B6B" HorizontalAlignment="Left"><TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource RedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Padding="7,3" Background="#1CF26B6B" CornerRadius="7" HorizontalAlignment="Right"><TextBlock Text="{Binding [Profiles.Aggressive.Badge], Source={StaticResource LocalizedStrings}}" FontSize="8" FontWeight="Bold" Foreground="{DynamicResource RedBrush}" /></Border></Grid>
+                                        <TextBlock Text="{Binding [Profiles.Aggressive.Name], Source={StaticResource LocalizedStrings}}" Margin="0,13,0,0" FontSize="16" FontWeight="Bold" />
+                                        <TextBlock Text="{Binding [Profiles.Aggressive.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding AggressiveImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource RedBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </RadioButton>
                             </Grid>
@@ -271,12 +356,12 @@
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                     <StackPanel VerticalAlignment="Center">
-                                        <TextBlock FontSize="13.5" FontWeight="SemiBold"><Run Text="{Binding SelectedActionCount, Mode=OneWay}" /><Run Text=" ações verificadas  •  " /><Run Text="{Binding ElevationLabel, Mode=OneWay}" Foreground="{StaticResource TextMutedBrush}" /></TextBlock>
-                                        <TextBlock Text="{Binding PlanSummary}" Margin="0,5,0,0" Foreground="{StaticResource TextSubtleBrush}" FontSize="10.5" />
+                                        <TextBlock FontSize="13.5" FontWeight="SemiBold" TextWrapping="Wrap"><Run Text="{Binding SelectedActionCount, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding [Plan.VerifiedActions.Label], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /><Run Text="  •  " /><Run Text="{Binding ElevationLabel, Mode=OneWay}" Foreground="{DynamicResource TextMutedBrush}" /></TextBlock>
+                                        <TextBlock Text="{Binding PlanSummary}" Margin="0,5,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                     </StackPanel>
                                     <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <Button Content="Revisar plano" Style="{StaticResource SecondaryButtonStyle}" Height="42" Margin="0,0,9,0" Click="ReviewPlan_Click" />
-                                        <Button Content="Otimizar agora" Style="{StaticResource PrimaryButtonStyle}" Height="42" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
+                                        <Button Content="{Binding [Plan.Review], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="42" Margin="0,0,9,0" Click="ReviewPlan_Click" />
+                                        <Button Content="{Binding [Plan.OptimizeNow], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="42" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -287,25 +372,35 @@
                     <Grid x:Name="OptimizerPage" Visibility="Collapsed">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                         <Grid Margin="0,0,0,18">
-                            <StackPanel><TextBlock Text="Otimizador" FontSize="25" FontWeight="Bold" /><TextBlock Text="Plano determinístico: o helper aceita somente ações internas conhecidas." Margin="0,6,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="13" /></StackPanel>
-                            <Border HorizontalAlignment="Right" Padding="10,5" Background="#1837C889" CornerRadius="8" VerticalAlignment="Center"><TextBlock Text="SEM SCRIPTS REMOTOS" Foreground="{StaticResource GreenBrush}" FontSize="9" FontWeight="Bold" /></Border>
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                            <StackPanel Margin="0,0,18,0"><TextBlock Text="{Binding [Optimizer.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" /><TextBlock Text="{Binding [Optimizer.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" TextWrapping="Wrap" /></StackPanel>
+                            <Border Grid.Column="1" HorizontalAlignment="Right" Padding="10,5" Background="#1837C889" CornerRadius="8" VerticalAlignment="Center"><TextBlock Text="{Binding [Optimizer.NoRemoteScripts], Source={StaticResource LocalizedStrings}}" Foreground="{DynamicResource GreenBrush}" FontSize="9" FontWeight="Bold" /></Border>
                         </Grid>
                         <Grid Grid.Row="1">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="1.08*" /><ColumnDefinition Width="15" /><ColumnDefinition Width="0.92*" /></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="18">
                                 <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                    <Grid Margin="0,0,0,13"><StackPanel><TextBlock Text="Plano atual" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="{Binding PlanHeader}" Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="11" /></StackPanel><Border HorizontalAlignment="Right" Padding="9,4" Background="#24272D" CornerRadius="7"><TextBlock Text="{Binding SelectedProfileLabel}" FontSize="9" FontWeight="Bold" Foreground="{StaticResource OrangeLightBrush}" /></Border></Grid>
-                                    <Border Grid.Row="1" Margin="0,0,0,11" Padding="11,8" Background="#1FFF7A18" BorderBrush="#45FF7A18" BorderThickness="1" CornerRadius="8"><TextBlock Text="{Binding PlanNoticesText}" Foreground="{StaticResource OrangeLightBrush}" FontSize="10" TextWrapping="Wrap" /></Border>
+                                    <Grid Margin="0,0,0,13"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,12,0"><TextBlock Text="{Binding [Optimizer.CurrentPlan], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="{Binding PlanHeader}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" TextWrapping="Wrap" /></StackPanel><Border Grid.Column="1" HorizontalAlignment="Right" Padding="9,4" Background="{DynamicResource ChipBrush}" CornerRadius="7"><TextBlock Text="{Binding SelectedProfileLabel}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" /></Border></Grid>
+                                    <Border Grid.Row="1" Margin="0,0,0,11" Padding="11,8" Background="#1FFF7A18" BorderBrush="#45FF7A18" BorderThickness="1" CornerRadius="8"><TextBlock Text="{Binding PlanNoticesText}" Foreground="{DynamicResource OrangeLightBrush}" FontSize="10" TextWrapping="Wrap" /></Border>
                                     <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding PlannedActions}" ItemTemplate="{StaticResource ActionTemplate}" /></ScrollViewer>
-                                    <Grid Grid.Row="3" Margin="0,13,0,0"><Button Content="Executar plano" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" /><TextBlock Text="{Binding SafetySummary}" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{StaticResource TextSubtleBrush}" FontSize="10.5" /></Grid>
+                                    <Grid Grid.Row="3" Margin="0,13,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Button Content="{Binding [Optimizer.RunPlan], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" /><TextBlock Grid.Column="1" Text="{Binding SafetySummary}" Margin="12,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" TextAlignment="Right" /></Grid>
                                 </Grid>
                             </Border>
                             <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="20">
                                 <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                    <Grid><StackPanel><TextBlock Text="Progresso" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="{Binding ProgressStateLabel}" Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="11" /></StackPanel><TextBlock Text="{Binding ProgressPercent, Mode=OneWay, StringFormat={}{0:0}%}" HorizontalAlignment="Right" FontSize="22" FontWeight="Bold" Foreground="{StaticResource OrangeLightBrush}" /></Grid>
-                                    <StackPanel Grid.Row="1" Margin="0,18,0,15"><ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100" /><TextBlock Text="{Binding ProgressHeadline}" Margin="0,11,0,0" FontSize="13" FontWeight="SemiBold" /><TextBlock Text="{Binding ProgressDetail}" Margin="0,4,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" /></StackPanel>
-                                    <Border Grid.Row="2" Background="#0C0E11" BorderBrush="{StaticResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Padding="13"><ScrollViewer VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding ActivityLog}" ItemTemplate="{StaticResource LogTemplate}" /></ScrollViewer></Border>
-                                    <Button Grid.Row="3" Content="Cancelar após esta etapa" Style="{StaticResource SecondaryButtonStyle}" Margin="0,13,0,0" HorizontalAlignment="Stretch" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />
+                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,12,0"><TextBlock Text="{Binding [Progress.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="{Binding ProgressStateLabel}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" TextWrapping="Wrap" /></StackPanel><TextBlock Grid.Column="1" Text="{Binding ProgressPercent, Mode=OneWay, StringFormat={}{0:0}%}" HorizontalAlignment="Right" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" /></Grid>
+                                    <StackPanel Grid.Row="1" Margin="0,18,0,15">
+                                        <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100" />
+                                        <Grid Margin="0,7,0,0">
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding ElapsedTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" TextTrimming="CharacterEllipsis" />
+                                            <TextBlock Grid.Column="1" Text="{Binding RemainingTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" HorizontalAlignment="Right" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
+                                        </Grid>
+                                        <TextBlock Text="{Binding ProgressHeadline}" Margin="0,11,0,0" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding ProgressDetail}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Border Grid.Row="2" Background="{DynamicResource InsetBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Padding="13"><ScrollViewer VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding ActivityLog}" ItemTemplate="{StaticResource LogTemplate}" /></ScrollViewer></Border>
+                                    <Button Grid.Row="3" Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,13,0,0" HorizontalAlignment="Stretch" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />
                                 </Grid>
                             </Border>
                         </Grid>
@@ -314,10 +409,10 @@
                     <!-- History -->
                     <Grid x:Name="HistoryPage" Visibility="Collapsed">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                        <Grid Margin="0,0,0,18"><StackPanel><TextBlock Text="Histórico" FontSize="25" FontWeight="Bold" /><TextBlock Text="Cada execução guarda ações, resultados e os estados necessários para rollback." Margin="0,6,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="13" /></StackPanel><Button Content="Abrir pasta de logs" HorizontalAlignment="Right" Style="{StaticResource SecondaryButtonStyle}" Height="38" Click="OpenLogs_Click" /></Grid>
+                        <Grid Margin="0,0,0,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,18,0"><TextBlock Text="{Binding [History.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" /><TextBlock Text="{Binding [History.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" TextWrapping="Wrap" /></StackPanel><Button Grid.Column="1" Content="{Binding [History.OpenLogs], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Right" Style="{StaticResource SecondaryButtonStyle}" Height="38" Click="OpenLogs_Click" /></Grid>
                         <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="18">
                             <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                                <Grid Margin="0,0,0,14"><TextBlock Text="Execuções locais" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="Sem telemetria" HorizontalAlignment="Right" Foreground="{StaticResource GreenBrush}" FontSize="10" FontWeight="Bold" /></Grid>
+                                <Grid Margin="0,0,0,14"><TextBlock Text="{Binding [History.LocalRuns], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="{Binding [History.NoTelemetry], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Right" Foreground="{DynamicResource GreenBrush}" FontSize="10" FontWeight="Bold" /></Grid>
                                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding HistoryItems}" ItemTemplate="{StaticResource HistoryTemplate}" /></ScrollViewer>
                             </Grid>
                         </Border>
@@ -326,39 +421,72 @@
                     <!-- Settings -->
                     <ScrollViewer x:Name="SettingsPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
-                            <TextBlock Text="Configurações" FontSize="25" FontWeight="Bold" />
-                            <TextBlock Text="Controle exatamente o que entra em cada execução." Margin="0,6,0,18" Foreground="{StaticResource TextMutedBrush}" FontSize="13" />
+                            <TextBlock Text="{Binding [Settings.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" />
+                            <TextBlock Text="{Binding [Settings.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,18" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" />
 
                             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">
                                 <StackPanel>
-                                    <TextBlock Text="Limpeza e diagnóstico" FontSize="15" FontWeight="SemiBold" />
-                                    <TextBlock Text="Nunca apagamos Downloads, Lixeira, game-storage, NUI, login ou shader cache." Margin="0,5,0,16" Foreground="{StaticResource TextSubtleBrush}" FontSize="10.5" />
-                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding CleanTemporaryFiles}"><StackPanel><TextBlock Text="Temporários antigos do usuário" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Somente arquivos fora da janela de retenção e que não estão em uso." Margin="0,3,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="10.5" /></StackPanel></CheckBox>
-                                    <Separator Margin="0,13" Background="{StaticResource BorderSoftBrush}" />
-                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding RemoveOldDiagnostics}"><StackPanel><TextBlock Text="Logs e dumps antigos do FiveM" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Mantém diagnósticos recentes para suporte e remove somente os antigos." Margin="0,3,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="10.5" /></StackPanel></CheckBox>
-                                    <Separator Margin="0,13" Background="{StaticResource BorderSoftBrush}" />
-                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding SmartCacheRepair}"><StackPanel><TextBlock Text="Reparo inteligente do cache de servidores" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Só age quando o cache Legacy excede o limite; o primeiro carregamento fica mais lento." Margin="0,3,0,0" Foreground="{StaticResource YellowBrush}" FontSize="10.5" /></StackPanel></CheckBox>
+                                    <TextBlock Text="{Binding [Settings.General.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding [Settings.Language.Title], Source={StaticResource LocalizedStrings}}" Margin="0,15,0,0" FontSize="12.5" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding [Settings.Language.Description], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,11" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                    <WrapPanel>
+                                        <RadioButton GroupName="Language" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsEnglishSelected, Mode=OneWay}" Checked="EnglishLanguage_Checked" Content="{Binding [Settings.Language.English], Source={StaticResource LocalizedStrings}}" />
+                                        <RadioButton GroupName="Language" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsPortugueseSelected, Mode=OneWay}" Checked="PortugueseLanguage_Checked" Content="{Binding [Settings.Language.PortugueseBrazil], Source={StaticResource LocalizedStrings}}" />
+                                    </WrapPanel>
+                                    <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
+                                    <TextBlock Text="{Binding [Settings.CloseBehavior.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,8" FontSize="12.5" FontWeight="SemiBold" />
+                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding MinimizeToTrayOnClose}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding [Settings.CloseBehavior.Tray], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding [Settings.CloseBehavior.Description], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </CheckBox>
+                                    <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
+                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding LaunchAtStartup}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding [Settings.StartWithWindows.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding [Settings.StartWithWindows.Description], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
 
                             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">
                                 <StackPanel>
-                                    <TextBlock Text="Jogos e Windows" FontSize="15" FontWeight="SemiBold" />
-                                    <TextBlock Text="Mudanças suportadas, registradas e reversíveis." Margin="0,5,0,16" Foreground="{StaticResource TextSubtleBrush}" FontSize="10.5" />
-                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding EnableGameMode}"><StackPanel><TextBlock Text="Modo de Jogo do Windows" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Ativa priorização para jogos sem mexer em serviços essenciais." Margin="0,3,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="10.5" /></StackPanel></CheckBox>
-                                    <Separator Margin="0,13" Background="{StaticResource BorderSoftBrush}" />
-                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding DisableBackgroundCapture}"><StackPanel><TextBlock Text="Desativar gravação em segundo plano" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Mantém o Game Bar, mas evita captura contínua durante a sessão." Margin="0,3,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="10.5" /></StackPanel></CheckBox>
-                                    <Separator Margin="0,13" Background="{StaticResource BorderSoftBrush}" />
-                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding UsePerformancePowerPlan}"><StackPanel><TextBlock Text="Plano de energia de alto desempenho" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="Somente na tomada; mantém até você usar Desfazer no histórico." Margin="0,3,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="10.5" /></StackPanel></CheckBox>
+                                    <TextBlock Text="{Binding [Settings.Appearance.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding [Settings.Appearance.Description], Source={StaticResource LocalizedStrings}}" Margin="0,5,0,13" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                    <WrapPanel>
+                                        <RadioButton GroupName="Theme" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsSystemThemeSelected, Mode=OneWay}" Checked="SystemTheme_Checked" Content="{Binding [Settings.Appearance.System], Source={StaticResource LocalizedStrings}}" />
+                                        <RadioButton GroupName="Theme" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsDarkThemeSelected, Mode=OneWay}" Checked="DarkTheme_Checked" Content="{Binding [Settings.Appearance.Dark], Source={StaticResource LocalizedStrings}}" />
+                                        <RadioButton GroupName="Theme" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsLightThemeSelected, Mode=OneWay}" Checked="LightTheme_Checked" Content="{Binding [Settings.Appearance.Light], Source={StaticResource LocalizedStrings}}" />
+                                    </WrapPanel>
                                 </StackPanel>
                             </Border>
 
-                            <Border Style="{StaticResource CardStyle}">
+                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">
                                 <StackPanel>
-                                    <TextBlock Text="Limites de segurança" FontSize="15" FontWeight="SemiBold" />
-                                    <TextBlock Text="O FiveMCleaner nunca desativa Defender, Firewall, UAC, Windows Update, pagefile ou serviços críticos; não usa BCDEdit/HPET, injeção, hooks ou prioridade Realtime." Margin="0,9,0,0" Foreground="{StaticResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
-                                    <TextBlock Text="FiveM Enhanced: bloqueado nesta versão até o layout oficial ser testado." Margin="0,8,0,0" Foreground="{StaticResource OrangeLightBrush}" FontSize="11" />
+                                    <TextBlock Text="{Binding [Safety.Limits.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding [Safety.Limits.Description], Source={StaticResource LocalizedStrings}}" Margin="0,9,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding [Safety.EnhancedBlocked], Source={StaticResource LocalizedStrings}}" Margin="0,8,0,0" Foreground="{DynamicResource OrangeLightBrush}" FontSize="11" TextWrapping="Wrap" />
                                 </StackPanel>
+                            </Border>
+
+                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="76" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <Image Source="Assets/FiveMCleaner.png" Width="58" Height="58" Stretch="Uniform" VerticalAlignment="Top" />
+                                    <StackPanel Grid.Column="1" Margin="2,0,18,0">
+                                        <TextBlock Text="{Binding [About.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding AboutVersionDeveloper}" Margin="0,5,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding [About.Copyright], Source={StaticResource LocalizedStrings}}" Margin="0,5,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" />
+                                        <TextBlock Text="{Binding [About.License], Source={StaticResource LocalizedStrings}}" Margin="0,5,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <Button Grid.Column="2" Content="{Binding [About.OpenGitHub], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Padding="14,0" Click="OpenRepository_Click" VerticalAlignment="Center" />
+                                </Grid>
                             </Border>
                         </StackPanel>
                     </ScrollViewer>

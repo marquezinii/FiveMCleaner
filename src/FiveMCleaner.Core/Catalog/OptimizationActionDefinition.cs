@@ -106,5 +106,6 @@ internal enum ActionOptionGate
     DisableBackgroundCapture,
     UseSessionPerformancePowerPlan,
     ApplyLegacyGraphicsPreset,
+    ApplyGtaVGraphicsPreset,
     ReduceWindowsVisualEffects
 }

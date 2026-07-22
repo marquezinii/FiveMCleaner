@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
@@ -6,6 +7,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FiveMCleaner.App.Services;
 using FiveMCleaner.App.ViewModels;
+using FiveMCleaner.App.Views;
 using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.App;
@@ -13,20 +15,54 @@ namespace FiveMCleaner.App;
 public partial class MainWindow : Window
 {
     private readonly MainViewModel viewModel;
+    private readonly ThemeManager themeManager;
+    private readonly TrayIconService trayIcon;
+    private readonly GitHubReleaseUpdateService? releaseUpdateService;
+    private readonly bool startupLaunch;
+    private bool allowClose;
+    private bool trayAnnouncementShown;
+    private bool systemSessionEnding;
 
     public MainWindow()
     {
         InitializeComponent();
-        var demoMode = Environment.GetCommandLineArgs()
+        themeManager = new ThemeManager();
+        themeManager.Apply(AppThemePreference.System);
+        var commandLine = Environment.GetCommandLineArgs();
+        var syntheticDemo = commandLine
+            .Any(value => value.Equals("--demo-synthetic", StringComparison.OrdinalIgnoreCase));
+        var demoMode = syntheticDemo || commandLine
             .Any(value => value.Equals("--demo", StringComparison.OrdinalIgnoreCase));
-        viewModel = new MainViewModel(new AppOptimizationService(demoMode));
+        startupLaunch = commandLine
+            .Any(value => value.Equals("--startup", StringComparison.OrdinalIgnoreCase));
+        IStartupRegistrationService startupRegistration = demoMode
+            ? new SessionStartupRegistrationService()
+            : new WindowsStartupRegistrationService();
+        releaseUpdateService = demoMode ? null : new GitHubReleaseUpdateService();
+        viewModel = new MainViewModel(
+            new AppOptimizationService(demoMode, syntheticDemo),
+            localization: LocalizationService.Current,
+            startupRegistration: startupRegistration,
+            releaseUpdateService: releaseUpdateService);
+        trayIcon = new TrayIconService(LocalizationService.Current);
+        trayIcon.ShowRequested += TrayIcon_ShowRequested;
+        trayIcon.ExitRequested += TrayIcon_ExitRequested;
         DataContext = viewModel;
         Loaded += MainWindow_Loaded;
+        Closing += MainWindow_Closing;
+        Closed += MainWindow_Closed;
+        StateChanged += MainWindow_StateChanged;
+        System.Windows.Application.Current.SessionEnding += Application_SessionEnding;
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         await viewModel.InitializeAsync();
+        themeManager.Apply(viewModel.ThemePreference);
+        if (startupLaunch && viewModel.MinimizeToTrayOnClose)
+        {
+            HideToTray();
+        }
         await CaptureIfRequestedAsync();
     }
 
@@ -53,6 +89,14 @@ public partial class MainWindow : Window
     private void ToggleMaximize()
     {
         WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+    }
+
+    private void MainWindow_StateChanged(object? sender, EventArgs e)
+    {
+        var maximized = WindowState == WindowState.Maximized;
+        MaximizeGlyph.Text = maximized ? "\uE923" : "\uE922";
+        MaximizeButton.ToolTip = LocalizationService.Current.GetString(
+            maximized ? "Window.Restore" : "Window.Maximize");
     }
 
     private void DashboardNav_Click(object sender, RoutedEventArgs e) => Navigate(DashboardPage, DashboardNav);
@@ -85,12 +129,86 @@ public partial class MainWindow : Window
 
     private void AggressiveProfile_Checked(object sender, RoutedEventArgs e) => viewModel.SelectProfile(OptimizationProfile.Aggressive);
 
+    private void SystemTheme_Checked(object sender, RoutedEventArgs e) => ApplyTheme(AppThemePreference.System);
+
+    private void DarkTheme_Checked(object sender, RoutedEventArgs e) => ApplyTheme(AppThemePreference.Dark);
+
+    private void LightTheme_Checked(object sender, RoutedEventArgs e) => ApplyTheme(AppThemePreference.Light);
+
+    private void EnglishLanguage_Checked(object sender, RoutedEventArgs e) => ApplyLanguage(AppLanguage.English);
+
+    private void PortugueseLanguage_Checked(object sender, RoutedEventArgs e) => ApplyLanguage(AppLanguage.PortugueseBrazil);
+
+    private void ApplyTheme(AppThemePreference preference)
+    {
+        if (!IsLoaded)
+        {
+            return;
+        }
+
+        viewModel.SelectTheme(preference);
+        themeManager.Apply(preference);
+    }
+
+    private void ApplyLanguage(AppLanguage language)
+    {
+        if (IsLoaded)
+        {
+            viewModel.SelectLanguage(language);
+            MainWindow_StateChanged(this, EventArgs.Empty);
+        }
+    }
+
     private async void RefreshDiagnostic_Click(object sender, RoutedEventArgs e) => await viewModel.RefreshDiagnosticAsync();
 
     private async void StartOptimization_Click(object sender, RoutedEventArgs e)
     {
         Navigate(OptimizerPage, OptimizerNav);
         await viewModel.StartOptimizationAsync();
+    }
+
+    private async void DownloadUpdate_Click(object sender, RoutedEventArgs e)
+    {
+        var downloaded = await viewModel.DownloadAvailableUpdateAsync();
+        if (downloaded is null || !File.Exists(downloaded.InstallerPath))
+        {
+            return;
+        }
+
+        var decision = System.Windows.MessageBox.Show(
+            LocalizationService.Current.Format(
+                "Dialog.UpdateInstall.Message",
+                downloaded.Version.CoreVersion),
+            LocalizationService.Current.GetString("Dialog.UpdateInstall.Title"),
+            MessageBoxButton.YesNo,
+            MessageBoxImage.Information);
+        if (decision != MessageBoxResult.Yes)
+        {
+            return;
+        }
+
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = downloaded.InstallerPath,
+                UseShellExecute = true
+            });
+            allowClose = true;
+            trayIcon.Hide();
+            Close();
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            System.Windows.MessageBox.Show(
+                LocalizationService.Current.Format(
+                    "Dialog.UpdateInstall.Failed",
+                    exception.Message),
+                LocalizationService.Current.GetString("Dialog.UpdateInstall.Title"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     private void CancelOptimization_Click(object sender, RoutedEventArgs e) => viewModel.CancelOptimization();
@@ -102,9 +220,9 @@ public partial class MainWindow : Window
             return;
         }
 
-        var decision = MessageBox.Show(
-            "Restaurar as configurações salvas por esta execução? Limpezas de cache e temporários não podem ser recuperadas.",
-            "Desfazer otimização",
+        var decision = System.Windows.MessageBox.Show(
+            LocalizationService.Current.GetString("Dialog.Rollback.Message"),
+            LocalizationService.Current.GetString("Dialog.Rollback.Title"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Question);
         if (decision == MessageBoxResult.Yes)
@@ -122,6 +240,95 @@ public partial class MainWindow : Window
             Arguments = $"\"{viewModel.LogsDirectory}\"",
             UseShellExecute = true
         });
+    }
+
+    private void ReportBug_Click(object sender, RoutedEventArgs e)
+    {
+        var dialog = new BugReportWindow(
+            new FormSubmitBugReportService(),
+            viewModel.AppVersion,
+            viewModel.SelectedProfileName,
+            viewModel.EditionBadgeLabel)
+        {
+            Owner = this
+        };
+        _ = dialog.ShowDialog();
+    }
+
+    private void OpenRepository_Click(object sender, RoutedEventArgs e)
+    {
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = ProductIdentity.RepositoryUrl,
+            UseShellExecute = true
+        });
+    }
+
+    private void MainWindow_Closing(object? sender, CancelEventArgs e)
+    {
+        if (viewModel.IsBusy && !systemSessionEnding)
+        {
+            e.Cancel = true;
+            var decision = System.Windows.MessageBox.Show(
+                LocalizationService.Current.GetString("Dialog.CancelRunning.Message"),
+                LocalizationService.Current.GetString("Dialog.CancelRunning.Title"),
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+            if (decision == MessageBoxResult.Yes)
+            {
+                viewModel.CancelOptimization();
+            }
+
+            return;
+        }
+
+        if (!allowClose && viewModel.MinimizeToTrayOnClose)
+        {
+            e.Cancel = true;
+            HideToTray();
+        }
+    }
+
+    private void MainWindow_Closed(object? sender, EventArgs e)
+    {
+        System.Windows.Application.Current.SessionEnding -= Application_SessionEnding;
+        themeManager.Dispose();
+        trayIcon.Dispose();
+        releaseUpdateService?.Dispose();
+    }
+
+    private void Application_SessionEnding(object? sender, SessionEndingCancelEventArgs e)
+    {
+        // Nunca transforma a preferência de bandeja em bloqueio de logoff/desligamento.
+        systemSessionEnding = true;
+        allowClose = true;
+        viewModel.CancelOptimization();
+    }
+
+    private void HideToTray()
+    {
+        Hide();
+        trayIcon.Show(announce: !trayAnnouncementShown);
+        trayAnnouncementShown = true;
+    }
+
+    private void TrayIcon_ShowRequested(object? sender, EventArgs e)
+    {
+        trayIcon.Hide();
+        Show();
+        if (WindowState == WindowState.Minimized)
+        {
+            WindowState = WindowState.Normal;
+        }
+
+        Activate();
+    }
+
+    private void TrayIcon_ExitRequested(object? sender, EventArgs e)
+    {
+        allowClose = true;
+        trayIcon.Hide();
+        Close();
     }
 
     private async Task CaptureIfRequestedAsync()

@@ -5,12 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
-    <Authors>FiveMCleaner contributors</Authors>
-    <Company>FiveMCleaner</Company>
-    <Copyright>Copyright (c) 2026 FiveMCleaner contributors</Copyright>
+    <Authors>Felipe Marquezini</Authors>
+    <Company>Felipe Marquezini</Company>
+    <Copyright>Copyright (c) 2026 Felipe Marquezini. All rights reserved.</Copyright>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/marquezinii/FiveMCleaner</RepositoryUrl>
     <Product>FiveMCleaner</Product>
-    <Version>0.1.0</Version>
+    <Version>0.2.0</Version>
   </PropertyGroup>
 </Project>

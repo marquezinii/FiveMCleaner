@@ -1,0 +1,22 @@
+{
+  "schemaVersion": 1,
+  "repository": "marquezinii/FiveMCleaner",
+  "releasePage": "https://github.com/marquezinii/FiveMCleaner/releases/latest",
+  "latestReleaseApi": "https://api.github.com/repos/marquezinii/FiveMCleaner/releases/latest",
+  "runtime": "win-x64",
+  "assets": {
+    "installer": "FiveMCleaner-Setup-{version}-win-x64.exe",
+    "installerChecksum": "FiveMCleaner-Setup-{version}-win-x64.exe.sha256",
+    "releaseManifest": "FiveMCleaner-release-manifest-{version}.json",
+    "portableArchive": "FiveMCleaner-win-x64.zip",
+    "portableChecksum": "FiveMCleaner-win-x64.zip.sha256"
+  },
+  "updatePolicy": {
+    "channel": "stable",
+    "notifyBeforeDownload": true,
+    "requireUserConfirmation": true,
+    "verifySha256BeforeLaunch": true,
+    "allowForcedUpdates": false,
+    "allowBackgroundInstall": false
+  }
+}

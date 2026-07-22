@@ -11,7 +11,7 @@ public sealed class ActionCatalogTests
     {
         var catalog = ActionCatalog.Current;
 
-        Assert.Equal(1, ActionCatalog.CurrentVersion);
+        Assert.Equal(2, ActionCatalog.CurrentVersion);
         Assert.NotEmpty(catalog.Actions);
         Assert.Equal(
             catalog.Actions.Count,
@@ -30,6 +30,34 @@ public sealed class ActionCatalogTests
             Assert.NotEmpty(action.SupportedProfiles);
             Assert.Equal(action.SupportedProfiles.Count, action.SupportedProfiles.Distinct().Count());
         });
+    }
+
+    [Theory]
+    [InlineData(
+        OptimizationActionIds.ApplyLightGtaVGraphics,
+        OptimizationProfile.Light,
+        ActionRisk.Low)]
+    [InlineData(
+        OptimizationActionIds.ApplyBalancedGtaVGraphics,
+        OptimizationProfile.Balanced,
+        ActionRisk.Moderate)]
+    [InlineData(
+        OptimizationActionIds.ApplyAggressiveGtaVGraphics,
+        OptimizationProfile.Aggressive,
+        ActionRisk.High)]
+    public void GtaVGraphicsDefinitions_AreProfileSpecificAndReversible(
+        string actionId,
+        OptimizationProfile profile,
+        ActionRisk risk)
+    {
+        var definition = ActionCatalog.Current.GetRequired(actionId);
+
+        Assert.Equal([profile], definition.SupportedProfiles);
+        Assert.Equal(risk, definition.Risk);
+        Assert.Equal(ActionCategory.FiveMGraphics, definition.Category);
+        Assert.Equal(ActionReversibility.FullyReversible, definition.Reversibility);
+        Assert.Equal(RequiredPrivilege.StandardUser, definition.RequiredPrivilege);
+        Assert.True(definition.RequiresFiveMStopped);
     }
 
     [Fact]
