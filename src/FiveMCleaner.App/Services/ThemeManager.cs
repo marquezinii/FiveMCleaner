@@ -83,6 +83,7 @@ public sealed class ThemeManager : IDisposable
     public ThemeManager()
     {
         SystemParameters.StaticPropertyChanged += SystemParameters_StaticPropertyChanged;
+        SystemEvents.UserPreferenceChanged += SystemEvents_UserPreferenceChanged;
     }
 
     public AppThemePreference Preference => preference;
@@ -110,6 +111,7 @@ public sealed class ThemeManager : IDisposable
 
         disposed = true;
         SystemParameters.StaticPropertyChanged -= SystemParameters_StaticPropertyChanged;
+        SystemEvents.UserPreferenceChanged -= SystemEvents_UserPreferenceChanged;
     }
 
     private void SystemParameters_StaticPropertyChanged(
@@ -128,6 +130,23 @@ public sealed class ThemeManager : IDisposable
         }
 
         _ = dispatcher.BeginInvoke(() => Apply(AppThemePreference.System));
+    }
+
+    private void SystemEvents_UserPreferenceChanged(object? sender, UserPreferenceChangedEventArgs e)
+    {
+        if (disposed || preference != AppThemePreference.System)
+        {
+            return;
+        }
+
+        // Windows does not consistently raise a WPF SystemParameters change
+        // for AppsUseLightTheme. UserPreferenceChanged covers the shell/theme
+        // notification used by Windows 10 and 11.
+        var dispatcher = System.Windows.Application.Current?.Dispatcher;
+        if (dispatcher is not null)
+        {
+            _ = dispatcher.BeginInvoke(() => Apply(AppThemePreference.System));
+        }
     }
 
     private void ApplyEffectiveTheme(bool useLightTheme)

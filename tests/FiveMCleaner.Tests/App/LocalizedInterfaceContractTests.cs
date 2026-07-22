@@ -121,10 +121,18 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Equal(
             new[]
             {
-                "{Binding MinimizeToTrayOnClose}",
                 "{Binding LaunchAtStartup}"
             },
             checkBoxBindings);
+
+        var radioBindings = document
+            .Descendants(presentation + "RadioButton")
+            .Select(element => (string?)element.Attribute("IsChecked"))
+            .Where(value => value is not null)
+            .ToArray();
+
+        Assert.Contains("{Binding IsCloseAppOnCloseSelected, Mode=OneWay}", radioBindings);
+        Assert.Contains("{Binding IsMinimizeToTrayOnCloseSelected, Mode=OneWay}", radioBindings);
     }
 
     [Fact]

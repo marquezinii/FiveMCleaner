@@ -68,7 +68,11 @@ public sealed class AppOptimizationService : IAppOptimizationService
             var cacheBytes = installation.Edition == FiveMEdition.Legacy && installation.Root is not null
                 ? GetLegacyServerCacheBytes(installation.Root, cancellationToken)
                 : 0L;
-            var gpuName = GetGpuName(out var gpuWasIdentified);
+            var gpuNames = GetGpuNames();
+            var gpuWasIdentified = gpuNames.Count > 0;
+            var gpuName = gpuWasIdentified
+                ? string.Join(" / ", gpuNames)
+                : localization.GetString("Diagnosis.GpuFallback");
             var streamingSoftware = DetectStreamingSoftware(cancellationToken);
             var memoryGiB = memoryStatus.TotalPhysical / 1024d / 1024d / 1024d;
             var availableMemoryGiB = memoryStatus.AvailablePhysical / 1024d / 1024d / 1024d;
@@ -112,12 +116,14 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 GtaVGraphicsSettingsPath = gtaV.GraphicsSettingsPath,
                 CpuName = GetCpuName(),
                 GpuName = gpuName,
+                GpuNames = gpuNames,
                 TotalMemoryGiB = memoryGiB,
                 AvailableMemoryGiB = availableMemoryGiB,
                 LogicalProcessorCount = logicalProcessorCount,
                 FreeDiskGiB = freeDiskGiB,
                 LegacyCacheBytes = cacheBytes,
                 OsLabel = RuntimeInformation.OSDescription,
+                SystemArchitecture = GetArchitectureLabel(),
                 ReadinessScore = assessment.ReadinessScore,
                 RecommendedProfile = assessment.RecommendedProfile,
                 PerformancePressure = assessment.PerformancePressure,
@@ -366,12 +372,14 @@ public sealed class AppOptimizationService : IAppOptimizationService
             GtaVGraphicsSettingsPath = @"C:\User\Documents\Rockstar Games\GTA V\settings.xml",
             CpuName = localization.GetString("Demo.Cpu"),
             GpuName = localization.GetString("Demo.Gpu"),
+            GpuNames = [localization.GetString("Demo.Gpu")],
             TotalMemoryGiB = 16,
             AvailableMemoryGiB = 8,
             LogicalProcessorCount = 12,
             FreeDiskGiB = 128,
             LegacyCacheBytes = 3L * 1024 * 1024 * 1024,
             OsLabel = "Windows 11",
+            SystemArchitecture = "x64",
             ReadinessScore = 88,
             RecommendedProfile = OptimizationProfile.Balanced,
             PerformancePressure = PerformancePressureLevel.Moderate,
@@ -972,7 +980,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
             ?? localization.GetString("Diagnosis.CpuUnknown");
     }
 
-    private string GetGpuName(out bool wasIdentified)
+    private IReadOnlyList<string> GetGpuNames()
     {
         var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         try
@@ -981,8 +989,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 @"SYSTEM\CurrentControlSet\Control\Video");
             if (video is null)
             {
-                wasIdentified = false;
-                return localization.GetString("Diagnosis.GpuFallback");
+                return [];
             }
 
             foreach (var deviceKeyName in video.GetSubKeyNames())
@@ -1011,11 +1018,17 @@ public sealed class AppOptimizationService : IAppOptimizationService
             // O diagnóstico continua sem iniciar PowerShell, WMI ou ferramentas externas.
         }
 
-        wasIdentified = names.Count > 0;
-        return wasIdentified
-            ? string.Join(" / ", names.Order(StringComparer.OrdinalIgnoreCase))
-            : localization.GetString("Diagnosis.GpuFallback");
+        return names.Order(StringComparer.OrdinalIgnoreCase).ToArray();
     }
+
+    private static string GetArchitectureLabel() => RuntimeInformation.OSArchitecture switch
+    {
+        Architecture.X64 => "x64",
+        Architecture.X86 => "x86",
+        Architecture.Arm64 => "ARM64",
+        Architecture.Arm => "ARM",
+        _ => RuntimeInformation.OSArchitecture.ToString()
+    };
 
     private MemoryStatusEx GetMemoryStatus()
     {

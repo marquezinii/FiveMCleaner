@@ -63,6 +63,20 @@ public sealed class LocalizationServiceTests
     }
 
     [Fact]
+    public void ManualChoice_IsPersistedEvenWhenItMatchesTheDetectedLanguage()
+    {
+        var service = new LocalizationService(CultureInfo.GetCultureInfo("pt-BR"));
+
+        Assert.Equal(AppLanguagePreference.Automatic, service.CurrentPreference);
+        Assert.Equal(AppLanguage.PortugueseBrazil, service.CurrentLanguage);
+
+        service.SetLanguage(AppLanguage.PortugueseBrazil);
+
+        Assert.Equal(AppLanguagePreference.PortugueseBrazil, service.CurrentPreference);
+        Assert.Equal(AppLanguage.PortugueseBrazil, service.CurrentLanguage);
+    }
+
+    [Fact]
     public void MissingResource_FallsBackToStableKey()
     {
         var service = new LocalizationService(CultureInfo.GetCultureInfo("pt-BR"));

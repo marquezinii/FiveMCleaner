@@ -36,6 +36,13 @@ public sealed record AppDiagnostic
 
     public required string GpuName { get; init; }
 
+    /// <summary>
+    /// Every display adapter Windows reported during the local scan. The
+    /// summary above remains for compatibility with existing callers; this
+    /// list lets the UI present hybrid and multi-GPU machines accurately.
+    /// </summary>
+    public IReadOnlyList<string> GpuNames { get; init; } = [];
+
     public required double TotalMemoryGiB { get; init; }
 
     public required double AvailableMemoryGiB { get; init; }
@@ -47,6 +54,8 @@ public sealed record AppDiagnostic
     public required long LegacyCacheBytes { get; init; }
 
     public required string OsLabel { get; init; }
+
+    public string SystemArchitecture { get; init; } = "Unknown";
 
     public required int ReadinessScore { get; init; }
 

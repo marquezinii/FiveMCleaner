@@ -33,6 +33,11 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 
 ## Estado da v0.2.0-preview
 
+- preferências gerais enxutas: idioma pt-BR/inglês, tema do sistema/claro/escuro,
+  comportamento do X e inicialização com Windows;
+- painel de hardware com CPU, GPUs (inclusive múltiplos adaptadores), memória,
+  armazenamento, versão do Windows e arquitetura, além de uma pontuação de
+  capacidade explicada e sem promessa de FPS;
 - interface WPF funcional com os modos **Leve**, **Médio** e **Agressivo**;
 - diagnóstico local de FiveM Legacy, CPU, GPU, memória, armazenamento e processo ativo;
 - executor transacional com cache allowlisted, temporários antigos, gráficos, Game Mode, captura, preferência de GPU, efeitos visuais e energia;

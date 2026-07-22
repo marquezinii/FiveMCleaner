@@ -46,14 +46,14 @@ public partial class App : System.Windows.Application
         try
         {
             System.Windows.MessageBox.Show(
-                $"O FiveMCleaner encontrou um erro inesperado. Nenhuma nova alteração será aplicada.\n\n{exception.Message}",
+                Services.LocalizationService.Current.Format("Dialog.FatalError.Message", exception.Message),
                 ProductIdentity.Name,
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
         catch
         {
-            // Nunca transforme uma falha da caixa de diálogo em um loop do Dispatcher.
+            // Never turn a dialog failure into a Dispatcher loop.
         }
     }
 

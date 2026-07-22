@@ -139,6 +139,22 @@ public partial class MainWindow : Window
 
     private void PortugueseLanguage_Checked(object sender, RoutedEventArgs e) => ApplyLanguage(AppLanguage.PortugueseBrazil);
 
+    private void CloseAppOnClose_Checked(object sender, RoutedEventArgs e)
+    {
+        if (IsLoaded)
+        {
+            viewModel.MinimizeToTrayOnClose = false;
+        }
+    }
+
+    private void MinimizeToTrayOnClose_Checked(object sender, RoutedEventArgs e)
+    {
+        if (IsLoaded)
+        {
+            viewModel.MinimizeToTrayOnClose = true;
+        }
+    }
+
     private void ApplyTheme(AppThemePreference preference)
     {
         if (!IsLoaded)

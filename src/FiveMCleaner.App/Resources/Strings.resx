@@ -25,6 +25,9 @@
   <data name="Dashboard.GraphicsCard" xml:space="preserve"><value>GRAPHICS CARD</value></data>
   <data name="Dashboard.Memory" xml:space="preserve"><value>MEMORY</value></data>
   <data name="Dashboard.Storage" xml:space="preserve"><value>STORAGE</value></data>
+  <data name="Dashboard.Windows" xml:space="preserve"><value>WINDOWS</value></data>
+  <data name="Dashboard.Architecture" xml:space="preserve"><value>SYSTEM ARCHITECTURE</value></data>
+  <data name="Dashboard.ReadinessExplanation" xml:space="preserve"><value>Capacity signal based on available memory, logical processors, free disk space, detected graphics adapter, cache state and FiveM edition. It is not an FPS benchmark or a performance promise.</value></data>
   <data name="Profiles.Choose" xml:space="preserve"><value>Choose a level</value></data>
   <data name="Profiles.RecommendedHint" xml:space="preserve"><value>Balanced is recommended for most PCs.</value></data>
   <data name="Profiles.Light.Name" xml:space="preserve"><value>Light</value></data>
@@ -232,7 +235,8 @@
   <data name="Log.RollbackCancelled" xml:space="preserve"><value>Rollback cancelled between steps.</value></data>
   <data name="Log.RollbackFailed" xml:space="preserve"><value>Safe rollback failure: {0}</value></data>
   <data name="Log.SettingsSaveFailed" xml:space="preserve"><value>Could not save settings right now.</value></data>
-  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>When disabled, clicking X exits the app completely.</value></data>
+  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Choose whether clicking X exits completely or keeps FiveMCleaner available from the notification area.</value></data>
+  <data name="Dialog.FatalError.Message" xml:space="preserve"><value>FiveMCleaner encountered an unexpected error. No new change will be applied.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>verified actions</value></data>
   <data name="Progress.ElapsedFormat" xml:space="preserve"><value>Elapsed {0}</value></data>

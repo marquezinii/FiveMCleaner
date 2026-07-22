@@ -23,6 +23,20 @@ Isso permite acompanhar as mudanças locais sem manter uma cópia congelada do a
 - Next.js, React, TypeScript, Vite/Vinext e ESLint para o site em `website/`;
 - GitHub Actions para CI e para o workflow manual de release.
 
+## Interface e preferências
+
+- A interface usa Segoe UI Variable, cards com espaçamento consistente e um
+  painel de hardware em duas colunas que preserva nomes completos de CPU e de
+  todas as GPUs detectadas. O diagnóstico também mostra Windows e arquitetura.
+- Configurações gerais possuem somente idioma, tema, comportamento do X e
+  inicialização com Windows. O fechamento é uma escolha explícita entre sair e
+  manter o app na área de notificação; a bandeja usa o ícone oficial e menu
+  localizado. O tema Sistema acompanha as notificações de preferência do
+  Windows quando o sistema as fornece.
+- A pontuação de prontidão é um sinal de capacidade, não uma estimativa de FPS:
+  a tela explica os fatores observados (memória, processadores lógicos, disco,
+  GPU, cache e edição do FiveM).
+
 ## Arquitetura
 
 A solução `FiveMCleaner.slnx` separa responsabilidades em projetos:

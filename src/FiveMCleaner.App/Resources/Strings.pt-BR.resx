@@ -25,6 +25,9 @@
   <data name="Dashboard.GraphicsCard" xml:space="preserve"><value>PLACA DE VÍDEO</value></data>
   <data name="Dashboard.Memory" xml:space="preserve"><value>MEMÓRIA</value></data>
   <data name="Dashboard.Storage" xml:space="preserve"><value>ARMAZENAMENTO</value></data>
+  <data name="Dashboard.Windows" xml:space="preserve"><value>WINDOWS</value></data>
+  <data name="Dashboard.Architecture" xml:space="preserve"><value>ARQUITETURA DO SISTEMA</value></data>
+  <data name="Dashboard.ReadinessExplanation" xml:space="preserve"><value>Sinal de capacidade baseado na memória disponível, processadores lógicos, espaço livre, placa de vídeo identificada, estado do cache e edição do FiveM. Não é benchmark de FPS nem promessa de desempenho.</value></data>
   <data name="Profiles.Choose" xml:space="preserve"><value>Escolha o nível</value></data>
   <data name="Profiles.RecommendedHint" xml:space="preserve"><value>Médio é o recomendado para a maioria dos PCs.</value></data>
   <data name="Profiles.Light.Name" xml:space="preserve"><value>Leve</value></data>
@@ -232,7 +235,8 @@
   <data name="Log.RollbackCancelled" xml:space="preserve"><value>Rollback cancelado entre etapas.</value></data>
   <data name="Log.RollbackFailed" xml:space="preserve"><value>Falha segura no rollback: {0}</value></data>
   <data name="Log.SettingsSaveFailed" xml:space="preserve"><value>Não foi possível salvar as configurações agora.</value></data>
-  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Desativado: clicar no X encerra o aplicativo por completo.</value></data>
+  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Escolha se clicar no X encerra por completo ou mantém o FiveMCleaner disponível na área de notificação.</value></data>
+  <data name="Dialog.FatalError.Message" xml:space="preserve"><value>O FiveMCleaner encontrou um erro inesperado. Nenhuma nova alteração será aplicada.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>ações verificadas</value></data>
   <data name="Progress.ElapsedFormat" xml:space="preserve"><value>Decorrido {0}</value></data>

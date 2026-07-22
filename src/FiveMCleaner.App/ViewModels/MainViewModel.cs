@@ -35,6 +35,10 @@ public sealed class MainViewModel : BindableBase
     private string gpuName = string.Empty;
     private string ramLabel = string.Empty;
     private string diskLabel = string.Empty;
+    private string windowsLabel = string.Empty;
+    private string architectureLabel = string.Empty;
+    private string gpuDetail = string.Empty;
+    private string readinessScoreExplanation = string.Empty;
     private string editionLabel = string.Empty;
     private string editionBadgeLabel = "AUTO";
     private string gtaStatusLabel = string.Empty;
@@ -98,6 +102,14 @@ public sealed class MainViewModel : BindableBase
     public string RamLabel { get => ramLabel; private set => SetProperty(ref ramLabel, value); }
 
     public string DiskLabel { get => diskLabel; private set => SetProperty(ref diskLabel, value); }
+
+    public string WindowsLabel { get => windowsLabel; private set => SetProperty(ref windowsLabel, value); }
+
+    public string ArchitectureLabel { get => architectureLabel; private set => SetProperty(ref architectureLabel, value); }
+
+    public string GpuDetail { get => gpuDetail; private set => SetProperty(ref gpuDetail, value); }
+
+    public string ReadinessScoreExplanation { get => readinessScoreExplanation; private set => SetProperty(ref readinessScoreExplanation, value); }
 
     public string EditionLabel { get => editionLabel; private set => SetProperty(ref editionLabel, value); }
 
@@ -187,6 +199,30 @@ public sealed class MainViewModel : BindableBase
 
     public bool IsPortugueseSelected => CurrentLanguage == AppLanguage.PortugueseBrazil;
 
+    public bool IsCloseAppOnCloseSelected
+    {
+        get => !MinimizeToTrayOnClose;
+        set
+        {
+            if (value)
+            {
+                MinimizeToTrayOnClose = false;
+            }
+        }
+    }
+
+    public bool IsMinimizeToTrayOnCloseSelected
+    {
+        get => MinimizeToTrayOnClose;
+        set
+        {
+            if (value)
+            {
+                MinimizeToTrayOnClose = true;
+            }
+        }
+    }
+
     public bool IsSystemThemeSelected => themePreference == AppThemePreference.System;
 
     public bool IsDarkThemeSelected => themePreference == AppThemePreference.Dark;
@@ -200,6 +236,8 @@ public sealed class MainViewModel : BindableBase
         {
             if (SetProperty(ref minimizeToTrayOnClose, value))
             {
+                OnPropertyChanged(nameof(IsCloseAppOnCloseSelected));
+                OnPropertyChanged(nameof(IsMinimizeToTrayOnCloseSelected));
                 SettingsChanged(refreshPlan: false);
             }
         }
@@ -492,18 +530,24 @@ public sealed class MainViewModel : BindableBase
 
     public void SelectLanguage(AppLanguage language)
     {
-        if (!Enum.IsDefined(language) || CurrentLanguage == language)
+        if (!Enum.IsDefined(language))
         {
             return;
         }
 
-        localization.SetLanguage(language);
-        languagePreference = language switch
+        var preference = language switch
         {
             AppLanguage.English => AppLanguagePreference.English,
             AppLanguage.PortugueseBrazil => AppLanguagePreference.PortugueseBrazil,
             _ => AppLanguagePreference.English
         };
+        if (languagePreference == preference)
+        {
+            return;
+        }
+
+        localization.SetLanguage(language);
+        languagePreference = preference;
         RefreshLocalizedState();
         SettingsChanged(refreshPlan: false);
     }
@@ -664,11 +708,17 @@ public sealed class MainViewModel : BindableBase
 
         CpuName = value.CpuName;
         GpuName = value.GpuName;
+        GpuDetail = value.GpuNames.Count > 1
+            ? string.Join(Environment.NewLine, value.GpuNames)
+            : value.GpuName;
         RamLabel = localization.Format(
             "Diagnosis.MemoryAvailable",
             value.TotalMemoryGiB,
             value.AvailableMemoryGiB);
         DiskLabel = localization.Format("Diagnosis.FreeDisk", value.FreeDiskGiB);
+        WindowsLabel = value.OsLabel;
+        ArchitectureLabel = value.SystemArchitecture;
+        ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
         ReadinessScore = value.ReadinessScore;
         EditionLabel = value.Edition switch
         {
@@ -857,6 +907,8 @@ public sealed class MainViewModel : BindableBase
         OnPropertyChanged(nameof(IsDarkThemeSelected));
         OnPropertyChanged(nameof(IsLightThemeSelected));
         OnPropertyChanged(nameof(MinimizeToTrayOnClose));
+        OnPropertyChanged(nameof(IsCloseAppOnCloseSelected));
+        OnPropertyChanged(nameof(IsMinimizeToTrayOnCloseSelected));
         OnPropertyChanged(nameof(LaunchAtStartup));
         OnPropertyChanged(nameof(CheckForUpdates));
         ResetLocalizedPlaceholders(preserveDiagnostic: true);
@@ -1099,8 +1151,12 @@ public sealed class MainViewModel : BindableBase
             var analyzing = localization.GetString("Status.Analyzing");
             CpuName = analyzing;
             GpuName = analyzing;
+            GpuDetail = analyzing;
             RamLabel = analyzing;
             DiskLabel = analyzing;
+            WindowsLabel = analyzing;
+            ArchitectureLabel = analyzing;
+            ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
             EditionLabel = localization.GetString("Status.SearchingFiveM");
             GtaStatusLabel = localization.GetString("Status.SearchingGtaV");
             RecommendationTitle = localization.GetString("Status.AnalyzingComputer");
