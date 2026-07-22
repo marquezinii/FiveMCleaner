@@ -5,6 +5,25 @@ Studio, Streamlabs Desktop e TikTok LIVE Studio. O detector existe para que uma
 integração futura possa proteger o fluxo de trabalho de criadores durante uma
 otimização.
 
+## Painel de prontidão para criadores
+
+O dashboard transforma o levantamento local em um painel de três sinais, sem
+aplicar alterações no software de transmissão:
+
+1. **Software preservado**: mostra os aplicativos reconhecidos ou em execução.
+   A presença de um processo nunca é tratada como prova de que há uma live.
+2. **Margem de recursos**: usa memória disponível e pressão já medida pelo
+   diagnóstico para sugerir um teste privado quando a margem é pequena. Não
+   inventa FPS, bitrate, resolução ou capacidade de encoder.
+3. **Estado da sessão de jogo**: indica se FiveM ou GTA V estão abertos, porque
+   eles devem ser fechados antes de uma otimização que possa editar arquivos.
+
+O painel serve tanto para quem transmite em Twitch, YouTube, TikTok ou outra
+plataforma quanto para quem apenas grava. Ele não depende da plataforma, não
+envia telemetria e não requer login. Em caso de pressão ou leitura parcial, a
+orientação é testar uma cena privada e observar a própria plataforma, não
+alterar silenciosamente configurações de encoder.
+
 ## O que o detector informa
 
 Para cada aplicativo conhecido, o detector mantém dois sinais independentes:

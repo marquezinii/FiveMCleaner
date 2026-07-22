@@ -54,7 +54,13 @@ test("removes starter artifacts and keeps the Sites build cross-platform", async
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readdir(previewRoot),
+    readdir(previewRoot).catch((error) => {
+      if (error && error.code === "ENOENT") {
+        return [];
+      }
+
+      throw error;
+    }),
   ]);
 
   assert.deepEqual(files, []);

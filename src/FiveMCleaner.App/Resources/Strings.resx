@@ -263,6 +263,35 @@
   <data name="Streaming.SafeDetail" xml:space="preserve"><value>Profiles do not close OBS, Streamlabs or TikTok LIVE Studio.</value></data>
   <data name="Streaming.PartialTitle" xml:space="preserve"><value>Streaming check was partial</value></data>
   <data name="Streaming.PartialDetail" xml:space="preserve"><value>Some locations could not be read; conservative rules remain active.</value></data>
+  <data name="Streaming.Readiness.Protected.Title" xml:space="preserve"><value>Streaming protection is active</value></data>
+  <data name="Streaming.Readiness.Protected.Detail" xml:space="preserve"><value>A streaming app is open. FiveMCleaner preserves it; confirm your broadcast state before optimizing.</value></data>
+  <data name="Streaming.Readiness.Attention.Title" xml:space="preserve"><value>Run a test before going live</value></data>
+  <data name="Streaming.Readiness.Attention.Detail" xml:space="preserve"><value>The diagnosis shows resource pressure or an open game session. Use a private scene to validate stability.</value></data>
+  <data name="Streaming.Readiness.Ready.Title" xml:space="preserve"><value>Streaming preparation is available</value></data>
+  <data name="Streaming.Readiness.Ready.Detail" xml:space="preserve"><value>Your streaming software was detected. The plan preserves its settings and files.</value></data>
+  <data name="Streaming.Readiness.Partial.Title" xml:space="preserve"><value>Streaming scan was incomplete</value></data>
+  <data name="Streaming.Readiness.Partial.Detail" xml:space="preserve"><value>Part of the local check did not finish. No streaming setting will be changed.</value></data>
+  <data name="Streaming.Readiness.NotDetected.Title" xml:space="preserve"><value>A safe space for creators</value></data>
+  <data name="Streaming.Readiness.NotDetected.Detail" xml:space="preserve"><value>When you use OBS, Streamlabs or TikTok LIVE Studio, this panel helps review the PC without touching your scenes.</value></data>
+  <data name="Streaming.Check.Software.Protected.Title" xml:space="preserve"><value>Software preserved</value></data>
+  <data name="Streaming.Check.Software.Protected.DetailWithNames" xml:space="preserve"><value>{0} is running. This does not confirm that a broadcast is live.</value></data>
+  <data name="Streaming.Check.Software.Partial.Title" xml:space="preserve"><value>Partial detection</value></data>
+  <data name="Streaming.Check.Software.Partial.Detail" xml:space="preserve"><value>The complete local scan of streaming software could not finish.</value></data>
+  <data name="Streaming.Check.Software.Partial.DetailWithNames" xml:space="preserve"><value>{0} was detected; part of the local scan was unavailable.</value></data>
+  <data name="Streaming.Check.Software.Detected.Title" xml:space="preserve"><value>Software detected</value></data>
+  <data name="Streaming.Check.Software.Detected.DetailWithNames" xml:space="preserve"><value>{0} was detected. Scenes, profiles and recordings remain untouched.</value></data>
+  <data name="Streaming.Check.Software.NotDetected.Title" xml:space="preserve"><value>No software detected</value></data>
+  <data name="Streaming.Check.Software.NotDetected.Detail" xml:space="preserve"><value>No recognized application was found in this local scan.</value></data>
+  <data name="Streaming.Check.Resources.Ready.Title" xml:space="preserve"><value>Resource headroom</value></data>
+  <data name="Streaming.Check.Resources.Ready.Detail" xml:space="preserve"><value>Memory is available and this diagnosis has low pressure.</value></data>
+  <data name="Streaming.Check.Resources.Attention.Title" xml:space="preserve"><value>Resources need review</value></data>
+  <data name="Streaming.Check.Resources.Attention.Detail" xml:space="preserve"><value>Prioritize an encoder test and reduce load before starting a broadcast.</value></data>
+  <data name="Streaming.Check.Resources.Review.Title" xml:space="preserve"><value>Resources under observation</value></data>
+  <data name="Streaming.Check.Resources.Review.Detail" xml:space="preserve"><value>Headroom appears moderate. Test the scene and monitor dropped frames on the platform.</value></data>
+  <data name="Streaming.Check.GameSession.Open.Title" xml:space="preserve"><value>Game session is open</value></data>
+  <data name="Streaming.Check.GameSession.Open.Detail" xml:space="preserve"><value>Close FiveM and GTA V before applying optimizations that may edit settings.</value></data>
+  <data name="Streaming.Check.GameSession.Closed.Title" xml:space="preserve"><value>Game session is closed</value></data>
+  <data name="Streaming.Check.GameSession.Closed.Detail" xml:space="preserve"><value>The PC is in a safe state to plan optimizations before playing or broadcasting.</value></data>
   <data name="Actions.safety.fivem-stopped.verify.Name" xml:space="preserve"><value>Check FiveM status</value></data>
   <data name="Actions.safety.fivem-stopped.verify.Description" xml:space="preserve"><value>Confirms that FiveM processes are closed before any cache or graphics change.</value></data>
   <data name="Actions.safety.gtav-stopped.verify.Name" xml:space="preserve"><value>Check GTA V status</value></data>

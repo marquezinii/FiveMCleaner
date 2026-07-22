@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         mc:Ignorable="d"
         Title="FiveMCleaner"
@@ -240,7 +241,7 @@
                                                  Margin="7,10,0,0"
                                                  Minimum="0"
                                                  Maximum="100"
-                                                 Value="{Binding UpdateDownloadPercent}"
+                                                 Value="{Binding UpdateDownloadPercent, Mode=OneWay}"
                                                  Visibility="{Binding IsUpdateDownloading, Converter={StaticResource BooleanToVisibilityConverter}}" />
                                 </Grid>
                             </Border>
@@ -287,6 +288,42 @@
                                         <TextBlock Text="{Binding StreamingProtectionDetail}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Grid>
+                            </Border>
+
+                            <Border Style="{StaticResource CardStyle}" Padding="16" Margin="0,0,0,16">
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="38" />
+                                            <ColumnDefinition Width="*" />
+                                        </Grid.ColumnDefinitions>
+                                        <Border Width="30" Height="30" CornerRadius="8" Background="#1C62A8FF" VerticalAlignment="Top">
+                                            <TextBlock Text="&#xE8A5;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource BlueBrush}" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                                            <TextBlock Text="{Binding StreamingReadinessTitle}" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding StreamingReadinessDetail}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </Grid>
+                                    <ItemsControl ItemsSource="{Binding StreamingReadinessItems}" Margin="0,14,0,0">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate>
+                                                <primitives:UniformGrid Columns="3" />
+                                            </ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Border Background="{DynamicResource SurfaceRaisedBrush}" CornerRadius="9" Padding="11" Margin="0,0,8,0">
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TextMutedBrush}" />
+                                                        <TextBlock Text="{Binding Title}" Margin="0,8,0,0" FontSize="10.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                        <TextBlock Text="{Binding Detail}" Margin="0,4,0,0" FontSize="9.5" Foreground="{DynamicResource TextSubtleBrush}" TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                </Border>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
                             </Border>
 
                             <Grid Margin="0,0,0,16">

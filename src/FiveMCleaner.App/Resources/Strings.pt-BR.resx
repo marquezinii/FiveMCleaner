@@ -263,6 +263,35 @@
   <data name="Streaming.SafeDetail" xml:space="preserve"><value>Os perfis não fecham OBS, Streamlabs nem TikTok LIVE Studio.</value></data>
   <data name="Streaming.PartialTitle" xml:space="preserve"><value>A verificação de transmissão foi parcial</value></data>
   <data name="Streaming.PartialDetail" xml:space="preserve"><value>Alguns locais não puderam ser lidos; as regras conservadoras continuam ativas.</value></data>
+  <data name="Streaming.Readiness.Protected.Title" xml:space="preserve"><value>Proteção para transmissão ativa</value></data>
+  <data name="Streaming.Readiness.Protected.Detail" xml:space="preserve"><value>Um aplicativo de transmissão está aberto. O FiveMCleaner o preserva; confirme o estado da sua live antes de otimizar.</value></data>
+  <data name="Streaming.Readiness.Attention.Title" xml:space="preserve"><value>Faça um teste antes de entrar ao vivo</value></data>
+  <data name="Streaming.Readiness.Attention.Detail" xml:space="preserve"><value>O diagnóstico indica pressão de recursos ou sessão de jogo aberta. Use uma cena privada para validar estabilidade.</value></data>
+  <data name="Streaming.Readiness.Ready.Title" xml:space="preserve"><value>Preparação de transmissão disponível</value></data>
+  <data name="Streaming.Readiness.Ready.Detail" xml:space="preserve"><value>Seu software de transmissão foi detectado. O plano preserva suas configurações e arquivos.</value></data>
+  <data name="Streaming.Readiness.Partial.Title" xml:space="preserve"><value>Leitura de transmissão incompleta</value></data>
+  <data name="Streaming.Readiness.Partial.Detail" xml:space="preserve"><value>Parte da verificação local não foi concluída. Nenhuma configuração de transmissão será alterada.</value></data>
+  <data name="Streaming.Readiness.NotDetected.Title" xml:space="preserve"><value>Espaço seguro para criadores</value></data>
+  <data name="Streaming.Readiness.NotDetected.Detail" xml:space="preserve"><value>Ao usar OBS, Streamlabs ou TikTok LIVE Studio, este painel ajudará a revisar o PC sem tocar nas suas cenas.</value></data>
+  <data name="Streaming.Check.Software.Protected.Title" xml:space="preserve"><value>Software preservado</value></data>
+  <data name="Streaming.Check.Software.Protected.DetailWithNames" xml:space="preserve"><value>{0} está em execução. Isso não confirma uma live ativa.</value></data>
+  <data name="Streaming.Check.Software.Partial.Title" xml:space="preserve"><value>Detecção parcial</value></data>
+  <data name="Streaming.Check.Software.Partial.Detail" xml:space="preserve"><value>Não foi possível concluir toda a leitura local de aplicativos de transmissão.</value></data>
+  <data name="Streaming.Check.Software.Partial.DetailWithNames" xml:space="preserve"><value>{0} foi detectado; parte da leitura local ficou indisponível.</value></data>
+  <data name="Streaming.Check.Software.Detected.Title" xml:space="preserve"><value>Software identificado</value></data>
+  <data name="Streaming.Check.Software.Detected.DetailWithNames" xml:space="preserve"><value>{0} foi identificado. Cenas, perfis e gravações ficam intactos.</value></data>
+  <data name="Streaming.Check.Software.NotDetected.Title" xml:space="preserve"><value>Nenhum software identificado</value></data>
+  <data name="Streaming.Check.Software.NotDetected.Detail" xml:space="preserve"><value>Sem aplicativos reconhecidos nesta leitura local.</value></data>
+  <data name="Streaming.Check.Resources.Ready.Title" xml:space="preserve"><value>Margem de recursos</value></data>
+  <data name="Streaming.Check.Resources.Ready.Detail" xml:space="preserve"><value>Há memória disponível e pressão baixa neste diagnóstico.</value></data>
+  <data name="Streaming.Check.Resources.Attention.Title" xml:space="preserve"><value>Recursos para revisar</value></data>
+  <data name="Streaming.Check.Resources.Attention.Detail" xml:space="preserve"><value>Priorize um teste de encoder e reduza carga antes de iniciar uma transmissão.</value></data>
+  <data name="Streaming.Check.Resources.Review.Title" xml:space="preserve"><value>Recursos sob observação</value></data>
+  <data name="Streaming.Check.Resources.Review.Detail" xml:space="preserve"><value>A margem parece intermediária. Teste a cena e acompanhe quedas de quadro na plataforma.</value></data>
+  <data name="Streaming.Check.GameSession.Open.Title" xml:space="preserve"><value>Sessão de jogo aberta</value></data>
+  <data name="Streaming.Check.GameSession.Open.Detail" xml:space="preserve"><value>Feche FiveM e GTA V antes de aplicar otimizações que possam editar configurações.</value></data>
+  <data name="Streaming.Check.GameSession.Closed.Title" xml:space="preserve"><value>Sessão de jogo fechada</value></data>
+  <data name="Streaming.Check.GameSession.Closed.Detail" xml:space="preserve"><value>O PC está em um estado seguro para planejar a otimização antes de jogar ou transmitir.</value></data>
   <data name="Actions.safety.fivem-stopped.verify.Name" xml:space="preserve"><value>Verificar estado do FiveM</value></data>
   <data name="Actions.safety.fivem-stopped.verify.Description" xml:space="preserve"><value>Confirma que os processos do FiveM estão encerrados antes de qualquer alteração em cache ou gráficos.</value></data>
   <data name="Actions.safety.gtav-stopped.verify.Name" xml:space="preserve"><value>Verificar estado do GTA V</value></data>

@@ -16,3 +16,8 @@ public sealed record HistoryDisplayItem(
     string DateLabel,
     string Summary,
     bool CanRollback);
+
+public sealed record StreamingReadinessDisplayItem(
+    string IconGlyph,
+    string Title,
+    string Detail);

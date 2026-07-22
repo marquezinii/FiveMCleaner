@@ -42,6 +42,8 @@ public sealed class MainViewModel : BindableBase
     private string recommendationText = string.Empty;
     private string streamingProtectionTitle = string.Empty;
     private string streamingProtectionDetail = string.Empty;
+    private string streamingReadinessTitle = string.Empty;
+    private string streamingReadinessDetail = string.Empty;
     private string lightImpactLabel = string.Empty;
     private string balancedImpactLabel = string.Empty;
     private string aggressiveImpactLabel = string.Empty;
@@ -87,6 +89,8 @@ public sealed class MainViewModel : BindableBase
 
     public ObservableCollection<HistoryDisplayItem> HistoryItems { get; } = [];
 
+    public ObservableCollection<StreamingReadinessDisplayItem> StreamingReadinessItems { get; } = [];
+
     public string CpuName { get => cpuName; private set => SetProperty(ref cpuName, value); }
 
     public string GpuName { get => gpuName; private set => SetProperty(ref gpuName, value); }
@@ -108,6 +112,10 @@ public sealed class MainViewModel : BindableBase
     public string StreamingProtectionTitle { get => streamingProtectionTitle; private set => SetProperty(ref streamingProtectionTitle, value); }
 
     public string StreamingProtectionDetail { get => streamingProtectionDetail; private set => SetProperty(ref streamingProtectionDetail, value); }
+
+    public string StreamingReadinessTitle { get => streamingReadinessTitle; private set => SetProperty(ref streamingReadinessTitle, value); }
+
+    public string StreamingReadinessDetail { get => streamingReadinessDetail; private set => SetProperty(ref streamingReadinessDetail, value); }
 
     public string LightImpactLabel { get => lightImpactLabel; private set => SetProperty(ref lightImpactLabel, value); }
 
@@ -693,6 +701,7 @@ public sealed class MainViewModel : BindableBase
             _ => localization.GetString("Diagnosis.InstallLegacy")
         };
         ApplyStreamingProtection(value.StreamingSoftware);
+        ApplyStreamingReadiness(value);
         ApplyProfileImpact(value.PerformancePressure);
     }
 
@@ -747,6 +756,75 @@ public sealed class MainViewModel : BindableBase
 
         StreamingProtectionTitle = localization.GetString("Streaming.SafeTitle");
         StreamingProtectionDetail = localization.GetString("Streaming.SafeDetail");
+    }
+
+    private void ApplyStreamingReadiness(AppDiagnostic value)
+    {
+        var assessment = StreamingReadinessAdvisor.Evaluate(value);
+        (StreamingReadinessTitle, StreamingReadinessDetail) = assessment.Level switch
+        {
+            StreamingReadinessLevel.Protected => (
+                localization.GetString("Streaming.Readiness.Protected.Title"),
+                localization.GetString("Streaming.Readiness.Protected.Detail")),
+            StreamingReadinessLevel.Attention => (
+                localization.GetString("Streaming.Readiness.Attention.Title"),
+                localization.GetString("Streaming.Readiness.Attention.Detail")),
+            StreamingReadinessLevel.Ready => (
+                localization.GetString("Streaming.Readiness.Ready.Title"),
+                localization.GetString("Streaming.Readiness.Ready.Detail")),
+            StreamingReadinessLevel.Partial => (
+                localization.GetString("Streaming.Readiness.Partial.Title"),
+                localization.GetString("Streaming.Readiness.Partial.Detail")),
+            _ => (
+                localization.GetString("Streaming.Readiness.NotDetected.Title"),
+                localization.GetString("Streaming.Readiness.NotDetected.Detail"))
+        };
+
+        StreamingReadinessItems.Clear();
+        foreach (var check in assessment.Checks)
+        {
+            StreamingReadinessItems.Add(CreateStreamingReadinessItem(check));
+        }
+    }
+
+    private StreamingReadinessDisplayItem CreateStreamingReadinessItem(StreamingReadinessCheck check)
+    {
+        var suffix = check.Kind switch
+        {
+            StreamingReadinessCheckKind.Software => check.Tone switch
+            {
+                StreamingReadinessTone.Protected => "Protected",
+                StreamingReadinessTone.Caution => "Partial",
+                StreamingReadinessTone.Ready => "Detected",
+                _ => "NotDetected"
+            },
+            StreamingReadinessCheckKind.Resources => check.Tone switch
+            {
+                StreamingReadinessTone.Ready => "Ready",
+                StreamingReadinessTone.Caution => "Attention",
+                _ => "Review"
+            },
+            StreamingReadinessCheckKind.GameSession => check.Tone == StreamingReadinessTone.Caution
+                ? "Open"
+                : "Closed",
+            _ => throw new ArgumentOutOfRangeException(nameof(check))
+        };
+        var icon = check.Kind switch
+        {
+            StreamingReadinessCheckKind.Software => "\uE8A5",
+            StreamingReadinessCheckKind.Resources => "\uE950",
+            StreamingReadinessCheckKind.GameSession => "\uE7FC",
+            _ => "\uE946"
+        };
+        var title = localization.GetString($"Streaming.Check.{check.Kind}.{suffix}.Title");
+        var detail = check.Kind == StreamingReadinessCheckKind.Software
+            && check.ApplicationNames.Count > 0
+            ? localization.Format(
+                $"Streaming.Check.{check.Kind}.{suffix}.DetailWithNames",
+                string.Join(", ", check.ApplicationNames))
+            : localization.GetString($"Streaming.Check.{check.Kind}.{suffix}.Detail");
+
+        return new StreamingReadinessDisplayItem(icon, title, detail);
     }
 
     private void ApplySettings(AppSettings settings)

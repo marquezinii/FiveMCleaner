@@ -89,6 +89,10 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
 - Broker elevado de escopo mínimo, atualização opcional por GitHub Releases,
   atalho de desenvolvimento, ícone oficial, bandeja, inicialização opcional,
   suporte de idioma/tema e formulário de bugs.
+- Painel local de prontidão para criadores: reconhece OBS, Streamlabs Desktop e
+  TikTok LIVE Studio, preserva seus processos e exibe sinais de software,
+  recursos e sessão de jogo sem inferir que uma live está ativa nem alterar
+  cenas, contas, encoder ou gravações.
 - Instalador Inno Setup, pacote portável self-contained, manifestos e checksums
   de release.
 - Landing page e documentação de segurança, instalação, pesquisa, bugs e
