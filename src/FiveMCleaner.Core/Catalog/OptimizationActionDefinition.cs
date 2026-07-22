@@ -19,7 +19,14 @@ public sealed class OptimizationActionDefinition
         bool requiresRestart,
         int progressWeight,
         string expectedImpact,
-        ActionOptionGate optionGate)
+        ActionOptionGate optionGate,
+        IReadOnlyList<string> prerequisites,
+        bool isCritical,
+        SupportedWindowsVersions supportedWindows,
+        string detectionSummary,
+        string confirmationSummary,
+        string undoSummary,
+        string riskLimitations)
     {
         Id = id;
         Version = version;
@@ -36,6 +43,13 @@ public sealed class OptimizationActionDefinition
         ProgressWeight = progressWeight;
         ExpectedImpact = expectedImpact;
         OptionGate = optionGate;
+        Prerequisites = prerequisites;
+        IsCritical = isCritical;
+        SupportedWindows = supportedWindows;
+        DetectionSummary = detectionSummary;
+        ConfirmationSummary = confirmationSummary;
+        UndoSummary = undoSummary;
+        RiskLimitations = riskLimitations;
     }
 
     public string Id { get; }
@@ -66,11 +80,31 @@ public sealed class OptimizationActionDefinition
 
     public string ExpectedImpact { get; }
 
+    public IReadOnlyList<string> Prerequisites { get; }
+
+    public bool IsCritical { get; }
+
+    public SupportedWindowsVersions SupportedWindows { get; }
+
+    public string DetectionSummary { get; }
+
+    public string ConfirmationSummary { get; }
+
+    public string UndoSummary { get; }
+
+    public string RiskLimitations { get; }
+
     internal ActionOptionGate OptionGate { get; }
 
     public bool Supports(OptimizationProfile profile)
     {
         return SupportedProfiles.Contains(profile);
+    }
+
+    public bool SupportsWindows(SupportedWindowsVersions detected)
+    {
+        return detected == SupportedWindowsVersions.None
+            || (SupportedWindows & detected) != SupportedWindowsVersions.None;
     }
 
     public ActionMetadataDto ToMetadata()
@@ -90,7 +124,14 @@ public sealed class OptimizationActionDefinition
             RequiresAcPower = RequiresAcPower,
             RequiresRestart = RequiresRestart,
             ProgressWeight = ProgressWeight,
-            ExpectedImpact = ExpectedImpact
+            ExpectedImpact = ExpectedImpact,
+            Prerequisites = Prerequisites.ToArray(),
+            IsCritical = IsCritical,
+            SupportedWindows = SupportedWindows,
+            DetectionSummary = DetectionSummary,
+            ConfirmationSummary = ConfirmationSummary,
+            UndoSummary = UndoSummary,
+            RiskLimitations = RiskLimitations
         };
     }
 }

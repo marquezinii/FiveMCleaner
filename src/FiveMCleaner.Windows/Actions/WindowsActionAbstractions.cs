@@ -33,7 +33,14 @@ public static class WindowsActionMetadata
             && metadata.RequiresAcPower == expected.RequiresAcPower
             && metadata.RequiresRestart == expected.RequiresRestart
             && metadata.ProgressWeight == expected.ProgressWeight
-            && metadata.ExpectedImpact == expected.ExpectedImpact;
+            && metadata.ExpectedImpact == expected.ExpectedImpact
+            && metadata.Prerequisites.SequenceEqual(expected.Prerequisites)
+            && metadata.IsCritical == expected.IsCritical
+            && metadata.SupportedWindows == expected.SupportedWindows
+            && metadata.DetectionSummary == expected.DetectionSummary
+            && metadata.ConfirmationSummary == expected.ConfirmationSummary
+            && metadata.UndoSummary == expected.UndoSummary
+            && metadata.RiskLimitations == expected.RiskLimitations;
     }
 }
 
@@ -42,7 +49,10 @@ public sealed record WindowsActionProgress(
     string ActionId,
     string Message,
     int CompletedWeight,
-    int TotalWeight);
+    int TotalWeight,
+    int CompletedSteps = 0,
+    int TotalSteps = 0,
+    ActionExecutionOutcome Outcome = ActionExecutionOutcome.Pending);
 
 public sealed record WindowsActionContext
 {

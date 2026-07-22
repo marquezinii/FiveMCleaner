@@ -11,7 +11,7 @@ public sealed class ActionCatalogTests
     {
         var catalog = ActionCatalog.Current;
 
-        Assert.Equal(2, ActionCatalog.CurrentVersion);
+        Assert.Equal(3, ActionCatalog.CurrentVersion);
         Assert.NotEmpty(catalog.Actions);
         Assert.Equal(
             catalog.Actions.Count,
@@ -29,6 +29,17 @@ public sealed class ActionCatalogTests
             Assert.True(action.ProgressWeight > 0);
             Assert.NotEmpty(action.SupportedProfiles);
             Assert.Equal(action.SupportedProfiles.Count, action.SupportedProfiles.Distinct().Count());
+
+            // Documentação por ação de primeira classe (PROMPT 2).
+            Assert.False(string.IsNullOrWhiteSpace(action.DetectionSummary));
+            Assert.False(string.IsNullOrWhiteSpace(action.ConfirmationSummary));
+            Assert.False(string.IsNullOrWhiteSpace(action.UndoSummary));
+            Assert.False(string.IsNullOrWhiteSpace(action.RiskLimitations));
+            Assert.NotEqual(SupportedWindowsVersions.None, action.SupportedWindows);
+
+            // Todo prerequisito referencia uma ação existente do catálogo.
+            Assert.All(action.Prerequisites, prerequisiteId =>
+                Assert.True(catalog.TryGet(prerequisiteId, out _)));
         });
     }
 
@@ -58,6 +69,17 @@ public sealed class ActionCatalogTests
         Assert.Equal(ActionReversibility.FullyReversible, definition.Reversibility);
         Assert.Equal(RequiredPrivilege.StandardUser, definition.RequiredPrivilege);
         Assert.True(definition.RequiresFiveMStopped);
+    }
+
+    [Fact]
+    public void SupportsWindows_GatesByDetectedVersionAndFailsOpenWhenUnknown()
+    {
+        var action = ActionCatalog.Current.GetRequired(OptimizationActionIds.EnableGameMode);
+
+        Assert.True(action.SupportsWindows(SupportedWindowsVersions.Windows10));
+        Assert.True(action.SupportsWindows(SupportedWindowsVersions.Windows11));
+        // Quando a versão não é detectada, a ação permanece elegível (fail-open).
+        Assert.True(action.SupportsWindows(SupportedWindowsVersions.None));
     }
 
     [Fact]

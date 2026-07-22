@@ -32,6 +32,7 @@ public sealed class PlanBuilder : IPlanBuilder
 
         var selectedDefinitions = _catalog.Actions
             .Where(action => action.Supports(request.Profile))
+            .Where(action => action.SupportsWindows(request.DetectedWindows))
             .Where(action => IsEnabled(action.OptionGate, request.Options))
             .ToArray();
 

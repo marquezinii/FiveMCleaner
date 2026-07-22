@@ -10,6 +10,7 @@ public enum WindowsTransactionState
     Applying,
     Committing,
     Committed,
+    CommittedWithErrors,
     AwaitingElevation,
     AwaitingElevationRollback,
     AwaitingStandardRollback,
@@ -28,6 +29,7 @@ public enum WindowsActionJournalState
     Applied,
     Committing,
     Committed,
+    Skipped,
     RollingBack,
     RolledBack,
     Failed,
@@ -47,6 +49,15 @@ public sealed record WindowsActionJournalEntry
     public required ActionReversibility Reversibility { get; init; }
 
     public required WindowsActionJournalState State { get; set; }
+
+    /// <summary>
+    /// Semantic outcome for reporting. Independent from <see cref="State"/>,
+    /// which drives the transactional machine and rollback eligibility.
+    /// </summary>
+    public ActionExecutionOutcome Outcome { get; set; } = ActionExecutionOutcome.Pending;
+
+    /// <summary>Reason an action was skipped or not run, for the report.</summary>
+    public string? OutcomeReason { get; set; }
 
     public bool Changed { get; set; }
 

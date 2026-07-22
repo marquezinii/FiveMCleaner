@@ -9,7 +9,20 @@ public sealed record WindowsTransactionOptions
 
     public bool IncludeAdministratorActions { get; init; } = true;
 
+    /// <summary>
+    /// Strict mode only: when a genuine failure occurs, roll back every action
+    /// already applied in this run and mark the whole transaction failed.
+    /// Ignored when <see cref="IsolateFailures"/> is true.
+    /// </summary>
     public bool RollbackOnFailure { get; init; } = true;
+
+    /// <summary>
+    /// When true, each action is executed as an isolated mini-transaction:
+    /// verify → apply → commit, rolling back only itself on failure while
+    /// unrelated safe actions keep running. Actions whose prerequisite did not
+    /// succeed are skipped; a failed critical action aborts the remaining run.
+    /// </summary>
+    public bool IsolateFailures { get; init; }
 }
 
 public sealed record WindowsRollbackOptions
@@ -144,6 +157,13 @@ public sealed class WindowsTransactionEngine
 
             journal.State = WindowsTransactionState.Applying;
             await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+
+            if (options.IsolateFailures)
+            {
+                return await ExecuteIsolatedAsync(journal, selected, context, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
             var applied = new List<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)>();
             try
             {
@@ -197,6 +217,9 @@ public sealed class WindowsTransactionEngine
                         item.Entry.SnapshotJson,
                         cancellationToken).ConfigureAwait(false);
                     item.Entry.State = WindowsActionJournalState.Committed;
+                    item.Entry.Outcome = item.Entry.Changed
+                        ? ActionExecutionOutcome.Applied
+                        : ActionExecutionOutcome.Verified;
                     item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
                     await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
                 }
@@ -220,6 +243,7 @@ public sealed class WindowsTransactionEngine
                 if (current is not null)
                 {
                     current.State = WindowsActionJournalState.Failed;
+                    current.Outcome = ActionExecutionOutcome.Failed;
                     current.Error = exception.ToString();
                     current.CompletedAtUtc = DateTimeOffset.UtcNow;
                 }
@@ -354,7 +378,9 @@ public sealed class WindowsTransactionEngine
             || entry.State is WindowsActionJournalState.RolledBack
                 or WindowsActionJournalState.Pending
                 or WindowsActionJournalState.DeferredPrivilege
-                or WindowsActionJournalState.SkippedPrivilege)
+                or WindowsActionJournalState.SkippedPrivilege
+                or WindowsActionJournalState.Skipped
+                or WindowsActionJournalState.Failed)
         {
             return false;
         }
@@ -504,6 +530,229 @@ public sealed class WindowsTransactionEngine
         };
     }
 
+    private async Task<WindowsTransactionResult> ExecuteIsolatedAsync(
+        WindowsTransactionJournal journal,
+        IReadOnlyList<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)> selected,
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        var entriesById = journal.Actions.ToDictionary(entry => entry.ActionId, StringComparer.Ordinal);
+        var applied = new List<string>();
+        var totalWeight = selected.Sum(item => Math.Max(1, item.Action.Metadata.ProgressWeight));
+        var totalSteps = selected.Count;
+        var completedWeight = 0;
+        var step = 0;
+        var aborted = false;
+
+        foreach (var item in selected)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            step++;
+            var weight = Math.Max(1, item.Action.Metadata.ProgressWeight);
+
+            if (aborted)
+            {
+                MarkTerminal(item.Entry, WindowsActionJournalState.Skipped,
+                    ActionExecutionOutcome.NotRun, "Ignorada após uma falha crítica anterior.");
+                completedWeight += weight;
+                await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+                ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
+                    ActionExecutionOutcome.NotRun);
+                continue;
+            }
+
+            var unmet = FindUnmetPrerequisite(item.Action.Metadata, entriesById);
+            if (unmet is not null)
+            {
+                MarkTerminal(item.Entry, WindowsActionJournalState.Skipped,
+                    ActionExecutionOutcome.Skipped, $"Pré-requisito não atendido: {unmet}.");
+                completedWeight += weight;
+                await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+                ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
+                    ActionExecutionOutcome.Skipped);
+                continue;
+            }
+
+            item.Entry.State = WindowsActionJournalState.Applying;
+            item.Entry.StartedAtUtc = DateTimeOffset.UtcNow;
+            item.Entry.Error = null;
+            await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+            ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
+                ActionExecutionOutcome.Pending);
+
+            try
+            {
+                var result = await item.Action.ApplyAsync(context, cancellationToken)
+                    .ConfigureAwait(false);
+                item.Entry.Changed = result.Changed;
+                item.Entry.SnapshotJson = result.SnapshotJson;
+                item.Entry.Messages.AddRange(result.Messages);
+
+                if (result.Changed)
+                {
+                    item.Entry.State = WindowsActionJournalState.Committing;
+                    await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+                    await item.Action.CommitAsync(context, item.Entry.SnapshotJson, cancellationToken)
+                        .ConfigureAwait(false);
+                    item.Entry.State = WindowsActionJournalState.Committed;
+                    item.Entry.Outcome = ActionExecutionOutcome.Applied;
+                    applied.Add(item.Action.Metadata.Id);
+                }
+                else
+                {
+                    item.Entry.State = WindowsActionJournalState.Committed;
+                    item.Entry.Outcome = ActionExecutionOutcome.Verified;
+                }
+
+                item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
+                completedWeight += weight;
+                await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+                ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
+                    item.Entry.Outcome);
+            }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+            {
+                await IsolatedRollbackSelfAsync(journal, item, context).ConfigureAwait(false);
+                throw;
+            }
+            catch (Exception exception) when (exception is not StackOverflowException)
+            {
+                item.Entry.Error = exception.ToString();
+                item.Entry.State = WindowsActionJournalState.Failed;
+                item.Entry.Outcome = ActionExecutionOutcome.Failed;
+                item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
+                await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+
+                await IsolatedRollbackSelfAsync(journal, item, context).ConfigureAwait(false);
+
+                completedWeight += weight;
+                if (item.Action.Metadata.IsCritical)
+                {
+                    aborted = true;
+                }
+
+                ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
+                    item.Entry.Outcome);
+            }
+        }
+
+        if (aborted)
+        {
+            foreach (var entry in journal.Actions.Where(entry =>
+                         entry.State is WindowsActionJournalState.Pending
+                             or WindowsActionJournalState.DeferredPrivilege))
+            {
+                MarkTerminal(entry, WindowsActionJournalState.Skipped,
+                    ActionExecutionOutcome.NotRun, "Ignorada após uma falha crítica anterior.");
+            }
+        }
+
+        journal.State = DetermineIsolatedFinalState(journal);
+        journal.Error = journal.Actions.Any(entry => entry.Outcome is
+            ActionExecutionOutcome.Failed
+            or ActionExecutionOutcome.RolledBack
+            or ActionExecutionOutcome.RollbackFailed)
+            ? "Uma ou mais ações não foram concluídas; consulte o relatório."
+            : null;
+        await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+
+        return CreateResult(journal, applied, GetDeferredAdministratorIds(journal), journal.Error);
+    }
+
+    private async Task IsolatedRollbackSelfAsync(
+        WindowsTransactionJournal journal,
+        (IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry) item,
+        WindowsActionContext context)
+    {
+        if (!item.Entry.Changed || string.IsNullOrWhiteSpace(item.Entry.SnapshotJson))
+        {
+            return;
+        }
+
+        try
+        {
+            item.Entry.State = WindowsActionJournalState.RollingBack;
+            await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+            await item.Action.RollbackAsync(context, item.Entry.SnapshotJson, CancellationToken.None)
+                .ConfigureAwait(false);
+            item.Entry.State = WindowsActionJournalState.RolledBack;
+            item.Entry.Outcome = ActionExecutionOutcome.RolledBack;
+        }
+        catch (Exception exception) when (exception is not StackOverflowException)
+        {
+            item.Entry.State = WindowsActionJournalState.RollbackFailed;
+            item.Entry.Outcome = ActionExecutionOutcome.RollbackFailed;
+            item.Entry.Error = exception.ToString();
+        }
+
+        await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+    }
+
+    private static string? FindUnmetPrerequisite(
+        ActionMetadataDto metadata,
+        IReadOnlyDictionary<string, WindowsActionJournalEntry> entriesById)
+    {
+        foreach (var prerequisiteId in metadata.Prerequisites)
+        {
+            if (!entriesById.TryGetValue(prerequisiteId, out var entry)
+                || entry.Outcome is not (ActionExecutionOutcome.Verified or ActionExecutionOutcome.Applied))
+            {
+                return prerequisiteId;
+            }
+        }
+
+        return null;
+    }
+
+    private static void MarkTerminal(
+        WindowsActionJournalEntry entry,
+        WindowsActionJournalState state,
+        ActionExecutionOutcome outcome,
+        string reason)
+    {
+        entry.State = state;
+        entry.Outcome = outcome;
+        entry.OutcomeReason = reason;
+        entry.CompletedAtUtc = DateTimeOffset.UtcNow;
+    }
+
+    private static WindowsTransactionState DetermineIsolatedFinalState(
+        WindowsTransactionJournal journal)
+    {
+        if (journal.Actions.Any(entry => entry.Outcome is
+            ActionExecutionOutcome.Failed
+            or ActionExecutionOutcome.RolledBack
+            or ActionExecutionOutcome.RollbackFailed))
+        {
+            return WindowsTransactionState.CommittedWithErrors;
+        }
+
+        return journal.Actions.Any(entry => entry.State is
+            WindowsActionJournalState.Pending or WindowsActionJournalState.DeferredPrivilege)
+            ? WindowsTransactionState.AwaitingElevation
+            : WindowsTransactionState.Committed;
+    }
+
+    private static void ReportStep(
+        WindowsActionContext context,
+        (IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry) item,
+        int step,
+        int totalSteps,
+        int completedWeight,
+        int totalWeight,
+        ActionExecutionOutcome outcome)
+    {
+        context.Progress?.Report(new WindowsActionProgress(
+            context.TransactionId,
+            item.Action.Metadata.Id,
+            item.Action.Metadata.Name,
+            completedWeight,
+            totalWeight,
+            step,
+            totalSteps,
+            outcome));
+    }
+
     private async Task RollbackAppliedAsync(
         WindowsTransactionJournal journal,
         IReadOnlyList<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)> applied,
@@ -526,11 +775,13 @@ public sealed class WindowsTransactionEngine
                     item.Entry.SnapshotJson,
                     cancellationToken).ConfigureAwait(false);
                 item.Entry.State = WindowsActionJournalState.RolledBack;
+                item.Entry.Outcome = ActionExecutionOutcome.RolledBack;
                 item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
             }
             catch (Exception exception) when (exception is not StackOverflowException)
             {
                 item.Entry.State = WindowsActionJournalState.RollbackFailed;
+                item.Entry.Outcome = ActionExecutionOutcome.RollbackFailed;
                 item.Entry.Error = exception.ToString();
                 rollbackErrors.Add(exception);
             }
