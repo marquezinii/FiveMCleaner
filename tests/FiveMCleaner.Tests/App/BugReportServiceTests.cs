@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -142,11 +143,15 @@ public sealed class BugReportServiceTests
         var constructor = typeof(FormSubmitBugReportService).GetConstructor(
             BindingFlags.Instance | BindingFlags.NonPublic,
             binder: null,
-            [typeof(HttpClient), typeof(Uri)],
+            [typeof(HttpClient), typeof(Uri), typeof(ILocalizationService)],
             modifiers: null);
         Assert.NotNull(constructor);
         return Assert.IsType<FormSubmitBugReportService>(
-            constructor.Invoke([httpClient, endpoint]));
+            constructor.Invoke([
+                httpClient,
+                endpoint,
+                new LocalizationService(CultureInfo.GetCultureInfo("pt-BR"))
+            ]));
     }
 
     private static BugReportSubmission ValidSubmission()
