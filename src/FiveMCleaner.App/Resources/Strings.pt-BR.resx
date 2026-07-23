@@ -162,7 +162,7 @@
   <data name="Diagnosis.CouldNotScanAgain" xml:space="preserve"><value>Não foi possível reanalisar agora</value></data>
   <data name="Diagnosis.FiveMLegacyDetected" xml:space="preserve"><value>FIVEM LEGACY DETECTADO</value></data>
   <data name="Diagnosis.FiveMEnhancedBlocked" xml:space="preserve"><value>ENHANCED • AINDA BLOQUEADO</value></data>
-  <data name="Diagnosis.FiveMNotFound" xml:space="preserve"><value>FIVEM LEGACY NÃO LOCALIZADO</value></data>
+  <data name="Diagnosis.FiveMNotFound" xml:space="preserve"><value>FIVEM LEGACY NÃO DETECTADO</value></data>
   <data name="Diagnosis.GtaVOpen" xml:space="preserve"><value>GTA V ABERTO • FECHE PARA OTIMIZAR</value></data>
   <data name="Diagnosis.GtaVLegacyDetected" xml:space="preserve"><value>GTA V LEGACY DETECTADO</value></data>
   <data name="Diagnosis.GtaVSettingsDetected" xml:space="preserve"><value>CONFIGURAÇÃO DO GTA V DETECTADA</value></data>

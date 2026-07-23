@@ -43,6 +43,8 @@ public sealed class MainViewModel : BindableBase
     private string editionLabel = string.Empty;
     private string editionBadgeLabel = "AUTO";
     private string gtaStatusLabel = string.Empty;
+    private bool isFiveMLegacyDetected;
+    private bool isGtaVLegacyDetected;
     private string recommendationTitle = string.Empty;
     private string recommendationText = string.Empty;
     private string streamingProtectionTitle = string.Empty;
@@ -156,6 +158,10 @@ public sealed class MainViewModel : BindableBase
     public string EditionBadgeLabel { get => editionBadgeLabel; private set => SetProperty(ref editionBadgeLabel, value); }
 
     public string GtaStatusLabel { get => gtaStatusLabel; private set => SetProperty(ref gtaStatusLabel, value); }
+
+    public bool IsFiveMLegacyDetected { get => isFiveMLegacyDetected; private set => SetProperty(ref isFiveMLegacyDetected, value); }
+
+    public bool IsGtaVLegacyDetected { get => isGtaVLegacyDetected; private set => SetProperty(ref isGtaVLegacyDetected, value); }
 
     public string RecommendationTitle { get => recommendationTitle; private set => SetProperty(ref recommendationTitle, value); }
 
@@ -769,25 +775,20 @@ public sealed class MainViewModel : BindableBase
         ArchitectureLabel = value.SystemArchitecture;
         ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
         ReadinessScore = value.ReadinessScore;
-        EditionLabel = value.Edition switch
-        {
-            FiveMEdition.Legacy => localization.GetString("Diagnosis.FiveMLegacyDetected"),
-            FiveMEdition.Enhanced => localization.GetString("Diagnosis.FiveMEnhancedBlocked"),
-            _ => localization.GetString("Diagnosis.FiveMNotFound")
-        };
+        IsFiveMLegacyDetected = value.Edition == FiveMEdition.Legacy;
+        IsGtaVLegacyDetected = value.GtaVDetected || File.Exists(value.GtaVGraphicsSettingsPath);
+        EditionLabel = IsFiveMLegacyDetected
+            ? localization.GetString("Diagnosis.FiveMLegacyDetected")
+            : localization.GetString("Diagnosis.FiveMNotFound");
         EditionBadgeLabel = value.Edition switch
         {
             FiveMEdition.Legacy => "LEGACY",
             FiveMEdition.Enhanced => "ENHANCED",
             _ => localization.GetString("Status.Waiting")
         };
-        GtaStatusLabel = value.GtaVIsRunning
-            ? localization.GetString("Diagnosis.GtaVOpen")
-            : value.GtaVDetected
+        GtaStatusLabel = IsGtaVLegacyDetected
             ? localization.GetString("Diagnosis.GtaVLegacyDetected")
-            : File.Exists(value.GtaVGraphicsSettingsPath)
-                ? localization.GetString("Diagnosis.GtaVSettingsDetected")
-                : localization.GetString("Diagnosis.GtaVNotFound");
+            : localization.GetString("Diagnosis.GtaVNotFound");
         RecommendationTitle = value.IsFiveMRunning
             ? localization.GetString("Diagnosis.CloseFiveMSafely")
             : value.GtaVIsRunning
@@ -1343,6 +1344,8 @@ public sealed class MainViewModel : BindableBase
             ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
             EditionLabel = localization.GetString("Status.SearchingFiveM");
             GtaStatusLabel = localization.GetString("Status.SearchingGtaV");
+            IsFiveMLegacyDetected = false;
+            IsGtaVLegacyDetected = false;
             RecommendationTitle = localization.GetString("Status.AnalyzingComputer");
             RecommendationText = localization.GetString("Status.LocalOnly");
             StreamingProtectionTitle = localization.GetString("Streaming.SafeTitle");

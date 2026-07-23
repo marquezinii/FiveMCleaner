@@ -162,7 +162,7 @@
   <data name="Diagnosis.CouldNotScanAgain" xml:space="preserve"><value>Could not scan again right now</value></data>
   <data name="Diagnosis.FiveMLegacyDetected" xml:space="preserve"><value>FIVEM LEGACY DETECTED</value></data>
   <data name="Diagnosis.FiveMEnhancedBlocked" xml:space="preserve"><value>ENHANCED • CURRENTLY BLOCKED</value></data>
-  <data name="Diagnosis.FiveMNotFound" xml:space="preserve"><value>FIVEM LEGACY NOT FOUND</value></data>
+  <data name="Diagnosis.FiveMNotFound" xml:space="preserve"><value>FIVEM LEGACY NOT DETECTED</value></data>
   <data name="Diagnosis.GtaVOpen" xml:space="preserve"><value>GTA V OPEN • CLOSE TO OPTIMIZE</value></data>
   <data name="Diagnosis.GtaVLegacyDetected" xml:space="preserve"><value>GTA V LEGACY DETECTED</value></data>
   <data name="Diagnosis.GtaVSettingsDetected" xml:space="preserve"><value>GTA V SETTINGS DETECTED</value></data>

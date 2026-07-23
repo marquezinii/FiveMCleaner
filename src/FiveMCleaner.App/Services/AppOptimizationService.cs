@@ -124,7 +124,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 LogicalProcessorCount = logicalProcessorCount,
                 FreeDiskGiB = freeDiskGiB,
                 LegacyCacheBytes = cacheBytes,
-                OsLabel = RuntimeInformation.OSDescription,
+                OsLabel = GetOperatingSystemLabel(),
                 SystemArchitecture = GetArchitectureLabel(),
                 ReadinessScore = assessment.ReadinessScore,
                 RecommendedProfile = assessment.RecommendedProfile,
@@ -1072,6 +1072,20 @@ public sealed class AppOptimizationService : IAppOptimizationService
         }
 
         return status;
+    }
+
+    private static string GetOperatingSystemLabel()
+    {
+        if (!OperatingSystem.IsWindows())
+        {
+            return RuntimeInformation.OSDescription;
+        }
+
+        // Windows 11 mantém a versão interna 10.0 por compatibilidade. O build
+        // 22000 ou superior é a forma suportada pelo Windows para identificá-lo.
+        return Environment.OSVersion.Version.Build >= 22000
+            ? "Microsoft Windows 11"
+            : "Microsoft Windows 10";
     }
 
     private static string? GetMemoryModuleLayout()

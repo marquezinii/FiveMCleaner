@@ -283,3 +283,10 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   espaço livre e, quando o WMI disponibiliza os módulos, informa a composição
   física da RAM (por exemplo, `32 GB · 2×16 GB`). Idioma e aparência usam
   seletores compactos; minimizar para a bandeja é um toggle único.
+- A visão geral mostra FiveM Legacy e GTA V Legacy com um estado binário e
+  coerente: check verde para detectado e X vermelho para não detectado. A
+  identificação do Windows considera o build 22000 ou superior como Windows
+  11, porque o sistema conserva internamente a versão `10.0` por
+  compatibilidade. Os modos usam velocímetros neutros com ponteiro verde,
+  amarelo ou vermelho para comunicar a intensidade; os avisos redundantes de
+  recomendação e os cards de streaming não aparecem na interface principal.
