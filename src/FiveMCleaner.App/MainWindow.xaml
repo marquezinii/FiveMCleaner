@@ -142,7 +142,7 @@
                     <StackPanel Grid.Column="1" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
                         <Button Style="{StaticResource WindowButtonStyle}" Click="Minimize_Click" ToolTip="{Binding [Window.Minimize], Source={StaticResource LocalizedStrings}}"><TextBlock Text="&#xE921;" FontFamily="Segoe MDL2 Assets" FontSize="10" /></Button>
                         <Button x:Name="MaximizeButton" Style="{StaticResource WindowButtonStyle}" Click="Maximize_Click" ToolTip="{Binding [Window.Maximize], Source={StaticResource LocalizedStrings}}"><TextBlock x:Name="MaximizeGlyph" Text="&#xE922;" FontFamily="Segoe MDL2 Assets" FontSize="10" /></Button>
-                        <Button Style="{StaticResource WindowButtonStyle}" Click="Close_Click" ToolTip="{Binding [Window.Close], Source={StaticResource LocalizedStrings}}"><TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" /></Button>
+                        <Button Style="{StaticResource CloseWindowButtonStyle}" Click="Close_Click" ToolTip="{Binding [Window.Close], Source={StaticResource LocalizedStrings}}"><TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" /></Button>
                     </StackPanel>
                 </Grid>
             </Border>
@@ -189,7 +189,7 @@
                         </StackPanel>
 
                         <StackPanel Grid.Row="2">
-                            <Border Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="11">
+                            <Border Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="11" ToolTip="{Binding [Safety.SnapshotRollback], Source={StaticResource LocalizedStrings}}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="30" />
@@ -200,7 +200,6 @@
                                     </Border>
                                     <StackPanel Grid.Column="1" Margin="7,0,0,0">
                                         <TextBlock Text="{Binding [Safety.Active], Source={StaticResource LocalizedStrings}}" FontSize="11.5" FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding [Safety.SnapshotRollback], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" TextWrapping="Wrap" />
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -449,7 +448,7 @@
                             <Grid.ColumnDefinitions><ColumnDefinition Width="1.08*" /><ColumnDefinition Width="15" /><ColumnDefinition Width="0.92*" /></Grid.ColumnDefinitions>
                             <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="18">
                                 <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                    <Grid Margin="0,0,0,13"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,12,0"><TextBlock Text="{Binding [Optimizer.CurrentPlan], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="{Binding PlanHeader}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" TextWrapping="Wrap" /></StackPanel><Border Grid.Column="1" HorizontalAlignment="Right" Padding="9,4" Background="{DynamicResource ChipBrush}" CornerRadius="7"><TextBlock Text="{Binding SelectedProfileLabel}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" /></Border></Grid>
+                                    <Grid Margin="0,0,0,13"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,12,0"><TextBlock Text="{Binding [Optimizer.CurrentPlan], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="{Binding PlanHeader}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" TextWrapping="Wrap" /></StackPanel><Border Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" MinHeight="28" Padding="9,0" Background="{DynamicResource ChipBrush}" CornerRadius="7"><TextBlock Text="{Binding SelectedProfileLabel}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" /></Border></Grid>
                                     <Border Grid.Row="1" Margin="0,0,0,11" Padding="11,8" Background="#1FFF7A18" BorderBrush="#45FF7A18" BorderThickness="1" CornerRadius="8"><TextBlock Text="{Binding PlanNoticesText}" Foreground="{DynamicResource OrangeLightBrush}" FontSize="10" TextWrapping="Wrap" /></Border>
                                     <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding PlannedActions}" ItemTemplate="{StaticResource ActionTemplate}" /></ScrollViewer>
                                     <Grid Grid.Row="3" Margin="0,13,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Button Content="{Binding [Optimizer.RunPlan], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" /><TextBlock Grid.Column="1" Text="{Binding SafetySummary}" Margin="12,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" TextAlignment="Right" /></Grid>
@@ -507,8 +506,6 @@
                     <ScrollViewer x:Name="SettingsPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock Text="{Binding [Settings.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" />
-                            <TextBlock Text="{Binding [Settings.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,18" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" />
-
                             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">
                                 <StackPanel>
                                     <TextBlock Text="{Binding [Settings.General.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />

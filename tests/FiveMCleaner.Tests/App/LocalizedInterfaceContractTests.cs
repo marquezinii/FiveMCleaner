@@ -235,6 +235,31 @@ public sealed partial class LocalizedInterfaceContractTests
             (string?)trigger.Attribute("Property") == "IsMouseOver");
     }
 
+    [Fact]
+    public void SettingsAndWindowChrome_UseTheRefinedSpacingAndHoverContracts()
+    {
+        var root = FindRepositoryRoot();
+        var mainWindow = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml"));
+        var controls = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Themes",
+            "Controls.xaml"));
+
+        Assert.Contains("ToolTip=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Text=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Text=\"{Binding [Settings.Subtitle]", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource CloseWindowButtonStyle}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("<Style x:Key=\"CloseWindowButtonStyle\"", controls, StringComparison.Ordinal);
+        Assert.Contains("BorderBrush\" Value=\"{DynamicResource RedBrush}\"", controls, StringComparison.Ordinal);
+        Assert.Contains("Padding\" Value=\"17,0,11,0\"", controls, StringComparison.Ordinal);
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

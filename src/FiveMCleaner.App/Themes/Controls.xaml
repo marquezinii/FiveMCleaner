@@ -173,6 +173,31 @@
         </Setter>
     </Style>
 
+    <Style x:Key="CloseWindowButtonStyle" TargetType="Button" BasedOn="{StaticResource WindowButtonStyle}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="Transparent"
+                            BorderThickness="1"
+                            CornerRadius="7">
+                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="#1AF26B6B" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource RedBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="Root" Property="Background" Value="#33F26B6B" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="FormTextBoxStyle" TargetType="TextBox">
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="Background" Value="{DynamicResource InsetBrush}" />
@@ -236,7 +261,7 @@
     <Style x:Key="SettingsComboBoxStyle" TargetType="ComboBox">
         <Setter Property="MinWidth" Value="218" />
         <Setter Property="Height" Value="38" />
-        <Setter Property="Padding" Value="11,0" />
+        <Setter Property="Padding" Value="17,0,11,0" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}" />
@@ -249,7 +274,7 @@
                 <Style TargetType="ComboBoxItem">
                     <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
                     <Setter Property="Background" Value="Transparent" />
-                    <Setter Property="Padding" Value="11,9" />
+                    <Setter Property="Padding" Value="17,9,11,9" />
                     <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
                     <Setter Property="FontSize" Value="12" />
                     <Setter Property="Template">

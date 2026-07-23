@@ -335,3 +335,8 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   tarefas quanto faixas vazias em múltiplos monitores ou escalas de DPI altas
   com `WindowChrome` personalizado. O link de relato preserva apenas cursor e
   sublinhado: não usa hover ou tooltip visual.
+- O card **Proteção ativa** mostra apenas o estado compacto; a explicação de
+  snapshot e rollback fica no tooltip. Os seletores de configurações usam
+  recuo interno maior, o subtítulo redundante da página foi removido, o selo do
+  perfil selecionado é verticalmente centralizado e apenas a moldura do botão
+  de fechar fica vermelha ao passar o mouse.
