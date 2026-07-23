@@ -154,7 +154,7 @@
                 </Grid.ColumnDefinitions>
 
                 <Border Grid.Column="0" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="0,0,1,0">
-                    <Grid Margin="14,22,14,16">
+                    <Grid Margin="14,22,14,24">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
@@ -198,11 +198,15 @@
                                     <Border Width="25" Height="25" Background="#1C37C889" CornerRadius="7" VerticalAlignment="Top">
                                         <TextBlock Text="&#xEA18;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource GreenBrush}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     </Border>
-                                    <StackPanel Grid.Column="1" Margin="7,0,0,0">
+                                    <StackPanel Grid.Column="1" Margin="7,0,0,0" VerticalAlignment="Center">
                                         <TextBlock Text="{Binding [Safety.Active], Source={StaticResource LocalizedStrings}}" FontSize="11.5" FontWeight="SemiBold" />
                                     </StackPanel>
                                 </Grid>
                             </Border>
+                            <TextBlock Margin="0,9,0,0" HorizontalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" FontSize="9.5">
+                                <Run Text="v " />
+                                <Run Text="{Binding AppVersion}" />
+                            </TextBlock>
                         </StackPanel>
                     </Grid>
                 </Border>

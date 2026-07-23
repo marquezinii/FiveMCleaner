@@ -260,6 +260,27 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("Padding\" Value=\"17,0,11,0\"", controls, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void SupportCard_AlignsItsStatusAndShowsTheInstalledVersion()
+    {
+        var root = FindRepositoryRoot();
+        var mainWindow = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml"));
+        var controls = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Themes",
+            "Controls.xaml"));
+
+        Assert.Contains("VerticalAlignment=\"Center\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("<Run Text=\"{Binding AppVersion}\" />", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Padding=\"{TemplateBinding Padding}\"", controls, StringComparison.Ordinal);
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

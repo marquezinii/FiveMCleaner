@@ -340,3 +340,6 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   recuo interno maior, o subtítulo redundante da página foi removido, o selo do
   perfil selecionado é verticalmente centralizado e apenas a moldura do botão
   de fechar fica vermelha ao passar o mouse.
+- O status de proteção é alinhado verticalmente ao escudo e exibe a versão
+  instalada logo abaixo. O `Padding` do seletor é repassado ao botão interno do
+  template WPF, garantindo o recuo visual do valor selecionado em qualquer DPI.
