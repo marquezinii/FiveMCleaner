@@ -244,7 +244,7 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 
 ## Distribuição e validação (atualização de 23/07/2026)
 
-- A distribuição pública está na versão `v1.0.1` e usa Inno Setup 6.7.3, com aplicativo e broker
+- A distribuição pública preparada nesta etapa é a versão `v1.0.2` e usa Inno Setup 6.7.3, com aplicativo e broker
   `win-x64` self-contained: não requer .NET, Node.js, SDK, Visual Studio ou
   outra ferramenta de desenvolvimento na máquina da pessoa.
 - O instalador é por usuário, detecta pt-BR/inglês pela linguagem de interface
@@ -350,3 +350,6 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   em vez de texto solto. A página pública de download possui a seção
   **Última versão pública**, alimentada apenas pelo conteúdo factual do
   `CHANGELOG.md`; ela deve ser atualizada junto da próxima release autorizada.
+- O número exibido nesse selo usa `TextBrush`, um recurso presente em todos os
+  temas. Não usar `TextPrimaryBrush`: ele não existe na paleta e faz o WPF cair
+  na cor padrão preta em vez de preservar o contraste do tema escuro.

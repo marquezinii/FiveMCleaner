@@ -218,7 +218,7 @@
                                                FontWeight="SemiBold" />
                                     <Border Width="1" Height="10" Margin="7,0" Background="{DynamicResource BorderSoftBrush}" />
                                     <TextBlock Text="{Binding AppVersion, Mode=OneWay}"
-                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               Foreground="{DynamicResource TextBrush}"
                                                FontFamily="Segoe UI Variable Text"
                                                FontSize="9.5"
                                                FontWeight="SemiBold" />

@@ -47,6 +47,30 @@ tarefa. Um commit local não autoriza publicação.
 
 ## Versionamento obrigatório ao fazer push
 
+### Responsabilidade de versão e Semantic Versioning
+
+As IAs que trabalham neste projeto são responsáveis por definir a próxima versão
+pública com base no estado real do produto e em
+[Semantic Versioning](https://semver.org/lang/pt-BR/). Não delegue essa decisão
+ao usuário nem incremente números de forma arbitrária:
+
+- **patch** (`X.Y.Z` → `X.Y.(Z+1)`): correções, ajustes visuais, segurança,
+  documentação de release ou melhorias internas compatíveis que não adicionam
+  uma capacidade pública relevante;
+- **minor** (`X.Y.Z` → `X.(Y+1).0`): novas funcionalidades públicas
+  compatíveis, fluxos relevantes adicionais ou melhorias de produto que ampliam
+  a capacidade sem quebrar integrações existentes;
+- **major** (`X.Y.Z` → `(X+1).0.0`): mudança incompatível de contrato,
+  instalação, atualização, dados persistidos ou comportamento público que exija
+  migração, atenção explícita ou perda de compatibilidade.
+
+Ao preparar uma publicação, a IA deve justificar internamente a classificação,
+aplicar a versão escolhida de forma consistente no app, instalador, artefatos,
+site, changelog, README, tag, release e metadados, e validar essa coerência
+antes de publicar. Alterações exclusivamente neste `AI_RULES.md` ou em outra
+documentação de governança de IA podem ser enviadas sem criar uma nova versão
+pública; nunca devem, porém, ser apresentadas como alteração do aplicativo.
+
 ### Diferença entre commit local e push público
 
 - Enquanto o usuário não disser explicitamente **push**, a IA deve apenas

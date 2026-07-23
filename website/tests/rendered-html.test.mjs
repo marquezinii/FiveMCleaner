@@ -88,8 +88,8 @@ test("keeps the public download page aligned with the latest published release",
 
   assert.match(page, /id="atualizacoes"/i);
   assert.match(page, /ÚLTIMA VERSÃO PÚBLICA/i);
-  assert.match(page, /<strong id="updates-version">1\.0\.1<\/strong>/i);
-  assert.match(page, /Corrigida a proporção da arte lateral/i);
+  assert.match(page, /<strong id="updates-version">1\.0\.2<\/strong>/i);
+  assert.match(page, /Corrigido o fechamento inesperado ao exibir a versão/i);
   assert.match(page, /CHANGELOG\.md/i);
   assert.match(styles, /\.updates-section\{/i);
   assert.match(styles, /\.updates-card\{/i);

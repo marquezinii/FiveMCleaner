@@ -5,6 +5,28 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.0.2] - 2026-07-23
+
+### Corrigido
+
+- Corrigido o fechamento inesperado na abertura causado pelo binding da versão
+  no painel lateral.
+- Corrigido o contraste do número da versão no tema escuro.
+- Corrigido o enquadramento da janela maximizada para respeitar a área útil do
+  monitor, sem faixas vazias nem rodapé oculto.
+
+### Melhorado
+
+- Refinados o selo de versão, o card de proteção e os seletores de idioma e
+  aparência para melhorar legibilidade, alinhamento e consistência visual.
+- O rodapé com relato de bug e copyright permanece acessível com a janela
+  maximizada.
+
+### Atualizado
+
+- A página pública de download agora mostra a seção **Última versão pública**
+  com mudanças verificáveis e link para o histórico completo.
+
 ## [1.0.1] - 2026-07-23
 
 ### Público

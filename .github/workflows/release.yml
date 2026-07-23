@@ -140,10 +140,22 @@ jobs:
           $installerName = "FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe"
           $downloadUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:RELEASE_TAG/$installerName"
           $channelText = if ($env:RELEASE_CHANNEL -eq 'preview') { 'prévia / preview' } else { 'estável / stable' }
+          $changelog = Get-Content -LiteralPath ./CHANGELOG.md -Raw -Encoding utf8
+          $escapedVersion = [regex]::Escape($env:ASSET_VERSION)
+          $releaseChanges = [regex]::Match(
+            $changelog,
+            "(?ms)^## \[$escapedVersion\].*?(?=^## \[|\z)")
+          if (-not $releaseChanges.Success) {
+            throw "CHANGELOG.md does not contain an entry for $env:ASSET_VERSION."
+          }
           @"
           ## FiveMCleaner $env:ASSET_VERSION ($channelText)
 
           **[Download do instalador / Download installer]($downloadUrl)**
+
+          ## Últimas atualizações / Latest updates
+
+          $($releaseChanges.Value.Trim())
 
           Consulte as alterações completas em
           [CHANGELOG.md](https://github.com/$env:GITHUB_REPOSITORY/blob/$env:RELEASE_TAG/CHANGELOG.md).
