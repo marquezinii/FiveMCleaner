@@ -273,6 +273,9 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   `.github/workflows/pages.yml` publica somente o conteúdo estático de
   `website/public-site/` depois de mudanças em `main`. Ela é vinculada pelo link
   sublinhado **DOWNLOAD** no topo do `README.md` exibido no GitHub.
+- A configuração de hospedagem anterior foi removida do checkout e o site
+  correspondente foi restringido à conta do proprietário; a única página pública
+  promovida pelo projeto é a do GitHub Pages.
 - Os botões da landing page iniciam o download direto do alias estável
   `FiveMCleaner-Setup-latest-win-x64.exe`, hospedado no GitHub Releases. Em toda
   release estável, `release.yml` publica esse alias além do instalador
