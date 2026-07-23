@@ -1,8 +1,10 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FiveMCleaner.App.Services;
@@ -14,11 +16,14 @@ namespace FiveMCleaner.App;
 
 public partial class MainWindow : Window
 {
+    private const uint MonitorDefaultToNearest = 2;
+    private const int WmGetMinMaxInfo = 0x0024;
     private readonly MainViewModel viewModel;
     private readonly ThemeManager themeManager;
     private readonly TrayIconService trayIcon;
     private readonly GitHubReleaseUpdateService? releaseUpdateService;
     private readonly bool startupLaunch;
+    private HwndSource? windowSource;
     private bool allowClose;
     private bool trayAnnouncementShown;
     private bool systemSessionEnding;
@@ -49,6 +54,7 @@ public partial class MainWindow : Window
         trayIcon.ExitRequested += TrayIcon_ExitRequested;
         DataContext = viewModel;
         Loaded += MainWindow_Loaded;
+        SourceInitialized += MainWindow_SourceInitialized;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
         StateChanged += MainWindow_StateChanged;
@@ -104,6 +110,95 @@ public partial class MainWindow : Window
         MaximizeGlyph.Text = maximized ? "\uE923" : "\uE922";
         MaximizeButton.ToolTip = LocalizationService.Current.GetString(
             maximized ? "Window.Restore" : "Window.Maximize");
+    }
+
+    private void MainWindow_SourceInitialized(object? sender, EventArgs e)
+    {
+        windowSource = PresentationSource.FromVisual(this) as HwndSource;
+        windowSource?.AddHook(WindowMessageHook);
+    }
+
+    private IntPtr WindowMessageHook(
+        IntPtr windowHandle,
+        int message,
+        IntPtr wParam,
+        IntPtr lParam,
+        ref bool handled)
+    {
+        if (message != WmGetMinMaxInfo)
+        {
+            return IntPtr.Zero;
+        }
+
+        var monitor = MonitorFromWindow(windowHandle, MonitorDefaultToNearest);
+        var monitorInfo = new MonitorInfo
+        {
+            Size = Marshal.SizeOf<MonitorInfo>()
+        };
+        if (monitor == IntPtr.Zero || !GetMonitorInfo(monitor, ref monitorInfo))
+        {
+            return IntPtr.Zero;
+        }
+
+        var minMaxInfo = Marshal.PtrToStructure<MinMaxInfo>(lParam);
+        minMaxInfo.MaxPosition = new NativePoint(
+            monitorInfo.WorkArea.Left - monitorInfo.MonitorArea.Left,
+            monitorInfo.WorkArea.Top - monitorInfo.MonitorArea.Top);
+        minMaxInfo.MaxSize = new NativePoint(
+            monitorInfo.WorkArea.Right - monitorInfo.WorkArea.Left,
+            monitorInfo.WorkArea.Bottom - monitorInfo.WorkArea.Top);
+        minMaxInfo.MaxTrackSize = minMaxInfo.MaxSize;
+        Marshal.StructureToPtr(minMaxInfo, lParam, false);
+        handled = true;
+        return IntPtr.Zero;
+    }
+
+    [DllImport("user32.dll")]
+    private static extern IntPtr MonitorFromWindow(IntPtr windowHandle, uint flags);
+
+    [DllImport("user32.dll", SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool GetMonitorInfo(IntPtr monitor, ref MonitorInfo monitorInfo);
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativeRectangle
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct NativePoint
+    {
+        public NativePoint(int x, int y)
+        {
+            X = x;
+            Y = y;
+        }
+
+        public int X;
+        public int Y;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MinMaxInfo
+    {
+        public NativePoint Reserved;
+        public NativePoint MaxSize;
+        public NativePoint MaxPosition;
+        public NativePoint MinTrackSize;
+        public NativePoint MaxTrackSize;
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private struct MonitorInfo
+    {
+        public int Size;
+        public NativeRectangle MonitorArea;
+        public NativeRectangle WorkArea;
+        public uint Flags;
     }
 
     private void DashboardNav_Click(object sender, RoutedEventArgs e) => Navigate(DashboardPage, DashboardNav);
@@ -357,6 +452,7 @@ public partial class MainWindow : Window
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
+        windowSource?.RemoveHook(WindowMessageHook);
         System.Windows.Application.Current.SessionEnding -= Application_SessionEnding;
         themeManager.Dispose();
         trayIcon.Dispose();

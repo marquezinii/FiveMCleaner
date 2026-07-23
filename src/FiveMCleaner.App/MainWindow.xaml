@@ -555,8 +555,7 @@
                 <StackPanel HorizontalAlignment="Center" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Style="{StaticResource LinkButtonStyle}"
                             Padding="4,2"
-                            Click="ReportBug_Click"
-                            ToolTip="{Binding [BugReport.LinkTooltip], Source={StaticResource LocalizedStrings}}">
+                            Click="ReportBug_Click">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#xE74C;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource OrangeLightBrush}" Margin="0,0,6,0" />
                             <TextBlock Text="{Binding [BugReport.Link], Source={StaticResource LocalizedStrings}}" FontSize="10.5" TextDecorations="Underline" Foreground="{DynamicResource TextMutedBrush}" />

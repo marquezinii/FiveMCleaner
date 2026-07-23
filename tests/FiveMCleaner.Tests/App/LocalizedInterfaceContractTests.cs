@@ -196,6 +196,45 @@ public sealed partial class LocalizedInterfaceContractTests
             element => ((string?)element.Attribute("Text"))?.Contains("Brand.FooterCopyright", StringComparison.Ordinal) == true);
     }
 
+    [Fact]
+    public void MainWindow_MaximizesToTheCurrentMonitorWorkArea()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml.cs"));
+
+        Assert.Contains("WmGetMinMaxInfo", source, StringComparison.Ordinal);
+        Assert.Contains("WindowMessageHook", source, StringComparison.Ordinal);
+        Assert.Contains("MonitorFromWindow", source, StringComparison.Ordinal);
+        Assert.Contains("GetMonitorInfo", source, StringComparison.Ordinal);
+        Assert.Contains("minMaxInfo.MaxSize", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void LinkButtonStyle_UsesAStableCustomTemplate()
+    {
+        var root = FindRepositoryRoot();
+        var document = XDocument.Load(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Themes",
+            "Controls.xaml"));
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml";
+        var linkStyle = Assert.Single(
+            document.Descendants(presentation + "Style"),
+            element => (string?)element.Attribute(xaml + "Key") == "LinkButtonStyle");
+
+        Assert.Contains(linkStyle.Descendants(presentation + "ControlTemplate"), template =>
+            (string?)template.Attribute("TargetType") == "Button");
+        Assert.DoesNotContain(linkStyle.Descendants(presentation + "Trigger"), trigger =>
+            (string?)trigger.Attribute("Property") == "IsMouseOver");
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);

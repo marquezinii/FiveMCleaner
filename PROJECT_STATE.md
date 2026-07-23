@@ -330,3 +330,8 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   janela maximizada. Os seletores de idioma e aparência usam templates WPF
   próprios (campo, popup e itens), todos vinculados à paleta do aplicativo,
   para não voltar ao fundo branco do controle padrão do Windows no tema escuro.
+- A janela principal trata `WM_GETMINMAXINFO` para maximizar na área útil do
+  monitor atual, em pixels nativos. Isso evita tanto o rodapé sob a barra de
+  tarefas quanto faixas vazias em múltiplos monitores ou escalas de DPI altas
+  com `WindowChrome` personalizado. O link de relato preserva apenas cursor e
+  sublinhado: não usa hover ou tooltip visual.
