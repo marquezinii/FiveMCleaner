@@ -271,3 +271,11 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   transitivos em `sharp`/`next`. O registro não oferece correção não disruptiva
   para a versão disponível; não usar `npm audit fix --force` sem revisar a
   compatibilidade Vinext/Next. Esta limitação não deve ser ocultada.
+
+## Revisão visual (atualização de 22/07/2026)
+
+- A interface prioriza tipografia Segoe UI Variable: `Display` para títulos de
+  seção e `Text` para conteúdo e metadados. Chips usam altura mínima e
+  alinhamento vertical explícito para preservar o enquadramento em DPI maior.
+- O status detectado do FiveM usa sinal verde com check; os cards de modo são
+  mais minimalistas e exibem selo somente no perfil Médio, recomendado.

@@ -134,8 +134,8 @@
                         <TextBlock Margin="10,0,0,0" FontSize="15" FontWeight="Bold" VerticalAlignment="Center">
                             <Run Text="FiveM" /><Run Text="Cleaner" Foreground="{DynamicResource OrangeBrush}" />
                         </TextBlock>
-                        <Border Margin="12,0,0,0" Padding="8,3" Background="{DynamicResource ChipBrush}" CornerRadius="7">
-                            <TextBlock Text="{Binding EditionBadgeLabel}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
+                        <Border Margin="12,0,0,0" MinHeight="26" Padding="9,0" Background="{DynamicResource ChipBrush}" CornerRadius="8" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding EditionBadgeLabel}" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" />
                         </Border>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
@@ -292,11 +292,14 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel VerticalAlignment="Center" MaxWidth="600" HorizontalAlignment="Left">
                                         <StackPanel Orientation="Horizontal">
-                                            <Border Padding="9,4" Background="#1FFF7A18" CornerRadius="8">
-                                                <TextBlock Text="{Binding EditionLabel}" Foreground="{DynamicResource OrangeLightBrush}" FontSize="10" FontWeight="Bold" />
+                                            <Border MinHeight="32" Padding="10,0" Background="#1C37C889" CornerRadius="9" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" FontSize="11" Foreground="{DynamicResource GreenBrush}" VerticalAlignment="Center" />
+                                                    <TextBlock Text="{Binding EditionLabel}" Margin="6,0,0,0" Foreground="{DynamicResource GreenBrush}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                </StackPanel>
                                             </Border>
-                                            <Border Margin="7,0,0,0" Padding="9,4" Background="{DynamicResource ChipBrush}" CornerRadius="8">
-                                                <TextBlock Text="{Binding GtaStatusLabel}" Foreground="{DynamicResource TextMutedBrush}" FontSize="10" FontWeight="SemiBold" />
+                                            <Border Margin="7,0,0,0" MinHeight="32" Padding="10,0" Background="{DynamicResource ChipBrush}" CornerRadius="9" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding GtaStatusLabel}" Foreground="{DynamicResource TextMutedBrush}" FontSize="10" FontWeight="SemiBold" VerticalAlignment="Center" />
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="{Binding RecommendationTitle}" Margin="0,14,0,0" FontSize="20" FontWeight="Bold" />
@@ -377,8 +380,8 @@
 
                             <Grid Margin="0,2,0,9">
                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                <TextBlock Text="{Binding [Profiles.Choose], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
-                                <TextBlock Grid.Column="1" Text="{Binding [Profiles.RecommendedHint], Source={StaticResource LocalizedStrings}}" Margin="16,0,0,0" HorizontalAlignment="Right" Foreground="{DynamicResource TextSubtleBrush}" FontSize="11" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding [Profiles.Choose], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionTitleStyle}" />
+                                <TextBlock Grid.Column="1" Text="{Binding [Profiles.RecommendedHint], Source={StaticResource LocalizedStrings}}" Margin="16,0,0,0" HorizontalAlignment="Right" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" VerticalAlignment="Center" TextWrapping="Wrap" />
                             </Grid>
                             <Grid>
                                 <Grid.ColumnDefinitions>
@@ -390,7 +393,7 @@
                                 </Grid.ColumnDefinitions>
                                 <RadioButton Grid.Column="0" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsLightSelected}" Checked="LightProfile_Checked">
                                     <StackPanel>
-                                        <Grid><Border Width="31" Height="31" CornerRadius="8" Background="#1C62A8FF" HorizontalAlignment="Left"><TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource BlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Padding="7,3" Background="#1A62A8FF" CornerRadius="7" HorizontalAlignment="Right"><TextBlock Text="{Binding [Profiles.Light.Badge], Source={StaticResource LocalizedStrings}}" FontSize="8" FontWeight="Bold" Foreground="{DynamicResource BlueBrush}" /></Border></Grid>
+                                        <Border Width="31" Height="31" CornerRadius="8" Background="#1C62A8FF" HorizontalAlignment="Left"><TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource BlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
                                         <TextBlock Text="{Binding [Profiles.Light.Name], Source={StaticResource LocalizedStrings}}" Margin="0,13,0,0" FontSize="16" FontWeight="Bold" />
                                         <TextBlock Text="{Binding [Profiles.Light.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                         <TextBlock Text="{Binding LightImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource BlueBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
@@ -398,7 +401,7 @@
                                 </RadioButton>
                                 <RadioButton Grid.Column="2" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsBalancedSelected}" Checked="BalancedProfile_Checked">
                                     <StackPanel>
-                                        <Grid><Border Width="31" Height="31" CornerRadius="8" Background="#20FF7A18" HorizontalAlignment="Left"><TextBlock Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Padding="7,3" Background="#24FF7A18" CornerRadius="7" HorizontalAlignment="Right"><TextBlock Text="{Binding [Profiles.Balanced.Badge], Source={StaticResource LocalizedStrings}}" FontSize="8" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" /></Border></Grid>
+                                        <Grid><Border Width="31" Height="31" CornerRadius="8" Background="#20FF7A18" HorizontalAlignment="Left"><TextBlock Text="&#xE9D2;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border MinHeight="25" Padding="9,0" Background="#24FF7A18" CornerRadius="7" HorizontalAlignment="Right" VerticalAlignment="Center"><TextBlock Text="{Binding [Profiles.Balanced.Badge], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" /></Border></Grid>
                                         <TextBlock Text="{Binding [Profiles.Balanced.Name], Source={StaticResource LocalizedStrings}}" Margin="0,13,0,0" FontSize="16" FontWeight="Bold" />
                                         <TextBlock Text="{Binding [Profiles.Balanced.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                         <TextBlock Text="{Binding BalancedImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource OrangeLightBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
@@ -406,7 +409,7 @@
                                 </RadioButton>
                                 <RadioButton Grid.Column="4" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsAggressiveSelected}" Checked="AggressiveProfile_Checked">
                                     <StackPanel>
-                                        <Grid><Border Width="31" Height="31" CornerRadius="8" Background="#1CF26B6B" HorizontalAlignment="Left"><TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource RedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><Border Padding="7,3" Background="#1CF26B6B" CornerRadius="7" HorizontalAlignment="Right"><TextBlock Text="{Binding [Profiles.Aggressive.Badge], Source={StaticResource LocalizedStrings}}" FontSize="8" FontWeight="Bold" Foreground="{DynamicResource RedBrush}" /></Border></Grid>
+                                        <Border Width="31" Height="31" CornerRadius="8" Background="#1CF26B6B" HorizontalAlignment="Left"><TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource RedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
                                         <TextBlock Text="{Binding [Profiles.Aggressive.Name], Source={StaticResource LocalizedStrings}}" Margin="0,13,0,0" FontSize="16" FontWeight="Bold" />
                                         <TextBlock Text="{Binding [Profiles.Aggressive.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                         <TextBlock Text="{Binding AggressiveImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource RedBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
