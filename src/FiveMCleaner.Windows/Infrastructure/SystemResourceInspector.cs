@@ -6,7 +6,9 @@ public sealed record SystemResourceSnapshot(
     long TotalMemoryBytes,
     long AvailableMemoryBytes,
     int LogicalProcessorCount,
-    long SystemDriveFreeBytes);
+    long SystemDriveFreeBytes,
+    long TotalPageFileBytes,
+    long AvailablePageFileBytes);
 
 public interface ISystemResourceInspector
 {
@@ -34,7 +36,9 @@ public sealed class WindowsSystemResourceInspector : ISystemResourceInspector
             checked((long)status.TotalPhysical),
             checked((long)status.AvailablePhysical),
             Math.Max(1, Environment.ProcessorCount),
-            systemDrive.AvailableFreeSpace);
+            systemDrive.AvailableFreeSpace,
+            checked((long)status.TotalPageFile),
+            checked((long)status.AvailablePageFile));
     }
 
     [DllImport("kernel32.dll", SetLastError = true)]

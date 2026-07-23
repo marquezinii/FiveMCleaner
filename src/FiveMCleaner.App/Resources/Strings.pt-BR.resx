@@ -309,6 +309,16 @@
   <data name="Actions.fivem.legacy.logs.read.Description" xml:space="preserve"><value>Localiza o log mais recente do FiveM Legacy e resume sua idade e ocorrências de possíveis erros, sem modificar nada.</value></data>
   <data name="Actions.safety.performance-diagnostics.guide.Name" xml:space="preserve"><value>Orientar diagnóstico de desempenho</value></data>
   <data name="Actions.safety.performance-diagnostics.guide.Description" xml:space="preserve"><value>Aponta os comandos oficiais do FiveM (cl_drawfps, cl_drawperf, netgraph) para medir FPS e rede dentro do próprio jogo.</value></data>
+  <data name="Actions.safety.network-health.diagnose.Name" xml:space="preserve"><value>Diagnosticar saúde da rede local</value></data>
+  <data name="Actions.safety.network-health.diagnose.Description" xml:space="preserve"><value>Lê contadores de pacotes descartados e com erro das placas de rede ativas, sem enviar tráfego a nenhum servidor.</value></data>
+  <data name="Actions.safety.thermal.diagnose.Name" xml:space="preserve"><value>Diagnosticar temperatura e throttling</value></data>
+  <data name="Actions.safety.thermal.diagnose.Description" xml:space="preserve"><value>Tenta ler a zona térmica ACPI exposta pelo Windows; a maioria das placas-mãe não expõe esse dado sem software do fabricante, e isso é informado com honestidade.</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.Name" xml:space="preserve"><value>Diagnosticar pagefile e memória committed</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.Description" xml:space="preserve"><value>Lê o tamanho total e disponível do arquivo de paginação para avisar quando o sistema está perto do limite de commit, sem redimensionar nada.</value></data>
+  <data name="Actions.fivem.legacy.cache-integrity.diagnose.Name" xml:space="preserve"><value>Diagnosticar integridade do índice de cache</value></data>
+  <data name="Actions.fivem.legacy.cache-integrity.diagnose.Description" xml:space="preserve"><value>Verifica se o índice de cache do FiveM (content_index.xml) existe e está bem formado, recomendando o reparo já existente quando necessário.</value></data>
+  <data name="Actions.windows.gaming.gpu-vendor.detect.Name" xml:space="preserve"><value>Detectar fabricante da GPU</value></data>
+  <data name="Actions.windows.gaming.gpu-vendor.detect.Description" xml:space="preserve"><value>Identifica o fabricante (NVIDIA, AMD ou Intel) das GPUs detectadas e aponta para o painel oficial do fabricante, sem escrever nenhum perfil de driver.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Name" xml:space="preserve"><value>Limpar temporários antigos</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Remove somente arquivos temporários do usuário mais antigos que o período de retenção escolhido pelo perfil.</value></data>
   <data name="Actions.fivem.legacy.crash-dumps.prune.Name" xml:space="preserve"><value>Remover diagnósticos antigos</value></data>
@@ -465,6 +475,9 @@
   <data name="Report.RestartNeeded" xml:space="preserve"><value>Recomendamos reiniciar o Windows para aplicar totalmente as alterações.</value></data>
   <data name="Report.RestartNotNeeded" xml:space="preserve"><value>Não é necessário reiniciar.</value></data>
   <data name="Report.CopyButton" xml:space="preserve"><value>Copiar relatório técnico</value></data>
+  <data name="Report.SaveButton" xml:space="preserve"><value>Salvar relatório em arquivo</value></data>
+  <data name="Log.ReportSaved" xml:space="preserve"><value>Relatório técnico salvo em {0}.</value></data>
+  <data name="Log.ReportSaveFailed" xml:space="preserve"><value>Não foi possível salvar o relatório: {0}</value></data>
   <data name="Common.Yes" xml:space="preserve"><value>Sim</value></data>
   <data name="Common.No" xml:space="preserve"><value>Não</value></data>
   <data name="Log.ReportCopied" xml:space="preserve"><value>Relatório técnico copiado para a área de transferência.</value></data>

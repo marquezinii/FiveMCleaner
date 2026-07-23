@@ -80,6 +80,12 @@ public sealed record WindowsOptimizationDependencies
 
     public required IOverlaySoftwareInspector OverlaySoftware { get; init; }
 
+    public required INetworkHealthInspector NetworkHealth { get; init; }
+
+    public required IThermalInspector Thermal { get; init; }
+
+    public required IGpuVendorInspector GpuVendor { get; init; }
+
     public static WindowsOptimizationDependencies CreateDefault(
         WindowsOptimizationEnvironment environment)
     {
@@ -96,7 +102,10 @@ public sealed record WindowsOptimizationDependencies
             PowerStatus = new WindowsPowerStatusProvider(),
             JournalStore = new JsonWindowsTransactionJournalStore(environment.JournalDirectory),
             SystemResources = new WindowsSystemResourceInspector(),
-            OverlaySoftware = new WindowsOverlaySoftwareInspector()
+            OverlaySoftware = new WindowsOverlaySoftwareInspector(),
+            NetworkHealth = new WindowsNetworkHealthInspector(),
+            Thermal = new WindowsThermalInspector(),
+            GpuVendor = new WindowsGpuVendorInspector()
         };
     }
 }
@@ -139,6 +148,11 @@ public sealed class WindowsOptimizationActionFactory
             new OverlaySoftwareDetectionAction(dependencies.OverlaySoftware),
             new FiveMLegacyLogReaderAction(environment.FiveMAppRoot),
             new PerformanceDiagnosticsGuideAction(),
+            new NetworkHealthDiagnosisAction(dependencies.NetworkHealth),
+            new ThermalDiagnosisAction(dependencies.Thermal),
+            new PagefileCommitDiagnosisAction(dependencies.SystemResources),
+            new CacheIndexIntegrityDiagnosisAction(environment.FiveMAppRoot),
+            new GpuVendorDetectionAction(dependencies.GpuVendor),
             new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(defaults.TemporaryFileMinimumAgeDays),
@@ -230,6 +244,16 @@ public sealed class WindowsOptimizationActionFactory
             OptimizationActionIds.ReadFiveMLegacyLogs => new FiveMLegacyLogReaderAction(
                 environment.FiveMAppRoot),
             OptimizationActionIds.GuidePerformanceDiagnostics => new PerformanceDiagnosticsGuideAction(),
+            OptimizationActionIds.DiagnoseNetworkHealth => new NetworkHealthDiagnosisAction(
+                dependencies.NetworkHealth),
+            OptimizationActionIds.DiagnoseThermalThrottling => new ThermalDiagnosisAction(
+                dependencies.Thermal),
+            OptimizationActionIds.DiagnosePagefileCommit => new PagefileCommitDiagnosisAction(
+                dependencies.SystemResources),
+            OptimizationActionIds.DiagnoseCacheIntegrity => new CacheIndexIntegrityDiagnosisAction(
+                environment.FiveMAppRoot),
+            OptimizationActionIds.DetectGpuVendor => new GpuVendorDetectionAction(
+                dependencies.GpuVendor),
             OptimizationActionIds.CleanUserTemporaryFiles => new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(plan.Options.TemporaryFileMinimumAgeDays),

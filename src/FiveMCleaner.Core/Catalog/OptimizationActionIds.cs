@@ -8,6 +8,11 @@ public static class OptimizationActionIds
     public const string DetectOverlaysAndCaptureSoftware = "windows.gaming.overlays.detect";
     public const string ReadFiveMLegacyLogs = "fivem.legacy.logs.read";
     public const string GuidePerformanceDiagnostics = "safety.performance-diagnostics.guide";
+    public const string DiagnoseNetworkHealth = "safety.network-health.diagnose";
+    public const string DiagnoseThermalThrottling = "safety.thermal.diagnose";
+    public const string DiagnosePagefileCommit = "safety.pagefile-commit.diagnose";
+    public const string DiagnoseCacheIntegrity = "fivem.legacy.cache-integrity.diagnose";
+    public const string DetectGpuVendor = "windows.gaming.gpu-vendor.detect";
     public const string CleanUserTemporaryFiles = "storage.user-temporary-files.clean";
     public const string PruneLegacyCrashDumps = "fivem.legacy.crash-dumps.prune";
     public const string RepairLegacyServerCache = "fivem.legacy.server-cache.repair";

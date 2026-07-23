@@ -86,7 +86,7 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   validar → registrar, uma falha reverte só a própria ação); falhas críticas
   abortam o restante com segurança e nenhum sucesso parcial é relatado como
   total. Ver `docs/safety.md` (seção "Execução isolada por ação") e
-  `docs/architecture.md`. O catálogo de ações está na versão 4
+  `docs/architecture.md`. O catálogo de ações está na versão 5
   (`ActionCatalog.CurrentVersion`).
 - Avaliação da "PRIMEIRA FASE" de adições pedida pelo usuário em 23/07/2026:
   backup/restauração, presets do `settings.xml`, gerenciamento de cache,
@@ -132,9 +132,38 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   Xbox Game Bar — apenas detecta, nunca fecha), leitura do log mais recente do
   FiveM Legacy (contagem aproximada de possíveis erros) e orientação para
   medir desempenho pelos comandos oficiais do próprio FiveM (`cl_drawfps`,
-  `cl_drawperf`, `netgraph`) em vez de um benchmark embutido — medir FPS
-  exigiria overlay/hook, o que violaria o modelo de segurança do produto.
-  Catálogo de ações agora na versão 4 (`ActionCatalog.CurrentVersion`).
+  `cl_drawperf`, `netgraph`, `resmon` — orientação estendida na SEGUNDA FASE
+  para citar `resmon` e o painel de streaming) em vez de um benchmark
+  embutido — medir FPS exigiria overlay/hook, o que violaria o modelo de
+  segurança do produto.
+- Cinco ações de diagnóstico somente leitura adicionadas na SEGUNDA FASE
+  (23/07/2026), mesmo padrão `ActionOptionGate.Always`: saúde de rede local
+  (contadores de pacotes descartados/com erro da placa ativa, sem pingar
+  nenhum servidor), temperatura/throttling (leitura best-effort via WMI
+  `MSAcpi_ThermalZoneTemperature` com verificação de plausibilidade; informa
+  honestamente "não disponível" na maioria dos sistemas sem software do
+  fabricante), pagefile/commit (extensão de `SystemResourceSnapshot` com
+  `TotalPageFileBytes`/`AvailablePageFileBytes`, nunca redimensiona o
+  pagefile), integridade do índice de cache (`content_index.xml` em
+  `server-cache`/`server-cache-priv`; só alerta quando o arquivo existe e é
+  malformado, recomendando o reparo de cache já existente) e detecção de
+  fabricante de GPU (NVIDIA/AMD/Intel a partir do driver já lido no
+  diagnóstico de hardware; aponta para o painel oficial do fabricante e nunca
+  escreve/sobrescreve perfil de driver). Catálogo de ações agora na
+  versão 5 (`ActionCatalog.CurrentVersion`).
+- Relatório técnico agora também pode ser salvo em arquivo
+  (`MainViewModel.SaveTechnicalReport`, `SaveFileDialog` nativo no
+  code-behind), além de copiado para a área de transferência; usa o mesmo
+  `TechnicalReportBuilder`/`ReportSanitizer` sanitizado, e a localização do
+  arquivo é sempre escolhida explicitamente pelo usuário.
+- Avaliação da "SEGUNDA FASE" pedida pelo usuário em 23/07/2026: rede/jitter,
+  temperatura/throttling, pagefile/commit, reparo automatizado (via detecção
+  + recomendação) e diagnóstico resmon/netgraph/streaming foram adicionados
+  (acima). Relatórios compartilháveis ganharam a opção de salvar em arquivo.
+  Dois itens ficaram deliberadamente de fora com a concordância do usuário:
+  escrever perfis NVIDIA/AMD/Intel (proibido por `docs/safety.md`; apenas
+  detecção/orientação foi implementada) e benchmark por servidor (mesma
+  limitação do benchmark da Primeira Fase — exigiria overlay/hook).
 - Motor de execução **isolada por ação** (`WindowsTransactionOptions.
   IsolateFailures`, usado pelo fluxo padrão do app): cada ação verifica,
   aplica, valida e registra separadamente; uma falha reverte só a própria
@@ -416,5 +445,43 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   as duas novas infraestruturas reais); `scripts\Verify-Safety.ps1` aprovado;
   smoke test manual do executável (`Start-Process --demo-synthetic`, 5s, sem
   novas entradas em `crash.log`).
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
+
+## Diagnósticos somente leitura da SEGUNDA FASE (23/07/2026)
+
+- Trabalho local, **não publicado** (sem push/tag/release desta etapa, por
+  instrução explícita do usuário). Não altera versão pública, instalador nem
+  site.
+- Avaliação completa dos 8 itens pedidos pelo usuário e decisões registradas
+  acima em "Decisões técnicas e padrões". Resumo: rede/jitter,
+  temperatura/throttling, pagefile/commit, integridade do índice de cache
+  (reparo automatizado) e a extensão de resmon/streaming à orientação de
+  performance foram adicionados como diagnósticos somente leitura; o item de
+  relatórios compartilháveis ganhou "Salvar em arquivo" além de "Copiar".
+  Dois itens ficaram deliberadamente restritos a detecção/orientação, com a
+  concordância do usuário: perfis NVIDIA/AMD/Intel (só detecta fabricante e
+  aponta para o painel oficial; nunca escreve perfil, por proibição explícita
+  de `docs/safety.md`) e benchmark por servidor (não implementado; mesma
+  limitação do benchmark da Primeira Fase).
+- Novo código: 5 ações em
+  `src/FiveMCleaner.Windows/Actions/DiagnosticActions.cs` (rede, térmica,
+  pagefile, integridade de cache, fabricante de GPU) e 3 novos inspectors em
+  `src/FiveMCleaner.Windows/Infrastructure/` (`NetworkHealthInspector.cs`,
+  `ThermalInspector.cs`, `GpuVendorInspector.cs`), todos read-only atrás de
+  interface e testáveis com doubles; `SystemResourceSnapshot` ganhou campos
+  de pagefile. Referência a `System.Management` (WMI) adicionada ao projeto
+  `FiveMCleaner.Windows`, seguindo o mesmo padrão try/fallback-honesto já
+  usado em `AppOptimizationService` para composição de módulos de RAM.
+  Catálogo de ações avançou da versão 4 para a 5.
+- App: `MainViewModel.SaveTechnicalReport` + `SaveFileDialog` nativo no
+  code-behind para exportar o relatório técnico sanitizado como arquivo,
+  complementando a cópia para a área de transferência já existente.
+- Validação: `dotnet build` Release sem avisos/erros; **277 testes .NET
+  aprovados** (258 anteriores + 19 novos cobrindo classificação de rede,
+  temperatura, pagefile, integridade de cache, detecção de fabricante de GPU
+  e as três novas infraestruturas reais); `scripts\Verify-Safety.ps1`
+  aprovado; smoke test manual do executável (`Start-Process
+  --demo-synthetic`, 5s, sem novas entradas em `crash.log`).
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.

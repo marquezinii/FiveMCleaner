@@ -109,7 +109,10 @@ public sealed class WindowsOptimizationRuntimeTests
             PowerStatus = new FakePowerStatusProvider(),
             JournalStore = journals,
             SystemResources = new FakeSystemResourceInspector(),
-            OverlaySoftware = new FakeOverlaySoftwareInspector()
+            OverlaySoftware = new FakeOverlaySoftwareInspector(),
+            NetworkHealth = new FakeNetworkHealthInspector(),
+            Thermal = new FakeThermalInspector(),
+            GpuVendor = new FakeGpuVendorInspector()
         };
 
         Assert.Throws<InvalidOperationException>(() =>

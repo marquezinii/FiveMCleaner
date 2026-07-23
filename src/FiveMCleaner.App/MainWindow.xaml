@@ -502,7 +502,11 @@
                                             <TextBlock Text="{Binding ReportSummaryLabel}" Margin="0,6,0,0" FontSize="10.5" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" />
                                             <TextBlock Text="{Binding ReportRestartLabel}" Margin="0,4,0,0" FontSize="10" TextWrapping="Wrap" Foreground="{DynamicResource TextSubtleBrush}" />
                                             <ScrollViewer MaxHeight="140" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding ReportLines}" ItemTemplate="{StaticResource ReportLineTemplate}" /></ScrollViewer>
-                                            <Button Content="{Binding [Report.CopyButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,10,0,0" HorizontalAlignment="Stretch" Click="CopyTechnicalReport_Click" />
+                                            <Grid Margin="0,10,0,0">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="9" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                <Button Grid.Column="0" Content="{Binding [Report.CopyButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Click="CopyTechnicalReport_Click" />
+                                                <Button Grid.Column="2" Content="{Binding [Report.SaveButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Click="SaveTechnicalReport_Click" />
+                                            </Grid>
                                         </StackPanel>
                                     </Border>
                                     <Button Grid.Row="5" Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,13,0,0" HorizontalAlignment="Stretch" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />

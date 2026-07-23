@@ -374,6 +374,26 @@ public partial class MainWindow : Window
 
     private void CopyTechnicalReport_Click(object sender, RoutedEventArgs e) => viewModel.CopyTechnicalReport();
 
+    private void SaveTechnicalReport_Click(object sender, RoutedEventArgs e)
+    {
+        if (!viewModel.CanShareReport)
+        {
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            FileName = viewModel.SuggestedReportFileName,
+            DefaultExt = ".txt",
+            Filter = "Text (*.txt)|*.txt|All files (*.*)|*.*"
+        };
+
+        if (dialog.ShowDialog(this) == true)
+        {
+            viewModel.SaveTechnicalReport(dialog.FileName);
+        }
+    }
+
     private async void RollbackHistory_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: HistoryDisplayItem item } || !item.CanRollback)

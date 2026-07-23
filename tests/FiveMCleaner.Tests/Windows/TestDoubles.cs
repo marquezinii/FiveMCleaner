@@ -154,7 +154,9 @@ internal sealed class FakeSystemResourceInspector : ISystemResourceInspector
         TotalMemoryBytes: 16L * 1024 * 1024 * 1024,
         AvailableMemoryBytes: 8L * 1024 * 1024 * 1024,
         LogicalProcessorCount: 12,
-        SystemDriveFreeBytes: 64L * 1024 * 1024 * 1024);
+        SystemDriveFreeBytes: 64L * 1024 * 1024 * 1024,
+        TotalPageFileBytes: 20L * 1024 * 1024 * 1024,
+        AvailablePageFileBytes: 16L * 1024 * 1024 * 1024);
 
     public SystemResourceSnapshot GetSnapshot() => Snapshot;
 }
@@ -164,6 +166,30 @@ internal sealed class FakeOverlaySoftwareInspector : IOverlaySoftwareInspector
     public IReadOnlyList<string> Names { get; set; } = [];
 
     public IReadOnlyList<string> DetectRunningOverlayNames() => Names;
+}
+
+internal sealed class FakeNetworkHealthInspector : INetworkHealthInspector
+{
+    public NetworkHealthSnapshot Snapshot { get; set; } = new(
+        HasActiveInterface: true,
+        DiscardedPackets: 0,
+        ErrorPackets: 0);
+
+    public NetworkHealthSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeThermalInspector : IThermalInspector
+{
+    public ThermalSnapshot Snapshot { get; set; } = new(false, null);
+
+    public ThermalSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeGpuVendorInspector : IGpuVendorInspector
+{
+    public GpuVendorSnapshot Snapshot { get; set; } = new([]);
+
+    public GpuVendorSnapshot GetSnapshot() => Snapshot;
 }
 
 internal sealed class InMemoryJournalStore : IWindowsTransactionJournalStore
@@ -229,7 +255,10 @@ internal static class WindowsTestRuntime
             PowerStatus = new FakePowerStatusProvider(),
             JournalStore = journals,
             SystemResources = new FakeSystemResourceInspector(),
-            OverlaySoftware = new FakeOverlaySoftwareInspector()
+            OverlaySoftware = new FakeOverlaySoftwareInspector(),
+            NetworkHealth = new FakeNetworkHealthInspector(),
+            Thermal = new FakeThermalInspector(),
+            GpuVendor = new FakeGpuVendorInspector()
         };
 
         return (

@@ -24,6 +24,11 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DetectOverlaysAndCaptureSoftware,
                 OptimizationActionIds.ReadFiveMLegacyLogs,
                 OptimizationActionIds.GuidePerformanceDiagnostics,
+                OptimizationActionIds.DiagnoseNetworkHealth,
+                OptimizationActionIds.DiagnoseThermalThrottling,
+                OptimizationActionIds.DiagnosePagefileCommit,
+                OptimizationActionIds.DiagnoseCacheIntegrity,
+                OptimizationActionIds.DetectGpuVendor,
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 OptimizationActionIds.PruneLegacyCrashDumps,
                 OptimizationActionIds.EnableGameMode,
@@ -124,7 +129,12 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnoseBottleneck,
                 OptimizationActionIds.DetectOverlaysAndCaptureSoftware,
                 OptimizationActionIds.ReadFiveMLegacyLogs,
-                OptimizationActionIds.GuidePerformanceDiagnostics
+                OptimizationActionIds.GuidePerformanceDiagnostics,
+                OptimizationActionIds.DiagnoseNetworkHealth,
+                OptimizationActionIds.DiagnoseThermalThrottling,
+                OptimizationActionIds.DiagnosePagefileCommit,
+                OptimizationActionIds.DiagnoseCacheIntegrity,
+                OptimizationActionIds.DetectGpuVendor
             ],
             Ids(plan));
         Assert.False(plan.RequiresElevation);

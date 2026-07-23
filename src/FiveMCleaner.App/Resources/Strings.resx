@@ -309,6 +309,16 @@
   <data name="Actions.fivem.legacy.logs.read.Description" xml:space="preserve"><value>Locates the most recent FiveM Legacy log and summarizes its age and possible error occurrences, without changing anything.</value></data>
   <data name="Actions.safety.performance-diagnostics.guide.Name" xml:space="preserve"><value>Guide performance diagnostics</value></data>
   <data name="Actions.safety.performance-diagnostics.guide.Description" xml:space="preserve"><value>Points to FiveM's official commands (cl_drawfps, cl_drawperf, netgraph) to measure FPS and network inside the game itself.</value></data>
+  <data name="Actions.safety.network-health.diagnose.Name" xml:space="preserve"><value>Diagnose local network health</value></data>
+  <data name="Actions.safety.network-health.diagnose.Description" xml:space="preserve"><value>Reads discarded and errored packet counters from active network adapters, without sending traffic to any server.</value></data>
+  <data name="Actions.safety.thermal.diagnose.Name" xml:space="preserve"><value>Diagnose temperature and throttling</value></data>
+  <data name="Actions.safety.thermal.diagnose.Description" xml:space="preserve"><value>Attempts to read the ACPI thermal zone exposed by Windows; most motherboards do not expose this without vendor software, and that is reported honestly.</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.Name" xml:space="preserve"><value>Diagnose pagefile and committed memory</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.Description" xml:space="preserve"><value>Reads the total and available page file size to warn when the system is close to the commit limit, without resizing anything.</value></data>
+  <data name="Actions.fivem.legacy.cache-integrity.diagnose.Name" xml:space="preserve"><value>Diagnose cache index integrity</value></data>
+  <data name="Actions.fivem.legacy.cache-integrity.diagnose.Description" xml:space="preserve"><value>Checks whether FiveM's cache index (content_index.xml) exists and is well-formed, recommending the existing repair when needed.</value></data>
+  <data name="Actions.windows.gaming.gpu-vendor.detect.Name" xml:space="preserve"><value>Detect GPU vendor</value></data>
+  <data name="Actions.windows.gaming.gpu-vendor.detect.Description" xml:space="preserve"><value>Identifies the vendor (NVIDIA, AMD or Intel) of the detected GPUs and points to the official vendor panel, without writing any driver profile.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Name" xml:space="preserve"><value>Clean old temporary files</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Removes only user temporary files older than the retention period selected by the profile.</value></data>
   <data name="Actions.fivem.legacy.crash-dumps.prune.Name" xml:space="preserve"><value>Remove old diagnostic files</value></data>
@@ -465,6 +475,9 @@
   <data name="Report.RestartNeeded" xml:space="preserve"><value>Restarting Windows is recommended to fully apply the changes.</value></data>
   <data name="Report.RestartNotNeeded" xml:space="preserve"><value>No restart is required.</value></data>
   <data name="Report.CopyButton" xml:space="preserve"><value>Copy technical report</value></data>
+  <data name="Report.SaveButton" xml:space="preserve"><value>Save report to file</value></data>
+  <data name="Log.ReportSaved" xml:space="preserve"><value>Technical report saved to {0}.</value></data>
+  <data name="Log.ReportSaveFailed" xml:space="preserve"><value>Could not save the report: {0}</value></data>
   <data name="Common.Yes" xml:space="preserve"><value>Yes</value></data>
   <data name="Common.No" xml:space="preserve"><value>No</value></data>
   <data name="Log.ReportCopied" xml:space="preserve"><value>Technical report copied to the clipboard.</value></data>

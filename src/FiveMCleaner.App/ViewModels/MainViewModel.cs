@@ -1188,6 +1188,8 @@ public sealed class MainViewModel : BindableBase
     {
         lastReport = report;
         IsReportAvailable = report is not null;
+        OnPropertyChanged(nameof(CanShareReport));
+        OnPropertyChanged(nameof(SuggestedReportFileName));
         ReportLines.Clear();
         if (report is null)
         {
@@ -1218,6 +1220,12 @@ public sealed class MainViewModel : BindableBase
         }
     }
 
+    public bool CanShareReport => lastReport is not null;
+
+    public string SuggestedReportFileName => lastReport is null
+        ? "FiveMCleaner-Report.txt"
+        : $"FiveMCleaner-Report-{lastReport.TransactionId:N}.txt";
+
     public void CopyTechnicalReport()
     {
         if (lastReport is null)
@@ -1235,6 +1243,33 @@ public sealed class MainViewModel : BindableBase
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             AddLog(localization.Format("Log.ReportCopyFailed", exception.Message));
+        }
+    }
+
+    /// <summary>
+    /// Writes the sanitized technical report to a path the user picked
+    /// explicitly (via a native save dialog in the code-behind). Never
+    /// chooses or guesses a location itself.
+    /// </summary>
+    public void SaveTechnicalReport(string filePath)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(filePath);
+        if (lastReport is null)
+        {
+            return;
+        }
+
+        var text = TechnicalReportBuilder.Build(lastReport, diagnostic, localization);
+        try
+        {
+            File.WriteAllText(filePath, text);
+            AddLog(localization.Format("Log.ReportSaved", filePath));
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException
+            or System.Security.SecurityException)
+        {
+            AddLog(localization.Format("Log.ReportSaveFailed", exception.Message));
         }
     }
 
