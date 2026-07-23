@@ -47,6 +47,25 @@ tarefa. Um commit local não autoriza publicação.
 
 ## Versionamento obrigatório ao fazer push
 
+### Diferença entre commit local e push público
+
+- Enquanto o usuário não disser explicitamente **push**, a IA deve apenas
+  trabalhar localmente e criar commits conforme as regras do projeto. Esses
+  commits não representam uma nova versão pública e não devem publicar,
+  substituir ou anunciar instaladores.
+- Quando o usuário disser **push**, a IA deve preparar uma publicação completa
+  usando o estado real e verificável do projeto naquele momento. A versão
+  informada deve ser exatamente a versão que foi gravada nos arquivos do
+  projeto, no executável/app incluído no pacote, no instalador, nos manifestos,
+  checksums, tags, release, site e demais metadados.
+- O push deve atualizar publicamente todos os artefatos correspondentes àquela
+  versão, incluindo o aplicativo que vai dentro do instalador. Nunca publicar
+  um instalador antigo com número novo, um app diferente do código informado,
+  hashes incorretos, notas genéricas ou detalhes inventados.
+- As notas de **Últimas atualizações** devem ser geradas a partir das mudanças
+  reais presentes desde a última publicação e só podem afirmar o que foi
+  implementado e validado pelos testes executados.
+
 Quando o usuário autorizar ou solicitar um `git push`, a IA deve tratar esse
 push como uma nova versão pública do aplicativo. Antes do push, ela deve:
 
