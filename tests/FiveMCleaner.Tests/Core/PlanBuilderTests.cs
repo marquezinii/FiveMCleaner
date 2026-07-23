@@ -20,6 +20,10 @@ public sealed class PlanBuilderTests
             [
                 OptimizationActionIds.VerifyFiveMIsStopped,
                 OptimizationActionIds.VerifyGtaVIsStopped,
+                OptimizationActionIds.DiagnoseBottleneck,
+                OptimizationActionIds.DetectOverlaysAndCaptureSoftware,
+                OptimizationActionIds.ReadFiveMLegacyLogs,
+                OptimizationActionIds.GuidePerformanceDiagnostics,
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 OptimizationActionIds.PruneLegacyCrashDumps,
                 OptimizationActionIds.EnableGameMode,
@@ -112,7 +116,17 @@ public sealed class PlanBuilderTests
         var plan = Build(OptimizationProfile.Aggressive, options);
 
         Assert.True(plan.IsExecutable);
-        Assert.Equal([OptimizationActionIds.VerifyFiveMIsStopped], Ids(plan));
+        // Segurança e diagnósticos somente leitura sempre permanecem (ActionOptionGate.Always);
+        // não são tweaks desativáveis, pois não alteram nada e não têm custo.
+        Assert.Equal(
+            [
+                OptimizationActionIds.VerifyFiveMIsStopped,
+                OptimizationActionIds.DiagnoseBottleneck,
+                OptimizationActionIds.DetectOverlaysAndCaptureSoftware,
+                OptimizationActionIds.ReadFiveMLegacyLogs,
+                OptimizationActionIds.GuidePerformanceDiagnostics
+            ],
+            Ids(plan));
         Assert.False(plan.RequiresElevation);
         Assert.False(plan.ContainsNonReversibleActions);
         Assert.Equal(ActionRisk.Informational, plan.MaximumRisk);

@@ -76,6 +76,10 @@ public sealed record WindowsOptimizationDependencies
 
     public required IWindowsTransactionJournalStore JournalStore { get; init; }
 
+    public required ISystemResourceInspector SystemResources { get; init; }
+
+    public required IOverlaySoftwareInspector OverlaySoftware { get; init; }
+
     public static WindowsOptimizationDependencies CreateDefault(
         WindowsOptimizationEnvironment environment)
     {
@@ -90,7 +94,9 @@ public sealed record WindowsOptimizationDependencies
             VisualEffects = new WindowsVisualEffectsController(),
             PowerPlans = new PowerCfgController(commandRunner),
             PowerStatus = new WindowsPowerStatusProvider(),
-            JournalStore = new JsonWindowsTransactionJournalStore(environment.JournalDirectory)
+            JournalStore = new JsonWindowsTransactionJournalStore(environment.JournalDirectory),
+            SystemResources = new WindowsSystemResourceInspector(),
+            OverlaySoftware = new WindowsOverlaySoftwareInspector()
         };
     }
 }
@@ -129,6 +135,10 @@ public sealed class WindowsOptimizationActionFactory
             new VerifyGtaVStoppedAction(
                 environment.GtaVInstallationRoot,
                 dependencies.GtaVProcessInspector),
+            new BottleneckDiagnosisAction(dependencies.SystemResources),
+            new OverlaySoftwareDetectionAction(dependencies.OverlaySoftware),
+            new FiveMLegacyLogReaderAction(environment.FiveMAppRoot),
+            new PerformanceDiagnosticsGuideAction(),
             new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(defaults.TemporaryFileMinimumAgeDays),
@@ -213,6 +223,13 @@ public sealed class WindowsOptimizationActionFactory
             OptimizationActionIds.VerifyGtaVIsStopped => new VerifyGtaVStoppedAction(
                 environment.GtaVInstallationRoot,
                 dependencies.GtaVProcessInspector),
+            OptimizationActionIds.DiagnoseBottleneck => new BottleneckDiagnosisAction(
+                dependencies.SystemResources),
+            OptimizationActionIds.DetectOverlaysAndCaptureSoftware => new OverlaySoftwareDetectionAction(
+                dependencies.OverlaySoftware),
+            OptimizationActionIds.ReadFiveMLegacyLogs => new FiveMLegacyLogReaderAction(
+                environment.FiveMAppRoot),
+            OptimizationActionIds.GuidePerformanceDiagnostics => new PerformanceDiagnosticsGuideAction(),
             OptimizationActionIds.CleanUserTemporaryFiles => new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(plan.Options.TemporaryFileMinimumAgeDays),

@@ -107,7 +107,9 @@ public sealed class WindowsOptimizationRuntimeTests
             VisualEffects = new FakeVisualEffectsController(),
             PowerPlans = new FakePowerPlanController(),
             PowerStatus = new FakePowerStatusProvider(),
-            JournalStore = journals
+            JournalStore = journals,
+            SystemResources = new FakeSystemResourceInspector(),
+            OverlaySoftware = new FakeOverlaySoftwareInspector()
         };
 
         Assert.Throws<InvalidOperationException>(() =>

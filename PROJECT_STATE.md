@@ -86,8 +86,20 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   validar → registrar, uma falha reverte só a própria ação); falhas críticas
   abortam o restante com segurança e nenhum sucesso parcial é relatado como
   total. Ver `docs/safety.md` (seção "Execução isolada por ação") e
-  `docs/architecture.md`. O catálogo de ações está na versão 3
+  `docs/architecture.md`. O catálogo de ações está na versão 4
   (`ActionCatalog.CurrentVersion`).
+- Avaliação da "PRIMEIRA FASE" de adições pedida pelo usuário em 23/07/2026:
+  backup/restauração, presets do `settings.xml`, gerenciamento de cache,
+  plano de energia temporário e GPU de alto desempenho já estavam
+  implementados; gargalo, overlays/captura e leitura de log foram adicionados
+  como diagnósticos somente leitura (acima). Dois itens ficaram
+  deliberadamente de fora com a concordância do usuário: um "modo sessão" que
+  fecha/reabre aplicativos automaticamente (risco real de perda de dados em
+  apps com trabalho não salvo, e reabrir não restaura o estado interno) e um
+  benchmark de FPS embutido (exigiria overlay/hook, proibido pelo modelo de
+  segurança). Se o benchmark ou o modo sessão forem retomados, tratar como
+  nova decisão de produto com o usuário, não como extensão automática do
+  catálogo — ver `docs/safety.md` para as proibições exatas.
 - Caches e arquivos sensíveis são tratados por allowlist e condições
   explícitas. Dados de autenticação, `game-storage`, NUI storage,
   configurações e plugins não são lixo automático.
@@ -113,6 +125,16 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
 - Ações reversíveis e restritas para configurações gráficas Legacy, Game Mode,
   preferências de GPU, energia de sessão, captura em segundo plano, efeitos
   visuais e limpezas condicionadas.
+- Quatro ações de diagnóstico somente leitura, sempre presentes em todos os
+  modos (`ActionOptionGate.Always`, nunca escrevem no sistema, nunca críticas):
+  diagnóstico de gargalo provável (memória/CPU/disco), detecção de overlays e
+  captura em segundo plano de terceiros conhecidos (NVIDIA, RTSS, Discord,
+  Xbox Game Bar — apenas detecta, nunca fecha), leitura do log mais recente do
+  FiveM Legacy (contagem aproximada de possíveis erros) e orientação para
+  medir desempenho pelos comandos oficiais do próprio FiveM (`cl_drawfps`,
+  `cl_drawperf`, `netgraph`) em vez de um benchmark embutido — medir FPS
+  exigiria overlay/hook, o que violaria o modelo de segurança do produto.
+  Catálogo de ações agora na versão 4 (`ActionCatalog.CurrentVersion`).
 - Motor de execução **isolada por ação** (`WindowsTransactionOptions.
   IsolateFailures`, usado pelo fluxo padrão do app): cada ação verifica,
   aplica, valida e registra separadamente; uma falha reverte só a própria
@@ -368,3 +390,31 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - O commit posterior de documentação de handoff não altera arquivos do app,
   instalador, site público ou versão. Ele é permitido pela exceção de governança
   registrada em `AI_RULES.md` e deve permanecer separado de futuras releases.
+
+## Diagnósticos somente leitura da PRIMEIRA FASE (23/07/2026)
+
+- Trabalho local, **não publicado** (sem push/tag/release desta etapa, por
+  instrução explícita do usuário). Não altera versão pública, instalador nem
+  site.
+- Avaliação completa dos 10 itens pedidos pelo usuário e decisões registradas
+  acima em "Decisões técnicas e padrões". Resumo: 5 já existiam
+  (backup/restauração transacional, presets do `settings.xml`, cache seguro,
+  plano de energia temporário, GPU de alto desempenho); 3 foram adicionados
+  como diagnósticos somente leitura sempre ativos (gargalo, overlays/captura,
+  leitura de log do FiveM), mais a orientação de comandos oficiais de FPS/rede
+  no lugar de um benchmark embutido; 1 item (modo sessão que fecha/reabre
+  apps) ficou fora por risco real de perda de dados, com a concordância do
+  usuário.
+- Novo código: `src/FiveMCleaner.Windows/Actions/DiagnosticActions.cs` (4
+  ações), `src/FiveMCleaner.Windows/Infrastructure/SystemResourceInspector.cs`
+  e `OverlaySoftwareInspector.cs` (leituras read-only atrás de interface,
+  testáveis com doubles). Catálogo de ações avançou da versão 3 para a 4.
+- Validação: `dotnet build` Release sem avisos/erros; **258 testes .NET
+  aprovados** (244 anteriores + 14 novos cobrindo classificação de gargalo,
+  degradação segura quando a leitura de hardware falha, detecção de overlays,
+  leitura/priorização do log mais recente, mensagem de orientação de FPS, e
+  as duas novas infraestruturas reais); `scripts\Verify-Safety.ps1` aprovado;
+  smoke test manual do executável (`Start-Process --demo-synthetic`, 5s, sem
+  novas entradas em `crash.log`).
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.

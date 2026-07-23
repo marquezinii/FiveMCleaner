@@ -148,6 +148,24 @@ internal sealed class FakePowerPlanController : IPowerPlanController
     }
 }
 
+internal sealed class FakeSystemResourceInspector : ISystemResourceInspector
+{
+    public SystemResourceSnapshot Snapshot { get; set; } = new(
+        TotalMemoryBytes: 16L * 1024 * 1024 * 1024,
+        AvailableMemoryBytes: 8L * 1024 * 1024 * 1024,
+        LogicalProcessorCount: 12,
+        SystemDriveFreeBytes: 64L * 1024 * 1024 * 1024);
+
+    public SystemResourceSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeOverlaySoftwareInspector : IOverlaySoftwareInspector
+{
+    public IReadOnlyList<string> Names { get; set; } = [];
+
+    public IReadOnlyList<string> DetectRunningOverlayNames() => Names;
+}
+
 internal sealed class InMemoryJournalStore : IWindowsTransactionJournalStore
 {
     private readonly Dictionary<Guid, WindowsTransactionJournal> journals = [];
@@ -209,7 +227,9 @@ internal static class WindowsTestRuntime
             VisualEffects = new FakeVisualEffectsController(),
             PowerPlans = new FakePowerPlanController(),
             PowerStatus = new FakePowerStatusProvider(),
-            JournalStore = journals
+            JournalStore = journals,
+            SystemResources = new FakeSystemResourceInspector(),
+            OverlaySoftware = new FakeOverlaySoftwareInspector()
         };
 
         return (

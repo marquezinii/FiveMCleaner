@@ -301,6 +301,14 @@
   <data name="Actions.safety.fivem-stopped.verify.Description" xml:space="preserve"><value>Confirms that FiveM processes are closed before any cache or graphics change.</value></data>
   <data name="Actions.safety.gtav-stopped.verify.Name" xml:space="preserve"><value>Check GTA V status</value></data>
   <data name="Actions.safety.gtav-stopped.verify.Description" xml:space="preserve"><value>Confirms that GTA V Legacy is closed before its settings.xml is changed.</value></data>
+  <data name="Actions.safety.bottleneck.diagnose.Name" xml:space="preserve"><value>Diagnose likely bottleneck</value></data>
+  <data name="Actions.safety.bottleneck.diagnose.Description" xml:space="preserve"><value>Analyzes available memory, logical processors and free disk space to point out the most limiting resource, without changing anything.</value></data>
+  <data name="Actions.windows.gaming.overlays.detect.Name" xml:space="preserve"><value>Detect overlays and background capture</value></data>
+  <data name="Actions.windows.gaming.overlays.detect.Description" xml:space="preserve"><value>Checks for known third-party overlays and capture software (NVIDIA, RTSS, Discord, Xbox Game Bar) running, without closing them.</value></data>
+  <data name="Actions.fivem.legacy.logs.read.Name" xml:space="preserve"><value>Read recent FiveM log</value></data>
+  <data name="Actions.fivem.legacy.logs.read.Description" xml:space="preserve"><value>Locates the most recent FiveM Legacy log and summarizes its age and possible error occurrences, without changing anything.</value></data>
+  <data name="Actions.safety.performance-diagnostics.guide.Name" xml:space="preserve"><value>Guide performance diagnostics</value></data>
+  <data name="Actions.safety.performance-diagnostics.guide.Description" xml:space="preserve"><value>Points to FiveM's official commands (cl_drawfps, cl_drawperf, netgraph) to measure FPS and network inside the game itself.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Name" xml:space="preserve"><value>Clean old temporary files</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Removes only user temporary files older than the retention period selected by the profile.</value></data>
   <data name="Actions.fivem.legacy.crash-dumps.prune.Name" xml:space="preserve"><value>Remove old diagnostic files</value></data>
