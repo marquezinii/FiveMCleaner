@@ -135,5 +135,6 @@ Fontes oficiais usadas no desenho:
 
 O workflow nunca publica por `push`; a etapa de criação de release exige o
 disparo manual com `publish=true`. A página pública de download é
-`https://github.com/marquezinii/FiveMCleaner/releases/latest`, gratuita e sem
-login para visitantes.
+`https://marquezinii.github.io/FiveMCleaner/`, gratuita e sem login para
+visitantes. O botao da pagina inicia diretamente o alias estavel
+`FiveMCleaner-Setup-latest-win-x64.exe` hospedado na release oficial.

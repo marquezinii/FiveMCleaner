@@ -5,6 +5,14 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.0.1] - 2026-07-23
+
+### Público
+
+- Corrigida a proporção da arte lateral e o idioma inicial do instalador.
+- Adicionados limites de tempo seguros para fases administrativas, evitando que uma etapa fique travada indefinidamente.
+- Atualizada a publicação pública com landing no GitHub Pages e download direto do instalador.
+
 ## [1.0.0] - 2026-07-23
 
 ### Público

@@ -169,8 +169,9 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
 - Nenhuma otimização nova foi adicionada nesta etapa; o trabalho foi
   inteiramente sobre motor de execução, progresso, relatório e apresentação
   das otimizações já existentes e pesquisadas em `docs/research.md`.
-- O instalador público e o sistema de atualização automática continuam fora
-  do escopo desta etapa, conforme combinado; ficam para uma tarefa futura.
+- O instalador público e o sistema de atualização automática estão implementados
+  e documentados na seção de distribuição; a publicação é deliberadamente manual
+  por workflow_dispatch para evitar releases acidentais.
 - Build, lint, testes renderizados e `npx tsc --noEmit` do site passam. A
   landing estática do GitHub Pages não requer runtime Cloudflare no navegador.
 - O conteúdo de `website/` faz parte do repositório principal. Seus artefatos
@@ -192,8 +193,8 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
 - O checkout canônico está em `C:\Projetos\FiveMCleaner`, no branch `main`.
 - Especificação completa da tarefa em
   `docs/superpowers/specs/2026-07-22-motor-otimizacao-resiliente-design.md`.
-- Última validação do app: `dotnet build` Release sem avisos/erros, **235
-  testes .NET aprovados** (215 anteriores + 20 novos cobrindo isolamento,
+- Última validação do app: `dotnet build` Release sem avisos/erros, **238
+  testes .NET aprovados** cobrindo isolamento,
   dependência, aborto crítico, outcome, relatório, sanitização e apresentação
   de modos) e `scripts\Verify-Safety.ps1` aprovado. O executável real abriu e
   permaneceu estável por smoke test manual (`Start-Process` + `--demo-synthetic`,
@@ -241,9 +242,9 @@ O `npm test` do site já executa o build antes dos testes de HTML renderizado.
 Use `docs/installer.md`, `docs/safety.md` e `docs/architecture.md` como contexto
 complementar, mas confirme sempre o comportamento no código e nos testes.
 
-## Distribuição e validação (atualização de 22/07/2026)
+## Distribuição e validação (atualização de 23/07/2026)
 
-- A distribuição pública inicia em `v1.0.0` e usa Inno Setup 6.7.3, com aplicativo e broker
+- A distribuição pública está na versão `v1.0.1` e usa Inno Setup 6.7.3, com aplicativo e broker
   `win-x64` self-contained: não requer .NET, Node.js, SDK, Visual Studio ou
   outra ferramenta de desenvolvimento na máquina da pessoa.
 - O instalador é por usuário, detecta pt-BR/inglês pela linguagem de interface
