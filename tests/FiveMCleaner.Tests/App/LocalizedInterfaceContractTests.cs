@@ -277,7 +277,7 @@ public sealed partial class LocalizedInterfaceContractTests
             "Controls.xaml"));
 
         Assert.Contains("VerticalAlignment=\"Center\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("<Run Text=\"{Binding AppVersion}\" />", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("<Run Text=\"{Binding AppVersion, Mode=OneWay}\" />", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Padding=\"{TemplateBinding Padding}\"", controls, StringComparison.Ordinal);
     }
 

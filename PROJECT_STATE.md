@@ -343,3 +343,6 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - O status de proteção é alinhado verticalmente ao escudo e exibe a versão
   instalada logo abaixo. O `Padding` do seletor é repassado ao botão interno do
   template WPF, garantindo o recuo visual do valor selecionado em qualquer DPI.
+- A versão exibida no painel lateral é uma leitura unidirecional da montagem.
+  Isso evita que o binding de um `Run` tente escrever em `AppVersion`, que é
+  uma propriedade calculada e somente leitura.
