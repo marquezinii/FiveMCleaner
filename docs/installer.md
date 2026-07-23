@@ -40,13 +40,13 @@ para nunca apagar histórico ou backup sem confirmação visível.
 ## Build local reproduzível
 
 ```powershell
-.\scripts\Build-Installer.ps1 -Version 0.2.0
+.\scripts\Build-Installer.ps1 -Version 1.0.0
 
-$installer = Resolve-Path .\artifacts\installer\FiveMCleaner-Setup-0.2.0-win-x64.exe
+$installer = Resolve-Path .\artifacts\installer\FiveMCleaner-Setup-1.0.0-win-x64.exe
 .\scripts\Test-Installer.ps1 `
   -InstallerPath $installer `
   -PublishDirectory .\artifacts\FiveMCleaner-win-x64 `
-  -ExpectedVersion 0.2.0
+  -ExpectedVersion 1.0.0
 ```
 
 O script primeiro executa a verificação de segurança e o publish self-contained,

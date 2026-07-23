@@ -74,6 +74,10 @@ jobs:
             throw "Tag/channel mismatch. Expected '$expectedTag', got '$env:RELEASE_TAG'."
           }
 
+          if ($env:RELEASE_CHANNEL -eq 'stable') {
+            ./scripts/Test-PublicVersionProgression.ps1 -Version $version
+          }
+
           $tagCommit = (git rev-parse "$env:RELEASE_TAG^{commit}").Trim()
           $headCommit = (git rev-parse HEAD).Trim()
           if ($tagCommit -ne $headCommit) {

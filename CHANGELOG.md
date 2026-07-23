@@ -5,6 +5,29 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.0.0] - 2026-07-23
+
+### Público
+
+- Marco da primeira versão pública estável, mantendo toda a evolução técnica
+  entregue antes desta numeração.
+- Landing page própria para download, com visual do FiveMCleaner e acesso ao
+  instalador oficial pelo GitHub Releases.
+
+### Alterado
+
+- Diagnóstico visual de FiveM Legacy e GTA V Legacy agora apresenta estados
+  explícitos de detectado/não detectado; a identificação distingue corretamente
+  Windows 11 de builds internos `10.0`.
+- A interface recebeu modos com indicadores de intensidade, hardware mais claro
+  e uma visão geral mais limpa.
+
+### Política de versão
+
+- As releases estáveis públicas avançam em sequência controlada: `1.0.0` até
+  `1.0.99`, depois `1.1.0`; o mesmo padrão vale para cada minor seguinte. O
+  workflow valida a próxima versão permitida antes de gerar uma release.
+
 ## [0.2.0] - 2026-07-22
 
 ### Adicionado

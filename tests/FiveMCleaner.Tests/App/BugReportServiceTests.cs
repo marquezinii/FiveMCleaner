@@ -40,7 +40,7 @@ public sealed class BugReportServiceTests
         Assert.Equal(HttpMethod.Post, handler.Method);
         Assert.Equal(TestEndpoint, handler.RequestUri);
         Assert.Contains("application/json", handler.Accept, StringComparison.Ordinal);
-        Assert.Contains("FiveMCleaner/0.2.0", handler.UserAgent, StringComparison.Ordinal);
+        Assert.Contains("FiveMCleaner/1.0.0", handler.UserAgent, StringComparison.Ordinal);
         Assert.Equal("https://github.com/marquezinii/FiveMCleaner", handler.Referrer);
         Assert.Equal("https://github.com", handler.Origin);
         Assert.StartsWith("multipart/form-data", handler.ContentType, StringComparison.OrdinalIgnoreCase);
@@ -162,7 +162,7 @@ public sealed class BugReportServiceTests
             Category = "Falha na otimização",
             Summary = "O preset não terminou",
             Description = "Ao aplicar o perfil médio, a operação parou antes da conclusão.",
-            AppVersion = "0.2.0",
+            AppVersion = "1.0.0",
             Profile = "Médio"
         };
     }
