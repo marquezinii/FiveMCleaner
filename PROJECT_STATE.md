@@ -325,3 +325,8 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   com identidade visual escura/laranja. O GitHub Releases continua sendo a
   origem única e verificável do instalador, enquanto a página serve apenas como
   central de apresentação e inicia o download direto do arquivo oficial.
+- O rodapé de suporte agora é global e fixado abaixo do conteúdo principal: o
+  atalho **Relatar um bug** e o copyright continuam acessíveis também com a
+  janela maximizada. Os seletores de idioma e aparência usam templates WPF
+  próprios (campo, popup e itens), todos vinculados à paleta do aplicativo,
+  para não voltar ao fundo branco do controle padrão do Windows no tema escuro.

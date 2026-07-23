@@ -153,6 +153,49 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Equal("Uniform", (string?)ring.Attribute("Stretch"));
     }
 
+    [Fact]
+    public void SettingsSelectors_UseThemedControlAndItemTemplates()
+    {
+        var root = FindRepositoryRoot();
+        var document = XDocument.Load(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Themes",
+            "Controls.xaml"));
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml";
+        var selectorStyle = Assert.Single(
+            document.Descendants(presentation + "Style"),
+            element => (string?)element.Attribute(xaml + "Key") == "SettingsComboBoxStyle");
+
+        Assert.Contains(selectorStyle.Descendants(presentation + "ControlTemplate"), template =>
+            (string?)template.Attribute("TargetType") == "ComboBox");
+        Assert.Contains(selectorStyle.Descendants(presentation + "Style"), style =>
+            (string?)style.Attribute("TargetType") == "ComboBoxItem");
+        Assert.Contains(selectorStyle.Descendants(presentation + "Popup"), popup =>
+            (string?)popup.Attribute(xaml + "Name") == "PART_Popup");
+    }
+
+    [Fact]
+    public void BugReportAndCopyright_AreInTheGlobalFooter()
+    {
+        var root = FindRepositoryRoot();
+        var document = XDocument.Load(
+            Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"));
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var reportButton = Assert.Single(
+            document.Descendants(presentation + "Button"),
+            element => (string?)element.Attribute("Click") == "ReportBug_Click");
+        var footer = reportButton.Ancestors(presentation + "Border").FirstOrDefault();
+
+        Assert.NotNull(footer);
+        Assert.Equal("2", (string?)footer!.Attribute("Grid.Row"));
+        Assert.Contains(
+            footer.Descendants(presentation + "TextBlock"),
+            element => ((string?)element.Attribute("Text"))?.Contains("Brand.FooterCopyright", StringComparison.Ordinal) == true);
+    }
+
     private static string FindRepositoryRoot()
     {
         var directory = new DirectoryInfo(AppContext.BaseDirectory);
