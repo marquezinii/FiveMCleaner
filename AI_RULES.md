@@ -44,3 +44,46 @@ não tiver sido produzido por ele.
 Nunca execute `git push`, crie releases, publique site, acione deploy ou faça
 qualquer outra publicação remota sem autorização explícita do usuário nesta
 tarefa. Um commit local não autoriza publicação.
+
+## Versionamento obrigatório ao fazer push
+
+Quando o usuário autorizar ou solicitar um `git push`, a IA deve tratar esse
+push como uma nova versão pública do aplicativo. Antes do push, ela deve:
+
+1. Ler a versão atual na fonte de verdade do projeto e calcular a próxima
+   versão permitida.
+2. Incrementar somente o último componente numérico enquanto possível:
+   `1.0.0` → `1.0.1` → ... → `1.0.99` → `1.1.0` → `1.1.1` → ... .
+   A mesma regra vale para todos os componentes posteriores (`1.2.99` →
+   `1.3.0`, e assim por diante).
+3. Atualizar consistentemente a versão em todos os locais aplicáveis, sem
+   deixar números divergentes: projeto/app, assemblies, instalador, manifestos,
+   pacote portátil, metadados de release, workflows, atualizador, site,
+   README, CHANGELOG e demais arquivos de distribuição.
+4. Executar os validadores de progressão de versão e confirmar que a tag,
+   artefatos e metadados usam exatamente a mesma versão.
+5. Atualizar no GitHub o bloco visível **Últimas atualizações**, mantendo-o
+   organizado e no topo da informação de release/documentação. O formato deve
+   ser semelhante a:
+
+   ```text
+   Últimas atualizações:
+   Versão 1.2.3
+
+   - Corrigido: descrição objetiva da correção.
+   - Melhorado: descrição objetiva da melhoria.
+   - Atualizado: descrição objetiva de dependências, componentes ou dados.
+   ```
+
+   Esse bloco deve refletir somente alterações realmente presentes no commit
+   e na release, sem inventar correções ou prometer resultados não testados.
+6. Atualizar `CHANGELOG.md` e as notas da release com o mesmo resumo, incluindo
+   a versão exata, correções, melhorias e atualizações relevantes.
+7. Fazer um único commit profissional contendo a unidade completa de trabalho,
+   criar a tag correspondente quando a publicação for autorizada e somente
+   então executar o `git push` da branch e da tag. Nunca fazer push de uma
+   versão parcialmente atualizada.
+
+Um push autorizado não autoriza ocultar falhas: se build, testes, lint,
+typecheck, empacotamento ou validação da versão falharem, a IA deve corrigir o
+problema antes do push ou informar claramente que a publicação ficou bloqueada.
