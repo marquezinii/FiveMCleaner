@@ -761,11 +761,10 @@ public sealed class MainViewModel : BindableBase
         GpuDetail = value.GpuNames.Count > 1
             ? string.Join(Environment.NewLine, value.GpuNames)
             : value.GpuName;
-        RamLabel = localization.Format(
-            "Diagnosis.MemoryAvailable",
-            value.TotalMemoryGiB,
-            value.AvailableMemoryGiB);
-        DiskLabel = localization.Format("Diagnosis.FreeDisk", value.FreeDiskGiB);
+        RamLabel = string.IsNullOrWhiteSpace(value.MemoryModuleLayout)
+            ? localization.Format("Diagnosis.MemoryTotal", value.TotalMemoryGiB)
+            : localization.Format("Diagnosis.MemoryModules", value.TotalMemoryGiB, value.MemoryModuleLayout);
+        DiskLabel = localization.Format("Diagnosis.DiskCapacity", value.FreeDiskGiB);
         WindowsLabel = value.OsLabel;
         ArchitectureLabel = value.SystemArchitecture;
         ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");

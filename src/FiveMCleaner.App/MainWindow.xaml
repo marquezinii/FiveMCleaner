@@ -536,25 +536,25 @@
                                     <TextBlock Text="{Binding [Settings.General.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding [Settings.Language.Title], Source={StaticResource LocalizedStrings}}" Margin="0,15,0,0" FontSize="12.5" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding [Settings.Language.Description], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,11" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                                    <WrapPanel>
-                                        <RadioButton GroupName="Language" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsEnglishSelected, Mode=OneWay}" Checked="EnglishLanguage_Checked" Content="{Binding [Settings.Language.English], Source={StaticResource LocalizedStrings}}" />
-                                        <RadioButton GroupName="Language" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsPortugueseSelected, Mode=OneWay}" Checked="PortugueseLanguage_Checked" Content="{Binding [Settings.Language.PortugueseBrazil], Source={StaticResource LocalizedStrings}}" />
-                                    </WrapPanel>
+                                    <ComboBox x:Name="LanguageSelector" Style="{StaticResource SettingsComboBoxStyle}" SelectionChanged="LanguageSelector_SelectionChanged">
+                                        <ComboBoxItem Tag="pt-BR" Content="{Binding [Settings.Language.PortugueseBrazil], Source={StaticResource LocalizedStrings}}" />
+                                        <ComboBoxItem Tag="en" Content="{Binding [Settings.Language.English], Source={StaticResource LocalizedStrings}}" />
+                                    </ComboBox>
                                     <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
                                     <TextBlock Text="{Binding [Settings.Appearance.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,4" FontSize="12.5" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding [Settings.Appearance.Description], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,11" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                                    <WrapPanel>
-                                        <RadioButton GroupName="Theme" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsSystemThemeSelected, Mode=OneWay}" Checked="SystemTheme_Checked" Content="{Binding [Settings.Appearance.System], Source={StaticResource LocalizedStrings}}" />
-                                        <RadioButton GroupName="Theme" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsDarkThemeSelected, Mode=OneWay}" Checked="DarkTheme_Checked" Content="{Binding [Settings.Appearance.Dark], Source={StaticResource LocalizedStrings}}" />
-                                        <RadioButton GroupName="Theme" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsLightThemeSelected, Mode=OneWay}" Checked="LightTheme_Checked" Content="{Binding [Settings.Appearance.Light], Source={StaticResource LocalizedStrings}}" />
-                                    </WrapPanel>
+                                    <ComboBox x:Name="ThemeSelector" Style="{StaticResource SettingsComboBoxStyle}" SelectionChanged="ThemeSelector_SelectionChanged">
+                                        <ComboBoxItem Tag="system" Content="{Binding [Settings.Appearance.System], Source={StaticResource LocalizedStrings}}" />
+                                        <ComboBoxItem Tag="dark" Content="{Binding [Settings.Appearance.Dark], Source={StaticResource LocalizedStrings}}" />
+                                        <ComboBoxItem Tag="light" Content="{Binding [Settings.Appearance.Light], Source={StaticResource LocalizedStrings}}" />
+                                    </ComboBox>
                                     <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
-                                    <TextBlock Text="{Binding [Settings.CloseBehavior.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,8" FontSize="12.5" FontWeight="SemiBold" />
-                                    <WrapPanel>
-                                        <RadioButton GroupName="CloseBehavior" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsCloseAppOnCloseSelected, Mode=OneWay}" Checked="CloseAppOnClose_Checked" Content="{Binding [Settings.CloseBehavior.Close], Source={StaticResource LocalizedStrings}}" />
-                                        <RadioButton GroupName="CloseBehavior" Style="{StaticResource ChoiceRadioStyle}" IsChecked="{Binding IsMinimizeToTrayOnCloseSelected, Mode=OneWay}" Checked="MinimizeToTrayOnClose_Checked" Content="{Binding [Settings.CloseBehavior.Tray], Source={StaticResource LocalizedStrings}}" />
-                                    </WrapPanel>
-                                    <TextBlock Text="{Binding [Settings.CloseBehavior.Description], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding MinimizeToTrayOnClose}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding [Settings.CloseBehavior.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding [Settings.CloseBehavior.Description], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </CheckBox>
                                     <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
                                     <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding LaunchAtStartup}">
                                         <StackPanel>

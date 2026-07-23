@@ -59,6 +59,13 @@ public partial class MainWindow : Window
     {
         await viewModel.InitializeAsync();
         themeManager.Apply(viewModel.ThemePreference);
+        LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected ? 0 : 1;
+        ThemeSelector.SelectedIndex = viewModel.ThemePreference switch
+        {
+            AppThemePreference.Dark => 1,
+            AppThemePreference.Light => 2,
+            _ => 0
+        };
         if (startupLaunch && viewModel.MinimizeToTrayOnClose)
         {
             HideToTray();
@@ -138,6 +145,33 @@ public partial class MainWindow : Window
     private void EnglishLanguage_Checked(object sender, RoutedEventArgs e) => ApplyLanguage(AppLanguage.English);
 
     private void PortugueseLanguage_Checked(object sender, RoutedEventArgs e) => ApplyLanguage(AppLanguage.PortugueseBrazil);
+
+    private void LanguageSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (!IsLoaded || LanguageSelector.SelectedItem is not System.Windows.Controls.ComboBoxItem item)
+        {
+            return;
+        }
+
+        ApplyLanguage(string.Equals(item.Tag as string, "pt-BR", StringComparison.Ordinal)
+            ? AppLanguage.PortugueseBrazil
+            : AppLanguage.English);
+    }
+
+    private void ThemeSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    {
+        if (!IsLoaded || ThemeSelector.SelectedItem is not System.Windows.Controls.ComboBoxItem item)
+        {
+            return;
+        }
+
+        ApplyTheme((string?)item.Tag switch
+        {
+            "dark" => AppThemePreference.Dark,
+            "light" => AppThemePreference.Light,
+            _ => AppThemePreference.System
+        });
+    }
 
     private void CloseAppOnClose_Checked(object sender, RoutedEventArgs e)
     {

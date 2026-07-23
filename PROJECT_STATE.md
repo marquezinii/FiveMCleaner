@@ -279,3 +279,7 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   alinhamento vertical explícito para preservar o enquadramento em DPI maior.
 - O status detectado do FiveM usa sinal verde com check; os cards de modo são
   mais minimalistas e exibem selo somente no perfil Médio, recomendado.
+- O diagnóstico de hardware exibe armazenamento arredondado sem a indicação de
+  espaço livre e, quando o WMI disponibiliza os módulos, informa a composição
+  física da RAM (por exemplo, `32 GB · 2×16 GB`). Idioma e aparência usam
+  seletores compactos; minimizar para a bandeja é um toggle único.

@@ -47,6 +47,9 @@ public sealed record AppDiagnostic
 
     public required double AvailableMemoryGiB { get; init; }
 
+    /// <summary>Physical DIMM layout reported by Windows when available.</summary>
+    public string? MemoryModuleLayout { get; init; }
+
     public required int LogicalProcessorCount { get; init; }
 
     public required double FreeDiskGiB { get; init; }

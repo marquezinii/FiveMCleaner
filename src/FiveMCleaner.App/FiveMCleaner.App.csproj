@@ -11,6 +11,7 @@
     <AssemblyName>FiveMCleaner</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
+    <PackageReference Include="System.Management" Version="10.0.0" />
     <ProjectReference Include="../FiveMCleaner.Contracts/FiveMCleaner.Contracts.csproj" />
     <ProjectReference Include="../FiveMCleaner.Core/FiveMCleaner.Core.csproj" />
     <ProjectReference Include="../FiveMCleaner.Windows/FiveMCleaner.Windows.csproj" />

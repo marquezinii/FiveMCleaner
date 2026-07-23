@@ -70,7 +70,7 @@
   <data name="Settings.Appearance.System" xml:space="preserve"><value>Sistema</value></data>
   <data name="Settings.Appearance.Dark" xml:space="preserve"><value>Escuro</value></data>
   <data name="Settings.Appearance.Light" xml:space="preserve"><value>Claro</value></data>
-  <data name="Settings.CloseBehavior.Title" xml:space="preserve"><value>Ao fechar a janela</value></data>
+  <data name="Settings.CloseBehavior.Title" xml:space="preserve"><value>Minimizar para a bandeja</value></data>
   <data name="Settings.CloseBehavior.Close" xml:space="preserve"><value>Encerrar o FiveMCleaner</value></data>
   <data name="Settings.CloseBehavior.Tray" xml:space="preserve"><value>Continuar na área de notificação</value></data>
   <data name="Settings.StartWithWindows.Title" xml:space="preserve"><value>Iniciar com o Windows</value></data>
@@ -166,7 +166,7 @@
   <data name="Diagnosis.GtaVOpen" xml:space="preserve"><value>GTA V ABERTO • FECHE PARA OTIMIZAR</value></data>
   <data name="Diagnosis.GtaVLegacyDetected" xml:space="preserve"><value>GTA V LEGACY DETECTADO</value></data>
   <data name="Diagnosis.GtaVSettingsDetected" xml:space="preserve"><value>CONFIGURAÇÃO DO GTA V DETECTADA</value></data>
-  <data name="Diagnosis.GtaVNotFound" xml:space="preserve"><value>GTA V AINDA NÃO LOCALIZADO</value></data>
+  <data name="Diagnosis.GtaVNotFound" xml:space="preserve"><value>GTA V LEGACY NÃO DETECTADO</value></data>
   <data name="Diagnosis.CloseFiveMSafely" xml:space="preserve"><value>Feche o FiveM para otimizar com segurança</value></data>
   <data name="Diagnosis.CloseGtaVSafely" xml:space="preserve"><value>Feche o GTA V para otimizar com segurança</value></data>
   <data name="Diagnosis.RecommendedProfile" xml:space="preserve"><value>Perfil {0} recomendado para este PC</value></data>
@@ -235,7 +235,7 @@
   <data name="Log.RollbackCancelled" xml:space="preserve"><value>Rollback cancelado entre etapas.</value></data>
   <data name="Log.RollbackFailed" xml:space="preserve"><value>Falha segura no rollback: {0}</value></data>
   <data name="Log.SettingsSaveFailed" xml:space="preserve"><value>Não foi possível salvar as configurações agora.</value></data>
-  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Escolha se clicar no X encerra por completo ou mantém o FiveMCleaner disponível na área de notificação.</value></data>
+  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Ao clicar no X, o FiveMCleaner passará a ser minimizado para a bandeja do sistema em vez de ser fechado.</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>O FiveMCleaner encontrou um erro inesperado. Nenhuma nova alteração será aplicada.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>ações verificadas</value></data>
@@ -377,6 +377,9 @@
   <data name="Log.UpdateVerified" xml:space="preserve"><value>Atualização baixada e verificada com SHA-256.</value></data>
   <data name="Log.UpdateDownloadFailed" xml:space="preserve"><value>Falha segura ao baixar a atualização: {0}</value></data>
   <data name="Diagnosis.MemoryAvailable" xml:space="preserve"><value>{0:0.#} GB • {1:0.#} GB disponíveis</value></data>
+  <data name="Diagnosis.MemoryTotal" xml:space="preserve"><value>{0:0} GB</value></data>
+  <data name="Diagnosis.MemoryModules" xml:space="preserve"><value>{0:0} GB · {1}</value></data>
+  <data name="Diagnosis.DiskCapacity" xml:space="preserve"><value>{0:0} GB</value></data>
   <data name="Profiles.Impact.Pending" xml:space="preserve"><value>Potencial calculado após o diagnóstico local</value></data>
   <data name="Profiles.Impact.Light.Low" xml:space="preserve"><value>Potencial baixo • FPS não medido</value></data>
   <data name="Profiles.Impact.Light.Moderate" xml:space="preserve"><value>Potencial moderado • FPS não medido</value></data>

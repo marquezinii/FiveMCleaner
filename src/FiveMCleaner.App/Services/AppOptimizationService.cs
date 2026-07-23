@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Management;
 using System.Text.Json;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Catalog;
@@ -119,6 +120,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 GpuNames = gpuNames,
                 TotalMemoryGiB = memoryGiB,
                 AvailableMemoryGiB = availableMemoryGiB,
+                MemoryModuleLayout = GetMemoryModuleLayout(),
                 LogicalProcessorCount = logicalProcessorCount,
                 FreeDiskGiB = freeDiskGiB,
                 LegacyCacheBytes = cacheBytes,
@@ -375,6 +377,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
             GpuNames = [localization.GetString("Demo.Gpu")],
             TotalMemoryGiB = 16,
             AvailableMemoryGiB = 8,
+            MemoryModuleLayout = "2×8 GB",
             LogicalProcessorCount = 12,
             FreeDiskGiB = 128,
             LegacyCacheBytes = 3L * 1024 * 1024 * 1024,
@@ -1069,6 +1072,34 @@ public sealed class AppOptimizationService : IAppOptimizationService
         }
 
         return status;
+    }
+
+    private static string? GetMemoryModuleLayout()
+    {
+        try
+        {
+            using var searcher = new ManagementObjectSearcher("SELECT Capacity FROM Win32_PhysicalMemory");
+            var modules = searcher.Get()
+                .Cast<ManagementObject>()
+                .Select(module => module["Capacity"])
+                .OfType<ulong>()
+                .Select(bytes => Math.Round(bytes / 1024d / 1024d / 1024d))
+                .Where(size => size > 0)
+                .GroupBy(size => size)
+                .OrderByDescending(group => group.Key)
+                .Select(group => $"{group.Count()}×{group.Key:0} GB")
+                .ToArray();
+
+            return modules.Length == 0 ? null : string.Join(" + ", modules);
+        }
+        catch (ManagementException)
+        {
+            return null;
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return null;
+        }
     }
 
     private static OptimizationProfile InferProfile(WindowsTransactionJournal journal)

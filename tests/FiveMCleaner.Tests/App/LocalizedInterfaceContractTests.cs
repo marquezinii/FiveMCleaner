@@ -121,6 +121,7 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Equal(
             new[]
             {
+                "{Binding MinimizeToTrayOnClose}",
                 "{Binding LaunchAtStartup}"
             },
             checkBoxBindings);
@@ -131,8 +132,8 @@ public sealed partial class LocalizedInterfaceContractTests
             .Where(value => value is not null)
             .ToArray();
 
-        Assert.Contains("{Binding IsCloseAppOnCloseSelected, Mode=OneWay}", radioBindings);
-        Assert.Contains("{Binding IsMinimizeToTrayOnCloseSelected, Mode=OneWay}", radioBindings);
+        Assert.DoesNotContain("{Binding IsCloseAppOnCloseSelected, Mode=OneWay}", radioBindings);
+        Assert.DoesNotContain("{Binding IsMinimizeToTrayOnCloseSelected, Mode=OneWay}", radioBindings);
     }
 
     [Fact]
