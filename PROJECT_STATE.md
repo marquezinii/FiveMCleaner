@@ -246,7 +246,7 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 
 ## Distribuição e validação (atualização de 22/07/2026)
 
-- A distribuição de `v0.2.0` usa Inno Setup 6.7.3, com aplicativo e broker
+- A distribuição pública inicia em `v1.0.0` e usa Inno Setup 6.7.3, com aplicativo e broker
   `win-x64` self-contained: não requer .NET, Node.js, SDK, Visual Studio ou
   outra ferramenta de desenvolvimento na máquina da pessoa.
 - O instalador é por usuário, detecta pt-BR/inglês e tema do Windows, oferece
@@ -271,6 +271,15 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   transitivos em `sharp`/`next`. O registro não oferece correção não disruptiva
   para a versão disponível; não usar `npm audit fix --force` sem revisar a
   compatibilidade Vinext/Next. Esta limitação não deve ser ocultada.
+- A página pública de download está em
+  `https://fivemcleaner-download.marquezini.chatgpt.site`. Ela preserva o GitHub
+  Releases como origem única do instalador e é vinculada pelo link sublinhado
+  **DOWNLOAD** no topo do `README.md` exibido no GitHub.
+- A numeração pública segue a sequência exigida pelo produto: começa em
+  `1.0.0`, incrementa patch até `X.Y.99` e então avança para `X.(Y+1).0`.
+  `scripts/Test-PublicVersionProgression.ps1` aplica essa regra em releases
+  estáveis, com uma exceção única documentada para a transição histórica de
+  `v0.2.0` para `v1.0.0`.
 
 ## Revisão visual (atualização de 22/07/2026)
 

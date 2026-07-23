@@ -105,6 +105,13 @@ instalador. O binário permanece sem assinatura de código até existir um
 certificado Authenticode. SHA-256 e atestação aumentam a transparência, mas não
 substituem reputação ou uma assinatura pública.
 
+### Sequência de versões públicas
+
+A linha pública inicia em `1.0.0`. Para manter a numeração simples, cada nova
+release estável incrementa apenas o último dígito até `1.0.99`; a próxima passa
+para `1.1.0`. O script `scripts/Test-PublicVersionProgression.ps1` é executado
+no workflow e recusa uma versão que não seja a próxima permitida.
+
 Fontes oficiais usadas no desenho:
 
 - [Inno Setup: recursos e suporte de Windows](https://jrsoftware.org/isinfo.php)
