@@ -171,10 +171,8 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   das otimizações já existentes e pesquisadas em `docs/research.md`.
 - O instalador público e o sistema de atualização automática continuam fora
   do escopo desta etapa, conforme combinado; ficam para uma tarefa futura.
-- O build, lint e testes renderizados do site passam, mas `npx tsc --noEmit`
-  atualmente reporta tipos ausentes do runtime Cloudflare (`cloudflare:workers`,
-  `Fetcher` e `D1Database`). Isso deve ser tratado como uma limitação conhecida
-  do site, não mascarado por uma cadeia de comandos.
+- Build, lint, testes renderizados e `npx tsc --noEmit` do site passam. A
+  landing estática do GitHub Pages não requer runtime Cloudflare no navegador.
 - O conteúdo de `website/` faz parte do repositório principal. Seus artefatos
   gerados e credenciais locais são ignorados tanto pela raiz quanto pelo
   `.gitignore` específico do site.
@@ -205,10 +203,9 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   a fim `AppOptimizationService → runtime real do Windows` (só é exercitada
   por doubles no motor; o serviço de app em si depende de Windows real). É um
   bom próximo passo para o agente seguinte, se quiser reforçar cobertura.
-- Última validação do site: lint, build e testes renderizados aprovados. O
-  typecheck continua limitado pelos tipos ausentes do runtime Cloudflare,
-  conforme descrito acima; não mascarar esse erro nem substituir por comandos
-  que ignorem tipos.
+- Última validação do site: lint, typecheck, build e testes renderizados
+  aprovados. A landing estática também é verificada quanto à presença do
+  instalador direto, do ícone oficial e da ausência do endereço anterior.
 - O push desta tarefa para `origin/main` foi autorizado explicitamente pelo
   usuário e realizado ao final desta etapa, sem PR — confira `git log
   origin/main` para confirmar que o HEAD local e o remoto coincidem antes de
@@ -271,10 +268,16 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   transitivos em `sharp`/`next`. O registro não oferece correção não disruptiva
   para a versão disponível; não usar `npm audit fix --force` sem revisar a
   compatibilidade Vinext/Next. Esta limitação não deve ser ocultada.
-- A página pública de download está em
-  `https://fivemcleaner-download.marquezini.chatgpt.site`. Ela preserva o GitHub
-  Releases como origem única do instalador e é vinculada pelo link sublinhado
-  **DOWNLOAD** no topo do `README.md` exibido no GitHub.
+- A página pública de download é publicada gratuitamente no GitHub Pages em
+  `https://marquezinii.github.io/FiveMCleaner/`. O workflow
+  `.github/workflows/pages.yml` publica somente o conteúdo estático de
+  `website/public-site/` depois de mudanças em `main`. Ela é vinculada pelo link
+  sublinhado **DOWNLOAD** no topo do `README.md` exibido no GitHub.
+- Os botões da landing page iniciam o download direto do alias estável
+  `FiveMCleaner-Setup-latest-win-x64.exe`, hospedado no GitHub Releases. Em toda
+  release estável, `release.yml` publica esse alias além do instalador
+  versionado. O atualizador do aplicativo **não** usa o alias: continua exigindo
+  o arquivo versionado, HTTPS, tamanho e SHA-256 publicados pela API do GitHub.
 - A numeração pública segue a sequência exigida pelo produto: começa em
   `1.0.0`, incrementa patch até `X.Y.99` e então avança para `X.(Y+1).0`.
   `scripts/Test-PublicVersionProgression.ps1` aplica essa regra em releases
@@ -299,10 +302,9 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   compatibilidade. Os modos usam velocímetros neutros com ponteiro verde,
   amarelo ou vermelho para comunicar a intensidade; os avisos redundantes de
   recomendação e os cards de streaming não aparecem na interface principal.
-- A landing page em `website/` é uma experiência própria do FiveMCleaner, com
-  identidade visual escura/laranja, central de download, destaque para o
-  instalador oficial, prévia da interface e links para GitHub Releases. O site
-  não depende visualmente do GitHub; o GitHub Releases continua sendo a origem
-  única e verificável do instalador. Não há workflow de GitHub Pages neste
-  checkout: qualquer publicação ou troca de hospedagem exige autorização
-  explícita e configuração própria.
+- A landing page em `website/` permanece a experiência React usada em ambientes
+  de desenvolvimento. A versão pública equivalente fica em
+  `website/public-site/`, é estática, responsiva e publicada por GitHub Pages
+  com identidade visual escura/laranja. O GitHub Releases continua sendo a
+  origem única e verificável do instalador, enquanto a página serve apenas como
+  central de apresentação e inicia o download direto do arquivo oficial.

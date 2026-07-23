@@ -6,7 +6,7 @@ import Image from "next/image";
 type Language = "pt" | "en";
 
 const DOWNLOAD_URL =
-  "https://github.com/marquezinii/FiveMCleaner/releases/latest";
+  "https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe";
 const GITHUB_URL = "https://github.com/marquezinii/FiveMCleaner";
 
 const copy = {
@@ -572,7 +572,7 @@ export default function Home() {
               <p className="hero-body">{text.hero.body}</p>
 
               <div className="hero-actions">
-                <a className="button button-primary" href={DOWNLOAD_URL} target="_blank" rel="noreferrer">
+                <a className="button button-primary" href={DOWNLOAD_URL}>
                   <span>{text.hero.download}</span>
                   <span aria-hidden="true">↓</span>
                 </a>
@@ -589,7 +589,7 @@ export default function Home() {
                   <span>{text.hero.releaseKicker}</span>
                   <strong>{text.hero.releaseTitle}</strong>
                   <p>{text.hero.releaseBody}</p>
-                  <a href={DOWNLOAD_URL} target="_blank" rel="noreferrer">{text.hero.releaseLink}<b aria-hidden="true">↗</b></a>
+                  <a href={DOWNLOAD_URL}>{text.hero.releaseLink}<b aria-hidden="true">↗</b></a>
                 </div>
               </aside>
 
@@ -860,7 +860,7 @@ export default function Home() {
             <h2>{text.finalCta.title}</h2>
             <p>{text.finalCta.body}</p>
             <div className="hero-actions centered-actions">
-              <a className="button button-primary" href={DOWNLOAD_URL} target="_blank" rel="noreferrer">
+              <a className="button button-primary" href={DOWNLOAD_URL}>
                 <span>{text.finalCta.download}</span><span aria-hidden="true">↓</span>
               </a>
               <a className="button button-secondary" href={GITHUB_URL} target="_blank" rel="noreferrer">

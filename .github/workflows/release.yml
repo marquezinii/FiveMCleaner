@@ -128,6 +128,15 @@ jobs:
           Copy-Item -LiteralPath ./artifacts/FiveMCleaner-win-x64.zip -Destination ./artifacts/release
           Copy-Item -LiteralPath ./artifacts/FiveMCleaner-win-x64.zip.sha256 -Destination ./artifacts/release
 
+          # A landing page precisa de um endereço estável para iniciar o download
+          # sem uma etapa intermediária. O atualizador do aplicativo continua usando
+          # exclusivamente o instalador versionado e o digest publicado pelo GitHub.
+          if ($env:RELEASE_CHANNEL -eq 'stable') {
+            Copy-Item `
+              -LiteralPath "./artifacts/installer/FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe" `
+              -Destination ./artifacts/release/FiveMCleaner-Setup-latest-win-x64.exe
+          }
+
           $installerName = "FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe"
           $downloadUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:RELEASE_TAG/$installerName"
           $channelText = if ($env:RELEASE_CHANNEL -eq 'preview') { 'prévia / preview' } else { 'estável / stable' }
@@ -188,18 +197,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ inputs.release_tag }}
           RELEASE_CHANNEL: ${{ inputs.channel }}
+          ASSET_VERSION: ${{ needs.build_audit.outputs.asset_version }}
         run: |
           if (gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY 2>$null) {
             throw "Release '$env:RELEASE_TAG' already exists; refusing to overwrite it."
           }
 
           $assets = @(
-            (Resolve-Path ./release/FiveMCleaner-Setup-*-win-x64.exe).Path,
-            (Resolve-Path ./release/FiveMCleaner-Setup-*-win-x64.exe.sha256).Path,
-            (Resolve-Path ./release/FiveMCleaner-release-manifest-*.json).Path,
+            (Resolve-Path "./release/FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe").Path,
+            (Resolve-Path "./release/FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe.sha256").Path,
+            (Resolve-Path "./release/FiveMCleaner-release-manifest-$env:ASSET_VERSION.json").Path,
             (Resolve-Path ./release/FiveMCleaner-win-x64.zip).Path,
             (Resolve-Path ./release/FiveMCleaner-win-x64.zip.sha256).Path
           )
+          if ($env:RELEASE_CHANNEL -eq 'stable') {
+            $assets += (Resolve-Path ./release/FiveMCleaner-Setup-latest-win-x64.exe).Path
+          }
           $arguments = @(
             'release', 'create', $env:RELEASE_TAG
           ) + $assets + @(

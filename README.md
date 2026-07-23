@@ -21,7 +21,7 @@
 </p>
 
 <p align="center">
-  <a href="https://fivemcleaner-download.marquezini.chatgpt.site"><strong><ins>DOWNLOAD</ins></strong></a>
+  <a href="https://marquezinii.github.io/FiveMCleaner/"><strong><ins>DOWNLOAD</ins></strong></a>
 </p>
 
 <p align="center">
