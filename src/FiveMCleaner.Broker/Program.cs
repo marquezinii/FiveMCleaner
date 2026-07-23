@@ -15,6 +15,8 @@ internal static class BrokerExitCode
 
 internal static class Program
 {
+    private static readonly TimeSpan ExecutionTimeout = TimeSpan.FromSeconds(90);
+
     [STAThread]
     public static async Task<int> Main(string[] args)
     {
@@ -108,10 +110,34 @@ internal static class Program
             item => item.TransactionId = plan.PlanId);
 
         var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault();
-        var result = await runtime.ExecuteAsync(
-            validated,
-            events,
-            CancellationToken.None).ConfigureAwait(false);
+        using var timeout = new CancellationTokenSource(ExecutionTimeout);
+        WindowsTransactionResult result;
+        try
+        {
+            result = await runtime.ExecuteAsync(
+                validated,
+                events,
+                timeout.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+        {
+            return PublishFailure(
+                events,
+                BrokerEventKind.Failed,
+                "A etapa administrativa excedeu o tempo seguro e foi interrompida. Consulte o relatório antes de tentar novamente.",
+                "broker-operation-timeout",
+                BrokerExitCode.ExecutionFailed);
+        }
+
+        if (timeout.IsCancellationRequested)
+        {
+            return PublishFailure(
+                events,
+                BrokerEventKind.Failed,
+                "A etapa administrativa excedeu o tempo seguro e foi interrompida. Consulte o relatório antes de tentar novamente.",
+                "broker-operation-timeout",
+                BrokerExitCode.ExecutionFailed);
+        }
 
         if (result.State != WindowsTransactionState.Committed)
         {

@@ -27,7 +27,10 @@ internal sealed class ElevatedBrokerClient
     private const int MaximumEvents = 128;
     private const int MaximumEventCharacters = 64 * 1024;
     private static readonly TimeSpan ConnectionTimeout = TimeSpan.FromSeconds(30);
-    private static readonly TimeSpan OperationTimeout = TimeSpan.FromMinutes(30);
+    // A fase elevada do perfil médio executa somente ações allowlisted e curtas.
+    // Não deixar a interface em espera por dezenas de minutos torna uma falha
+    // do Windows recuperável e visível no relatório.
+    private static readonly TimeSpan OperationTimeout = TimeSpan.FromMinutes(2);
     private readonly string requestDirectory;
     private readonly string brokerPath;
 

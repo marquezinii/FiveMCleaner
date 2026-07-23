@@ -24,6 +24,10 @@
   #define RepositoryRoot ".."
 #endif
 
+#ifndef InstallerArtworkPath
+  #define InstallerArtworkPath "..\artifacts\installer-artwork\FiveMCleaner-wizard-side.png"
+#endif
+
 #define InstallerBaseName "FiveMCleaner-Setup-" + AppVersion + "-win-x64"
 
 [Setup]
@@ -74,15 +78,15 @@ SetupMutex=FiveMCleaner.Setup.49338651-127F-4FD3-BEAD-88D8C9377672
 UninstallLogging=yes
 UsePreviousAppDir=yes
 UsePreviousGroup=yes
-UsePreviousLanguage=yes
+UsePreviousLanguage=no
 UsePreviousTasks=yes
 LanguageDetectionMethod=uilanguage
-ShowLanguageDialog=auto
+ShowLanguageDialog=no
 WizardStyle=modern dynamic windows11 includetitlebar
 WizardResizable=yes
 WizardKeepAspectRatio=yes
-WizardImageFile={#RepositoryRoot}\src\FiveMCleaner.App\Assets\FiveMCleaner.png
-WizardImageFileDynamicDark={#RepositoryRoot}\src\FiveMCleaner.App\Assets\FiveMCleaner.png
+WizardImageFile={#InstallerArtworkPath}
+WizardImageFileDynamicDark={#InstallerArtworkPath}
 WizardImageBackColor=$F3F4F6
 WizardImageBackColorDynamicDark=$151515
 WizardSmallImageFile={#RepositoryRoot}\src\FiveMCleaner.App\Assets\FiveMCleaner.png

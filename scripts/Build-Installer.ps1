@@ -20,6 +20,7 @@ $workspace = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $artifactsRoot = [System.IO.Path]::GetFullPath((Join-Path $workspace 'artifacts'))
 $publishDirectory = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'FiveMCleaner-win-x64'))
 $installerOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer'))
+$installerArtwork = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-artwork\FiveMCleaner-wizard-side.png'))
 $stagingOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot ".installer-staging-$([Guid]::NewGuid().ToString('N'))"))
 $innoVersion = '6.7.3'
 $innoAssetName = "innosetup-$innoVersion.exe"
@@ -176,6 +177,7 @@ $numericVersion = "$($versionMatch.Groups['core'].Value).0"
 
 Assert-UnderArtifacts $publishDirectory
 Assert-UnderArtifacts $installerOutput
+Assert-UnderArtifacts $installerArtwork
 Assert-UnderArtifacts $stagingOutput
 New-Item -ItemType Directory -Force -Path $artifactsRoot, $installerOutput, $stagingOutput | Out-Null
 
@@ -204,6 +206,13 @@ try {
     $compiler = Resolve-InnoCompiler
     Write-Host "Compiling with $compiler" -ForegroundColor Cyan
 
+    & (Join-Path $PSScriptRoot 'New-InstallerArtwork.ps1') `
+        -SourceIconPath (Join-Path $workspace 'src\FiveMCleaner.App\Assets\FiveMCleaner.png') `
+        -OutputPath $installerArtwork
+    if (-not (Test-Path -LiteralPath $installerArtwork -PathType Leaf)) {
+        throw 'Installer artwork generation did not produce the expected file.'
+    }
+
     $installerScript = Join-Path $workspace 'installer\FiveMCleaner.iss'
     $arguments = @(
         '/Qp',
@@ -212,6 +221,7 @@ try {
         "/DSourceDir=$publishDirectory",
         "/DOutputDir=$stagingOutput",
         "/DRepositoryRoot=$workspace",
+        "/DInstallerArtworkPath=$installerArtwork",
         $installerScript
     )
     & $compiler @arguments

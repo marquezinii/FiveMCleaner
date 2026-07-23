@@ -246,7 +246,8 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - A distribuição pública inicia em `v1.0.0` e usa Inno Setup 6.7.3, com aplicativo e broker
   `win-x64` self-contained: não requer .NET, Node.js, SDK, Visual Studio ou
   outra ferramenta de desenvolvimento na máquina da pessoa.
-- O instalador é por usuário, detecta pt-BR/inglês e tema do Windows, oferece
+- O instalador é por usuário, detecta pt-BR/inglês pela linguagem de interface
+  atual do Windows (inglês como fallback) e tema do Windows, oferece
   atalho de área de trabalho e inicialização com Windows, atualiza por cima da
   instalação anterior e usa Restart Manager sem encerramento forçado. Na
   desinstalação interativa, a pessoa escolhe preservar ou remover
@@ -273,9 +274,11 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   `.github/workflows/pages.yml` publica somente o conteúdo estático de
   `website/public-site/` depois de mudanças em `main`. Ela é vinculada pelo link
   sublinhado **DOWNLOAD** no topo do `README.md` exibido no GitHub.
-- A configuração de hospedagem anterior foi removida do checkout e o site
-  correspondente foi restringido à conta do proprietário; a única página pública
-  promovida pelo projeto é a do GitHub Pages.
+- O identificador da hospedagem anterior foi removido do checkout e o site
+  correspondente foi restringido à conta do proprietário. O arquivo
+  `website/.openai/hosting.json` permanece apenas com bindings locais vazios,
+  necessários ao build Vinext; ele não contém URL ou credencial. A única
+  página pública promovida pelo projeto é a do GitHub Pages.
 - Os botões da landing page iniciam o download direto do alias estável
   `FiveMCleaner-Setup-latest-win-x64.exe`, hospedado no GitHub Releases. Em toda
   release estável, `release.yml` publica esse alias além do instalador
@@ -286,6 +289,16 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   `scripts/Test-PublicVersionProgression.ps1` aplica essa regra em releases
   estáveis, com uma exceção única documentada para a transição histórica de
   `v0.2.0` para `v1.0.0`.
+- A arte lateral do instalador é gerada localmente por
+  `scripts/New-InstallerArtwork.ps1` a partir do ícone oficial. Ela usa a
+  proporção 164:314 exigida pelo Inno Setup, preservando o ícone quadrado sem
+  distorção. O setup não reaproveita mais o idioma de uma instalação anterior:
+  sempre reavalia o idioma atual do Windows ao iniciar.
+- A fase administrativa possui watchdog duplo: o broker encerra uma etapa
+  elevada que exceder 90 segundos com resultado de falha seguro e o aplicativo
+  deixa de aguardar uma resposta do broker após dois minutos. Não há sucesso
+  implícito nem nova tentativa automática; o journal e o relatório preservam o
+  estado para diagnóstico e rollback quando aplicável.
 
 ## Revisão visual (atualização de 22/07/2026)
 
