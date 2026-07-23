@@ -83,6 +83,7 @@
   <data name="About.Copyright" xml:space="preserve"><value>© 2026 Felipe Marquezini. All rights reserved.</value></data>
   <data name="About.License" xml:space="preserve"><value>Source code under the MIT license. Independent project, not affiliated with Cfx.re, Rockstar Games or Microsoft.</value></data>
   <data name="About.OpenGitHub" xml:space="preserve"><value>Open GitHub</value></data>
+  <data name="Sidebar.Version" xml:space="preserve"><value>VERSION</value></data>
   <data name="BugReport.WindowTitle" xml:space="preserve"><value>Report a bug — FiveMCleaner</value></data>
   <data name="BugReport.FormLanguage" xml:space="preserve"><value>Bug report form</value></data>
   <data name="BugReport.Heading" xml:space="preserve"><value>Tell us what happened</value></data>

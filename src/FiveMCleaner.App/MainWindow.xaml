@@ -203,10 +203,27 @@
                                     </StackPanel>
                                 </Grid>
                             </Border>
-                            <TextBlock Margin="0,9,0,0" HorizontalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" FontSize="9.5">
-                                <Run Text="v " />
-                                <Run Text="{Binding AppVersion, Mode=OneWay}" />
-                            </TextBlock>
+                            <Border Margin="0,10,0,0"
+                                    Padding="9,4,9,4"
+                                    HorizontalAlignment="Center"
+                                    Background="{DynamicResource PanelBrush}"
+                                    BorderBrush="{DynamicResource BorderSoftBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="7">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}}"
+                                               Foreground="{DynamicResource TextSubtleBrush}"
+                                               FontFamily="Segoe UI Variable Text"
+                                               FontSize="8"
+                                               FontWeight="SemiBold" />
+                                    <Border Width="1" Height="10" Margin="7,0" Background="{DynamicResource BorderSoftBrush}" />
+                                    <TextBlock Text="{Binding AppVersion, Mode=OneWay}"
+                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                               FontFamily="Segoe UI Variable Text"
+                                               FontSize="9.5"
+                                               FontWeight="SemiBold" />
+                                </StackPanel>
+                            </Border>
                         </StackPanel>
                     </Grid>
                 </Border>

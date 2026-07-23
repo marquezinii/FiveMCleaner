@@ -79,3 +79,18 @@ test("removes starter artifacts and keeps the Sites build cross-platform", async
   await access(new URL("../public/icon.png", import.meta.url));
   await assert.rejects(access(new URL("public/_sites-preview", templateRoot)));
 });
+
+test("keeps the public download page aligned with the latest published release", async () => {
+  const [page, styles] = await Promise.all([
+    readFile(new URL("../public-site/index.html", import.meta.url), "utf8"),
+    readFile(new URL("../public-site/styles.css", import.meta.url), "utf8"),
+  ]);
+
+  assert.match(page, /id="atualizacoes"/i);
+  assert.match(page, /ÚLTIMA VERSÃO PÚBLICA/i);
+  assert.match(page, /<strong id="updates-version">1\.0\.1<\/strong>/i);
+  assert.match(page, /Corrigida a proporção da arte lateral/i);
+  assert.match(page, /CHANGELOG\.md/i);
+  assert.match(styles, /\.updates-section\{/i);
+  assert.match(styles, /\.updates-card\{/i);
+});

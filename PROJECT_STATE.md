@@ -346,3 +346,7 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - A versão exibida no painel lateral é uma leitura unidirecional da montagem.
   Isso evita que o binding de um `Run` tente escrever em `AppVersion`, que é
   uma propriedade calculada e somente leitura.
+- A versão lateral usa um selo compacto, localizado e de leitura unidirecional,
+  em vez de texto solto. A página pública de download possui a seção
+  **Última versão pública**, alimentada apenas pelo conteúdo factual do
+  `CHANGELOG.md`; ela deve ser atualizada junto da próxima release autorizada.
