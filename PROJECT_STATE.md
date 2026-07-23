@@ -244,7 +244,7 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 
 ## Distribuição e validação (atualização de 23/07/2026)
 
-- A distribuição pública preparada nesta etapa é a versão `v1.0.2` e usa Inno Setup 6.7.3, com aplicativo e broker
+- A distribuição pública atual é a versão `v1.0.2` e usa Inno Setup 6.7.3, com aplicativo e broker
   `win-x64` self-contained: não requer .NET, Node.js, SDK, Visual Studio ou
   outra ferramenta de desenvolvimento na máquina da pessoa.
 - O instalador é por usuário, detecta pt-BR/inglês pela linguagem de interface
@@ -353,3 +353,18 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - O número exibido nesse selo usa `TextBrush`, um recurso presente em todos os
   temas. Não usar `TextPrimaryBrush`: ele não existe na paleta e faz o WPF cair
   na cor padrão preta em vez de preservar o contraste do tema escuro.
+
+## Publicação v1.0.2 e handoff (23/07/2026)
+
+- A tag `v1.0.2` aponta para `74f23ebab836902fe19d9dea7f4ae9c4fd17e31a` e a
+  release pública está disponível em
+  `https://github.com/marquezinii/FiveMCleaner/releases/tag/v1.0.2`.
+- O workflow de release `30034666597` passou integralmente: validação de versão,
+  segurança e testes, pacote autocontido, instalador, smoke test de instalação/
+  atualização/desinstalação, hashes, manifesto e atestação de procedência.
+- O GitHub Pages para o mesmo commit também passou (`30034659354`). A página
+  pública e o download direto do alias estável responderam HTTP 200 após a
+  publicação; a página exibe a seção **Última versão pública** para `1.0.2`.
+- O commit posterior de documentação de handoff não altera arquivos do app,
+  instalador, site público ou versão. Ele é permitido pela exceção de governança
+  registrada em `AI_RULES.md` e deve permanecer separado de futuras releases.
