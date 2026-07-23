@@ -19,9 +19,8 @@ function ConvertTo-VersionParts {
     }
 }
 
-$candidate = ConvertTo-VersionParts $Version
 $stableTags = @(git tag --merged HEAD --list 'v*' | ForEach-Object {
-    if ($_ -match '^v(?<version>\d+\.\d+\.\d+)$') {
+    if ($_ -ne "v$Version" -and $_ -match '^v(?<version>\d+\.\d+\.\d+)$') {
         [pscustomobject]@{ Tag = $_; Parts = ConvertTo-VersionParts $Matches.version }
     }
 })
@@ -36,11 +35,6 @@ $previous = $stableTags |
                            @{ Expression = { $_.Parts.Minor }; Descending = $true },
                            @{ Expression = { $_.Parts.Patch }; Descending = $true } |
     Select-Object -First 1
-
-if ($previous.Tag -eq "v$Version") {
-    Write-Host "Version '$Version' already matches the current stable tag."
-    exit 0
-}
 
 # The product intentionally starts its public sequence at 1.0.0 after the
 # pre-public 0.x line. All later stable versions must follow the policy below.
