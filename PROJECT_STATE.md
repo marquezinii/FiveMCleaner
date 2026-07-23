@@ -290,3 +290,10 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   compatibilidade. Os modos usam velocímetros neutros com ponteiro verde,
   amarelo ou vermelho para comunicar a intensidade; os avisos redundantes de
   recomendação e os cards de streaming não aparecem na interface principal.
+- A landing page em `website/` é uma experiência própria do FiveMCleaner, com
+  identidade visual escura/laranja, central de download, destaque para o
+  instalador oficial, prévia da interface e links para GitHub Releases. O site
+  não depende visualmente do GitHub; o GitHub Releases continua sendo a origem
+  única e verificável do instalador. Não há workflow de GitHub Pages neste
+  checkout: qualquer publicação ou troca de hospedagem exige autorização
+  explícita e configuração própria.

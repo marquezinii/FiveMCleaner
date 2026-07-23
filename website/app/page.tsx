@@ -25,16 +25,20 @@ const copy = {
     },
     headerDownload: "Baixar",
     hero: {
-      eyebrow: "OTIMIZAÇÃO TRANSPARENTE PARA FIVEM",
+      eyebrow: "CENTRAL OFICIAL DE DOWNLOAD",
       titleStart: "Seu PC mais preparado.",
       titleAccent: "Seu FiveM mais fluido.",
-      body: "Um clique inicia um plano feito para o seu computador. O FiveMCleaner diagnostica, ajusta e registra cada etapa — sem atalhos perigosos e com opção de desfazer.",
+      body: "Uma experiência premium para preparar o Windows, o FiveM e o GTA V Legacy com decisões técnicas claras, progresso ao vivo e mudanças que podem ser revisadas.",
       download: "Download do instalador",
       github: "Ver código no GitHub",
       releaseNote: "Download pelo GitHub Releases · sem cadastro",
       included: "Runtime incluído",
       windows: "Windows 10 e 11",
       rollback: "Rollback disponível",
+      releaseKicker: "RELEASE OFICIAL",
+      releaseTitle: "Instalação simples. Sem dependências extras.",
+      releaseBody: "O instalador inclui o runtime necessário e abre a versão estável mais recente, publicada na origem oficial do projeto.",
+      releaseLink: "Abrir download seguro",
     },
     preview: {
       label: "PRÉVIA DA INTERFACE",
@@ -45,7 +49,7 @@ const copy = {
       ringBottom: "para otimizar",
       profileLabel: "Perfil selecionado",
       light: "Leve",
-      medium: "Moderado",
+      medium: "Médio",
       aggressive: "Agressivo",
       recommended: "RECOMENDADO",
       progressTitle: "Preparando otimização segura",
@@ -78,7 +82,7 @@ const copy = {
         },
         {
           number: "02",
-          name: "Moderado",
+          name: "Médio",
           summary: "O melhor equilíbrio entre imagem e resposta.",
           ideal: "Recomendado para a maioria dos jogadores.",
           bullets: [
@@ -263,16 +267,20 @@ const copy = {
     },
     headerDownload: "Download",
     hero: {
-      eyebrow: "TRANSPARENT OPTIMIZATION FOR FIVEM",
+      eyebrow: "OFFICIAL DOWNLOAD CENTER",
       titleStart: "A better prepared PC.",
       titleAccent: "A smoother FiveM.",
-      body: "One click starts a plan built for your computer. FiveMCleaner diagnoses, adjusts and records every step — without dangerous shortcuts and with an option to undo.",
+      body: "A premium experience for preparing Windows, FiveM and GTA V Legacy with clear technical decisions, live progress and changes you can review.",
       download: "Download installer",
       github: "View code on GitHub",
       releaseNote: "Download via GitHub Releases · no account required",
       included: "Runtime included",
       windows: "Windows 10 and 11",
       rollback: "Rollback available",
+      releaseKicker: "OFFICIAL RELEASE",
+      releaseTitle: "Simple installation. No extra dependencies.",
+      releaseBody: "The installer includes its required runtime and opens the latest stable version from the project’s official source.",
+      releaseLink: "Open secure download",
     },
     preview: {
       label: "INTERFACE PREVIEW",
@@ -564,16 +572,26 @@ export default function Home() {
               <p className="hero-body">{text.hero.body}</p>
 
               <div className="hero-actions">
-                <a className="button button-primary" href={DOWNLOAD_URL}>
+                <a className="button button-primary" href={DOWNLOAD_URL} target="_blank" rel="noreferrer">
                   <span>{text.hero.download}</span>
                   <span aria-hidden="true">↓</span>
                 </a>
-                <a className="button button-secondary" href={GITHUB_URL}>
+                <a className="button button-secondary" href={GITHUB_URL} target="_blank" rel="noreferrer">
                   {text.hero.github}
                   <span aria-hidden="true">↗</span>
                 </a>
               </div>
               <p className="release-note"><span aria-hidden="true">●</span>{text.hero.releaseNote}</p>
+
+              <aside className="release-card" aria-label={text.hero.releaseKicker}>
+                <div className="release-card-icon" aria-hidden="true">↓</div>
+                <div>
+                  <span>{text.hero.releaseKicker}</span>
+                  <strong>{text.hero.releaseTitle}</strong>
+                  <p>{text.hero.releaseBody}</p>
+                  <a href={DOWNLOAD_URL} target="_blank" rel="noreferrer">{text.hero.releaseLink}<b aria-hidden="true">↗</b></a>
+                </div>
+              </aside>
 
               <ul className="trust-list" aria-label={text.highlightsLabel}>
                 <li><CheckMark />{text.hero.included}</li>
@@ -715,7 +733,7 @@ export default function Home() {
               <p className="eyebrow"><span />{text.transparency.eyebrow}</p>
               <h2>{text.transparency.title}</h2>
               <p>{text.transparency.body}</p>
-              <a href={GITHUB_URL}>{text.transparency.github}<span aria-hidden="true">↗</span></a>
+              <a href={GITHUB_URL} target="_blank" rel="noreferrer">{text.transparency.github}<span aria-hidden="true">↗</span></a>
             </div>
             <div className="transparency-list">
               {text.transparency.items.map((item, index) => (
@@ -842,10 +860,10 @@ export default function Home() {
             <h2>{text.finalCta.title}</h2>
             <p>{text.finalCta.body}</p>
             <div className="hero-actions centered-actions">
-              <a className="button button-primary" href={DOWNLOAD_URL}>
+              <a className="button button-primary" href={DOWNLOAD_URL} target="_blank" rel="noreferrer">
                 <span>{text.finalCta.download}</span><span aria-hidden="true">↓</span>
               </a>
-              <a className="button button-secondary" href={GITHUB_URL}>
+              <a className="button button-secondary" href={GITHUB_URL} target="_blank" rel="noreferrer">
                 {text.finalCta.github}<span aria-hidden="true">↗</span>
               </a>
             </div>
