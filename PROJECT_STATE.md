@@ -243,3 +243,31 @@ npx tsc --noEmit
 O `npm test` do site já executa o build antes dos testes de HTML renderizado.
 Use `docs/installer.md`, `docs/safety.md` e `docs/architecture.md` como contexto
 complementar, mas confirme sempre o comportamento no código e nos testes.
+
+## Distribuição e validação (atualização de 22/07/2026)
+
+- A distribuição de `v0.2.0` usa Inno Setup 6.7.3, com aplicativo e broker
+  `win-x64` self-contained: não requer .NET, Node.js, SDK, Visual Studio ou
+  outra ferramenta de desenvolvimento na máquina da pessoa.
+- O instalador é por usuário, detecta pt-BR/inglês e tema do Windows, oferece
+  atalho de área de trabalho e inicialização com Windows, atualiza por cima da
+  instalação anterior e usa Restart Manager sem encerramento forçado. Na
+  desinstalação interativa, a pessoa escolhe preservar ou remover
+  `%LOCALAPPDATA%\FiveMCleaner`; em modo silencioso a preservação é o padrão.
+- O atualizador consulta exclusivamente `/releases/latest` do repositório
+  oficial, aceita somente SemVer estável e instalador allowlisted, exige HTTPS,
+  tamanho e digest SHA-256 do GitHub, grava o download de forma atômica e pede
+  confirmação antes de abrir o setup. A interface só abre notas da release na
+  página oficial da tag. Falha de download não altera a versão instalada.
+- `CHANGELOG.md` é a fonte das alterações públicas. O workflow
+  `.github/workflows/release.yml` só publica por `workflow_dispatch`, após
+  build, testes, smoke de instalação/upgrade/desinstalação, checksums, manifesto
+  e atestação de proveniência. Consulte `docs/installer.md` para versionar,
+  etiquetar, disparar e verificar uma release.
+- Validação executada nesta etapa: build .NET Release sem avisos/erros, 238
+  testes xUnit aprovados, `Verify-Safety.ps1` e contrato do instalador aprovados;
+  lint, typecheck, build e testes renderizados do site aprovados.
+- `npm audit --omit=dev --audit-level=high` ainda indica dois alertas altos
+  transitivos em `sharp`/`next`. O registro não oferece correção não disruptiva
+  para a versão disponível; não usar `npm audit fix --force` sem revisar a
+  compatibilidade Vinext/Next. Esta limitação não deve ser ocultada.

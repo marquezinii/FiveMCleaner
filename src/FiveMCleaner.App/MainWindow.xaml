@@ -254,15 +254,24 @@
                                         <TextBlock Text="{Binding UpdateBannerTitle}" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                                         <TextBlock Text="{Binding UpdateBannerDetail}" Margin="0,4,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
                                     </StackPanel>
-                                    <Button Grid.Column="2"
-                                            Content="{Binding UpdateActionLabel}"
-                                            Style="{StaticResource PrimaryButtonStyle}"
-                                            Height="36"
-                                            MinWidth="132"
-                                            Padding="15,0"
-                                            VerticalAlignment="Center"
-                                            IsEnabled="{Binding CanDownloadUpdate}"
-                                            Click="DownloadUpdate_Click" />
+                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                        <Button Content="{Binding UpdateActionLabel}"
+                                                Style="{StaticResource PrimaryButtonStyle}"
+                                                Height="36"
+                                                MinWidth="132"
+                                                Padding="15,0"
+                                                IsEnabled="{Binding CanDownloadUpdate}"
+                                                Click="DownloadUpdate_Click" />
+                                        <Button Content="{Binding UpdateReleaseNotesLabel}"
+                                                Background="Transparent"
+                                                BorderThickness="0"
+                                                Foreground="{DynamicResource OrangeLightBrush}"
+                                                FontSize="10.5"
+                                                Padding="4,7,4,0"
+                                                HorizontalAlignment="Center"
+                                                IsEnabled="{Binding CanOpenReleaseNotes}"
+                                                Click="OpenReleaseNotes_Click" />
+                                    </StackPanel>
                                     <ProgressBar Grid.Row="1"
                                                  Grid.Column="1"
                                                  Grid.ColumnSpan="2"

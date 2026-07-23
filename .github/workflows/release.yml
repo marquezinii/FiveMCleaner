@@ -132,6 +132,9 @@ jobs:
 
           **[Download do instalador / Download installer]($downloadUrl)**
 
+          Consulte as alterações completas em
+          [CHANGELOG.md](https://github.com/$env:GITHUB_REPOSITORY/blob/$env:RELEASE_TAG/CHANGELOG.md).
+
           O instalador inclui o runtime .NET e funciona sem baixar dependências durante a instalação.
           The installer includes the .NET runtime and does not download dependencies during setup.
 

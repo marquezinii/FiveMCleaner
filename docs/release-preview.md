@@ -1,18 +1,20 @@
 # Release preview, integridade e simulação
 
-Este documento descreve a distribuição de **FiveMCleaner v0.2.0-preview**. A
-preview existe para validação pública; ela não deve ser tratada como uma versão
-final ou como garantia de ganho de desempenho.
+Este documento descreve a distribuição pública do **FiveMCleaner**. A versão
+exata e suas mudanças ficam no [CHANGELOG](../CHANGELOG.md) e na página da
+release correspondente; nenhuma delas é garantia de ganho de desempenho.
 
 ## Origem oficial
 
 Baixe binários somente pela página
-[GitHub Releases](https://github.com/marquezinii/FiveMCleaner/releases). Para a
-preview `win-x64`, a publicação deve conter estes dois arquivos produzidos pelo
-mesmo workflow:
+[GitHub Releases](https://github.com/marquezinii/FiveMCleaner/releases). Para
+cada release `win-x64`, a publicação deve conter os seguintes arquivos
+produzidos pelo mesmo workflow:
 
-- `FiveMCleaner-win-x64.zip`;
-- `FiveMCleaner-win-x64.zip.sha256`.
+- `FiveMCleaner-Setup-X.Y.Z-win-x64.exe`;
+- `FiveMCleaner-Setup-X.Y.Z-win-x64.exe.sha256`;
+- `FiveMCleaner-release-manifest-X.Y.Z.json`;
+- `FiveMCleaner-win-x64.zip` e `FiveMCleaner-win-x64.zip.sha256`.
 
 Não use cópias hospedadas em encurtadores, mirrors, vídeos ou pacotes de
 "FPS boost". O código-fonte correspondente deve estar disponível no mesmo tag
@@ -34,14 +36,15 @@ if ($actual -ne $expected) {
 "SHA-256 confirmado: $actual"
 ```
 
-O hash detecta corrupção e troca de arquivo. Como a preview ainda não possui
+O hash detecta corrupção e troca de arquivo. Como a release ainda não possui
 assinatura de código pública, o hash sozinho não substitui identidade do
 publicador: confira também o domínio `github.com`, o repositório, o tag e o
 código-fonte associado.
 
 ## Build ainda não assinado
 
-Os executáveis desta preview são **unsigned**. Windows SmartScreen e produtos
+Os executáveis desta release são **unsigned** enquanto não houver certificado
+Authenticode. Windows SmartScreen e produtos
 antivírus podem, legitimamente, pedir confirmação ou bloquear um arquivo sem
 reputação. Isso não deve ser contornado automaticamente.
 
@@ -53,7 +56,7 @@ O projeto nunca orienta o usuário a:
 - baixar uma cópia alternativa para evitar um alerta;
 - executar um arquivo cujo hash diverge.
 
-Se a política da máquina bloquear a preview, a opção segura é não executá-la,
+Se a política da máquina bloquear a release, a opção segura é não executá-la,
 revisar/compilar o código-fonte ou aguardar uma release assinada. Um falso
 positivo reproduzível pode ser relatado com produto, versão das assinaturas e
 SHA-256, sem enviar arquivos pessoais a serviços externos.

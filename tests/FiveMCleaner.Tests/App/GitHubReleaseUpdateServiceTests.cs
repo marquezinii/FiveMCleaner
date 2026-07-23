@@ -62,6 +62,24 @@ public sealed class GitHubReleaseUpdateServiceTests
         Assert.Equal("FiveMCleaner-Setup-1.2.3-win-x64.exe", update.AssetName);
         Assert.Equal(installer.Length, update.SizeBytes);
         Assert.Equal(Sha256Hex(installer), update.Sha256Hex);
+        Assert.Equal(OfficialReleaseNotesUrl("v1.2.3"), update.ReleaseNotesUri?.AbsoluteUri);
+    }
+
+    [Theory]
+    [InlineData("https://example.test/release")]
+    [InlineData("https://github.com/marquezinii/FiveMCleaner/releases/tag/v2.0.1")]
+    [InlineData("http://github.com/marquezinii/FiveMCleaner/releases/tag/v2.0.0")]
+    public async Task CheckForUpdate_RejectsUntrustedReleaseNotesUrl(string releaseNotesUrl)
+    {
+        using var scope = new TemporaryDirectory();
+        var manifest = CreateManifest(
+            "v2.0.0",
+            Encoding.UTF8.GetBytes("setup"),
+            releaseNotesUrl: releaseNotesUrl);
+        using var service = CreateService(ManifestOnlyHandler(manifest), scope.Path);
+
+        await Assert.ThrowsAsync<UpdateSecurityException>(() =>
+            service.CheckForUpdateAsync("1.0.0"));
     }
 
     [Theory]
@@ -564,11 +582,13 @@ public sealed class GitHubReleaseUpdateServiceTests
         byte[] installer,
         bool draft = false,
         bool prerelease = false,
-        string? downloadUrl = null) => JsonSerializer.Serialize(new
+        string? downloadUrl = null,
+        string? releaseNotesUrl = null) => JsonSerializer.Serialize(new
         {
             draft,
             prerelease,
             tag_name = tag,
+            html_url = releaseNotesUrl ?? OfficialReleaseNotesUrl(tag),
             assets = new[]
             {
                 new
@@ -593,6 +613,9 @@ public sealed class GitHubReleaseUpdateServiceTests
 
     private static string OfficialDownloadUrl(string tag) =>
         $"https://github.com/marquezinii/FiveMCleaner/releases/download/{tag}/{AssetName(tag)}";
+
+    private static string OfficialReleaseNotesUrl(string tag) =>
+        $"https://github.com/marquezinii/FiveMCleaner/releases/tag/{tag}";
 
     private static string AssetName(string tag)
     {

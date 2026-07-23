@@ -199,6 +199,14 @@ try {
         throw 'Application executable remains after uninstall.'
     }
 
+    # Silent uninstalls intentionally preserve user data. The interactive
+    # removal choice is guarded by Verify-Installer.ps1 and is left to manual
+    # validation so this smoke test never deletes a developer's real settings.
+    if ((Get-Content -LiteralPath (Join-Path $workspace 'installer\FiveMCleaner.iss') -Raw) -notmatch
+        "DelTree\(ExpandConstant\('\{localappdata\}\\FiveMCleaner'\), True, True, True\)") {
+        throw 'The explicit interactive removal path for user data is missing.'
+    }
+
     Write-Host 'Installer install/upgrade/uninstall smoke test: OK' -ForegroundColor Green
 }
 finally {

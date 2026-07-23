@@ -34,6 +34,9 @@ $requiredPatterns = [ordered]@{
     'startup ownership cleanup'     = 'ValueName: "FiveMCleaner"; Flags: deletevalue uninsdeletevalue; Tasks: not startup'
     'no launch in silent installs'  = 'Flags: nowait postinstall skipifsilent'
     'redirection guard'             = 'RedirectionGuard=yes'
+    'explicit user-data removal'    = 'RemoveUserDataQuestion='
+    'silent uninstall preserves data' = 'SuppressibleMsgBox\([\s\S]*IDNO\) = IDYES'
+    'fixed user-data directory'     = "DelTree\(ExpandConstant\('\{localappdata\}\\FiveMCleaner'\), True, True, True\)"
 }
 
 foreach ($entry in $requiredPatterns.GetEnumerator()) {
@@ -49,7 +52,6 @@ $forbiddenPatterns = [ordered]@{
     'elevated installer'      = '(?im)^\s*PrivilegesRequired\s*=\s*admin'
     'forced process closing'  = '(?im)^\s*CloseApplications\s*=\s*force'
     'forced reboot'           = '(?im)^\s*AlwaysRestart\s*=\s*yes'
-    'arbitrary Pascal code'   = '(?im)^\s*\[Code\]\s*$'
     'shell execution helper'  = '(?im)\b(ShellExec|Exec|CreateProcess)\s*\('
     'broad install deletion'  = '(?im)^\s*Type\s*:\s*filesandordirs\b'
 }
@@ -58,6 +60,13 @@ foreach ($entry in $forbiddenPatterns.GetEnumerator()) {
     if ($scriptText -match $entry.Value) {
         throw "Forbidden installer behavior detected: $($entry.Key)."
     }
+}
+
+$deleteStatements = @([regex]::Matches($scriptText, '(?im)^\s*DelTree\s*\([^\r\n]+\);'))
+$expectedDeleteStatement = "DelTree(ExpandConstant('{localappdata}\FiveMCleaner'), True, True, True);"
+if ($deleteStatements.Count -ne 1 -or
+    $deleteStatements[0].Value.Trim() -ne $expectedDeleteStatement) {
+    throw 'Installer script contains an unapproved local data deletion.'
 }
 
 Write-Host 'Installer source contract: OK' -ForegroundColor Green

@@ -149,7 +149,8 @@ public sealed class ReleaseUpdate
         string assetName,
         Uri downloadUri,
         long sizeBytes,
-        string sha256Hex)
+        string sha256Hex,
+        Uri? releaseNotesUri = null)
     {
         Version = version ?? throw new ArgumentNullException(nameof(version));
         TagName = tagName ?? throw new ArgumentNullException(nameof(tagName));
@@ -157,6 +158,7 @@ public sealed class ReleaseUpdate
         DownloadUri = downloadUri ?? throw new ArgumentNullException(nameof(downloadUri));
         SizeBytes = sizeBytes;
         Sha256Hex = sha256Hex ?? throw new ArgumentNullException(nameof(sha256Hex));
+        ReleaseNotesUri = releaseNotesUri;
     }
 
     public StableSemanticVersion Version { get; }
@@ -170,6 +172,13 @@ public sealed class ReleaseUpdate
     public long SizeBytes { get; }
 
     public string Sha256Hex { get; }
+
+    /// <summary>
+    /// The official GitHub page for the exact release. It is optional for
+    /// compatibility with locally constructed values, but API-sourced updates
+    /// validate it before exposing it to the interface.
+    /// </summary>
+    public Uri? ReleaseNotesUri { get; }
 }
 
 public sealed record DownloadedUpdate(

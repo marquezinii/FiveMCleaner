@@ -105,10 +105,12 @@ en.AdditionalShortcuts=Shortcuts
 en.DesktopIcon=Create a desktop shortcut
 en.StartWithWindows=Start FiveMCleaner when I sign in to Windows
 en.LaunchProgram=Open FiveMCleaner
+en.RemoveUserDataQuestion=Remove local FiveMCleaner settings, logs, backups and downloaded updates too? Choosing No preserves this data for a future installation.
 ptbr.AdditionalShortcuts=Atalhos
 ptbr.DesktopIcon=Criar um atalho na Área de Trabalho
 ptbr.StartWithWindows=Iniciar o FiveMCleaner ao entrar no Windows
 ptbr.LaunchProgram=Abrir o FiveMCleaner
+ptbr.RemoveUserDataQuestion=Também remover configurações, logs, backups e atualizações baixadas do FiveMCleaner? Escolher Não preserva esses dados para uma instalação futura.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:AdditionalShortcuts}:"; Flags: unchecked
@@ -132,3 +134,23 @@ Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram}"; WorkingDir: 
 [UninstallDelete]
 Type: dirifempty; Name: "{app}\broker"
 Type: dirifempty; Name: "{app}"
+
+[Code]
+var
+  RemoveUserData: Boolean;
+
+function InitializeUninstall(): Boolean;
+begin
+  RemoveUserData := SuppressibleMsgBox(
+    CustomMessage('RemoveUserDataQuestion'),
+    mbConfirmation,
+    MB_YESNO,
+    IDNO) = IDYES;
+  Result := True;
+end;
+
+procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
+begin
+  if (CurUninstallStep = usPostUninstall) and RemoveUserData then
+    DelTree(ExpandConstant('{localappdata}\FiveMCleaner'), True, True, True);
+end;

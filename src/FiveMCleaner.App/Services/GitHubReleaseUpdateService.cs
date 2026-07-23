@@ -568,8 +568,28 @@ public sealed class GitHubReleaseUpdateService : IReleaseUpdateService, IDisposa
 
         var downloadUrl = GetRequiredString(assetElement, "browser_download_url");
         var downloadUri = ValidateBrowserDownloadUri(downloadUrl, tagName, selectedName);
+        Uri? releaseNotesUri = null;
+        var releaseNotesElement = TryGetUniqueProperty(root, "html_url");
+        if (releaseNotesElement is JsonElement element)
+        {
+            if (element.ValueKind != JsonValueKind.String)
+            {
+                throw new UpdateSecurityException("A pagina de notas da release e invalida.");
+            }
 
-        return new ReleaseUpdate(version, tagName, selectedName, downloadUri, size, hash);
+            releaseNotesUri = ValidateReleaseNotesUri(
+                element.GetString() ?? string.Empty,
+                tagName);
+        }
+
+        return new ReleaseUpdate(
+            version,
+            tagName,
+            selectedName,
+            downloadUri,
+            size,
+            hash,
+            releaseNotesUri);
     }
 
     private ValidatedUpdate ValidateUpdateForDownload(ReleaseUpdate update)
@@ -668,6 +688,24 @@ public sealed class GitHubReleaseUpdateService : IReleaseUpdateService, IDisposa
         if (!decodedPath.Equals(expectedPath, StringComparison.Ordinal))
         {
             throw new UpdateSecurityException("A URL do instalador nao aponta para o asset esperado da release.");
+        }
+
+        return uri;
+    }
+
+    private static Uri ValidateReleaseNotesUri(string releaseNotesUrl, string tagName)
+    {
+        if (!Uri.TryCreate(releaseNotesUrl, UriKind.Absolute, out var uri)
+            || !uri.Scheme.Equals(Uri.UriSchemeHttps, StringComparison.Ordinal)
+            || !uri.Host.Equals("github.com", StringComparison.OrdinalIgnoreCase)
+            || !uri.IsDefaultPort
+            || !uri.AbsolutePath.Equals(
+                $"/marquezinii/FiveMCleaner/releases/tag/{tagName}",
+                StringComparison.Ordinal)
+            || !string.IsNullOrEmpty(uri.Query)
+            || !string.IsNullOrEmpty(uri.Fragment))
+        {
+            throw new UpdateSecurityException("A pagina de notas da release nao pertence ao repositorio oficial.");
         }
 
         return uri;

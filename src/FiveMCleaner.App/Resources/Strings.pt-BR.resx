@@ -366,6 +366,7 @@
   <data name="Update.Ready.Title" xml:space="preserve"><value>Atualização {0} pronta</value></data>
   <data name="Update.Ready.Detail" xml:space="preserve"><value>SHA-256 verificado. O Windows pedirá confirmação antes de abrir o instalador.</value></data>
   <data name="Update.OpenInstaller" xml:space="preserve"><value>Abrir instalador</value></data>
+  <data name="Update.ReleaseNotes" xml:space="preserve"><value>Ver alterações</value></data>
   <data name="Update.Failed.Title" xml:space="preserve"><value>A atualização não foi baixada</value></data>
   <data name="Update.Failed.Detail" xml:space="preserve"><value>Nada foi instalado. {0}</value></data>
   <data name="Dialog.UpdateInstall.Title" xml:space="preserve"><value>Instalar atualização verificada</value></data>

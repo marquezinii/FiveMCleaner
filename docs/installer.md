@@ -31,21 +31,22 @@ Windows realmente for executada.
   upgrade, sem encerramento forçado nem reinicialização automática;
 - logs padrões do Inno Setup para diagnóstico.
 
-Configurações, journals e logs do aplicativo ficam fora da pasta de instalação,
-em `%LOCALAPPDATA%\FiveMCleaner`, e são preservados ao desinstalar para evitar
-perda silenciosa de histórico. A remoção desses dados deve ser uma ação separada
-e explícita do usuário.
+Configurações, journals, logs, backups e downloads de atualização ficam fora da
+pasta de instalação, em `%LOCALAPPDATA%\FiveMCleaner`. Na desinstalação
+interativa, a pessoa escolhe se deseja preservar ou remover esses dados. A
+opção padrão é preservar; uma desinstalação silenciosa também preserva os dados
+para nunca apagar histórico ou backup sem confirmação visível.
 
 ## Build local reproduzível
 
 ```powershell
-.\scripts\Build-Installer.ps1 -Version 0.2.0-preview
+.\scripts\Build-Installer.ps1 -Version 0.2.0
 
-$installer = Resolve-Path .\artifacts\installer\FiveMCleaner-Setup-0.2.0-preview-win-x64.exe
+$installer = Resolve-Path .\artifacts\installer\FiveMCleaner-Setup-0.2.0-win-x64.exe
 .\scripts\Test-Installer.ps1 `
   -InstallerPath $installer `
   -PublishDirectory .\artifacts\FiveMCleaner-win-x64 `
-  -ExpectedVersion 0.2.0-preview
+  -ExpectedVersion 0.2.0
 ```
 
 O script primeiro executa a verificação de segurança e o publish self-contained,
@@ -67,16 +68,29 @@ somente a API oficial da última release estável do GitHub, comparar versões e
 mostrar uma notificação; ele não deve forçar, baixar ou instalar uma atualização
 sem confirmação.
 
-Depois do clique do usuário, o atualizador deve:
+Depois do clique do usuário, o atualizador:
 
-1. baixar o instalador e o `.sha256` da mesma release HTTPS;
-2. verificar o SHA-256 antes de abrir qualquer executável;
-3. iniciar o instalador com `/SP- /SILENT /SUPPRESSMSGBOXES /NORESTART`;
-4. encerrar o app para o Restart Manager substituir os arquivos;
-5. nunca desativar SmartScreen, Defender, UAC ou antivírus de terceiros.
+1. exibe a página oficial das alterações da release, quando disponível;
+2. baixa somente o instalador com nome permitido, via HTTPS e de origem GitHub
+   validada;
+3. confere tamanho, digest SHA-256 fornecido pela API do GitHub e hash do
+   arquivo baixado antes de qualquer abertura;
+4. grava o pacote concluído de forma atômica em
+   `%LOCALAPPDATA%\FiveMCleaner\Updates` e mantém arquivos parciais sem uso;
+5. pede uma segunda confirmação e abre o instalador interativo normal; o
+   Restart Manager solicita o fechamento seguro do app para a substituição;
+6. nunca desativa SmartScreen, Defender, UAC ou antivírus de terceiros.
 
 Previews não aparecem no endpoint `/releases/latest`; portanto, uma instalação
 estável nunca migra para uma preview sem uma escolha explícita de canal.
+
+Se a consulta, download ou validação falhar, nenhum instalador é aberto e a
+versão já instalada continua utilizável. O setup aceita atualização por cima
+da instalação anterior e preserva os dados locais. O Inno Setup não fornece um
+rollback transacional completo após uma falha externa durante a cópia de
+arquivos; nesse caso a pessoa deve executar novamente o instalador da mesma
+release ou a release anterior verificada. Isso é uma limitação explicitamente
+assumida, não uma promessa de rollback automático.
 
 ## Publicação no GitHub
 
@@ -100,3 +114,19 @@ Fontes oficiais usadas no desenho:
 - [Inno Setup: Restart Manager](https://jrsoftware.org/ishelp/topic_setup_closeapplications.htm)
 - [Inno Setup: verificação dos downloads oficiais](https://jrsoftware.org/isdl-verify.php)
 - [GitHub: releases em workflows](https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch)
+
+## Procedimento de release
+
+1. Atualize `Directory.Build.props` e `CHANGELOG.md` com uma versão SemVer.
+2. Execute localmente `Verify-Safety.ps1`, os testes, `Build-Installer.ps1` e
+   `Test-Installer.ps1`.
+3. Faça commit, envie `main`, crie a tag exata `vX.Y.Z` e envie a tag.
+4. Em **Actions → Build installer and publish release**, escolha a tag, canal
+   `stable` e `publish=true`.
+5. Verifique no GitHub a release pública, o instalador, os checksums, o
+   manifesto e a atestação antes de divulgar o link.
+
+O workflow nunca publica por `push`; a etapa de criação de release exige o
+disparo manual com `publish=true`. A página pública de download é
+`https://github.com/marquezinii/FiveMCleaner/releases/latest`, gratuita e sem
+login para visitantes.

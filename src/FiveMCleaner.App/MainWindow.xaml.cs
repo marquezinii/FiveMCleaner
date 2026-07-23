@@ -227,6 +227,20 @@ public partial class MainWindow : Window
         }
     }
 
+    private void OpenReleaseNotes_Click(object sender, RoutedEventArgs e)
+    {
+        if (viewModel.ReleaseNotesUri is not { } releaseNotesUri)
+        {
+            return;
+        }
+
+        Process.Start(new ProcessStartInfo
+        {
+            FileName = releaseNotesUri.AbsoluteUri,
+            UseShellExecute = true
+        });
+    }
+
     private void CancelOptimization_Click(object sender, RoutedEventArgs e) => viewModel.CancelOptimization();
 
     private void CopyTechnicalReport_Click(object sender, RoutedEventArgs e) => viewModel.CopyTechnicalReport();

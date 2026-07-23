@@ -337,6 +337,10 @@ public sealed class MainViewModel : BindableBase
 
     public bool CanDownloadUpdate => availableUpdate is not null && !IsUpdateDownloading;
 
+    public Uri? ReleaseNotesUri => availableUpdate?.ReleaseNotesUri;
+
+    public bool CanOpenReleaseNotes => ReleaseNotesUri is not null;
+
     public double UpdateDownloadPercent
     {
         get => updateDownloadPercent;
@@ -359,6 +363,8 @@ public sealed class MainViewModel : BindableBase
         updatePresentationState == UpdatePresentationState.Ready
             ? "Update.OpenInstaller"
             : "Update.Download");
+
+    public string UpdateReleaseNotesLabel => localization.GetString("Update.ReleaseNotes");
 
     public int SelectedActionCount => currentPlan?.Actions.Count ?? 0;
 
@@ -1425,7 +1431,10 @@ public sealed class MainViewModel : BindableBase
 
         OnPropertyChanged(nameof(IsUpdateBannerVisible));
         OnPropertyChanged(nameof(UpdateActionLabel));
+        OnPropertyChanged(nameof(UpdateReleaseNotesLabel));
         OnPropertyChanged(nameof(CanDownloadUpdate));
+        OnPropertyChanged(nameof(ReleaseNotesUri));
+        OnPropertyChanged(nameof(CanOpenReleaseNotes));
     }
 
     private ActionDisplayItem ToDisplayItem(ActionMetadataDto action)
