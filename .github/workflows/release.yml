@@ -74,7 +74,7 @@ jobs:
             throw "Tag/channel mismatch. Expected '$expectedTag', got '$env:RELEASE_TAG'."
           }
 
-          $tagCommit = (git rev-list -n 1 --verify $env:RELEASE_TAG).Trim()
+          $tagCommit = (git rev-parse "$env:RELEASE_TAG^{commit}").Trim()
           $headCommit = (git rev-parse HEAD).Trim()
           if ($tagCommit -ne $headCommit) {
             throw 'Checked out commit does not match the requested tag.'
