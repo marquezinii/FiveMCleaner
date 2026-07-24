@@ -86,6 +86,24 @@ public sealed record WindowsOptimizationDependencies
 
     public required IGpuVendorInspector GpuVendor { get; init; }
 
+    public required ICpuInspector Cpu { get; init; }
+
+    public required IGpuDetailsInspector GpuDetails { get; init; }
+
+    public required IRamDetailsInspector RamDetails { get; init; }
+
+    public required IStorageHealthInspector StorageHealth { get; init; }
+
+    public required IDriverVersionInspector DriverVersions { get; init; }
+
+    public required IDisplayConfigurationInspector DisplayConfiguration { get; init; }
+
+    public required IResourceUsageInspector ResourceUsage { get; init; }
+
+    public required IPciLinkInspector PciLink { get; init; }
+
+    public required IHardwareStabilityInspector HardwareStability { get; init; }
+
     public static WindowsOptimizationDependencies CreateDefault(
         WindowsOptimizationEnvironment environment)
     {
@@ -105,7 +123,16 @@ public sealed record WindowsOptimizationDependencies
             OverlaySoftware = new WindowsOverlaySoftwareInspector(),
             NetworkHealth = new WindowsNetworkHealthInspector(),
             Thermal = new WindowsThermalInspector(),
-            GpuVendor = new WindowsGpuVendorInspector()
+            GpuVendor = new WindowsGpuVendorInspector(),
+            Cpu = new WindowsCpuInspector(),
+            GpuDetails = new WindowsGpuDetailsInspector(),
+            RamDetails = new WindowsRamDetailsInspector(),
+            StorageHealth = new WindowsStorageHealthInspector(),
+            DriverVersions = new WindowsDriverVersionInspector(),
+            DisplayConfiguration = new WindowsDisplayConfigurationInspector(),
+            ResourceUsage = new WindowsResourceUsageInspector(),
+            PciLink = new WindowsPciLinkInspector(),
+            HardwareStability = new WindowsHardwareStabilityInspector()
         };
     }
 }
@@ -153,6 +180,21 @@ public sealed class WindowsOptimizationActionFactory
             new PagefileCommitDiagnosisAction(dependencies.SystemResources),
             new CacheIndexIntegrityDiagnosisAction(environment.FiveMAppRoot),
             new GpuVendorDetectionAction(dependencies.GpuVendor),
+            new CpuDetailsDiagnosisAction(dependencies.Cpu),
+            new GpuDetailsDiagnosisAction(dependencies.GpuDetails),
+            new RamDetailsDiagnosisAction(dependencies.RamDetails),
+            new StorageHealthDiagnosisAction(dependencies.StorageHealth),
+            new DriverVersionsDiagnosisAction(dependencies.DriverVersions),
+            new DisplayConfigurationDiagnosisAction(dependencies.DisplayConfiguration),
+            new SessionSettingsDiagnosisAction(dependencies.Registry, dependencies.PowerPlans),
+            new ThrottlingSignalDiagnosisAction(
+                dependencies.Cpu,
+                dependencies.ResourceUsage,
+                dependencies.HardwareStability,
+                dependencies.Thermal),
+            new ResourceUsageDiagnosisAction(dependencies.ResourceUsage),
+            new PciLinkDiagnosisAction(dependencies.PciLink),
+            new HardwareStabilityDiagnosisAction(dependencies.HardwareStability),
             new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(defaults.TemporaryFileMinimumAgeDays),
@@ -254,6 +296,32 @@ public sealed class WindowsOptimizationActionFactory
                 environment.FiveMAppRoot),
             OptimizationActionIds.DetectGpuVendor => new GpuVendorDetectionAction(
                 dependencies.GpuVendor),
+            OptimizationActionIds.DiagnoseCpuDetails => new CpuDetailsDiagnosisAction(
+                dependencies.Cpu),
+            OptimizationActionIds.DiagnoseGpuDetails => new GpuDetailsDiagnosisAction(
+                dependencies.GpuDetails),
+            OptimizationActionIds.DiagnoseRamDetails => new RamDetailsDiagnosisAction(
+                dependencies.RamDetails),
+            OptimizationActionIds.DiagnoseStorageHealth => new StorageHealthDiagnosisAction(
+                dependencies.StorageHealth),
+            OptimizationActionIds.DiagnoseDriverVersions => new DriverVersionsDiagnosisAction(
+                dependencies.DriverVersions),
+            OptimizationActionIds.DiagnoseDisplayConfiguration => new DisplayConfigurationDiagnosisAction(
+                dependencies.DisplayConfiguration),
+            OptimizationActionIds.DiagnoseSessionSettings => new SessionSettingsDiagnosisAction(
+                dependencies.Registry,
+                dependencies.PowerPlans),
+            OptimizationActionIds.DiagnoseThrottlingSignal => new ThrottlingSignalDiagnosisAction(
+                dependencies.Cpu,
+                dependencies.ResourceUsage,
+                dependencies.HardwareStability,
+                dependencies.Thermal),
+            OptimizationActionIds.DiagnoseResourceUsage => new ResourceUsageDiagnosisAction(
+                dependencies.ResourceUsage),
+            OptimizationActionIds.DiagnosePciLink => new PciLinkDiagnosisAction(
+                dependencies.PciLink),
+            OptimizationActionIds.DiagnoseHardwareStability => new HardwareStabilityDiagnosisAction(
+                dependencies.HardwareStability),
             OptimizationActionIds.CleanUserTemporaryFiles => new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(plan.Options.TemporaryFileMinimumAgeDays),

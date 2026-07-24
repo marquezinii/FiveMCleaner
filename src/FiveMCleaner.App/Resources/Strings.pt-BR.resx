@@ -319,6 +319,28 @@
   <data name="Actions.fivem.legacy.cache-integrity.diagnose.Description" xml:space="preserve"><value>Verifica se o índice de cache do FiveM (content_index.xml) existe e está bem formado, recomendando o reparo já existente quando necessário.</value></data>
   <data name="Actions.windows.gaming.gpu-vendor.detect.Name" xml:space="preserve"><value>Detectar fabricante da GPU</value></data>
   <data name="Actions.windows.gaming.gpu-vendor.detect.Description" xml:space="preserve"><value>Identifica o fabricante (NVIDIA, AMD ou Intel) das GPUs detectadas e aponta para o painel oficial do fabricante, sem escrever nenhum perfil de driver.</value></data>
+  <data name="Actions.safety.cpu-details.diagnose.Name" xml:space="preserve"><value>Diagnosticar núcleos, threads e frequência da CPU</value></data>
+  <data name="Actions.safety.cpu-details.diagnose.Description" xml:space="preserve"><value>Lê a quantidade de núcleos físicos, threads lógicas e a frequência atual/máxima da CPU via WMI padrão.</value></data>
+  <data name="Actions.windows.gaming.gpu-details.diagnose.Name" xml:space="preserve"><value>Diagnosticar VRAM e tipo da GPU</value></data>
+  <data name="Actions.windows.gaming.gpu-details.diagnose.Description" xml:space="preserve"><value>Lê a VRAM reportada pelo driver e estima se cada GPU detectada é integrada ou dedicada, sem escrever nenhum perfil.</value></data>
+  <data name="Actions.safety.ram-details.diagnose.Name" xml:space="preserve"><value>Diagnosticar frequência, canais e XMP/EXPO da RAM</value></data>
+  <data name="Actions.safety.ram-details.diagnose.Description" xml:space="preserve"><value>Lê a frequência configurada e nominal de cada módulo de RAM, estimando single-channel e se XMP/EXPO parece desativado.</value></data>
+  <data name="Actions.fivem.legacy.storage-health.diagnose.Name" xml:space="preserve"><value>Diagnosticar tipo e saúde das unidades</value></data>
+  <data name="Actions.fivem.legacy.storage-health.diagnose.Description" xml:space="preserve"><value>Identifica HDD, SSD ou NVMe de cada unidade física e lê o status de saúde preditiva (SMART/NVMe Health), sem reparar nada.</value></data>
+  <data name="Actions.windows.system.driver-versions.diagnose.Name" xml:space="preserve"><value>Diagnosticar build do Windows e versões de driver</value></data>
+  <data name="Actions.windows.system.driver-versions.diagnose.Description" xml:space="preserve"><value>Lê o build exato do Windows e as versões dos drivers de vídeo, rede, áudio e chipset (quando identificável).</value></data>
+  <data name="Actions.windows.gaming.display-configuration.diagnose.Name" xml:space="preserve"><value>Diagnosticar resolução, taxa de atualização e HAGS</value></data>
+  <data name="Actions.windows.gaming.display-configuration.diagnose.Description" xml:space="preserve"><value>Compara a taxa de atualização configurada com a máxima suportada na resolução atual e lê o estado do HAGS.</value></data>
+  <data name="Actions.windows.gaming.session-settings.diagnose.Name" xml:space="preserve"><value>Diagnosticar Modo de Jogo, tela cheia e plano de energia</value></data>
+  <data name="Actions.windows.gaming.session-settings.diagnose.Description" xml:space="preserve"><value>Lê o estado atual do Modo de Jogo, das otimizações para tela cheia e do plano de energia ativo, sem alterar nada.</value></data>
+  <data name="Actions.safety.throttling-signal.diagnose.Name" xml:space="preserve"><value>Diagnosticar sinais combinados de throttling</value></data>
+  <data name="Actions.safety.throttling-signal.diagnose.Description" xml:space="preserve"><value>Combina queda de frequência sob carga, eventos de erro de hardware (WHEA) e temperatura disponível para indicar "possível throttling", sem sensor direto por núcleo.</value></data>
+  <data name="Actions.safety.resource-usage.diagnose.Name" xml:space="preserve"><value>Diagnosticar uso atual de CPU, disco, GPU e rede</value></data>
+  <data name="Actions.safety.resource-usage.diagnose.Description" xml:space="preserve"><value>Faz uma leitura instantânea (não uma média) do uso de CPU, disco, GPU (quando disponível) e throughput de rede.</value></data>
+  <data name="Actions.windows.gaming.pcie-link.diagnose.Name" xml:space="preserve"><value>Diagnosticar link PCIe da GPU</value></data>
+  <data name="Actions.windows.gaming.pcie-link.diagnose.Description" xml:space="preserve"><value>Tenta ler a largura e velocidade atual/máxima do link PCIe de cada GPU via propriedades de dispositivo do Windows, sem driver de terceiros.</value></data>
+  <data name="Actions.safety.hardware-stability.diagnose.Name" xml:space="preserve"><value>Diagnosticar idade da BIOS e estabilidade de hardware</value></data>
+  <data name="Actions.safety.hardware-stability.diagnose.Description" xml:space="preserve"><value>Lê a data de lançamento da BIOS e eventos recentes de erro de hardware (WHEA) no Log de Eventos do Windows.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Name" xml:space="preserve"><value>Limpar temporários antigos</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Remove somente arquivos temporários do usuário mais antigos que o período de retenção escolhido pelo perfil.</value></data>
   <data name="Actions.fivem.legacy.crash-dumps.prune.Name" xml:space="preserve"><value>Remover diagnósticos antigos</value></data>

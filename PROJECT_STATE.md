@@ -86,7 +86,7 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   validar → registrar, uma falha reverte só a própria ação); falhas críticas
   abortam o restante com segurança e nenhum sucesso parcial é relatado como
   total. Ver `docs/safety.md` (seção "Execução isolada por ação") e
-  `docs/architecture.md`. O catálogo de ações está na versão 5
+  `docs/architecture.md`. O catálogo de ações está na versão 6
   (`ActionCatalog.CurrentVersion`).
 - Avaliação da "PRIMEIRA FASE" de adições pedida pelo usuário em 23/07/2026:
   backup/restauração, presets do `settings.xml`, gerenciamento de cache,
@@ -151,6 +151,28 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   diagnóstico de hardware; aponta para o painel oficial do fabricante e nunca
   escreve/sobrescreve perfil de driver). Catálogo de ações agora na
   versão 5 (`ActionCatalog.CurrentVersion`).
+- Onze ações de diagnóstico somente leitura adicionadas na TERCEIRA FASE
+  (23/07/2026), mesmo padrão `ActionOptionGate.Always`, sem driver de
+  kernel/terceiros (decisão explícita do usuário: nada de LibreHardwareMonitor
+  ou WinRing0): núcleos/threads/clock de CPU, VRAM e tipo integrada/dedicada
+  de GPU (heurística por nome do driver), frequência/canais/XMP-EXPO de RAM
+  (heurísticas honestas via WMI, nunca afirmadas como certeza), tipo e saúde
+  de unidades físicas (`MSFT_PhysicalDisk`, cobre SATA S.M.A.R.T. e NVMe
+  Health sem driver adicional), build do Windows e versões de driver de
+  vídeo/rede/áudio/chipset, resolução/taxa de atualização vs. máxima do
+  monitor e HAGS (G-SYNC/FreeSync/VRR explicitamente não detectáveis sem
+  ferramenta do fabricante — informado, não adivinhado), estado de Modo de
+  Jogo/otimizações de tela cheia/plano de energia ativo, um diagnóstico
+  **composto** de throttling (combina queda de frequência sob carga, eventos
+  WHEA recentes e temperatura ACPI disponível em um único sinal "possível
+  throttling", nunca confirmado por sensor direto por núcleo, exatamente
+  como o usuário pediu), uso instantâneo de CPU/disco/GPU/rede
+  (`PerformanceCounter` + categoria nativa `GPU Engine`, sem driver), link
+  PCIe da GPU (best-effort via `CM_Get_DevNode_Property`; falha segura vira
+  "não disponível", nunca dado errado) e idade da BIOS + eventos WHEA
+  recentes (Resizable BAR/Above 4G/Smart Access Memory explicitamente não
+  detectáveis sem ferramenta do fabricante). Catálogo de ações agora na
+  versão 6 (`ActionCatalog.CurrentVersion`).
 - Relatório técnico agora também pode ser salvo em arquivo
   (`MainViewModel.SaveTechnicalReport`, `SaveFileDialog` nativo no
   code-behind), além de copiado para a área de transferência; usa o mesmo
@@ -164,6 +186,31 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   escrever perfis NVIDIA/AMD/Intel (proibido por `docs/safety.md`; apenas
   detecção/orientação foi implementada) e benchmark por servidor (mesma
   limitação do benchmark da Primeira Fase — exigiria overlay/hook).
+- Avaliação da "TERCEIRA FASE" pedida pelo usuário em 23/07/2026 (lista de
+  hardware/sistema com legenda ✅/👁, sem nenhum item 🟡/🧪/🔧): antes de
+  implementar, o usuário foi consultado especificamente sobre o pedido de
+  usar LibreHardwareMonitor "ou biblioteca semelhante" para temperatura, pois
+  essas bibliotecas exigem driver de kernel (WinRing0), o que
+  `docs/safety.md` proíbe explicitamente. O usuário confirmou: sem driver,
+  sem acesso a kernel, coleta best-effort por APIs nativas do Windows,
+  informando com honestidade quando um dado não está disponível, e o
+  diagnóstico de throttling deve combinar sinais indiretos (queda de clock
+  sob carga, uso, WHEA, temperatura disponível) em vez de depender de um
+  sensor direto. Todos os 27 itens da lista foram avaliados; os itens de
+  detecção pura (nenhum aplica mudança) foram implementados como as onze
+  ações descritas acima em "Funcionalidades presentes no código atual".
+  Espaço livre em disco e versão/arquitetura do Windows já existiam no
+  diagnóstico anterior e não foram duplicados.
+- Durante a implementação da TERCEIRA FASE foi corrigido um bug real de
+  marshaling em `WindowsDisplayConfigurationInspector`: o P/Invoke de
+  `EnumDisplaySettings` usava `CharSet.Auto`/`Ansi` no struct `DEVMODE`, mas
+  o Windows moderno resolve `CharSet.Auto` para a variante Unicode
+  (`EnumDisplaySettingsW`); a incompatibilidade desalinhava todos os campos
+  após `dmDeviceName` e produzia uma chamada "bem-sucedida" com resolução e
+  taxa de atualização zeradas em vez de uma falha limpa. Corrigido fixando
+  `CharSet.Unicode` de ponta a ponta (struct + `EntryPoint =
+  "EnumDisplaySettingsW"`); confirmado com dados reais da máquina de
+  desenvolvimento antes do commit.
 - Motor de execução **isolada por ação** (`WindowsTransactionOptions.
   IsolateFailures`, usado pelo fluxo padrão do app): cada ação verifica,
   aplica, valida e registra separadamente; uma falha reverte só a própria
@@ -483,5 +530,60 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   e as três novas infraestruturas reais); `scripts\Verify-Safety.ps1`
   aprovado; smoke test manual do executável (`Start-Process
   --demo-synthetic`, 5s, sem novas entradas em `crash.log`).
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
+
+## Diagnósticos somente leitura da TERCEIRA FASE (23/07/2026)
+
+- Trabalho local, **não publicado** (sem push/tag/release desta etapa, por
+  instrução explícita do usuário). Não altera versão pública, instalador nem
+  site.
+- Antes de implementar, o usuário foi consultado sobre o pedido explícito de
+  LibreHardwareMonitor/biblioteca semelhante para temperatura (exige driver
+  de kernel, proibido por `docs/safety.md`). Decisão registrada acima em
+  "Avaliação da TERCEIRA FASE": sem driver, coleta best-effort por API
+  nativa do Windows, honestidade quando um dado não está disponível, e
+  throttling diagnosticado por combinação de sinais indiretos, não por
+  sensor direto.
+- Novo código: 11 ações em
+  `src/FiveMCleaner.Windows/Actions/HardwareDiagnosticActions.cs` (CPU, GPU,
+  RAM, armazenamento, drivers, monitor, sessão/energia, throttling
+  composto, uso de recursos, link PCIe, estabilidade de hardware) e 9 novos
+  inspectors em `src/FiveMCleaner.Windows/Infrastructure/`
+  (`CpuInspector.cs`, `GpuDetailsInspector.cs`, `RamDetailsInspector.cs`,
+  `StorageHealthInspector.cs`, `DriverVersionInspector.cs`,
+  `DisplayConfigurationInspector.cs`, `ResourceUsageInspector.cs`,
+  `PciLinkInspector.cs`, `HardwareStabilityInspector.cs`), todos read-only
+  atrás de interface e testáveis com doubles. O diagnóstico de GPU vendor da
+  Segunda Fase foi preservado sem alteração; VRAM/tipo integrada-dedicada
+  entraram por um inspector novo e separado para não arriscar o código já
+  testado. Pacotes adicionados ao projeto `FiveMCleaner.Windows`:
+  `System.Diagnostics.PerformanceCounter` (uso de CPU/disco/GPU). Catálogo
+  de ações avançou da versão 5 para a 6.
+- Bug real corrigido durante a implementação (não é apenas um ajuste de
+  teste): marshaling incorreto de `EnumDisplaySettings` em
+  `WindowsDisplayConfigurationInspector` retornava sucesso com todos os
+  campos zerados em vez de dados reais ou uma falha limpa. Ver detalhes
+  acima em "Decisões técnicas e padrões". Sem esse conflito de `CharSet`, a
+  leitura de resolução/taxa de atualização/HAGS estaria silenciosamente
+  quebrada em produção.
+- Limitações conhecidas e assumidas conscientemente, documentadas nas
+  mensagens do próprio app em vez de escondidas: G-SYNC/FreeSync/VRR não têm
+  API pública sem driver do fabricante; Resizable BAR/Above 4G/Smart Access
+  Memory não são detectáveis com confiança sem ferramenta do fabricante; o
+  link PCIe só é lido quando o driver/placa-mãe expõe as DEVPKEYs padrão do
+  Windows (não em toda combinação de hardware); a classificação de fabricante
+  de RAM single-channel/XMP é heurística, não uma leitura de BIOS garantida;
+  temperatura só é reportada quando a zona térmica ACPI do WMI retorna um
+  valor plausível, o que não acontece na maioria dos PCs sem software do
+  fabricante — em todos esses casos o app diz "não disponível" em vez de
+  inventar um número.
+- Validação: `dotnet build` Release sem avisos/erros; **317 testes .NET
+  aprovados** (277 anteriores + 40 novos cobrindo classificação de CPU/GPU/
+  RAM/armazenamento/drivers/monitor/sessão/throttling composto/uso de
+  recursos/link PCIe/estabilidade de hardware, mais smoke tests reais de
+  cada um dos 9 novos inspectors); `scripts\Verify-Safety.ps1` aprovado;
+  smoke test manual do executável (`Start-Process --demo-synthetic`, 6s, sem
+  novas entradas em `crash.log`).
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.
