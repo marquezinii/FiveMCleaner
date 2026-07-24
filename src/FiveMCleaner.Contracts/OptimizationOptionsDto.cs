@@ -68,4 +68,38 @@ public sealed record OptimizationOptionsDto
 
     /// <summary>Desired VSync state when <see cref="ApplyDisplayPreferences"/> is enabled.</summary>
     public bool EnableVSync { get; init; } = true;
+
+    /// <summary>
+    /// Opt-in, standalone GTA V only (FiveM ignores commandline.txt — see
+    /// docs/research.md). Writes -cityDensity/-anisotropicQualityLevel/
+    /// -fxaa/-grassQuality/-lodScale/-frameLimit. Never part of automatic
+    /// profile composition.
+    /// </summary>
+    public bool ApplyGtaVGraphicsLaunchParameters { get; init; }
+
+    /// <summary>
+    /// Opt-in, standalone GTA V only. Writes -fullscreen/-windowed/
+    /// -borderless and, when set, -DX10/-DX10_1/-DX11. Never part of
+    /// automatic profile composition.
+    /// </summary>
+    public bool ApplyGtaVDisplayLaunchParameters { get; init; }
+
+    /// <summary>When enabled with <see cref="ApplyGtaVDisplayLaunchParameters"/>, uses -borderless instead of -windowed/-fullscreen.</summary>
+    public bool PreferBorderlessWindow { get; init; }
+
+    /// <summary>DirectX version to write, or <see cref="GtaVDirectXVersion.Unspecified"/> to let the game auto-detect.</summary>
+    public GtaVDirectXVersion GtaVLaunchDirectXVersion { get; init; } = GtaVDirectXVersion.Unspecified;
+
+    /// <summary>
+    /// Opt-in, standalone GTA V only. Writes temporary repair parameters
+    /// (-safemode/-useMinimumSettings/-UseAutoSettings). Never part of
+    /// automatic profile composition; must be reverted after diagnosing.
+    /// </summary>
+    public bool ApplyGtaVRepairLaunchParameters { get; init; }
+
+    public bool UseGtaVSafeMode { get; init; }
+
+    public bool UseGtaVMinimumSettings { get; init; }
+
+    public bool UseGtaVAutoSettingsRebuild { get; init; }
 }

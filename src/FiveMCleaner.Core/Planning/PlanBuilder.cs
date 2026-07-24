@@ -199,6 +199,29 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
+        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyGtaVRepairLaunchParameters))
+        {
+            notices.Add(new PlanNoticeDto
+            {
+                Code = "gtav-repair-launch-parameters-are-temporary",
+                Severity = PlanNoticeSeverity.Warning,
+                ActionId = OptimizationActionIds.ApplyGtaVRepairLaunchParameters,
+                Message = "Parâmetros de reparo do GTA V (-safemode/-useMinimumSettings/-UseAutoSettings) são temporários; reverta esta otimização assim que terminar de diagnosticar o problema."
+            });
+        }
+
+        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters
+            || action.Id == OptimizationActionIds.ApplyGtaVDisplayLaunchParameters
+            || action.Id == OptimizationActionIds.ApplyGtaVRepairLaunchParameters))
+        {
+            notices.Add(new PlanNoticeDto
+            {
+                Code = "gtav-launch-parameters-do-not-affect-fivem",
+                Severity = PlanNoticeSeverity.Information,
+                Message = "Parâmetros de inicialização em commandline.txt só têm efeito no GTA V standalone; o FiveM ignora esse arquivo."
+            });
+        }
+
         if (request.Profile == OptimizationProfile.Aggressive)
         {
             notices.Add(new PlanNoticeDto
@@ -232,6 +255,9 @@ public sealed class PlanBuilder : IPlanBuilder
             ActionOptionGate.RepairStaleAuthData => options.RepairStaleAuthData,
             ActionOptionGate.ApplyQualityGraphicsPreset => options.ApplyQualityGraphicsPreset,
             ActionOptionGate.ApplyDisplayPreferences => options.ApplyDisplayPreferences,
+            ActionOptionGate.ApplyGtaVGraphicsLaunchParameters => options.ApplyGtaVGraphicsLaunchParameters,
+            ActionOptionGate.ApplyGtaVDisplayLaunchParameters => options.ApplyGtaVDisplayLaunchParameters,
+            ActionOptionGate.ApplyGtaVRepairLaunchParameters => options.ApplyGtaVRepairLaunchParameters,
             _ => throw new ArgumentOutOfRangeException(nameof(gate), gate, "Unknown option gate value.")
         };
     }

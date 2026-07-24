@@ -51,4 +51,8 @@ public static class OptimizationActionIds
     public const string ApplyGtaVDisplayPreferences = "gtav.legacy.display-preferences.apply";
     public const string RecommendGraphicsPreset = "safety.graphics-preset-recommendation.diagnose";
     public const string DiagnoseTextureVramFit = "windows.gaming.texture-vram-fit.diagnose";
+    public const string DiagnoseGtaVLaunchParameters = "gtav.legacy.launch-parameters.diagnose";
+    public const string ApplyGtaVGraphicsLaunchParameters = "gtav.legacy.launch-parameters.graphics.apply";
+    public const string ApplyGtaVDisplayLaunchParameters = "gtav.legacy.launch-parameters.display.apply";
+    public const string ApplyGtaVRepairLaunchParameters = "gtav.legacy.launch-parameters.repair.apply";
 }

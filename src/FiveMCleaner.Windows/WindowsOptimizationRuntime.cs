@@ -217,6 +217,7 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.NetworkHealth,
                 dependencies.GpuDetails,
                 dependencies.BackgroundProcess),
+            new GtaVLaunchParametersDiagnosisAction(environment.GtaVInstallationRoot),
             new GraphicsPresetRecommendationAction(
                 dependencies.GpuDetails,
                 dependencies.Cpu,
@@ -347,6 +348,22 @@ public sealed class WindowsOptimizationActionFactory
                 defaults.EnableVSync,
                 dependencies.ProcessInspector,
                 dependencies.GtaVProcessInspector),
+            new GtaVGraphicsLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                dependencies.DisplayConfiguration,
+                dependencies.GtaVProcessInspector),
+            new GtaVDisplayLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                defaults.PreferWindowedMode,
+                defaults.PreferBorderlessWindow,
+                defaults.GtaVLaunchDirectXVersion,
+                dependencies.GtaVProcessInspector),
+            new GtaVRepairLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                defaults.UseGtaVSafeMode,
+                defaults.UseGtaVMinimumSettings,
+                defaults.UseGtaVAutoSettingsRebuild,
+                dependencies.GtaVProcessInspector),
             new VisualEffectsAction(dependencies.VisualEffects)
         ];
     }
@@ -413,6 +430,8 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.NetworkHealth,
                 dependencies.GpuDetails,
                 dependencies.BackgroundProcess),
+            OptimizationActionIds.DiagnoseGtaVLaunchParameters => new GtaVLaunchParametersDiagnosisAction(
+                environment.GtaVInstallationRoot),
             OptimizationActionIds.RecommendGraphicsPreset => new GraphicsPresetRecommendationAction(
                 dependencies.GpuDetails,
                 dependencies.Cpu,
@@ -547,6 +566,22 @@ public sealed class WindowsOptimizationActionFactory
                 plan.Options.PreferWindowedMode,
                 plan.Options.EnableVSync,
                 dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters => new GtaVGraphicsLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                dependencies.DisplayConfiguration,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyGtaVDisplayLaunchParameters => new GtaVDisplayLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                plan.Options.PreferWindowedMode,
+                plan.Options.PreferBorderlessWindow,
+                plan.Options.GtaVLaunchDirectXVersion,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyGtaVRepairLaunchParameters => new GtaVRepairLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                plan.Options.UseGtaVSafeMode,
+                plan.Options.UseGtaVMinimumSettings,
+                plan.Options.UseGtaVAutoSettingsRebuild,
                 dependencies.GtaVProcessInspector),
             OptimizationActionIds.ReduceWindowsVisualEffects => new VisualEffectsAction(
                 dependencies.VisualEffects),

@@ -30,7 +30,12 @@ O projeto não aceita implementações que:
 - executem PowerShell, CMD ou scripts remotos arbitrários por meio do broker;
 - apliquem prioridade `Realtime`, afinidade fixa ou desliguem SMT/Hyper-Threading;
 - usem “debloat” genérico, removam AppX em massa ou desativem serviços sem relação comprovada;
-- editem `commandline.txt` como otimização do FiveM;
+- editem `commandline.txt` como otimização do FiveM (o FiveM bloqueia
+  explicitamente a leitura desse arquivo do GTA — ver `docs/research.md`
+  e `BlockLoadSetters.cpp` do próprio FiveM —, então isso nunca teria
+  efeito real; a única exceção é o `commandline.txt` do **GTA V Legacy
+  standalone**, gerenciado por `GtaVLaunchParametersActions.cs`, nunca
+  como caminho de otimização do FiveM);
 - sobrescrevam perfil NVIDIA ou ativem/limpem shader cache à força;
 - removam dados de autenticação, entitlement, plugins ou configurações em perfis automáticos;
 - escondam ações, usem ofuscação ou baixem código executável depois da instalação;
@@ -59,6 +64,31 @@ modelo:
   combinações contra os modos realmente suportados pelo monitor. Ver
   `PROJECT_STATE.md` para o registro dessa decisão e do que ficou de fora
   nesta etapa.
+
+## Parâmetros de inicialização do GTA V standalone
+
+`GtaVLaunchParametersActions.cs` gerencia o `commandline.txt` do GTA V
+Legacy **standalone**, nunca do FiveM (ver exceção documentada acima em
+"Ações proibidas"). Regras específicas:
+
+- só toca em linhas cujo parâmetro pertence a um conjunto allowlisted por
+  ação (`GtaVCommandLineFile.Merge`); qualquer outra linha do arquivo,
+  incluindo parâmetros que o produto não conhece, é preservada exatamente
+  como estava;
+- `-width`/`-height`/`-RefreshRate`/`-scOfflineOnly` e demais parâmetros de
+  resolução/adaptador **não são gerenciados**, pela mesma razão da seção
+  acima (risco de escolher um modo não suportado pelo monitor);
+- `-disableHyperthreading` foi avaliado e **deliberadamente não
+  implementado**: desligar SMT/Hyper-Threading já é uma proibição explícita
+  deste documento ("Ações proibidas"), e a lista de parâmetros pedida não
+  altera esse invariante só porque vem de um parâmetro oficial do jogo;
+- `-safemode`, `-useMinimumSettings` e `-UseAutoSettings` são tratados como
+  reparo temporário: a própria ação (`GtaVRepairLaunchParametersAction`) e
+  o aviso do plano (`gtav-repair-launch-parameters-are-temporary`) deixam
+  explícito que devem ser revertidos após o diagnóstico, nunca deixados
+  ativos permanentemente;
+- toda escrita usa backup + restauração exata via rollback da transação,
+  igual ao padrão já usado pelas ações gráficas.
 
 ## Proteção de caminhos
 

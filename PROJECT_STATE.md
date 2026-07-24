@@ -892,3 +892,76 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   Verify-Safety.ps1` aprovado.
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.
+
+## Parâmetros de inicialização do GTA V standalone (24/07/2026)
+
+- Trabalho local, **não publicado** (sem push da main/tag/release nesta
+  etapa; apenas push de desenvolvimento de `dev/proxima-versao`, autorizado
+  explicitamente pelo usuário nesta tarefa). Não altera versão pública,
+  instalador nem site.
+- Antes de implementar, o usuário foi consultado sobre um conflito direto
+  com `docs/safety.md`: o item 🧪 pedido, `-disableHyperthreading`, é
+  exatamente o que a seção "Ações proibidas" já veta explicitamente
+  ("desliguem SMT/Hyper-Threading"). O usuário confirmou **não
+  implementar**, mantendo a proibição sem exceção.
+- Descoberta relevante ao avaliar o pedido: `docs/research.md` já
+  documentava, com fonte no próprio código do FiveM
+  (`BlockLoadSetters.cpp`), que o **FiveM bloqueia explicitamente a
+  leitura do `commandline.txt`** do GTA — ou seja, escrever parâmetros
+  nesse arquivo nunca teve efeito real para o FiveM. Isso confirma por que
+  `docs/safety.md` já proibia editar `commandline.txt` "como otimização do
+  FiveM": a proibição é sobre o *uso para FiveM*, não sobre o arquivo em
+  si. A funcionalidade pedida foi implementada com escopo explícito e
+  exclusivo do **GTA V Legacy standalone**, nunca do FiveM — reforçado em
+  `docs/safety.md` (nova seção "Parâmetros de inicialização do GTA V
+  standalone").
+- Catálogo avançou da versão 9 para a 10, com 4 novas ações, todas restritas
+  ao GTA V standalone (`environment.GtaVInstallationRoot`):
+  - `DiagnoseGtaVLaunchParameters` (👁, sempre ativa): lê o commandline.txt
+    existente e avisa especificamente quando um parâmetro de reparo
+    (-safemode/-useMinimumSettings/-UseAutoSettings) ficou ativo além do
+    necessário.
+  - `ApplyGtaVGraphicsLaunchParameters` (opt-in, nunca em perfil
+    automático): escreve -cityDensity/-anisotropicQualityLevel/-fxaa/
+    -grassQuality/-lodScale/-frameLimit (este último usando a taxa de
+    atualização já detectada do monitor, quando disponível, em vez de um
+    valor arbitrário).
+  - `ApplyGtaVDisplayLaunchParameters` (opt-in, nunca em perfil
+    automático): escreve o modo de tela (-fullscreen/-windowed/
+    -borderless, mutuamente exclusivos) e, quando escolhida, a versão do
+    DirectX (-DX10/-DX10_1/-DX11). Nunca escreve -width/-height/adaptador,
+    pela mesma razão de risco de modo não suportado já registrada na fase
+    anterior de presets gráficos.
+  - `ApplyGtaVRepairLaunchParameters` (opt-in, nunca em perfil automático):
+    escreve -safemode/-useMinimumSettings/-UseAutoSettings individualmente;
+    o aviso do plano (`gtav-repair-launch-parameters-are-temporary`) e o
+    `undoSummary` da própria ação lembram explicitamente de reverter após
+    diagnosticar, atendendo ao "🚫 Não deixar parâmetros de reparo ativos
+    permanentemente" do pedido original.
+- Novo `src/FiveMCleaner.Windows/Actions/GtaVLaunchParametersActions.cs`:
+  um helper interno (`GtaVCommandLineFile`) faz parse/merge/escrita atômica
+  do arquivo de texto plano, tocando somente as linhas cujo parâmetro
+  pertence ao conjunto allowlisted de cada ação e preservando qualquer
+  outra linha (inclusive parâmetros desconhecidos do produto) exatamente
+  como estava — mesma filosofia de allowlist já usada nas ações gráficas
+  em XML. Backup e rollback exato reaproveitam o mesmo padrão.
+- `scripts/Verify-Safety.ps1` já continha uma verificação automática que
+  bloqueia qualquer menção a `commandline.txt` no código-fonte (guarda
+  literal da proibição antiga). Ela foi ajustada com um novo parâmetro
+  `-ExcludeFileNames` em `Find-CSharpSourceMatches`, para permitir
+  especificamente `GtaVLaunchParametersActions.cs` — um arquivo revisado,
+  documentado e restrito ao GTA V standalone — sem enfraquecer a proteção
+  para qualquer outro arquivo do projeto.
+- Itens do pedido original avaliados e **deliberadamente deferidos**, com
+  justificativa: `-disableHyperthreading` (decisão do usuário, mantém
+  proibição de `docs/safety.md`); `-width`/`-height` (mesmo risco de modo
+  de vídeo não suportado já documentado na fase de presets gráficos).
+- Validação: `dotnet build` Release sem avisos/erros; **388 testes .NET
+  aprovados** (375 anteriores + 13 novos cobrindo o diagnóstico de
+  commandline.txt incluindo o aviso de parâmetro de reparo ativo, a
+  mescla/preservação de linhas desconhecidas com rollback exato, a
+  exclusividade mútua do modo de tela, a troca de versão do DirectX e a
+  recusa de escrita com o GTA V aberto); `scripts\Verify-Safety.ps1`
+  aprovado (após o ajuste de `-ExcludeFileNames` descrito acima).
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.

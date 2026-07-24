@@ -46,6 +46,7 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnoseCrashPatterns,
                 OptimizationActionIds.RecommendGraphicsPreset,
                 OptimizationActionIds.DiagnoseTextureVramFit,
+                OptimizationActionIds.DiagnoseGtaVLaunchParameters,
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 OptimizationActionIds.PruneLegacyCrashDumps,
                 OptimizationActionIds.EnableGameMode,
@@ -185,6 +186,37 @@ public sealed class PlanBuilderTests
     }
 
     [Fact]
+    public void GtaVLaunchParameters_AreOptInAndNeverPartOfAnyDefaultProfile()
+    {
+        var light = Build(OptimizationProfile.Light);
+        var balanced = Build(OptimizationProfile.Balanced);
+        var aggressive = Build(OptimizationProfile.Aggressive);
+
+        foreach (var plan in new[] { light, balanced, aggressive })
+        {
+            Assert.DoesNotContain(OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ApplyGtaVDisplayLaunchParameters, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ApplyGtaVRepairLaunchParameters, Ids(plan));
+        }
+
+        var enabledPlan = Build(
+            OptimizationProfile.Aggressive,
+            new OptimizationOptionsDto
+            {
+                ApplyGtaVGraphicsLaunchParameters = true,
+                ApplyGtaVDisplayLaunchParameters = true,
+                ApplyGtaVRepairLaunchParameters = true,
+                UseGtaVSafeMode = true
+            });
+
+        Assert.Contains(OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters, Ids(enabledPlan));
+        Assert.Contains(OptimizationActionIds.ApplyGtaVDisplayLaunchParameters, Ids(enabledPlan));
+        Assert.Contains(OptimizationActionIds.ApplyGtaVRepairLaunchParameters, Ids(enabledPlan));
+        Assert.Contains(enabledPlan.Notices, notice => notice.Code == "gtav-repair-launch-parameters-are-temporary");
+        Assert.Contains(enabledPlan.Notices, notice => notice.Code == "gtav-launch-parameters-do-not-affect-fivem");
+    }
+
+    [Fact]
     public void DisabledOptions_RemoveTheirActionsButKeepSafetyPreflight()
     {
         var options = new OptimizationOptionsDto
@@ -233,7 +265,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnoseInstallationHealth,
                 OptimizationActionIds.DiagnoseCrashPatterns,
                 OptimizationActionIds.RecommendGraphicsPreset,
-                OptimizationActionIds.DiagnoseTextureVramFit
+                OptimizationActionIds.DiagnoseTextureVramFit,
+                OptimizationActionIds.DiagnoseGtaVLaunchParameters
             ],
             Ids(plan));
         Assert.False(plan.RequiresElevation);
