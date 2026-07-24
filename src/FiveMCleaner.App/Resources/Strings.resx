@@ -354,12 +354,24 @@
   <data name="Actions.safety.hardware-stability.diagnose.Description" xml:space="preserve"><value>Reads the BIOS release date and recent hardware error (WHEA) events from the Windows Event Log.</value></data>
   <data name="Actions.safety.bottleneck-classification.diagnose.Name" xml:space="preserve"><value>Classify the likely bottleneck type</value></data>
   <data name="Actions.safety.bottleneck-classification.diagnose.Description" xml:space="preserve"><value>Combines CPU/GPU/disk/network usage, memory, temperature and the top CPU-consuming process to point to the most likely limiting resource right now.</value></data>
+  <data name="Actions.fivem.legacy.cache-storage.diagnose.Name" xml:space="preserve"><value>Diagnose FiveM cache size and integrity</value></data>
+  <data name="Actions.fivem.legacy.cache-storage.diagnose.Description" xml:space="preserve"><value>Measures the total and per-category size of FiveM Legacy cache (server-cache, server-cache-priv, NUI storage, logs, diagnostics) and flags files locked by another process, without deleting anything.</value></data>
+  <data name="Actions.fivem.legacy.installation-health.diagnose.Name" xml:space="preserve"><value>Diagnose FiveM installation health</value></data>
+  <data name="Actions.fivem.legacy.installation-health.diagnose.Description" xml:space="preserve"><value>Checks for duplicate installations, write permission on the data folder, OneDrive syncing and free disk space, without changing anything.</value></data>
+  <data name="Actions.fivem.legacy.crash-patterns.diagnose.Name" xml:space="preserve"><value>Diagnose recurring crash and streaming error patterns</value></data>
+  <data name="Actions.fivem.legacy.crash-patterns.diagnose.Description" xml:space="preserve"><value>Looks for recognizable error codes in recent crash dump names and streaming error keywords (textures, models, maps) in the latest log, without deleting anything.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Name" xml:space="preserve"><value>Clean old temporary files</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Removes only user temporary files older than the retention period selected by the profile.</value></data>
   <data name="Actions.fivem.legacy.crash-dumps.prune.Name" xml:space="preserve"><value>Remove old diagnostic files</value></data>
   <data name="Actions.fivem.legacy.crash-dumps.prune.Description" xml:space="preserve"><value>Removes old FiveM Legacy dumps and logs while preserving recent diagnostics.</value></data>
   <data name="Actions.fivem.legacy.server-cache.repair.Name" xml:space="preserve"><value>Repair server cache</value></data>
   <data name="Actions.fivem.legacy.server-cache.repair.Description" xml:space="preserve"><value>Removes only regenerable FiveM Legacy server-content caches when a repair is needed.</value></data>
+  <data name="Actions.fivem.legacy.stuck-process.terminate.Name" xml:space="preserve"><value>Terminate a stuck FiveM process</value></data>
+  <data name="Actions.fivem.legacy.stuck-process.terminate.Description" xml:space="preserve"><value>Terminates a demonstrably stuck FiveM process (not responding, holding a cache file locked) to allow cleanup. Never part of automatic profiles.</value></data>
+  <data name="Actions.fivem.legacy.local-data.recreate.Name" xml:space="preserve"><value>Recreate FiveM local data</value></data>
+  <data name="Actions.fivem.legacy.local-data.recreate.Description" xml:space="preserve"><value>Removes and recreates regenerable FiveM Legacy data folders (server-cache, server-cache-priv, logs, crashes) while preserving game-storage, NUI storage, ipfs, CitizenFX.ini and plugins, with quarantine backup.</value></data>
+  <data name="Actions.fivem.legacy.auth-data.repair.Name" xml:space="preserve"><value>Repair corrupted entitlement data</value></data>
+  <data name="Actions.fivem.legacy.auth-data.repair.Description" xml:space="preserve"><value>Removes ros_id.dat and the digital entitlements folder only when a startup entitlement error pattern is detected in the latest log, with quarantine backup and per-run confirmation.</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.Name" xml:space="preserve"><value>Enable Game Mode</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.Description" xml:space="preserve"><value>Enables the Windows gaming feature that prioritizes resources while games are running.</value></data>
   <data name="Actions.windows.gaming.high-performance-gpu.prefer.Name" xml:space="preserve"><value>Prefer the high-performance GPU</value></data>

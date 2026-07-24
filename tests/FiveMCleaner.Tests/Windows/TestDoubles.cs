@@ -263,6 +263,17 @@ internal sealed class FakeBackgroundProcessInspector : IBackgroundProcessInspect
     public BackgroundProcessUsage? GetTopConsumer(IReadOnlyCollection<string> excludedProcessNames) => Result;
 }
 
+internal sealed class FakeStuckFiveMProcessInspector : IStuckFiveMProcessInspector
+{
+    public StuckFiveMProcessSnapshot Snapshot { get; set; } = new(false, 0, string.Empty);
+
+    public bool TerminateSucceeds { get; set; } = true;
+
+    public StuckFiveMProcessSnapshot GetSnapshot(string installationRoot) => Snapshot;
+
+    public bool TryTerminate(int processId) => TerminateSucceeds;
+}
+
 internal sealed class InMemoryJournalStore : IWindowsTransactionJournalStore
 {
     private readonly Dictionary<Guid, WindowsTransactionJournal> journals = [];
@@ -339,7 +350,8 @@ internal static class WindowsTestRuntime
             ResourceUsage = new FakeResourceUsageInspector(),
             PciLink = new FakePciLinkInspector(),
             HardwareStability = new FakeHardwareStabilityInspector(),
-            BackgroundProcess = new FakeBackgroundProcessInspector()
+            BackgroundProcess = new FakeBackgroundProcessInspector(),
+            StuckProcess = new FakeStuckFiveMProcessInspector()
         };
 
         return (

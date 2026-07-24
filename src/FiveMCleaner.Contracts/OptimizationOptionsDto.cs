@@ -27,4 +27,27 @@ public sealed record OptimizationOptionsDto
     public bool ApplyGtaVGraphicsPreset { get; init; }
 
     public bool ReduceWindowsVisualEffects { get; init; } = true;
+
+    /// <summary>
+    /// Opt-in repair action, never part of automatic profile composition
+    /// (see docs/safety.md). Off by default; only meant to be turned on for
+    /// a specific, manually-requested repair run.
+    /// </summary>
+    public bool TerminateStuckFiveMProcess { get; init; }
+
+    /// <summary>
+    /// Opt-in repair action, never part of automatic profile composition
+    /// (see docs/safety.md). Off by default; only meant to be turned on for
+    /// a specific, manually-requested repair run.
+    /// </summary>
+    public bool RecreateFiveMLocalData { get; init; }
+
+    /// <summary>
+    /// Opt-in repair action, never part of automatic profile composition
+    /// (see docs/safety.md). Off by default; only meant to be turned on for
+    /// a specific, manually-requested repair run, and even then only removes
+    /// data when the action's own detection confirms the specific error
+    /// pattern is present.
+    /// </summary>
+    public bool RepairStaleAuthData { get; init; }
 }

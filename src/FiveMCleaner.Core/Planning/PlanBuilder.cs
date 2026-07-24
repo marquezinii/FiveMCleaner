@@ -144,6 +144,39 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
+        if (actions.Any(action => action.Id == OptimizationActionIds.TerminateStuckFiveMProcess))
+        {
+            notices.Add(new PlanNoticeDto
+            {
+                Code = "stuck-process-termination-loses-unsaved-state",
+                Severity = PlanNoticeSeverity.Warning,
+                ActionId = OptimizationActionIds.TerminateStuckFiveMProcess,
+                Message = "Só encerra um processo do FiveM comprovadamente travado (não responde); qualquer estado não salvo nele será perdido."
+            });
+        }
+
+        if (actions.Any(action => action.Id == OptimizationActionIds.RecreateFiveMLocalData))
+        {
+            notices.Add(new PlanNoticeDto
+            {
+                Code = "local-data-recreation-is-a-repair-not-daily-optimization",
+                Severity = PlanNoticeSeverity.Warning,
+                ActionId = OptimizationActionIds.RecreateFiveMLocalData,
+                Message = "Recria as pastas de dados regeneráveis do FiveM; use apenas para reparar uma instalação com problema, não como otimização diária."
+            });
+        }
+
+        if (actions.Any(action => action.Id == OptimizationActionIds.RepairStaleAuthData))
+        {
+            notices.Add(new PlanNoticeDto
+            {
+                Code = "auth-data-repair-requires-detected-error-pattern",
+                Severity = PlanNoticeSeverity.Warning,
+                ActionId = OptimizationActionIds.RepairStaleAuthData,
+                Message = "Só remove ros_id.dat e entitlements quando um padrão de erro específico é detectado no log; exigirá novo login no próximo início do FiveM."
+            });
+        }
+
         if (request.Profile == OptimizationProfile.Aggressive)
         {
             notices.Add(new PlanNoticeDto
@@ -172,6 +205,9 @@ public sealed class PlanBuilder : IPlanBuilder
             ActionOptionGate.ApplyLegacyGraphicsPreset => options.ApplyLegacyGraphicsPreset,
             ActionOptionGate.ApplyGtaVGraphicsPreset => options.ApplyGtaVGraphicsPreset,
             ActionOptionGate.ReduceWindowsVisualEffects => options.ReduceWindowsVisualEffects,
+            ActionOptionGate.TerminateStuckFiveMProcess => options.TerminateStuckFiveMProcess,
+            ActionOptionGate.RecreateFiveMLocalData => options.RecreateFiveMLocalData,
+            ActionOptionGate.RepairStaleAuthData => options.RepairStaleAuthData,
             _ => throw new ArgumentOutOfRangeException(nameof(gate), gate, "Unknown option gate value.")
         };
     }

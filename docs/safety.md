@@ -55,17 +55,59 @@ O projeto não aceita implementações que:
 
 Configurações podem ser editadas por uma ação tipada, mas nunca tratadas como lixo.
 
+#### Exceção documentada: reparo de dados de entitlement
+
+`ros_id.dat` e `%LOCALAPPDATA%\DigitalEntitlements` continuam proibidos de
+remoção automática em qualquer perfil (Leve/Médio/Agressivo). A única
+exceção é a ação opt-in `fivem.legacy.auth-data.repair`
+(`StaleAuthDataRepairAction`), que só existe para o cenário específico de
+falha de inicialização por entitlement corrompido, e que respeita todas as
+condições abaixo simultaneamente:
+
+- nunca faz parte de nenhum perfil automático (`ActionOptionGate` próprio,
+  desligado por padrão; precisa ser habilitado explicitamente fora dos
+  perfis padrão);
+- só toca em algum arquivo depois de detectar, no log mais recente do
+  FiveM, um padrão textual já conhecido de erro de entitlement/autenticação
+  — caso contrário, a ação não faz nada e informa isso;
+- move os itens para quarentena em vez de apagar diretamente, preservando a
+  reversibilidade até a confirmação final da transação, igual ao padrão já
+  usado para `server-cache`/`server-cache-priv`;
+- exige que o FiveM esteja fechado, como qualquer outra limpeza condicionada.
+
 ### Limpeza condicionada
 
-| Alvo                                | Condição                                         | Aviso obrigatório                                           |
-| ----------------------------------- | ------------------------------------------------ | ----------------------------------------------------------- |
-| `data\server-cache`                 | FiveM encerrado; usuário abriu manutenção/reparo | recursos serão baixados novamente                           |
-| `data\server-cache-priv`            | mesmas condições                                 | clipes antigos do Rockstar Editor podem deixar de funcionar |
-| `crashes`                           | dumps não serão enviados ao suporte              | dumps podem ser essenciais para diagnóstico                 |
-| `logs`                              | somente arquivos antigos e reconhecidos          | logs recentes devem ser preservados                         |
-| `content_index.xml` ou `caches.xml` | erro de integridade/componente correspondente    | FiveM fará nova verificação/download                        |
+| Alvo                                                                     | Condição                                                                          | Aviso obrigatório                                                    |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `data\server-cache`                                                      | FiveM encerrado; usuário abriu manutenção/reparo                                  | recursos serão baixados novamente                                    |
+| `data\server-cache-priv`                                                 | mesmas condições                                                                   | clipes antigos do Rockstar Editor podem deixar de funcionar          |
+| `crashes`                                                                 | dumps não serão enviados ao suporte                                                | dumps podem ser essenciais para diagnóstico                          |
+| `logs`                                                                    | somente arquivos antigos e reconhecidos                                            | logs recentes devem ser preservados                                  |
+| `content_index.xml` ou `caches.xml`                                       | erro de integridade/componente correspondente                                      | FiveM fará nova verificação/download                                 |
+| `server-cache`+`server-cache-priv`+`logs`+`crashes` (recriação completa)  | FiveM encerrado; ação opt-in `fivem.legacy.local-data.recreate`, nunca automática   | reparo, não otimização diária; primeiro carregamento fica mais lento |
+| `ros_id.dat` + `DigitalEntitlements`                                      | FiveM encerrado; padrão de erro de entitlement detectado no log; ação opt-in       | exigirá novo login no próximo início do FiveM                        |
 
 A limpeza de cache não entra implicitamente nos modos Leve, Médio ou Agressivo.
+
+### Encerramento de processo travado
+
+A ação opt-in `fivem.legacy.stuck-process.terminate`
+(`StuckProcessTerminationAction`) é a única capacidade do produto que
+encerra um processo, e só o faz sob todas as condições abaixo:
+
+- o processo alvo precisa ter a imagem executável dentro da pasta de
+  instalação do FiveM (mesma verificação usada por `IFiveMProcessInspector`);
+  nunca um processo de terceiros, do GTA V ou do sistema;
+- o processo precisa estar comprovadamente sem resposta (`Process.
+  Responding == false`) no momento da leitura; um processo respondendo
+  normalmente nunca é encerrado;
+- nunca faz parte de nenhum perfil automático — é opt-in, desligado por
+  padrão, e existe apenas para desbloquear uma limpeza de cache impedida por
+  uma instância travada.
+
+Isso não é uma exceção às proibições de "afinidade fixa/prioridade
+Realtime/SMT" nem de manipulação de outros processos: o escopo é
+estritamente o próprio processo do FiveM, nunca outro.
 
 ## Ciclo transacional
 

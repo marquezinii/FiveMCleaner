@@ -41,6 +41,9 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnosePciLink,
                 OptimizationActionIds.DiagnoseHardwareStability,
                 OptimizationActionIds.ClassifyBottleneck,
+                OptimizationActionIds.DiagnoseCacheStorage,
+                OptimizationActionIds.DiagnoseInstallationHealth,
+                OptimizationActionIds.DiagnoseCrashPatterns,
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 OptimizationActionIds.PruneLegacyCrashDumps,
                 OptimizationActionIds.EnableGameMode,
@@ -115,6 +118,40 @@ public sealed class PlanBuilderTests
     }
 
     [Fact]
+    public void RepairActions_AreOptInAndNeverPartOfAnyDefaultProfile()
+    {
+        var light = Build(OptimizationProfile.Light);
+        var balanced = Build(OptimizationProfile.Balanced);
+        var aggressive = Build(OptimizationProfile.Aggressive);
+
+        foreach (var plan in new[] { light, balanced, aggressive })
+        {
+            Assert.DoesNotContain(OptimizationActionIds.TerminateStuckFiveMProcess, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.RecreateFiveMLocalData, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.RepairStaleAuthData, Ids(plan));
+        }
+
+        var repairPlan = Build(
+            OptimizationProfile.Aggressive,
+            new OptimizationOptionsDto
+            {
+                TerminateStuckFiveMProcess = true,
+                RecreateFiveMLocalData = true,
+                RepairStaleAuthData = true
+            });
+
+        Assert.Contains(OptimizationActionIds.TerminateStuckFiveMProcess, Ids(repairPlan));
+        Assert.Contains(OptimizationActionIds.RecreateFiveMLocalData, Ids(repairPlan));
+        Assert.Contains(OptimizationActionIds.RepairStaleAuthData, Ids(repairPlan));
+        Assert.Contains(repairPlan.Notices, notice =>
+            notice.Code == "stuck-process-termination-loses-unsaved-state");
+        Assert.Contains(repairPlan.Notices, notice =>
+            notice.Code == "local-data-recreation-is-a-repair-not-daily-optimization");
+        Assert.Contains(repairPlan.Notices, notice =>
+            notice.Code == "auth-data-repair-requires-detected-error-pattern");
+    }
+
+    [Fact]
     public void DisabledOptions_RemoveTheirActionsButKeepSafetyPreflight()
     {
         var options = new OptimizationOptionsDto
@@ -158,7 +195,10 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnoseResourceUsage,
                 OptimizationActionIds.DiagnosePciLink,
                 OptimizationActionIds.DiagnoseHardwareStability,
-                OptimizationActionIds.ClassifyBottleneck
+                OptimizationActionIds.ClassifyBottleneck,
+                OptimizationActionIds.DiagnoseCacheStorage,
+                OptimizationActionIds.DiagnoseInstallationHealth,
+                OptimizationActionIds.DiagnoseCrashPatterns
             ],
             Ids(plan));
         Assert.False(plan.RequiresElevation);

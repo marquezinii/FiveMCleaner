@@ -106,6 +106,8 @@ public sealed record WindowsOptimizationDependencies
 
     public required IBackgroundProcessInspector BackgroundProcess { get; init; }
 
+    public required IStuckFiveMProcessInspector StuckProcess { get; init; }
+
     public static WindowsOptimizationDependencies CreateDefault(
         WindowsOptimizationEnvironment environment)
     {
@@ -135,7 +137,8 @@ public sealed record WindowsOptimizationDependencies
             ResourceUsage = new WindowsResourceUsageInspector(),
             PciLink = new WindowsPciLinkInspector(),
             HardwareStability = new WindowsHardwareStabilityInspector(),
-            BackgroundProcess = new WindowsBackgroundProcessInspector()
+            BackgroundProcess = new WindowsBackgroundProcessInspector(),
+            StuckProcess = new WindowsStuckFiveMProcessInspector()
         };
     }
 }
@@ -153,6 +156,15 @@ public sealed class WindowsOptimizationActionFactory
         this.environment = ValidateEnvironment(environment);
         this.dependencies = dependencies ?? throw new ArgumentNullException(nameof(dependencies));
     }
+
+    private string RosIdPath =>
+        Path.Combine(Path.GetDirectoryName(environment.LegacyGraphicsSettingsPath)!, "ros_id.dat");
+
+    private string DigitalEntitlementsRoot =>
+        Path.Combine(Path.GetDirectoryName(environment.UserTemporaryDirectory)!, "DigitalEntitlements");
+
+    private string AuthQuarantineRoot =>
+        Path.Combine(Path.GetDirectoryName(environment.JournalDirectory)!, "AuthQuarantine");
 
     public IReadOnlyList<IWindowsOptimizationAction> Create(OptimizationPlanDto plan)
     {
@@ -205,6 +217,11 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.NetworkHealth,
                 dependencies.GpuDetails,
                 dependencies.BackgroundProcess),
+            new CacheStorageDiagnosisAction(environment.FiveMAppRoot),
+            new InstallationHealthDiagnosisAction(
+                environment.FiveMInstallationRoot,
+                environment.FiveMAppRoot),
+            new CrashPatternDiagnosisAction(environment.FiveMAppRoot),
             new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(defaults.TemporaryFileMinimumAgeDays),
@@ -222,6 +239,21 @@ public sealed class WindowsOptimizationActionFactory
                 checked(defaults.ServerCacheThresholdGiB * GiB),
                 dependencies.ProcessInspector,
                 dependencies.FileTree),
+            new StuckProcessTerminationAction(
+                environment.FiveMInstallationRoot,
+                dependencies.StuckProcess),
+            new RecreateFiveMLocalDataAction(
+                environment.FiveMAppRoot,
+                environment.FiveMInstallationRoot,
+                dependencies.ProcessInspector,
+                dependencies.FileTree),
+            new StaleAuthDataRepairAction(
+                environment.FiveMAppRoot,
+                environment.FiveMInstallationRoot,
+                RosIdPath,
+                DigitalEntitlementsRoot,
+                AuthQuarantineRoot,
+                dependencies.ProcessInspector),
             new GameModeRegistryAction(dependencies.Registry),
             new GpuPreferenceRegistryAction(
                 dependencies.Registry,
@@ -339,6 +371,28 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.NetworkHealth,
                 dependencies.GpuDetails,
                 dependencies.BackgroundProcess),
+            OptimizationActionIds.DiagnoseCacheStorage => new CacheStorageDiagnosisAction(
+                environment.FiveMAppRoot),
+            OptimizationActionIds.DiagnoseInstallationHealth => new InstallationHealthDiagnosisAction(
+                environment.FiveMInstallationRoot,
+                environment.FiveMAppRoot),
+            OptimizationActionIds.DiagnoseCrashPatterns => new CrashPatternDiagnosisAction(
+                environment.FiveMAppRoot),
+            OptimizationActionIds.TerminateStuckFiveMProcess => new StuckProcessTerminationAction(
+                environment.FiveMInstallationRoot,
+                dependencies.StuckProcess),
+            OptimizationActionIds.RecreateFiveMLocalData => new RecreateFiveMLocalDataAction(
+                environment.FiveMAppRoot,
+                environment.FiveMInstallationRoot,
+                dependencies.ProcessInspector,
+                dependencies.FileTree),
+            OptimizationActionIds.RepairStaleAuthData => new StaleAuthDataRepairAction(
+                environment.FiveMAppRoot,
+                environment.FiveMInstallationRoot,
+                RosIdPath,
+                DigitalEntitlementsRoot,
+                AuthQuarantineRoot,
+                dependencies.ProcessInspector),
             OptimizationActionIds.CleanUserTemporaryFiles => new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(plan.Options.TemporaryFileMinimumAgeDays),

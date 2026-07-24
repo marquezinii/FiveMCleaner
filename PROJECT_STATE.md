@@ -730,3 +730,75 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   entradas em `crash.log`) exercitando as novas telas.
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.
+
+## Otimizações específicas do FiveM: cache, diagnóstico interno e instalação (24/07/2026)
+
+- Trabalho local, **não publicado** (sem push da main/tag/release nesta
+  etapa; apenas push de desenvolvimento de `dev/proxima-versao`, autorizado
+  explicitamente pelo usuário nesta tarefa). Não altera versão pública,
+  instalador nem site.
+- Antes de implementar, o usuário foi consultado sobre três pontos que
+  tensionavam decisões de segurança já documentadas: (1) remoção de
+  `ros_id.dat`/`DigitalEntitlements` — proibida no modelo padrão; o usuário
+  escolheu implementar com confirmação explícita a cada execução; (2)
+  encerrar processos FiveM "abandonados" antes da limpeza — capacidade nova;
+  o usuário escolheu permitir apenas para processos comprovadamente travados
+  (`Process.Responding == false`); (3) reinstalação assistida/recriação
+  completa de dados corrompidos — o usuário escolheu implementar a
+  recriação automatizada dos dados regeneráveis. Todas as três decisões e
+  suas justificativas de segurança estão documentadas em
+  `docs/safety.md` (seções "Exceção documentada: reparo de dados de
+  entitlement" e "Encerramento de processo travado").
+- Seis novas ações no catálogo, catálogo avançou da versão 7 para a 8:
+  - Três diagnósticos somente leitura, sempre presentes
+    (`ActionOptionGate.Always`, nunca escrevem no sistema): tamanho e
+    integridade do cache do FiveM por categoria com detecção de arquivos
+    bloqueados (`CacheStorageDiagnosisAction`), saúde da instalação
+    (instalação duplicada, permissão de escrita, sincronização por
+    OneDrive, espaço livre em disco — `InstallationHealthDiagnosisAction`)
+    e padrões recorrentes de erro/streaming a partir de nomes de crash
+    dumps e do log mais recente (`CrashPatternDiagnosisAction`).
+  - Três ações de reparo (🔧), cada uma com seu próprio `ActionOptionGate`
+    dedicado, **desligadas por padrão e nunca incluídas em nenhum perfil
+    automático** (Leve/Médio/Agressivo) — cobertas pelo teste
+    `RepairActions_AreOptInAndNeverPartOfAnyDefaultProfile`:
+    `StuckProcessTerminationAction` (encerra apenas um processo do FiveM
+    comprovadamente sem resposta), `RecreateFiveMLocalDataAction` (reutiliza
+    o padrão de quarentena já existente para recriar server-cache/
+    server-cache-priv/logs/crashes, nunca as pastas protegidas por
+    `docs/safety.md`) e `StaleAuthDataRepairAction` (só remove
+    `ros_id.dat`/`DigitalEntitlements` quando um padrão de erro de
+    entitlement é detectado no log; caso contrário não faz nada; sempre via
+    quarentena reversível até a confirmação final da transação).
+- Novo `src/FiveMCleaner.Windows/Infrastructure/StuckFiveMProcessInspector.cs`
+  (`IStuckFiveMProcessInspector`): encontra e encerra apenas um processo
+  cuja imagem pertence à instalação do FiveM e que não responde no momento
+  da leitura; nunca um processo de terceiros, do GTA V ou do sistema.
+- Novo `src/FiveMCleaner.Windows/Actions/FiveMInstallationActions.cs` com as
+  seis ações acima e um helper interno `FiveMLogPatterns` compartilhado
+  (busca textual honesta por códigos de erro/streaming/entitlement — nunca
+  uma análise de despejo de memória).
+- Itens do pedido original avaliados e **deliberadamente deferidos**, com
+  justificativa (mesma disciplina das fases anteriores — não é lacuna
+  silenciosa): detecção de arquivos bloqueados por antivírus (não há API
+  segura e genérica para identificar qual AV bloqueou o quê); detecção de
+  atalhos apontando para o executável errado (exigiria parsing de `.lnk`
+  via COM, adiado); detecção de "arquivos estranhos injetados" na pasta
+  (heurística com risco relevante de falso positivo); "preservar arquivos
+  íntegros que seriam baixados novamente" (exigiria validar integridade por
+  item de cache, não apenas por pasta); comparação de versão
+  instalada vs. mais recente do FiveM (não há fonte oficial segura de
+  "última versão" consultável sem rede, e o produto evita depender de rede
+  para diagnóstico); monitoramento de CPU/GPU por NUI especificamente (não
+  há quebra confiável de uso por subprocesso de NUI sem tocar a API do
+  próprio FiveM); reinstalação automática do FiveM baixando/executando um
+  instalador (permanece proibido por `docs/safety.md` — "sem baixar/
+  executar código arbitrário" — independente da decisão sobre recriação de
+  dados locais, que é uma operação diferente e mais restrita).
+- Validação: `dotnet build` Release sem avisos/erros; **363 testes .NET
+  aprovados** (358 anteriores + 5 novos: 3 ações opt-in nunca aparecem em
+  nenhum perfil por padrão e aparecem corretamente quando habilitadas, mais
+  a cobertura de localização/catálogo/plano já existente reajustada para a
+  versão 8); `scripts\Verify-Safety.ps1` aprovado.
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.

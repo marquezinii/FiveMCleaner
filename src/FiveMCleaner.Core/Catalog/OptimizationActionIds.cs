@@ -39,4 +39,10 @@ public static class OptimizationActionIds
     public const string ApplyBalancedGtaVGraphics = "gtav.legacy.graphics.balanced.apply";
     public const string ApplyAggressiveGtaVGraphics = "gtav.legacy.graphics.aggressive.apply";
     public const string ReduceWindowsVisualEffects = "windows.appearance.visual-effects.reduce";
+    public const string DiagnoseCacheStorage = "fivem.legacy.cache-storage.diagnose";
+    public const string DiagnoseInstallationHealth = "fivem.legacy.installation-health.diagnose";
+    public const string DiagnoseCrashPatterns = "fivem.legacy.crash-patterns.diagnose";
+    public const string TerminateStuckFiveMProcess = "fivem.legacy.stuck-process.terminate";
+    public const string RecreateFiveMLocalData = "fivem.legacy.local-data.recreate";
+    public const string RepairStaleAuthData = "fivem.legacy.auth-data.repair";
 }
