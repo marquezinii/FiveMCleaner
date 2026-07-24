@@ -520,6 +520,16 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - O número exibido nesse selo usa `TextBrush`, um recurso presente em todos os
   temas. Não usar `TextPrimaryBrush`: ele não existe na paleta e faz o WPF cair
   na cor padrão preta em vez de preservar o contraste do tema escuro.
+- Durante uma otimização, o botão de cancelar e qualquer tentativa de fechar o
+  app passam pelo modal temático `OptimizationConfirmationWindow`. A recusa
+  preserva a execução; a confirmação solicita cancelamento seguro somente após
+  a etapa atual. No caso de fechamento, a janela permanece aberta até a rotina
+  encerrar e só então fecha. Logoff/desligamento do Windows continua sem modal
+  para não bloquear o sistema.
+- A lista do plano atual foi simplificada: mantém nome e descrição de cada ação,
+  mas não expõe chips internos de risco, reversibilidade, privilégio ou versão
+  do catálogo. O espaçamento do título de Configurações segue agora o padrão
+  das demais páginas.
 
 ## Publicação v1.0.2 e handoff (23/07/2026)
 

@@ -191,6 +191,13 @@
   <data name="Dialog.Rollback.Title" xml:space="preserve"><value>Undo optimization</value></data>
   <data name="Dialog.CancelRunning.Message" xml:space="preserve"><value>An optimization is in progress. Request safe cancellation after the current step?</value></data>
   <data name="Dialog.CancelRunning.Title" xml:space="preserve"><value>FiveMCleaner is running</value></data>
+  <data name="Dialog.CancelOptimization.Title" xml:space="preserve"><value>Cancel optimization?</value></data>
+  <data name="Dialog.CancelOptimization.Message" xml:space="preserve"><value>FiveMCleaner will safely complete or roll back the current step before stopping the plan. Request cancellation?</value></data>
+  <data name="Dialog.CancelOptimization.Confirm" xml:space="preserve"><value>Cancel optimization</value></data>
+  <data name="Dialog.CloseOptimization.Title" xml:space="preserve"><value>Optimization in progress</value></data>
+  <data name="Dialog.CloseOptimization.Message" xml:space="preserve"><value>To close FiveMCleaner, the optimization will be safely cancelled after the current step. The app will remain open until that completes.</value></data>
+  <data name="Dialog.CloseOptimization.Confirm" xml:space="preserve"><value>Cancel and close</value></data>
+  <data name="Dialog.OptimizationInterruption.KeepWorking" xml:space="preserve"><value>Keep optimizing</value></data>
   <data name="BugReport.Attachment.DialogTitle" xml:space="preserve"><value>Select an image of the issue</value></data>
   <data name="BugReport.Attachment.Filter" xml:space="preserve"><value>PNG or JPEG images|*.png;*.jpg;*.jpeg</value></data>
   <data name="BugReport.Attachment.Ready" xml:space="preserve"><value>Image ready and sanitized • {0}</value></data>

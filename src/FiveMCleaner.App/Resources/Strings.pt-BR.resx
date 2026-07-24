@@ -191,6 +191,13 @@
   <data name="Dialog.Rollback.Title" xml:space="preserve"><value>Desfazer otimização</value></data>
   <data name="Dialog.CancelRunning.Message" xml:space="preserve"><value>Uma otimização está em andamento. Deseja solicitar o cancelamento seguro após a etapa atual?</value></data>
   <data name="Dialog.CancelRunning.Title" xml:space="preserve"><value>FiveMCleaner em execução</value></data>
+  <data name="Dialog.CancelOptimization.Title" xml:space="preserve"><value>Cancelar otimização?</value></data>
+  <data name="Dialog.CancelOptimization.Message" xml:space="preserve"><value>O FiveMCleaner concluirá ou reverterá com segurança a etapa atual antes de interromper o plano. Deseja solicitar o cancelamento?</value></data>
+  <data name="Dialog.CancelOptimization.Confirm" xml:space="preserve"><value>Cancelar otimização</value></data>
+  <data name="Dialog.CloseOptimization.Title" xml:space="preserve"><value>Otimização em andamento</value></data>
+  <data name="Dialog.CloseOptimization.Message" xml:space="preserve"><value>Para fechar o FiveMCleaner, a otimização será cancelada com segurança após a etapa atual. O aplicativo permanecerá aberto até essa confirmação.</value></data>
+  <data name="Dialog.CloseOptimization.Confirm" xml:space="preserve"><value>Cancelar e fechar</value></data>
+  <data name="Dialog.OptimizationInterruption.KeepWorking" xml:space="preserve"><value>Continuar otimizando</value></data>
   <data name="BugReport.Attachment.DialogTitle" xml:space="preserve"><value>Selecionar imagem do problema</value></data>
   <data name="BugReport.Attachment.Filter" xml:space="preserve"><value>Imagens PNG ou JPEG|*.png;*.jpg;*.jpeg</value></data>
   <data name="BugReport.Attachment.Ready" xml:space="preserve"><value>Imagem pronta e sanitizada • {0}</value></data>
