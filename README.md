@@ -17,7 +17,7 @@
   <img alt="GTAV Enhanced bloqueado" src="https://img.shields.io/badge/GTAV_Enhanced-bloqueado-4b5563?style=flat-square">
   <img alt="Windows 10 e 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb?style=flat-square">
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10.0-7c3aed?style=flat-square">
-  <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-16a34a?style=flat-square"></a>
+  <a href="LICENSE"><img alt="Licença Source-Available" src="https://img.shields.io/badge/licen%C3%A7a-Source--Available-ef6c00?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -186,12 +186,15 @@ As decisões do projeto priorizam documentação do Cfx.re, suporte oficial, rep
 ## Contribuindo e segurança
 
 - Bugs comuns podem ser enviados pelo app ou pelo GitHub; leia antes [Relatos de bug e privacidade](docs/bug-reports.md).
+- A telemetria técnica é opcional e vem desativada. Quando habilitada em **Configurações**, envia somente categorias de erro, duração de otimizações e versão; nunca inclui arquivos, documentos, histórico ou dados pessoais no payload. Veja [Telemetria opcional](docs/telemetry.md).
 - Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de propor uma ação de sistema.
 - Vulnerabilidades devem seguir [SECURITY.md](SECURITY.md), sem issue pública.
 - Toda contribuição está sujeita ao [Código de Conduta](CODE_OF_CONDUCT.md).
 
 ## Licença e não afiliação
 
-Código disponibilizado sob a [Licença MIT](LICENSE).
+Código disponibilizado sob a [Licença Source-Available do FiveMCleaner](LICENSE).
+Consulte as permissões e restrições antes de compilar, fazer fork ou distribuir
+qualquer derivado.
 
 **FiveMCleaner é um projeto comunitário independente. Não é aprovado, patrocinado, endossado nem afiliado à Rockstar Games, Cfx.re ou FiveM.** FiveM, Grand Theft Auto V, Rockstar Games e marcas relacionadas pertencem aos respectivos titulares. A marca é usada apenas para indicar compatibilidade.

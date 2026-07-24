@@ -24,4 +24,14 @@ public interface IAppOptimizationService
         Guid transactionId,
         IProgress<AppProgressUpdate> progress,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Launches the official GTA V standalone benchmark (never inside a
+    /// FiveM session) and reads back the game's own frame time output.
+    /// Requires GTA V to be closed first; explicit, opt-in, never part of
+    /// the automatic optimization flow.
+    /// </summary>
+    Task<AppGtaVBenchmarkResult> RunGtaVBenchmarkAsync(
+        int iterations,
+        CancellationToken cancellationToken = default);
 }

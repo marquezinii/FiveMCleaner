@@ -440,7 +440,7 @@ const copy = {
       title: "Powerful where it matters. Clear about limits.",
       body: "FiveMCleaner uses documented Windows APIs and settings, publishes its source code and avoids techniques that commonly cause blocks or put the system at risk.",
       cards: [
-        ["Open source", "You can inspect exactly what the application does."],
+        ["Source available", "You can inspect the code under the FiveMCleaner license."],
         ["No evasion", "No obfuscation, antivirus exclusions, injection or tricks to hide behavior."],
         ["Verifiable hash", "Check the SHA-256 published with the release before installing."],
       ],
@@ -469,7 +469,7 @@ const copy = {
         ],
         [
           "Does the application collect my data?",
-          "There is no telemetry. Optimization runs locally. The network is used to check for updates and only sends a bug report if you choose that action.",
+          "Anonymous technical telemetry is off by default. If enabled, it sends only categorized errors, execution time, and version; optimization stays local.",
         ],
         [
           "Why might SmartScreen show a warning?",
@@ -483,7 +483,7 @@ const copy = {
       body: "Download the latest stable version and let the app safely decide what makes sense for your computer.",
       download: "Download installer",
       github: "Open GitHub",
-      note: "Free · open source · Windows x64",
+      note: "Free · source available · Windows x64",
     },
     footer: {
       tagline: "Transparent optimization for FiveM on Windows.",

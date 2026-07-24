@@ -12,12 +12,18 @@ function Find-CSharpSourceMatches {
         [string[]]$Roots,
 
         [Parameter(Mandatory)]
-        [string]$Pattern
+        [string]$Pattern,
+
+        [string[]]$ExcludeFileNames = @()
     )
 
     foreach ($root in $Roots) {
         foreach ($file in Get-ChildItem -LiteralPath $root -Recurse -File -Filter '*.cs') {
             if ($file.FullName -match '[\\/](bin|obj)[\\/]') {
+                continue
+            }
+
+            if ($ExcludeFileNames -contains $file.Name) {
                 continue
             }
 
@@ -49,7 +55,16 @@ try {
         'src/FiveMCleaner.Windows',
         'src/FiveMCleaner.Broker'
     )
-    $forbiddenMatches = @(Find-CSharpSourceMatches -Roots $scanRoots -Pattern $forbiddenPattern)
+    # GtaVLaunchParametersActions.cs is a reviewed, documented exception (see
+    # docs/safety.md "Escopo de edição gráfica" / GTA V launch parameters):
+    # it only ever targets standalone GTA V's commandline.txt, never FiveM's
+    # (which explicitly ignores that file — see docs/research.md).
+    $forbiddenMatches = @(
+        Find-CSharpSourceMatches `
+            -Roots $scanRoots `
+            -Pattern $forbiddenPattern `
+            -ExcludeFileNames @('GtaVLaunchParametersActions.cs')
+    )
     if ($forbiddenMatches.Count -gt 0) {
         throw "Forbidden tweak or security-bypass pattern found:`n$($forbiddenMatches -join [Environment]::NewLine)"
     }

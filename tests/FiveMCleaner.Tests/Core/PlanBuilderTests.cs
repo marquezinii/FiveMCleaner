@@ -20,6 +20,33 @@ public sealed class PlanBuilderTests
             [
                 OptimizationActionIds.VerifyFiveMIsStopped,
                 OptimizationActionIds.VerifyGtaVIsStopped,
+                OptimizationActionIds.DiagnoseBottleneck,
+                OptimizationActionIds.DetectOverlaysAndCaptureSoftware,
+                OptimizationActionIds.ReadFiveMLegacyLogs,
+                OptimizationActionIds.GuidePerformanceDiagnostics,
+                OptimizationActionIds.DiagnoseNetworkHealth,
+                OptimizationActionIds.DiagnoseThermalThrottling,
+                OptimizationActionIds.DiagnosePagefileCommit,
+                OptimizationActionIds.DiagnoseCacheIntegrity,
+                OptimizationActionIds.DetectGpuVendor,
+                OptimizationActionIds.DiagnoseCpuDetails,
+                OptimizationActionIds.DiagnoseGpuDetails,
+                OptimizationActionIds.DiagnoseRamDetails,
+                OptimizationActionIds.DiagnoseStorageHealth,
+                OptimizationActionIds.DiagnoseDriverVersions,
+                OptimizationActionIds.DiagnoseDisplayConfiguration,
+                OptimizationActionIds.DiagnoseSessionSettings,
+                OptimizationActionIds.DiagnoseThrottlingSignal,
+                OptimizationActionIds.DiagnoseResourceUsage,
+                OptimizationActionIds.DiagnosePciLink,
+                OptimizationActionIds.DiagnoseHardwareStability,
+                OptimizationActionIds.ClassifyBottleneck,
+                OptimizationActionIds.DiagnoseCacheStorage,
+                OptimizationActionIds.DiagnoseInstallationHealth,
+                OptimizationActionIds.DiagnoseCrashPatterns,
+                OptimizationActionIds.RecommendGraphicsPreset,
+                OptimizationActionIds.DiagnoseTextureVramFit,
+                OptimizationActionIds.DiagnoseGtaVLaunchParameters,
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 OptimizationActionIds.PruneLegacyCrashDumps,
                 OptimizationActionIds.EnableGameMode,
@@ -94,6 +121,102 @@ public sealed class PlanBuilderTests
     }
 
     [Fact]
+    public void RepairActions_AreOptInAndNeverPartOfAnyDefaultProfile()
+    {
+        var light = Build(OptimizationProfile.Light);
+        var balanced = Build(OptimizationProfile.Balanced);
+        var aggressive = Build(OptimizationProfile.Aggressive);
+
+        foreach (var plan in new[] { light, balanced, aggressive })
+        {
+            Assert.DoesNotContain(OptimizationActionIds.TerminateStuckFiveMProcess, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.RecreateFiveMLocalData, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.RepairStaleAuthData, Ids(plan));
+        }
+
+        var repairPlan = Build(
+            OptimizationProfile.Aggressive,
+            new OptimizationOptionsDto
+            {
+                TerminateStuckFiveMProcess = true,
+                RecreateFiveMLocalData = true,
+                RepairStaleAuthData = true
+            });
+
+        Assert.Contains(OptimizationActionIds.TerminateStuckFiveMProcess, Ids(repairPlan));
+        Assert.Contains(OptimizationActionIds.RecreateFiveMLocalData, Ids(repairPlan));
+        Assert.Contains(OptimizationActionIds.RepairStaleAuthData, Ids(repairPlan));
+        Assert.Contains(repairPlan.Notices, notice =>
+            notice.Code == "stuck-process-termination-loses-unsaved-state");
+        Assert.Contains(repairPlan.Notices, notice =>
+            notice.Code == "local-data-recreation-is-a-repair-not-daily-optimization");
+        Assert.Contains(repairPlan.Notices, notice =>
+            notice.Code == "auth-data-repair-requires-detected-error-pattern");
+    }
+
+    [Fact]
+    public void GraphicsPresetsAndDisplayPreferences_AreOptInAndNeverPartOfAnyDefaultProfile()
+    {
+        var light = Build(OptimizationProfile.Light);
+        var balanced = Build(OptimizationProfile.Balanced);
+        var aggressive = Build(OptimizationProfile.Aggressive);
+
+        foreach (var plan in new[] { light, balanced, aggressive })
+        {
+            Assert.DoesNotContain(OptimizationActionIds.ApplyQualityLegacyGraphics, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ApplyQualityGtaVGraphics, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ApplyLegacyDisplayPreferences, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ApplyGtaVDisplayPreferences, Ids(plan));
+        }
+
+        var enabledPlan = Build(
+            OptimizationProfile.Aggressive,
+            new OptimizationOptionsDto
+            {
+                ApplyQualityGraphicsPreset = true,
+                ApplyDisplayPreferences = true
+            });
+
+        Assert.Contains(OptimizationActionIds.ApplyQualityLegacyGraphics, Ids(enabledPlan));
+        Assert.Contains(OptimizationActionIds.ApplyQualityGtaVGraphics, Ids(enabledPlan));
+        Assert.Contains(OptimizationActionIds.ApplyLegacyDisplayPreferences, Ids(enabledPlan));
+        Assert.Contains(OptimizationActionIds.ApplyGtaVDisplayPreferences, Ids(enabledPlan));
+        Assert.Contains(enabledPlan.Notices, notice => notice.Code == "quality-preset-may-reduce-fps");
+        Assert.Contains(enabledPlan.Notices, notice => notice.Code == "display-preferences-do-not-change-resolution");
+    }
+
+    [Fact]
+    public void GtaVLaunchParameters_AreOptInAndNeverPartOfAnyDefaultProfile()
+    {
+        var light = Build(OptimizationProfile.Light);
+        var balanced = Build(OptimizationProfile.Balanced);
+        var aggressive = Build(OptimizationProfile.Aggressive);
+
+        foreach (var plan in new[] { light, balanced, aggressive })
+        {
+            Assert.DoesNotContain(OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ApplyGtaVDisplayLaunchParameters, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ApplyGtaVRepairLaunchParameters, Ids(plan));
+        }
+
+        var enabledPlan = Build(
+            OptimizationProfile.Aggressive,
+            new OptimizationOptionsDto
+            {
+                ApplyGtaVGraphicsLaunchParameters = true,
+                ApplyGtaVDisplayLaunchParameters = true,
+                ApplyGtaVRepairLaunchParameters = true,
+                UseGtaVSafeMode = true
+            });
+
+        Assert.Contains(OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters, Ids(enabledPlan));
+        Assert.Contains(OptimizationActionIds.ApplyGtaVDisplayLaunchParameters, Ids(enabledPlan));
+        Assert.Contains(OptimizationActionIds.ApplyGtaVRepairLaunchParameters, Ids(enabledPlan));
+        Assert.Contains(enabledPlan.Notices, notice => notice.Code == "gtav-repair-launch-parameters-are-temporary");
+        Assert.Contains(enabledPlan.Notices, notice => notice.Code == "gtav-launch-parameters-do-not-affect-fivem");
+    }
+
+    [Fact]
     public void DisabledOptions_RemoveTheirActionsButKeepSafetyPreflight()
     {
         var options = new OptimizationOptionsDto
@@ -112,7 +235,40 @@ public sealed class PlanBuilderTests
         var plan = Build(OptimizationProfile.Aggressive, options);
 
         Assert.True(plan.IsExecutable);
-        Assert.Equal([OptimizationActionIds.VerifyFiveMIsStopped], Ids(plan));
+        // Segurança e diagnósticos somente leitura sempre permanecem (ActionOptionGate.Always);
+        // não são tweaks desativáveis, pois não alteram nada e não têm custo.
+        Assert.Equal(
+            [
+                OptimizationActionIds.VerifyFiveMIsStopped,
+                OptimizationActionIds.DiagnoseBottleneck,
+                OptimizationActionIds.DetectOverlaysAndCaptureSoftware,
+                OptimizationActionIds.ReadFiveMLegacyLogs,
+                OptimizationActionIds.GuidePerformanceDiagnostics,
+                OptimizationActionIds.DiagnoseNetworkHealth,
+                OptimizationActionIds.DiagnoseThermalThrottling,
+                OptimizationActionIds.DiagnosePagefileCommit,
+                OptimizationActionIds.DiagnoseCacheIntegrity,
+                OptimizationActionIds.DetectGpuVendor,
+                OptimizationActionIds.DiagnoseCpuDetails,
+                OptimizationActionIds.DiagnoseGpuDetails,
+                OptimizationActionIds.DiagnoseRamDetails,
+                OptimizationActionIds.DiagnoseStorageHealth,
+                OptimizationActionIds.DiagnoseDriverVersions,
+                OptimizationActionIds.DiagnoseDisplayConfiguration,
+                OptimizationActionIds.DiagnoseSessionSettings,
+                OptimizationActionIds.DiagnoseThrottlingSignal,
+                OptimizationActionIds.DiagnoseResourceUsage,
+                OptimizationActionIds.DiagnosePciLink,
+                OptimizationActionIds.DiagnoseHardwareStability,
+                OptimizationActionIds.ClassifyBottleneck,
+                OptimizationActionIds.DiagnoseCacheStorage,
+                OptimizationActionIds.DiagnoseInstallationHealth,
+                OptimizationActionIds.DiagnoseCrashPatterns,
+                OptimizationActionIds.RecommendGraphicsPreset,
+                OptimizationActionIds.DiagnoseTextureVramFit,
+                OptimizationActionIds.DiagnoseGtaVLaunchParameters
+            ],
+            Ids(plan));
         Assert.False(plan.RequiresElevation);
         Assert.False(plan.ContainsNonReversibleActions);
         Assert.Equal(ActionRisk.Informational, plan.MaximumRisk);

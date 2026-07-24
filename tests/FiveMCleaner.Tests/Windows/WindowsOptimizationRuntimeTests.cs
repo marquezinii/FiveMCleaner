@@ -107,7 +107,23 @@ public sealed class WindowsOptimizationRuntimeTests
             VisualEffects = new FakeVisualEffectsController(),
             PowerPlans = new FakePowerPlanController(),
             PowerStatus = new FakePowerStatusProvider(),
-            JournalStore = journals
+            JournalStore = journals,
+            SystemResources = new FakeSystemResourceInspector(),
+            OverlaySoftware = new FakeOverlaySoftwareInspector(),
+            NetworkHealth = new FakeNetworkHealthInspector(),
+            Thermal = new FakeThermalInspector(),
+            GpuVendor = new FakeGpuVendorInspector(),
+            Cpu = new FakeCpuInspector(),
+            GpuDetails = new FakeGpuDetailsInspector(),
+            RamDetails = new FakeRamDetailsInspector(),
+            StorageHealth = new FakeStorageHealthInspector(),
+            DriverVersions = new FakeDriverVersionInspector(),
+            DisplayConfiguration = new FakeDisplayConfigurationInspector(),
+            ResourceUsage = new FakeResourceUsageInspector(),
+            PciLink = new FakePciLinkInspector(),
+            HardwareStability = new FakeHardwareStabilityInspector(),
+            BackgroundProcess = new FakeBackgroundProcessInspector(),
+            StuckProcess = new FakeStuckFiveMProcessInspector()
         };
 
         Assert.Throws<InvalidOperationException>(() =>

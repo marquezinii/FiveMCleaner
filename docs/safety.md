@@ -30,12 +30,65 @@ O projeto não aceita implementações que:
 - executem PowerShell, CMD ou scripts remotos arbitrários por meio do broker;
 - apliquem prioridade `Realtime`, afinidade fixa ou desliguem SMT/Hyper-Threading;
 - usem “debloat” genérico, removam AppX em massa ou desativem serviços sem relação comprovada;
-- editem `commandline.txt` como otimização do FiveM;
+- editem `commandline.txt` como otimização do FiveM (o FiveM bloqueia
+  explicitamente a leitura desse arquivo do GTA — ver `docs/research.md`
+  e `BlockLoadSetters.cpp` do próprio FiveM —, então isso nunca teria
+  efeito real; a única exceção é o `commandline.txt` do **GTA V Legacy
+  standalone**, gerenciado por `GtaVLaunchParametersActions.cs`, nunca
+  como caminho de otimização do FiveM);
 - sobrescrevam perfil NVIDIA ou ativem/limpem shader cache à força;
 - removam dados de autenticação, entitlement, plugins ou configurações em perfis automáticos;
 - escondam ações, usem ofuscação ou baixem código executável depois da instalação;
 - contornem anti-cheat, pure mode ou verificações de integridade;
 - operem em FiveM/GTAV Enhanced enquanto esse adaptador estiver bloqueado.
+
+## Escopo de edição gráfica
+
+`LegacyGraphicsPresetAction` e `DisplayPreferencesAction` só escrevem opções
+já existentes nos arquivos gráficos do FiveM/GTA V Legacy (nunca criam nós
+novos) e sempre com backup, hash de verificação e rollback. Dentro desse
+modelo:
+
+- os presets Leve/Equilibrado/Agressivo só **reduzem** valores existentes
+  (`GraphicsPresetDirection.LowerOnly`); o preset de Qualidade, opt-in e
+  nunca automático, é a única exceção que **eleva** valores, até um teto
+  conservador documentado no próprio catálogo;
+- `DisplayPreferencesAction` só escreve `Windowed`/`VSync` (modo de janela e
+  VSync), preservando o formato original do valor (`"true"/"false"` ou
+  `"0"/"1"`, conforme o que já estava no arquivo);
+- resolução, taxa de atualização, adaptador de vídeo, proporção de tela,
+  limite de FPS, escala de resolução e versão do DirectX **não são
+  ajustados automaticamente** por nenhuma ação: escolher uma resolução ou
+  taxa de atualização não suportada pelo monitor pode deixar a tela preta
+  ou o jogo num estado inválido, e o produto não valida ainda essas
+  combinações contra os modos realmente suportados pelo monitor. Ver
+  `PROJECT_STATE.md` para o registro dessa decisão e do que ficou de fora
+  nesta etapa.
+
+## Parâmetros de inicialização do GTA V standalone
+
+`GtaVLaunchParametersActions.cs` gerencia o `commandline.txt` do GTA V
+Legacy **standalone**, nunca do FiveM (ver exceção documentada acima em
+"Ações proibidas"). Regras específicas:
+
+- só toca em linhas cujo parâmetro pertence a um conjunto allowlisted por
+  ação (`GtaVCommandLineFile.Merge`); qualquer outra linha do arquivo,
+  incluindo parâmetros que o produto não conhece, é preservada exatamente
+  como estava;
+- `-width`/`-height`/`-RefreshRate`/`-scOfflineOnly` e demais parâmetros de
+  resolução/adaptador **não são gerenciados**, pela mesma razão da seção
+  acima (risco de escolher um modo não suportado pelo monitor);
+- `-disableHyperthreading` foi avaliado e **deliberadamente não
+  implementado**: desligar SMT/Hyper-Threading já é uma proibição explícita
+  deste documento ("Ações proibidas"), e a lista de parâmetros pedida não
+  altera esse invariante só porque vem de um parâmetro oficial do jogo;
+- `-safemode`, `-useMinimumSettings` e `-UseAutoSettings` são tratados como
+  reparo temporário: a própria ação (`GtaVRepairLaunchParametersAction`) e
+  o aviso do plano (`gtav-repair-launch-parameters-are-temporary`) deixam
+  explícito que devem ser revertidos após o diagnóstico, nunca deixados
+  ativos permanentemente;
+- toda escrita usa backup + restauração exata via rollback da transação,
+  igual ao padrão já usado pelas ações gráficas.
 
 ## Proteção de caminhos
 
@@ -55,17 +108,59 @@ O projeto não aceita implementações que:
 
 Configurações podem ser editadas por uma ação tipada, mas nunca tratadas como lixo.
 
+#### Exceção documentada: reparo de dados de entitlement
+
+`ros_id.dat` e `%LOCALAPPDATA%\DigitalEntitlements` continuam proibidos de
+remoção automática em qualquer perfil (Leve/Médio/Agressivo). A única
+exceção é a ação opt-in `fivem.legacy.auth-data.repair`
+(`StaleAuthDataRepairAction`), que só existe para o cenário específico de
+falha de inicialização por entitlement corrompido, e que respeita todas as
+condições abaixo simultaneamente:
+
+- nunca faz parte de nenhum perfil automático (`ActionOptionGate` próprio,
+  desligado por padrão; precisa ser habilitado explicitamente fora dos
+  perfis padrão);
+- só toca em algum arquivo depois de detectar, no log mais recente do
+  FiveM, um padrão textual já conhecido de erro de entitlement/autenticação
+  — caso contrário, a ação não faz nada e informa isso;
+- move os itens para quarentena em vez de apagar diretamente, preservando a
+  reversibilidade até a confirmação final da transação, igual ao padrão já
+  usado para `server-cache`/`server-cache-priv`;
+- exige que o FiveM esteja fechado, como qualquer outra limpeza condicionada.
+
 ### Limpeza condicionada
 
-| Alvo                                | Condição                                         | Aviso obrigatório                                           |
-| ----------------------------------- | ------------------------------------------------ | ----------------------------------------------------------- |
-| `data\server-cache`                 | FiveM encerrado; usuário abriu manutenção/reparo | recursos serão baixados novamente                           |
-| `data\server-cache-priv`            | mesmas condições                                 | clipes antigos do Rockstar Editor podem deixar de funcionar |
-| `crashes`                           | dumps não serão enviados ao suporte              | dumps podem ser essenciais para diagnóstico                 |
-| `logs`                              | somente arquivos antigos e reconhecidos          | logs recentes devem ser preservados                         |
-| `content_index.xml` ou `caches.xml` | erro de integridade/componente correspondente    | FiveM fará nova verificação/download                        |
+| Alvo                                                                     | Condição                                                                          | Aviso obrigatório                                                    |
+| -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `data\server-cache`                                                      | FiveM encerrado; usuário abriu manutenção/reparo                                  | recursos serão baixados novamente                                    |
+| `data\server-cache-priv`                                                 | mesmas condições                                                                   | clipes antigos do Rockstar Editor podem deixar de funcionar          |
+| `crashes`                                                                 | dumps não serão enviados ao suporte                                                | dumps podem ser essenciais para diagnóstico                          |
+| `logs`                                                                    | somente arquivos antigos e reconhecidos                                            | logs recentes devem ser preservados                                  |
+| `content_index.xml` ou `caches.xml`                                       | erro de integridade/componente correspondente                                      | FiveM fará nova verificação/download                                 |
+| `server-cache`+`server-cache-priv`+`logs`+`crashes` (recriação completa)  | FiveM encerrado; ação opt-in `fivem.legacy.local-data.recreate`, nunca automática   | reparo, não otimização diária; primeiro carregamento fica mais lento |
+| `ros_id.dat` + `DigitalEntitlements`                                      | FiveM encerrado; padrão de erro de entitlement detectado no log; ação opt-in       | exigirá novo login no próximo início do FiveM                        |
 
 A limpeza de cache não entra implicitamente nos modos Leve, Médio ou Agressivo.
+
+### Encerramento de processo travado
+
+A ação opt-in `fivem.legacy.stuck-process.terminate`
+(`StuckProcessTerminationAction`) é a única capacidade do produto que
+encerra um processo, e só o faz sob todas as condições abaixo:
+
+- o processo alvo precisa ter a imagem executável dentro da pasta de
+  instalação do FiveM (mesma verificação usada por `IFiveMProcessInspector`);
+  nunca um processo de terceiros, do GTA V ou do sistema;
+- o processo precisa estar comprovadamente sem resposta (`Process.
+  Responding == false`) no momento da leitura; um processo respondendo
+  normalmente nunca é encerrado;
+- nunca faz parte de nenhum perfil automático — é opt-in, desligado por
+  padrão, e existe apenas para desbloquear uma limpeza de cache impedida por
+  uma instância travada.
+
+Isso não é uma exceção às proibições de "afinidade fixa/prioridade
+Realtime/SMT" nem de manipulação de outros processos: o escopo é
+estritamente o próprio processo do FiveM, nunca outro.
 
 ## Ciclo transacional
 
@@ -198,6 +293,13 @@ O diagnóstico permanece local por padrão. Relatórios exportados devem:
 - indicar que ETW e dumps podem conter dados sensíveis.
 
 O formulário de bug é uma exceção explícita ao processamento apenas local: depois do clique em **Enviar**, os campos autorizados e a imagem opcional são encaminhados ao serviço externo FormSubmit. O app não envia esse conteúdo em segundo plano, não repete automaticamente uma falha e oferece cópia local do texto. Consulte [Relatos de bug e privacidade](bug-reports.md) antes de usar o canal.
+
+A telemetria técnica é uma exceção separada e estritamente opt-in: ela começa
+desativada e só transmite categorias allowlisted de erro, duração de uma
+otimização e versão do aplicativo. Ela não lê nem envia logs, arquivos,
+documentos, histórico, caminhos, hardware ou dados pessoais. A especificação,
+o provedor e o limite de metadados de transporte estão documentados em
+[Telemetria opcional](telemetry.md).
 
 O relatório técnico do otimizador (botão "Copiar relatório técnico" ao final
 de uma execução) segue a mesma política: `ReportSanitizer` substitui

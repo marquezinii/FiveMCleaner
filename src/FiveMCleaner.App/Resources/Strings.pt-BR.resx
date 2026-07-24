@@ -81,7 +81,7 @@
   <data name="About.Title" xml:space="preserve"><value>Sobre o FiveMCleaner</value></data>
   <data name="About.VersionDeveloper" xml:space="preserve"><value>Versão {0}  •  Desenvolvido por Felipe Marquezini</value></data>
   <data name="About.Copyright" xml:space="preserve"><value>© 2026 Felipe Marquezini. Todos os direitos reservados.</value></data>
-  <data name="About.License" xml:space="preserve"><value>Código-fonte sob licença MIT. Projeto independente, sem afiliação com Cfx.re, Rockstar Games ou Microsoft.</value></data>
+  <data name="About.License" xml:space="preserve"><value>Código-fonte disponibilizado sob a Licença Source-Available do FiveMCleaner. Projeto independente, sem afiliação com Cfx.re, Rockstar Games ou Microsoft.</value></data>
   <data name="About.OpenGitHub" xml:space="preserve"><value>Abrir GitHub</value></data>
   <data name="Sidebar.Version" xml:space="preserve"><value>VERSÃO</value></data>
   <data name="BugReport.WindowTitle" xml:space="preserve"><value>Relatar um bug — FiveMCleaner</value></data>
@@ -191,6 +191,13 @@
   <data name="Dialog.Rollback.Title" xml:space="preserve"><value>Desfazer otimização</value></data>
   <data name="Dialog.CancelRunning.Message" xml:space="preserve"><value>Uma otimização está em andamento. Deseja solicitar o cancelamento seguro após a etapa atual?</value></data>
   <data name="Dialog.CancelRunning.Title" xml:space="preserve"><value>FiveMCleaner em execução</value></data>
+  <data name="Dialog.CancelOptimization.Title" xml:space="preserve"><value>Cancelar otimização?</value></data>
+  <data name="Dialog.CancelOptimization.Message" xml:space="preserve"><value>O FiveMCleaner concluirá ou reverterá com segurança a etapa atual antes de interromper o plano. Deseja solicitar o cancelamento?</value></data>
+  <data name="Dialog.CancelOptimization.Confirm" xml:space="preserve"><value>Cancelar otimização</value></data>
+  <data name="Dialog.CloseOptimization.Title" xml:space="preserve"><value>Otimização em andamento</value></data>
+  <data name="Dialog.CloseOptimization.Message" xml:space="preserve"><value>Para fechar o FiveMCleaner, a otimização será cancelada com segurança após a etapa atual. O aplicativo permanecerá aberto até essa confirmação.</value></data>
+  <data name="Dialog.CloseOptimization.Confirm" xml:space="preserve"><value>Cancelar e fechar</value></data>
+  <data name="Dialog.OptimizationInterruption.KeepWorking" xml:space="preserve"><value>Continuar otimizando</value></data>
   <data name="BugReport.Attachment.DialogTitle" xml:space="preserve"><value>Selecionar imagem do problema</value></data>
   <data name="BugReport.Attachment.Filter" xml:space="preserve"><value>Imagens PNG ou JPEG|*.png;*.jpg;*.jpeg</value></data>
   <data name="BugReport.Attachment.Ready" xml:space="preserve"><value>Imagem pronta e sanitizada • {0}</value></data>
@@ -237,6 +244,10 @@
   <data name="Log.RollbackFailed" xml:space="preserve"><value>Falha segura no rollback: {0}</value></data>
   <data name="Log.SettingsSaveFailed" xml:space="preserve"><value>Não foi possível salvar as configurações agora.</value></data>
   <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Ao clicar no X, o FiveMCleaner passará a ser minimizado para a bandeja do sistema em vez de ser fechado.</value></data>
+  <data name="Settings.Telemetry.Title" xml:space="preserve"><value>Ajude a melhorar o FiveMCleaner</value></data>
+  <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Envie telemetria técnica anonimizada, somente se você quiser.</value></data>
+  <data name="Settings.Telemetry.Sends" xml:space="preserve"><value>✓ Envia: erros categorizados, tempo de execução e versão.</value></data>
+  <data name="Settings.Telemetry.NeverSends" xml:space="preserve"><value>✕ Nunca envia: arquivos, documentos, histórico ou dados pessoais.</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>O FiveMCleaner encontrou um erro inesperado. Nenhuma nova alteração será aplicada.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>ações verificadas</value></data>
@@ -301,12 +312,72 @@
   <data name="Actions.safety.fivem-stopped.verify.Description" xml:space="preserve"><value>Confirma que os processos do FiveM estão encerrados antes de qualquer alteração em cache ou gráficos.</value></data>
   <data name="Actions.safety.gtav-stopped.verify.Name" xml:space="preserve"><value>Verificar estado do GTA V</value></data>
   <data name="Actions.safety.gtav-stopped.verify.Description" xml:space="preserve"><value>Confirma que o GTA V Legacy está fechado antes de qualquer alteração no settings.xml dele.</value></data>
+  <data name="Actions.safety.bottleneck.diagnose.Name" xml:space="preserve"><value>Diagnosticar gargalo provável</value></data>
+  <data name="Actions.safety.bottleneck.diagnose.Description" xml:space="preserve"><value>Analisa memória disponível, processadores lógicos e espaço livre em disco para apontar o recurso mais limitante, sem alterar nada.</value></data>
+  <data name="Actions.windows.gaming.overlays.detect.Name" xml:space="preserve"><value>Detectar overlays e captura em segundo plano</value></data>
+  <data name="Actions.windows.gaming.overlays.detect.Description" xml:space="preserve"><value>Verifica a presença de overlays e softwares de captura de terceiros conhecidos (NVIDIA, RTSS, Discord, Xbox Game Bar) em execução, sem fechá-los.</value></data>
+  <data name="Actions.fivem.legacy.logs.read.Name" xml:space="preserve"><value>Ler log recente do FiveM</value></data>
+  <data name="Actions.fivem.legacy.logs.read.Description" xml:space="preserve"><value>Localiza o log mais recente do FiveM Legacy e resume sua idade e ocorrências de possíveis erros, sem modificar nada.</value></data>
+  <data name="Actions.safety.performance-diagnostics.guide.Name" xml:space="preserve"><value>Orientar diagnóstico de desempenho</value></data>
+  <data name="Actions.safety.performance-diagnostics.guide.Description" xml:space="preserve"><value>Aponta os comandos oficiais do FiveM (cl_drawfps, cl_drawperf, netgraph) para medir FPS e rede dentro do próprio jogo.</value></data>
+  <data name="Actions.safety.network-health.diagnose.Name" xml:space="preserve"><value>Diagnosticar saúde da rede local</value></data>
+  <data name="Actions.safety.network-health.diagnose.Description" xml:space="preserve"><value>Lê contadores de pacotes descartados e com erro das placas de rede ativas, sem enviar tráfego a nenhum servidor.</value></data>
+  <data name="Actions.safety.thermal.diagnose.Name" xml:space="preserve"><value>Diagnosticar temperatura e throttling</value></data>
+  <data name="Actions.safety.thermal.diagnose.Description" xml:space="preserve"><value>Tenta ler a zona térmica ACPI exposta pelo Windows; a maioria das placas-mãe não expõe esse dado sem software do fabricante, e isso é informado com honestidade.</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.Name" xml:space="preserve"><value>Diagnosticar pagefile e memória committed</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.Description" xml:space="preserve"><value>Lê o tamanho total e disponível do arquivo de paginação para avisar quando o sistema está perto do limite de commit, sem redimensionar nada.</value></data>
+  <data name="Actions.fivem.legacy.cache-integrity.diagnose.Name" xml:space="preserve"><value>Diagnosticar integridade do índice de cache</value></data>
+  <data name="Actions.fivem.legacy.cache-integrity.diagnose.Description" xml:space="preserve"><value>Verifica se o índice de cache do FiveM (content_index.xml) existe e está bem formado, recomendando o reparo já existente quando necessário.</value></data>
+  <data name="Actions.windows.gaming.gpu-vendor.detect.Name" xml:space="preserve"><value>Detectar fabricante da GPU</value></data>
+  <data name="Actions.windows.gaming.gpu-vendor.detect.Description" xml:space="preserve"><value>Identifica o fabricante (NVIDIA, AMD ou Intel) das GPUs detectadas e aponta para o painel oficial do fabricante, sem escrever nenhum perfil de driver.</value></data>
+  <data name="Actions.safety.cpu-details.diagnose.Name" xml:space="preserve"><value>Diagnosticar núcleos, threads e frequência da CPU</value></data>
+  <data name="Actions.safety.cpu-details.diagnose.Description" xml:space="preserve"><value>Lê a quantidade de núcleos físicos, threads lógicas e a frequência atual/máxima da CPU via WMI padrão.</value></data>
+  <data name="Actions.windows.gaming.gpu-details.diagnose.Name" xml:space="preserve"><value>Diagnosticar VRAM e tipo da GPU</value></data>
+  <data name="Actions.windows.gaming.gpu-details.diagnose.Description" xml:space="preserve"><value>Lê a VRAM reportada pelo driver e estima se cada GPU detectada é integrada ou dedicada, sem escrever nenhum perfil.</value></data>
+  <data name="Actions.safety.ram-details.diagnose.Name" xml:space="preserve"><value>Diagnosticar frequência, canais e XMP/EXPO da RAM</value></data>
+  <data name="Actions.safety.ram-details.diagnose.Description" xml:space="preserve"><value>Lê a frequência configurada e nominal de cada módulo de RAM, estimando single-channel e se XMP/EXPO parece desativado.</value></data>
+  <data name="Actions.fivem.legacy.storage-health.diagnose.Name" xml:space="preserve"><value>Diagnosticar tipo e saúde das unidades</value></data>
+  <data name="Actions.fivem.legacy.storage-health.diagnose.Description" xml:space="preserve"><value>Identifica HDD, SSD ou NVMe de cada unidade física e lê o status de saúde preditiva (SMART/NVMe Health), sem reparar nada.</value></data>
+  <data name="Actions.windows.system.driver-versions.diagnose.Name" xml:space="preserve"><value>Diagnosticar build do Windows e versões de driver</value></data>
+  <data name="Actions.windows.system.driver-versions.diagnose.Description" xml:space="preserve"><value>Lê o build exato do Windows e as versões dos drivers de vídeo, rede, áudio e chipset (quando identificável).</value></data>
+  <data name="Actions.windows.gaming.display-configuration.diagnose.Name" xml:space="preserve"><value>Diagnosticar resolução, taxa de atualização e HAGS</value></data>
+  <data name="Actions.windows.gaming.display-configuration.diagnose.Description" xml:space="preserve"><value>Compara a taxa de atualização configurada com a máxima suportada na resolução atual e lê o estado do HAGS.</value></data>
+  <data name="Actions.windows.gaming.session-settings.diagnose.Name" xml:space="preserve"><value>Diagnosticar Modo de Jogo, tela cheia e plano de energia</value></data>
+  <data name="Actions.windows.gaming.session-settings.diagnose.Description" xml:space="preserve"><value>Lê o estado atual do Modo de Jogo, das otimizações para tela cheia e do plano de energia ativo, sem alterar nada.</value></data>
+  <data name="Actions.safety.throttling-signal.diagnose.Name" xml:space="preserve"><value>Diagnosticar sinais combinados de throttling</value></data>
+  <data name="Actions.safety.throttling-signal.diagnose.Description" xml:space="preserve"><value>Combina queda de frequência sob carga, eventos de erro de hardware (WHEA) e temperatura disponível para indicar "possível throttling", sem sensor direto por núcleo.</value></data>
+  <data name="Actions.safety.resource-usage.diagnose.Name" xml:space="preserve"><value>Diagnosticar uso atual de CPU, disco, GPU e rede</value></data>
+  <data name="Actions.safety.resource-usage.diagnose.Description" xml:space="preserve"><value>Faz uma leitura instantânea (não uma média) do uso de CPU, disco, GPU (quando disponível) e throughput de rede.</value></data>
+  <data name="Actions.windows.gaming.pcie-link.diagnose.Name" xml:space="preserve"><value>Diagnosticar link PCIe da GPU</value></data>
+  <data name="Actions.windows.gaming.pcie-link.diagnose.Description" xml:space="preserve"><value>Tenta ler a largura e velocidade atual/máxima do link PCIe de cada GPU via propriedades de dispositivo do Windows, sem driver de terceiros.</value></data>
+  <data name="Actions.safety.hardware-stability.diagnose.Name" xml:space="preserve"><value>Diagnosticar idade da BIOS e estabilidade de hardware</value></data>
+  <data name="Actions.safety.hardware-stability.diagnose.Description" xml:space="preserve"><value>Lê a data de lançamento da BIOS e eventos recentes de erro de hardware (WHEA) no Log de Eventos do Windows.</value></data>
+  <data name="Actions.safety.bottleneck-classification.diagnose.Name" xml:space="preserve"><value>Classificar tipo provável de gargalo</value></data>
+  <data name="Actions.safety.bottleneck-classification.diagnose.Description" xml:space="preserve"><value>Combina uso de CPU/GPU/disco/rede, memória, temperatura e o processo que mais consome CPU para apontar o recurso mais provavelmente limitante no momento.</value></data>
+  <data name="Actions.gtav.legacy.launch-parameters.diagnose.Name" xml:space="preserve"><value>Diagnosticar parâmetros de inicialização do GTA V</value></data>
+  <data name="Actions.gtav.legacy.launch-parameters.diagnose.Description" xml:space="preserve"><value>Lê o commandline.txt do GTA V Legacy standalone (nunca do FiveM, que ignora esse arquivo) e avisa quando parâmetros de reparo ficaram ativos permanentemente.</value></data>
+  <data name="Actions.safety.graphics-preset-recommendation.diagnose.Name" xml:space="preserve"><value>Recomendar preset gráfico</value></data>
+  <data name="Actions.safety.graphics-preset-recommendation.diagnose.Description" xml:space="preserve"><value>Analisa GPU, VRAM, CPU, RAM e a taxa de atualização do monitor para sugerir qual preset gráfico (FPS, Equilibrado ou Qualidade) combina melhor com o hardware, sem aplicar nada sozinho.</value></data>
+  <data name="Actions.windows.gaming.texture-vram-fit.diagnose.Name" xml:space="preserve"><value>Diagnosticar textura configurada vs. VRAM disponível</value></data>
+  <data name="Actions.windows.gaming.texture-vram-fit.diagnose.Description" xml:space="preserve"><value>Compara a qualidade de textura configurada no FiveM/GTA V com a VRAM detectada da GPU e avisa quando a configuração provavelmente excede a VRAM disponível.</value></data>
+  <data name="Actions.fivem.legacy.cache-storage.diagnose.Name" xml:space="preserve"><value>Diagnosticar tamanho e integridade do cache do FiveM</value></data>
+  <data name="Actions.fivem.legacy.cache-storage.diagnose.Description" xml:space="preserve"><value>Mede o tamanho total e por categoria do cache do FiveM Legacy (server-cache, server-cache-priv, NUI storage, logs, diagnósticos) e sinaliza arquivos bloqueados por outro processo, sem apagar nada.</value></data>
+  <data name="Actions.fivem.legacy.installation-health.diagnose.Name" xml:space="preserve"><value>Diagnosticar saúde da instalação do FiveM</value></data>
+  <data name="Actions.fivem.legacy.installation-health.diagnose.Description" xml:space="preserve"><value>Verifica instalações duplicadas, permissão de escrita na pasta de dados, sincronização por OneDrive e espaço livre em disco, sem alterar nada.</value></data>
+  <data name="Actions.fivem.legacy.crash-patterns.diagnose.Name" xml:space="preserve"><value>Diagnosticar padrões recorrentes de erro e streaming</value></data>
+  <data name="Actions.fivem.legacy.crash-patterns.diagnose.Description" xml:space="preserve"><value>Procura códigos de erro reconhecíveis nos nomes dos crash dumps recentes e palavras-chave de erro de streaming (texturas, modelos, mapas) no log mais recente, sem apagar nada.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Name" xml:space="preserve"><value>Limpar temporários antigos</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Remove somente arquivos temporários do usuário mais antigos que o período de retenção escolhido pelo perfil.</value></data>
   <data name="Actions.fivem.legacy.crash-dumps.prune.Name" xml:space="preserve"><value>Remover diagnósticos antigos</value></data>
   <data name="Actions.fivem.legacy.crash-dumps.prune.Description" xml:space="preserve"><value>Remove dumps e logs antigos do FiveM Legacy, preservando diagnósticos recentes.</value></data>
   <data name="Actions.fivem.legacy.server-cache.repair.Name" xml:space="preserve"><value>Reparar cache de servidores</value></data>
   <data name="Actions.fivem.legacy.server-cache.repair.Description" xml:space="preserve"><value>Remove somente caches regeneráveis de conteúdo de servidores do FiveM Legacy quando um reparo é necessário.</value></data>
+  <data name="Actions.fivem.legacy.stuck-process.terminate.Name" xml:space="preserve"><value>Encerrar processo travado do FiveM</value></data>
+  <data name="Actions.fivem.legacy.stuck-process.terminate.Description" xml:space="preserve"><value>Encerra um processo do FiveM comprovadamente travado (não responde e mantém arquivo de cache bloqueado) para permitir a limpeza. Nunca faz parte de perfis automáticos.</value></data>
+  <data name="Actions.fivem.legacy.local-data.recreate.Name" xml:space="preserve"><value>Recriar dados locais do FiveM</value></data>
+  <data name="Actions.fivem.legacy.local-data.recreate.Description" xml:space="preserve"><value>Remove e recria as pastas de dados regeneráveis do FiveM Legacy (server-cache, server-cache-priv, logs, crashes) preservando game-storage, NUI storage, ipfs, CitizenFX.ini e plugins, com backup em quarentena.</value></data>
+  <data name="Actions.fivem.legacy.auth-data.repair.Name" xml:space="preserve"><value>Reparar dados de entitlement corrompidos</value></data>
+  <data name="Actions.fivem.legacy.auth-data.repair.Description" xml:space="preserve"><value>Remove ros_id.dat e a pasta de entitlements digitais apenas quando um padrão de erro de inicialização relacionado a entitlement é detectado no log mais recente, com backup em quarentena e confirmação a cada execução.</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.Name" xml:space="preserve"><value>Ativar Modo de Jogo</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.Description" xml:space="preserve"><value>Ativa o recurso de jogos do Windows para priorizar recursos enquanto jogos estão em execução.</value></data>
   <data name="Actions.windows.gaming.high-performance-gpu.prefer.Name" xml:space="preserve"><value>Preferir GPU de alto desempenho</value></data>
@@ -327,6 +398,20 @@
   <data name="Actions.gtav.legacy.graphics.balanced.apply.Description" xml:space="preserve"><value>Aplica limites equilibrados somente às opções existentes do settings.xml do GTA V Legacy, com backup.</value></data>
   <data name="Actions.gtav.legacy.graphics.aggressive.apply.Name" xml:space="preserve"><value>Priorizar FPS no GTA V</value></data>
   <data name="Actions.gtav.legacy.graphics.aggressive.apply.Description" xml:space="preserve"><value>Reduz opções gráficas pesadas do GTA V Legacy sem alterar resolução, modo de exibição ou adaptador.</value></data>
+  <data name="Actions.fivem.legacy.graphics.quality.apply.Name" xml:space="preserve"><value>Aplicar preset de qualidade no FiveM</value></data>
+  <data name="Actions.fivem.legacy.graphics.quality.apply.Description" xml:space="preserve"><value>Aumenta somente opções gráficas já existentes no FiveM Legacy até um teto seguro, priorizando qualidade visual sem descontrolar o 1% low. Nunca faz parte de perfis automáticos.</value></data>
+  <data name="Actions.gtav.legacy.graphics.quality.apply.Name" xml:space="preserve"><value>Aplicar preset de qualidade no GTA V</value></data>
+  <data name="Actions.gtav.legacy.graphics.quality.apply.Description" xml:space="preserve"><value>Aumenta somente opções gráficas já existentes no GTA V Legacy até um teto seguro, priorizando qualidade visual sem descontrolar o 1% low. Nunca faz parte de perfis automáticos.</value></data>
+  <data name="Actions.fivem.legacy.display-preferences.apply.Name" xml:space="preserve"><value>Ajustar janela e VSync do FiveM</value></data>
+  <data name="Actions.fivem.legacy.display-preferences.apply.Description" xml:space="preserve"><value>Define somente o modo de janela/tela cheia e o VSync do FiveM Legacy, sem tocar em resolução, adaptador de vídeo ou proporção de tela. Nunca faz parte de perfis automáticos.</value></data>
+  <data name="Actions.gtav.legacy.display-preferences.apply.Name" xml:space="preserve"><value>Ajustar janela e VSync do GTA V</value></data>
+  <data name="Actions.gtav.legacy.display-preferences.apply.Description" xml:space="preserve"><value>Define somente o modo de janela/tela cheia e o VSync do GTA V Legacy, sem tocar em resolução, adaptador de vídeo ou proporção de tela. Nunca faz parte de perfis automáticos.</value></data>
+  <data name="Actions.gtav.legacy.launch-parameters.graphics.apply.Name" xml:space="preserve"><value>Aplicar parâmetros gráficos de inicialização do GTA V</value></data>
+  <data name="Actions.gtav.legacy.launch-parameters.graphics.apply.Description" xml:space="preserve"><value>Escreve no commandline.txt do GTA V standalone os parâmetros oficiais -cityDensity, -anisotropicQualityLevel, -fxaa, -grassQuality, -lodScale e -frameLimit, preservando qualquer outra linha já existente. Nunca faz parte de perfis automáticos.</value></data>
+  <data name="Actions.gtav.legacy.launch-parameters.display.apply.Name" xml:space="preserve"><value>Aplicar parâmetros de exibição de inicialização do GTA V</value></data>
+  <data name="Actions.gtav.legacy.launch-parameters.display.apply.Description" xml:space="preserve"><value>Escreve no commandline.txt do GTA V standalone o modo de tela (-fullscreen/-windowed/-borderless) e, quando escolhida, a versão do DirectX (-DX10/-DX10_1/-DX11). Nunca altera resolução. Nunca faz parte de perfis automáticos.</value></data>
+  <data name="Actions.gtav.legacy.launch-parameters.repair.apply.Name" xml:space="preserve"><value>Aplicar parâmetros de reparo de inicialização do GTA V</value></data>
+  <data name="Actions.gtav.legacy.launch-parameters.repair.apply.Description" xml:space="preserve"><value>Escreve no commandline.txt do GTA V standalone parâmetros de reparo temporários (-safemode, -useMinimumSettings, -UseAutoSettings) para diagnosticar um problema específico. Nunca faz parte de perfis automáticos e não deve ficar ativo permanentemente.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Name" xml:space="preserve"><value>Reduzir efeitos visuais do Windows</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Description" xml:space="preserve"><value>Reduz animações e transparências, preservando legibilidade e suavização de fontes.</value></data>
   <data name="Runtime.ApplyingAction" xml:space="preserve"><value>Aplicando {0}</value></data>
@@ -457,6 +542,28 @@
   <data name="Report.RestartNeeded" xml:space="preserve"><value>Recomendamos reiniciar o Windows para aplicar totalmente as alterações.</value></data>
   <data name="Report.RestartNotNeeded" xml:space="preserve"><value>Não é necessário reiniciar.</value></data>
   <data name="Report.CopyButton" xml:space="preserve"><value>Copiar relatório técnico</value></data>
+  <data name="Comparison.Reason.NewThermalSignal" xml:space="preserve"><value>Um novo sinal de temperatura elevada apareceu, que não existia antes.</value></data>
+  <data name="Comparison.Reason.MemoryDropped" xml:space="preserve"><value>A memória disponível caiu bastante em relação a antes.</value></data>
+  <data name="Comparison.Title" xml:space="preserve"><value>Comparação antes/depois</value></data>
+  <data name="Comparison.RegressionSuspected" xml:space="preserve"><value>O resultado parece pior que antes. Isso não é uma medição de FPS — é um sinal local aproximado.</value></data>
+  <data name="Comparison.NoRegression" xml:space="preserve"><value>Nenhum sinal de piora foi detectado localmente após a otimização.</value></data>
+  <data name="Comparison.RevertButton" xml:space="preserve"><value>Reverter esta otimização</value></data>
+  <data name="Comparison.HardwareProfile" xml:space="preserve"><value>Perfil de hardware</value></data>
+  <data name="GtaVBenchmark.Title" xml:space="preserve"><value>Benchmark oficial do GTA V</value></data>
+  <data name="GtaVBenchmark.Description" xml:space="preserve"><value>Lança o GTA V standalone (nunca dentro do FiveM) com o parâmetro oficial -benchmark da Rockstar, roda 3 rodadas e mostra a mediana. O GTA V precisa estar fechado antes.</value></data>
+  <data name="GtaVBenchmark.RunButton" xml:space="preserve"><value>Executar benchmark oficial</value></data>
+  <data name="GtaVBenchmark.Running" xml:space="preserve"><value>Executando o benchmark oficial do GTA V (3 rodadas)... isso pode levar vários minutos.</value></data>
+  <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Mediana de {4} rodada(s) — FPS médio: {0:0.#}, FPS mínimo: {1:0.#}, 1% low: {2:0.#}, 0,1% low: {3:0.#}.</value></data>
+  <data name="GtaVBenchmark.Error" xml:space="preserve"><value>Não foi possível executar o benchmark oficial: {0}</value></data>
+  <data name="GtaVBenchmark.Failure.NotDetected" xml:space="preserve"><value>O GTA V não foi detectado neste computador.</value></data>
+  <data name="GtaVBenchmark.Failure.StillRunning" xml:space="preserve"><value>O GTA V ainda está em execução. Feche-o antes de executar o benchmark oficial.</value></data>
+  <data name="GtaVBenchmark.Failure.OutputNotFound" xml:space="preserve"><value>O benchmark oficial rodou, mas o arquivo de resultado não foi encontrado na pasta de perfil do GTA V.</value></data>
+  <data name="GtaVBenchmark.Failure.OutputNotRecognized" xml:space="preserve"><value>Um arquivo de resultado foi encontrado, mas seu formato não pôde ser interpretado com segurança.</value></data>
+  <data name="GtaVBenchmark.Failure.Timeout" xml:space="preserve"><value>O GTA V não encerrou dentro do tempo esperado; o benchmark foi cancelado.</value></data>
+  <data name="GtaVBenchmark.Failure.Generic" xml:space="preserve"><value>Não foi possível concluir o benchmark oficial.</value></data>
+  <data name="Report.SaveButton" xml:space="preserve"><value>Salvar relatório em arquivo</value></data>
+  <data name="Log.ReportSaved" xml:space="preserve"><value>Relatório técnico salvo em {0}.</value></data>
+  <data name="Log.ReportSaveFailed" xml:space="preserve"><value>Não foi possível salvar o relatório: {0}</value></data>
   <data name="Common.Yes" xml:space="preserve"><value>Sim</value></data>
   <data name="Common.No" xml:space="preserve"><value>Não</value></data>
   <data name="Log.ReportCopied" xml:space="preserve"><value>Relatório técnico copiado para a área de transferência.</value></data>

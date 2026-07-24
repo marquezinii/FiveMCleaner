@@ -86,8 +86,20 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   validar → registrar, uma falha reverte só a própria ação); falhas críticas
   abortam o restante com segurança e nenhum sucesso parcial é relatado como
   total. Ver `docs/safety.md` (seção "Execução isolada por ação") e
-  `docs/architecture.md`. O catálogo de ações está na versão 3
+  `docs/architecture.md`. O catálogo de ações está na versão 7
   (`ActionCatalog.CurrentVersion`).
+- Avaliação da "PRIMEIRA FASE" de adições pedida pelo usuário em 23/07/2026:
+  backup/restauração, presets do `settings.xml`, gerenciamento de cache,
+  plano de energia temporário e GPU de alto desempenho já estavam
+  implementados; gargalo, overlays/captura e leitura de log foram adicionados
+  como diagnósticos somente leitura (acima). Dois itens ficaram
+  deliberadamente de fora com a concordância do usuário: um "modo sessão" que
+  fecha/reabre aplicativos automaticamente (risco real de perda de dados em
+  apps com trabalho não salvo, e reabrir não restaura o estado interno) e um
+  benchmark de FPS embutido (exigiria overlay/hook, proibido pelo modelo de
+  segurança). Se o benchmark ou o modo sessão forem retomados, tratar como
+  nova decisão de produto com o usuário, não como extensão automática do
+  catálogo — ver `docs/safety.md` para as proibições exatas.
 - Caches e arquivos sensíveis são tratados por allowlist e condições
   explícitas. Dados de autenticação, `game-storage`, NUI storage,
   configurações e plugins não são lixo automático.
@@ -102,6 +114,19 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   confirmação explícita do usuário.
 - O formulário de bugs é opt-in: nenhum dado é enviado sem o clique do usuário.
   Imagens opcionais passam por sanitização antes do envio.
+- A telemetria técnica também é estritamente opt-in e fica desativada por
+  padrão. Após consentimento explícito, só envia por HTTPS uma allowlist de
+  tipo de término da otimização, duração, versão e categoria fixa de erro; não
+  envia logs, texto livre, caminhos, arquivos, documentos, histórico, hardware
+  ou dados pessoais. O contrato e a ressalva sobre metadados de transporte do
+  FormSubmit estão em `docs/telemetry.md`; falhas de telemetria nunca interferem
+  na otimização nem geram novas tentativas automáticas.
+- A licença do código próprio é a `FiveMCleaner Source-Available License v1.0`
+  em `LICENSE`, substituindo a MIT. Ela permite estudo, auditoria, compilação
+  para uso próprio, forks de desenvolvimento e Pull Requests, mas restringe
+  venda, redistribuição de executáveis modificados, remoção de créditos, uso da
+  marca e produtos concorrentes derivados. Licenças de dependências de terceiros
+  continuam válidas e independentes.
 
 ## Funcionalidades presentes no código atual
 
@@ -113,6 +138,148 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
 - Ações reversíveis e restritas para configurações gráficas Legacy, Game Mode,
   preferências de GPU, energia de sessão, captura em segundo plano, efeitos
   visuais e limpezas condicionadas.
+- Quatro ações de diagnóstico somente leitura, sempre presentes em todos os
+  modos (`ActionOptionGate.Always`, nunca escrevem no sistema, nunca críticas):
+  diagnóstico de gargalo provável (memória/CPU/disco), detecção de overlays e
+  captura em segundo plano de terceiros conhecidos (NVIDIA, RTSS, Discord,
+  Xbox Game Bar — apenas detecta, nunca fecha), leitura do log mais recente do
+  FiveM Legacy (contagem aproximada de possíveis erros) e orientação para
+  medir desempenho pelos comandos oficiais do próprio FiveM (`cl_drawfps`,
+  `cl_drawperf`, `netgraph`, `resmon` — orientação estendida na SEGUNDA FASE
+  para citar `resmon` e o painel de streaming) em vez de um benchmark
+  embutido — medir FPS exigiria overlay/hook, o que violaria o modelo de
+  segurança do produto.
+- Cinco ações de diagnóstico somente leitura adicionadas na SEGUNDA FASE
+  (23/07/2026), mesmo padrão `ActionOptionGate.Always`: saúde de rede local
+  (contadores de pacotes descartados/com erro da placa ativa, sem pingar
+  nenhum servidor), temperatura/throttling (leitura best-effort via WMI
+  `MSAcpi_ThermalZoneTemperature` com verificação de plausibilidade; informa
+  honestamente "não disponível" na maioria dos sistemas sem software do
+  fabricante), pagefile/commit (extensão de `SystemResourceSnapshot` com
+  `TotalPageFileBytes`/`AvailablePageFileBytes`, nunca redimensiona o
+  pagefile), integridade do índice de cache (`content_index.xml` em
+  `server-cache`/`server-cache-priv`; só alerta quando o arquivo existe e é
+  malformado, recomendando o reparo de cache já existente) e detecção de
+  fabricante de GPU (NVIDIA/AMD/Intel a partir do driver já lido no
+  diagnóstico de hardware; aponta para o painel oficial do fabricante e nunca
+  escreve/sobrescreve perfil de driver). Catálogo de ações agora na
+  versão 5 (`ActionCatalog.CurrentVersion`).
+- Onze ações de diagnóstico somente leitura adicionadas na TERCEIRA FASE
+  (23/07/2026), mesmo padrão `ActionOptionGate.Always`, sem driver de
+  kernel/terceiros (decisão explícita do usuário: nada de LibreHardwareMonitor
+  ou WinRing0): núcleos/threads/clock de CPU, VRAM e tipo integrada/dedicada
+  de GPU (heurística por nome do driver), frequência/canais/XMP-EXPO de RAM
+  (heurísticas honestas via WMI, nunca afirmadas como certeza), tipo e saúde
+  de unidades físicas (`MSFT_PhysicalDisk`, cobre SATA S.M.A.R.T. e NVMe
+  Health sem driver adicional), build do Windows e versões de driver de
+  vídeo/rede/áudio/chipset, resolução/taxa de atualização vs. máxima do
+  monitor e HAGS (G-SYNC/FreeSync/VRR explicitamente não detectáveis sem
+  ferramenta do fabricante — informado, não adivinhado), estado de Modo de
+  Jogo/otimizações de tela cheia/plano de energia ativo, um diagnóstico
+  **composto** de throttling (combina queda de frequência sob carga, eventos
+  WHEA recentes e temperatura ACPI disponível em um único sinal "possível
+  throttling", nunca confirmado por sensor direto por núcleo, exatamente
+  como o usuário pediu), uso instantâneo de CPU/disco/GPU/rede
+  (`PerformanceCounter` + categoria nativa `GPU Engine`, sem driver), link
+  PCIe da GPU (best-effort via `CM_Get_DevNode_Property`; falha segura vira
+  "não disponível", nunca dado errado) e idade da BIOS + eventos WHEA
+  recentes (Resizable BAR/Above 4G/Smart Access Memory explicitamente não
+  detectáveis sem ferramenta do fabricante). Catálogo de ações agora na
+  versão 6 (`ActionCatalog.CurrentVersion`).
+- Sistema de benchmark e comparação antes/depois (23/07/2026), com escopo
+  deliberadamente restrito à parte segura do pedido (ver decisão registrada
+  abaixo em "Avaliação do sistema de benchmark"): (1) classificador de
+  gargalo expandido nas 9 categorias pedidas (GPU/CPU/VRAM/RAM/disco/
+  servidor/rede/térmico/processo em segundo plano),
+  `BottleneckClassificationAction`, combinando os inspectors já existentes
+  mais um novo `IBackgroundProcessInspector`
+  (`Win32_PerfFormattedData_PerfProc_Process`, sem driver); "servidor
+  limitado" é sempre uma conclusão por eliminação, nunca uma medição direta
+  do servidor. (2) Comparação antes/depois: `AppOptimizationService` captura
+  um snapshot leve de recursos (CPU/GPU/disco%, memória disponível, sinal
+  térmico, problemas de rede) antes de iniciar a otimização e novamente
+  depois (com 1s de espera para a atividade da própria otimização assentar),
+  e sinaliza regressão apenas para os dois sinais atribuíveis com confiança
+  razoável: novo sinal térmico elevado que não existia antes, ou memória
+  disponível caindo à menos da metade. Quando sinalizado, a UI mostra
+  "Reverter esta otimização", que reaproveita o rollback por transação já
+  existente — nunca reverte sozinho. (3) Perfil de hardware:
+  `HardwareProfileSignature` gera uma chave SHA-256 estável e local
+  (CPU+GPUs+RAM arredondada) para agrupar comparações por máquina; nunca
+  identifica servidor do FiveM, pois não há API segura para isso. (4)
+  Benchmark oficial do GTA V: `WindowsGtaVBenchmarkRunner` lança o
+  `GTA5.exe` standalone com as flags oficiais e documentadas da Rockstar
+  (`-benchmark -benchmarkFrameTimes`), nunca dentro de uma sessão do FiveM,
+  exige o GTA V fechado antes, roda 3 rodadas e usa a mediana por FPS médio
+  (evitando misturar métricas de rodadas diferentes). Como o formato exato
+  do arquivo de resultado não é documentado de forma estável entre versões
+  do jogo, a busca é defensiva (procura por arquivos `.csv`/`.txt` criados
+  após o lançamento contendo "bench"/"frametime" no nome, tenta interpretar
+  colunas de frametime ou FPS) e falha honestamente
+  ("`benchmark-output-file-not-found`"/"`-not-recognized`") em vez de
+  inventar um resultado. Botão dedicado e opt-in em Configurações; nunca faz
+  parte do fluxo automático dos perfis Leve/Médio/Agressivo. Catálogo de
+  ações avança da versão 6 para a 7 (nova ação de classificação de
+  gargalo).
+- Relatório técnico agora também pode ser salvo em arquivo
+  (`MainViewModel.SaveTechnicalReport`, `SaveFileDialog` nativo no
+  code-behind), além de copiado para a área de transferência; usa o mesmo
+  `TechnicalReportBuilder`/`ReportSanitizer` sanitizado, e a localização do
+  arquivo é sempre escolhida explicitamente pelo usuário.
+- Avaliação da "SEGUNDA FASE" pedida pelo usuário em 23/07/2026: rede/jitter,
+  temperatura/throttling, pagefile/commit, reparo automatizado (via detecção
+  + recomendação) e diagnóstico resmon/netgraph/streaming foram adicionados
+  (acima). Relatórios compartilháveis ganharam a opção de salvar em arquivo.
+  Dois itens ficaram deliberadamente de fora com a concordância do usuário:
+  escrever perfis NVIDIA/AMD/Intel (proibido por `docs/safety.md`; apenas
+  detecção/orientação foi implementada) e benchmark por servidor (mesma
+  limitação do benchmark da Primeira Fase — exigiria overlay/hook).
+- Avaliação da "TERCEIRA FASE" pedida pelo usuário em 23/07/2026 (lista de
+  hardware/sistema com legenda ✅/👁, sem nenhum item 🟡/🧪/🔧): antes de
+  implementar, o usuário foi consultado especificamente sobre o pedido de
+  usar LibreHardwareMonitor "ou biblioteca semelhante" para temperatura, pois
+  essas bibliotecas exigem driver de kernel (WinRing0), o que
+  `docs/safety.md` proíbe explicitamente. O usuário confirmou: sem driver,
+  sem acesso a kernel, coleta best-effort por APIs nativas do Windows,
+  informando com honestidade quando um dado não está disponível, e o
+  diagnóstico de throttling deve combinar sinais indiretos (queda de clock
+  sob carga, uso, WHEA, temperatura disponível) em vez de depender de um
+  sensor direto. Todos os 27 itens da lista foram avaliados; os itens de
+  detecção pura (nenhum aplica mudança) foram implementados como as onze
+  ações descritas acima em "Funcionalidades presentes no código atual".
+  Espaço livre em disco e versão/arquitetura do Windows já existiam no
+  diagnóstico anterior e não foram duplicados.
+- Durante a implementação da TERCEIRA FASE foi corrigido um bug real de
+  marshaling em `WindowsDisplayConfigurationInspector`: o P/Invoke de
+  `EnumDisplaySettings` usava `CharSet.Auto`/`Ansi` no struct `DEVMODE`, mas
+  o Windows moderno resolve `CharSet.Auto` para a variante Unicode
+  (`EnumDisplaySettingsW`); a incompatibilidade desalinhava todos os campos
+  após `dmDeviceName` e produzia uma chamada "bem-sucedida" com resolução e
+  taxa de atualização zeradas em vez de uma falha limpa. Corrigido fixando
+  `CharSet.Unicode` de ponta a ponta (struct + `EntryPoint =
+  "EnumDisplaySettingsW"`); confirmado com dados reais da máquina de
+  desenvolvimento antes do commit.
+- Avaliação do sistema de "Benchmark e comparação antes/depois" pedido pelo
+  usuário em 23/07/2026: antes de implementar, o usuário foi consultado
+  sobre três pontos que tensionavam decisões já documentadas. (1) Captura de
+  FPS/frametime/1%-low **ao vivo dentro de uma sessão real do FiveM**
+  (diferenciando parado/dirigindo/urbano/servidor cheio) exigiria ETW
+  (reconstruir algo como o PresentMon da Microsoft) ou hook/injeção
+  (proibido); o usuário confirmou **não implementar por enquanto**, mantendo
+  a decisão já registrada nas Fases 1 e 2 — nenhum código de ETW/DXGI foi
+  escrito. (2) O parâmetro oficial `-benchmark` do GTA V (fora do FiveM,
+  sequência fixa, lê arquivo de log) foi confirmado como seguro e útil —
+  implementado como `WindowsGtaVBenchmarkRunner`. (3) "Reverter
+  automaticamente ajustes que piorarem o resultado" tensionava com o
+  princípio de "prévia completa"; o usuário confirmou **sinalizar e pedir
+  confirmação** em vez de reverter sozinho — implementado como
+  `MainViewModel.CanRevertLastOptimization`/`RevertLastOptimizationAsync`,
+  que reaproveita o rollback por transação já existente. Como consequência
+  dessas decisões, "diferenciar parado/dirigindo/urbano/servidor cheio" e
+  "salvar histórico por servidor" não foram implementados (exigiriam a
+  captura de FPS ao vivo ou uma forma segura de identificar o servidor
+  conectado, que não existe sem ler estado do FiveM); "salvar perfil por
+  hardware" foi implementado sem a dimensão "por servidor".
 - Motor de execução **isolada por ação** (`WindowsTransactionOptions.
   IsolateFailures`, usado pelo fluxo padrão do app): cada ação verifica,
   aplica, valida e registra separadamente; uma falha reverte só a própria
@@ -353,6 +520,16 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - O número exibido nesse selo usa `TextBrush`, um recurso presente em todos os
   temas. Não usar `TextPrimaryBrush`: ele não existe na paleta e faz o WPF cair
   na cor padrão preta em vez de preservar o contraste do tema escuro.
+- Durante uma otimização, o botão de cancelar e qualquer tentativa de fechar o
+  app passam pelo modal temático `OptimizationConfirmationWindow`. A recusa
+  preserva a execução; a confirmação solicita cancelamento seguro somente após
+  a etapa atual. No caso de fechamento, a janela permanece aberta até a rotina
+  encerrar e só então fecha. Logoff/desligamento do Windows continua sem modal
+  para não bloquear o sistema.
+- A lista do plano atual foi simplificada: mantém nome e descrição de cada ação,
+  mas não expõe chips internos de risco, reversibilidade, privilégio ou versão
+  do catálogo. O espaçamento do título de Configurações segue agora o padrão
+  das demais páginas.
 
 ## Publicação v1.0.2 e handoff (23/07/2026)
 
@@ -368,3 +545,423 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - O commit posterior de documentação de handoff não altera arquivos do app,
   instalador, site público ou versão. Ele é permitido pela exceção de governança
   registrada em `AI_RULES.md` e deve permanecer separado de futuras releases.
+
+## Diagnósticos somente leitura da PRIMEIRA FASE (23/07/2026)
+
+- Trabalho local, **não publicado** (sem push/tag/release desta etapa, por
+  instrução explícita do usuário). Não altera versão pública, instalador nem
+  site.
+- Avaliação completa dos 10 itens pedidos pelo usuário e decisões registradas
+  acima em "Decisões técnicas e padrões". Resumo: 5 já existiam
+  (backup/restauração transacional, presets do `settings.xml`, cache seguro,
+  plano de energia temporário, GPU de alto desempenho); 3 foram adicionados
+  como diagnósticos somente leitura sempre ativos (gargalo, overlays/captura,
+  leitura de log do FiveM), mais a orientação de comandos oficiais de FPS/rede
+  no lugar de um benchmark embutido; 1 item (modo sessão que fecha/reabre
+  apps) ficou fora por risco real de perda de dados, com a concordância do
+  usuário.
+- Novo código: `src/FiveMCleaner.Windows/Actions/DiagnosticActions.cs` (4
+  ações), `src/FiveMCleaner.Windows/Infrastructure/SystemResourceInspector.cs`
+  e `OverlaySoftwareInspector.cs` (leituras read-only atrás de interface,
+  testáveis com doubles). Catálogo de ações avançou da versão 3 para a 4.
+- Validação: `dotnet build` Release sem avisos/erros; **258 testes .NET
+  aprovados** (244 anteriores + 14 novos cobrindo classificação de gargalo,
+  degradação segura quando a leitura de hardware falha, detecção de overlays,
+  leitura/priorização do log mais recente, mensagem de orientação de FPS, e
+  as duas novas infraestruturas reais); `scripts\Verify-Safety.ps1` aprovado;
+  smoke test manual do executável (`Start-Process --demo-synthetic`, 5s, sem
+  novas entradas em `crash.log`).
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
+
+## Diagnósticos somente leitura da SEGUNDA FASE (23/07/2026)
+
+- Trabalho local, **não publicado** (sem push/tag/release desta etapa, por
+  instrução explícita do usuário). Não altera versão pública, instalador nem
+  site.
+- Avaliação completa dos 8 itens pedidos pelo usuário e decisões registradas
+  acima em "Decisões técnicas e padrões". Resumo: rede/jitter,
+  temperatura/throttling, pagefile/commit, integridade do índice de cache
+  (reparo automatizado) e a extensão de resmon/streaming à orientação de
+  performance foram adicionados como diagnósticos somente leitura; o item de
+  relatórios compartilháveis ganhou "Salvar em arquivo" além de "Copiar".
+  Dois itens ficaram deliberadamente restritos a detecção/orientação, com a
+  concordância do usuário: perfis NVIDIA/AMD/Intel (só detecta fabricante e
+  aponta para o painel oficial; nunca escreve perfil, por proibição explícita
+  de `docs/safety.md`) e benchmark por servidor (não implementado; mesma
+  limitação do benchmark da Primeira Fase).
+- Novo código: 5 ações em
+  `src/FiveMCleaner.Windows/Actions/DiagnosticActions.cs` (rede, térmica,
+  pagefile, integridade de cache, fabricante de GPU) e 3 novos inspectors em
+  `src/FiveMCleaner.Windows/Infrastructure/` (`NetworkHealthInspector.cs`,
+  `ThermalInspector.cs`, `GpuVendorInspector.cs`), todos read-only atrás de
+  interface e testáveis com doubles; `SystemResourceSnapshot` ganhou campos
+  de pagefile. Referência a `System.Management` (WMI) adicionada ao projeto
+  `FiveMCleaner.Windows`, seguindo o mesmo padrão try/fallback-honesto já
+  usado em `AppOptimizationService` para composição de módulos de RAM.
+  Catálogo de ações avançou da versão 4 para a 5.
+- App: `MainViewModel.SaveTechnicalReport` + `SaveFileDialog` nativo no
+  code-behind para exportar o relatório técnico sanitizado como arquivo,
+  complementando a cópia para a área de transferência já existente.
+- Validação: `dotnet build` Release sem avisos/erros; **277 testes .NET
+  aprovados** (258 anteriores + 19 novos cobrindo classificação de rede,
+  temperatura, pagefile, integridade de cache, detecção de fabricante de GPU
+  e as três novas infraestruturas reais); `scripts\Verify-Safety.ps1`
+  aprovado; smoke test manual do executável (`Start-Process
+  --demo-synthetic`, 5s, sem novas entradas em `crash.log`).
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
+
+## Diagnósticos somente leitura da TERCEIRA FASE (23/07/2026)
+
+- Trabalho local, **não publicado** (sem push/tag/release desta etapa, por
+  instrução explícita do usuário). Não altera versão pública, instalador nem
+  site.
+- Antes de implementar, o usuário foi consultado sobre o pedido explícito de
+  LibreHardwareMonitor/biblioteca semelhante para temperatura (exige driver
+  de kernel, proibido por `docs/safety.md`). Decisão registrada acima em
+  "Avaliação da TERCEIRA FASE": sem driver, coleta best-effort por API
+  nativa do Windows, honestidade quando um dado não está disponível, e
+  throttling diagnosticado por combinação de sinais indiretos, não por
+  sensor direto.
+- Novo código: 11 ações em
+  `src/FiveMCleaner.Windows/Actions/HardwareDiagnosticActions.cs` (CPU, GPU,
+  RAM, armazenamento, drivers, monitor, sessão/energia, throttling
+  composto, uso de recursos, link PCIe, estabilidade de hardware) e 9 novos
+  inspectors em `src/FiveMCleaner.Windows/Infrastructure/`
+  (`CpuInspector.cs`, `GpuDetailsInspector.cs`, `RamDetailsInspector.cs`,
+  `StorageHealthInspector.cs`, `DriverVersionInspector.cs`,
+  `DisplayConfigurationInspector.cs`, `ResourceUsageInspector.cs`,
+  `PciLinkInspector.cs`, `HardwareStabilityInspector.cs`), todos read-only
+  atrás de interface e testáveis com doubles. O diagnóstico de GPU vendor da
+  Segunda Fase foi preservado sem alteração; VRAM/tipo integrada-dedicada
+  entraram por um inspector novo e separado para não arriscar o código já
+  testado. Pacotes adicionados ao projeto `FiveMCleaner.Windows`:
+  `System.Diagnostics.PerformanceCounter` (uso de CPU/disco/GPU). Catálogo
+  de ações avançou da versão 5 para a 6.
+- Bug real corrigido durante a implementação (não é apenas um ajuste de
+  teste): marshaling incorreto de `EnumDisplaySettings` em
+  `WindowsDisplayConfigurationInspector` retornava sucesso com todos os
+  campos zerados em vez de dados reais ou uma falha limpa. Ver detalhes
+  acima em "Decisões técnicas e padrões". Sem esse conflito de `CharSet`, a
+  leitura de resolução/taxa de atualização/HAGS estaria silenciosamente
+  quebrada em produção.
+- Limitações conhecidas e assumidas conscientemente, documentadas nas
+  mensagens do próprio app em vez de escondidas: G-SYNC/FreeSync/VRR não têm
+  API pública sem driver do fabricante; Resizable BAR/Above 4G/Smart Access
+  Memory não são detectáveis com confiança sem ferramenta do fabricante; o
+  link PCIe só é lido quando o driver/placa-mãe expõe as DEVPKEYs padrão do
+  Windows (não em toda combinação de hardware); a classificação de fabricante
+  de RAM single-channel/XMP é heurística, não uma leitura de BIOS garantida;
+  temperatura só é reportada quando a zona térmica ACPI do WMI retorna um
+  valor plausível, o que não acontece na maioria dos PCs sem software do
+  fabricante — em todos esses casos o app diz "não disponível" em vez de
+  inventar um número.
+- Validação: `dotnet build` Release sem avisos/erros; **317 testes .NET
+  aprovados** (277 anteriores + 40 novos cobrindo classificação de CPU/GPU/
+  RAM/armazenamento/drivers/monitor/sessão/throttling composto/uso de
+  recursos/link PCIe/estabilidade de hardware, mais smoke tests reais de
+  cada um dos 9 novos inspectors); `scripts\Verify-Safety.ps1` aprovado;
+  smoke test manual do executável (`Start-Process --demo-synthetic`, 6s, sem
+  novas entradas em `crash.log`).
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
+
+## Benchmark e comparação antes/depois (23/07/2026)
+
+- Trabalho local, **não publicado** (sem push/tag/release desta etapa, por
+  instrução explícita do usuário). Não altera versão pública, instalador nem
+  site.
+- Antes de implementar, o usuário foi consultado sobre três pontos que
+  tensionavam decisões já registradas (captura de FPS ao vivo, benchmark
+  oficial do GTA V, reversão automática). Decisões e justificativas completas
+  registradas acima em "Avaliação do sistema de benchmark".
+- Novo código:
+  - `src/FiveMCleaner.Windows/Infrastructure/BackgroundProcessInspector.cs` —
+    processo com maior uso de CPU, excluindo FiveM/GTA/o próprio app
+    (`Win32_PerfFormattedData_PerfProc_Process`, sem driver);
+  - `BottleneckClassificationAction` (em `HardwareDiagnosticActions.cs`) —
+    9ª ação de diagnóstico sempre presente, combina os inspectors já
+    existentes para classificar GPU/CPU/VRAM/RAM/disco/servidor/rede/
+    térmico/processo-de-fundo limitado, em ordem de prioridade;
+  - `src/FiveMCleaner.App/Services/HardwareProfileSignature.cs` — assinatura
+    SHA-256 estável de CPU+GPUs+RAM, local, nunca identifica servidor;
+  - `AppOptimizationService.TryCaptureResourceComparisonSnapshot`/
+    `BuildComparison`/`ComputeRegressionReasonKeys` — captura antes/depois e
+    regra de regressão conservadora (só sinaliza novo problema térmico ou
+    memória disponível caindo à menos da metade), nunca deriva de FPS;
+  - `MainViewModel.RevertLastOptimizationAsync`/`CanRevertLastOptimization` —
+    reaproveita o rollback por transação já existente, nunca reverte sem
+    clique do usuário;
+  - `src/FiveMCleaner.Windows/Infrastructure/GtaVBenchmarkRunner.cs` —
+    lança `GTA5.exe -benchmark -benchmarkFrameTimes` standalone (nunca
+    dentro do FiveM), exige GTA V fechado, roda N rodadas, busca o arquivo
+    de resultado de forma defensiva (nome/local do arquivo não é
+    documentado de forma estável entre versões do jogo) e falha
+    honestamente quando não consegue localizar/interpretar o resultado;
+    calcula FPS médio/mínimo, 1%/0,1% low e frametime médio/pico por
+    rodada, com mediana por FPS médio entre rodadas (nunca mistura métricas
+    de rodadas diferentes); exposto via `IAppOptimizationService.
+    RunGtaVBenchmarkAsync` e um botão dedicado e opt-in em Configurações —
+    nunca faz parte do fluxo automático dos perfis.
+- Catálogo de ações avançou da versão 6 para a 7 (nova ação de classificação
+  de gargalo). O benchmark oficial do GTA V e a comparação antes/depois não
+  são ações de catálogo: o primeiro lança um processo externo de vida longa
+  (não cabe no modelo de ação curta e transacional), e a segunda é um
+  extra informativo em volta de uma otimização já existente, não uma
+  otimização em si.
+- Limitação conhecida e assumida conscientemente: o formato exato do
+  arquivo de resultado do benchmark oficial do GTA V não pôde ser verificado
+  com certeza neste ambiente (sem acesso à internet durante o
+  desenvolvimento); o parser busca arquivos plausíveis e tenta interpretar
+  colunas de frametime/FPS de forma genérica, reportando falha honesta
+  (`benchmark-output-file-not-found`/`-not-recognized`) em vez de um
+  resultado inventado quando o formato real não corresponder. Recomenda-se
+  validar em uma máquina com GTA V instalado antes de divulgar este recurso
+  amplamente.
+- Validação: `dotnet build` Release sem avisos/erros; **353 testes .NET
+  aprovados** (317 anteriores + 36 novos cobrindo as 9 categorias do
+  classificador de gargalo, a assinatura de hardware, a regra de detecção
+  de regressão, o parser do benchmark oficial do GTA V — incluindo formatos
+  válidos, delimitador `;`, arquivo não reconhecido, poucas amostras,
+  arquivo ausente — a mediana entre rodadas e a validação/modo demo do
+  serviço de benchmark); `scripts\Verify-Safety.ps1` aprovado; smoke test
+  manual do executável (`Start-Process --demo-synthetic`, 6s, sem novas
+  entradas em `crash.log`) exercitando as novas telas.
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
+
+## Otimizações específicas do FiveM: cache, diagnóstico interno e instalação (24/07/2026)
+
+- Trabalho local, **não publicado** (sem push da main/tag/release nesta
+  etapa; apenas push de desenvolvimento de `dev/proxima-versao`, autorizado
+  explicitamente pelo usuário nesta tarefa). Não altera versão pública,
+  instalador nem site.
+- Antes de implementar, o usuário foi consultado sobre três pontos que
+  tensionavam decisões de segurança já documentadas: (1) remoção de
+  `ros_id.dat`/`DigitalEntitlements` — proibida no modelo padrão; o usuário
+  escolheu implementar com confirmação explícita a cada execução; (2)
+  encerrar processos FiveM "abandonados" antes da limpeza — capacidade nova;
+  o usuário escolheu permitir apenas para processos comprovadamente travados
+  (`Process.Responding == false`); (3) reinstalação assistida/recriação
+  completa de dados corrompidos — o usuário escolheu implementar a
+  recriação automatizada dos dados regeneráveis. Todas as três decisões e
+  suas justificativas de segurança estão documentadas em
+  `docs/safety.md` (seções "Exceção documentada: reparo de dados de
+  entitlement" e "Encerramento de processo travado").
+- Seis novas ações no catálogo, catálogo avançou da versão 7 para a 8:
+  - Três diagnósticos somente leitura, sempre presentes
+    (`ActionOptionGate.Always`, nunca escrevem no sistema): tamanho e
+    integridade do cache do FiveM por categoria com detecção de arquivos
+    bloqueados (`CacheStorageDiagnosisAction`), saúde da instalação
+    (instalação duplicada, permissão de escrita, sincronização por
+    OneDrive, espaço livre em disco — `InstallationHealthDiagnosisAction`)
+    e padrões recorrentes de erro/streaming a partir de nomes de crash
+    dumps e do log mais recente (`CrashPatternDiagnosisAction`).
+  - Três ações de reparo (🔧), cada uma com seu próprio `ActionOptionGate`
+    dedicado, **desligadas por padrão e nunca incluídas em nenhum perfil
+    automático** (Leve/Médio/Agressivo) — cobertas pelo teste
+    `RepairActions_AreOptInAndNeverPartOfAnyDefaultProfile`:
+    `StuckProcessTerminationAction` (encerra apenas um processo do FiveM
+    comprovadamente sem resposta), `RecreateFiveMLocalDataAction` (reutiliza
+    o padrão de quarentena já existente para recriar server-cache/
+    server-cache-priv/logs/crashes, nunca as pastas protegidas por
+    `docs/safety.md`) e `StaleAuthDataRepairAction` (só remove
+    `ros_id.dat`/`DigitalEntitlements` quando um padrão de erro de
+    entitlement é detectado no log; caso contrário não faz nada; sempre via
+    quarentena reversível até a confirmação final da transação).
+- Novo `src/FiveMCleaner.Windows/Infrastructure/StuckFiveMProcessInspector.cs`
+  (`IStuckFiveMProcessInspector`): encontra e encerra apenas um processo
+  cuja imagem pertence à instalação do FiveM e que não responde no momento
+  da leitura; nunca um processo de terceiros, do GTA V ou do sistema.
+- Novo `src/FiveMCleaner.Windows/Actions/FiveMInstallationActions.cs` com as
+  seis ações acima e um helper interno `FiveMLogPatterns` compartilhado
+  (busca textual honesta por códigos de erro/streaming/entitlement — nunca
+  uma análise de despejo de memória).
+- Itens do pedido original avaliados e **deliberadamente deferidos**, com
+  justificativa (mesma disciplina das fases anteriores — não é lacuna
+  silenciosa): detecção de arquivos bloqueados por antivírus (não há API
+  segura e genérica para identificar qual AV bloqueou o quê); detecção de
+  atalhos apontando para o executável errado (exigiria parsing de `.lnk`
+  via COM, adiado); detecção de "arquivos estranhos injetados" na pasta
+  (heurística com risco relevante de falso positivo); "preservar arquivos
+  íntegros que seriam baixados novamente" (exigiria validar integridade por
+  item de cache, não apenas por pasta); comparação de versão
+  instalada vs. mais recente do FiveM (não há fonte oficial segura de
+  "última versão" consultável sem rede, e o produto evita depender de rede
+  para diagnóstico); monitoramento de CPU/GPU por NUI especificamente (não
+  há quebra confiável de uso por subprocesso de NUI sem tocar a API do
+  próprio FiveM); reinstalação automática do FiveM baixando/executando um
+  instalador (permanece proibido por `docs/safety.md` — "sem baixar/
+  executar código arbitrário" — independente da decisão sobre recriação de
+  dados locais, que é uma operação diferente e mais restrita).
+- Validação: `dotnet build` Release sem avisos/erros; **363 testes .NET
+  aprovados** (358 anteriores + 5 novos: 3 ações opt-in nunca aparecem em
+  nenhum perfil por padrão e aparecem corretamente quando habilitadas, mais
+  a cobertura de localização/catálogo/plano já existente reajustada para a
+  versão 8); `scripts\Verify-Safety.ps1` aprovado.
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
+
+## Presets gráficos ampliados: Qualidade, janela/VSync e recomendação (24/07/2026)
+
+- Trabalho local, **não publicado** (sem push da main/tag/release nesta
+  etapa; apenas push de desenvolvimento de `dev/proxima-versao`, autorizado
+  explicitamente pelo usuário nesta tarefa). Não altera versão pública,
+  instalador nem site.
+- Antes de implementar, o usuário foi consultado sobre três tensões com o
+  design de segurança já existente do motor gráfico (`LegacyGraphicsAction.
+  cs`), que historicamente só **reduz** valores existentes: (1) o "Preset
+  Qualidade" pedido exige **aumentar** opções — o usuário escolheu permitir
+  aumento apenas nesse preset novo, mantendo Leve/Equilibrado/Agressivo
+  somente-reduz; (2) resolução/tela cheia/janela/VSync/adaptador ficam numa
+  parte do arquivo nunca tocada pelo app — o usuário escolheu implementar
+  com validação, mas a implementação real ficou deliberadamente restrita a
+  **janela e VSync** (dois booleanos sem risco de "tela preta"); resolução,
+  taxa de atualização, adaptador de vídeo, proporção de tela, limite de FPS,
+  escala de resolução e versão do DirectX ficaram de fora por exigirem
+  validação contra os modos realmente suportados pelo monitor, que o app
+  ainda não faz de ponta a ponta — ver `docs/safety.md` ("Escopo de edição
+  gráfica"); (3) "configuração inteligente" — o usuário confirmou que deve
+  ser apenas uma recomendação, nunca aplicada automaticamente; quem aplica
+  continua sendo o usuário escolhendo manualmente.
+- Catálogo avançou da versão 8 para a 9, com 6 novas ações:
+  - `RecommendGraphicsPreset` (👁, sempre ativa): combina os diagnósticos já
+    existentes de GPU/VRAM, CPU, RAM e monitor numa recomendação textual de
+    qual preset (FPS/Equilibrado/Qualidade) combina com o hardware; nunca
+    aplica nada sozinha. Heurística documentada e testada
+    (`GraphicsPresetRecommendationAction.Recommend`), deliberadamente sem
+    considerar servidor utilizado (sem API segura para identificá-lo) nem
+    resultado de benchmark ainda não executado.
+  - `DiagnoseTextureVramFit` (👁, sempre ativa): compara `TextureQuality`
+    já configurado com a VRAM detectada da GPU usando um limiar
+    conservador e documentado como estimativa, não medição real de uso.
+  - `ApplyQualityLegacyGraphics`/`ApplyQualityGtaVGraphics` (🔧, opt-in,
+    nunca em nenhum perfil automático): novo `GraphicsPresetDirection.
+    RaiseOnly` em `LegacyGraphicsPresetAction`, reaproveitando 100% do
+    mecanismo de backup/hash/troca atômica/rollback já existente. O preset
+    `LegacyGraphicsPresets.Quality` eleva shadow/reflection/water/
+    particles/grass/shader/postfx/tessellation/SSAO/anisotropic/texture/
+    FXAA/densidade populacional/escala de distância até um teto
+    conservador, deliberadamente sem tocar MSAA/ReflectionMSAA/TXAA
+    (custo por GPU variável demais para adivinhar com segurança),
+    distância/sombra estendida, motion blur ou profundidade de campo —
+    para não descontrolar o 1% low, como pedido.
+  - `ApplyLegacyDisplayPreferences`/`ApplyGtaVDisplayPreferences` (🔧,
+    opt-in, nunca em nenhum perfil automático): nova
+    `DisplayPreferencesAction`, mesmo padrão de segurança (backup/hash/
+    troca atômica/rollback) da ação gráfica, mas restrita a `Windowed` e
+    `VSync`. Corrigido durante a implementação um risco real: os arquivos
+    de configuração do FiveM/GTA V Legacy não são consistentes no formato
+    de booleano — alguns valores usam `"true"/"false"`, outros usam
+    `"0"/"1"` (confirmado pelo próprio teste `GtaVGraphicsPresetTests`
+    já existente, que usa `Windowed value="0"`); a ação lê ambos os
+    formatos e **preserva o formato original** ao escrever, em vez de
+    normalizar para `"true"/"false"` e arriscar quebrar leitura por outra
+    ferramenta.
+- Novo `src/FiveMCleaner.Windows/Actions/DisplayPreferencesAction.cs` e
+  `GraphicsRecommendationActions.cs`. `LegacyGraphicsAction.cs` ganhou
+  `LegacyGraphicsPresets.Quality`, `GraphicsPresetDirection` e um novo
+  construtor que aceita `actionId`/`preset`/`direction` explícitos, mantendo
+  o construtor por perfil (Leve/Médio/Agressivo) inalterado e sempre
+  `LowerOnly`.
+- Itens do pedido original avaliados e **já cobertos** pela implementação
+  anterior (sem necessidade de novo código): resolução — não; mas
+  qualidade de sombra/reflexo/água/partículas/grama/shader/pós-
+  processamento/tesselação/oclusão de ambiente/filtragem anisotrópica/
+  textura/densidade e variedade populacional/escala de distância (normal e
+  estendida)/streaming detalhado durante voo/MSAA/Reflection MSAA/TXAA já
+  existiam nos presets Leve/Equilibrado/Agressivo desde a implementação
+  anterior do motor gráfico.
+- Itens **deliberadamente deferidos**, com justificativa: resolução,
+  frequência de atualização, adaptador de vídeo, proporção de tela (exigem
+  validar a combinação contra os modos realmente suportados pelo monitor,
+  o que o app não faz de ponta a ponta ainda); limite de FPS e escala de
+  resolução (não há confirmação de que existam como chave estável no
+  settings.xml do FiveM/GTA V Legacy nesta versão; preferimos não
+  adivinhar uma chave e escrever um valor sem efeito ou, pior, incorreto);
+  DirectX 10/10.1/11 (mesma razão: sem confirmação de uma chave estável e
+  segura); sombras suaves (sem uma chave conhecida e testável distinta de
+  `ShadowQuality`/`HighResolutionShadows` já cobertas).
+- Validação: `dotnet build` Release sem avisos/erros; **375 testes .NET
+  aprovados** (363 anteriores + 12 novos cobrindo o preset de Qualidade
+  somente-eleva com rollback exato, a preservação de formato booleano de
+  `DisplayPreferencesAction` — incluindo o caso `"0"/"1"` — recusa de
+  escrita com o jogo aberto, a heurística de recomendação de preset nos
+  três cenários e o diagnóstico de textura vs. VRAM); `scripts\
+  Verify-Safety.ps1` aprovado.
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
+
+## Parâmetros de inicialização do GTA V standalone (24/07/2026)
+
+- Trabalho local, **não publicado** (sem push da main/tag/release nesta
+  etapa; apenas push de desenvolvimento de `dev/proxima-versao`, autorizado
+  explicitamente pelo usuário nesta tarefa). Não altera versão pública,
+  instalador nem site.
+- Antes de implementar, o usuário foi consultado sobre um conflito direto
+  com `docs/safety.md`: o item 🧪 pedido, `-disableHyperthreading`, é
+  exatamente o que a seção "Ações proibidas" já veta explicitamente
+  ("desliguem SMT/Hyper-Threading"). O usuário confirmou **não
+  implementar**, mantendo a proibição sem exceção.
+- Descoberta relevante ao avaliar o pedido: `docs/research.md` já
+  documentava, com fonte no próprio código do FiveM
+  (`BlockLoadSetters.cpp`), que o **FiveM bloqueia explicitamente a
+  leitura do `commandline.txt`** do GTA — ou seja, escrever parâmetros
+  nesse arquivo nunca teve efeito real para o FiveM. Isso confirma por que
+  `docs/safety.md` já proibia editar `commandline.txt` "como otimização do
+  FiveM": a proibição é sobre o *uso para FiveM*, não sobre o arquivo em
+  si. A funcionalidade pedida foi implementada com escopo explícito e
+  exclusivo do **GTA V Legacy standalone**, nunca do FiveM — reforçado em
+  `docs/safety.md` (nova seção "Parâmetros de inicialização do GTA V
+  standalone").
+- Catálogo avançou da versão 9 para a 10, com 4 novas ações, todas restritas
+  ao GTA V standalone (`environment.GtaVInstallationRoot`):
+  - `DiagnoseGtaVLaunchParameters` (👁, sempre ativa): lê o commandline.txt
+    existente e avisa especificamente quando um parâmetro de reparo
+    (-safemode/-useMinimumSettings/-UseAutoSettings) ficou ativo além do
+    necessário.
+  - `ApplyGtaVGraphicsLaunchParameters` (opt-in, nunca em perfil
+    automático): escreve -cityDensity/-anisotropicQualityLevel/-fxaa/
+    -grassQuality/-lodScale/-frameLimit (este último usando a taxa de
+    atualização já detectada do monitor, quando disponível, em vez de um
+    valor arbitrário).
+  - `ApplyGtaVDisplayLaunchParameters` (opt-in, nunca em perfil
+    automático): escreve o modo de tela (-fullscreen/-windowed/
+    -borderless, mutuamente exclusivos) e, quando escolhida, a versão do
+    DirectX (-DX10/-DX10_1/-DX11). Nunca escreve -width/-height/adaptador,
+    pela mesma razão de risco de modo não suportado já registrada na fase
+    anterior de presets gráficos.
+  - `ApplyGtaVRepairLaunchParameters` (opt-in, nunca em perfil automático):
+    escreve -safemode/-useMinimumSettings/-UseAutoSettings individualmente;
+    o aviso do plano (`gtav-repair-launch-parameters-are-temporary`) e o
+    `undoSummary` da própria ação lembram explicitamente de reverter após
+    diagnosticar, atendendo ao "🚫 Não deixar parâmetros de reparo ativos
+    permanentemente" do pedido original.
+- Novo `src/FiveMCleaner.Windows/Actions/GtaVLaunchParametersActions.cs`:
+  um helper interno (`GtaVCommandLineFile`) faz parse/merge/escrita atômica
+  do arquivo de texto plano, tocando somente as linhas cujo parâmetro
+  pertence ao conjunto allowlisted de cada ação e preservando qualquer
+  outra linha (inclusive parâmetros desconhecidos do produto) exatamente
+  como estava — mesma filosofia de allowlist já usada nas ações gráficas
+  em XML. Backup e rollback exato reaproveitam o mesmo padrão.
+- `scripts/Verify-Safety.ps1` já continha uma verificação automática que
+  bloqueia qualquer menção a `commandline.txt` no código-fonte (guarda
+  literal da proibição antiga). Ela foi ajustada com um novo parâmetro
+  `-ExcludeFileNames` em `Find-CSharpSourceMatches`, para permitir
+  especificamente `GtaVLaunchParametersActions.cs` — um arquivo revisado,
+  documentado e restrito ao GTA V standalone — sem enfraquecer a proteção
+  para qualquer outro arquivo do projeto.
+- Itens do pedido original avaliados e **deliberadamente deferidos**, com
+  justificativa: `-disableHyperthreading` (decisão do usuário, mantém
+  proibição de `docs/safety.md`); `-width`/`-height` (mesmo risco de modo
+  de vídeo não suportado já documentado na fase de presets gráficos).
+- Validação: `dotnet build` Release sem avisos/erros; **388 testes .NET
+  aprovados** (375 anteriores + 13 novos cobrindo o diagnóstico de
+  commandline.txt incluindo o aviso de parâmetro de reparo ativo, a
+  mescla/preservação de linhas desconhecidas com rollback exato, a
+  exclusividade mútua do modo de tela, a troca de versão do DirectX e a
+  recusa de escrita com o GTA V aberto); `scripts\Verify-Safety.ps1`
+  aprovado (após o ajuste de `-ExcludeFileNames` descrito acima).
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.

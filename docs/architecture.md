@@ -150,6 +150,29 @@ Quando o suporte for implementado, ele deve ser um adaptador separado e passar p
 
 Progresso é calculado por passos concluídos e pesos declarados. Mensagens devem descrever ações reais, por exemplo “Validando snapshot gráfico”, não frases genéricas. O progresso também expõe etapa atual / total de etapas (`CompletedSteps`/`TotalSteps` em `WindowsActionProgress` e `AppProgressUpdate`) e o outcome de cada etapa, permitindo à interface manter um livro-razão ao vivo (ver `MainViewModel.StepLedger`).
 
+## Telemetria opcional
+
+`IAnonymousTelemetryService` é uma fronteira da camada App, separada do
+serviço de otimização. A preferência persistida `AppSettings.ShareAnonymousTelemetry`
+nasce como `false`; o `MainViewModel` só gera um evento ao término de uma
+otimização após o consentimento. O contrato `AnonymousTelemetryEvent` não
+aceita payload livre: contém apenas nome allowlisted do evento, duração, versão
+e, em falha, categoria allowlisted. A implementação FormSubmit é best-effort;
+qualquer erro é suprimido localmente para não alterar a execução nem os logs.
+Detalhes de privacidade: [telemetry.md](telemetry.md).
+
+## Interrupção de otimização pela interface
+
+O `MainWindow` não encerra nem chama `MainViewModel.CancelOptimization()`
+diretamente enquanto `IsBusy` for verdadeiro. Ambos os caminhos de interface
+(botão de cancelar e fechamento da janela, inclusive pelo ícone da bandeja)
+passam por `OptimizationConfirmationWindow`, um modal localizado e temático.
+Ao confirmar, o view-model solicita o token de cancelamento já existente; a
+execução mantém a garantia de concluir ou reverter a etapa atual. Um fechamento
+confirmado agenda o encerramento somente depois que `StartOptimizationAsync`
+retorna. O evento de sessão do Windows é exceção: não mostra modal e não impede
+logoff/desligamento.
+
 A execução do usuário padrão roda com `WindowsTransactionOptions.IsolateFailures = true`: cada ação do plano é aplicada, validada e registrada como uma mini-transação independente.
 
 - uma falha genuína reverte somente a própria ação (rollback atômico existente, sem afetar as demais);

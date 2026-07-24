@@ -136,6 +136,7 @@ public sealed class LocalizationServiceTests
         Assert.NotNull(settings);
         Assert.Equal(AppLanguagePreference.Automatic, settings!.Language);
         Assert.Equal(AppThemePreference.Dark, settings.Theme);
+        Assert.False(settings.ShareAnonymousTelemetry);
     }
 
     [Fact]

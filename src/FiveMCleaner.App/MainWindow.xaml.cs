@@ -25,6 +25,7 @@ public partial class MainWindow : Window
     private readonly bool startupLaunch;
     private HwndSource? windowSource;
     private bool allowClose;
+    private bool closeAfterOptimizationStops;
     private bool trayAnnouncementShown;
     private bool systemSessionEnding;
 
@@ -48,7 +49,10 @@ public partial class MainWindow : Window
             new AppOptimizationService(demoMode, syntheticDemo),
             localization: LocalizationService.Current,
             startupRegistration: startupRegistration,
-            releaseUpdateService: releaseUpdateService);
+            releaseUpdateService: releaseUpdateService,
+            telemetry: demoMode
+                ? DisabledAnonymousTelemetryService.Instance
+                : new FormSubmitAnonymousTelemetryService());
         trayIcon = new TrayIconService(LocalizationService.Current);
         trayIcon.ShowRequested += TrayIcon_ShowRequested;
         trayIcon.ExitRequested += TrayIcon_ExitRequested;
@@ -310,6 +314,12 @@ public partial class MainWindow : Window
     {
         Navigate(OptimizerPage, OptimizerNav);
         await viewModel.StartOptimizationAsync();
+        if (closeAfterOptimizationStops)
+        {
+            closeAfterOptimizationStops = false;
+            allowClose = true;
+            Close();
+        }
     }
 
     private async void DownloadUpdate_Click(object sender, RoutedEventArgs e)
@@ -370,9 +380,47 @@ public partial class MainWindow : Window
         });
     }
 
-    private void CancelOptimization_Click(object sender, RoutedEventArgs e) => viewModel.CancelOptimization();
+    private void CancelOptimization_Click(object sender, RoutedEventArgs e)
+    {
+        if (!viewModel.IsBusy || !ConfirmOptimizationInterruption(closeApplication: false))
+        {
+            return;
+        }
+
+        viewModel.CancelOptimization();
+    }
 
     private void CopyTechnicalReport_Click(object sender, RoutedEventArgs e) => viewModel.CopyTechnicalReport();
+
+    private void SaveTechnicalReport_Click(object sender, RoutedEventArgs e)
+    {
+        if (!viewModel.CanShareReport)
+        {
+            return;
+        }
+
+        var dialog = new Microsoft.Win32.SaveFileDialog
+        {
+            FileName = viewModel.SuggestedReportFileName,
+            DefaultExt = ".txt",
+            Filter = "Text (*.txt)|*.txt|All files (*.*)|*.*"
+        };
+
+        if (dialog.ShowDialog(this) == true)
+        {
+            viewModel.SaveTechnicalReport(dialog.FileName);
+        }
+    }
+
+    private async void RunGtaVBenchmark_Click(object sender, RoutedEventArgs e) => await viewModel.RunGtaVBenchmarkAsync();
+
+    private async void RevertLastOptimization_Click(object sender, RoutedEventArgs e)
+    {
+        if (viewModel.CanRevertLastOptimization)
+        {
+            await viewModel.RevertLastOptimizationAsync();
+        }
+    }
 
     private async void RollbackHistory_Click(object sender, RoutedEventArgs e)
     {
@@ -430,13 +478,9 @@ public partial class MainWindow : Window
         if (viewModel.IsBusy && !systemSessionEnding)
         {
             e.Cancel = true;
-            var decision = System.Windows.MessageBox.Show(
-                LocalizationService.Current.GetString("Dialog.CancelRunning.Message"),
-                LocalizationService.Current.GetString("Dialog.CancelRunning.Title"),
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-            if (decision == MessageBoxResult.Yes)
+            if (ConfirmOptimizationInterruption(closeApplication: true))
             {
+                closeAfterOptimizationStops = true;
                 viewModel.CancelOptimization();
             }
 
@@ -448,6 +492,29 @@ public partial class MainWindow : Window
             e.Cancel = true;
             HideToTray();
         }
+    }
+
+    private bool ConfirmOptimizationInterruption(bool closeApplication)
+    {
+        var localization = LocalizationService.Current;
+        var dialog = new OptimizationConfirmationWindow(
+            localization.GetString(
+                closeApplication
+                    ? "Dialog.CloseOptimization.Title"
+                    : "Dialog.CancelOptimization.Title"),
+            localization.GetString(
+                closeApplication
+                    ? "Dialog.CloseOptimization.Message"
+                    : "Dialog.CancelOptimization.Message"),
+            localization.GetString("Dialog.OptimizationInterruption.KeepWorking"),
+            localization.GetString(
+                closeApplication
+                    ? "Dialog.CloseOptimization.Confirm"
+                    : "Dialog.CancelOptimization.Confirm"))
+        {
+            Owner = this
+        };
+        return dialog.ShowDialog() == true;
     }
 
     private void MainWindow_Closed(object? sender, EventArgs e)
