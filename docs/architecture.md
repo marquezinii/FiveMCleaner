@@ -150,6 +150,17 @@ Quando o suporte for implementado, ele deve ser um adaptador separado e passar p
 
 Progresso é calculado por passos concluídos e pesos declarados. Mensagens devem descrever ações reais, por exemplo “Validando snapshot gráfico”, não frases genéricas. O progresso também expõe etapa atual / total de etapas (`CompletedSteps`/`TotalSteps` em `WindowsActionProgress` e `AppProgressUpdate`) e o outcome de cada etapa, permitindo à interface manter um livro-razão ao vivo (ver `MainViewModel.StepLedger`).
 
+## Telemetria opcional
+
+`IAnonymousTelemetryService` é uma fronteira da camada App, separada do
+serviço de otimização. A preferência persistida `AppSettings.ShareAnonymousTelemetry`
+nasce como `false`; o `MainViewModel` só gera um evento ao término de uma
+otimização após o consentimento. O contrato `AnonymousTelemetryEvent` não
+aceita payload livre: contém apenas nome allowlisted do evento, duração, versão
+e, em falha, categoria allowlisted. A implementação FormSubmit é best-effort;
+qualquer erro é suprimido localmente para não alterar a execução nem os logs.
+Detalhes de privacidade: [telemetry.md](telemetry.md).
+
 A execução do usuário padrão roda com `WindowsTransactionOptions.IsolateFailures = true`: cada ação do plano é aplicada, validada e registrada como uma mini-transação independente.
 
 - uma falha genuína reverte somente a própria ação (rollback atômico existente, sem afetar as demais);

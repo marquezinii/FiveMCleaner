@@ -114,6 +114,19 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   confirmação explícita do usuário.
 - O formulário de bugs é opt-in: nenhum dado é enviado sem o clique do usuário.
   Imagens opcionais passam por sanitização antes do envio.
+- A telemetria técnica também é estritamente opt-in e fica desativada por
+  padrão. Após consentimento explícito, só envia por HTTPS uma allowlist de
+  tipo de término da otimização, duração, versão e categoria fixa de erro; não
+  envia logs, texto livre, caminhos, arquivos, documentos, histórico, hardware
+  ou dados pessoais. O contrato e a ressalva sobre metadados de transporte do
+  FormSubmit estão em `docs/telemetry.md`; falhas de telemetria nunca interferem
+  na otimização nem geram novas tentativas automáticas.
+- A licença do código próprio é a `FiveMCleaner Source-Available License v1.0`
+  em `LICENSE`, substituindo a MIT. Ela permite estudo, auditoria, compilação
+  para uso próprio, forks de desenvolvimento e Pull Requests, mas restringe
+  venda, redistribuição de executáveis modificados, remoção de créditos, uso da
+  marca e produtos concorrentes derivados. Licenças de dependências de terceiros
+  continuam válidas e independentes.
 
 ## Funcionalidades presentes no código atual
 

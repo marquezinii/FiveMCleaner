@@ -199,6 +199,13 @@ O diagnóstico permanece local por padrão. Relatórios exportados devem:
 
 O formulário de bug é uma exceção explícita ao processamento apenas local: depois do clique em **Enviar**, os campos autorizados e a imagem opcional são encaminhados ao serviço externo FormSubmit. O app não envia esse conteúdo em segundo plano, não repete automaticamente uma falha e oferece cópia local do texto. Consulte [Relatos de bug e privacidade](bug-reports.md) antes de usar o canal.
 
+A telemetria técnica é uma exceção separada e estritamente opt-in: ela começa
+desativada e só transmite categorias allowlisted de erro, duração de uma
+otimização e versão do aplicativo. Ela não lê nem envia logs, arquivos,
+documentos, histórico, caminhos, hardware ou dados pessoais. A especificação,
+o provedor e o limite de metadados de transporte estão documentados em
+[Telemetria opcional](telemetry.md).
+
 O relatório técnico do otimizador (botão "Copiar relatório técnico" ao final
 de uma execução) segue a mesma política: `ReportSanitizer` substitui
 `%LOCALAPPDATA%`, `%APPDATA%` e `%USERPROFILE%` reais por seus nomes de

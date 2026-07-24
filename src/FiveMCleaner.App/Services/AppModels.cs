@@ -220,4 +220,10 @@ public sealed record AppSettings
     public bool LaunchAtStartup { get; init; }
 
     public bool CheckForUpdates { get; init; } = true;
+
+    /// <summary>
+    /// Consentimento explícito para telemetria técnica anonimizada. Permanece
+    /// desabilitada para instalações existentes e novas até ação do usuário.
+    /// </summary>
+    public bool ShareAnonymousTelemetry { get; init; }
 }

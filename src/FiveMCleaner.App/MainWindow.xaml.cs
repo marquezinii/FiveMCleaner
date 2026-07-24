@@ -48,7 +48,10 @@ public partial class MainWindow : Window
             new AppOptimizationService(demoMode, syntheticDemo),
             localization: LocalizationService.Current,
             startupRegistration: startupRegistration,
-            releaseUpdateService: releaseUpdateService);
+            releaseUpdateService: releaseUpdateService,
+            telemetry: demoMode
+                ? DisabledAnonymousTelemetryService.Instance
+                : new FormSubmitAnonymousTelemetryService());
         trayIcon = new TrayIconService(LocalizationService.Current);
         trayIcon.ShowRequested += TrayIcon_ShowRequested;
         trayIcon.ExitRequested += TrayIcon_ExitRequested;

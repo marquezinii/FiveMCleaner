@@ -570,6 +570,15 @@
                                             <TextBlock Text="{Binding [Settings.StartWithWindows.Description], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                         </StackPanel>
                                     </CheckBox>
+                                    <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
+                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding ShareAnonymousTelemetry}">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding [Settings.Telemetry.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding [Settings.Telemetry.Description], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding [Settings.Telemetry.Sends], Source={StaticResource LocalizedStrings}}" Margin="0,7,0,0" Foreground="{DynamicResource GreenBrush}" FontSize="10" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding [Settings.Telemetry.NeverSends], Source={StaticResource LocalizedStrings}}" Margin="0,2,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </CheckBox>
                                 </StackPanel>
                             </Border>
                             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">

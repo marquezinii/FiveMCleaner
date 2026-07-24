@@ -81,7 +81,7 @@
   <data name="About.Title" xml:space="preserve"><value>Sobre o FiveMCleaner</value></data>
   <data name="About.VersionDeveloper" xml:space="preserve"><value>Versão {0}  •  Desenvolvido por Felipe Marquezini</value></data>
   <data name="About.Copyright" xml:space="preserve"><value>© 2026 Felipe Marquezini. Todos os direitos reservados.</value></data>
-  <data name="About.License" xml:space="preserve"><value>Código-fonte sob licença MIT. Projeto independente, sem afiliação com Cfx.re, Rockstar Games ou Microsoft.</value></data>
+  <data name="About.License" xml:space="preserve"><value>Código-fonte disponibilizado sob a Licença Source-Available do FiveMCleaner. Projeto independente, sem afiliação com Cfx.re, Rockstar Games ou Microsoft.</value></data>
   <data name="About.OpenGitHub" xml:space="preserve"><value>Abrir GitHub</value></data>
   <data name="Sidebar.Version" xml:space="preserve"><value>VERSÃO</value></data>
   <data name="BugReport.WindowTitle" xml:space="preserve"><value>Relatar um bug — FiveMCleaner</value></data>
@@ -237,6 +237,10 @@
   <data name="Log.RollbackFailed" xml:space="preserve"><value>Falha segura no rollback: {0}</value></data>
   <data name="Log.SettingsSaveFailed" xml:space="preserve"><value>Não foi possível salvar as configurações agora.</value></data>
   <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Ao clicar no X, o FiveMCleaner passará a ser minimizado para a bandeja do sistema em vez de ser fechado.</value></data>
+  <data name="Settings.Telemetry.Title" xml:space="preserve"><value>Ajude a melhorar o FiveMCleaner</value></data>
+  <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Envie telemetria técnica anonimizada, somente se você quiser.</value></data>
+  <data name="Settings.Telemetry.Sends" xml:space="preserve"><value>✓ Envia: erros categorizados, tempo de execução e versão.</value></data>
+  <data name="Settings.Telemetry.NeverSends" xml:space="preserve"><value>✕ Nunca envia: arquivos, documentos, histórico ou dados pessoais.</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>O FiveMCleaner encontrou um erro inesperado. Nenhuma nova alteração será aplicada.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>ações verificadas</value></data>

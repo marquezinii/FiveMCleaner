@@ -17,6 +17,7 @@ public sealed class MainViewModel : BindableBase
     private readonly ILocalizationService localization;
     private readonly IStartupRegistrationService startupRegistration;
     private readonly IReleaseUpdateService? releaseUpdateService;
+    private readonly IAnonymousTelemetryService telemetry;
     private readonly ProgressTimingEstimator progressTimingEstimator = new();
     private readonly SemaphoreSlim settingsSaveGate = new(1, 1);
     private CancellationTokenSource? operationCancellation;
@@ -60,6 +61,7 @@ public sealed class MainViewModel : BindableBase
     private bool minimizeToTrayOnClose;
     private bool launchAtStartup;
     private bool checkForUpdates = true;
+    private bool shareAnonymousTelemetry;
     private ReleaseUpdate? availableUpdate;
     private UpdatePresentationState updatePresentationState;
     private string? updateFailureMessage;
@@ -96,13 +98,15 @@ public sealed class MainViewModel : BindableBase
         IPlanBuilder? planBuilder = null,
         ILocalizationService? localization = null,
         IStartupRegistrationService? startupRegistration = null,
-        IReleaseUpdateService? releaseUpdateService = null)
+        IReleaseUpdateService? releaseUpdateService = null,
+        IAnonymousTelemetryService? telemetry = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
         this.planBuilder = planBuilder ?? new PlanBuilder();
         this.localization = localization ?? LocalizationService.Current;
         this.startupRegistration = startupRegistration ?? new WindowsStartupRegistrationService();
         this.releaseUpdateService = releaseUpdateService;
+        this.telemetry = telemetry ?? DisabledAnonymousTelemetryService.Instance;
         StepLedger.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasStepLedgerItems));
         ResetLocalizedPlaceholders();
         RefreshProfilePresentation();
@@ -348,6 +352,19 @@ public sealed class MainViewModel : BindableBase
         {
             if (SetProperty(ref checkForUpdates, value))
             {
+                SettingsChanged(refreshPlan: false);
+            }
+        }
+    }
+
+    public bool ShareAnonymousTelemetry
+    {
+        get => shareAnonymousTelemetry;
+        set
+        {
+            if (SetProperty(ref shareAnonymousTelemetry, value))
+            {
+                telemetry.SetEnabled(value);
                 SettingsChanged(refreshPlan: false);
             }
         }
@@ -670,10 +687,13 @@ public sealed class MainViewModel : BindableBase
 
         var progress = new Progress<AppProgressUpdate>(ApplyProgress);
         var completedSuccessfully = false;
+        var telemetryEventName = "optimization-failed";
+        string? telemetryErrorCategory = null;
         try
         {
             var result = await service.ExecuteAsync(currentPlan, progress, operationCancellation.Token);
             completedSuccessfully = result.Succeeded;
+            telemetryEventName = result.Succeeded ? "optimization-completed" : "optimization-failed";
             ProgressPercent = result.Succeeded ? 100 : ProgressPercent;
             ProgressStateLabel = result.Succeeded
                 ? localization.GetString("Status.Completed")
@@ -700,6 +720,8 @@ public sealed class MainViewModel : BindableBase
         }
         catch (OperationCanceledException)
         {
+            telemetryEventName = "optimization-cancelled";
+            telemetryErrorCategory = "cancelled";
             ProgressStateLabel = localization.GetString("Status.Cancelled");
             ProgressHeadline = localization.GetString("Status.SafeCancellation.Headline");
             ProgressDetail = localization.GetString("Status.SafeCancellation.Detail");
@@ -707,6 +729,8 @@ public sealed class MainViewModel : BindableBase
         }
         catch (Exception exception)
         {
+            telemetryEventName = "optimization-failed";
+            telemetryErrorCategory = FormSubmitAnonymousTelemetryService.ClassifyException(exception);
             ProgressStateLabel = localization.GetString("Status.SafeFailure");
             ProgressHeadline = localization.GetString("Status.CouldNotComplete");
             ProgressDetail = exception.Message;
@@ -714,7 +738,9 @@ public sealed class MainViewModel : BindableBase
         }
         finally
         {
+            var executionTime = operationStopwatch?.Elapsed ?? TimeSpan.Zero;
             StopOperationTiming(completedSuccessfully);
+            TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory);
             operationCancellation.Dispose();
             operationCancellation = null;
             IsBusy = false;
@@ -1036,6 +1062,8 @@ public sealed class MainViewModel : BindableBase
             : AppThemePreference.System;
         minimizeToTrayOnClose = settings.MinimizeToTrayOnClose;
         checkForUpdates = settings.CheckForUpdates;
+        shareAnonymousTelemetry = settings.ShareAnonymousTelemetry;
+        telemetry.SetEnabled(shareAnonymousTelemetry);
         try
         {
             launchAtStartup = startupRegistration.IsEnabled();
@@ -1059,6 +1087,7 @@ public sealed class MainViewModel : BindableBase
         OnPropertyChanged(nameof(IsMinimizeToTrayOnCloseSelected));
         OnPropertyChanged(nameof(LaunchAtStartup));
         OnPropertyChanged(nameof(CheckForUpdates));
+        OnPropertyChanged(nameof(ShareAnonymousTelemetry));
         ResetLocalizedPlaceholders(preserveDiagnostic: true);
     }
 
@@ -1171,9 +1200,40 @@ public sealed class MainViewModel : BindableBase
             Theme = ThemePreference,
             MinimizeToTrayOnClose = MinimizeToTrayOnClose,
             LaunchAtStartup = LaunchAtStartup,
-            CheckForUpdates = CheckForUpdates
+            CheckForUpdates = CheckForUpdates,
+            ShareAnonymousTelemetry = ShareAnonymousTelemetry
         };
         _ = SaveSettingsRevisionAsync(snapshot, revision);
+    }
+
+    private void TrackOptimizationTelemetry(
+        string eventName,
+        TimeSpan executionTime,
+        string? errorCategory)
+    {
+        if (!telemetry.IsEnabled)
+        {
+            return;
+        }
+
+        var telemetryEvent = new AnonymousTelemetryEvent(
+            eventName,
+            executionTime,
+            AppVersion.TrimStart('v', 'V'),
+            errorCategory);
+        _ = TrackOptimizationTelemetryAsync(telemetryEvent);
+    }
+
+    private async Task TrackOptimizationTelemetryAsync(AnonymousTelemetryEvent telemetryEvent)
+    {
+        try
+        {
+            await telemetry.TrackAsync(telemetryEvent).ConfigureAwait(false);
+        }
+        catch
+        {
+            // Telemetria é opcional e não pode afetar a experiência nem gerar logs locais adicionais.
+        }
     }
 
     private async Task SaveSettingsRevisionAsync(AppSettings snapshot, long revision)
