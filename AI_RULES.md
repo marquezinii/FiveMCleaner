@@ -45,7 +45,69 @@ Nunca execute `git push`, crie releases, publique site, acione deploy ou faça
 qualquer outra publicação remota sem autorização explícita do usuário nesta
 tarefa. Um commit local não autoriza publicação.
 
+Nem todo `git push` autorizado é uma publicação. Este documento distingue
+explicitamente dois tipos de push remoto, tratados por regras diferentes:
+
+- **push de desenvolvimento** (ver seção própria abaixo): envia uma branch de
+  desenvolvimento/sincronização para o remoto, sem tocar `main` nem criar tag.
+  Não é publicação e não aciona o procedimento de versionamento.
+- **publicação oficial**: push que atualiza `main` e/ou cria uma tag/release
+  pública. Aciona integralmente o procedimento descrito em "Versionamento
+  obrigatório ao fazer push".
+
+Antes de qualquer push, a IA deve identificar explicitamente qual dos dois
+tipos o usuário está autorizando nesta tarefa e seguir somente as regras
+correspondentes. Na dúvida, tratar como push de desenvolvimento (o mais
+conservador) e perguntar antes de aplicar qualquer efeito de publicação.
+
+## Push de desenvolvimento
+
+Um push de desenvolvimento serve exclusivamente para **backup remoto,
+sincronização e continuidade entre diferentes agentes de IA** (por exemplo,
+Claude Code e Codex trabalhando alternadamente no mesmo projeto) — não para
+disponibilizar uma nova versão ao público.
+
+Um push é de desenvolvimento quando todas as condições abaixo são
+verdadeiras:
+
+- o destino é uma branch que não é `main` (por exemplo, `dev/*`,
+  `feature/*` ou equivalente combinada com o usuário nesta tarefa);
+- nenhuma tag é criada ou enviada;
+- o usuário não pediu explicitamente uma release, publicação ou nova versão
+  pública nesta tarefa.
+
+Quando essas condições são atendidas, o push de desenvolvimento:
+
+- **não representa publicação** de nenhuma forma, ainda que o código enviado
+  esteja completo e validado;
+- **não** deve alterar a versão do aplicativo em nenhum arquivo (projeto,
+  assemblies, instalador, manifestos, site, `CHANGELOG.md` ou metadados);
+- **não** deve gerar release nem abrir rascunho de release no GitHub;
+- **não** deve criar tag;
+- **não** deve atualizar, gerar ou publicar o instalador;
+- **não** deve publicar ou atualizar o site;
+- **não** deve acionar deploy nem qualquer workflow de distribuição;
+- **não** autoriza merge para `main`, nem abertura de Pull Request, a menos
+  que o usuário peça isso explicitamente como uma ação separada.
+
+Mesmo sendo uma operação de baixo risco de publicação, um push de
+desenvolvimento continua sendo uma operação remota: exige autorização
+explícita do usuário nesta tarefa, igual a qualquer outro item da seção
+"Operações remotas". A autorização de um push de desenvolvimento não deve
+ser interpretada como autorização para nenhuma das ações listadas acima;
+cada uma delas exige seu próprio pedido explícito, feito em outra tarefa.
+
+Preserve integralmente o histórico ao criar ou atualizar uma branch de
+desenvolvimento: não faça squash, não reescreva commits existentes e não
+descarte trabalho já commitado, a menos que o usuário peça isso de forma
+explícita e inequívoca.
+
 ## Versionamento obrigatório ao fazer push
+
+As regras desta seção (e das subseções abaixo) aplicam-se exclusivamente à
+**publicação oficial** — push que atualiza `main` e/ou cria tag/release
+pública. Elas não se aplicam a um push de desenvolvimento, que segue apenas
+a seção "Push de desenvolvimento" acima.
 
 ### Responsabilidade de versão e Semantic Versioning
 
@@ -71,27 +133,32 @@ antes de publicar. Alterações exclusivamente neste `AI_RULES.md` ou em outra
 documentação de governança de IA podem ser enviadas sem criar uma nova versão
 pública; nunca devem, porém, ser apresentadas como alteração do aplicativo.
 
-### Diferença entre commit local e push público
+### Diferença entre commit local, push de desenvolvimento e publicação oficial
 
-- Enquanto o usuário não disser explicitamente **push**, a IA deve apenas
-  trabalhar localmente e criar commits conforme as regras do projeto. Esses
-  commits não representam uma nova versão pública e não devem publicar,
+- Enquanto o usuário não autorizar explicitamente um push para `main` e/ou a
+  criação de tag/release, a IA deve apenas trabalhar localmente e criar
+  commits conforme as regras do projeto (ou, quando autorizado à parte, um
+  push de desenvolvimento — ver seção própria). Nenhum desses dois casos
+  representa uma nova versão pública, e nenhum deles deve publicar,
   substituir ou anunciar instaladores.
-- Quando o usuário disser **push**, a IA deve preparar uma publicação completa
-  usando o estado real e verificável do projeto naquele momento. A versão
-  informada deve ser exatamente a versão que foi gravada nos arquivos do
-  projeto, no executável/app incluído no pacote, no instalador, nos manifestos,
+- Quando o usuário autorizar especificamente uma **publicação oficial** —
+  push para `main` combinado com tag/release, não um push de desenvolvimento
+  isolado —, a IA deve preparar uma publicação completa usando o estado real
+  e verificável do projeto naquele momento. A versão informada deve ser
+  exatamente a versão que foi gravada nos arquivos do projeto, no
+  executável/app incluído no pacote, no instalador, nos manifestos,
   checksums, tags, release, site e demais metadados.
-- O push deve atualizar publicamente todos os artefatos correspondentes àquela
-  versão, incluindo o aplicativo que vai dentro do instalador. Nunca publicar
-  um instalador antigo com número novo, um app diferente do código informado,
-  hashes incorretos, notas genéricas ou detalhes inventados.
+- A publicação deve atualizar publicamente todos os artefatos correspondentes
+  àquela versão, incluindo o aplicativo que vai dentro do instalador. Nunca
+  publicar um instalador antigo com número novo, um app diferente do código
+  informado, hashes incorretos, notas genéricas ou detalhes inventados.
 - As notas de **Últimas atualizações** devem ser geradas a partir das mudanças
   reais presentes desde a última publicação e só podem afirmar o que foi
   implementado e validado pelos testes executados.
 
-Quando o usuário autorizar ou solicitar um `git push`, a IA deve tratar esse
-push como uma nova versão pública do aplicativo. Antes do push, ela deve:
+Quando o usuário autorizar ou solicitar explicitamente uma publicação oficial
+(não um push de desenvolvimento), a IA deve tratar essa publicação como uma
+nova versão pública do aplicativo. Antes de publicar, ela deve:
 
 1. Ler a versão atual na fonte de verdade do projeto e calcular a próxima
    versão permitida.
