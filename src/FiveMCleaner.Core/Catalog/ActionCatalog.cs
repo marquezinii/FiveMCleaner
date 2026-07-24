@@ -5,7 +5,7 @@ namespace FiveMCleaner.Core.Catalog;
 
 public sealed class ActionCatalog
 {
-    public const int CurrentVersion = 6;
+    public const int CurrentVersion = 7;
 
     private static readonly string[] NoPrerequisites = [];
     private static readonly string[] RequiresFiveMStoppedFirst = [OptimizationActionIds.VerifyFiveMIsStopped];
@@ -430,6 +430,23 @@ public sealed class ActionCatalog
                 confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
                 undoSummary: "Somente leitura: não atualiza BIOS nem limpa o log de eventos.",
                 riskLimitations: "Resizable BAR/Above 4G/Smart Access Memory não são detectáveis de forma confiável sem ferramenta do fabricante; o app informa essa limitação em vez de adivinhar."),
+            Define(
+                OptimizationActionIds.ClassifyBottleneck,
+                "Classificar tipo provável de gargalo",
+                "Combina uso de CPU/GPU/disco/rede, memória, temperatura e o processo que mais consome CPU para apontar o recurso mais provavelmente limitante no momento.",
+                ActionCategory.Safety,
+                ActionRisk.Informational,
+                ActionReversibility.ReadOnly,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 3,
+                expectedImpact: "Ajuda a decidir qual ajuste vale mais a pena antes de tentar várias mudanças às cegas.",
+                ActionOptionGate.Always,
+                detectionSummary: "Combina as leituras já feitas por outros diagnósticos (uso de recursos, temperatura, rede, memória) com o processo de maior uso de CPU no momento (Win32_PerfFormattedData_PerfProc_Process).",
+                confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
+                undoSummary: "Somente leitura: não encerra nem prioriza nenhum processo.",
+                riskLimitations: "É uma classificação por eliminação a partir de sinais locais; 'servidor limitado' é a conclusão quando nenhum sinal local se destaca, não uma medição direta do servidor."),
             Define(
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 "Limpar temporários antigos",

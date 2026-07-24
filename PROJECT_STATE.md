@@ -86,7 +86,7 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   validar → registrar, uma falha reverte só a própria ação); falhas críticas
   abortam o restante com segurança e nenhum sucesso parcial é relatado como
   total. Ver `docs/safety.md` (seção "Execução isolada por ação") e
-  `docs/architecture.md`. O catálogo de ações está na versão 6
+  `docs/architecture.md`. O catálogo de ações está na versão 7
   (`ActionCatalog.CurrentVersion`).
 - Avaliação da "PRIMEIRA FASE" de adições pedida pelo usuário em 23/07/2026:
   backup/restauração, presets do `settings.xml`, gerenciamento de cache,
@@ -173,6 +173,41 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   recentes (Resizable BAR/Above 4G/Smart Access Memory explicitamente não
   detectáveis sem ferramenta do fabricante). Catálogo de ações agora na
   versão 6 (`ActionCatalog.CurrentVersion`).
+- Sistema de benchmark e comparação antes/depois (23/07/2026), com escopo
+  deliberadamente restrito à parte segura do pedido (ver decisão registrada
+  abaixo em "Avaliação do sistema de benchmark"): (1) classificador de
+  gargalo expandido nas 9 categorias pedidas (GPU/CPU/VRAM/RAM/disco/
+  servidor/rede/térmico/processo em segundo plano),
+  `BottleneckClassificationAction`, combinando os inspectors já existentes
+  mais um novo `IBackgroundProcessInspector`
+  (`Win32_PerfFormattedData_PerfProc_Process`, sem driver); "servidor
+  limitado" é sempre uma conclusão por eliminação, nunca uma medição direta
+  do servidor. (2) Comparação antes/depois: `AppOptimizationService` captura
+  um snapshot leve de recursos (CPU/GPU/disco%, memória disponível, sinal
+  térmico, problemas de rede) antes de iniciar a otimização e novamente
+  depois (com 1s de espera para a atividade da própria otimização assentar),
+  e sinaliza regressão apenas para os dois sinais atribuíveis com confiança
+  razoável: novo sinal térmico elevado que não existia antes, ou memória
+  disponível caindo à menos da metade. Quando sinalizado, a UI mostra
+  "Reverter esta otimização", que reaproveita o rollback por transação já
+  existente — nunca reverte sozinho. (3) Perfil de hardware:
+  `HardwareProfileSignature` gera uma chave SHA-256 estável e local
+  (CPU+GPUs+RAM arredondada) para agrupar comparações por máquina; nunca
+  identifica servidor do FiveM, pois não há API segura para isso. (4)
+  Benchmark oficial do GTA V: `WindowsGtaVBenchmarkRunner` lança o
+  `GTA5.exe` standalone com as flags oficiais e documentadas da Rockstar
+  (`-benchmark -benchmarkFrameTimes`), nunca dentro de uma sessão do FiveM,
+  exige o GTA V fechado antes, roda 3 rodadas e usa a mediana por FPS médio
+  (evitando misturar métricas de rodadas diferentes). Como o formato exato
+  do arquivo de resultado não é documentado de forma estável entre versões
+  do jogo, a busca é defensiva (procura por arquivos `.csv`/`.txt` criados
+  após o lançamento contendo "bench"/"frametime" no nome, tenta interpretar
+  colunas de frametime ou FPS) e falha honestamente
+  ("`benchmark-output-file-not-found`"/"`-not-recognized`") em vez de
+  inventar um resultado. Botão dedicado e opt-in em Configurações; nunca faz
+  parte do fluxo automático dos perfis Leve/Médio/Agressivo. Catálogo de
+  ações avança da versão 6 para a 7 (nova ação de classificação de
+  gargalo).
 - Relatório técnico agora também pode ser salvo em arquivo
   (`MainViewModel.SaveTechnicalReport`, `SaveFileDialog` nativo no
   code-behind), além de copiado para a área de transferência; usa o mesmo
@@ -211,6 +246,27 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   `CharSet.Unicode` de ponta a ponta (struct + `EntryPoint =
   "EnumDisplaySettingsW"`); confirmado com dados reais da máquina de
   desenvolvimento antes do commit.
+- Avaliação do sistema de "Benchmark e comparação antes/depois" pedido pelo
+  usuário em 23/07/2026: antes de implementar, o usuário foi consultado
+  sobre três pontos que tensionavam decisões já documentadas. (1) Captura de
+  FPS/frametime/1%-low **ao vivo dentro de uma sessão real do FiveM**
+  (diferenciando parado/dirigindo/urbano/servidor cheio) exigiria ETW
+  (reconstruir algo como o PresentMon da Microsoft) ou hook/injeção
+  (proibido); o usuário confirmou **não implementar por enquanto**, mantendo
+  a decisão já registrada nas Fases 1 e 2 — nenhum código de ETW/DXGI foi
+  escrito. (2) O parâmetro oficial `-benchmark` do GTA V (fora do FiveM,
+  sequência fixa, lê arquivo de log) foi confirmado como seguro e útil —
+  implementado como `WindowsGtaVBenchmarkRunner`. (3) "Reverter
+  automaticamente ajustes que piorarem o resultado" tensionava com o
+  princípio de "prévia completa"; o usuário confirmou **sinalizar e pedir
+  confirmação** em vez de reverter sozinho — implementado como
+  `MainViewModel.CanRevertLastOptimization`/`RevertLastOptimizationAsync`,
+  que reaproveita o rollback por transação já existente. Como consequência
+  dessas decisões, "diferenciar parado/dirigindo/urbano/servidor cheio" e
+  "salvar histórico por servidor" não foram implementados (exigiriam a
+  captura de FPS ao vivo ou uma forma segura de identificar o servidor
+  conectado, que não existe sem ler estado do FiveM); "salvar perfil por
+  hardware" foi implementado sem a dimensão "por servidor".
 - Motor de execução **isolada por ação** (`WindowsTransactionOptions.
   IsolateFailures`, usado pelo fluxo padrão do app): cada ação verifica,
   aplica, valida e registra separadamente; uma falha reverte só a própria
@@ -585,5 +641,69 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   cada um dos 9 novos inspectors); `scripts\Verify-Safety.ps1` aprovado;
   smoke test manual do executável (`Start-Process --demo-synthetic`, 6s, sem
   novas entradas em `crash.log`).
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
+
+## Benchmark e comparação antes/depois (23/07/2026)
+
+- Trabalho local, **não publicado** (sem push/tag/release desta etapa, por
+  instrução explícita do usuário). Não altera versão pública, instalador nem
+  site.
+- Antes de implementar, o usuário foi consultado sobre três pontos que
+  tensionavam decisões já registradas (captura de FPS ao vivo, benchmark
+  oficial do GTA V, reversão automática). Decisões e justificativas completas
+  registradas acima em "Avaliação do sistema de benchmark".
+- Novo código:
+  - `src/FiveMCleaner.Windows/Infrastructure/BackgroundProcessInspector.cs` —
+    processo com maior uso de CPU, excluindo FiveM/GTA/o próprio app
+    (`Win32_PerfFormattedData_PerfProc_Process`, sem driver);
+  - `BottleneckClassificationAction` (em `HardwareDiagnosticActions.cs`) —
+    9ª ação de diagnóstico sempre presente, combina os inspectors já
+    existentes para classificar GPU/CPU/VRAM/RAM/disco/servidor/rede/
+    térmico/processo-de-fundo limitado, em ordem de prioridade;
+  - `src/FiveMCleaner.App/Services/HardwareProfileSignature.cs` — assinatura
+    SHA-256 estável de CPU+GPUs+RAM, local, nunca identifica servidor;
+  - `AppOptimizationService.TryCaptureResourceComparisonSnapshot`/
+    `BuildComparison`/`ComputeRegressionReasonKeys` — captura antes/depois e
+    regra de regressão conservadora (só sinaliza novo problema térmico ou
+    memória disponível caindo à menos da metade), nunca deriva de FPS;
+  - `MainViewModel.RevertLastOptimizationAsync`/`CanRevertLastOptimization` —
+    reaproveita o rollback por transação já existente, nunca reverte sem
+    clique do usuário;
+  - `src/FiveMCleaner.Windows/Infrastructure/GtaVBenchmarkRunner.cs` —
+    lança `GTA5.exe -benchmark -benchmarkFrameTimes` standalone (nunca
+    dentro do FiveM), exige GTA V fechado, roda N rodadas, busca o arquivo
+    de resultado de forma defensiva (nome/local do arquivo não é
+    documentado de forma estável entre versões do jogo) e falha
+    honestamente quando não consegue localizar/interpretar o resultado;
+    calcula FPS médio/mínimo, 1%/0,1% low e frametime médio/pico por
+    rodada, com mediana por FPS médio entre rodadas (nunca mistura métricas
+    de rodadas diferentes); exposto via `IAppOptimizationService.
+    RunGtaVBenchmarkAsync` e um botão dedicado e opt-in em Configurações —
+    nunca faz parte do fluxo automático dos perfis.
+- Catálogo de ações avançou da versão 6 para a 7 (nova ação de classificação
+  de gargalo). O benchmark oficial do GTA V e a comparação antes/depois não
+  são ações de catálogo: o primeiro lança um processo externo de vida longa
+  (não cabe no modelo de ação curta e transacional), e a segunda é um
+  extra informativo em volta de uma otimização já existente, não uma
+  otimização em si.
+- Limitação conhecida e assumida conscientemente: o formato exato do
+  arquivo de resultado do benchmark oficial do GTA V não pôde ser verificado
+  com certeza neste ambiente (sem acesso à internet durante o
+  desenvolvimento); o parser busca arquivos plausíveis e tenta interpretar
+  colunas de frametime/FPS de forma genérica, reportando falha honesta
+  (`benchmark-output-file-not-found`/`-not-recognized`) em vez de um
+  resultado inventado quando o formato real não corresponder. Recomenda-se
+  validar em uma máquina com GTA V instalado antes de divulgar este recurso
+  amplamente.
+- Validação: `dotnet build` Release sem avisos/erros; **353 testes .NET
+  aprovados** (317 anteriores + 36 novos cobrindo as 9 categorias do
+  classificador de gargalo, a assinatura de hardware, a regra de detecção
+  de regressão, o parser do benchmark oficial do GTA V — incluindo formatos
+  válidos, delimitador `;`, arquivo não reconhecido, poucas amostras,
+  arquivo ausente — a mediana entre rodadas e a validação/modo demo do
+  serviço de benchmark); `scripts\Verify-Safety.ps1` aprovado; smoke test
+  manual do executável (`Start-Process --demo-synthetic`, 6s, sem novas
+  entradas em `crash.log`) exercitando as novas telas.
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.

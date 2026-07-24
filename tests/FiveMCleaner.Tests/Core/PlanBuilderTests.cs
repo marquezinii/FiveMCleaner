@@ -40,6 +40,7 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnoseResourceUsage,
                 OptimizationActionIds.DiagnosePciLink,
                 OptimizationActionIds.DiagnoseHardwareStability,
+                OptimizationActionIds.ClassifyBottleneck,
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 OptimizationActionIds.PruneLegacyCrashDumps,
                 OptimizationActionIds.EnableGameMode,
@@ -156,7 +157,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnoseThrottlingSignal,
                 OptimizationActionIds.DiagnoseResourceUsage,
                 OptimizationActionIds.DiagnosePciLink,
-                OptimizationActionIds.DiagnoseHardwareStability
+                OptimizationActionIds.DiagnoseHardwareStability,
+                OptimizationActionIds.ClassifyBottleneck
             ],
             Ids(plan));
         Assert.False(plan.RequiresElevation);

@@ -394,6 +394,16 @@ public partial class MainWindow : Window
         }
     }
 
+    private async void RunGtaVBenchmark_Click(object sender, RoutedEventArgs e) => await viewModel.RunGtaVBenchmarkAsync();
+
+    private async void RevertLastOptimization_Click(object sender, RoutedEventArgs e)
+    {
+        if (viewModel.CanRevertLastOptimization)
+        {
+            await viewModel.RevertLastOptimizationAsync();
+        }
+    }
+
     private async void RollbackHistory_Click(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement { Tag: HistoryDisplayItem item } || !item.CanRollback)

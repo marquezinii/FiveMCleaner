@@ -104,6 +104,8 @@ public sealed record WindowsOptimizationDependencies
 
     public required IHardwareStabilityInspector HardwareStability { get; init; }
 
+    public required IBackgroundProcessInspector BackgroundProcess { get; init; }
+
     public static WindowsOptimizationDependencies CreateDefault(
         WindowsOptimizationEnvironment environment)
     {
@@ -132,7 +134,8 @@ public sealed record WindowsOptimizationDependencies
             DisplayConfiguration = new WindowsDisplayConfigurationInspector(),
             ResourceUsage = new WindowsResourceUsageInspector(),
             PciLink = new WindowsPciLinkInspector(),
-            HardwareStability = new WindowsHardwareStabilityInspector()
+            HardwareStability = new WindowsHardwareStabilityInspector(),
+            BackgroundProcess = new WindowsBackgroundProcessInspector()
         };
     }
 }
@@ -195,6 +198,13 @@ public sealed class WindowsOptimizationActionFactory
             new ResourceUsageDiagnosisAction(dependencies.ResourceUsage),
             new PciLinkDiagnosisAction(dependencies.PciLink),
             new HardwareStabilityDiagnosisAction(dependencies.HardwareStability),
+            new BottleneckClassificationAction(
+                dependencies.SystemResources,
+                dependencies.ResourceUsage,
+                dependencies.Thermal,
+                dependencies.NetworkHealth,
+                dependencies.GpuDetails,
+                dependencies.BackgroundProcess),
             new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(defaults.TemporaryFileMinimumAgeDays),
@@ -322,6 +332,13 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.PciLink),
             OptimizationActionIds.DiagnoseHardwareStability => new HardwareStabilityDiagnosisAction(
                 dependencies.HardwareStability),
+            OptimizationActionIds.ClassifyBottleneck => new BottleneckClassificationAction(
+                dependencies.SystemResources,
+                dependencies.ResourceUsage,
+                dependencies.Thermal,
+                dependencies.NetworkHealth,
+                dependencies.GpuDetails,
+                dependencies.BackgroundProcess),
             OptimizationActionIds.CleanUserTemporaryFiles => new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(plan.Options.TemporaryFileMinimumAgeDays),

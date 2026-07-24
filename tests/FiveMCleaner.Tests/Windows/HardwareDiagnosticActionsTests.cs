@@ -330,6 +330,127 @@ public sealed class HardwareDiagnosticActionsTests
     }
 }
 
+public sealed class BottleneckClassificationActionTests
+{
+    private static readonly SystemResourceSnapshot HealthyResources = new(
+        TotalMemoryBytes: 16L * 1024 * 1024 * 1024,
+        AvailableMemoryBytes: 8L * 1024 * 1024 * 1024,
+        LogicalProcessorCount: 12,
+        SystemDriveFreeBytes: 100L * 1024 * 1024 * 1024,
+        TotalPageFileBytes: 20L * 1024 * 1024 * 1024,
+        AvailablePageFileBytes: 16L * 1024 * 1024 * 1024);
+
+    private static readonly ResourceUsageSnapshot HealthyUsage = new(30, 10, 40, 1.0);
+    private static readonly ThermalSnapshot NoThermalData = new(false, null);
+    private static readonly NetworkHealthSnapshot HealthyNetwork = new(true, 0, 0);
+    private static readonly IReadOnlyList<GpuAdapterDetails> BigVramGpu =
+        [new GpuAdapterDetails("NVIDIA GeForce RTX 4070", 12L * 1024 * 1024 * 1024, GpuKindGuess.LikelyDiscrete)];
+
+    [Fact]
+    public void Classify_PrioritizesThermalWhenTemperatureIsElevated()
+    {
+        var input = new BottleneckClassificationInput(
+            HealthyResources, HealthyUsage, new ThermalSnapshot(true, 90), HealthyNetwork, BigVramGpu, null);
+
+        var message = BottleneckClassificationAction.Classify(input);
+
+        Assert.Contains("térmico", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Classify_FlagsBackgroundProcessConsumingCpu()
+    {
+        var input = new BottleneckClassificationInput(
+            HealthyResources, HealthyUsage, NoThermalData, HealthyNetwork, BigVramGpu,
+            new BackgroundProcessUsage("chrome", 400)); // 400% / 12 cores ≈ 33%, above threshold
+
+        var message = BottleneckClassificationAction.Classify(input);
+
+        Assert.Contains("processo em segundo plano", message, StringComparison.Ordinal);
+        Assert.Contains("chrome", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Classify_FlagsNetworkWhenPacketsAreDiscarded()
+    {
+        var input = new BottleneckClassificationInput(
+            HealthyResources, HealthyUsage, NoThermalData, new NetworkHealthSnapshot(true, 5, 0), BigVramGpu, null);
+
+        var message = BottleneckClassificationAction.Classify(input);
+
+        Assert.Contains("rede", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Classify_FlagsDiskWhenDiskTimeIsHigh()
+    {
+        var input = new BottleneckClassificationInput(
+            HealthyResources, HealthyUsage with { DiskPercent = 95 }, NoThermalData, HealthyNetwork, BigVramGpu, null);
+
+        var message = BottleneckClassificationAction.Classify(input);
+
+        Assert.Contains("disco", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Classify_FlagsRamWhenAvailableIsLow()
+    {
+        var lowMemory = HealthyResources with { AvailableMemoryBytes = 512L * 1024 * 1024 };
+        var input = new BottleneckClassificationInput(
+            lowMemory, HealthyUsage, NoThermalData, HealthyNetwork, BigVramGpu, null);
+
+        var message = BottleneckClassificationAction.Classify(input);
+
+        Assert.Contains("memória RAM", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Classify_FlagsVramWhenGpuIsSaturatedAndVramIsSmall()
+    {
+        IReadOnlyList<GpuAdapterDetails> smallVramGpu =
+            [new GpuAdapterDetails("Old GPU", 2L * 1024 * 1024 * 1024, GpuKindGuess.LikelyDiscrete)];
+        var input = new BottleneckClassificationInput(
+            HealthyResources, HealthyUsage with { GpuPercent = 98 }, NoThermalData, HealthyNetwork, smallVramGpu, null);
+
+        var message = BottleneckClassificationAction.Classify(input);
+
+        Assert.Contains("VRAM", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Classify_FlagsGpuWhenSaturatedWithCpuHeadroom()
+    {
+        var input = new BottleneckClassificationInput(
+            HealthyResources, HealthyUsage with { GpuPercent = 98, CpuPercent = 40 }, NoThermalData, HealthyNetwork, BigVramGpu, null);
+
+        var message = BottleneckClassificationAction.Classify(input);
+
+        Assert.Contains("Gargalo provável: GPU", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Classify_FlagsCpuWhenSaturatedWithGpuHeadroom()
+    {
+        var input = new BottleneckClassificationInput(
+            HealthyResources, HealthyUsage with { CpuPercent = 95, GpuPercent = 40 }, NoThermalData, HealthyNetwork, BigVramGpu, null);
+
+        var message = BottleneckClassificationAction.Classify(input);
+
+        Assert.Contains("Gargalo provável: CPU", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Classify_FallsBackToServerByEliminationWhenNothingElseFires()
+    {
+        var input = new BottleneckClassificationInput(
+            HealthyResources, HealthyUsage, NoThermalData, HealthyNetwork, BigVramGpu, null);
+
+        var message = BottleneckClassificationAction.Classify(input);
+
+        Assert.Contains("servidor FiveM", message, StringComparison.Ordinal);
+    }
+}
+
 public sealed class HardwareInspectorSmokeTests
 {
     [Fact]
@@ -399,5 +520,13 @@ public sealed class HardwareInspectorSmokeTests
     public void WindowsHardwareStabilityInspector_NeverThrows()
     {
         Assert.NotNull(new WindowsHardwareStabilityInspector().GetSnapshot());
+    }
+
+    [Fact]
+    public void WindowsBackgroundProcessInspector_NeverThrows()
+    {
+        // May legitimately return null when nothing exceeds the internal
+        // exclusions, so only the absence of an exception is asserted here.
+        _ = new WindowsBackgroundProcessInspector().GetTopConsumer(["FiveMCleaner"]);
     }
 }

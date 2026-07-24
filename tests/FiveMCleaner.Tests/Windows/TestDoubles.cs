@@ -256,6 +256,13 @@ internal sealed class FakeHardwareStabilityInspector : IHardwareStabilityInspect
     public HardwareStabilitySnapshot GetSnapshot() => Snapshot;
 }
 
+internal sealed class FakeBackgroundProcessInspector : IBackgroundProcessInspector
+{
+    public BackgroundProcessUsage? Result { get; set; }
+
+    public BackgroundProcessUsage? GetTopConsumer(IReadOnlyCollection<string> excludedProcessNames) => Result;
+}
+
 internal sealed class InMemoryJournalStore : IWindowsTransactionJournalStore
 {
     private readonly Dictionary<Guid, WindowsTransactionJournal> journals = [];
@@ -331,7 +338,8 @@ internal static class WindowsTestRuntime
             DisplayConfiguration = new FakeDisplayConfigurationInspector(),
             ResourceUsage = new FakeResourceUsageInspector(),
             PciLink = new FakePciLinkInspector(),
-            HardwareStability = new FakeHardwareStabilityInspector()
+            HardwareStability = new FakeHardwareStabilityInspector(),
+            BackgroundProcess = new FakeBackgroundProcessInspector()
         };
 
         return (

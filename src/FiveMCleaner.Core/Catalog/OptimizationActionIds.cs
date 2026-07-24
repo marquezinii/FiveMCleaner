@@ -24,6 +24,7 @@ public static class OptimizationActionIds
     public const string DiagnoseResourceUsage = "safety.resource-usage.diagnose";
     public const string DiagnosePciLink = "windows.gaming.pcie-link.diagnose";
     public const string DiagnoseHardwareStability = "safety.hardware-stability.diagnose";
+    public const string ClassifyBottleneck = "safety.bottleneck-classification.diagnose";
     public const string CleanUserTemporaryFiles = "storage.user-temporary-files.clean";
     public const string PruneLegacyCrashDumps = "fivem.legacy.crash-dumps.prune";
     public const string RepairLegacyServerCache = "fivem.legacy.server-cache.repair";

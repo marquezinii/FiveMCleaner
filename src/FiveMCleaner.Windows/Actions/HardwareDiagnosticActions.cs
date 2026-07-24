@@ -610,3 +610,158 @@ public sealed class HardwareStabilityDiagnosisAction : WindowsOptimizationAction
             : $"BIOS lançada em {releaseDate:yyyy-MM-dd}, relativamente recente.";
     }
 }
+
+/// <summary>
+/// The nine-way bottleneck classification requested for the benchmark/
+/// comparison feature. It only reuses signals already read by the other
+/// diagnostics in this file — no new system access beyond the background
+/// process CPU reader — and returns the first category whose threshold
+/// fires, in the priority order documented in <see cref="Classify"/>.
+/// "Servidor limitado" is a conclusion by elimination (no local signal
+/// stood out), never a direct measurement of the FiveM server.
+/// </summary>
+public sealed class BottleneckClassificationAction : WindowsOptimizationAction
+{
+    private const double ElevatedTemperatureCelsius = 85d;
+    private const double HighUtilizationPercent = 90d;
+    private const double ModerateUtilizationPercent = 85d;
+    private const double BackgroundProcessCpuThresholdPercent = 20d;
+
+    private static readonly IReadOnlyCollection<string> ExcludedProcessNames =
+    [
+        "FiveM", "FiveM_", "CitizenFX", "CitizenFX_", "GTA5", "GTA5_Enhanced",
+        "FiveMCleaner", "FiveMCleaner.Broker"
+    ];
+
+    private readonly ISystemResourceInspector systemResources;
+    private readonly IResourceUsageInspector resourceUsage;
+    private readonly IThermalInspector thermal;
+    private readonly INetworkHealthInspector networkHealth;
+    private readonly IGpuDetailsInspector gpuDetails;
+    private readonly IBackgroundProcessInspector backgroundProcess;
+
+    public BottleneckClassificationAction(
+        ISystemResourceInspector systemResources,
+        IResourceUsageInspector resourceUsage,
+        IThermalInspector thermal,
+        INetworkHealthInspector networkHealth,
+        IGpuDetailsInspector gpuDetails,
+        IBackgroundProcessInspector backgroundProcess)
+    {
+        this.systemResources = systemResources ?? throw new ArgumentNullException(nameof(systemResources));
+        this.resourceUsage = resourceUsage ?? throw new ArgumentNullException(nameof(resourceUsage));
+        this.thermal = thermal ?? throw new ArgumentNullException(nameof(thermal));
+        this.networkHealth = networkHealth ?? throw new ArgumentNullException(nameof(networkHealth));
+        this.gpuDetails = gpuDetails ?? throw new ArgumentNullException(nameof(gpuDetails));
+        this.backgroundProcess = backgroundProcess ?? throw new ArgumentNullException(nameof(backgroundProcess));
+    }
+
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.ClassifyBottleneck);
+
+    public override Task<WindowsActionApplyResult> ApplyAsync(
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var input = new BottleneckClassificationInput(
+            systemResources.GetSnapshot(),
+            resourceUsage.GetSnapshot(),
+            thermal.GetSnapshot(),
+            networkHealth.GetSnapshot(),
+            gpuDetails.GetSnapshot(),
+            backgroundProcess.GetTopConsumer(ExcludedProcessNames));
+        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(input)));
+    }
+
+    public override Task RollbackAsync(
+        WindowsActionContext context,
+        string? snapshotJson,
+        CancellationToken cancellationToken) => Task.CompletedTask;
+
+    internal static string Classify(BottleneckClassificationInput input)
+    {
+        var logicalProcessors = Math.Max(1, input.SystemResources.LogicalProcessorCount);
+
+        // 1. Térmico: alta temperatura disponível é o sinal mais direto que temos.
+        if (input.Thermal is { IsAvailable: true, HighestCelsius: >= ElevatedTemperatureCelsius })
+        {
+            return $"Gargalo provável: térmico. Temperatura em ~{input.Thermal.HighestCelsius:0}°C, "
+                + "o que pode causar throttling e queda de desempenho sob carga.";
+        }
+
+        // 2. Processo de fundo: outro processo consumindo CPU de forma relevante.
+        if (input.BackgroundProcess is { } process
+            && process.CpuPercent / logicalProcessors >= BackgroundProcessCpuThresholdPercent)
+        {
+            return $"Gargalo provável: processo em segundo plano. '{process.ProcessName}' está consumindo "
+                + "CPU de forma relevante além do FiveM/GTA V.";
+        }
+
+        // 3. Rede: perda/erro de pacotes local.
+        if (input.NetworkHealth.HasActiveInterface
+            && (input.NetworkHealth.DiscardedPackets > 0 || input.NetworkHealth.ErrorPackets > 0))
+        {
+            return "Gargalo provável: rede. Há descarte ou erro de pacotes na placa de rede ativa, "
+                + "o que pode causar jitter ou perda de conexão com o servidor.";
+        }
+
+        // 4. Disco: tempo ativo elevado.
+        if (input.ResourceUsage.DiskPercent is >= HighUtilizationPercent)
+        {
+            return "Gargalo provável: disco. A unidade está com tempo ativo elevado, "
+                + "o que pode causar travamentos ao carregar texturas/streaming.";
+        }
+
+        // 5. RAM: pouca memória disponível.
+        var availableRatio = input.SystemResources.TotalMemoryBytes > 0
+            ? (double)input.SystemResources.AvailableMemoryBytes / input.SystemResources.TotalMemoryBytes
+            : 1d;
+        if (availableRatio < 0.10 || input.SystemResources.AvailableMemoryBytes < 1536L * 1024 * 1024)
+        {
+            return "Gargalo provável: memória RAM. A memória disponível está baixa, "
+                + "o que pode causar paginação e engasgos.";
+        }
+
+        // 6. VRAM: GPU saturada em uma placa com pouca VRAM total (estimativa).
+        var lowestVram = input.GpuDetails
+            .Where(gpu => gpu.VramBytes is > 0)
+            .Select(gpu => gpu.VramBytes!.Value)
+            .DefaultIfEmpty(0)
+            .Min();
+        if (input.ResourceUsage.GpuPercent is >= HighUtilizationPercent
+            && lowestVram is > 0 and <= 4L * 1024 * 1024 * 1024)
+        {
+            return "Gargalo provável: VRAM. A GPU detectada tem pouca memória de vídeo (4 GB ou menos) "
+                + "e está com uso alto; texturas em qualidade mais alta podem causar stutter.";
+        }
+
+        // 7. GPU: GPU saturada com CPU folgada.
+        if (input.ResourceUsage.GpuPercent is >= HighUtilizationPercent
+            && input.ResourceUsage.CpuPercent is < ModerateUtilizationPercent)
+        {
+            return "Gargalo provável: GPU. A GPU está próxima do limite enquanto a CPU ainda tem folga; "
+                + "reduzir opções gráficas tende a ajudar mais que ajustes de CPU.";
+        }
+
+        // 8. CPU: CPU saturada com GPU não saturada.
+        if (input.ResourceUsage.CpuPercent is >= ModerateUtilizationPercent
+            && input.ResourceUsage.GpuPercent is < HighUtilizationPercent)
+        {
+            return "Gargalo provável: CPU. A CPU está com uso alto enquanto a GPU tem folga; "
+                + "reduzir opções gráficas tende a ajudar pouco nesse caso.";
+        }
+
+        // 9. Servidor (por eliminação): nenhum sinal local se destacou.
+        return "Nenhum gargalo local evidente foi encontrado; se o desempenho ainda estiver ruim, "
+            + "os recursos do servidor FiveM (scripts e mapas) podem ser o fator limitante.";
+    }
+}
+
+public sealed record BottleneckClassificationInput(
+    SystemResourceSnapshot SystemResources,
+    ResourceUsageSnapshot ResourceUsage,
+    ThermalSnapshot Thermal,
+    NetworkHealthSnapshot NetworkHealth,
+    IReadOnlyList<GpuAdapterDetails> GpuDetails,
+    BackgroundProcessUsage? BackgroundProcess);

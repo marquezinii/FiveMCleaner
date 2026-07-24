@@ -361,6 +361,76 @@ public sealed class AppOptimizationService : IAppOptimizationService
         return RollbackCoreAsync(transactionId, progress, cancellationToken);
     }
 
+    public async Task<AppGtaVBenchmarkResult> RunGtaVBenchmarkAsync(
+        int iterations,
+        CancellationToken cancellationToken = default)
+    {
+        if (iterations < 1 || iterations > 9)
+        {
+            throw new ArgumentOutOfRangeException(nameof(iterations));
+        }
+
+        if (demoMode)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return new AppGtaVBenchmarkResult
+            {
+                Succeeded = false,
+                FailureReason = "demo-mode",
+                Iterations = []
+            };
+        }
+
+        var gtaV = GtaVLocator.Detect(detectedLegacyRoot);
+        if (!gtaV.IsInstalled || gtaV.ExecutablePath is null)
+        {
+            return new AppGtaVBenchmarkResult
+            {
+                Succeeded = false,
+                FailureReason = "gtav-not-detected",
+                Iterations = []
+            };
+        }
+
+        var running = new WindowsGtaVProcessInspector().IsRunningFrom(gtaV.InstallationRoot);
+        if (running)
+        {
+            return new AppGtaVBenchmarkResult
+            {
+                Succeeded = false,
+                FailureReason = "gtav-still-running",
+                Iterations = []
+            };
+        }
+
+        var runner = new WindowsGtaVBenchmarkRunner();
+        var result = await runner.RunAsync(
+            gtaV.ExecutablePath,
+            iterations,
+            TimeSpan.FromMinutes(5),
+            cancellationToken).ConfigureAwait(false);
+
+        return new AppGtaVBenchmarkResult
+        {
+            Succeeded = result.Succeeded,
+            FailureReason = result.FailureReason,
+            Iterations = result.Iterations.Select(ToAppIteration).ToArray(),
+            Median = result.Median is null ? null : ToAppIteration(result.Median)
+        };
+    }
+
+    private static AppGtaVBenchmarkIteration ToAppIteration(GtaVBenchmarkIterationResult iteration)
+    {
+        return new AppGtaVBenchmarkIteration(
+            iteration.AverageFps,
+            iteration.MinimumFps,
+            iteration.OnePercentLowFps,
+            iteration.PointOnePercentLowFps,
+            iteration.AverageFrametimeMs,
+            iteration.PeakFrametimeMs,
+            iteration.SampleCount);
+    }
+
     private AppDiagnostic CreateDemoDiagnostic()
     {
         return new AppDiagnostic
@@ -434,6 +504,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Detail = localization.GetString("Runtime.ValidatingPlanDetail")
         });
 
+        var beforeSnapshot = TryCaptureResourceComparisonSnapshot();
         var runtime = CreateRuntimeForDetectedInstallation();
         var actionProgress = new InlineProgress<WindowsActionProgress>(update =>
         {
@@ -581,7 +652,22 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Detail = localization.GetString(
                 runSucceeded ? "Runtime.PlanCompletedDetail" : "Runtime.PlanCompletedWithErrorsDetail")
         });
-        return await CreateResultFromJournalAsync(
+
+        OptimizationComparisonResult? comparison = null;
+        if (beforeSnapshot is not null)
+        {
+            // A curta espera deixa a atividade de disco/CPU da própria otimização
+            // assentar antes de medir "depois", evitando comparar o trabalho da
+            // otimização em si com o estado real pós-otimização.
+            await Task.Delay(TimeSpan.FromSeconds(1), CancellationToken.None).ConfigureAwait(false);
+            var afterSnapshot = TryCaptureResourceComparisonSnapshot();
+            if (afterSnapshot is not null)
+            {
+                comparison = BuildComparison(beforeSnapshot, afterSnapshot);
+            }
+        }
+
+        var result = await CreateResultFromJournalAsync(
             plan.PlanId,
             plan.Profile,
             succeeded: runSucceeded,
@@ -590,6 +676,94 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 + localization.GetString(
                     runSucceeded ? "Runtime.PlanCompletedDetail" : "Runtime.PlanCompletedWithErrorsDetail"),
             cancellationToken).ConfigureAwait(false);
+        return comparison is null ? result : result with { Comparison = comparison };
+    }
+
+    private ResourceComparisonSnapshot? TryCaptureResourceComparisonSnapshot()
+    {
+        try
+        {
+            var resources = new WindowsResourceUsageInspector().GetSnapshot();
+            var thermal = new WindowsThermalInspector().GetSnapshot();
+            var network = new WindowsNetworkHealthInspector().GetSnapshot();
+            var system = new WindowsSystemResourceInspector().GetSnapshot();
+            return new ResourceComparisonSnapshot
+            {
+                CapturedAtUtc = DateTimeOffset.UtcNow,
+                CpuPercent = resources.CpuPercent,
+                GpuPercent = resources.GpuPercent,
+                DiskPercent = resources.DiskPercent,
+                AvailableMemoryGiB = system.AvailableMemoryBytes / 1024d / 1024d / 1024d,
+                ThermalElevated = thermal is { IsAvailable: true, HighestCelsius: >= 85 },
+                NetworkIssuesDetected = network.DiscardedPackets > 0 || network.ErrorPackets > 0
+            };
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            // A comparação antes/depois é um extra informativo; nunca deve
+            // interromper nem fazer a otimização real falhar.
+            return null;
+        }
+    }
+
+    private OptimizationComparisonResult BuildComparison(
+        ResourceComparisonSnapshot before,
+        ResourceComparisonSnapshot after)
+    {
+        var reasonKeys = ComputeRegressionReasonKeys(before, after);
+        var cpuName = GetCpuNameSafe();
+        var gpuNames = GetGpuNames();
+        var totalMemoryGiB = new WindowsSystemResourceInspector().GetSnapshot().TotalMemoryBytes
+            / 1024d / 1024d / 1024d;
+
+        return new OptimizationComparisonResult
+        {
+            HardwareProfileSignature = HardwareProfileSignature.Compute(cpuName, gpuNames, totalMemoryGiB),
+            Before = before,
+            After = after,
+            RegressionSuspected = reasonKeys.Count > 0,
+            RegressionReasons = reasonKeys.Select(localization.GetString).ToArray()
+        };
+    }
+
+    /// <summary>
+    /// Pure regression-detection rule set, kept intentionally conservative:
+    /// only signals this product can attribute with reasonable confidence to
+    /// something having gotten worse (never derived from FPS, which this
+    /// product does not measure live). Returns localization keys so this can
+    /// be tested without a real <see cref="ILocalizationService"/>.
+    /// </summary>
+    internal static IReadOnlyList<string> ComputeRegressionReasonKeys(
+        ResourceComparisonSnapshot before,
+        ResourceComparisonSnapshot after)
+    {
+        var reasons = new List<string>();
+        if (!before.ThermalElevated && after.ThermalElevated)
+        {
+            reasons.Add("Comparison.Reason.NewThermalSignal");
+        }
+
+        if (before.AvailableMemoryGiB > 1
+            && after.AvailableMemoryGiB < before.AvailableMemoryGiB * 0.5)
+        {
+            reasons.Add("Comparison.Reason.MemoryDropped");
+        }
+
+        return reasons;
+    }
+
+    private string GetCpuNameSafe()
+    {
+        try
+        {
+            return GetCpuName();
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            return "unknown-cpu";
+        }
     }
 
     private static string DetailKeyFor(ActionExecutionOutcome outcome) => outcome switch

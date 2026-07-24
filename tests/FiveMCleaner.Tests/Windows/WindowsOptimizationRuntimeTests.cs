@@ -121,7 +121,8 @@ public sealed class WindowsOptimizationRuntimeTests
             DisplayConfiguration = new FakeDisplayConfigurationInspector(),
             ResourceUsage = new FakeResourceUsageInspector(),
             PciLink = new FakePciLinkInspector(),
-            HardwareStability = new FakeHardwareStabilityInspector()
+            HardwareStability = new FakeHardwareStabilityInspector(),
+            BackgroundProcess = new FakeBackgroundProcessInspector()
         };
 
         Assert.Throws<InvalidOperationException>(() =>

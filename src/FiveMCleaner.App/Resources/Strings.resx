@@ -341,6 +341,8 @@
   <data name="Actions.windows.gaming.pcie-link.diagnose.Description" xml:space="preserve"><value>Attempts to read the current/maximum PCIe link width and speed of each GPU via Windows device properties, no third-party driver.</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.Name" xml:space="preserve"><value>Diagnose BIOS age and hardware stability</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.Description" xml:space="preserve"><value>Reads the BIOS release date and recent hardware error (WHEA) events from the Windows Event Log.</value></data>
+  <data name="Actions.safety.bottleneck-classification.diagnose.Name" xml:space="preserve"><value>Classify the likely bottleneck type</value></data>
+  <data name="Actions.safety.bottleneck-classification.diagnose.Description" xml:space="preserve"><value>Combines CPU/GPU/disk/network usage, memory, temperature and the top CPU-consuming process to point to the most likely limiting resource right now.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Name" xml:space="preserve"><value>Clean old temporary files</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Removes only user temporary files older than the retention period selected by the profile.</value></data>
   <data name="Actions.fivem.legacy.crash-dumps.prune.Name" xml:space="preserve"><value>Remove old diagnostic files</value></data>
@@ -497,6 +499,25 @@
   <data name="Report.RestartNeeded" xml:space="preserve"><value>Restarting Windows is recommended to fully apply the changes.</value></data>
   <data name="Report.RestartNotNeeded" xml:space="preserve"><value>No restart is required.</value></data>
   <data name="Report.CopyButton" xml:space="preserve"><value>Copy technical report</value></data>
+  <data name="Comparison.Reason.NewThermalSignal" xml:space="preserve"><value>A new elevated temperature signal appeared that was not present before.</value></data>
+  <data name="Comparison.Reason.MemoryDropped" xml:space="preserve"><value>Available memory dropped sharply compared to before.</value></data>
+  <data name="Comparison.Title" xml:space="preserve"><value>Before/after comparison</value></data>
+  <data name="Comparison.RegressionSuspected" xml:space="preserve"><value>The result looks worse than before. This is not an FPS measurement — it is a coarse local signal.</value></data>
+  <data name="Comparison.NoRegression" xml:space="preserve"><value>No worsening signal was detected locally after the optimization.</value></data>
+  <data name="Comparison.RevertButton" xml:space="preserve"><value>Revert this optimization</value></data>
+  <data name="Comparison.HardwareProfile" xml:space="preserve"><value>Hardware profile</value></data>
+  <data name="GtaVBenchmark.Title" xml:space="preserve"><value>Official GTA V benchmark</value></data>
+  <data name="GtaVBenchmark.Description" xml:space="preserve"><value>Launches GTA V standalone (never inside FiveM) with Rockstar's own -benchmark flag, runs 3 rounds and reports the median. GTA V must be closed first.</value></data>
+  <data name="GtaVBenchmark.RunButton" xml:space="preserve"><value>Run official benchmark</value></data>
+  <data name="GtaVBenchmark.Running" xml:space="preserve"><value>Running the official GTA V benchmark (3 rounds)... this can take several minutes.</value></data>
+  <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Median of {4} round(s) — avg FPS: {0:0.#}, min FPS: {1:0.#}, 1% low: {2:0.#}, 0.1% low: {3:0.#}.</value></data>
+  <data name="GtaVBenchmark.Error" xml:space="preserve"><value>Could not run the official benchmark: {0}</value></data>
+  <data name="GtaVBenchmark.Failure.NotDetected" xml:space="preserve"><value>GTA V was not detected on this computer.</value></data>
+  <data name="GtaVBenchmark.Failure.StillRunning" xml:space="preserve"><value>GTA V is still running. Close it before running the official benchmark.</value></data>
+  <data name="GtaVBenchmark.Failure.OutputNotFound" xml:space="preserve"><value>The official benchmark ran, but its result file could not be located in the GTA V profile folder.</value></data>
+  <data name="GtaVBenchmark.Failure.OutputNotRecognized" xml:space="preserve"><value>A benchmark output file was found, but its format could not be recognized safely.</value></data>
+  <data name="GtaVBenchmark.Failure.Timeout" xml:space="preserve"><value>GTA V did not exit within the expected time; the benchmark was cancelled.</value></data>
+  <data name="GtaVBenchmark.Failure.Generic" xml:space="preserve"><value>The official benchmark could not be completed.</value></data>
   <data name="Report.SaveButton" xml:space="preserve"><value>Save report to file</value></data>
   <data name="Log.ReportSaved" xml:space="preserve"><value>Technical report saved to {0}.</value></data>
   <data name="Log.ReportSaveFailed" xml:space="preserve"><value>Could not save the report: {0}</value></data>

@@ -122,6 +122,76 @@ public sealed record AppOptimizationResult
 
     /// <summary>Structured report of the run, when a journal was produced.</summary>
     public OptimizationReportDto? Report { get; init; }
+
+    /// <summary>Before/after resource comparison, when one could be captured.</summary>
+    public OptimizationComparisonResult? Comparison { get; init; }
+}
+
+/// <summary>
+/// A lightweight, best-effort resource reading taken immediately before or
+/// shortly after an optimization run. It is not a benchmark and never
+/// includes FPS: this is a coarse safety-net signal, not a performance
+/// guarantee.
+/// </summary>
+public sealed record ResourceComparisonSnapshot
+{
+    public required DateTimeOffset CapturedAtUtc { get; init; }
+
+    public double? CpuPercent { get; init; }
+
+    public double? GpuPercent { get; init; }
+
+    public double? DiskPercent { get; init; }
+
+    public required double AvailableMemoryGiB { get; init; }
+
+    public bool ThermalElevated { get; init; }
+
+    public bool NetworkIssuesDetected { get; init; }
+}
+
+/// <summary>
+/// One iteration of the official GTA V standalone <c>-benchmark</c> run,
+/// mirrored from <see cref="FiveMCleaner.Windows.Infrastructure.GtaVBenchmarkIterationResult"/>
+/// so the App layer's public surface does not depend on Windows.Infrastructure types.
+/// </summary>
+public sealed record AppGtaVBenchmarkIteration(
+    double AverageFps,
+    double MinimumFps,
+    double OnePercentLowFps,
+    double PointOnePercentLowFps,
+    double AverageFrametimeMs,
+    double PeakFrametimeMs,
+    int SampleCount);
+
+public sealed record AppGtaVBenchmarkResult
+{
+    public required bool Succeeded { get; init; }
+
+    public string? FailureReason { get; init; }
+
+    public required IReadOnlyList<AppGtaVBenchmarkIteration> Iterations { get; init; }
+
+    public AppGtaVBenchmarkIteration? Median { get; init; }
+}
+
+public sealed record OptimizationComparisonResult
+{
+    public required string HardwareProfileSignature { get; init; }
+
+    public required ResourceComparisonSnapshot Before { get; init; }
+
+    public required ResourceComparisonSnapshot After { get; init; }
+
+    /// <summary>
+    /// True only for signals this product can attribute with reasonable
+    /// confidence to something having gotten worse (a new thermal signal, or
+    /// available memory dropping sharply) — never derived from FPS, which
+    /// this product does not measure during a live FiveM session.
+    /// </summary>
+    public required bool RegressionSuspected { get; init; }
+
+    public required IReadOnlyList<string> RegressionReasons { get; init; }
 }
 
 public sealed record AppHistoryRecord
