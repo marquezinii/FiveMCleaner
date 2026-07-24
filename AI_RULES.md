@@ -106,15 +106,66 @@ Ao ser disparada, a IA deve:
 5. Atualizar `CHANGELOG.md` e as notas de release com um resumo fiel às
    mudanças reais implementadas e validadas pelos testes.
 6. Atualizar o instalador, o site e demais artefatos de distribuição.
-7. Fazer merge da branch de desenvolvimento para `main`, quando necessário.
+7. Fazer merge da branch de desenvolvimento para `main`, incorporando
+   integralmente todos os commits e todo o conteúdo validado dessa branch.
+   Esse merge só pode ser dispensado quando estiver comprovado — por
+   comparação explícita de histórico e conteúdo (por exemplo, `git log
+   main..dev/proxima-versao` vazio e `git diff main dev/proxima-versao`
+   vazio) — que `main` já contém exatamente os mesmos commits e o mesmo
+   conteúdo da branch de desenvolvimento. Nunca dispensar o merge apenas
+   porque parece "desnecessário"; a comprovação deve ser verificada e
+   relatada.
 8. Criar a tag correspondente à nova versão.
 9. Publicar oficialmente: `git push` de `main` e da tag, e demais publicações
    de artefatos (site, release, instalador).
+10. Validar o fluxo de atualização de ponta a ponta (ver "Validação do
+    atualizador" abaixo) antes de considerar a publicação concluída.
+11. Sincronizar a branch de desenvolvimento com a `main` publicada (ver
+    "Sincronização após a publicação" abaixo).
 
 Um push autorizado não autoriza ocultar falhas: se build, testes, lint,
 typecheck, empacotamento ou validação da versão falharem, a IA deve corrigir o
 problema antes do push ou informar claramente que a publicação ficou
 bloqueada.
+
+#### Sincronização após a publicação
+
+Depois que uma publicação oficial for concluída (merge, tag e push de `main`
+realizados com sucesso):
+
+- a branch de desenvolvimento deve ser sincronizada com a `main` recém
+  publicada, de forma que ambas apontem para o mesmo conteúdo e o mesmo
+  histórico naquele momento;
+- `main` e a branch de desenvolvimento devem representar exatamente a mesma
+  versão e o mesmo conteúdo logo após a publicação;
+- a branch de desenvolvimento permanece como a branch de trabalho ativa; a IA
+  não deve permanecer nem deixar o repositório configurado em `main`;
+- todo o trabalho seguinte — a partir da próxima tarefa — deve continuar
+  exclusivamente na branch de desenvolvimento, iniciando um novo ciclo de
+  desenvolvimento sobre a versão recém-publicada.
+
+#### Validação do atualizador
+
+Antes de considerar qualquer publicação oficial concluída, a IA deve validar
+o fluxo de atualização de ponta a ponta, verificando — sempre que
+tecnicamente possível no ambiente disponível — que:
+
+- o aplicativo instalado consegue consultar a fonte de atualizações;
+- a nova versão publicada é detectada corretamente;
+- o número da versão é comparado corretamente (nova versão > versão
+  instalada, sem falsos positivos/negativos);
+- o artefato correto de instalação ou atualização está acessível na origem
+  oficial;
+- links, manifestos, hashes e demais metadados necessários estão válidos e
+  coerentes com o que foi publicado;
+- o usuário receberá corretamente o aviso de nova atualização disponível.
+
+Quando essa validação não puder ser executada de forma completa no ambiente
+atual (por exemplo, por depender de instalação real, rede externa ou
+interação manual), a IA deve informar claramente e por escrito quais partes
+foram efetivamente verificadas e quais dependem de teste externo ou manual
+pendente. A IA nunca deve afirmar que o atualizador funciona sem evidência
+concreta da verificação realizada.
 
 #### Classificação de versão (Semantic Versioning)
 
@@ -154,10 +205,19 @@ aplicativo.
 ## Fluxo de trabalho
 
 ```text
-Implementação → Testes → Commit local automático → Nova tarefa →
-Commit local automático → [usuário pede "push de desenvolvimento"] →
-Push apenas da branch de desenvolvimento → Continuar desenvolvendo
-normalmente → [Somente quando o usuário pedir uma publicação oficial] →
-Preparar release completa → Merge para main → Tag → Release →
-Publicação da nova versão
+Desenvolvimento na dev/proxima-versao
+→ testes
+→ commits automáticos
+→ push de desenvolvimento quando autorizado
+→ [Somente quando o usuário pedir uma publicação oficial]
+→ preparação da publicação oficial
+→ validação completa (build, testes, lint, typecheck)
+→ atualização de versão, changelog, instalador, site e artefatos
+→ merge integral para main
+→ tag
+→ push da main e da tag
+→ release e demais publicações
+→ validação do atualizador
+→ sincronização da dev/proxima-versao com a main publicada
+→ retorno à dev/proxima-versao para o próximo ciclo de desenvolvimento
 ```
