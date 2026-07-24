@@ -50,4 +50,22 @@ public sealed record OptimizationOptionsDto
     /// pattern is present.
     /// </summary>
     public bool RepairStaleAuthData { get; init; }
+
+    /// <summary>
+    /// Opt-in preset, never part of automatic profile composition. Raises
+    /// (never lowers) existing graphics options up to a conservative ceiling.
+    /// </summary>
+    public bool ApplyQualityGraphicsPreset { get; init; }
+
+    /// <summary>
+    /// Opt-in preference, never part of automatic profile composition. Only
+    /// touches windowed mode and VSync; never resolution/refresh/adapter.
+    /// </summary>
+    public bool ApplyDisplayPreferences { get; init; }
+
+    /// <summary>Desired windowed mode when <see cref="ApplyDisplayPreferences"/> is enabled.</summary>
+    public bool PreferWindowedMode { get; init; }
+
+    /// <summary>Desired VSync state when <see cref="ApplyDisplayPreferences"/> is enabled.</summary>
+    public bool EnableVSync { get; init; } = true;
 }

@@ -45,4 +45,10 @@ public static class OptimizationActionIds
     public const string TerminateStuckFiveMProcess = "fivem.legacy.stuck-process.terminate";
     public const string RecreateFiveMLocalData = "fivem.legacy.local-data.recreate";
     public const string RepairStaleAuthData = "fivem.legacy.auth-data.repair";
+    public const string ApplyQualityLegacyGraphics = "fivem.legacy.graphics.quality.apply";
+    public const string ApplyQualityGtaVGraphics = "gtav.legacy.graphics.quality.apply";
+    public const string ApplyLegacyDisplayPreferences = "fivem.legacy.display-preferences.apply";
+    public const string ApplyGtaVDisplayPreferences = "gtav.legacy.display-preferences.apply";
+    public const string RecommendGraphicsPreset = "safety.graphics-preset-recommendation.diagnose";
+    public const string DiagnoseTextureVramFit = "windows.gaming.texture-vram-fit.diagnose";
 }

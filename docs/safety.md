@@ -37,6 +37,29 @@ O projeto não aceita implementações que:
 - contornem anti-cheat, pure mode ou verificações de integridade;
 - operem em FiveM/GTAV Enhanced enquanto esse adaptador estiver bloqueado.
 
+## Escopo de edição gráfica
+
+`LegacyGraphicsPresetAction` e `DisplayPreferencesAction` só escrevem opções
+já existentes nos arquivos gráficos do FiveM/GTA V Legacy (nunca criam nós
+novos) e sempre com backup, hash de verificação e rollback. Dentro desse
+modelo:
+
+- os presets Leve/Equilibrado/Agressivo só **reduzem** valores existentes
+  (`GraphicsPresetDirection.LowerOnly`); o preset de Qualidade, opt-in e
+  nunca automático, é a única exceção que **eleva** valores, até um teto
+  conservador documentado no próprio catálogo;
+- `DisplayPreferencesAction` só escreve `Windowed`/`VSync` (modo de janela e
+  VSync), preservando o formato original do valor (`"true"/"false"` ou
+  `"0"/"1"`, conforme o que já estava no arquivo);
+- resolução, taxa de atualização, adaptador de vídeo, proporção de tela,
+  limite de FPS, escala de resolução e versão do DirectX **não são
+  ajustados automaticamente** por nenhuma ação: escolher uma resolução ou
+  taxa de atualização não suportada pelo monitor pode deixar a tela preta
+  ou o jogo num estado inválido, e o produto não valida ainda essas
+  combinações contra os modos realmente suportados pelo monitor. Ver
+  `PROJECT_STATE.md` para o registro dessa decisão e do que ficou de fora
+  nesta etapa.
+
 ## Proteção de caminhos
 
 ### Nunca remover automaticamente

@@ -44,6 +44,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnoseCacheStorage,
                 OptimizationActionIds.DiagnoseInstallationHealth,
                 OptimizationActionIds.DiagnoseCrashPatterns,
+                OptimizationActionIds.RecommendGraphicsPreset,
+                OptimizationActionIds.DiagnoseTextureVramFit,
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 OptimizationActionIds.PruneLegacyCrashDumps,
                 OptimizationActionIds.EnableGameMode,
@@ -152,6 +154,37 @@ public sealed class PlanBuilderTests
     }
 
     [Fact]
+    public void GraphicsPresetsAndDisplayPreferences_AreOptInAndNeverPartOfAnyDefaultProfile()
+    {
+        var light = Build(OptimizationProfile.Light);
+        var balanced = Build(OptimizationProfile.Balanced);
+        var aggressive = Build(OptimizationProfile.Aggressive);
+
+        foreach (var plan in new[] { light, balanced, aggressive })
+        {
+            Assert.DoesNotContain(OptimizationActionIds.ApplyQualityLegacyGraphics, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ApplyQualityGtaVGraphics, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ApplyLegacyDisplayPreferences, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ApplyGtaVDisplayPreferences, Ids(plan));
+        }
+
+        var enabledPlan = Build(
+            OptimizationProfile.Aggressive,
+            new OptimizationOptionsDto
+            {
+                ApplyQualityGraphicsPreset = true,
+                ApplyDisplayPreferences = true
+            });
+
+        Assert.Contains(OptimizationActionIds.ApplyQualityLegacyGraphics, Ids(enabledPlan));
+        Assert.Contains(OptimizationActionIds.ApplyQualityGtaVGraphics, Ids(enabledPlan));
+        Assert.Contains(OptimizationActionIds.ApplyLegacyDisplayPreferences, Ids(enabledPlan));
+        Assert.Contains(OptimizationActionIds.ApplyGtaVDisplayPreferences, Ids(enabledPlan));
+        Assert.Contains(enabledPlan.Notices, notice => notice.Code == "quality-preset-may-reduce-fps");
+        Assert.Contains(enabledPlan.Notices, notice => notice.Code == "display-preferences-do-not-change-resolution");
+    }
+
+    [Fact]
     public void DisabledOptions_RemoveTheirActionsButKeepSafetyPreflight()
     {
         var options = new OptimizationOptionsDto
@@ -198,7 +231,9 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.ClassifyBottleneck,
                 OptimizationActionIds.DiagnoseCacheStorage,
                 OptimizationActionIds.DiagnoseInstallationHealth,
-                OptimizationActionIds.DiagnoseCrashPatterns
+                OptimizationActionIds.DiagnoseCrashPatterns,
+                OptimizationActionIds.RecommendGraphicsPreset,
+                OptimizationActionIds.DiagnoseTextureVramFit
             ],
             Ids(plan));
         Assert.False(plan.RequiresElevation);

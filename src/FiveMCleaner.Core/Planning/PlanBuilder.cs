@@ -177,6 +177,28 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
+        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyQualityLegacyGraphics
+            || action.Id == OptimizationActionIds.ApplyQualityGtaVGraphics))
+        {
+            notices.Add(new PlanNoticeDto
+            {
+                Code = "quality-preset-may-reduce-fps",
+                Severity = PlanNoticeSeverity.Warning,
+                Message = "O preset de qualidade aumenta opções gráficas até um teto seguro; isso pode reduzir o FPS em comparação com os presets Equilibrado ou FPS."
+            });
+        }
+
+        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyLegacyDisplayPreferences
+            || action.Id == OptimizationActionIds.ApplyGtaVDisplayPreferences))
+        {
+            notices.Add(new PlanNoticeDto
+            {
+                Code = "display-preferences-do-not-change-resolution",
+                Severity = PlanNoticeSeverity.Information,
+                Message = "Este ajuste altera apenas janela e VSync; resolução, taxa de atualização, adaptador de vídeo e proporção de tela não são alterados automaticamente."
+            });
+        }
+
         if (request.Profile == OptimizationProfile.Aggressive)
         {
             notices.Add(new PlanNoticeDto
@@ -208,6 +230,8 @@ public sealed class PlanBuilder : IPlanBuilder
             ActionOptionGate.TerminateStuckFiveMProcess => options.TerminateStuckFiveMProcess,
             ActionOptionGate.RecreateFiveMLocalData => options.RecreateFiveMLocalData,
             ActionOptionGate.RepairStaleAuthData => options.RepairStaleAuthData,
+            ActionOptionGate.ApplyQualityGraphicsPreset => options.ApplyQualityGraphicsPreset,
+            ActionOptionGate.ApplyDisplayPreferences => options.ApplyDisplayPreferences,
             _ => throw new ArgumentOutOfRangeException(nameof(gate), gate, "Unknown option gate value.")
         };
     }

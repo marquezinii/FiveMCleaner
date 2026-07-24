@@ -151,5 +151,7 @@ internal enum ActionOptionGate
     ReduceWindowsVisualEffects,
     TerminateStuckFiveMProcess,
     RecreateFiveMLocalData,
-    RepairStaleAuthData
+    RepairStaleAuthData,
+    ApplyQualityGraphicsPreset,
+    ApplyDisplayPreferences
 }

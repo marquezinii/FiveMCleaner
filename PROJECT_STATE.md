@@ -802,3 +802,93 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   versão 8); `scripts\Verify-Safety.ps1` aprovado.
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.
+
+## Presets gráficos ampliados: Qualidade, janela/VSync e recomendação (24/07/2026)
+
+- Trabalho local, **não publicado** (sem push da main/tag/release nesta
+  etapa; apenas push de desenvolvimento de `dev/proxima-versao`, autorizado
+  explicitamente pelo usuário nesta tarefa). Não altera versão pública,
+  instalador nem site.
+- Antes de implementar, o usuário foi consultado sobre três tensões com o
+  design de segurança já existente do motor gráfico (`LegacyGraphicsAction.
+  cs`), que historicamente só **reduz** valores existentes: (1) o "Preset
+  Qualidade" pedido exige **aumentar** opções — o usuário escolheu permitir
+  aumento apenas nesse preset novo, mantendo Leve/Equilibrado/Agressivo
+  somente-reduz; (2) resolução/tela cheia/janela/VSync/adaptador ficam numa
+  parte do arquivo nunca tocada pelo app — o usuário escolheu implementar
+  com validação, mas a implementação real ficou deliberadamente restrita a
+  **janela e VSync** (dois booleanos sem risco de "tela preta"); resolução,
+  taxa de atualização, adaptador de vídeo, proporção de tela, limite de FPS,
+  escala de resolução e versão do DirectX ficaram de fora por exigirem
+  validação contra os modos realmente suportados pelo monitor, que o app
+  ainda não faz de ponta a ponta — ver `docs/safety.md` ("Escopo de edição
+  gráfica"); (3) "configuração inteligente" — o usuário confirmou que deve
+  ser apenas uma recomendação, nunca aplicada automaticamente; quem aplica
+  continua sendo o usuário escolhendo manualmente.
+- Catálogo avançou da versão 8 para a 9, com 6 novas ações:
+  - `RecommendGraphicsPreset` (👁, sempre ativa): combina os diagnósticos já
+    existentes de GPU/VRAM, CPU, RAM e monitor numa recomendação textual de
+    qual preset (FPS/Equilibrado/Qualidade) combina com o hardware; nunca
+    aplica nada sozinha. Heurística documentada e testada
+    (`GraphicsPresetRecommendationAction.Recommend`), deliberadamente sem
+    considerar servidor utilizado (sem API segura para identificá-lo) nem
+    resultado de benchmark ainda não executado.
+  - `DiagnoseTextureVramFit` (👁, sempre ativa): compara `TextureQuality`
+    já configurado com a VRAM detectada da GPU usando um limiar
+    conservador e documentado como estimativa, não medição real de uso.
+  - `ApplyQualityLegacyGraphics`/`ApplyQualityGtaVGraphics` (🔧, opt-in,
+    nunca em nenhum perfil automático): novo `GraphicsPresetDirection.
+    RaiseOnly` em `LegacyGraphicsPresetAction`, reaproveitando 100% do
+    mecanismo de backup/hash/troca atômica/rollback já existente. O preset
+    `LegacyGraphicsPresets.Quality` eleva shadow/reflection/water/
+    particles/grass/shader/postfx/tessellation/SSAO/anisotropic/texture/
+    FXAA/densidade populacional/escala de distância até um teto
+    conservador, deliberadamente sem tocar MSAA/ReflectionMSAA/TXAA
+    (custo por GPU variável demais para adivinhar com segurança),
+    distância/sombra estendida, motion blur ou profundidade de campo —
+    para não descontrolar o 1% low, como pedido.
+  - `ApplyLegacyDisplayPreferences`/`ApplyGtaVDisplayPreferences` (🔧,
+    opt-in, nunca em nenhum perfil automático): nova
+    `DisplayPreferencesAction`, mesmo padrão de segurança (backup/hash/
+    troca atômica/rollback) da ação gráfica, mas restrita a `Windowed` e
+    `VSync`. Corrigido durante a implementação um risco real: os arquivos
+    de configuração do FiveM/GTA V Legacy não são consistentes no formato
+    de booleano — alguns valores usam `"true"/"false"`, outros usam
+    `"0"/"1"` (confirmado pelo próprio teste `GtaVGraphicsPresetTests`
+    já existente, que usa `Windowed value="0"`); a ação lê ambos os
+    formatos e **preserva o formato original** ao escrever, em vez de
+    normalizar para `"true"/"false"` e arriscar quebrar leitura por outra
+    ferramenta.
+- Novo `src/FiveMCleaner.Windows/Actions/DisplayPreferencesAction.cs` e
+  `GraphicsRecommendationActions.cs`. `LegacyGraphicsAction.cs` ganhou
+  `LegacyGraphicsPresets.Quality`, `GraphicsPresetDirection` e um novo
+  construtor que aceita `actionId`/`preset`/`direction` explícitos, mantendo
+  o construtor por perfil (Leve/Médio/Agressivo) inalterado e sempre
+  `LowerOnly`.
+- Itens do pedido original avaliados e **já cobertos** pela implementação
+  anterior (sem necessidade de novo código): resolução — não; mas
+  qualidade de sombra/reflexo/água/partículas/grama/shader/pós-
+  processamento/tesselação/oclusão de ambiente/filtragem anisotrópica/
+  textura/densidade e variedade populacional/escala de distância (normal e
+  estendida)/streaming detalhado durante voo/MSAA/Reflection MSAA/TXAA já
+  existiam nos presets Leve/Equilibrado/Agressivo desde a implementação
+  anterior do motor gráfico.
+- Itens **deliberadamente deferidos**, com justificativa: resolução,
+  frequência de atualização, adaptador de vídeo, proporção de tela (exigem
+  validar a combinação contra os modos realmente suportados pelo monitor,
+  o que o app não faz de ponta a ponta ainda); limite de FPS e escala de
+  resolução (não há confirmação de que existam como chave estável no
+  settings.xml do FiveM/GTA V Legacy nesta versão; preferimos não
+  adivinhar uma chave e escrever um valor sem efeito ou, pior, incorreto);
+  DirectX 10/10.1/11 (mesma razão: sem confirmação de uma chave estável e
+  segura); sombras suaves (sem uma chave conhecida e testável distinta de
+  `ShadowQuality`/`HighResolutionShadows` já cobertas).
+- Validação: `dotnet build` Release sem avisos/erros; **375 testes .NET
+  aprovados** (363 anteriores + 12 novos cobrindo o preset de Qualidade
+  somente-eleva com rollback exato, a preservação de formato booleano de
+  `DisplayPreferencesAction` — incluindo o caso `"0"/"1"` — recusa de
+  escrita com o jogo aberto, a heurística de recomendação de preset nos
+  três cenários e o diagnóstico de textura vs. VRAM); `scripts\
+  Verify-Safety.ps1` aprovado.
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.

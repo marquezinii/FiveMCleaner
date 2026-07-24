@@ -354,6 +354,10 @@
   <data name="Actions.safety.hardware-stability.diagnose.Description" xml:space="preserve"><value>Lê a data de lançamento da BIOS e eventos recentes de erro de hardware (WHEA) no Log de Eventos do Windows.</value></data>
   <data name="Actions.safety.bottleneck-classification.diagnose.Name" xml:space="preserve"><value>Classificar tipo provável de gargalo</value></data>
   <data name="Actions.safety.bottleneck-classification.diagnose.Description" xml:space="preserve"><value>Combina uso de CPU/GPU/disco/rede, memória, temperatura e o processo que mais consome CPU para apontar o recurso mais provavelmente limitante no momento.</value></data>
+  <data name="Actions.safety.graphics-preset-recommendation.diagnose.Name" xml:space="preserve"><value>Recomendar preset gráfico</value></data>
+  <data name="Actions.safety.graphics-preset-recommendation.diagnose.Description" xml:space="preserve"><value>Analisa GPU, VRAM, CPU, RAM e a taxa de atualização do monitor para sugerir qual preset gráfico (FPS, Equilibrado ou Qualidade) combina melhor com o hardware, sem aplicar nada sozinho.</value></data>
+  <data name="Actions.windows.gaming.texture-vram-fit.diagnose.Name" xml:space="preserve"><value>Diagnosticar textura configurada vs. VRAM disponível</value></data>
+  <data name="Actions.windows.gaming.texture-vram-fit.diagnose.Description" xml:space="preserve"><value>Compara a qualidade de textura configurada no FiveM/GTA V com a VRAM detectada da GPU e avisa quando a configuração provavelmente excede a VRAM disponível.</value></data>
   <data name="Actions.fivem.legacy.cache-storage.diagnose.Name" xml:space="preserve"><value>Diagnosticar tamanho e integridade do cache do FiveM</value></data>
   <data name="Actions.fivem.legacy.cache-storage.diagnose.Description" xml:space="preserve"><value>Mede o tamanho total e por categoria do cache do FiveM Legacy (server-cache, server-cache-priv, NUI storage, logs, diagnósticos) e sinaliza arquivos bloqueados por outro processo, sem apagar nada.</value></data>
   <data name="Actions.fivem.legacy.installation-health.diagnose.Name" xml:space="preserve"><value>Diagnosticar saúde da instalação do FiveM</value></data>
@@ -392,6 +396,14 @@
   <data name="Actions.gtav.legacy.graphics.balanced.apply.Description" xml:space="preserve"><value>Aplica limites equilibrados somente às opções existentes do settings.xml do GTA V Legacy, com backup.</value></data>
   <data name="Actions.gtav.legacy.graphics.aggressive.apply.Name" xml:space="preserve"><value>Priorizar FPS no GTA V</value></data>
   <data name="Actions.gtav.legacy.graphics.aggressive.apply.Description" xml:space="preserve"><value>Reduz opções gráficas pesadas do GTA V Legacy sem alterar resolução, modo de exibição ou adaptador.</value></data>
+  <data name="Actions.fivem.legacy.graphics.quality.apply.Name" xml:space="preserve"><value>Aplicar preset de qualidade no FiveM</value></data>
+  <data name="Actions.fivem.legacy.graphics.quality.apply.Description" xml:space="preserve"><value>Aumenta somente opções gráficas já existentes no FiveM Legacy até um teto seguro, priorizando qualidade visual sem descontrolar o 1% low. Nunca faz parte de perfis automáticos.</value></data>
+  <data name="Actions.gtav.legacy.graphics.quality.apply.Name" xml:space="preserve"><value>Aplicar preset de qualidade no GTA V</value></data>
+  <data name="Actions.gtav.legacy.graphics.quality.apply.Description" xml:space="preserve"><value>Aumenta somente opções gráficas já existentes no GTA V Legacy até um teto seguro, priorizando qualidade visual sem descontrolar o 1% low. Nunca faz parte de perfis automáticos.</value></data>
+  <data name="Actions.fivem.legacy.display-preferences.apply.Name" xml:space="preserve"><value>Ajustar janela e VSync do FiveM</value></data>
+  <data name="Actions.fivem.legacy.display-preferences.apply.Description" xml:space="preserve"><value>Define somente o modo de janela/tela cheia e o VSync do FiveM Legacy, sem tocar em resolução, adaptador de vídeo ou proporção de tela. Nunca faz parte de perfis automáticos.</value></data>
+  <data name="Actions.gtav.legacy.display-preferences.apply.Name" xml:space="preserve"><value>Ajustar janela e VSync do GTA V</value></data>
+  <data name="Actions.gtav.legacy.display-preferences.apply.Description" xml:space="preserve"><value>Define somente o modo de janela/tela cheia e o VSync do GTA V Legacy, sem tocar em resolução, adaptador de vídeo ou proporção de tela. Nunca faz parte de perfis automáticos.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Name" xml:space="preserve"><value>Reduzir efeitos visuais do Windows</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Description" xml:space="preserve"><value>Reduz animações e transparências, preservando legibilidade e suavização de fontes.</value></data>
   <data name="Runtime.ApplyingAction" xml:space="preserve"><value>Aplicando {0}</value></data>
