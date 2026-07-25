@@ -1,0 +1,53 @@
+/* Refinamentos visuais isolados para manter o tema principal estável. */
+.windows-icon {
+  display: grid;
+  grid-template-columns: repeat(2, 7px);
+  grid-template-rows: repeat(2, 7px);
+  gap: 1.5px;
+  width: 16px;
+  height: 16px;
+  filter: drop-shadow(0 1px 0 #ffffff40);
+  transform: perspective(30px) rotateX(3deg) rotateY(-4deg);
+}
+
+.windows-icon i {
+  display: block;
+  background: linear-gradient(145deg, #2b2b2b, #050505 72%);
+  box-shadow: inset 1px 1px #575757, inset -1px -1px #000;
+}
+
+.windows-icon i:nth-child(1),
+.windows-icon i:nth-child(4) {
+  transform: skewY(-6deg);
+}
+
+.windows-icon i:nth-child(2),
+.windows-icon i:nth-child(3) {
+  transform: skewY(6deg);
+}
+
+.code-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: color .18s;
+}
+
+.code-button:hover,
+.code-button:focus-visible {
+  color: #fff;
+}
+
+.github-icon {
+  width: 18px;
+  height: 18px;
+  fill: #fff;
+  filter: drop-shadow(0 1px 1px #0008);
+}
+
+.download-button:focus-visible,
+.code-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 4px;
+  border-radius: 7px;
+}

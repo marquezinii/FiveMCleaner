@@ -15,6 +15,7 @@
     />
     <link rel="icon" href="icon.png" />
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="site-polish.css" />
     <title>FiveMCleaner — Download oficial</title>
   </head>
   <body>
@@ -45,9 +46,13 @@
           </p>
           <div class="hero-actions">
             <a class="download-button" href="https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe">
-              <span class="arrow">↓</span> Baixar para Windows
+              <span class="windows-icon" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+              Baixar para Windows
             </a>
-            <a class="code-button" href="https://github.com/marquezinii/FiveMCleaner" target="_blank" rel="noreferrer">Ver no GitHub <span>↗</span></a>
+            <a class="code-button" href="https://github.com/marquezinii/FiveMCleaner" target="_blank" rel="noreferrer">
+              <svg class="github-icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path d="M8 0a8 8 0 0 0-2.53 15.59c.4.07.55-.17.55-.38v-1.49c-2.23.49-2.7-.95-2.7-.95-.36-.93-.89-1.18-.89-1.18-.73-.5.06-.49.06-.49.81.06 1.23.83 1.23.83.72 1.23 1.89.87 2.35.67.07-.52.28-.87.51-1.07-1.78-.2-3.65-.89-3.65-3.96 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.13 0 0 .67-.21 2.2.82A7.67 7.67 0 0 1 8 4.8c.68 0 1.36.09 2 .27 1.53-1.03 2.2-.82 2.2-.82.44 1.11.16 1.93.08 2.13.51.56.82 1.28.82 2.15 0 3.08-1.87 3.75-3.66 3.95.29.25.54.73.54 1.47v2.18c0 .21.14.46.55.38A8 8 0 0 0 8 0Z"/></svg>
+              Ver no GitHub <span>↗</span>
+            </a>
           </div>
           <p class="download-note">Download direto do instalador oficial · sem cadastro</p>
           <ul class="trust-list" aria-label="Destaques do instalador">
@@ -78,6 +83,27 @@
         <div><strong>03</strong><span>ATUALIZAÇÕES SEGURAS</span><small>Validação antes de instalar</small></div>
       </section>
 
+      <section id="atualizacoes" class="section-shell updates-section">
+        <div class="updates-heading">
+          <p class="eyebrow"><i></i> ÚLTIMA VERSÃO PÚBLICA</p>
+          <h2>Atualizações claras.<br /><em>Sem letras miúdas.</em></h2>
+          <p>Veja o que mudou na versão mais recente disponível para download.</p>
+        </div>
+        <article class="updates-card" aria-labelledby="updates-version">
+          <div class="updates-release">
+            <span>VERSÃO</span>
+            <strong id="updates-version">1.0.3</strong>
+            <time datetime="2026-07-25">25 JUL 2026</time>
+          </div>
+          <ul class="updates-list">
+            <li>Corrigidos cancelamentos transacionais, ajustes independentes de FiveM/GTA V e o progresso administrativo.</li>
+            <li>Melhoradas a confirmação segura durante otimização, a recomendação dinâmica e a notificação de atualização.</li>
+            <li>Atualizados diagnósticos e opções opt-in para FiveM/GTA V Legacy, com documentação de privacidade revisada.</li>
+          </ul>
+          <a class="updates-link" href="https://github.com/marquezinii/FiveMCleaner/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">Ver histórico completo <span>↗</span></a>
+        </article>
+      </section>
+
       <section id="como-funciona" class="section-shell feature-section">
         <div class="section-heading"><p class="eyebrow"><i></i> FEITO PARA SER CLARO</p><h2>Uma experiência direta,<br /><em>sem atalhos arriscados.</em></h2></div>
         <div class="feature-grid">
@@ -100,26 +126,6 @@
         <small>Ao baixar, você será direcionado diretamente ao arquivo oficial hospedado no GitHub Releases.</small>
       </section>
 
-      <section id="atualizacoes" class="section-shell updates-section">
-        <div class="updates-heading">
-          <p class="eyebrow"><i></i> ÚLTIMA VERSÃO PÚBLICA</p>
-          <h2>Atualizações claras.<br /><em>Sem letras miúdas.</em></h2>
-          <p>Veja o que mudou na versão mais recente disponível para download.</p>
-        </div>
-        <article class="updates-card" aria-labelledby="updates-version">
-          <div class="updates-release">
-            <span>VERSÃO</span>
-            <strong id="updates-version">1.0.3</strong>
-            <time datetime="2026-07-25">25 JUL 2026</time>
-          </div>
-          <ul class="updates-list">
-            <li>Corrigidos cancelamentos transacionais, ajustes independentes de FiveM/GTA V e o progresso administrativo.</li>
-            <li>Melhoradas a confirmação segura durante otimização, a recomendação dinâmica e a notificação de atualização.</li>
-            <li>Atualizados diagnósticos e opções opt-in para FiveM/GTA V Legacy, com documentação de privacidade revisada.</li>
-          </ul>
-          <a class="updates-link" href="https://github.com/marquezinii/FiveMCleaner/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">Ver histórico completo <span>↗</span></a>
-        </article>
-      </section>
     </main>
 
     <footer><a class="brand" href="#inicio"><img src="icon.png" alt="" width="34" height="34" /><span>FiveM<span>Cleaner</span></span></a><p>Desenvolvido por Felipe Marquezini · © 2026 Todos os direitos reservados.</p><a href="https://github.com/marquezinii/FiveMCleaner" target="_blank" rel="noreferrer">GitHub ↗</a></footer>

@@ -590,6 +590,24 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.
 
+## Refinamento da central pública de download (25/07/2026)
+
+- A página estática publicada pelo GitHub Pages em `website/public-site/` foi
+  refinada sem alterar o aplicativo, instalador, manifesto de atualização ou a
+  versão pública `1.0.3`.
+- O CTA principal **Baixar para Windows** agora usa um símbolo Windows escuro
+  com profundidade visual; **Ver no GitHub** ganhou a marca branca do GitHub.
+  Ambos mantêm rótulos em texto, foco visível e o download continua direto para
+  o alias oficial do GitHub Releases.
+- A seção **Última versão pública** foi movida para imediatamente após os três
+  pilares de confiança (instalador, controle e atualizações), deixando o que
+  mudou na release atual mais visível antes da apresentação detalhada do app.
+- O refinamento visual adicional está isolado em `site-polish.css`; o teste
+  renderizado verifica o carregamento dessa folha, os dois ícones e a nova
+  ordem estrutural da seção. A publicação do GitHub Pages é permitida como
+  atualização editorial independente, sem tag, release ou incremento de versão
+  do aplicativo, quando autorizada explicitamente pelo usuário.
+
 ## Diagnósticos somente leitura da SEGUNDA FASE (23/07/2026)
 
 - Trabalho local, **não publicado** (sem push/tag/release desta etapa, por

@@ -81,16 +81,26 @@ test("removes starter artifacts and keeps the Sites build cross-platform", async
 });
 
 test("keeps the public download page aligned with the latest published release", async () => {
-  const [page, styles] = await Promise.all([
+  const [page, styles, polish] = await Promise.all([
     readFile(new URL("../public-site/index.html", import.meta.url), "utf8"),
     readFile(new URL("../public-site/styles.css", import.meta.url), "utf8"),
+    readFile(new URL("../public-site/site-polish.css", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /id="atualizacoes"/i);
   assert.match(page, /ÚLTIMA VERSÃO PÚBLICA/i);
+  assert.match(page, /class="windows-icon"/i);
+  assert.match(page, /class="github-icon"/i);
+  assert.match(page, /href="site-polish\.css"/i);
+  assert.ok(
+    page.indexOf('ATUALIZAÇÕES SEGURAS') < page.indexOf('id="atualizacoes"'),
+    'A seção de atualizações deve vir imediatamente após os três pilares.'
+  );
   assert.match(page, /<strong id="updates-version">1\.0\.3<\/strong>/i);
   assert.match(page, /Corrigidos cancelamentos transacionais/i);
   assert.match(page, /CHANGELOG\.md/i);
   assert.match(styles, /\.updates-section\{/i);
   assert.match(styles, /\.updates-card\{/i);
+  assert.match(polish, /\.windows-icon\s*\{/i);
+  assert.match(polish, /\.github-icon\s*\{/i);
 });
