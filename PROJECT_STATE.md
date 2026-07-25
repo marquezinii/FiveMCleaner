@@ -113,7 +113,11 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   GitHub, valida versão, origem HTTPS e SHA-256, e só abre o instalador após
   confirmação explícita do usuário.
 - O formulário de bugs é opt-in: nenhum dado é enviado sem o clique do usuário.
-  Imagens opcionais passam por sanitização antes do envio.
+  Imagens opcionais passam por sanitização antes do envio. Os nomes de campos
+  enviados ao FormSubmit usam somente ASCII, embora os valores possam conter
+  texto localizado: o provedor expõe nomes multipart com acentos como palavras
+  MIME codificadas no e-mail, enquanto rótulos sem acentos preservam uma tabela
+  legível para telemetria e relatos de bug.
 - A telemetria técnica também é estritamente opcional e vem habilitada apenas
   em instalações novas; a pessoa pode desligá-la a qualquer momento. Quando
   habilitada, só envia por HTTPS uma allowlist de

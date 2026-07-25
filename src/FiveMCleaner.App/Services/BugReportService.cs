@@ -46,6 +46,16 @@ public sealed class FormSubmitBugReportService : IBugReportService
     public const string Endpoint =
         "https://formsubmit.co/ajax/482352ce22ed6e76ff37d235a5b667af";
 
+    private const string ReportIdFieldName = "ID do relato";
+    private const string IssueTypeFieldName = "Tipo do problema";
+    private const string SummaryFieldName = "Resumo";
+    private const string DescriptionFieldName = "Descricao e passos";
+    private const string AppVersionFieldName = "Versao do FiveMCleaner";
+    private const string ProfileFieldName = "Perfil selecionado";
+    private const string IdentityRequestedFieldName = "Identificacao solicitada";
+    private const string ConsentVersionFieldName = "Versao do consentimento";
+    private const string TechnicalInformationFieldName = "Informacoes tecnicas autorizadas";
+
     private static readonly HttpClient SharedClient = CreateClient();
     private readonly HttpClient httpClient;
     private readonly Uri endpoint;
@@ -82,17 +92,17 @@ public sealed class FormSubmitBugReportService : IBugReportService
         AddField(form, "_captcha", "false");
         AddField(form, "_honey", string.Empty);
         AddField(form, "_url", ProductIdentity.RepositoryUrl);
-        AddField(form, "ID do relato", submission.ReportId.ToString("D"));
-        AddField(form, "Tipo do problema", submission.Category);
-        AddField(form, "Resumo", submission.Summary.Trim());
-        AddField(form, "Descrição e passos", submission.Description.Trim());
-        AddField(form, "Versão do FiveMCleaner", submission.AppVersion);
-        AddField(form, "Perfil selecionado", submission.Profile);
-        AddField(form, "Identificação solicitada", "Não");
-        AddField(form, "Versão do consentimento", "1");
+        AddField(form, ReportIdFieldName, submission.ReportId.ToString("D"));
+        AddField(form, IssueTypeFieldName, submission.Category);
+        AddField(form, SummaryFieldName, submission.Summary.Trim());
+        AddField(form, DescriptionFieldName, submission.Description.Trim());
+        AddField(form, AppVersionFieldName, submission.AppVersion);
+        AddField(form, ProfileFieldName, submission.Profile);
+        AddField(form, IdentityRequestedFieldName, "Não");
+        AddField(form, ConsentVersionFieldName, "1");
         if (!string.IsNullOrWhiteSpace(submission.TechnicalSummary))
         {
-            AddField(form, "Informações técnicas autorizadas", submission.TechnicalSummary);
+            AddField(form, TechnicalInformationFieldName, submission.TechnicalSummary);
         }
 
         if (submission.Attachment is not null)

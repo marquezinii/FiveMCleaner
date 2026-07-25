@@ -52,6 +52,9 @@ public sealed class DisabledAnonymousTelemetryService : IAnonymousTelemetryServi
 public sealed class FormSubmitAnonymousTelemetryService : IAnonymousTelemetryService
 {
     public const string Endpoint = FormSubmitBugReportService.Endpoint;
+    private const string ExecutionTimeFieldName = "Tempo de execucao (ms)";
+    private const string AppVersionFieldName = "Versao do FiveMCleaner";
+    private const string ErrorCategoryFieldName = "Categoria de erro";
     private static readonly HttpClient SharedClient = CreateClient();
     private readonly HttpClient httpClient;
     private readonly Uri endpoint;
@@ -88,12 +91,12 @@ public sealed class FormSubmitAnonymousTelemetryService : IAnonymousTelemetrySer
         AddField(form, "_template", "table");
         AddField(form, "_captcha", "false");
         AddField(form, "Tipo", telemetryEvent.EventName);
-        AddField(form, "Tempo de execução (ms)",
+        AddField(form, ExecutionTimeFieldName,
             Math.Clamp((long)telemetryEvent.ExecutionTime.TotalMilliseconds, 0, 86_400_000).ToString(System.Globalization.CultureInfo.InvariantCulture));
-        AddField(form, "Versão do FiveMCleaner", telemetryEvent.AppVersion);
+        AddField(form, AppVersionFieldName, telemetryEvent.AppVersion);
         if (telemetryEvent.ErrorCategory is not null)
         {
-            AddField(form, "Categoria de erro", telemetryEvent.ErrorCategory);
+            AddField(form, ErrorCategoryFieldName, telemetryEvent.ErrorCategory);
         }
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint) { Content = form };

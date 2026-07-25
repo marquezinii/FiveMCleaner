@@ -46,6 +46,10 @@ public sealed class BugReportServiceTests
         Assert.StartsWith("multipart/form-data", handler.ContentType, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("_captcha", handler.RequestBody, StringComparison.Ordinal);
         Assert.Contains("ID do relato", handler.RequestBody, StringComparison.Ordinal);
+        Assert.Contains("Descricao e passos", handler.RequestBody, StringComparison.Ordinal);
+        Assert.Contains("Versao do FiveMCleaner", handler.RequestBody, StringComparison.Ordinal);
+        Assert.Contains("Informacoes tecnicas autorizadas", handler.RequestBody, StringComparison.Ordinal);
+        Assert.DoesNotContain("=?utf-8?", handler.RequestBody, StringComparison.OrdinalIgnoreCase);
         Assert.Contains(submission.ReportId.ToString("D"), handler.RequestBody, StringComparison.Ordinal);
         Assert.Contains("captura-test.png", handler.RequestBody, StringComparison.Ordinal);
         Assert.Contains("image/png", handler.RequestBody, StringComparison.Ordinal);

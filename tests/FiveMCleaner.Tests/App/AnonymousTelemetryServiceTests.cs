@@ -40,6 +40,9 @@ public sealed class AnonymousTelemetryServiceTests
         Assert.Contains("18342", handler.Body, StringComparison.Ordinal);
         Assert.Contains("1.0.2", handler.Body, StringComparison.Ordinal);
         Assert.Contains("timeout", handler.Body, StringComparison.Ordinal);
+        Assert.Contains("Tempo de execucao (ms)", handler.Body, StringComparison.Ordinal);
+        Assert.Contains("Versao do FiveMCleaner", handler.Body, StringComparison.Ordinal);
+        Assert.DoesNotContain("=?utf-8?", handler.Body, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("stack", handler.Body, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("path", handler.Body, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("file", handler.Body, StringComparison.OrdinalIgnoreCase);
