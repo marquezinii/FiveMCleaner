@@ -1,0 +1,38 @@
+## FiveMCleaner anonymous telemetry Worker.
+##
+## Receives the same closed-allowlist telemetry event already documented in
+## docs/telemetry.md, validates it server-side (never trusting client-side
+## validation alone), and stores it in D1. This Worker is NOT deployed and
+## NOT wired to the .NET client yet -- the client still sends telemetry
+## through FormSubmit, per the current increment. Deploying this requires
+## explicit authorization; see AI_RULES.md ("Operações remotas").
+##
+## The Development and Production environments below intentionally point at
+## the SAME D1 database (only one was provisioned) -- every row is tagged
+## with an `environment` column instead, so development traffic can still be
+## told apart from production traffic without needing a second database.
+
+name = "fivemcleaner-telemetry"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[[d1_databases]]
+binding = "TELEMETRY_DB"
+database_name = "fivemcleaner-telemetry"
+database_id = "fe276121-a71a-4ba4-ab62-81cccdf601c6"
+
+[env.development]
+name = "fivemcleaner-telemetry-development"
+
+[[env.development.d1_databases]]
+binding = "TELEMETRY_DB"
+database_name = "fivemcleaner-telemetry"
+database_id = "fe276121-a71a-4ba4-ab62-81cccdf601c6"
+
+[env.production]
+name = "fivemcleaner-telemetry-production"
+
+[[env.production.d1_databases]]
+binding = "TELEMETRY_DB"
+database_name = "fivemcleaner-telemetry"
+database_id = "fe276121-a71a-4ba4-ab62-81cccdf601c6"

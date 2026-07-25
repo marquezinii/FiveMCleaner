@@ -1,0 +1,17 @@
+{
+  "name": "fivemcleaner-telemetry-worker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Scaffold for the FiveMCleaner anonymous telemetry Cloudflare Worker (D1-backed). Not deployed yet.",
+  "scripts": {
+    "test": "node --test test/validateEvent.test.js",
+    "dev": "wrangler dev",
+    "db:migrate:local": "wrangler d1 execute fivemcleaner-telemetry --local --file=./schema.sql",
+    "deploy:development": "wrangler deploy --env development",
+    "deploy:production": "wrangler deploy --env production"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}
