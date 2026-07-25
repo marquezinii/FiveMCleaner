@@ -1,0 +1,49 @@
+namespace FiveMCleaner.App.Services;
+
+/// <summary>
+/// One versioned entry in the privacy consent history: the version number and
+/// a short, user-facing description of what changed relative to the previous
+/// version. Purely descriptive data — no UI, network, or storage dependency.
+/// </summary>
+public sealed record PrivacyConsentVersionEntry(int Version, string Summary);
+
+/// <summary>
+/// Central, dependency-free source of truth for the privacy consent version.
+/// Determines only "which version is current" and "what changed in each
+/// version" — it has no knowledge of UI, disk, Cloudflare, or Sentry, and must
+/// stay that way so it can be unit tested and reused by both the consent
+/// screen and the settings evaluator without pulling in those concerns.
+/// </summary>
+public static class PrivacyConsentPolicy
+{
+    /// <summary>
+    /// The current privacy consent version. Bump this whenever a material
+    /// change happens to what is collected or where it is sent (for example,
+    /// adding crash reporting, or switching the telemetry transport from
+    /// FormSubmit to another destination) — every user, including those who
+    /// already accepted an older version, will be asked to confirm again.
+    /// </summary>
+    public const int CurrentVersion = 1;
+
+    /// <summary>
+    /// Full history of consent versions, oldest first, each with a short
+    /// description of what changed. Version 1 is the baseline that
+    /// introduces separate, explicit consent for anonymous telemetry and
+    /// crash reports.
+    /// </summary>
+    public static readonly IReadOnlyList<PrivacyConsentVersionEntry> History =
+    [
+        new PrivacyConsentVersionEntry(
+            1,
+            "Introduz consentimento explícito e separado para telemetria de uso e relatórios de falhas (crash reports), " +
+            "ambos apresentados numa tela dedicada antes de qualquer envio.")
+    ];
+
+    /// <summary>
+    /// True when a stored consent version is missing or older than
+    /// <see cref="CurrentVersion"/>, meaning the user must be asked again
+    /// before anything is sent.
+    /// </summary>
+    public static bool RequiresRenewal(int? storedVersion) =>
+        storedVersion is null || storedVersion.Value < CurrentVersion;
+}

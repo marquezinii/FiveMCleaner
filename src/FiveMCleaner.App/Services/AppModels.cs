@@ -230,4 +230,24 @@ public sealed record AppSettings
     /// hardware ou dados pessoais.
     /// </summary>
     public bool ShareAnonymousTelemetry { get; init; } = true;
+
+    /// <summary>
+    /// Consentimento para relatórios automáticos de falhas (crash reports).
+    /// Vem habilitado por padrão em instalações novas, pois o produto ainda
+    /// está em fase inicial e esses dados são relevantes para identificar
+    /// falhas reais; mesmo assim, nenhum envio ocorre antes de o usuário
+    /// confirmar explicitamente a tela de consentimento — ver
+    /// <see cref="PrivacyConsentVersion"/> e <see cref="PrivacyConsentEvaluator"/>.
+    /// </summary>
+    public bool ShareCrashReports { get; init; } = true;
+
+    /// <summary>
+    /// Versão do consentimento de privacidade confirmada explicitamente pelo
+    /// usuário na tela dedicada. <see langword="null"/> significa que o
+    /// usuário ainda não confirmou nenhuma versão (instalação nova ou
+    /// instalação antiga anterior à existência desse campo) — nesse estado,
+    /// nenhum envio de telemetria ou crash report é autorizado, independente
+    /// do valor dos booleanos acima. Ver <see cref="PrivacyConsentPolicy"/>.
+    /// </summary>
+    public int? PrivacyConsentVersion { get; init; }
 }
