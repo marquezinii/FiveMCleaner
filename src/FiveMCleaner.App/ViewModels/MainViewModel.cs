@@ -537,6 +537,15 @@ public sealed class MainViewModel : BindableBase
         }
     }
 
+    /// <summary>
+    /// Raised exactly once, right when a newer version is first detected,
+    /// carrying the new version's core string (e.g. "1.2.3"). The main
+    /// window subscribes to this to show the native Windows notification
+    /// regardless of whether the window is currently in the foreground or
+    /// minimized to the tray.
+    /// </summary>
+    public event EventHandler<string>? UpdateAvailableDetected;
+
     public async Task CheckForUpdatesAsync()
     {
         if (releaseUpdateService is null || availableUpdate is not null)
@@ -559,6 +568,7 @@ public sealed class MainViewModel : BindableBase
             updatePresentationState = UpdatePresentationState.Available;
             RefreshUpdatePresentation();
             AddLog(localization.Format("Log.UpdateAvailable", update.Version.CoreVersion));
+            UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))

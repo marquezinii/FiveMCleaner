@@ -1163,3 +1163,40 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   (mesma lacuna já registrada para a camada de app/ViewModel).
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.
+
+## Notificação nativa do Windows para atualização disponível (24/07/2026)
+
+- Trabalho local, **não publicado** (nenhum push nesta etapa até o momento
+  do registro).
+- Reaproveitado o mecanismo já existente de bandeja
+  (`TrayIconService`/`System.Windows.Forms.NotifyIcon`) em vez de
+  introduzir uma API de toast WinRT nova: `NotifyIcon.ShowBalloonTip` já
+  renderiza como notificação nativa do Central de Ações do Windows
+  10/11, usando o ícone do próprio app (`notifyIcon.Icon`, já extraído do
+  executável) e o nome do app (`notifyIcon.Text = "FiveMCleaner"`) — sem
+  dependência nova.
+- `MainViewModel.CheckForUpdatesAsync` agora dispara um novo evento
+  `UpdateAvailableDetected` (com a versão nova como string) exatamente no
+  momento em que uma atualização é detectada, além do já existente
+  `AddLog`. `MainWindow` assina esse evento e chama
+  `TrayIconService.ShowUpdateAvailable(version)`.
+- `TrayIconService.ShowUpdateAvailable`: se o ícone da bandeja já não
+  estiver visível (app em primeiro plano, sem "minimizar para a bandeja"
+  ativo), ele é tornado visível só para carregar a notificação e volta a
+  ficar oculto ~8s depois, para não deixar um ícone de bandeja indesejado
+  para quem nunca ativou essa preferência. Se o app já estiver minimizado
+  para a bandeja, a notificação usa o ícone já visível normalmente.
+- Clicar na notificação (`NotifyIcon.BalloonTipClicked`, reaproveitando o
+  mesmo evento `ShowRequested` já usado pelo clique duplo no ícone da
+  bandeja) restaura e ativa a janela principal, igual ao fluxo já
+  existente de "voltar da bandeja".
+- Novas chaves de recurso `Notification.UpdateAvailable.Title`/`.Message`
+  em `Strings.resx`/`Strings.pt-BR.resx`, seguindo o mesmo padrão visual
+  já usado no banner de atualização dentro do app.
+- Validação: `dotnet build` Release sem avisos/erros; suíte completa (390
+  testes) segue aprovada sem alteração de contagem — a notificação nativa
+  do Windows não tem cobertura automatizada (mesma lacuna já registrada
+  para a camada de app/ViewModel; verificação depende de execução manual
+  em uma máquina Windows real). `scripts\Verify-Safety.ps1` aprovado.
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.

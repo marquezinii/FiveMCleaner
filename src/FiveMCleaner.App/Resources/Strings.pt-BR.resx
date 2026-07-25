@@ -228,6 +228,8 @@
   <data name="Tray.Exit" xml:space="preserve"><value>Sair</value></data>
   <data name="Tray.Title" xml:space="preserve"><value>FiveMCleaner continua em execução</value></data>
   <data name="Tray.Message" xml:space="preserve"><value>Clique duas vezes no ícone da bandeja para voltar.</value></data>
+  <data name="Notification.UpdateAvailable.Title" xml:space="preserve"><value>Atualização do FiveMCleaner disponível</value></data>
+  <data name="Notification.UpdateAvailable.Message" xml:space="preserve"><value>A versão {0} já está disponível. Clique para abrir o FiveMCleaner.</value></data>
   <data name="Log.StartedStandardUser" xml:space="preserve"><value>FiveMCleaner iniciado sem privilégios elevados.</value></data>
   <data name="Log.StartupSettingFailed" xml:space="preserve"><value>Não foi possível atualizar a inicialização: {0}</value></data>
   <data name="Log.StartupReadFailed" xml:space="preserve"><value>Não foi possível ler a inicialização: {0}</value></data>

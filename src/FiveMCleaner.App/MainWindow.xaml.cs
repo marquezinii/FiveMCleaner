@@ -56,6 +56,7 @@ public partial class MainWindow : Window
         trayIcon = new TrayIconService(LocalizationService.Current);
         trayIcon.ShowRequested += TrayIcon_ShowRequested;
         trayIcon.ExitRequested += TrayIcon_ExitRequested;
+        viewModel.UpdateAvailableDetected += ViewModel_UpdateAvailableDetected;
         DataContext = viewModel;
         Loaded += MainWindow_Loaded;
         SourceInitialized += MainWindow_SourceInitialized;
@@ -521,6 +522,7 @@ public partial class MainWindow : Window
     {
         windowSource?.RemoveHook(WindowMessageHook);
         System.Windows.Application.Current.SessionEnding -= Application_SessionEnding;
+        viewModel.UpdateAvailableDetected -= ViewModel_UpdateAvailableDetected;
         themeManager.Dispose();
         trayIcon.Dispose();
         releaseUpdateService?.Dispose();
@@ -539,6 +541,14 @@ public partial class MainWindow : Window
         Hide();
         trayIcon.Show(announce: !trayAnnouncementShown);
         trayAnnouncementShown = true;
+    }
+
+    private void ViewModel_UpdateAvailableDetected(object? sender, string version)
+    {
+        // Shows regardless of whether the window is currently visible,
+        // minimized or minimized to the tray — the user asked for the
+        // native Windows notification to fire in every case.
+        trayIcon.ShowUpdateAvailable(version);
     }
 
     private void TrayIcon_ShowRequested(object? sender, EventArgs e)

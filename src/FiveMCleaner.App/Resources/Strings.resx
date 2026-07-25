@@ -228,6 +228,8 @@
   <data name="Tray.Exit" xml:space="preserve"><value>Exit</value></data>
   <data name="Tray.Title" xml:space="preserve"><value>FiveMCleaner is still running</value></data>
   <data name="Tray.Message" xml:space="preserve"><value>Double-click the tray icon to return.</value></data>
+  <data name="Notification.UpdateAvailable.Title" xml:space="preserve"><value>FiveMCleaner update available</value></data>
+  <data name="Notification.UpdateAvailable.Message" xml:space="preserve"><value>Version {0} is available. Click to open FiveMCleaner.</value></data>
   <data name="Log.StartedStandardUser" xml:space="preserve"><value>FiveMCleaner started without elevated privileges.</value></data>
   <data name="Log.StartupSettingFailed" xml:space="preserve"><value>Could not update startup behavior: {0}</value></data>
   <data name="Log.StartupReadFailed" xml:space="preserve"><value>Could not read startup behavior: {0}</value></data>
