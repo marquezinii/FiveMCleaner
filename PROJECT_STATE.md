@@ -595,8 +595,9 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - A página estática publicada pelo GitHub Pages em `website/public-site/` foi
   refinada sem alterar o aplicativo, instalador, manifesto de atualização ou a
   versão pública `1.0.3`.
-- O CTA principal **Baixar para Windows** agora usa um símbolo Windows escuro
-  com profundidade visual; **Ver no GitHub** ganhou a marca branca do GitHub.
+- O CTA principal **Baixar para Windows** usa o símbolo Windows escuro com a
+  perspectiva inclinada característica; **Ver no GitHub** usa a marca branca
+  completa do GitHub, com área fixa e sem recorte lateral.
   Ambos mantêm rótulos em texto, foco visível e o download continua direto para
   o alias oficial do GitHub Releases.
 - A seção **Última versão pública** foi movida para imediatamente após os três

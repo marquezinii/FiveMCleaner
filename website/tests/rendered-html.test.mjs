@@ -91,6 +91,8 @@ test("keeps the public download page aligned with the latest published release",
   assert.match(page, /ÚLTIMA VERSÃO PÚBLICA/i);
   assert.match(page, /class="windows-icon"/i);
   assert.match(page, /class="github-icon"/i);
+  assert.match(page, /class="windows-icon" viewBox="0 0 88 88"/i);
+  assert.match(page, /class="github-icon" viewBox="0 0 24 24"/i);
   assert.match(page, /href="site-polish\.css"/i);
   assert.ok(
     page.indexOf('ATUALIZAÇÕES SEGURAS') < page.indexOf('id="atualizacoes"'),
@@ -101,6 +103,6 @@ test("keeps the public download page aligned with the latest published release",
   assert.match(page, /CHANGELOG\.md/i);
   assert.match(styles, /\.updates-section\{/i);
   assert.match(styles, /\.updates-card\{/i);
-  assert.match(polish, /\.windows-icon\s*\{/i);
-  assert.match(polish, /\.github-icon\s*\{/i);
+  assert.match(polish, /\.windows-icon\s*\{[\s\S]*width:\s*22px/i);
+  assert.match(polish, /\.github-icon\s*\{[\s\S]*overflow:\s*visible/i);
 });
