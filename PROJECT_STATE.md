@@ -1461,3 +1461,114 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   uso continua exatamente como estava; o Worker/D1 não foi implantado nem
   teve schema aplicado remotamente; nenhuma operação remota (deploy,
   publicação, `wrangler` real) foi executada nesta etapa.
+
+## Expansão da telemetria (hardware/ações), scaffold do painel administrativo e auth própria (25/07/2026)
+
+- Trabalho local, **não publicado** (nenhum push/deploy nesta etapa).
+  Quarto incremento do plano de telemetria central. Antes de implementar, o
+  escopo foi confirmado com o usuário em duas decisões: (1) expandir a
+  coleta de telemetria agora (hardware/OS/ações), o que exige subir
+  `PrivacyConsentPolicy.CurrentVersion` e renovar o consentimento de todos;
+  (2) autenticação própria do painel (senha + sessão + proteção contra
+  força bruta), sem domínio próprio, sem Cloudflare Access e sem OAuth
+  Google/GitHub.
+- **Consentimento renovado para a versão 2**: `PrivacyConsentPolicy.
+  CurrentVersion` avançou de 1 para 2, com entrada no histórico explicando
+  a mudança. A tela de consentimento e a seção Privacidade de Configurações
+  ganharam dois novos itens em "Coletamos": modelo de CPU/GPU (sem número
+  de série) e faixa aproximada de RAM — nas duas línguas. Qualquer
+  instalação que já tinha aceitado a versão 1 verá a tela de renovação no
+  próximo lançamento, mesmo sem alterar nada na tela em si (comportamento já
+  coberto pelos testes de `PrivacyConsentEvaluator` da segunda etapa).
+- **`AnonymousTelemetryEvent` expandido** (compatível com o contrato
+  anterior — todos os campos novos são opcionais e no final):
+  `OsVersion`, `SystemArchitecture`, `CpuModel`, `GpuModel`,
+  `RamBucketGiB` (faixa fixa: 2/4/8/16/32/64/128/256, sempre arredondada
+  para cima por `RamBucketCalculator`, nunca o valor exato), `Profile` e
+  `ActionIds` (IDs das ações do plano aplicado). `MainViewModel.
+  TrackOptimizationTelemetry` popula esses campos a partir do diagnóstico e
+  do plano já carregados — nenhuma leitura nova de hardware foi criada, só
+  reaproveitamento de `AppDiagnostic.CpuName/GpuName/TotalMemoryGiB/
+  OsLabel/SystemArchitecture` já existentes. O transporte ativo hoje
+  (`FormSubmitAnonymousTelemetryService`) continua enviando só os quatro
+  campos originais, inalterado — os campos novos só são de fato
+  transmitidos pelo transporte Cloudflare, ainda inativo.
+- **Transporte Cloudflare completo, porém inativo** (`CloudflareTelemetryService.cs`):
+  `TelemetryEventValidator` (validação completa do novo esquema),
+  `LocalTelemetryQueue` (persistência atômica em
+  `%LOCALAPPDATA%\FiveMCleaner\Telemetry\pending`, purga após 14 dias),
+  `CloudflareTelemetryTransport` (POST HTTPS em lote, nunca lança) e
+  `QueuedCloudflareTelemetryService` (implementa `IAnonymousTelemetryService`,
+  enfileira e tenta flush best-effort a cada `TrackAsync` e uma vez no
+  startup). `MainWindow` escolhe entre FormSubmit e Cloudflare com base em
+  `RemoteServicesOptions.TelemetryEndpoint` (novo campo de config, `null`
+  em ambos os arquivos de ambiente hoje) — **nunca os dois ativos ao mesmo
+  tempo**, por construção. `RemoteServicesOptions` agora é carregado uma
+  única vez no construtor de `MainWindow` (reaproveitado depois pela
+  inicialização do Sentry), evitando duplicar a leitura de config.
+- **Scaffold completo do Worker Cloudflare** (`infra/cloudflare-worker/`,
+  **não implantado**): schema D1 expandido (`telemetry_events` com as
+  colunas novas, `telemetry_event_actions` normalizada para "função mais
+  usada", `login_attempts` e `admin_sessions` para a autenticação do
+  painel); `validateEvent.js` espelhando o validador .NET; endpoints REST
+  de estatística (`src/stats/queries.js`, uma função pura por gráfico —
+  otimizações por dia, versões de Windows/app, funções mais usadas, tempo
+  médio, taxa de sucesso, erros por versão, CPU/GPU/RAM mais comuns, perfis
+  escolhidos — todas parametrizadas, nunca por interpolação de string, e
+  filtradas por `environment='Production'` por padrão para não misturar
+  testes do desenvolvedor com dados reais) e `src/stats/csv.js` (exportação
+  CSV pura).
+- **Autenticação própria do painel** (`src/auth/`): senha nunca em texto
+  puro — hash PBKDF2-SHA256 (210 mil iterações, Web Crypto nativo, sem
+  dependência de terceiros) gerado localmente por
+  `scripts/hash-admin-password.mjs` e guardado só como Secret do Worker
+  (`ADMIN_PASSWORD_HASH`); proteção contra força bruta por IP (`login_attempts`,
+  HMAC do IP com o Secret `IP_HASH_SECRET`, nunca o IP em claro, 5
+  tentativas por 15 minutos); sessões revogáveis do lado do servidor
+  (`admin_sessions`, cookie `HttpOnly`/`Secure`/`SameSite=Strict` carregando
+  só um ID aleatório de 256 bits — logout de verdade, não apenas expiração).
+  `src/auth/passwordAuthProvider.js` expõe só três funções
+  (`login`/`logout`/`requireSession`) para que um provedor futuro (OAuth,
+  Cloudflare Access) possa substituí-lo sem tocar nas rotas.
+- **Scaffold do painel** (`infra/dashboard/`, **não implantado**): site
+  estático (HTML/CSS/JS puro, sem framework nem build step, pronto para
+  Cloudflare Pages) com tela de login, filtros (período/versão), tiles
+  (otimizações no período, taxa de sucesso, tempo médio) e gráficos em
+  canvas (linha/barra) para cada estatística do Worker, mais exportação
+  CSV por gráfico. Lógica de formatação/agregação (`assets/charts.js`,
+  `assets/api.js`) extraída em módulos puros e testados; a renderização em
+  canvas (`assets/rendering.js`) e a colagem de DOM (`assets/app.js`) não
+  são cobertas por teste automatizado (exigiria um polyfill de canvas/DOM,
+  fora do escopo desta etapa) — registrado honestamente no README do
+  painel. O rodapé do painel deixa explícito que "otimizações" conta
+  eventos, não usuários únicos, já que a telemetria nunca carrega
+  identificador de máquina.
+- Documentação atualizada: `docs/telemetry.md` (tabela de campos v2,
+  seção do Worker/painel expandida), `docs/architecture.md` e
+  `docs/safety.md` (corrigidas duas frases desatualizadas de etapas
+  anteriores que ainda diziam "nasce como false"/"nunca hardware" —
+  inconsistentes com o que já estava implementado; e nova nota sobre a
+  autenticação do painel).
+- Validação: `dotnet build` Release sem avisos/erros; suíte .NET foi de 450
+  para **486 testes aprovados** (36 novos: `RamBucketCalculator`,
+  `TelemetryEventValidator`, `LocalTelemetryQueue`, `CloudflareTelemetryTransport`,
+  `QueuedCloudflareTelemetryService`); `scripts\Verify-Safety.ps1` aprovado.
+  Worker: **67 testes** via `npm test` em `infra/cloudflare-worker`
+  (validação estendida, `crypto.js`, `bruteForceGuard.js`, `sessionStore.js`,
+  `stats/queries.js`, `stats/csv.js` — tudo puro, sem Miniflare/wrangler).
+  Painel: **22 testes** via `npm test` em `infra/dashboard`
+  (`assets/api.js`, `assets/charts.js`). Total de 575 testes automatizados
+  entre os três projetos.
+- Pendências e lacunas conhecidas, registradas honestamente: a glue
+  D1-touching de `passwordAuthProvider.js` e o roteamento de `index.js` do
+  Worker não têm teste automatizado (exigiriam Miniflare); a renderização
+  em canvas do painel não tem teste automatizado; nenhum deploy, migração
+  remota de schema ou secret foi configurado; o cliente .NET continua
+  enviando telemetria só pelo FormSubmit (o transporte Cloudflare existe,
+  mas fica inativo até um endpoint real ser configurado); o painel de
+  "crash management" tipo centro-de-comando descrito pelo usuário
+  (clicar no erro, ver linha, contagem de usuários, marcar como
+  resolvido, regressão) é, na prática, a própria interface web do Sentry
+  (sentry.io) — não foi reconstruído dentro do painel próprio, já que
+  seria duplicar um produto que o Sentry já entrega nativamente assim que
+  o DSN estiver configurado e enviando eventos reais.

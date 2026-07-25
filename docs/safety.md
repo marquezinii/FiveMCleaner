@@ -296,10 +296,14 @@ O formulário de bug é uma exceção explícita ao processamento apenas local: 
 
 A telemetria técnica é uma exceção separada e opcional: ela vem habilitada por
 padrão em instalações novas, mas o usuário pode desativá-la a qualquer momento
-nas configurações, e só transmite categorias allowlisted de erro, duração de
-uma otimização e versão do aplicativo. Ela não lê nem envia logs, arquivos,
-documentos, histórico, caminhos, hardware ou dados pessoais. A especificação,
-o provedor e o limite de metadados de transporte estão documentados em
+nas configurações, e (desde a versão 2 do consentimento de privacidade) só
+transmite categorias allowlisted de erro, duração e resultado de uma
+otimização, versão do aplicativo, um perfil de hardware em faixas (modelo de
+CPU/GPU e faixa de RAM — as mesmas categorias já mostradas no diagnóstico
+local, nunca um identificador único) e os IDs das ações aplicadas. Ela não lê
+nem envia logs, arquivos, documentos, histórico, caminhos, identificador de
+máquina ou outros dados pessoais. A especificação, o provedor e o limite de
+metadados de transporte estão documentados em
 [Telemetria opcional](telemetry.md).
 
 O relatório automático de falhas (Sentry) é uma terceira exceção, separada e
@@ -311,6 +315,13 @@ evento é sanitizado (`CrashReportSanitizer`, reaproveitando `ReportSanitizer`)
 antes de sair do processo, removendo nome de máquina, IP, identificador de
 usuário e qualquer caminho pessoal. Detalhes completos em
 [Telemetria opcional](telemetry.md).
+
+O scaffold do painel administrativo (`infra/dashboard/`) e do Worker que o
+alimenta (`infra/cloudflare-worker/`) não fazem parte do aplicativo
+FiveMCleaner distribuído: rodam apenas na infraestrutura Cloudflare, nunca
+no processo do usuário nem no broker. A senha de administrador nunca fica em
+texto puro em nenhum lugar do repositório — só um hash PBKDF2 gerado
+localmente, guardado exclusivamente como Secret do Worker.
 
 O relatório técnico do otimizador (botão "Copiar relatório técnico" ao final
 de uma execução) segue a mesma política: `ReportSanitizer` substitui

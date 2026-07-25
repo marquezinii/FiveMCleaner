@@ -154,12 +154,21 @@ Progresso é calculado por passos concluídos e pesos declarados. Mensagens deve
 
 `IAnonymousTelemetryService` é uma fronteira da camada App, separada do
 serviço de otimização. A preferência persistida `AppSettings.ShareAnonymousTelemetry`
-nasce como `false`; o `MainViewModel` só gera um evento ao término de uma
-otimização após o consentimento. O contrato `AnonymousTelemetryEvent` não
-aceita payload livre: contém apenas nome allowlisted do evento, duração, versão
-e, em falha, categoria allowlisted. A implementação FormSubmit é best-effort;
-qualquer erro é suprimido localmente para não alterar a execução nem os logs.
-Detalhes de privacidade: [telemetry.md](telemetry.md).
+nasce como `true` em instalações novas, mas nada é enviado antes do
+consentimento versionado ser confirmado (`PrivacyConsentEvaluator`); o
+`MainViewModel` só gera um evento ao término de uma otimização após isso. O
+contrato `AnonymousTelemetryEvent` não aceita payload livre: contém o nome
+allowlisted do evento, duração, versão, categoria de erro allowlisted em
+falha e, desde a versão 2 do consentimento, um perfil de hardware (CPU/GPU/
+RAM em faixas) e os IDs das ações aplicadas. A implementação ativa hoje
+(`FormSubmitAnonymousTelemetryService`) é best-effort e só transmite os
+quatro primeiros campos; `CloudflareTelemetryService.cs`
+(`LocalTelemetryQueue`/`CloudflareTelemetryTransport`/
+`QueuedCloudflareTelemetryService`) implementa o transporte completo para o
+Worker em `infra/cloudflare-worker/`, mas fica inativo até um endpoint ser
+configurado — os dois transportes nunca ficam ativos ao mesmo tempo.
+Qualquer erro de transporte é suprimido localmente para não alterar a
+execução nem os logs. Detalhes de privacidade: [telemetry.md](telemetry.md).
 
 ### Relatório de falhas e configuração centralizada
 

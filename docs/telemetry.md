@@ -12,8 +12,9 @@ configuração ainda não define esse valor (instalação nova).
 
 ## Dados enviados quando autorizados
 
-Ao término, falha ou cancelamento de uma otimização, o aplicativo envia por
-HTTPS somente estes campos de um evento técnico:
+Ao término, falha ou cancelamento de uma otimização, o aplicativo monta um
+evento técnico com estes campos (versão 2 do consentimento de privacidade —
+ver `PrivacyConsentPolicy`):
 
 | Campo | Exemplo | Finalidade |
 | --- | --- | --- |
@@ -21,31 +22,52 @@ HTTPS somente estes campos de um evento técnico:
 | Tempo de execução | `18342` ms | identificar operações anormalmente longas |
 | Versão | `1.0.3` | correlacionar comportamento com uma versão |
 | Categoria de erro | `timeout` | presente apenas em falhas; é uma lista fechada |
+| Versão do Windows e arquitetura | `Windows 11`, `x64` | estatística agregada de compatibilidade |
+| Modelo de CPU e GPU | `AMD Ryzen 5 5600X`, `NVIDIA GeForce RTX 5070` | estatística agregada de hardware mais comum |
+| Faixa de RAM | `32` GiB (arredondada para cima entre um conjunto fixo de faixas) | estatística agregada, nunca o valor exato do sistema |
+| Perfil escolhido | `Balanced` | popularidade de cada modo (Leve/Médio/Agressivo) |
+| Identificadores das ações aplicadas | `fivem.legacy.cache.repair` | funcionalidade mais usada, agregada |
 
 As únicas categorias de erro possíveis são `cancelled`, `timeout`,
 `access-denied`, `io`, `invalid-data` e `unexpected`. Mensagens de exceção,
 stack traces, nomes de arquivos e caminhos locais nunca entram nesse contrato.
+Modelo de CPU/GPU e faixa de RAM são os mesmos dados já mostrados no
+diagnóstico local do app — categorias de hardware compartilhadas por muitas
+máquinas, nunca um identificador único (número de série, MAC, GUID de
+hardware). O transporte ativo hoje
+(`FormSubmitAnonymousTelemetryService`) continua enviando **somente** os
+quatro primeiros campos, exatamente como antes — os campos novos existem no
+evento em memória, mas só são de fato transmitidos pelo transporte
+Cloudflare (`CloudflareTelemetryService.cs`), que fica inativo até o Worker
+ser implantado e configurado (ver abaixo).
 
 ## Dados que o aplicativo nunca envia nessa telemetria
 
 - arquivos, imagens, documentos ou seus conteúdos;
 - histórico de otimizações, logs locais, relatórios técnicos ou journal;
-- nomes de usuário, e-mail, identificadores de máquina, IP como campo do
-  aplicativo, hardware, processos ou configurações do Windows;
+- nomes de usuário, e-mail, identificadores de máquina (número de série, MAC,
+  GUID de hardware), IP como campo do aplicativo, processos ou lista de
+  programas instalados, ou configurações do Windows além do que está na
+  tabela acima;
 - texto livre, mensagens de erro brutas, stack traces ou caminhos.
 
 O código limita os nomes de evento e categorias a uma allowlist e recusa
 campos fora desse esquema. Falhas de rede são ignoradas: não interrompem a
 otimização, não geram nova telemetria e não são reenviadas automaticamente.
+A fila local (`LocalTelemetryQueue`) persiste eventos pendentes por até 14
+dias antes de descartá-los, para sobreviver a reinícios e períodos offline
+sem crescer indefinidamente.
 
 ## Destino e metadados de transporte
 
-Quando habilitada, a telemetria é enviada ao endpoint HTTPS do
+Hoje, a telemetria é enviada ao endpoint HTTPS do
 [FormSubmit](https://formsubmit.co/privacy.pdf), o mesmo provedor usado pelo
 formulário de bugs. O payload do FiveMCleaner não contém dados pessoais.
 Como em qualquer conexão HTTPS, o provedor e a infraestrutura de rede podem
 processar metadados de conexão, como endereço IP, conforme suas próprias
 políticas; isso não é controlado nem incluído como campo pelo aplicativo.
+Quando o Worker Cloudflare (abaixo) for implantado e configurado, ele passa
+a ser o único transporte — nunca os dois simultaneamente.
 
 Para relatar um problema com descrição ou imagem, use o formulário de bug
 separado e opt-in; suas regras estão em [Relatos de bug e privacidade](bug-reports.md).
@@ -97,11 +119,32 @@ desenvolvedor rodando localmente nunca se misturam, no Sentry, com erros de
 usuários finais rodando a versão instalada — ambos usam o mesmo projeto e
 DSN do Sentry, apenas com a tag `Environment` diferente.
 
-### Cloudflare Worker/D1 (telemetria de uso, escopo futuro)
+### Cloudflare Worker/D1 e painel administrativo
 
-Um scaffold do Worker que receberia a telemetria de uso (não os relatórios
-de falha, que vão direto ao Sentry) existe em `infra/cloudflare-worker/`,
-com validação server-side e schema D1 — documentado em seu próprio
-`README.md`. Ele **não está implantado** e o cliente .NET ainda **não**
-envia dados para ele: a telemetria de uso continua sendo enviada pelo
-FormSubmit, sem alteração, até uma etapa futura trocar o transporte.
+Um scaffold completo do Worker que receberia a telemetria de uso (não os
+relatórios de falha, que vão direto ao Sentry) existe em
+`infra/cloudflare-worker/`, com validação server-side, schema D1 (incluindo
+uma tabela normalizada de ações aplicadas, para "função mais usada"),
+endpoints de estatística agregada (`/api/stats/*`) e autenticação própria
+protegendo esses endpoints — documentado em seu próprio `README.md`. Ele
+**não está implantado** e o cliente .NET ainda **não** envia dados para
+ele: a telemetria de uso continua sendo enviada pelo FormSubmit, sem
+alteração, até uma etapa futura trocar o transporte
+(`CloudflareTelemetryService.cs` já existe no cliente, mas fica inativo
+enquanto `RemoteServicesOptions.TelemetryEndpoint` não for configurado).
+
+Um scaffold do painel (`infra/dashboard/`, também não implantado) consome
+esses endpoints para mostrar gráficos agregados — otimizações por dia,
+versões do Windows/app, funções mais usadas, hardware mais comum, tempo
+médio e taxa de sucesso. Nenhum dado individual de usuário é exibido nem
+poderia ser, já que a telemetria nunca carrega um identificador de máquina;
+o painel deixa isso explícito em vez de fingir uma contagem de "usuários
+únicos" que os dados não permitem calcular corretamente.
+
+A autenticação do painel foi uma decisão explícita do usuário: sem domínio
+próprio, sem Cloudflare Access, sem OAuth Google/GitHub — uma senha de
+administrador (hash PBKDF2, nunca em texto puro, gerado localmente e
+guardado só como Secret do Worker), proteção contra força bruta e sessões
+revogáveis no lado do servidor, desenhada para poder ser trocada por outro
+provedor no futuro sem reescrever o resto do Worker. Detalhes completos em
+`infra/cloudflare-worker/README.md`.
