@@ -1368,3 +1368,96 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   aprovado.
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.
+
+## Relatório de falhas via Sentry, configuração centralizada e scaffold do Worker Cloudflare/D1 (25/07/2026)
+
+- Trabalho local, **não publicado** (nenhum push nesta etapa). Não altera
+  versão pública, instalador nem site. Terceiro incremento do plano de
+  telemetria central, sobre o consentimento versionado e a tela já
+  implementados nas duas etapas anteriores.
+- O usuário forneceu o DSN do Sentry e o nome/ID do banco D1 do Cloudflare,
+  pedindo explicitamente para não deixar esses valores fixos no código, usar
+  configuração centralizada por ambiente (Development/Production) e não
+  fazer nenhum deploy sem autorização. Antes de implementar, o escopo exato
+  foi confirmado com o usuário: (1) integração real do SDK Sentry agora
+  (não só a configuração) e (2) criação do scaffold do Worker/D1 agora
+  (sem implantar).
+- **Configuração centralizada** (`src/FiveMCleaner.App/Config/`):
+  `appsettings.json` (base/fallback seguro, sem DSN),
+  `appsettings.Development.json` e `appsettings.Production.json` (mesmo DSN
+  nos dois — único projeto Sentry —, diferindo apenas no campo
+  `environment`). Novo `AppEnvironment.Resolve()` decide qual arquivo usar:
+  variável de ambiente `FIVEMCLEANER_ENVIRONMENT` tem prioridade máxima
+  (definida como `Development` por `scripts/Start-DevelopmentApp.ps1`); sem
+  ela, build Debug resolve `Development` e build Release resolve
+  `Production` — a distribuição pública real é sempre Release e nunca
+  define a variável, então nunca precisa de nada especial para cair em
+  Production. Novo `RemoteServicesOptionsLoader` lê o arquivo
+  correspondente com o mesmo `FiveMCleanerJson.Options` já usado em todo o
+  app; falha ao ler (arquivo ausente, JSON malformado) sempre cai num
+  fallback seguro sem DSN, nunca lança exceção.
+- **Integração real do Sentry** (`FiveMCleaner.App` apenas — pacote NuGet
+  `Sentry 6.7.0`, nunca referenciado por `Core`/`Windows`/`Broker`):
+  `ICrashReportingService`/`SentryCrashReportingService`/
+  `NoOpCrashReportingService`, com um holder estático `CrashReporting.Current`
+  (mesmo padrão já usado por `LocalizationService.Current`) para que os
+  handlers estáticos de `App.xaml.cs` tenham sempre um alvo seguro. Nunca
+  inicializado antes do consentimento: `MainWindow.InitializeCrashReportingIfAuthorized`
+  roda só depois que `ShowPrivacyConsentIfNeededAsync` resolve, verificando
+  `viewModel.ShareCrashReports` (já garantidamente com
+  `PrivacyConsentVersion` em dia nesse ponto). `App.xaml.cs` ganhou os
+  handlers que faltavam desde a investigação anterior de bug hunting —
+  `AppDomain.CurrentDomain.UnhandledException` e
+  `TaskScheduler.UnobservedTaskException` — além do já existente
+  `DispatcherUnhandledException`, todos roteando para
+  `CrashReporting.Current.CaptureException` de forma best-effort (uma falha
+  do Sentry nunca mascara o crash original nem lança de dentro do handler).
+  `SentryOptions` desliga explicitamente tudo que não seja o evento de erro
+  sanitizado: `SendDefaultPii=false`, `IsEnvironmentUser=false`,
+  `AutoSessionTracking=false`, `CaptureFailedRequests=false`,
+  `TracesSampleRate=0`. Novo `CrashReportSanitizer` roda em todo evento via
+  `BeforeSend`, reaproveitando o mesmo `ReportSanitizer` já usado no
+  relatório técnico para substituir caminhos pessoais, além de sempre
+  sobrescrever `ServerName` para um valor fixo não identificável e limpar
+  `User.Id/Username/Email/IpAddress`.
+- **Scaffold do Worker Cloudflare/D1** (`infra/cloudflare-worker/`, **não
+  implantado**, sem wiring do cliente .NET ainda): `wrangler.toml` com
+  seções `env.development`/`env.production` (ambas apontando para o mesmo
+  banco D1 fornecido, já que só um foi provisionado; linhas distinguidas
+  por uma coluna `environment`), `schema.sql` com a tabela
+  `telemetry_events` espelhando o allowlist já documentado, `src/index.js`
+  (Worker mínimo) e `src/validateEvent.js` (validação pura, testada com o
+  test runner nativo do Node — 16 testes, sem precisar de Miniflare/
+  wrangler). `README.md` próprio documenta o que falta (deploy, migração
+  remota do schema, wiring do cliente) como pendências futuras que exigem
+  autorização explícita antes de qualquer operação remota.
+- Durante a verificação de `git status`, apareceu um `.wrangler/cache/
+  wrangler-account.json` na raiz do repositório contendo o e-mail e o ID da
+  conta Cloudflare real do usuário — não foi gerado por nenhum comando
+  executado nesta tarefa (nenhum `wrangler` foi chamado). Adicionado a
+  `.gitignore` (`/.wrangler/`) e nunca staged/commitado; registrado aqui
+  para transparência, já que é um artefato inesperado do ambiente, não do
+  código desta etapa.
+- Documentação atualizada: `docs/telemetry.md` (nova seção "Relatório de
+  falhas (Sentry)" com tabela de campos, configuração centralizada por
+  ambiente e nota sobre o Worker/D1 futuro), `docs/architecture.md` (nova
+  subseção "Relatório de falhas e configuração centralizada") e
+  `docs/safety.md` (terceira exceção de privacidade, mesmas garantias de
+  nunca rodar no broker e nunca hardcoded).
+- Validação: `dotnet build` Release sem avisos/erros; suíte completa foi de
+  430 para **450 testes aprovados** (20 novos: resolução de ambiente com e
+  sem variável, carregamento de configuração por ambiente com fallback
+  seguro em arquivo ausente/malformado, o holder estático
+  `CrashReporting`/`NoOpCrashReportingService`, sanitização real de
+  `SentryEvent` — nome de servidor, dados de usuário e caminho pessoal na
+  mensagem — e dois testes de guarda que escaneiam todo o código-fonte do
+  app garantindo que o DSN do Sentry e o ID do banco D1 nunca aparecem fora
+  dos arquivos de configuração/infraestrutura corretos);
+  `scripts\Verify-Safety.ps1` aprovado. Os 16 testes puros do Worker
+  (`npm test` em `infra/cloudflare-worker`) passam fora do pipeline .NET,
+  sem depender de Miniflare/wrangler.
+- Pendências explícitas para etapas futuras: nenhuma fila local, transporte
+  HTTP em lote ou remoção do FormSubmit foi implementada — a telemetria de
+  uso continua exatamente como estava; o Worker/D1 não foi implantado nem
+  teve schema aplicado remotamente; nenhuma operação remota (deploy,
+  publicação, `wrangler` real) foi executada nesta etapa.

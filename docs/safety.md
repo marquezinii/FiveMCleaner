@@ -302,6 +302,16 @@ documentos, histórico, caminhos, hardware ou dados pessoais. A especificação,
 o provedor e o limite de metadados de transporte estão documentados em
 [Telemetria opcional](telemetry.md).
 
+O relatório automático de falhas (Sentry) é uma terceira exceção, separada e
+com consentimento próprio, sujeita às mesmas regras de nunca inicializar
+antes da confirmação explícita do usuário e nunca rodar no broker elevado
+(`ICrashReportingService` só existe na camada App). O DSN vem de um arquivo
+de configuração por ambiente, nunca de um literal no código-fonte; todo
+evento é sanitizado (`CrashReportSanitizer`, reaproveitando `ReportSanitizer`)
+antes de sair do processo, removendo nome de máquina, IP, identificador de
+usuário e qualquer caminho pessoal. Detalhes completos em
+[Telemetria opcional](telemetry.md).
+
 O relatório técnico do otimizador (botão "Copiar relatório técnico" ao final
 de uma execução) segue a mesma política: `ReportSanitizer` substitui
 `%LOCALAPPDATA%`, `%APPDATA%` e `%USERPROFILE%` reais por seus nomes de

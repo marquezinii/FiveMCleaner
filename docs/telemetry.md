@@ -49,3 +49,59 @@ políticas; isso não é controlado nem incluído como campo pelo aplicativo.
 
 Para relatar um problema com descrição ou imagem, use o formulário de bug
 separado e opt-in; suas regras estão em [Relatos de bug e privacidade](bug-reports.md).
+
+## Relatório de falhas (Sentry)
+
+Consentimento separado do da telemetria de uso acima:
+**Ajuda-nos com relatórios automáticos de falhas** também vem habilitado por
+padrão em instalações novas (mesmo raciocínio: o produto está em fase
+inicial e falhas reais são difíceis de reproduzir sem esses dados), mas
+**nada é enviado antes da tela de consentimento** ser confirmada
+explicitamente pelo usuário, mesmo com o padrão ativado — ver a seção
+"Consentimento" acima e `PrivacyConsentEvaluator`. Instalações antigas que já
+tinham telemetria configurada, mas nunca viram essa tela, também não têm
+nada enviado até confirmarem.
+
+### Dados enviados quando autorizado
+
+Quando o aplicativo trava ou encontra uma exceção não tratada, e somente se
+autorizado, envia ao Sentry:
+
+| Campo | Exemplo | Finalidade |
+| --- | --- | --- |
+| Tipo e mensagem sanitizados da exceção | `IOException: could not read %APPDATA%\...` | identificar a causa técnica |
+| Stack trace sanitizado | caminhos do usuário substituídos por `%APPDATA%`/`%USERPROFILE%`/etc. | localizar o ponto de falha no código |
+| Versão do aplicativo | `1.0.3` | correlacionar com uma versão específica |
+| Ambiente | `Development` ou `Production` | nunca mistura erros de desenvolvimento com erros de usuários finais |
+
+O SDK do Sentry é inicializado apenas quando autorizado, com
+`SendDefaultPii=false`, `AutoSessionTracking`/`CaptureFailedRequests`/
+`TracesSampleRate` desligados (nenhum dado além do evento de erro em si é
+enviado) e um `BeforeSend` obrigatório (`CrashReportSanitizer`) que reaplica
+a mesma sanitização de caminhos já usada no relatório técnico
+(`ReportSanitizer`) sobre mensagem, stack trace e qualquer dado de usuário
+que o SDK tente preencher automaticamente — nome da máquina, IP e
+identificador de usuário são sempre sobrescritos/limpos, nunca enviados.
+
+### Configuração centralizada e ambientes
+
+O DSN do Sentry não é um literal espalhado pelo código: fica em
+`src/FiveMCleaner.App/Config/appsettings.Development.json` e
+`appsettings.Production.json` (com `appsettings.json` como base/fallback
+seguro, sem DSN). `AppEnvironment.Resolve()` decide qual arquivo usar: a
+variável de ambiente `FIVEMCLEANER_ENVIRONMENT` tem prioridade (é isso que
+`scripts/Start-DevelopmentApp.ps1` define como `Development`); sem ela, uma
+build Debug resolve para `Development` e uma build Release (a distribuição
+pública real) resolve para `Production`. Isso garante que erros do
+desenvolvedor rodando localmente nunca se misturam, no Sentry, com erros de
+usuários finais rodando a versão instalada — ambos usam o mesmo projeto e
+DSN do Sentry, apenas com a tag `Environment` diferente.
+
+### Cloudflare Worker/D1 (telemetria de uso, escopo futuro)
+
+Um scaffold do Worker que receberia a telemetria de uso (não os relatórios
+de falha, que vão direto ao Sentry) existe em `infra/cloudflare-worker/`,
+com validação server-side e schema D1 — documentado em seu próprio
+`README.md`. Ele **não está implantado** e o cliente .NET ainda **não**
+envia dados para ele: a telemetria de uso continua sendo enviada pelo
+FormSubmit, sem alteração, até uma etapa futura trocar o transporte.

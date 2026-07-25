@@ -161,6 +161,24 @@ e, em falha, categoria allowlisted. A implementação FormSubmit é best-effort;
 qualquer erro é suprimido localmente para não alterar a execução nem os logs.
 Detalhes de privacidade: [telemetry.md](telemetry.md).
 
+### Relatório de falhas e configuração centralizada
+
+`ICrashReportingService` (implementação `SentryCrashReportingService`) é
+outra fronteira da camada App, análoga à de telemetria: nunca inicializada
+antes do consentimento (`AppSettings.ShareCrashReports` combinado com
+`PrivacyConsentVersion` em dia, via o mesmo `PrivacyConsentEvaluator`), e
+nunca referenciada por `Core`/`Windows`/`Broker`. `MainWindow` a inicializa
+uma única vez, logo depois que o fluxo de consentimento resolve, usando
+`RemoteServicesOptionsLoader` para ler o DSN de um arquivo de configuração
+por ambiente (`Config/appsettings.{Development,Production}.json`, com
+`appsettings.json` como base sem DSN) — nenhum identificador remoto fica
+hardcoded em código-fonte. `AppEnvironment.Resolve()` decide entre
+Development/Production (variável `FIVEMCLEANER_ENVIRONMENT`, com fallback
+por configuração de build), permitindo separar no Sentry os erros do
+desenvolvedor dos erros de usuários finais sem duplicar DSN nem projeto.
+Todo evento passa por `CrashReportSanitizer` (reaproveitando
+`ReportSanitizer`) antes de sair do processo. Detalhes: [telemetry.md](telemetry.md).
+
 ## Interrupção de otimização pela interface
 
 O `MainWindow` não encerra nem chama `MainViewModel.CancelOptimization()`
