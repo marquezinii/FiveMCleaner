@@ -3,9 +3,12 @@
 ## Consentimento
 
 A opção **Ajude a melhorar o FiveMCleaner** fica em **Configurações** e vem
-desativada por padrão, inclusive após atualização. Sem o toggle ligado, o
-aplicativo não cria nem envia eventos de telemetria. O usuário pode desligá-lo
-a qualquer momento; eventos futuros deixam de ser enviados imediatamente.
+habilitada por padrão em instalações novas. O usuário pode desligá-la a
+qualquer momento; eventos futuros deixam de ser enviados imediatamente assim
+que o toggle é desativado. Configurações existentes, salvas por uma versão
+anterior do app com o toggle explicitamente desligado, são preservadas
+normalmente — a mudança de padrão vale apenas quando o arquivo de
+configuração ainda não define esse valor (instalação nova).
 
 ## Dados enviados quando autorizados
 

@@ -215,15 +215,19 @@ public sealed record AppSettings
 
     public AppThemePreference Theme { get; init; } = AppThemePreference.System;
 
-    public bool MinimizeToTrayOnClose { get; init; }
+    public bool MinimizeToTrayOnClose { get; init; } = true;
 
     public bool LaunchAtStartup { get; init; }
 
     public bool CheckForUpdates { get; init; } = true;
 
     /// <summary>
-    /// Consentimento explícito para telemetria técnica anonimizada. Permanece
-    /// desabilitada para instalações existentes e novas até ação do usuário.
+    /// Consentimento para telemetria técnica anonimizada. Vem habilitada por
+    /// padrão em instalações novas; o usuário pode desativá-la a qualquer
+    /// momento nas configurações. Continua transmitindo apenas categorias
+    /// allowlisted de erro, duração de uma otimização e versão do
+    /// aplicativo — nunca logs, arquivos, documentos, histórico, caminhos,
+    /// hardware ou dados pessoais.
     /// </summary>
-    public bool ShareAnonymousTelemetry { get; init; }
+    public bool ShareAnonymousTelemetry { get; init; } = true;
 }

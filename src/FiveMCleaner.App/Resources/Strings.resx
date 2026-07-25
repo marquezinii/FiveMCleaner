@@ -34,7 +34,7 @@
   <data name="Profiles.Light.Badge" xml:space="preserve"><value>VISUALS PRESERVED</value></data>
   <data name="Profiles.Light.Description" xml:space="preserve"><value>Gentle adjustments with reductions limited to expensive visual effects.</value></data>
   <data name="Profiles.Balanced.Name" xml:space="preserve"><value>Balanced</value></data>
-  <data name="Profiles.Balanced.Badge" xml:space="preserve"><value>RECOMMENDED</value></data>
+  <data name="Profiles.RecommendedBadge" xml:space="preserve"><value>RECOMMENDED</value></data>
   <data name="Profiles.Balanced.Description" xml:space="preserve"><value>A balance of image quality, power, capture and responsiveness.</value></data>
   <data name="Profiles.Aggressive.Name" xml:space="preserve"><value>Aggressive</value></data>
   <data name="Profiles.Aggressive.Badge" xml:space="preserve"><value>FPS FIRST</value></data>

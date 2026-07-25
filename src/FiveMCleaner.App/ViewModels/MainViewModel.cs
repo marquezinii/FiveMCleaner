@@ -266,6 +266,15 @@ public sealed class MainViewModel : BindableBase
         set { if (value) SelectProfile(OptimizationProfile.Aggressive); }
     }
 
+    private OptimizationProfile RecommendedProfile =>
+        diagnostic?.RecommendedProfile ?? OptimizationProfile.Balanced;
+
+    public bool IsLightRecommended => RecommendedProfile == OptimizationProfile.Light;
+
+    public bool IsBalancedRecommended => RecommendedProfile == OptimizationProfile.Balanced;
+
+    public bool IsAggressiveRecommended => RecommendedProfile == OptimizationProfile.Aggressive;
+
     public AppThemePreference ThemePreference => themePreference;
 
     public AppLanguagePreference LanguagePreference => languagePreference;
@@ -436,13 +445,23 @@ public sealed class MainViewModel : BindableBase
         ? string.Join("  •  ", currentPlan.Notices.Select(LocalizeNotice))
         : localization.GetString("Plan.NoAdditionalWarnings");
 
-    public string SelectedProfileLabel => selectedProfile switch
+    public string SelectedProfileLabel
     {
-        OptimizationProfile.Light => localization.GetString("Profiles.Light.Name").ToUpper(localization.CurrentCulture),
-        OptimizationProfile.Balanced => $"{localization.GetString("Profiles.Balanced.Name").ToUpper(localization.CurrentCulture)} • {localization.GetString("Profiles.Balanced.Badge")}",
-        OptimizationProfile.Aggressive => localization.GetString("Profiles.Aggressive.Name").ToUpper(localization.CurrentCulture),
-        _ => localization.GetString("Common.Unknown").ToUpper(localization.CurrentCulture)
-    };
+        get
+        {
+            var name = selectedProfile switch
+            {
+                OptimizationProfile.Light => localization.GetString("Profiles.Light.Name"),
+                OptimizationProfile.Balanced => localization.GetString("Profiles.Balanced.Name"),
+                OptimizationProfile.Aggressive => localization.GetString("Profiles.Aggressive.Name"),
+                _ => localization.GetString("Common.Unknown")
+            };
+            var upper = name.ToUpper(localization.CurrentCulture);
+            return selectedProfile == RecommendedProfile
+                ? $"{upper} • {localization.GetString("Profiles.RecommendedBadge")}"
+                : upper;
+        }
+    }
 
     public string SafetySummary => currentPlan?.RequiresElevation == true
         ? localization.GetString("Plan.Elevation.OnePrompt")
@@ -875,6 +894,10 @@ public sealed class MainViewModel : BindableBase
     private void ApplyDiagnostic(AppDiagnostic value)
     {
         diagnostic = value;
+        OnPropertyChanged(nameof(IsLightRecommended));
+        OnPropertyChanged(nameof(IsBalancedRecommended));
+        OnPropertyChanged(nameof(IsAggressiveRecommended));
+        OnPropertyChanged(nameof(SelectedProfileLabel));
         if (!profileInitializedFromDiagnostic)
         {
             selectedProfile = value.RecommendedProfile;

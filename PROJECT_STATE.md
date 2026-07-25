@@ -1114,3 +1114,52 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   aprovados** (388 anteriores + 2 novos: independência dos opt-ins de
   janela/VSync do FiveM vs. GTA V, e o journal não ficar preso em
   `Applying` após cancelamento); `scripts\Verify-Safety.ps1` aprovado.
+
+## Selo "recomendado" dinâmico e novos padrões de configuração (24/07/2026)
+
+- Trabalho local, **não publicado** (nenhum push nesta etapa até o momento
+  do registro).
+- **Bug de UX corrigido**: o selo laranja "RECOMENDADO" na tela de visão
+  geral e o texto do modo selecionado (`SelectedProfileLabel`) estavam
+  **hardcoded no perfil Médio**, independente do que o app realmente
+  diagnosticava como recomendado (`AppDiagnostic.RecommendedProfile`,
+  calculado por `HardwareProfileAdvisor`). Corrigido em dois pontos:
+  - `MainWindow.xaml`: o selo (antes só dentro do `RadioButton` do
+    perfil Médio) agora existe nos três cartões (Leve/Médio/Agressivo),
+    cada um com `Visibility` ligada a uma propriedade dedicada
+    (`IsLightRecommended`/`IsBalancedRecommended`/`IsAggressiveRecommended`
+    em `MainViewModel`), calculadas a partir do diagnóstico real.
+  - `MainViewModel.SelectedProfileLabel`: antes sempre anexava
+    " • RECOMENDADO" quando o perfil **selecionado** era Médio,
+    independentemente do diagnóstico; agora anexa o selo apenas quando o
+    perfil selecionado é de fato igual ao `RecommendedProfile` do
+    diagnóstico, qualquer que seja ele.
+  - A chave de recurso `Profiles.Balanced.Badge` (texto "RECOMENDADO",
+    fixa ao perfil Médio) foi renomeada para `Profiles.RecommendedBadge`
+    em `Strings.resx`/`Strings.pt-BR.resx`, já que o texto nunca foi
+    específico do perfil — só o binding condicional era o problema.
+- **Padrões de configuração alterados a pedido do usuário**
+  (`AppSettings` em `AppModels.cs`):
+  - `MinimizeToTrayOnClose` agora tem padrão `true` (antes `false`):
+    instalações novas iniciam com "Minimizar para a bandeja" habilitado.
+  - `ShareAnonymousTelemetry` agora tem padrão `true` (antes `false`):
+    instalações novas iniciam com "Ajude a melhorar o FiveMCleaner"
+    habilitado. A telemetria continua estritamente allowlisted (tipo de
+    evento, duração, versão, categoria de erro fechada) e nunca lê
+    logs/arquivos/documentos/histórico/caminhos/hardware/dados pessoais —
+    só o padrão de ativação mudou, não o escopo do que é coletado. O
+    usuário continua podendo desativar a qualquer momento nas
+    configurações, e uma configuração já salva anteriormente com o toggle
+    explicitamente desligado é preservada (o novo padrão só vale quando o
+    arquivo de configuração ainda não define esse valor, ou seja,
+    instalação nova). `docs/safety.md` e `docs/telemetry.md` atualizados
+    para refletir o novo padrão sem enfraquecer a documentação do escopo
+    de dados.
+- Validação: `dotnet build` Release sem avisos/erros; suíte completa (390
+  testes) segue aprovada, com um teste de deserialização de configuração
+  antiga (`ExistingSettingsJson_DefaultsToAutomaticLanguage`) ajustado
+  para refletir o novo padrão de telemetria; `scripts\Verify-Safety.ps1`
+  aprovado. Não há teste automatizado dedicado para `MainViewModel`
+  (mesma lacuna já registrada para a camada de app/ViewModel).
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
