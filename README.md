@@ -37,17 +37,17 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 > Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
 
 > [!NOTE]
-> A `v1.0.2` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
+> A `v1.0.3` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
 
 ## Últimas atualizações
 
-**Versão 1.0.2**
+**Versão 1.0.3**
 
-- Corrigido: o app não fecha mais ao exibir a versão e o selo tem contraste correto no tema escuro.
-- Melhorado: rodapé, janela maximizada, card de proteção e seletores visuais ficaram mais consistentes e legíveis.
-- Atualizado: a página pública informa as mudanças da última versão e direciona ao histórico completo.
+- Corrigido: cancelamentos transacionais, preferências independentes de FiveM/GTA V e progresso administrativo do broker.
+- Melhorado: confirmação segura para cancelar ou fechar durante otimização, recomendação dinâmica e notificação nativa de atualização.
+- Atualizado: diagnósticos, ajustes opt-in de FiveM/GTA V, documentação de privacidade e licença source-available.
 
-## Estado da v1.0.2
+## Estado da v1.0.3
 
 - preferências gerais enxutas: idioma pt-BR/inglês, tema do sistema/claro/escuro,
   comportamento do X e inicialização com Windows;
@@ -186,7 +186,7 @@ As decisões do projeto priorizam documentação do Cfx.re, suporte oficial, rep
 ## Contribuindo e segurança
 
 - Bugs comuns podem ser enviados pelo app ou pelo GitHub; leia antes [Relatos de bug e privacidade](docs/bug-reports.md).
-- A telemetria técnica é opcional e vem desativada. Quando habilitada em **Configurações**, envia somente categorias de erro, duração de otimizações e versão; nunca inclui arquivos, documentos, histórico ou dados pessoais no payload. Veja [Telemetria opcional](docs/telemetry.md).
+- A telemetria técnica é opcional e vem habilitada apenas para instalações novas; ela pode ser desligada em **Configurações** e envia somente categorias de erro, duração de otimizações e versão — nunca arquivos, documentos, histórico ou dados pessoais no payload. Veja [Telemetria opcional](docs/telemetry.md).
 - Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de propor uma ação de sistema.
 - Vulnerabilidades devem seguir [SECURITY.md](SECURITY.md), sem issue pública.
 - Toda contribuição está sujeita ao [Código de Conduta](CODE_OF_CONDUCT.md).

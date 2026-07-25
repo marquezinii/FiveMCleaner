@@ -114,8 +114,9 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   confirmação explícita do usuário.
 - O formulário de bugs é opt-in: nenhum dado é enviado sem o clique do usuário.
   Imagens opcionais passam por sanitização antes do envio.
-- A telemetria técnica também é estritamente opt-in e fica desativada por
-  padrão. Após consentimento explícito, só envia por HTTPS uma allowlist de
+- A telemetria técnica também é estritamente opcional e vem habilitada apenas
+  em instalações novas; a pessoa pode desligá-la a qualquer momento. Quando
+  habilitada, só envia por HTTPS uma allowlist de
   tipo de término da otimização, duração, versão e categoria fixa de erro; não
   envia logs, texto livre, caminhos, arquivos, documentos, histórico, hardware
   ou dados pessoais. O contrato e a ressalva sobre metadados de transporte do
@@ -411,7 +412,7 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 
 ## Distribuição e validação (atualização de 23/07/2026)
 
-- A distribuição pública atual é a versão `v1.0.2` e usa Inno Setup 6.7.3, com aplicativo e broker
+- A distribuição pública atual é a versão `v1.0.3` e usa Inno Setup 6.7.3, com aplicativo e broker
   `win-x64` self-contained: não requer .NET, Node.js, SDK, Visual Studio ou
   outra ferramenta de desenvolvimento na máquina da pessoa.
 - O instalador é por usuário, detecta pt-BR/inglês pela linguagem de interface
@@ -530,6 +531,21 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   mas não expõe chips internos de risco, reversibilidade, privilégio ou versão
   do catálogo. O espaçamento do título de Configurações segue agora o padrão
   das demais páginas.
+
+## Publicação v1.0.3 (25/07/2026)
+
+- A versão estável `v1.0.3` consolida todo o conteúdo da branch de
+  desenvolvimento após a `v1.0.2`: diagnósticos e ajustes opt-in de FiveM/GTA
+  V Legacy, benchmark standalone, telemetria documentada, licença
+  source-available, confirmações seguras de interrupção e correções do motor
+  transacional/broker.
+- A linha pública continua usando o instalador self-contained `win-x64`, o
+  manifesto com SHA-256 e o alias estável
+  `FiveMCleaner-Setup-latest-win-x64.exe`. A página estática de download e o
+  README exibem o resumo factual da `1.0.3`.
+- A política de progressão pública do repositório exige a próxima versão
+  sequencial após `1.0.2`; por isso esta publicação é `1.0.3`, validada por
+  `scripts/Test-PublicVersionProgression.ps1`.
 
 ## Publicação v1.0.2 e handoff (23/07/2026)
 

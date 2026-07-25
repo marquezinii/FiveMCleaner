@@ -5,11 +5,11 @@
 #define StableAppId "{{49338651-127F-4FD3-BEAD-88D8C9377672}"
 
 #ifndef AppVersion
-  #define AppVersion "1.0.2"
+  #define AppVersion "1.0.3"
 #endif
 
 #ifndef AppNumericVersion
-  #define AppNumericVersion "1.0.2.0"
+  #define AppNumericVersion "1.0.3.0"
 #endif
 
 #ifndef SourceDir

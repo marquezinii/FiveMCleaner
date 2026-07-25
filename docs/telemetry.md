@@ -19,7 +19,7 @@ HTTPS somente estes campos de um evento técnico:
 | --- | --- | --- |
 | Tipo | `optimization-completed` | distinguir conclusão, falha ou cancelamento |
 | Tempo de execução | `18342` ms | identificar operações anormalmente longas |
-| Versão | `1.0.2` | correlacionar comportamento com uma versão |
+| Versão | `1.0.3` | correlacionar comportamento com uma versão |
 | Categoria de erro | `timeout` | presente apenas em falhas; é uma lista fechada |
 
 As únicas categorias de erro possíveis são `cancelled`, `timeout`,

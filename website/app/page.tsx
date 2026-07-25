@@ -469,7 +469,7 @@ const copy = {
         ],
         [
           "Does the application collect my data?",
-          "Anonymous technical telemetry is off by default. If enabled, it sends only categorized errors, execution time, and version; optimization stays local.",
+          "Anonymous technical telemetry is enabled only for new installs and can be turned off at any time. It sends only categorized errors, execution time, and version; optimization stays local.",
         ],
         [
           "Why might SmartScreen show a warning?",
