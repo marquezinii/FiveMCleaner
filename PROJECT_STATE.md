@@ -965,3 +965,64 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   aprovado (após o ajuste de `-ExcludeFileNames` descrito acima).
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.
+
+## Investigação: fase administrativa falhando sem "Executar como administrador" (24/07/2026)
+
+- Relato do usuário: um terceiro que testou a versão pública `v1.0.2` em
+  duas máquinas diferentes, ambas no perfil Médio, teve a fase
+  administrativa (ação `EnableSessionPerformancePowerPlan`, a única do
+  catálogo com `RequiredPrivilege.Administrator`) falhar com "A fase
+  administrativa falhou com segurança: O componente administrativo
+  terminou sem uma confirmação válida." Rodando o app já **como
+  administrador**, nenhuma ação falhou nas duas máquinas.
+- Diagnóstico confirmado pelo código: essa mensagem específica
+  (`ElevatedBrokerClient.cs`) só aparece quando o pipe nomeado local
+  chegou a conectar com o broker elevado, mas o processo terminou **sem
+  publicar nenhum evento terminal** (`Completed`/`Failed`/`Rejected`) —
+  ou seja, o broker foi interrompido no meio da execução, não rejeitou
+  nem falhou de forma limpa pelo próprio código dele.
+- Hipótese mais bem sustentada (não confirmável sem logs de proteção da
+  máquina do usuário, mas consistente com o próprio registro já existente
+  em "Compatibilidade com antivírus" — "A versão sem assinatura
+  Authenticode pode receber avisos de reputação/SmartScreen"): quando o
+  app não está elevado, `Verb = "runas"` aciona o fluxo completo de
+  elevação do Windows (`consent.exe`), que para um executável **sem
+  assinatura digital** passa por checagem de reputação do
+  SmartScreen/Defender — podendo interromper o broker no meio da
+  execução. Quando o app já está elevado, essa checagem não é acionada
+  de novo (não há nova elevação a fazer), o que explica por que o
+  problema desaparece completamente nesse caso. A correção estrutural
+  real é assinar digitalmente o app e o broker com um certificado
+  Authenticode; isso é uma decisão de custo/infra, não uma mudança de
+  código.
+- Correções de código aplicadas nesta etapa, independentes da causa raiz
+  acima (o usuário optou por corrigir o bug real de timeout e melhorar as
+  mensagens, não só registrar o achado):
+  - Bug real corrigido em `ElevatedBrokerClient.RunAsync`: o timeout de
+    conexão de 30s (`ConnectionTimeout`) usava um `CancellationTokenSource`
+    vinculado apenas ao token do timeout geral de 2 minutos
+    (`OperationTimeout`), sem incluir o `cancellationToken` do chamador.
+    Se os 30s expirassem antes dos 2 minutos, a exceção não batia com a
+    cláusula `when (timeout.IsCancellationRequested)` do catch externo (só
+    o token vinculado tinha sido cancelado, não o token externo) e escapava
+    sem tratamento, virando um erro genérico em vez de uma mensagem
+    utilizável. Corrigido isolando esse timeout em seu próprio try/catch,
+    agora também vinculado ao `cancellationToken` do chamador, e
+    convertendo em uma `TimeoutException` clara e específica.
+  - Mensagem de fallback melhorada quando o broker conecta mas nunca
+    publica um evento terminal (`DescribeMissingTerminalEvent`): usa o
+    código de saída do processo para dar uma mensagem específica quando
+    reconhecido (argumentos inválidos, falha de conexão do pipe, token não
+    elevado) e, para um código de saída desconhecido — o caso mais comum
+    de encerramento externo —, orienta explicitamente a verificar o
+    histórico de proteção do Windows Defender/antivírus antes de tentar
+    de novo, em vez do texto genérico anterior.
+- Validação: `dotnet build` Release sem avisos/erros; suíte completa (388
+  testes) segue aprovada sem alteração de contagem — `ElevatedBrokerClient`
+  spawna um processo elevado real e não tem cobertura automatizada
+  (mesma limitação já registrada para a integração
+  `AppOptimizationService → runtime real do Windows`); `scripts\
+  Verify-Safety.ps1` aprovado.
+- Próximo passo recomendado, fora do escopo desta tarefa: avaliar
+  assinatura Authenticode do instalador/app/broker para eliminar a causa
+  raiz suspeita, não só melhorar a mensagem de erro.
