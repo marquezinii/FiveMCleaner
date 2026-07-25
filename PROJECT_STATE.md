@@ -1239,3 +1239,62 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   em uma máquina Windows real). `scripts\Verify-Safety.ps1` aprovado.
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.
+
+## Fundação do novo modelo de consentimento de privacidade (25/07/2026)
+
+- Trabalho local, **não publicado** (nenhum push nesta etapa). Não altera
+  versão pública, instalador nem site. Primeiro incremento, deliberadamente
+  restrito, de um plano maior (telemetria central via Cloudflare
+  Workers/D1 + relatório de falhas via Sentry) discutido e revisado com o
+  usuário nesta mesma etapa, mas ainda não implementado além do que está
+  descrito abaixo.
+- Decisão de produto confirmada pelo usuário: tanto `ShareAnonymousTelemetry`
+  quanto o novo `ShareCrashReports` nascem `true` em instalações novas (fase
+  inicial do produto, onde esses dados são valiosos para identificar falhas
+  reais), mas **nenhum envio pode ocorrer sem confirmação explícita** numa
+  tela de consentimento futura — daí a necessidade de um terceiro campo,
+  `PrivacyConsentVersion` (`int?`, nasce `null`), que funciona como o
+  verdadeiro portão de autorização, independente do valor dos booleanos.
+- Novo `src/FiveMCleaner.App/Services/PrivacyConsentPolicy.cs`: fonte única da
+  versão atual de consentimento (`CurrentVersion = 1`) e do histórico
+  descritivo de cada versão (`History`), sem qualquer dependência de UI,
+  disco, rede, Cloudflare ou Sentry — puramente declarativo, para poder ser
+  reutilizado tanto pela futura tela de consentimento quanto pelo avaliador.
+- Novo `src/FiveMCleaner.App/Services/PrivacyConsentEvaluator.cs`: lógica pura
+  (`PrivacyConsentEvaluator.Evaluate(AppSettings, bool settingsFileExistedBeforeLoad)`)
+  que decide, a partir de um `AppSettings` já carregado, se a tela de
+  consentimento precisa aparecer, qual variante (primeira instalação,
+  atualização de instalação antiga, renovação de versão, ou já válida) e se
+  cada tipo de envio (telemetria de uso / relatório de falhas) está
+  autorizado. Autorização exige simultaneamente o booleano correspondente
+  `true` **e** `PrivacyConsentVersion >= PrivacyConsentPolicy.CurrentVersion`;
+  nenhum dos dois sozinho autoriza envio. Sem acesso a disco: quem carrega
+  `AppSettings` e decide se o arquivo já existia continua sendo a camada de
+  serviço existente (`AppOptimizationService.LoadSettingsAsync`), preservando
+  a composição manual do projeto (nenhum container de DI foi adicionado).
+- `AppSettings` ([AppModels.cs](src/FiveMCleaner.App/Services/AppModels.cs))
+  ganhou `ShareCrashReports` (`true` por padrão) e `PrivacyConsentVersion`
+  (`int?`, `null` por padrão). Compatibilidade com `settings.json` antigos
+  verificada e testada: um arquivo salvo por uma versão anterior do app (só
+  com `shareAnonymousTelemetry`) preserva esse valor exatamente como estava
+  (aceito ou recusado) e ganha `shareCrashReports = true`/
+  `privacyConsentVersion = null` apenas como default do campo ausente — o
+  avaliador trata `PrivacyConsentVersion == null` como "ainda não decidiu",
+  então nenhum envio de telemetria ou crash report é autorizado até uma
+  futura tela de consentimento confirmar isso explicitamente, mesmo com os
+  booleanos em `true`.
+- **Não implementado nesta etapa, por instrução explícita do usuário**: a
+  tela de consentimento em si, qualquer alteração visual, o transporte HTTP,
+  a fila local resiliente, o Worker Cloudflare, D1, Sentry, handlers de
+  exceção não tratada, e qualquer remoção/alteração do `FormSubmit` atual
+  (`FormSubmitAnonymousTelemetryService` continua exatamente como estava).
+  Nenhuma operação remota foi realizada.
+- Validação: `dotnet build` Release sem avisos/erros; suíte completa foi de
+  390 para **411 testes aprovados** (21 novos cobrindo
+  `PrivacyConsentPolicy`, os quatro cenários de tela do
+  `PrivacyConsentEvaluator`, as combinações de autorização por tipo de envio,
+  e a (de)serialização de `AppSettings` — incluindo um `settings.json` antigo
+  fixture real, com e sem telemetria aceita); `scripts\Verify-Safety.ps1`
+  aprovado.
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
