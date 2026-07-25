@@ -270,6 +270,8 @@
 • Versão geral do Windows e arquitetura
 • Duração e resultado das otimizações
 • Identificadores técnicos das ações
+• Modelo de CPU e GPU (sem número de série)
+• Faixa aproximada de memória RAM
 • Códigos de erro sanitizados
 • Stack traces sanitizados em relatórios de falhas
 • Versão do aplicativo em que o erro ocorreu</value></data>

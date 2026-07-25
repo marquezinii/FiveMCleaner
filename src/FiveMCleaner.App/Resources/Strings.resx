@@ -270,6 +270,8 @@
 • General Windows version and architecture
 • Duration and outcome of optimizations
 • Technical identifiers of actions
+• CPU and GPU model (no serial number)
+• Approximate RAM range
 • Sanitized error codes
 • Sanitized stack traces in crash reports
 • App version where the error occurred</value></data>

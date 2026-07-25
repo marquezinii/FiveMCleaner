@@ -23,20 +23,29 @@ public static class PrivacyConsentPolicy
     /// FormSubmit to another destination) — every user, including those who
     /// already accepted an older version, will be asked to confirm again.
     /// </summary>
-    public const int CurrentVersion = 1;
+    public const int CurrentVersion = 2;
 
     /// <summary>
     /// Full history of consent versions, oldest first, each with a short
     /// description of what changed. Version 1 is the baseline that
     /// introduces separate, explicit consent for anonymous telemetry and
-    /// crash reports.
+    /// crash reports. Version 2 adds a perfil de hardware (CPU/GPU/RAM) e
+    /// os identificadores de ação aplicada ao evento de telemetria de uso —
+    /// mudança material que exige renovar o consentimento de todos, mesmo
+    /// quem já tinha aceitado a versão 1.
     /// </summary>
     public static readonly IReadOnlyList<PrivacyConsentVersionEntry> History =
     [
         new PrivacyConsentVersionEntry(
             1,
             "Introduz consentimento explícito e separado para telemetria de uso e relatórios de falhas (crash reports), " +
-            "ambos apresentados numa tela dedicada antes de qualquer envio.")
+            "ambos apresentados numa tela dedicada antes de qualquer envio."),
+        new PrivacyConsentVersionEntry(
+            2,
+            "A telemetria de uso passa a incluir um perfil de hardware (modelo de CPU/GPU e faixa de RAM, os mesmos já " +
+            "mostrados no diagnóstico local do app) e os identificadores técnicos das ações aplicadas numa otimização, " +
+            "para estatísticas agregadas (por exemplo, hardware ou funcionalidade mais comuns). Continua sem qualquer " +
+            "identificador único de máquina, caminho ou texto livre.")
     ];
 
     /// <summary>
