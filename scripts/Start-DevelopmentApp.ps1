@@ -62,4 +62,8 @@ if ($NoLaunch) {
     return
 }
 
+# Marks this run as Development for remote crash reporting (Sentry), so it
+# never mixes with end-user errors reported by installed Production copies.
+# See FiveMCleaner.App/Services/AppEnvironment.cs.
+$env:FIVEMCLEANER_ENVIRONMENT = 'Development'
 Start-Process -FilePath $applicationPath -WorkingDirectory $outputDirectory

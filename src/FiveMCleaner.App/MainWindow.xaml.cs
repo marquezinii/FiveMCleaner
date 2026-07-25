@@ -81,6 +81,7 @@ public partial class MainWindow : Window
         if (!demoMode)
         {
             await ShowPrivacyConsentIfNeededAsync();
+            InitializeCrashReportingIfAuthorized();
         }
         if (startupLaunch && viewModel.MinimizeToTrayOnClose)
         {
@@ -119,6 +120,33 @@ public partial class MainWindow : Window
         await viewModel.ConfirmPrivacyConsentAsync(
             consentWindow.AcceptedAnonymousTelemetry,
             consentWindow.AcceptedCrashReports);
+    }
+
+    /// <summary>
+    /// Initializes the real Sentry-backed crash reporter, but only after
+    /// <see cref="ShowPrivacyConsentIfNeededAsync"/> has resolved: by that
+    /// point <see cref="MainViewModel.ShareCrashReports"/> is guaranteed to
+    /// reflect a current, confirmed consent (either it already was current,
+    /// or the consent window just made it so) — so this single check is
+    /// enough, no separate re-evaluation of
+    /// <see cref="MainViewModel.PrivacyConsentDecision"/> is needed. Loads
+    /// the Sentry DSN from the environment-specific config file
+    /// (<see cref="RemoteServicesOptionsLoader"/>) — never from a literal in
+    /// source — and tags the event with the resolved
+    /// <see cref="AppEnvironment"/> so development and production errors are
+    /// never mixed together in Sentry.
+    /// </summary>
+    private void InitializeCrashReportingIfAuthorized()
+    {
+        if (!viewModel.ShareCrashReports)
+        {
+            return;
+        }
+
+        var environment = AppEnvironment.Resolve();
+        var options = RemoteServicesOptionsLoader.Load(environment, AppContext.BaseDirectory);
+        CrashReporting.Current = new SentryCrashReportingService();
+        CrashReporting.Current.Initialize(options, viewModel.AppVersion);
     }
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
