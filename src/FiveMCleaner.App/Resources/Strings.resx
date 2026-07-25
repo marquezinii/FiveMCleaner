@@ -250,6 +250,40 @@
   <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Send anonymized technical telemetry only if you choose to.</value></data>
   <data name="Settings.Telemetry.Sends" xml:space="preserve"><value>✓ Sends: categorized errors, execution time, and version.</value></data>
   <data name="Settings.Telemetry.NeverSends" xml:space="preserve"><value>✕ Never sends: files, documents, history, or personal data.</value></data>
+  <data name="Settings.Privacy.Title" xml:space="preserve"><value>Privacy</value></data>
+  <data name="Settings.CrashReports.Title" xml:space="preserve"><value>Send automatic crash reports</value></data>
+  <data name="Settings.CrashReports.Description" xml:space="preserve"><value>Send sanitized stack traces when FiveMCleaner crashes or hits an unexpected error.</value></data>
+  <data name="PrivacyConsent.WindowTitle" xml:space="preserve"><value>Privacy and diagnostics - FiveMCleaner</value></data>
+  <data name="PrivacyConsent.Heading.FirstInstallation" xml:space="preserve"><value>Privacy and diagnostics</value></data>
+  <data name="PrivacyConsent.Heading.Upgrade" xml:space="preserve"><value>New privacy option available</value></data>
+  <data name="PrivacyConsent.Heading.Renewal" xml:space="preserve"><value>We updated our privacy policy</value></data>
+  <data name="PrivacyConsent.Intro.FirstInstallation" xml:space="preserve"><value>This data helps us find bugs and improve FiveMCleaner. You can adjust each option below before continuing.</value></data>
+  <data name="PrivacyConsent.Intro.Upgrade" xml:space="preserve"><value>Your installation was already sending usage telemetry. You can now also choose to send automatic crash reports. Review both options before continuing.</value></data>
+  <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>We changed what is collected or where the data goes. Review the options below and confirm again before continuing.</value></data>
+  <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Send technical usage data</value></data>
+  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Optimization duration and outcome, app version, and closed error categories.</value></data>
+  <data name="PrivacyConsent.CrashReports.Title" xml:space="preserve"><value>Send automatic error and crash reports</value></data>
+  <data name="PrivacyConsent.CrashReports.Description" xml:space="preserve"><value>Sanitized stack traces and app version when FiveMCleaner crashes or hits an unexpected error.</value></data>
+  <data name="PrivacyConsent.Continue" xml:space="preserve"><value>Continue</value></data>
+  <data name="Privacy.Collects.Title" xml:space="preserve"><value>We collect</value></data>
+  <data name="Privacy.Collects.Items" xml:space="preserve"><value>• FiveMCleaner version
+• General Windows version and architecture
+• Duration and outcome of optimizations
+• Technical identifiers of actions
+• Sanitized error codes
+• Sanitized stack traces in crash reports
+• App version where the error occurred</value></data>
+  <data name="Privacy.DoesNotCollect.Title" xml:space="preserve"><value>We do not collect</value></data>
+  <data name="Privacy.DoesNotCollect.Items" xml:space="preserve"><value>• Username
+• Computer name
+• Personal files
+• Browsing history
+• Passwords or tokens
+• MAC address
+• Hardware serials
+• File contents
+• Full list of processes or programs
+• Personal paths without sanitization</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>FiveMCleaner encountered an unexpected error. No new change will be applied.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>verified actions</value></data>

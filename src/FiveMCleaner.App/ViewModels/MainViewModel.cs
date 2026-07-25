@@ -62,6 +62,8 @@ public sealed class MainViewModel : BindableBase
     private bool launchAtStartup;
     private bool checkForUpdates = true;
     private bool shareAnonymousTelemetry;
+    private bool shareCrashReports;
+    private int? privacyConsentVersion;
     private ReleaseUpdate? availableUpdate;
     private UpdatePresentationState updatePresentationState;
     private string? updateFailureMessage;
@@ -379,6 +381,38 @@ public sealed class MainViewModel : BindableBase
         }
     }
 
+    /// <summary>
+    /// Consentimento para relatórios automáticos de falhas. Alterar este
+    /// toggle nas configurações persiste imediatamente pelo mesmo mecanismo
+    /// já usado pelos demais ajustes, mas nunca altera
+    /// <see cref="PrivacyConsentVersion"/> nem reabre a tela de
+    /// consentimento — só a confirmação explícita dessa tela faz isso (ver
+    /// <see cref="ConfirmPrivacyConsentAsync"/>). Nenhum serviço externo de
+    /// relatório de falhas existe ainda; este toggle só governa a
+    /// preferência persistida.
+    /// </summary>
+    public bool ShareCrashReports
+    {
+        get => shareCrashReports;
+        set
+        {
+            if (SetProperty(ref shareCrashReports, value))
+            {
+                SettingsChanged(refreshPlan: false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Decisão computada pelo <see cref="PrivacyConsentEvaluator"/> a partir
+    /// das configurações recém-carregadas em <see cref="InitializeAsync"/>.
+    /// <see langword="null"/> antes da primeira inicialização. A janela
+    /// (responsabilidade da view) decide se e qual variante mostrar a partir
+    /// deste valor; nenhuma leitura adicional de <c>settings.json</c> é
+    /// necessária para isso.
+    /// </summary>
+    public PrivacyConsentDecision? PrivacyConsentDecision { get; private set; }
+
     public bool IsUpdateBannerVisible => availableUpdate is not null
         || updatePresentationState == UpdatePresentationState.Failed;
 
@@ -486,7 +520,11 @@ public sealed class MainViewModel : BindableBase
             var historyTask = service.LoadHistoryAsync();
             await Task.WhenAll(settingsTask, diagnosticTask, historyTask);
 
-            ApplySettings(await settingsTask);
+            var loadedSettings = await settingsTask;
+            ApplySettings(loadedSettings);
+            PrivacyConsentDecision = PrivacyConsentEvaluator.Evaluate(
+                loadedSettings,
+                service.SettingsFileExists());
             ApplyDiagnostic(await diagnosticTask);
             ApplyHistory(await historyTask);
             AddLog(localization.GetString("Log.DiagnosisCompleted"));
@@ -1097,6 +1135,8 @@ public sealed class MainViewModel : BindableBase
         checkForUpdates = settings.CheckForUpdates;
         shareAnonymousTelemetry = settings.ShareAnonymousTelemetry;
         telemetry.SetEnabled(shareAnonymousTelemetry);
+        shareCrashReports = settings.ShareCrashReports;
+        privacyConsentVersion = settings.PrivacyConsentVersion;
         try
         {
             launchAtStartup = startupRegistration.IsEnabled();
@@ -1121,6 +1161,7 @@ public sealed class MainViewModel : BindableBase
         OnPropertyChanged(nameof(LaunchAtStartup));
         OnPropertyChanged(nameof(CheckForUpdates));
         OnPropertyChanged(nameof(ShareAnonymousTelemetry));
+        OnPropertyChanged(nameof(ShareCrashReports));
         ResetLocalizedPlaceholders(preserveDiagnostic: true);
     }
 
@@ -1219,6 +1260,18 @@ public sealed class MainViewModel : BindableBase
         ProfilePresentationVariability = localization.GetString("Profiles.Presentation.VariabilityNote");
     }
 
+    private AppSettings BuildSettingsSnapshot() => new()
+    {
+        Language = languagePreference,
+        Theme = ThemePreference,
+        MinimizeToTrayOnClose = MinimizeToTrayOnClose,
+        LaunchAtStartup = LaunchAtStartup,
+        CheckForUpdates = CheckForUpdates,
+        ShareAnonymousTelemetry = ShareAnonymousTelemetry,
+        ShareCrashReports = ShareCrashReports,
+        PrivacyConsentVersion = privacyConsentVersion
+    };
+
     private void SettingsChanged(bool refreshPlan = true)
     {
         if (refreshPlan)
@@ -1227,16 +1280,37 @@ public sealed class MainViewModel : BindableBase
         }
 
         var revision = Interlocked.Increment(ref settingsRevision);
-        var snapshot = new AppSettings
-        {
-            Language = languagePreference,
-            Theme = ThemePreference,
-            MinimizeToTrayOnClose = MinimizeToTrayOnClose,
-            LaunchAtStartup = LaunchAtStartup,
-            CheckForUpdates = CheckForUpdates,
-            ShareAnonymousTelemetry = ShareAnonymousTelemetry
-        };
-        _ = SaveSettingsRevisionAsync(snapshot, revision);
+        _ = SaveSettingsRevisionAsync(BuildSettingsSnapshot(), revision);
+    }
+
+    /// <summary>
+    /// Persists the outcome of the privacy consent screen: whether the user
+    /// clicked "Continue" with their chosen toggles, or closed the window
+    /// (interpreted by the caller as declining both — pass
+    /// <see langword="false"/>/<see langword="false"/>). Always stamps
+    /// <see cref="PrivacyConsentPolicy.CurrentVersion"/> so the screen does
+    /// not reappear next launch, and always reuses the same settings
+    /// persistence path as every other preference
+    /// (<see cref="IAppOptimizationService.SaveSettingsAsync"/>) — no second
+    /// storage mechanism is introduced.
+    /// </summary>
+    public async Task ConfirmPrivacyConsentAsync(bool acceptAnonymousTelemetry, bool acceptCrashReports)
+    {
+        var snapshot = PrivacyConsentOutcomeBuilder.BuildConfirmed(
+            BuildSettingsSnapshot(),
+            acceptAnonymousTelemetry,
+            acceptCrashReports);
+
+        shareAnonymousTelemetry = snapshot.ShareAnonymousTelemetry;
+        telemetry.SetEnabled(shareAnonymousTelemetry);
+        shareCrashReports = snapshot.ShareCrashReports;
+        privacyConsentVersion = snapshot.PrivacyConsentVersion;
+        OnPropertyChanged(nameof(ShareAnonymousTelemetry));
+        OnPropertyChanged(nameof(ShareCrashReports));
+        PrivacyConsentDecision = null;
+
+        var revision = Interlocked.Increment(ref settingsRevision);
+        await SaveSettingsRevisionAsync(snapshot, revision).ConfigureAwait(false);
     }
 
     private void TrackOptimizationTelemetry(

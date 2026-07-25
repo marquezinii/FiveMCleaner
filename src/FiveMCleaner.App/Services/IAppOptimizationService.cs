@@ -12,6 +12,14 @@ public interface IAppOptimizationService
 
     Task SaveSettingsAsync(AppSettings settings, CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Whether a settings file already exists on disk, without deserializing
+    /// it. Used only to distinguish a brand-new installation from an older
+    /// installation that already had settings but never confirmed a
+    /// versioned privacy consent — see <see cref="PrivacyConsentEvaluator"/>.
+    /// </summary>
+    bool SettingsFileExists();
+
     Task<AppOptimizationResult> ExecuteAsync(
         OptimizationPlanDto plan,
         IProgress<AppProgressUpdate> progress,

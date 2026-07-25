@@ -136,6 +136,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
         }, cancellationToken).ConfigureAwait(false);
     }
 
+    public bool SettingsFileExists() => !demoMode && File.Exists(settingsPath);
+
     public async Task<AppSettings> LoadSettingsAsync(CancellationToken cancellationToken = default)
     {
         if (demoMode)

@@ -250,6 +250,40 @@
   <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Envie telemetria técnica anonimizada, somente se você quiser.</value></data>
   <data name="Settings.Telemetry.Sends" xml:space="preserve"><value>✓ Envia: erros categorizados, tempo de execução e versão.</value></data>
   <data name="Settings.Telemetry.NeverSends" xml:space="preserve"><value>✕ Nunca envia: arquivos, documentos, histórico ou dados pessoais.</value></data>
+  <data name="Settings.Privacy.Title" xml:space="preserve"><value>Privacidade</value></data>
+  <data name="Settings.CrashReports.Title" xml:space="preserve"><value>Enviar relatórios automáticos de falhas</value></data>
+  <data name="Settings.CrashReports.Description" xml:space="preserve"><value>Envie stack traces sanitizados quando o FiveMCleaner travar ou encontrar um erro inesperado.</value></data>
+  <data name="PrivacyConsent.WindowTitle" xml:space="preserve"><value>Privacidade e diagnóstico - FiveMCleaner</value></data>
+  <data name="PrivacyConsent.Heading.FirstInstallation" xml:space="preserve"><value>Privacidade e diagnóstico</value></data>
+  <data name="PrivacyConsent.Heading.Upgrade" xml:space="preserve"><value>Nova opção de privacidade disponível</value></data>
+  <data name="PrivacyConsent.Heading.Renewal" xml:space="preserve"><value>Atualizamos nossa política de privacidade</value></data>
+  <data name="PrivacyConsent.Intro.FirstInstallation" xml:space="preserve"><value>Esses dados ajudam a identificar bugs e melhorar o FiveMCleaner. Você pode ajustar cada opção abaixo antes de continuar.</value></data>
+  <data name="PrivacyConsent.Intro.Upgrade" xml:space="preserve"><value>Sua instalação já enviava telemetria de uso. Agora você também pode escolher enviar relatórios automáticos de falhas. Revise as duas opções antes de continuar.</value></data>
+  <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>Mudamos o que é coletado ou para onde os dados vão. Revise as opções abaixo e confirme novamente antes de continuar.</value></data>
+  <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Enviar dados técnicos de uso</value></data>
+  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Duração e resultado das otimizações, versão do aplicativo e categorias de erro fechadas.</value></data>
+  <data name="PrivacyConsent.CrashReports.Title" xml:space="preserve"><value>Enviar relatórios automáticos de erros e falhas</value></data>
+  <data name="PrivacyConsent.CrashReports.Description" xml:space="preserve"><value>Stack traces sanitizados e versão do aplicativo quando o FiveMCleaner travar ou encontrar um erro inesperado.</value></data>
+  <data name="PrivacyConsent.Continue" xml:space="preserve"><value>Continuar</value></data>
+  <data name="Privacy.Collects.Title" xml:space="preserve"><value>Coletamos</value></data>
+  <data name="Privacy.Collects.Items" xml:space="preserve"><value>• Versão do FiveMCleaner
+• Versão geral do Windows e arquitetura
+• Duração e resultado das otimizações
+• Identificadores técnicos das ações
+• Códigos de erro sanitizados
+• Stack traces sanitizados em relatórios de falhas
+• Versão do aplicativo em que o erro ocorreu</value></data>
+  <data name="Privacy.DoesNotCollect.Title" xml:space="preserve"><value>Não coletamos</value></data>
+  <data name="Privacy.DoesNotCollect.Items" xml:space="preserve"><value>• Nome do usuário
+• Nome do computador
+• Arquivos pessoais
+• Histórico de navegação
+• Senhas ou tokens
+• Endereço MAC
+• Seriais de hardware
+• Conteúdo de arquivos
+• Lista completa de processos ou programas
+• Caminhos pessoais sem sanitização</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>O FiveMCleaner encontrou um erro inesperado. Nenhuma nova alteração será aplicada.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>ações verificadas</value></data>

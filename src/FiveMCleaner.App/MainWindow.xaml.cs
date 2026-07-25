@@ -23,6 +23,7 @@ public partial class MainWindow : Window
     private readonly TrayIconService trayIcon;
     private readonly GitHubReleaseUpdateService? releaseUpdateService;
     private readonly bool startupLaunch;
+    private readonly bool demoMode;
     private HwndSource? windowSource;
     private bool allowClose;
     private bool closeAfterOptimizationStops;
@@ -37,7 +38,7 @@ public partial class MainWindow : Window
         var commandLine = Environment.GetCommandLineArgs();
         var syntheticDemo = commandLine
             .Any(value => value.Equals("--demo-synthetic", StringComparison.OrdinalIgnoreCase));
-        var demoMode = syntheticDemo || commandLine
+        demoMode = syntheticDemo || commandLine
             .Any(value => value.Equals("--demo", StringComparison.OrdinalIgnoreCase));
         startupLaunch = commandLine
             .Any(value => value.Equals("--startup", StringComparison.OrdinalIgnoreCase));
@@ -77,11 +78,47 @@ public partial class MainWindow : Window
             AppThemePreference.Light => 2,
             _ => 0
         };
+        if (!demoMode)
+        {
+            await ShowPrivacyConsentIfNeededAsync();
+        }
         if (startupLaunch && viewModel.MinimizeToTrayOnClose)
         {
             HideToTray();
         }
         await CaptureIfRequestedAsync();
+    }
+
+    /// <summary>
+    /// Shows the blocking privacy consent screen when
+    /// <see cref="MainViewModel.PrivacyConsentDecision"/> (computed once,
+    /// right after settings finish loading in
+    /// <see cref="MainViewModel.InitializeAsync"/>) says a decision is still
+    /// pending. Runs before anything else in <see cref="MainWindow_Loaded"/>
+    /// so the main window is shown but not meaningfully usable — the modal
+    /// dialog blocks input to it — until the user confirms or closes it.
+    /// Demo mode never shows this screen: it never persists settings or
+    /// sends telemetry regardless, and smoke tests must not hang on a modal.
+    /// </summary>
+    private async Task ShowPrivacyConsentIfNeededAsync()
+    {
+        var decision = viewModel.PrivacyConsentDecision;
+        if (decision is null || !decision.RequiresConsentScreen)
+        {
+            return;
+        }
+
+        var consentWindow = new PrivacyConsentWindow(
+            decision.Variant,
+            viewModel.ShareAnonymousTelemetry,
+            viewModel.ShareCrashReports)
+        {
+            Owner = this
+        };
+        consentWindow.ShowDialog();
+        await viewModel.ConfirmPrivacyConsentAsync(
+            consentWindow.AcceptedAnonymousTelemetry,
+            consentWindow.AcceptedCrashReports);
     }
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
