@@ -16,6 +16,16 @@ public sealed record RemoteServicesOptions
 {
     public string? SentryDsn { get; init; }
 
+    /// <summary>
+    /// HTTPS endpoint of the anonymous telemetry Cloudflare Worker. Absent
+    /// or empty means the Worker has not been deployed/configured yet, in
+    /// which case telemetry keeps using
+    /// <see cref="FormSubmitAnonymousTelemetryService"/> exactly as before —
+    /// the two transports are mutually exclusive by construction, never
+    /// sending the same event to both.
+    /// </summary>
+    public string? TelemetryEndpoint { get; init; }
+
     public required string Environment { get; init; }
 }
 

@@ -24,6 +24,8 @@ public partial class MainWindow : Window
     private readonly GitHubReleaseUpdateService? releaseUpdateService;
     private readonly bool startupLaunch;
     private readonly bool demoMode;
+    private readonly RemoteServicesOptions remoteServicesOptions;
+    private readonly QueuedCloudflareTelemetryService? queuedCloudflareTelemetry;
     private HwndSource? windowSource;
     private bool allowClose;
     private bool closeAfterOptimizationStops;
@@ -46,14 +48,37 @@ public partial class MainWindow : Window
             ? new SessionStartupRegistrationService()
             : new WindowsStartupRegistrationService();
         releaseUpdateService = demoMode ? null : new GitHubReleaseUpdateService();
+        remoteServicesOptions = RemoteServicesOptionsLoader.Load(AppEnvironment.Resolve(), AppContext.BaseDirectory);
+        IAnonymousTelemetryService telemetryService;
+        if (demoMode)
+        {
+            telemetryService = DisabledAnonymousTelemetryService.Instance;
+        }
+        else if (TryCreateHttpsEndpoint(remoteServicesOptions.TelemetryEndpoint, out var telemetryEndpoint))
+        {
+            // The Cloudflare Worker is configured: it becomes the sole
+            // telemetry transport, never alongside FormSubmit at the same
+            // time (see CloudflareTelemetryService.cs).
+            queuedCloudflareTelemetry = new QueuedCloudflareTelemetryService(
+                new LocalTelemetryQueue(Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    ProductIdentity.Name,
+                    "Telemetry",
+                    "pending")),
+                new CloudflareTelemetryTransport(telemetryEndpoint));
+            telemetryService = queuedCloudflareTelemetry;
+        }
+        else
+        {
+            telemetryService = new FormSubmitAnonymousTelemetryService();
+        }
+
         viewModel = new MainViewModel(
             new AppOptimizationService(demoMode, syntheticDemo),
             localization: LocalizationService.Current,
             startupRegistration: startupRegistration,
             releaseUpdateService: releaseUpdateService,
-            telemetry: demoMode
-                ? DisabledAnonymousTelemetryService.Instance
-                : new FormSubmitAnonymousTelemetryService());
+            telemetry: telemetryService);
         trayIcon = new TrayIconService(LocalizationService.Current);
         trayIcon.ShowRequested += TrayIcon_ShowRequested;
         trayIcon.ExitRequested += TrayIcon_ExitRequested;
@@ -82,6 +107,7 @@ public partial class MainWindow : Window
         {
             await ShowPrivacyConsentIfNeededAsync();
             InitializeCrashReportingIfAuthorized();
+            await FlushPendingTelemetryIfAnyAsync();
         }
         if (startupLaunch && viewModel.MinimizeToTrayOnClose)
         {
@@ -143,10 +169,32 @@ public partial class MainWindow : Window
             return;
         }
 
-        var environment = AppEnvironment.Resolve();
-        var options = RemoteServicesOptionsLoader.Load(environment, AppContext.BaseDirectory);
         CrashReporting.Current = new SentryCrashReportingService();
-        CrashReporting.Current.Initialize(options, viewModel.AppVersion);
+        CrashReporting.Current.Initialize(remoteServicesOptions, viewModel.AppVersion);
+    }
+
+    /// <summary>
+    /// Retries sending whatever telemetry could not be delivered during a
+    /// previous, possibly offline, run. A no-op unless the Cloudflare
+    /// transport is the active one (<see cref="queuedCloudflareTelemetry"/>
+    /// is only set when a telemetry endpoint is configured); FormSubmit has
+    /// no queue to flush.
+    /// </summary>
+    private Task FlushPendingTelemetryIfAnyAsync() =>
+        queuedCloudflareTelemetry?.FlushPendingAsync() ?? Task.CompletedTask;
+
+    private static bool TryCreateHttpsEndpoint(string? value, out Uri endpoint)
+    {
+        if (!string.IsNullOrWhiteSpace(value)
+            && Uri.TryCreate(value, UriKind.Absolute, out var candidate)
+            && candidate.Scheme == Uri.UriSchemeHttps)
+        {
+            endpoint = candidate;
+            return true;
+        }
+
+        endpoint = null!;
+        return false;
     }
 
     private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)

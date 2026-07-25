@@ -12,11 +12,30 @@ namespace FiveMCleaner.App.Services;
 /// máquina ou dados do usuário. O contrato deliberadamente não aceita campos
 /// adicionais para evitar que telemetria se transforme em coleta de logs.
 /// </summary>
+/// <remarks>
+/// Os campos a partir de <see cref="OsVersion"/> foram adicionados na versão
+/// 2 do consentimento de privacidade (<see cref="PrivacyConsentPolicy"/>):
+/// perfil de hardware (CPU/GPU/RAM, sem identificar a máquina — os mesmos
+/// nomes de modelo já mostrados no diagnóstico local) e os identificadores
+/// técnicos de ação já listados na tela de consentimento. Continuam sem
+/// texto livre, caminhos ou qualquer identificador único de máquina.
+/// <see cref="FormSubmitAnonymousTelemetryService"/> (o transporte ativo
+/// hoje) ignora esses campos por completo — só
+/// <see cref="CloudflareTelemetryTransport"/> (inativo até o Worker ser
+/// implantado) os transmite.
+/// </remarks>
 public sealed record AnonymousTelemetryEvent(
     string EventName,
     TimeSpan ExecutionTime,
     string AppVersion,
-    string? ErrorCategory = null);
+    string? ErrorCategory = null,
+    string? OsVersion = null,
+    string? SystemArchitecture = null,
+    string? CpuModel = null,
+    string? GpuModel = null,
+    int? RamBucketGiB = null,
+    string? Profile = null,
+    IReadOnlyList<string>? ActionIds = null);
 
 public interface IAnonymousTelemetryService
 {

@@ -1327,7 +1327,14 @@ public sealed class MainViewModel : BindableBase
             eventName,
             executionTime,
             AppVersion.TrimStart('v', 'V'),
-            errorCategory);
+            errorCategory,
+            OsVersion: diagnostic?.OsLabel,
+            SystemArchitecture: diagnostic?.SystemArchitecture,
+            CpuModel: diagnostic?.CpuName,
+            GpuModel: diagnostic?.GpuName,
+            RamBucketGiB: diagnostic is null ? null : RamBucketCalculator.ComputeBucketGiB(diagnostic.TotalMemoryGiB),
+            Profile: selectedProfile.ToString(),
+            ActionIds: currentPlan?.Actions.Select(action => action.Metadata.Id).ToArray());
         _ = TrackOptimizationTelemetryAsync(telemetryEvent);
     }
 
