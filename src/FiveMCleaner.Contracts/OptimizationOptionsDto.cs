@@ -58,15 +58,26 @@ public sealed record OptimizationOptionsDto
     public bool ApplyQualityGraphicsPreset { get; init; }
 
     /// <summary>
-    /// Opt-in preference, never part of automatic profile composition. Only
-    /// touches windowed mode and VSync; never resolution/refresh/adapter.
+    /// Opt-in preference for FiveM Legacy's gta5_settings.xml, never part of
+    /// automatic profile composition. Only touches windowed mode and VSync;
+    /// never resolution/refresh/adapter. Independent from
+    /// <see cref="ApplyGtaVDisplayPreferences"/> — enabling one must not
+    /// silently enable the other.
     /// </summary>
     public bool ApplyDisplayPreferences { get; init; }
 
-    /// <summary>Desired windowed mode when <see cref="ApplyDisplayPreferences"/> is enabled.</summary>
+    /// <summary>
+    /// Opt-in preference for standalone GTA V Legacy's settings.xml, never
+    /// part of automatic profile composition. Only touches windowed mode and
+    /// VSync; never resolution/refresh/adapter. Independent from
+    /// <see cref="ApplyDisplayPreferences"/>.
+    /// </summary>
+    public bool ApplyGtaVDisplayPreferences { get; init; }
+
+    /// <summary>Desired windowed mode when <see cref="ApplyDisplayPreferences"/> or <see cref="ApplyGtaVDisplayPreferences"/> is enabled.</summary>
     public bool PreferWindowedMode { get; init; }
 
-    /// <summary>Desired VSync state when <see cref="ApplyDisplayPreferences"/> is enabled.</summary>
+    /// <summary>Desired VSync state when <see cref="ApplyDisplayPreferences"/> or <see cref="ApplyGtaVDisplayPreferences"/> is enabled.</summary>
     public bool EnableVSync { get; init; } = true;
 
     /// <summary>

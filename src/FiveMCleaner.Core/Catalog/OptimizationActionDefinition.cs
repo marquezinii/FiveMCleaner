@@ -154,6 +154,7 @@ internal enum ActionOptionGate
     RepairStaleAuthData,
     ApplyQualityGraphicsPreset,
     ApplyDisplayPreferences,
+    ApplyGtaVDisplayPreferences,
     ApplyGtaVGraphicsLaunchParameters,
     ApplyGtaVDisplayLaunchParameters,
     ApplyGtaVRepairLaunchParameters

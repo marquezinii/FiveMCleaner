@@ -1723,11 +1723,14 @@ public sealed class MainViewModel : BindableBase
         _ => profile.ToString()
     };
 
-    private static string FormatBytes(long bytes)
+    private string FormatBytes(long bytes)
     {
         const double giB = 1024d * 1024d * 1024d;
         const double miB = 1024d * 1024d;
-        return bytes >= giB ? $"{bytes / giB:0.##} GB" : $"{bytes / miB:0.#} MB";
+        var culture = localization.CurrentCulture;
+        return bytes >= giB
+            ? $"{(bytes / giB).ToString("0.##", culture)} GB"
+            : $"{(bytes / miB).ToString("0.#", culture)} MB";
     }
 
     private static string FormatDuration(TimeSpan duration)

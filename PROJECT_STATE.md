@@ -1026,3 +1026,91 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
 - Próximo passo recomendado, fora do escopo desta tarefa: avaliar
   assinatura Authenticode do instalador/app/broker para eliminar a causa
   raiz suspeita, não só melhorar a mensagem de erro.
+
+## Bug hunting em todo o aplicativo (24/07/2026)
+
+- Trabalho local, **não publicado** (nenhum push nesta etapa até o momento
+  do registro). Varredura sistemática por bugs reais em quatro áreas em
+  paralelo: `FiveMCleaner.Core`/`Contracts` (catálogo, planejamento),
+  `FiveMCleaner.Windows/Actions` (ações e infraestrutura), `FiveMCleaner.App`
+  (ViewModel/serviços) e `FiveMCleaner.Broker` + motor transacional. Cada
+  achado abaixo foi verificado manualmente antes da correção; nenhum é
+  especulativo.
+- **Bug real corrigido — gate de opção compartilhado incorretamente**
+  (`ActionCatalog.cs`): `ApplyLegacyDisplayPreferences` (FiveM) e
+  `ApplyGtaVDisplayPreferences` (GTA V standalone) usavam o mesmo
+  `ActionOptionGate.ApplyDisplayPreferences`/mesmo flag em
+  `OptimizationOptionsDto`, então habilitar o ajuste de janela/VSync do
+  FiveM silenciosamente também planejava o do GTA V (e vice-versa),
+  arrastando `VerifyGtaVIsStopped`/`RequiresGtaVStoppedFirst` como
+  pré-requisito não solicitado. Corrigido com um gate e uma flag dedicados
+  (`ActionOptionGate.ApplyGtaVDisplayPreferences` /
+  `OptimizationOptionsDto.ApplyGtaVDisplayPreferences`), seguindo o mesmo
+  padrão já usado para separar `ApplyLegacyGraphicsPreset` de
+  `ApplyGtaVGraphicsPreset`. Teste de regressão adicionado
+  (`DisplayPreferences_FiveMAndGtaVOptInsAreIndependent`); o teste
+  existente que mascarava o bug (`GraphicsPresetsAndDisplayPreferences_
+  AreOptInAndNeverPartOfAnyDefaultProfile`) foi corrigido para habilitar
+  as duas flags explicitamente.
+- **Bug real corrigido — journal preso em `Applying` após cancelamento no
+  motor isolado** (`WindowsTransactionEngine.cs`, modo `IsolateFailures`,
+  usado pelo fluxo padrão do app): quando o `cancellationToken` do usuário
+  cancelava durante `ApplyAsync`/`CommitAsync` de uma ação, o código
+  revertia só aquela ação e relançava a exceção sem nunca atualizar
+  `journal.State` — que ficava travado em `Applying` permanentemente no
+  arquivo persistido, porque só o fim normal do laço chamava
+  `DetermineIsolatedFinalState`. Como `Applying` não é um dos estados que
+  `ValidateExistingJournal` rejeita para retomada, uma chamada futura de
+  `ExecuteAsync` com o mesmo ID de transação tentaria retomar esse journal
+  e falharia com uma `InvalidOperationException` não tratada — travando a
+  transação até exclusão manual do arquivo de journal. Corrigido com
+  `FinalizeCancelledIsolatedRunAsync`: marca as ações ainda pendentes como
+  `Skipped`/`NotRun`, calcula o estado final via a mesma
+  `DetermineIsolatedFinalState` já usada no caminho normal, e persiste
+  antes de relançar a exceção de cancelamento. Corrigida também uma
+  inconsistência menor no mesmo arquivo (linha do "pré-requisito não
+  atendido"): usava o `cancellationToken` do usuário em vez de
+  `CancellationToken.None` para salvar o journal, ao contrário do padrão
+  já usado no ramo "abortado" logo acima — um cancelamento naquele exato
+  instante descartaria silenciosamente o estado `Skipped` calculado.
+  Verificado que o teste de regressão novo
+  (`Cancellation_LeavesJournalInATerminalStateInsteadOfStuckApplying`)
+  falha sem a correção (`journal.State == Applying`) e passa com ela,
+  antes de ser incluído na suíte.
+- **Bugs reais corrigidos — inconsistência de cultura em números exibidos
+  ao usuário**: `MainViewModel.FormatBytes` formatava bytes livres/
+  baixados com a cultura ambiente da thread em vez de
+  `localization.CurrentCulture` (o padrão já usado por todo o resto da
+  ViewModel via `localization.Format`), podendo divergir do separador
+  decimal do restante da mesma frase localizada quando a cultura do
+  Windows diverge do idioma escolhido no app. Corrigido tornando o método
+  de instância e usando `localization.CurrentCulture` explicitamente.
+  Mesmo padrão de bug em `AppOptimizationService.GetMemoryModuleLayout`
+  (composição "2×16 GB" de módulos de RAM); corrigido com
+  `CultureInfo.InvariantCulture` explícito, já que esse identificador não
+  deve variar por idioma.
+- **Bug real corrigido — barra de progresso/ledger de etapas congelada
+  durante a fase administrativa elevada** (`ElevatedBrokerClient.
+  ReportBrokerProgress`): os eventos do broker elevado nunca populavam
+  `AppProgressUpdate.Outcome`, então `MainViewModel.ApplyProgress` nunca
+  chamava `UpsertStepLedgerItem` para a(s) ação(ões) administrativa(s) —
+  o usuário não via confirmação de qual ação elevada foi aplicada/falhou
+  no ledger ao vivo, só no relatório final. Corrigido mapeando
+  `BrokerEventKindWire`/`Success` para `ActionExecutionOutcome` quando o
+  evento tem um `ActionId`. `CompletedSteps`/`TotalSteps` da fase elevada
+  foram deliberadamente deixados como estavam: o formato de evento do
+  broker não expõe contagem de etapas por ação de forma confiável, e
+  arriscar um número inventado seria pior do que a lacuna atual.
+- Itens investigados e **descartados** (sem bug confirmado, para não
+  inflar o relatório com nitpicks): toda a pasta
+  `src/FiveMCleaner.Windows/Actions/` (padrões de backup/rollback,
+  thresholds, lógica booleana de todas as ações revisadas linha a linha);
+  `PlanValidator.cs` (nenhum campo do plano do cliente é confiado sem
+  revalidação contra o plano canônico reconstruído); numeração de
+  sequência do `NamedPipeEventWriter`; proteção contra clique duplo nos
+  botões da ViewModel; disposal de `CancellationTokenSource` e
+  desinscrição de eventos em `MainWindow.xaml.cs`.
+- Validação: `dotnet build` Release sem avisos/erros; **390 testes .NET
+  aprovados** (388 anteriores + 2 novos: independência dos opt-ins de
+  janela/VSync do FiveM vs. GTA V, e o journal não ficar preso em
+  `Applying` após cancelamento); `scripts\Verify-Safety.ps1` aprovado.

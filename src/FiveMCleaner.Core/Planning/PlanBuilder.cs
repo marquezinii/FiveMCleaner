@@ -255,6 +255,7 @@ public sealed class PlanBuilder : IPlanBuilder
             ActionOptionGate.RepairStaleAuthData => options.RepairStaleAuthData,
             ActionOptionGate.ApplyQualityGraphicsPreset => options.ApplyQualityGraphicsPreset,
             ActionOptionGate.ApplyDisplayPreferences => options.ApplyDisplayPreferences,
+            ActionOptionGate.ApplyGtaVDisplayPreferences => options.ApplyGtaVDisplayPreferences,
             ActionOptionGate.ApplyGtaVGraphicsLaunchParameters => options.ApplyGtaVGraphicsLaunchParameters,
             ActionOptionGate.ApplyGtaVDisplayLaunchParameters => options.ApplyGtaVDisplayLaunchParameters,
             ActionOptionGate.ApplyGtaVRepairLaunchParameters => options.ApplyGtaVRepairLaunchParameters,

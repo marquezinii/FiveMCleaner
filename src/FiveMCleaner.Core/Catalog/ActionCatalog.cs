@@ -899,7 +899,7 @@ public sealed class ActionCatalog
                 requiresFiveMStopped: true,
                 progressWeight: 5,
                 expectedImpact: "Ajusta latência e estabilidade de exibição sem risco de escolher uma resolução não suportada pelo monitor.",
-                ActionOptionGate.ApplyDisplayPreferences,
+                ActionOptionGate.ApplyGtaVDisplayPreferences,
                 prerequisites: RequiresGtaVStoppedFirst,
                 detectionSummary: "Lê os valores existentes de janela e VSync no settings.xml do GTA V Legacy.",
                 confirmationSummary: "Confirma que apenas janela e VSync foram alterados e o arquivo permanece válido.",

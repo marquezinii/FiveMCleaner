@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Management;
@@ -1275,7 +1276,9 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 .Where(size => size > 0)
                 .GroupBy(size => size)
                 .OrderByDescending(group => group.Key)
-                .Select(group => $"{group.Count()}×{group.Key:0} GB")
+                .Select(group => string.Create(
+                    CultureInfo.InvariantCulture,
+                    $"{group.Count()}×{group.Key:0} GB"))
                 .ToArray();
 
             return modules.Length == 0 ? null : string.Join(" + ", modules);

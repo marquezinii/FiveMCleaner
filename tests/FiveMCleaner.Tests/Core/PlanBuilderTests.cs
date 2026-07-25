@@ -174,7 +174,8 @@ public sealed class PlanBuilderTests
             new OptimizationOptionsDto
             {
                 ApplyQualityGraphicsPreset = true,
-                ApplyDisplayPreferences = true
+                ApplyDisplayPreferences = true,
+                ApplyGtaVDisplayPreferences = true
             });
 
         Assert.Contains(OptimizationActionIds.ApplyQualityLegacyGraphics, Ids(enabledPlan));
@@ -183,6 +184,27 @@ public sealed class PlanBuilderTests
         Assert.Contains(OptimizationActionIds.ApplyGtaVDisplayPreferences, Ids(enabledPlan));
         Assert.Contains(enabledPlan.Notices, notice => notice.Code == "quality-preset-may-reduce-fps");
         Assert.Contains(enabledPlan.Notices, notice => notice.Code == "display-preferences-do-not-change-resolution");
+    }
+
+    [Fact]
+    public void DisplayPreferences_FiveMAndGtaVOptInsAreIndependent()
+    {
+        // Regression test: ApplyDisplayPreferences (FiveM) and
+        // ApplyGtaVDisplayPreferences (GTA V standalone) used to share the
+        // same ActionOptionGate, so enabling one silently enabled the other.
+        var fiveMOnly = Build(
+            OptimizationProfile.Aggressive,
+            new OptimizationOptionsDto { ApplyDisplayPreferences = true });
+
+        Assert.Contains(OptimizationActionIds.ApplyLegacyDisplayPreferences, Ids(fiveMOnly));
+        Assert.DoesNotContain(OptimizationActionIds.ApplyGtaVDisplayPreferences, Ids(fiveMOnly));
+
+        var gtaVOnly = Build(
+            OptimizationProfile.Aggressive,
+            new OptimizationOptionsDto { ApplyGtaVDisplayPreferences = true });
+
+        Assert.DoesNotContain(OptimizationActionIds.ApplyLegacyDisplayPreferences, Ids(gtaVOnly));
+        Assert.Contains(OptimizationActionIds.ApplyGtaVDisplayPreferences, Ids(gtaVOnly));
     }
 
     [Fact]

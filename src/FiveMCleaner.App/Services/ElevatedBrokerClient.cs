@@ -341,7 +341,14 @@ internal sealed class ElevatedBrokerClient
                 ? "Restaurando configurações administrativas"
                 : "Aplicando ajustes administrativos",
             Detail = brokerEvent.Message,
-            ActionId = brokerEvent.ActionId
+            ActionId = brokerEvent.ActionId,
+            Outcome = brokerEvent.ActionId is null ? null : brokerEvent.Kind switch
+            {
+                BrokerEventKindWire.Completed or BrokerEventKindWire.RollbackCompleted =>
+                    brokerEvent.Success == true ? ActionExecutionOutcome.Applied : ActionExecutionOutcome.Failed,
+                BrokerEventKindWire.Failed or BrokerEventKindWire.Rejected => ActionExecutionOutcome.Failed,
+                _ => null
+            }
         });
     }
 
