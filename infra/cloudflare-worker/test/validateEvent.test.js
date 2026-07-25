@@ -1,27 +1,56 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateEvent, validateBatch, MAX_BATCH_SIZE } from '../src/validateEvent.js';
+import { validateEvent, validateBatch, MAX_BATCH_SIZE, MAX_ACTION_IDS } from '../src/validateEvent.js';
 
 function validEvent(overrides = {}) {
   return {
     eventName: 'optimization-completed',
     executionTimeMs: 18342,
-    appVersion: '1.0.3',
+    appVersion: '1.0.4',
     errorCategory: null,
     environment: 'Production',
+    osVersion: 'Windows 11',
+    systemArchitecture: 'x64',
+    cpuModel: 'AMD Ryzen 5 5600X',
+    gpuModel: 'NVIDIA GeForce RTX 5070',
+    ramBucketGiB: 32,
+    profile: 'Balanced',
+    actionIds: ['fivem.legacy.cache.repair', 'windows.power-plan.session'],
     ...overrides,
   };
 }
 
-test('validateEvent accepts a well-formed completed event', () => {
+test('validateEvent accepts a well-formed completed event with the full hardware profile', () => {
   const result = validateEvent(validEvent());
   assert.deepEqual(result, {
     eventName: 'optimization-completed',
     executionTimeMs: 18342,
-    appVersion: '1.0.3',
+    appVersion: '1.0.4',
     errorCategory: null,
     environment: 'Production',
+    osVersion: 'Windows 11',
+    systemArchitecture: 'x64',
+    cpuModel: 'AMD Ryzen 5 5600X',
+    gpuModel: 'NVIDIA GeForce RTX 5070',
+    ramBucketGiB: 32,
+    profile: 'Balanced',
+    actionIds: ['fivem.legacy.cache.repair', 'windows.power-plan.session'],
   });
+});
+
+test('validateEvent accepts an event without any of the optional hardware fields', () => {
+  const result = validateEvent({
+    eventName: 'optimization-cancelled',
+    executionTimeMs: 0,
+    appVersion: '1.0.4',
+    environment: 'Development',
+  });
+
+  assert.ok(result);
+  assert.equal(result.osVersion, null);
+  assert.equal(result.cpuModel, null);
+  assert.equal(result.ramBucketGiB, null);
+  assert.deepEqual(result.actionIds, []);
 });
 
 test('validateEvent accepts a failed event with an allowlisted error category', () => {
@@ -70,10 +99,31 @@ test('validateEvent rejects a payload that is not an object', () => {
   assert.equal(validateEvent(42), null);
 });
 
-test('validateEvent rejects a payload carrying unexpected fields silently by ignoring them, but still validates the closed schema', () => {
-  const result = validateEvent(validEvent({ userPath: 'C:\\Users\\someone\\file.txt' }));
-  assert.ok(result);
-  assert.equal('userPath' in result, false);
+test('validateEvent rejects an unknown RAM bucket', () => {
+  assert.equal(validateEvent(validEvent({ ramBucketGiB: 3 })), null);
+});
+
+test('validateEvent rejects an unknown profile', () => {
+  assert.equal(validateEvent(validEvent({ profile: 'Ultra' })), null);
+});
+
+test('validateEvent rejects a CPU/GPU model containing control characters (never free text/paths)', () => {
+  assert.equal(validateEvent(validEvent({ cpuModel: 'AMD\nRyzen' })), null);
+  assert.equal(validateEvent(validEvent({ gpuModel: 'C:\\Users\\someone\\file.txt\x00' })), null);
+});
+
+test('validateEvent rejects an action ID with characters outside the allowlisted pattern', () => {
+  assert.equal(validateEvent(validEvent({ actionIds: ['C:\\Users\\someone\\file.txt'] })), null);
+  assert.equal(validateEvent(validEvent({ actionIds: ['has spaces'] })), null);
+});
+
+test('validateEvent rejects more action IDs than the maximum allowed', () => {
+  const tooMany = Array.from({ length: MAX_ACTION_IDS + 1 }, (_, i) => `action.${i}`);
+  assert.equal(validateEvent(validEvent({ actionIds: tooMany })), null);
+});
+
+test('validateEvent rejects actionIds that is not an array', () => {
+  assert.equal(validateEvent(validEvent({ actionIds: 'fivem.legacy.cache.repair' })), null);
 });
 
 test('validateBatch accepts a single event wrapped as one item', () => {

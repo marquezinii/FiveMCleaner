@@ -1,16 +1,27 @@
-## FiveMCleaner anonymous telemetry Worker.
+## FiveMCleaner anonymous telemetry + admin dashboard API Worker.
 ##
 ## Receives the same closed-allowlist telemetry event already documented in
 ## docs/telemetry.md, validates it server-side (never trusting client-side
-## validation alone), and stores it in D1. This Worker is NOT deployed and
-## NOT wired to the .NET client yet -- the client still sends telemetry
-## through FormSubmit, per the current increment. Deploying this requires
-## explicit authorization; see AI_RULES.md ("Operações remotas").
+## validation alone), and stores it in D1. Also serves the authenticated
+## /api/stats/* endpoints the dashboard (infra/dashboard/) reads from, and
+## the custom admin login/logout used to protect them.
+##
+## This Worker is NOT deployed and NOT wired to the .NET client yet -- the
+## client still sends telemetry through FormSubmit, per the current
+## increment. Deploying this requires explicit authorization; see
+## AI_RULES.md ("Operações remotas").
 ##
 ## The Development and Production environments below intentionally point at
 ## the SAME D1 database (only one was provisioned) -- every row is tagged
 ## with an `environment` column instead, so development traffic can still be
 ## told apart from production traffic without needing a second database.
+##
+## Required secrets (set with `wrangler secret put <NAME> --env <env>`,
+## NEVER written to this file or committed):
+##   ADMIN_PASSWORD_HASH -- output of `npm run hash-admin-password`
+##   IP_HASH_SECRET      -- any long random string, used only to keep
+##                          brute-force tracking from storing a raw IP
+## See README.md for the full setup walkthrough.
 
 name = "fivemcleaner-telemetry"
 main = "src/index.js"

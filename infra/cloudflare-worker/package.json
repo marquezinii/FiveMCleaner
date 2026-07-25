@@ -5,7 +5,8 @@
   "type": "module",
   "description": "Scaffold for the FiveMCleaner anonymous telemetry Cloudflare Worker (D1-backed). Not deployed yet.",
   "scripts": {
-    "test": "node --test test/validateEvent.test.js",
+    "test": "node --test test/*.test.js test/auth/*.test.js test/stats/*.test.js",
+    "hash-admin-password": "node scripts/hash-admin-password.mjs",
     "dev": "wrangler dev",
     "db:migrate:local": "wrangler d1 execute fivemcleaner-telemetry --local --file=./schema.sql",
     "deploy:development": "wrangler deploy --env development",

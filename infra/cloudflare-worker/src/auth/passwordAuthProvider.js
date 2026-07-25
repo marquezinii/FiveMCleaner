@@ -1,0 +1,168 @@
+// Glue between the pure auth logic (crypto.js, bruteForceGuard.js,
+// sessionStore.js) and the D1 binding + Request/Response objects. Kept
+// separate and thin so the decision logic underneath stays unit testable
+// without Miniflare -- this file itself is exercised by manual review and,
+// once deployed, real requests, not by an automated D1-backed test (see
+// infra/cloudflare-worker/README.md for that known gap).
+//
+// Designed to be swappable: a future OAuth-based provider only needs to
+// implement the same three functions (login, logout, requireSession) with
+// the same signatures for index.js to use it instead, with no changes to
+// the routing or the rest of the Worker.
+
+import { hashIp, verifyPassword } from './crypto.js';
+import {
+  isLockedOut,
+  nextStateAfterFailure,
+  stateAfterSuccess,
+} from './bruteForceGuard.js';
+import {
+  buildExpiredSessionCookie,
+  buildSessionCookie,
+  createSessionRow,
+  isSessionValid,
+  readSessionCookie,
+} from './sessionStore.js';
+
+function clientIp(request) {
+  // Cloudflare always sets this header at the edge; it cannot be spoofed by
+  // the client because Cloudflare overwrites any client-supplied value.
+  return request.headers.get('CF-Connecting-IP') ?? 'unknown';
+}
+
+async function getLoginAttempt(db, ipHash) {
+  return db
+    .prepare('SELECT failed_count, first_failed_at, locked_until FROM login_attempts WHERE ip_hash = ?')
+    .bind(ipHash)
+    .first();
+}
+
+async function saveLoginAttempt(db, ipHash, row) {
+  if (row === null) {
+    await db.prepare('DELETE FROM login_attempts WHERE ip_hash = ?').bind(ipHash).run();
+    return;
+  }
+
+  await db
+    .prepare(
+      `INSERT INTO login_attempts (ip_hash, failed_count, first_failed_at, locked_until)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT(ip_hash) DO UPDATE SET
+         failed_count = excluded.failed_count,
+         first_failed_at = excluded.first_failed_at,
+         locked_until = excluded.locked_until`,
+    )
+    .bind(ipHash, row.failed_count, row.first_failed_at, row.locked_until)
+    .run();
+}
+
+async function getSession(db, id) {
+  return db
+    .prepare('SELECT id, created_at, expires_at, revoked_at FROM admin_sessions WHERE id = ?')
+    .bind(id)
+    .first();
+}
+
+async function saveSession(db, row) {
+  await db
+    .prepare('INSERT INTO admin_sessions (id, created_at, expires_at, revoked_at) VALUES (?, ?, ?, ?)')
+    .bind(row.id, row.created_at, row.expires_at, row.revoked_at)
+    .run();
+}
+
+async function revokeSession(db, id, now) {
+  await db
+    .prepare('UPDATE admin_sessions SET revoked_at = ? WHERE id = ?')
+    .bind(now.toISOString(), id)
+    .run();
+}
+
+export function createPasswordAuthProvider(env, now = () => new Date()) {
+  const db = env.TELEMETRY_DB;
+
+  return {
+    async login(request) {
+      const ip = clientIp(request);
+      const ipHash = await hashIp(ip, env.IP_HASH_SECRET);
+      const nowValue = now();
+
+      const attemptRow = await getLoginAttempt(db, ipHash);
+      if (isLockedOut(attemptRow, nowValue)) {
+        return new Response(
+          JSON.stringify({ error: 'too-many-attempts' }),
+          { status: 429, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+
+      let password;
+      try {
+        const body = await request.json();
+        password = body?.password;
+      } catch {
+        return new Response(
+          JSON.stringify({ error: 'invalid-request' }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+
+      const isValid = typeof password === 'string' && (await verifyPassword(password, env.ADMIN_PASSWORD_HASH));
+      if (!isValid) {
+        await saveLoginAttempt(db, ipHash, nextStateAfterFailure(attemptRow, nowValue));
+        return new Response(
+          JSON.stringify({ error: 'invalid-credentials' }),
+          { status: 401, headers: { 'Content-Type': 'application/json' } },
+        );
+      }
+
+      await saveLoginAttempt(db, ipHash, stateAfterSuccess());
+      const session = createSessionRow(nowValue);
+      await saveSession(db, session);
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie': buildSessionCookie(session.id, session.expires_at),
+        },
+      });
+    },
+
+    async logout(request) {
+      const sessionId = readSessionCookie(request.headers.get('Cookie'));
+      if (sessionId) {
+        await revokeSession(db, sessionId, now());
+      }
+
+      return new Response(JSON.stringify({ success: true }), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie': buildExpiredSessionCookie(),
+        },
+      });
+    },
+
+    /**
+     * Returns `{ authorized: true }` when the request carries a valid
+     * session, or `{ authorized: false, response }` with a ready-to-return
+     * 401 `Response` otherwise -- callers just check `authorized` and
+     * return `response` immediately when it is `false`.
+     */
+    async requireSession(request) {
+      const sessionId = readSessionCookie(request.headers.get('Cookie'));
+      const session = sessionId ? await getSession(db, sessionId) : null;
+
+      if (!isSessionValid(session, now())) {
+        return {
+          authorized: false,
+          response: new Response(
+            JSON.stringify({ error: 'unauthorized' }),
+            { status: 401, headers: { 'Content-Type': 'application/json' } },
+          ),
+        };
+      }
+
+      return { authorized: true };
+    },
+  };
+}

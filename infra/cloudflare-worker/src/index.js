@@ -1,43 +1,162 @@
 import { validateBatch } from './validateEvent.js';
+import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
+import * as queries from './stats/queries.js';
+import { toCsv } from './stats/csv.js';
 
-// FiveMCleaner anonymous telemetry Worker. Not deployed yet -- see
-// wrangler.toml and the module docs/telemetry.md for the data contract this
-// enforces. The .NET client does not send to this endpoint yet either; this
-// is scaffolding for a future increment (local queue + HTTP batch transport).
+// FiveMCleaner anonymous telemetry + admin dashboard API Worker. Not
+// deployed yet -- see wrangler.toml and README.md. The .NET client does not
+// send to /telemetry yet either; this is scaffolding for a future increment.
+//
+// Routes:
+//   POST /telemetry            -- ingest a batch of telemetry events (no auth; validated server-side)
+//   POST /admin/login          -- { password } -> session cookie
+//   POST /admin/logout         -- clears the session cookie
+//   GET  /api/stats/:name      -- one chart's data (requires a valid session)
+//   GET  /api/stats/:name.csv  -- same data as CSV (requires a valid session)
+
+const STATS_BUILDERS = {
+  'runs-per-day': queries.optimizationRunsPerDay,
+  'os-versions': queries.osVersionBreakdown,
+  'app-versions': queries.appVersionBreakdown,
+  'top-actions': queries.topActions,
+  'average-time': queries.averageOptimizationTimeMs,
+  'success-rate': queries.successRate,
+  'errors-by-version': queries.errorsByVersion,
+  'top-cpu': queries.topCpuModels,
+  'top-gpu': queries.topGpuModels,
+  'ram-buckets': queries.ramBucketBreakdown,
+  profiles: queries.profileBreakdown,
+};
+
 export default {
   async fetch(request, env) {
-    if (request.method !== 'POST') {
-      return new Response('Method not allowed', { status: 405 });
+    const url = new URL(request.url);
+
+    if (request.method === 'POST' && url.pathname === '/telemetry') {
+      return handleTelemetryIngest(request, env);
     }
 
-    let payload;
-    try {
-      payload = await request.json();
-    } catch {
-      return new Response('Invalid JSON', { status: 400 });
+    if (request.method === 'POST' && url.pathname === '/admin/login') {
+      return createPasswordAuthProvider(env).login(request);
     }
 
-    const events = validateBatch(payload);
-    if (events === null) {
-      return new Response('Event batch failed validation', { status: 400 });
+    if (request.method === 'POST' && url.pathname === '/admin/logout') {
+      return createPasswordAuthProvider(env).logout(request);
     }
 
-    const receivedAt = new Date().toISOString();
-    const statement = env.TELEMETRY_DB.prepare(
-      'INSERT INTO telemetry_events (event_name, execution_time_ms, app_version, error_category, environment, received_at) VALUES (?, ?, ?, ?, ?, ?)',
-    );
-    const batch = events.map((event) =>
-      statement.bind(
-        event.eventName,
-        event.executionTimeMs,
-        event.appVersion,
-        event.errorCategory,
-        event.environment,
-        receivedAt,
-      ),
-    );
-    await env.TELEMETRY_DB.batch(batch);
+    if (request.method === 'GET' && url.pathname.startsWith('/api/stats/')) {
+      return handleStatsRequest(request, env, url);
+    }
 
-    return new Response(null, { status: 202 });
+    return new Response('Not found', { status: 404 });
   },
 };
+
+async function handleTelemetryIngest(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return new Response('Invalid JSON', { status: 400 });
+  }
+
+  const events = validateBatch(payload);
+  if (events === null) {
+    return new Response('Event batch failed validation', { status: 400 });
+  }
+
+  const receivedAt = new Date().toISOString();
+  const statements = [];
+  for (const event of events) {
+    statements.push(
+      env.TELEMETRY_DB
+        .prepare(
+          `INSERT INTO telemetry_events
+             (event_name, execution_time_ms, app_version, error_category,
+              os_version, system_architecture, cpu_model, gpu_model,
+              ram_bucket_gib, profile, environment, received_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        )
+        .bind(
+          event.eventName,
+          event.executionTimeMs,
+          event.appVersion,
+          event.errorCategory,
+          event.osVersion,
+          event.systemArchitecture,
+          event.cpuModel,
+          event.gpuModel,
+          event.ramBucketGiB,
+          event.profile,
+          event.environment,
+          receivedAt,
+        ),
+    );
+  }
+
+  const results = await env.TELEMETRY_DB.batch(statements);
+
+  const actionStatements = [];
+  results.forEach((result, index) => {
+    const eventId = result.meta?.last_row_id;
+    if (!eventId) {
+      return;
+    }
+
+    for (const actionId of events[index].actionIds) {
+      actionStatements.push(
+        env.TELEMETRY_DB
+          .prepare('INSERT INTO telemetry_event_actions (telemetry_event_id, action_id) VALUES (?, ?)')
+          .bind(eventId, actionId),
+      );
+    }
+  });
+
+  if (actionStatements.length > 0) {
+    await env.TELEMETRY_DB.batch(actionStatements);
+  }
+
+  return new Response(null, { status: 202 });
+}
+
+async function handleStatsRequest(request, env, url) {
+  const auth = await createPasswordAuthProvider(env).requireSession(request);
+  if (!auth.authorized) {
+    return auth.response;
+  }
+
+  const asCsv = url.pathname.endsWith('.csv');
+  const name = url.pathname
+    .slice('/api/stats/'.length)
+    .replace(/\.csv$/, '');
+
+  const builder = STATS_BUILDERS[name];
+  if (!builder) {
+    return new Response('Unknown stat', { status: 404 });
+  }
+
+  const filters = {
+    from: url.searchParams.get('from') || undefined,
+    to: url.searchParams.get('to') || undefined,
+    appVersion: url.searchParams.get('version') || undefined,
+    environment: url.searchParams.get('environment') || undefined,
+  };
+
+  const { sql, params } = builder(filters);
+  const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
+
+  if (asCsv) {
+    return new Response(toCsv(results), {
+      status: 200,
+      headers: {
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${name}.csv"`,
+      },
+    });
+  }
+
+  return new Response(JSON.stringify(results), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
