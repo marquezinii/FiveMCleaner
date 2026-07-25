@@ -52,6 +52,13 @@ website/coverage/
 website/.wrangler/
 website/.dev.vars
 website/.dev.vars.*
+
+# Cloudflare telemetry Worker scaffold (not deployed)
+infra/cloudflare-worker/node_modules/
+infra/cloudflare-worker/.wrangler/
+infra/cloudflare-worker/.dev.vars
+infra/cloudflare-worker/.dev.vars.*
+/.wrangler/
 website/.vercel/
 website/out/
 website/outputs/

@@ -12,6 +12,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Management" Version="10.0.0" />
+    <PackageReference Include="Sentry" Version="6.7.0" />
     <ProjectReference Include="../FiveMCleaner.Contracts/FiveMCleaner.Contracts.csproj" />
     <ProjectReference Include="../FiveMCleaner.Core/FiveMCleaner.Core.csproj" />
     <ProjectReference Include="../FiveMCleaner.Windows/FiveMCleaner.Windows.csproj" />
@@ -19,6 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets/FiveMCleaner.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Config/appsettings.json;Config/appsettings.Development.json;Config/appsettings.Production.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Target Name="CopyBroker" AfterTargets="Build">
     <ItemGroup>
