@@ -1,0 +1,314 @@
+using FiveMCleaner.App.Services;
+using Sentry;
+using Xunit;
+
+namespace FiveMCleaner.Tests.App;
+
+public sealed class AppEnvironmentTests
+{
+    [Fact]
+    public void Resolve_ExplicitDevelopmentVariable_ReturnsDevelopmentRegardlessOfBuildConfiguration()
+    {
+        var result = AppEnvironment.Resolve(_ => "Development");
+
+        Assert.Equal(AppRuntimeEnvironment.Development, result);
+    }
+
+    [Fact]
+    public void Resolve_ExplicitProductionVariable_ReturnsProductionRegardlessOfBuildConfiguration()
+    {
+        var result = AppEnvironment.Resolve(_ => "Production");
+
+        Assert.Equal(AppRuntimeEnvironment.Production, result);
+    }
+
+    [Theory]
+    [InlineData("development")]
+    [InlineData("DEVELOPMENT")]
+    [InlineData("DeVeLoPmEnT")]
+    public void Resolve_VariableIsCaseInsensitive(string value)
+    {
+        Assert.Equal(AppRuntimeEnvironment.Development, AppEnvironment.Resolve(_ => value));
+    }
+
+    [Fact]
+    public void Resolve_UnrecognizedVariableValue_FallsBackToBuildConfigurationDefault()
+    {
+        var result = AppEnvironment.Resolve(_ => "not-a-real-environment");
+
+#if DEBUG
+        Assert.Equal(AppRuntimeEnvironment.Development, result);
+#else
+        Assert.Equal(AppRuntimeEnvironment.Production, result);
+#endif
+    }
+
+    [Fact]
+    public void Resolve_NoVariableSet_FallsBackToBuildConfigurationDefault()
+    {
+        var result = AppEnvironment.Resolve(_ => null);
+
+#if DEBUG
+        Assert.Equal(AppRuntimeEnvironment.Development, result);
+#else
+        Assert.Equal(AppRuntimeEnvironment.Production, result);
+#endif
+    }
+}
+
+public sealed class RemoteServicesOptionsLoaderTests : IDisposable
+{
+    private readonly string tempDirectory;
+
+    public RemoteServicesOptionsLoaderTests()
+    {
+        tempDirectory = Path.Combine(Path.GetTempPath(), "FiveMCleanerTests_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(Path.Combine(tempDirectory, "Config"));
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            Directory.Delete(tempDirectory, recursive: true);
+        }
+        catch (IOException)
+        {
+            // Best-effort cleanup; a leftover temp directory does not fail the test.
+        }
+    }
+
+    private void WriteConfigFile(string fileName, string json) =>
+        File.WriteAllText(Path.Combine(tempDirectory, "Config", fileName), json);
+
+    [Fact]
+    public void Load_DevelopmentFileExists_ReturnsItsDsnAndEnvironment()
+    {
+        WriteConfigFile(
+            "appsettings.Development.json",
+            """{ "environment": "Development", "sentryDsn": "https://key@example.ingest.sentry.io/1" }""");
+
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Development, tempDirectory);
+
+        Assert.Equal("Development", options.Environment);
+        Assert.Equal("https://key@example.ingest.sentry.io/1", options.SentryDsn);
+    }
+
+    [Fact]
+    public void Load_ProductionFileExists_ReturnsItsDsnAndEnvironment()
+    {
+        WriteConfigFile(
+            "appsettings.Production.json",
+            """{ "environment": "Production", "sentryDsn": "https://key@example.ingest.sentry.io/2" }""");
+
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Production, tempDirectory);
+
+        Assert.Equal("Production", options.Environment);
+        Assert.Equal("https://key@example.ingest.sentry.io/2", options.SentryDsn);
+    }
+
+    [Fact]
+    public void Load_NoEnvironmentSpecificFile_FallsBackToBaseAppSettings()
+    {
+        WriteConfigFile("appsettings.json", """{ "environment": "Production", "sentryDsn": null }""");
+
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Development, tempDirectory);
+
+        Assert.Equal("Production", options.Environment);
+        Assert.Null(options.SentryDsn);
+    }
+
+    [Fact]
+    public void Load_NoConfigFilesAtAll_ReturnsASafeFallbackWithNoDsn()
+    {
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Production, tempDirectory);
+
+        Assert.Null(options.SentryDsn);
+        Assert.Equal("Production", options.Environment);
+    }
+
+    [Fact]
+    public void Load_MalformedJson_NeverThrowsAndFallsBackSafely()
+    {
+        WriteConfigFile("appsettings.Development.json", "{ not valid json");
+
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Development, tempDirectory);
+
+        Assert.Null(options.SentryDsn);
+    }
+}
+
+public sealed class CrashReportingHolderTests
+{
+    [Fact]
+    public void NoOpCrashReportingService_NeverInitializesAndNeverThrows()
+    {
+        var service = NoOpCrashReportingService.Instance;
+
+        service.Initialize(new RemoteServicesOptions { SentryDsn = "https://x@y.ingest.sentry.io/1", Environment = "Production" }, "1.0.0");
+        service.CaptureException(new InvalidOperationException("test"));
+        service.Shutdown();
+
+        Assert.False(service.IsInitialized);
+    }
+
+    [Fact]
+    public void Current_DefaultsToNoOpAndCanBeReplaced()
+    {
+        var original = CrashReporting.Current;
+        try
+        {
+            Assert.Same(NoOpCrashReportingService.Instance, original);
+
+            var fake = new FakeCrashReportingService();
+            CrashReporting.Current = fake;
+
+            Assert.Same(fake, CrashReporting.Current);
+        }
+        finally
+        {
+            CrashReporting.Current = original;
+        }
+    }
+
+    [Fact]
+    public void Current_SetToNull_Throws()
+    {
+        Assert.Throws<ArgumentNullException>(() => CrashReporting.Current = null!);
+    }
+
+    private sealed class FakeCrashReportingService : ICrashReportingService
+    {
+        public bool IsInitialized => false;
+
+        public void Initialize(RemoteServicesOptions options, string appVersion)
+        {
+        }
+
+        public void CaptureException(Exception exception)
+        {
+        }
+
+        public void Shutdown()
+        {
+        }
+    }
+}
+
+public sealed class CrashReportSanitizerTests
+{
+    [Fact]
+    public void Sanitize_OverridesServerNameToANonIdentifyingValue()
+    {
+        var sentryEvent = new SentryEvent { ServerName = Environment.MachineName };
+
+        var result = CrashReportSanitizer.Sanitize(sentryEvent);
+
+        Assert.Equal("fivemcleaner-client", result.ServerName);
+    }
+
+    [Fact]
+    public void Sanitize_ClearsAnyAutoPopulatedUserData()
+    {
+        var sentryEvent = new SentryEvent();
+        sentryEvent.User.Id = "some-id";
+        sentryEvent.User.Username = Environment.UserName;
+        sentryEvent.User.Email = "someone@example.com";
+        sentryEvent.User.IpAddress = "203.0.113.1";
+
+        var result = CrashReportSanitizer.Sanitize(sentryEvent);
+
+        Assert.Null(result.User.Id);
+        Assert.Null(result.User.Username);
+        Assert.Null(result.User.Email);
+        Assert.Null(result.User.IpAddress);
+    }
+
+    [Fact]
+    public void Sanitize_ScrubsAUserProfilePathFromTheEventMessage()
+    {
+        var sentryEvent = new SentryEvent
+        {
+            Message = new SentryMessage
+            {
+                Message = @"Could not read C:\Users\someuser\AppData\settings.xml"
+            }
+        };
+
+        var result = CrashReportSanitizer.Sanitize(sentryEvent);
+
+        Assert.DoesNotContain("someuser", result.Message!.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("%USERPROFILE%", result.Message!.Message, StringComparison.Ordinal);
+    }
+}
+
+public sealed class CentralizedConfigurationGuardTests
+{
+    // Fragments of the identifiers the user supplied, kept split across
+    // concatenated literals here so this guard test itself never becomes a
+    // second place those values are typed out in full.
+    private static readonly string SentryDsnFragment =
+        "1e8d9183066a2ffcb265709" + "fbb17ec5a";
+
+    private static readonly string D1DatabaseIdFragment =
+        "fe276121-a71a-4ba4-ab62-" + "81cccdf601c6";
+
+    [Fact]
+    public void SentryDsn_OnlyAppearsInsideTheConfigJsonFiles_NeverInSourceCode()
+    {
+        var root = FindRepositoryRoot();
+        var configDirectory = Path.Combine(root, "src", "FiveMCleaner.App", "Config");
+        var allowedFiles = new[]
+        {
+            Path.Combine(configDirectory, "appsettings.Development.json"),
+            Path.Combine(configDirectory, "appsettings.Production.json"),
+        };
+
+        foreach (var sourceFile in EnumerateAppSourceFiles(root))
+        {
+            var content = File.ReadAllText(sourceFile);
+            if (content.Contains(SentryDsnFragment, StringComparison.Ordinal))
+            {
+                Assert.Contains(sourceFile, allowedFiles);
+            }
+        }
+    }
+
+    [Fact]
+    public void D1DatabaseId_OnlyAppearsInsideTheWorkerWranglerConfig_NeverInDotNetSourceCode()
+    {
+        var root = FindRepositoryRoot();
+
+        foreach (var sourceFile in EnumerateAppSourceFiles(root))
+        {
+            var content = File.ReadAllText(sourceFile);
+            Assert.DoesNotContain(D1DatabaseIdFragment, content, StringComparison.Ordinal);
+        }
+    }
+
+    private static IEnumerable<string> EnumerateAppSourceFiles(string root)
+    {
+        var appDirectory = Path.Combine(root, "src", "FiveMCleaner.App");
+        return Directory.EnumerateFiles(appDirectory, "*.*", SearchOption.AllDirectories)
+            .Where(path => path.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)
+                || path.EndsWith(".xaml", StringComparison.OrdinalIgnoreCase))
+            .Where(path => !path.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase)
+                && !path.Contains($"{Path.DirectorySeparatorChar}bin{Path.DirectorySeparatorChar}", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string FindRepositoryRoot()
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+        while (directory is not null)
+        {
+            if (File.Exists(Path.Combine(directory.FullName, "FiveMCleaner.slnx")))
+            {
+                return directory.FullName;
+            }
+
+            directory = directory.Parent;
+        }
+
+        throw new DirectoryNotFoundException("FiveMCleaner repository root was not found.");
+    }
+}
