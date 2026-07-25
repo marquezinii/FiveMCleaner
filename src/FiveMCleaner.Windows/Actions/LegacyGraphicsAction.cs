@@ -106,6 +106,36 @@ public static class LegacyGraphicsPresets
             ["MaxLodScale"] = "0"
         };
 
+    /// <summary>
+    /// Raises (never lowers) existing options up to a conservative ceiling.
+    /// Deliberately does not touch MSAA/ReflectionMSAA/TXAA (GPU-dependent
+    /// cost too variable to guess safely), extended distance/shadow settings,
+    /// motion blur or depth of field, so a heavy 1% low regression is not
+    /// silently introduced.
+    /// </summary>
+    public static readonly IReadOnlyDictionary<string, string> Quality =
+        new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            ["FXAA"] = "true",
+            ["ShadowQuality"] = "2",
+            ["ReflectionQuality"] = "2",
+            ["WaterQuality"] = "2",
+            ["ParticlesQuality"] = "2",
+            ["ParticleQuality"] = "2",
+            ["GrassQuality"] = "2",
+            ["ShaderQuality"] = "2",
+            ["PostFX"] = "2",
+            ["Tessellation"] = "1",
+            ["SSAO"] = "1",
+            ["AnisotropicFiltering"] = "16",
+            ["TextureQuality"] = "2",
+            ["CityDensity"] = "1.000000",
+            ["PedVarietyMultiplier"] = "1.000000",
+            ["VehicleVarietyMultiplier"] = "1.000000",
+            ["DistanceScaling"] = "1.000000",
+            ["LodScale"] = "1.000000"
+        };
+
     public static IReadOnlyDictionary<string, string> For(OptimizationProfile profile)
     {
         return profile switch
@@ -116,6 +146,18 @@ public static class LegacyGraphicsPresets
             _ => throw new ArgumentOutOfRangeException(nameof(profile), profile, null)
         };
     }
+}
+
+/// <summary>
+/// Whether a preset is only allowed to lower existing values (the original,
+/// most conservative behavior) or only allowed to raise them (used
+/// exclusively by the opt-in quality preset, which never lowers a setting
+/// the user already has above the preset's target).
+/// </summary>
+public enum GraphicsPresetDirection
+{
+    LowerOnly,
+    RaiseOnly
 }
 
 public enum GraphicsSettingsTarget
@@ -174,6 +216,7 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
     private readonly IFiveMProcessInspector processInspector;
     private readonly IGtaVProcessInspector gtaVProcessInspector;
     private readonly GraphicsSettingsTarget target;
+    private readonly GraphicsPresetDirection direction;
 
     public LegacyGraphicsPresetAction(
         string settingsPath,
@@ -197,9 +240,31 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
         GraphicsSettingsTarget target,
         IFiveMProcessInspector processInspector,
         IGtaVProcessInspector gtaVProcessInspector)
+        : this(
+            settingsPath,
+            gameRoot,
+            target,
+            processInspector,
+            gtaVProcessInspector,
+            GetActionId(target, profile),
+            LegacyGraphicsPresets.For(profile),
+            GraphicsPresetDirection.LowerOnly)
+    {
+    }
+
+    public LegacyGraphicsPresetAction(
+        string settingsPath,
+        string? gameRoot,
+        GraphicsSettingsTarget target,
+        IFiveMProcessInspector processInspector,
+        IGtaVProcessInspector gtaVProcessInspector,
+        string actionId,
+        IReadOnlyDictionary<string, string> preset,
+        GraphicsPresetDirection direction)
     {
         this.settingsPath = Path.GetFullPath(settingsPath);
         this.target = target;
+        this.direction = direction;
         var expectedFileName = target == GraphicsSettingsTarget.FiveM
             ? "gta5_settings.xml"
             : "settings.xml";
@@ -217,9 +282,9 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
             ?? throw new ArgumentNullException(nameof(processInspector));
         this.gtaVProcessInspector = gtaVProcessInspector
             ?? throw new ArgumentNullException(nameof(gtaVProcessInspector));
-        preset = LegacyGraphicsPresets.For(profile);
-        Metadata = WindowsActionMetadata.For(GetActionId(target, profile));
-        if (preset.Keys.Any(key => !AllowedSettingNames.Contains(key)))
+        this.preset = preset ?? throw new ArgumentNullException(nameof(preset));
+        Metadata = WindowsActionMetadata.For(actionId);
+        if (this.preset.Keys.Any(key => !AllowedSettingNames.Contains(key)))
         {
             throw new InvalidOperationException("Graphics preset contains a non-allowlisted setting.");
         }
@@ -299,7 +364,10 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
                 continue;
             }
 
-            if (!ShouldLowerValue(setting.Key, attribute.Value, setting.Value))
+            var shouldChange = direction == GraphicsPresetDirection.LowerOnly
+                ? ShouldLowerValue(setting.Key, attribute.Value, setting.Value)
+                : ShouldRaiseValue(setting.Key, attribute.Value, setting.Value);
+            if (!shouldChange)
             {
                 continue;
             }
@@ -628,6 +696,30 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
                 CultureInfo.InvariantCulture,
                 out var desiredNumber)
             && currentNumber > desiredNumber;
+    }
+
+    private static bool ShouldRaiseValue(string name, string currentValue, string desiredValue)
+    {
+        ValidatePresetValue(name, desiredValue);
+        if (IsBooleanSetting(name))
+        {
+            return bool.TryParse(currentValue, out var current)
+                && bool.TryParse(desiredValue, out var desired)
+                && !current
+                && desired;
+        }
+
+        return decimal.TryParse(
+                   currentValue,
+                   NumberStyles.Number,
+                   CultureInfo.InvariantCulture,
+                   out var currentNumber)
+            && decimal.TryParse(
+                desiredValue,
+                NumberStyles.Number,
+                CultureInfo.InvariantCulture,
+                out var desiredNumber)
+            && currentNumber < desiredNumber;
     }
 
     private static bool IsCompatibleCurrentValue(string name, string value)

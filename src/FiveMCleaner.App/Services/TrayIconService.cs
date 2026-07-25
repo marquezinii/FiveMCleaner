@@ -32,6 +32,7 @@ public sealed class TrayIconService : IDisposable
             Visible = false
         };
         notifyIcon.DoubleClick += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
+        notifyIcon.BalloonTipClicked += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
         this.localization.LanguageChanged += OnLanguageChanged;
         UpdateText();
     }
@@ -57,6 +58,45 @@ public sealed class TrayIconService : IDisposable
 
     public void Hide()
     {
+        if (!disposed)
+        {
+            notifyIcon.Visible = false;
+        }
+    }
+
+    /// <summary>
+    /// Shows the native Windows notification (Action Center toast, using the
+    /// app's own tray icon and name) announcing that a new version is
+    /// available, whether the main window is currently in the foreground or
+    /// minimized to the tray. Clicking the notification raises
+    /// <see cref="ShowRequested"/>, the same event used to restore the
+    /// window from the tray.
+    /// </summary>
+    public void ShowUpdateAvailable(string version)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(version);
+        ThrowIfDisposed();
+
+        var wasVisible = notifyIcon.Visible;
+        notifyIcon.Visible = true;
+        notifyIcon.BalloonTipTitle = localization.GetString("Notification.UpdateAvailable.Title");
+        notifyIcon.BalloonTipText = localization.Format("Notification.UpdateAvailable.Message", version);
+        notifyIcon.BalloonTipIcon = Forms.ToolTipIcon.Info;
+        notifyIcon.ShowBalloonTip(7000);
+
+        if (!wasVisible)
+        {
+            // The icon was only made visible to carry this notification (the
+            // user does not have "minimize to tray" active); hide it again
+            // once the balloon has had time to display instead of leaving a
+            // tray icon behind that the user never asked for.
+            _ = HideAfterDelayAsync(TimeSpan.FromSeconds(8));
+        }
+    }
+
+    private async Task HideAfterDelayAsync(TimeSpan delay)
+    {
+        await Task.Delay(delay);
         if (!disposed)
         {
             notifyIcon.Visible = false;

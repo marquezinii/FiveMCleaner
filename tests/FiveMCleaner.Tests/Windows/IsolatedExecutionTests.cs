@@ -83,6 +83,29 @@ public sealed class IsolatedExecutionTests
     }
 
     [Fact]
+    public async Task Cancellation_LeavesJournalInATerminalStateInsteadOfStuckApplying()
+    {
+        // Regression test: a cancellation used to leave journal.State stuck
+        // at Applying forever, because only the normal end of the loop ever
+        // advanced it — a later ExecuteAsync call for the same transaction
+        // would then hit an unhandled InvalidOperationException trying to
+        // resume it.
+        using var cancellation = new CancellationTokenSource();
+        var cancelled = ConfigurableTestAction.Cancelling(
+            OptimizationActionIds.CleanUserTemporaryFiles, cancellation);
+        var neverRuns = ConfigurableTestAction.Changing(OptimizationActionIds.EnableGameMode);
+        var (engine, journals, id) = Build(cancelled, neverRuns);
+
+        await Assert.ThrowsAsync<OperationCanceledException>(() =>
+            engine.ExecuteAsync([cancelled, neverRuns], Context(id), Isolated, cancellation.Token));
+
+        var journal = journals.Get(id);
+        Assert.NotEqual(WindowsTransactionState.Applying, journal.State);
+        Assert.Equal(ActionExecutionOutcome.NotRun, OutcomeOf(journal, neverRuns));
+        Assert.Equal(0, neverRuns.ApplyCount);
+    }
+
+    [Fact]
     public async Task VerifiedAction_IsRecordedWithoutChange()
     {
         var verified = ConfigurableTestAction.NoChange(OptimizationActionIds.EnableGameMode);
@@ -124,11 +147,16 @@ public sealed class IsolatedExecutionTests
     private sealed class ConfigurableTestAction : WindowsOptimizationAction
     {
         private readonly Behavior behavior;
+        private readonly CancellationTokenSource? cancelOnApply;
 
-        private ConfigurableTestAction(string actionId, Behavior behavior)
+        private ConfigurableTestAction(
+            string actionId,
+            Behavior behavior,
+            CancellationTokenSource? cancelOnApply = null)
         {
             Metadata = WindowsActionMetadata.For(actionId);
             this.behavior = behavior;
+            this.cancelOnApply = cancelOnApply;
         }
 
         private enum Behavior
@@ -136,7 +164,8 @@ public sealed class IsolatedExecutionTests
             Changing,
             NoChange,
             FailApply,
-            FailCommit
+            FailCommit,
+            Cancel
         }
 
         public override ActionMetadataDto Metadata { get; }
@@ -155,6 +184,9 @@ public sealed class IsolatedExecutionTests
 
         public static ConfigurableTestAction CommitFailing(string id) => new(id, Behavior.FailCommit);
 
+        public static ConfigurableTestAction Cancelling(string id, CancellationTokenSource source) =>
+            new(id, Behavior.Cancel, source);
+
         public override Task<WindowsActionApplyResult> ApplyAsync(
             WindowsActionContext context,
             CancellationToken cancellationToken)
@@ -163,6 +195,12 @@ public sealed class IsolatedExecutionTests
             if (behavior == Behavior.FailApply)
             {
                 throw new InvalidOperationException("simulated apply failure");
+            }
+
+            if (behavior == Behavior.Cancel)
+            {
+                cancelOnApply!.Cancel();
+                throw new OperationCanceledException(cancelOnApply.Token);
             }
 
             if (behavior == Behavior.NoChange)

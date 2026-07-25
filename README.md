@@ -17,7 +17,7 @@
   <img alt="GTAV Enhanced bloqueado" src="https://img.shields.io/badge/GTAV_Enhanced-bloqueado-4b5563?style=flat-square">
   <img alt="Windows 10 e 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb?style=flat-square">
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10.0-7c3aed?style=flat-square">
-  <a href="LICENSE"><img alt="Licença MIT" src="https://img.shields.io/badge/licen%C3%A7a-MIT-16a34a?style=flat-square"></a>
+  <a href="LICENSE"><img alt="Licença Source-Available" src="https://img.shields.io/badge/licen%C3%A7a-Source--Available-ef6c00?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -37,17 +37,17 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 > Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
 
 > [!NOTE]
-> A `v1.0.2` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
+> A `v1.0.3` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
 
 ## Últimas atualizações
 
-**Versão 1.0.2**
+**Versão 1.0.3**
 
-- Corrigido: o app não fecha mais ao exibir a versão e o selo tem contraste correto no tema escuro.
-- Melhorado: rodapé, janela maximizada, card de proteção e seletores visuais ficaram mais consistentes e legíveis.
-- Atualizado: a página pública informa as mudanças da última versão e direciona ao histórico completo.
+- Corrigido: cancelamentos transacionais, preferências independentes de FiveM/GTA V e progresso administrativo do broker.
+- Melhorado: confirmação segura para cancelar ou fechar durante otimização, recomendação dinâmica e notificação nativa de atualização.
+- Atualizado: diagnósticos, ajustes opt-in de FiveM/GTA V, documentação de privacidade e licença source-available.
 
-## Estado da v1.0.2
+## Estado da v1.0.3
 
 - preferências gerais enxutas: idioma pt-BR/inglês, tema do sistema/claro/escuro,
   comportamento do X e inicialização com Windows;
@@ -186,12 +186,15 @@ As decisões do projeto priorizam documentação do Cfx.re, suporte oficial, rep
 ## Contribuindo e segurança
 
 - Bugs comuns podem ser enviados pelo app ou pelo GitHub; leia antes [Relatos de bug e privacidade](docs/bug-reports.md).
+- A telemetria técnica é opcional e vem habilitada apenas para instalações novas; ela pode ser desligada em **Configurações** e envia somente categorias de erro, duração de otimizações e versão — nunca arquivos, documentos, histórico ou dados pessoais no payload. Veja [Telemetria opcional](docs/telemetry.md).
 - Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de propor uma ação de sistema.
 - Vulnerabilidades devem seguir [SECURITY.md](SECURITY.md), sem issue pública.
 - Toda contribuição está sujeita ao [Código de Conduta](CODE_OF_CONDUCT.md).
 
 ## Licença e não afiliação
 
-Código disponibilizado sob a [Licença MIT](LICENSE).
+Código disponibilizado sob a [Licença Source-Available do FiveMCleaner](LICENSE).
+Consulte as permissões e restrições antes de compilar, fazer fork ou distribuir
+qualquer derivado.
 
 **FiveMCleaner é um projeto comunitário independente. Não é aprovado, patrocinado, endossado nem afiliado à Rockstar Games, Cfx.re ou FiveM.** FiveM, Grand Theft Auto V, Rockstar Games e marcas relacionadas pertencem aos respectivos titulares. A marca é usada apenas para indicar compatibilidade.

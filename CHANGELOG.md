@@ -5,6 +5,35 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.0.3] - 2026-07-25
+
+### Corrigido
+
+- Corrigidos fluxos transacionais de cancelamento e a persistência do journal
+  para que uma execução interrompida não fique presa em estado intermediário.
+- Corrigidos gates independentes para preferências gráficas de FiveM e GTA V,
+  evitando que um ajuste planejasse indevidamente o outro.
+- Corrigidos o diagnóstico de timeout do broker e a atualização do ledger de
+  etapas administrativas durante a otimização.
+
+### Melhorado
+
+- Adicionada confirmação temática antes de cancelar ou fechar o aplicativo
+  durante uma otimização; o fechamento confirmado aguarda o cancelamento seguro
+  da etapa atual.
+- O selo **Recomendado** agora segue o diagnóstico real do computador, e o
+  plano atual ficou mais limpo ao ocultar metadados internos que poluíam a lista.
+- Incluída notificação nativa do Windows quando uma atualização estável é
+  encontrada.
+
+### Atualizado
+
+- Ampliados os diagnósticos e as opções opt-in para FiveM/GTA V Legacy,
+  incluindo cache, instalação, gráficos, janela/VSync, commandline standalone,
+  benchmark oficial do GTA V e comparação local antes/depois.
+- Atualizadas as configurações, documentação de segurança, telemetria e a
+  licença source-available do projeto para refletir o comportamento atual.
+
 ## [1.0.2] - 2026-07-23
 
 ### Corrigido

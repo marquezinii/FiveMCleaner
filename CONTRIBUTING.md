@@ -85,4 +85,7 @@ Veja a matriz completa em [docs/safety.md](docs/safety.md).
 
 O pull request deve explicar o problema e a decisão, não apenas listar arquivos. Inclua evidências, riscos, capturas para alterações visuais e o resultado exato dos testes. Um mantenedor pode solicitar benchmark ou validação em máquina descartável antes de aceitar uma nova ação do sistema.
 
-Ao contribuir, você concorda com o [Código de Conduta](CODE_OF_CONDUCT.md) e aceita disponibilizar sua contribuição sob a [Licença MIT](LICENSE).
+Ao contribuir, você concorda com o [Código de Conduta](CODE_OF_CONDUCT.md) e
+aceita os termos de contribuições da [Licença Source-Available do
+FiveMCleaner](LICENSE), inclusive a licença necessária para que o mantenedor
+incorpore sua contribuição ao projeto.

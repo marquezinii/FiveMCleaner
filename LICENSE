@@ -1,21 +1,78 @@
-MIT License
+# Licença Source-Available do FiveMCleaner — v1.0
 
-Copyright (c) 2026 FiveMCleaner contributors
+Copyright (c) 2026 Felipe Marquezini. Todos os direitos reservados.
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+Esta é uma licença **source-available**. Ela permite acesso limitado ao
+código-fonte nas condições abaixo, mas não torna o FiveMCleaner software livre
+ou open source nos sentidos das licenças permissivas.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+## 1. Permissões concedidas
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+Desde que todos os avisos desta licença, créditos e avisos de terceiros sejam
+preservados, é permitido:
+
+- estudar o código-fonte;
+- auditar a segurança e relatar vulnerabilidades de forma responsável;
+- compilar o código-fonte para uso próprio;
+- criar forks exclusivamente para desenvolvimento, testes e preparação de
+  contribuições;
+- enviar Pull Requests ao repositório oficial.
+
+## 2. Restrições
+
+Sem autorização prévia e escrita do titular dos direitos autorais, é proibido:
+
+- vender, alugar, sublicenciar ou monetizar o código-fonte, o aplicativo ou
+  qualquer derivado;
+- redistribuir executáveis, instaladores ou pacotes modificados;
+- remover, ocultar ou alterar créditos, avisos de copyright, marcas, ícones ou
+  demais avisos de atribuição;
+- usar o nome, a marca, os ícones ou a identidade visual **FiveMCleaner**, salvo
+  para atribuição factual ou no contexto de um fork/PR autorizado por esta
+  licença;
+- criar, publicar, comercializar ou promover um produto concorrente derivado
+  ou substancialmente baseado neste código, quando o propósito principal do
+  produto for otimizar FiveM, GTA V ou Windows para jogos;
+- burlar controles técnicos, usar o projeto de forma ilícita ou violar direitos
+  de terceiros.
+
+## 3. Contribuições
+
+Ao enviar um Pull Request ou outra contribuição ao repositório oficial, você
+declara que tem o direito de enviá-la e concede ao titular uma licença mundial,
+gratuita, não exclusiva, perpétua e irrevogável para usar, modificar,
+incorporar, distribuir e relicenciar essa contribuição como parte do
+FiveMCleaner, inclusive sob versões futuras desta licença.
+
+## 4. Componentes de terceiros
+
+Dependências, fontes, ícones e outros componentes de terceiros permanecem
+sujeitos às respectivas licenças. Esta licença não substitui nem remove avisos
+de licença que acompanham tais componentes.
+
+## 5. Marcas
+
+Nenhuma permissão de marca é concedida por esta licença. "FiveMCleaner", seus
+logotipos e sua identidade visual pertencem ao titular, exceto quando a lei
+aplicável determinar de outro modo.
+
+## 6. Ausência de garantia e limitação de responsabilidade
+
+O SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA", SEM GARANTIAS
+EXPRESSAS OU IMPLÍCITAS, INCLUSIVE DE COMERCIABILIDADE, ADEQUAÇÃO A UMA
+FINALIDADE ESPECÍFICA OU NÃO VIOLAÇÃO. NA MÁXIMA EXTENSÃO PERMITIDA PELA LEI,
+O TITULAR NÃO SERÁ RESPONSÁVEL POR DANOS, PERDA DE DADOS, LUCROS CESSANTES OU
+OUTRAS CONSEQUÊNCIAS DECORRENTES DO USO OU DA IMPOSSIBILIDADE DE USO DO
 SOFTWARE.
+
+## 7. Encerramento
+
+As permissões desta licença terminam automaticamente se qualquer condição for
+violada. Após o encerramento, você deve cessar o uso, a distribuição e a
+modificação do material licenciado, ressalvadas as obrigações que, por sua
+natureza, sobrevivem ao encerramento.
+
+## 8. Contato
+
+Para pedir autorização comercial, de redistribuição ou de uso de marca, entre
+em contato com o titular do projeto pelos canais oficiais do repositório.

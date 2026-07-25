@@ -567,7 +567,7 @@ public sealed class WindowsTransactionEngine
                 MarkTerminal(item.Entry, WindowsActionJournalState.Skipped,
                     ActionExecutionOutcome.Skipped, $"Pré-requisito não atendido: {unmet}.");
                 completedWeight += weight;
-                await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+                await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
                 ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
                     ActionExecutionOutcome.Skipped);
                 continue;
@@ -613,6 +613,7 @@ public sealed class WindowsTransactionEngine
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 await IsolatedRollbackSelfAsync(journal, item, context).ConfigureAwait(false);
+                await FinalizeCancelledIsolatedRunAsync(journal).ConfigureAwait(false);
                 throw;
             }
             catch (Exception exception) when (exception is not StackOverflowException)
@@ -685,6 +686,35 @@ public sealed class WindowsTransactionEngine
             item.Entry.Error = exception.ToString();
         }
 
+        await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    /// A cancellation during the isolated-failures loop used to leave
+    /// <c>journal.State</c> stuck at <see cref="WindowsTransactionState.Applying"/>
+    /// forever (only <see cref="DetermineIsolatedFinalState"/> — reached at
+    /// the bottom of the normal loop — ever advanced it past that point).
+    /// A journal persisted in that state is not one of the terminal states
+    /// <see cref="ValidateExistingJournal"/> rejects, so a later run with the
+    /// same transaction ID would try to resume it and hit an
+    /// <see cref="InvalidOperationException"/> because the cancelled action's
+    /// entry state no longer matches what resume expects — permanently
+    /// wedging the transaction until the journal file was deleted by hand.
+    /// This mirrors the same "mark remaining as skipped, compute the final
+    /// state, persist" sequence used when a critical failure aborts the run.
+    /// </summary>
+    private async Task FinalizeCancelledIsolatedRunAsync(WindowsTransactionJournal journal)
+    {
+        foreach (var entry in journal.Actions.Where(entry =>
+                     entry.State is WindowsActionJournalState.Pending
+                         or WindowsActionJournalState.DeferredPrivilege))
+        {
+            MarkTerminal(entry, WindowsActionJournalState.Skipped,
+                ActionExecutionOutcome.NotRun, "Ignorada porque a operação foi cancelada.");
+        }
+
+        journal.State = DetermineIsolatedFinalState(journal);
+        journal.Error = "A operação foi cancelada pelo usuário.";
         await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
     }
 

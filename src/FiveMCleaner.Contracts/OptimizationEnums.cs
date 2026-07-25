@@ -54,6 +54,20 @@ public enum CacheRepairPolicy
     RepairNow
 }
 
+/// <summary>
+/// DirectX version election for standalone GTA V's <c>commandline.txt</c>
+/// (<c>-DX10</c>/<c>-DX10_1</c>/<c>-DX11</c>). <c>Unspecified</c> means the
+/// flag is not written at all, letting the game auto-detect as it does by
+/// default.
+/// </summary>
+public enum GtaVDirectXVersion
+{
+    Unspecified,
+    DX10,
+    DX10_1,
+    DX11
+}
+
 public enum PlanBlockCode
 {
     EditionNotDetected,

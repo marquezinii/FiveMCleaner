@@ -148,5 +148,14 @@ internal enum ActionOptionGate
     UseSessionPerformancePowerPlan,
     ApplyLegacyGraphicsPreset,
     ApplyGtaVGraphicsPreset,
-    ReduceWindowsVisualEffects
+    ReduceWindowsVisualEffects,
+    TerminateStuckFiveMProcess,
+    RecreateFiveMLocalData,
+    RepairStaleAuthData,
+    ApplyQualityGraphicsPreset,
+    ApplyDisplayPreferences,
+    ApplyGtaVDisplayPreferences,
+    ApplyGtaVGraphicsLaunchParameters,
+    ApplyGtaVDisplayLaunchParameters,
+    ApplyGtaVRepairLaunchParameters
 }

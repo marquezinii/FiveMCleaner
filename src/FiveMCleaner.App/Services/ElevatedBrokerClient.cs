@@ -147,10 +147,27 @@ internal sealed class ElevatedBrokerClient
         using var timeout = new CancellationTokenSource(OperationTimeout);
         try
         {
-            using (var connectionTimeout = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token))
+            try
             {
+                using var connectionTimeout = CancellationTokenSource.CreateLinkedTokenSource(
+                    cancellationToken,
+                    timeout.Token);
                 connectionTimeout.CancelAfter(ConnectionTimeout);
                 await pipe.WaitForConnectionAsync(connectionTimeout.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException) when (
+                !timeout.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
+            {
+                // The 30s connection window elapsed on its own (neither the
+                // overall 2-minute safety timeout nor a user cancellation).
+                // A cancelled TimeoutException here — instead of letting this
+                // propagate unhandled — gives a catchable, honest result
+                // instead of a generic app-level error.
+                throw new TimeoutException(
+                    "O componente administrativo não conectou ao canal de progresso local a tempo. "
+                        + "Isso pode acontecer quando o antivírus ou o SmartScreen do Windows interrompe "
+                        + "a elevação de um executável sem assinatura digital; verifique o histórico de "
+                        + "proteção do Windows Defender (ou do seu antivírus) antes de tentar novamente.");
             }
 
             using var reader = new StreamReader(
@@ -219,8 +236,7 @@ internal sealed class ElevatedBrokerClient
             {
                 Succeeded = succeeded,
                 WasCancelled = false,
-                Message = terminal?.Message
-                    ?? "O componente administrativo terminou sem uma confirmação válida.",
+                Message = terminal?.Message ?? DescribeMissingTerminalEvent(process.ExitCode),
                 State = terminal?.State,
                 AppliedActionIds = terminal?.AppliedActionIds ?? []
             };
@@ -272,6 +288,34 @@ internal sealed class ElevatedBrokerClient
         }
     }
 
+    /// <summary>
+    /// The broker connected to the local progress pipe (otherwise a
+    /// <see cref="BrokerPipeException"/>-derived timeout would have already
+    /// been raised) but exited without ever publishing a terminal event —
+    /// meaning it was interrupted mid-run rather than rejecting or failing
+    /// the request cleanly. The known broker exit codes narrow this down
+    /// where possible; an unrecognized code most often means the process
+    /// was terminated externally (commonly antivirus/SmartScreen reacting
+    /// to an elevated, unsigned executable) rather than a bug in the
+    /// broker's own logic.
+    /// </summary>
+    private static string DescribeMissingTerminalEvent(int exitCode)
+    {
+        var known = exitCode switch
+        {
+            2 => "Os argumentos enviados ao componente administrativo eram inválidos.",
+            3 => "O componente administrativo não conseguiu conectar ao canal de progresso local.",
+            7 => "O componente administrativo não recebeu um token de administrador válido.",
+            _ => null
+        };
+
+        return known
+            ?? "O componente administrativo foi interrompido antes de confirmar o resultado (código de saída "
+                + $"{exitCode}). Isso costuma acontecer quando o antivírus ou o SmartScreen do Windows "
+                + "encerra um executável elevado sem assinatura digital; verifique o histórico de proteção "
+                + "do Windows Defender (ou do seu antivírus) antes de tentar novamente.";
+    }
+
     private static void ReportBrokerProgress(
         BrokerEventWire brokerEvent,
         IProgress<AppProgressUpdate> progress)
@@ -297,7 +341,14 @@ internal sealed class ElevatedBrokerClient
                 ? "Restaurando configurações administrativas"
                 : "Aplicando ajustes administrativos",
             Detail = brokerEvent.Message,
-            ActionId = brokerEvent.ActionId
+            ActionId = brokerEvent.ActionId,
+            Outcome = brokerEvent.ActionId is null ? null : brokerEvent.Kind switch
+            {
+                BrokerEventKindWire.Completed or BrokerEventKindWire.RollbackCompleted =>
+                    brokerEvent.Success == true ? ActionExecutionOutcome.Applied : ActionExecutionOutcome.Failed,
+                BrokerEventKindWire.Failed or BrokerEventKindWire.Rejected => ActionExecutionOutcome.Failed,
+                _ => null
+            }
         });
     }
 

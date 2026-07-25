@@ -76,6 +76,38 @@ public sealed record WindowsOptimizationDependencies
 
     public required IWindowsTransactionJournalStore JournalStore { get; init; }
 
+    public required ISystemResourceInspector SystemResources { get; init; }
+
+    public required IOverlaySoftwareInspector OverlaySoftware { get; init; }
+
+    public required INetworkHealthInspector NetworkHealth { get; init; }
+
+    public required IThermalInspector Thermal { get; init; }
+
+    public required IGpuVendorInspector GpuVendor { get; init; }
+
+    public required ICpuInspector Cpu { get; init; }
+
+    public required IGpuDetailsInspector GpuDetails { get; init; }
+
+    public required IRamDetailsInspector RamDetails { get; init; }
+
+    public required IStorageHealthInspector StorageHealth { get; init; }
+
+    public required IDriverVersionInspector DriverVersions { get; init; }
+
+    public required IDisplayConfigurationInspector DisplayConfiguration { get; init; }
+
+    public required IResourceUsageInspector ResourceUsage { get; init; }
+
+    public required IPciLinkInspector PciLink { get; init; }
+
+    public required IHardwareStabilityInspector HardwareStability { get; init; }
+
+    public required IBackgroundProcessInspector BackgroundProcess { get; init; }
+
+    public required IStuckFiveMProcessInspector StuckProcess { get; init; }
+
     public static WindowsOptimizationDependencies CreateDefault(
         WindowsOptimizationEnvironment environment)
     {
@@ -90,7 +122,23 @@ public sealed record WindowsOptimizationDependencies
             VisualEffects = new WindowsVisualEffectsController(),
             PowerPlans = new PowerCfgController(commandRunner),
             PowerStatus = new WindowsPowerStatusProvider(),
-            JournalStore = new JsonWindowsTransactionJournalStore(environment.JournalDirectory)
+            JournalStore = new JsonWindowsTransactionJournalStore(environment.JournalDirectory),
+            SystemResources = new WindowsSystemResourceInspector(),
+            OverlaySoftware = new WindowsOverlaySoftwareInspector(),
+            NetworkHealth = new WindowsNetworkHealthInspector(),
+            Thermal = new WindowsThermalInspector(),
+            GpuVendor = new WindowsGpuVendorInspector(),
+            Cpu = new WindowsCpuInspector(),
+            GpuDetails = new WindowsGpuDetailsInspector(),
+            RamDetails = new WindowsRamDetailsInspector(),
+            StorageHealth = new WindowsStorageHealthInspector(),
+            DriverVersions = new WindowsDriverVersionInspector(),
+            DisplayConfiguration = new WindowsDisplayConfigurationInspector(),
+            ResourceUsage = new WindowsResourceUsageInspector(),
+            PciLink = new WindowsPciLinkInspector(),
+            HardwareStability = new WindowsHardwareStabilityInspector(),
+            BackgroundProcess = new WindowsBackgroundProcessInspector(),
+            StuckProcess = new WindowsStuckFiveMProcessInspector()
         };
     }
 }
@@ -108,6 +156,15 @@ public sealed class WindowsOptimizationActionFactory
         this.environment = ValidateEnvironment(environment);
         this.dependencies = dependencies ?? throw new ArgumentNullException(nameof(dependencies));
     }
+
+    private string RosIdPath =>
+        Path.Combine(Path.GetDirectoryName(environment.LegacyGraphicsSettingsPath)!, "ros_id.dat");
+
+    private string DigitalEntitlementsRoot =>
+        Path.Combine(Path.GetDirectoryName(environment.UserTemporaryDirectory)!, "DigitalEntitlements");
+
+    private string AuthQuarantineRoot =>
+        Path.Combine(Path.GetDirectoryName(environment.JournalDirectory)!, "AuthQuarantine");
 
     public IReadOnlyList<IWindowsOptimizationAction> Create(OptimizationPlanDto plan)
     {
@@ -129,6 +186,51 @@ public sealed class WindowsOptimizationActionFactory
             new VerifyGtaVStoppedAction(
                 environment.GtaVInstallationRoot,
                 dependencies.GtaVProcessInspector),
+            new BottleneckDiagnosisAction(dependencies.SystemResources),
+            new OverlaySoftwareDetectionAction(dependencies.OverlaySoftware),
+            new FiveMLegacyLogReaderAction(environment.FiveMAppRoot),
+            new PerformanceDiagnosticsGuideAction(),
+            new NetworkHealthDiagnosisAction(dependencies.NetworkHealth),
+            new ThermalDiagnosisAction(dependencies.Thermal),
+            new PagefileCommitDiagnosisAction(dependencies.SystemResources),
+            new CacheIndexIntegrityDiagnosisAction(environment.FiveMAppRoot),
+            new GpuVendorDetectionAction(dependencies.GpuVendor),
+            new CpuDetailsDiagnosisAction(dependencies.Cpu),
+            new GpuDetailsDiagnosisAction(dependencies.GpuDetails),
+            new RamDetailsDiagnosisAction(dependencies.RamDetails),
+            new StorageHealthDiagnosisAction(dependencies.StorageHealth),
+            new DriverVersionsDiagnosisAction(dependencies.DriverVersions),
+            new DisplayConfigurationDiagnosisAction(dependencies.DisplayConfiguration),
+            new SessionSettingsDiagnosisAction(dependencies.Registry, dependencies.PowerPlans),
+            new ThrottlingSignalDiagnosisAction(
+                dependencies.Cpu,
+                dependencies.ResourceUsage,
+                dependencies.HardwareStability,
+                dependencies.Thermal),
+            new ResourceUsageDiagnosisAction(dependencies.ResourceUsage),
+            new PciLinkDiagnosisAction(dependencies.PciLink),
+            new HardwareStabilityDiagnosisAction(dependencies.HardwareStability),
+            new BottleneckClassificationAction(
+                dependencies.SystemResources,
+                dependencies.ResourceUsage,
+                dependencies.Thermal,
+                dependencies.NetworkHealth,
+                dependencies.GpuDetails,
+                dependencies.BackgroundProcess),
+            new GtaVLaunchParametersDiagnosisAction(environment.GtaVInstallationRoot),
+            new GraphicsPresetRecommendationAction(
+                dependencies.GpuDetails,
+                dependencies.Cpu,
+                dependencies.RamDetails,
+                dependencies.DisplayConfiguration),
+            new TextureVramFitDiagnosisAction(
+                environment.LegacyGraphicsSettingsPath,
+                dependencies.GpuDetails),
+            new CacheStorageDiagnosisAction(environment.FiveMAppRoot),
+            new InstallationHealthDiagnosisAction(
+                environment.FiveMInstallationRoot,
+                environment.FiveMAppRoot),
+            new CrashPatternDiagnosisAction(environment.FiveMAppRoot),
             new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(defaults.TemporaryFileMinimumAgeDays),
@@ -146,6 +248,21 @@ public sealed class WindowsOptimizationActionFactory
                 checked(defaults.ServerCacheThresholdGiB * GiB),
                 dependencies.ProcessInspector,
                 dependencies.FileTree),
+            new StuckProcessTerminationAction(
+                environment.FiveMInstallationRoot,
+                dependencies.StuckProcess),
+            new RecreateFiveMLocalDataAction(
+                environment.FiveMAppRoot,
+                environment.FiveMInstallationRoot,
+                dependencies.ProcessInspector,
+                dependencies.FileTree),
+            new StaleAuthDataRepairAction(
+                environment.FiveMAppRoot,
+                environment.FiveMInstallationRoot,
+                RosIdPath,
+                DigitalEntitlementsRoot,
+                AuthQuarantineRoot,
+                dependencies.ProcessInspector),
             new GameModeRegistryAction(dependencies.Registry),
             new GpuPreferenceRegistryAction(
                 dependencies.Registry,
@@ -197,6 +314,56 @@ public sealed class WindowsOptimizationActionFactory
                 GraphicsSettingsTarget.GtaV,
                 dependencies.ProcessInspector,
                 dependencies.GtaVProcessInspector),
+            new LegacyGraphicsPresetAction(
+                environment.LegacyGraphicsSettingsPath,
+                environment.FiveMInstallationRoot,
+                GraphicsSettingsTarget.FiveM,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector,
+                OptimizationActionIds.ApplyQualityLegacyGraphics,
+                LegacyGraphicsPresets.Quality,
+                GraphicsPresetDirection.RaiseOnly),
+            new LegacyGraphicsPresetAction(
+                environment.GtaVGraphicsSettingsPath,
+                environment.GtaVInstallationRoot,
+                GraphicsSettingsTarget.GtaV,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector,
+                OptimizationActionIds.ApplyQualityGtaVGraphics,
+                LegacyGraphicsPresets.Quality,
+                GraphicsPresetDirection.RaiseOnly),
+            new DisplayPreferencesAction(
+                environment.LegacyGraphicsSettingsPath,
+                environment.FiveMInstallationRoot,
+                GraphicsSettingsTarget.FiveM,
+                defaults.PreferWindowedMode,
+                defaults.EnableVSync,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            new DisplayPreferencesAction(
+                environment.GtaVGraphicsSettingsPath,
+                environment.GtaVInstallationRoot,
+                GraphicsSettingsTarget.GtaV,
+                defaults.PreferWindowedMode,
+                defaults.EnableVSync,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            new GtaVGraphicsLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                dependencies.DisplayConfiguration,
+                dependencies.GtaVProcessInspector),
+            new GtaVDisplayLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                defaults.PreferWindowedMode,
+                defaults.PreferBorderlessWindow,
+                defaults.GtaVLaunchDirectXVersion,
+                dependencies.GtaVProcessInspector),
+            new GtaVRepairLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                defaults.UseGtaVSafeMode,
+                defaults.UseGtaVMinimumSettings,
+                defaults.UseGtaVAutoSettingsRebuild,
+                dependencies.GtaVProcessInspector),
             new VisualEffectsAction(dependencies.VisualEffects)
         ];
     }
@@ -213,6 +380,88 @@ public sealed class WindowsOptimizationActionFactory
             OptimizationActionIds.VerifyGtaVIsStopped => new VerifyGtaVStoppedAction(
                 environment.GtaVInstallationRoot,
                 dependencies.GtaVProcessInspector),
+            OptimizationActionIds.DiagnoseBottleneck => new BottleneckDiagnosisAction(
+                dependencies.SystemResources),
+            OptimizationActionIds.DetectOverlaysAndCaptureSoftware => new OverlaySoftwareDetectionAction(
+                dependencies.OverlaySoftware),
+            OptimizationActionIds.ReadFiveMLegacyLogs => new FiveMLegacyLogReaderAction(
+                environment.FiveMAppRoot),
+            OptimizationActionIds.GuidePerformanceDiagnostics => new PerformanceDiagnosticsGuideAction(),
+            OptimizationActionIds.DiagnoseNetworkHealth => new NetworkHealthDiagnosisAction(
+                dependencies.NetworkHealth),
+            OptimizationActionIds.DiagnoseThermalThrottling => new ThermalDiagnosisAction(
+                dependencies.Thermal),
+            OptimizationActionIds.DiagnosePagefileCommit => new PagefileCommitDiagnosisAction(
+                dependencies.SystemResources),
+            OptimizationActionIds.DiagnoseCacheIntegrity => new CacheIndexIntegrityDiagnosisAction(
+                environment.FiveMAppRoot),
+            OptimizationActionIds.DetectGpuVendor => new GpuVendorDetectionAction(
+                dependencies.GpuVendor),
+            OptimizationActionIds.DiagnoseCpuDetails => new CpuDetailsDiagnosisAction(
+                dependencies.Cpu),
+            OptimizationActionIds.DiagnoseGpuDetails => new GpuDetailsDiagnosisAction(
+                dependencies.GpuDetails),
+            OptimizationActionIds.DiagnoseRamDetails => new RamDetailsDiagnosisAction(
+                dependencies.RamDetails),
+            OptimizationActionIds.DiagnoseStorageHealth => new StorageHealthDiagnosisAction(
+                dependencies.StorageHealth),
+            OptimizationActionIds.DiagnoseDriverVersions => new DriverVersionsDiagnosisAction(
+                dependencies.DriverVersions),
+            OptimizationActionIds.DiagnoseDisplayConfiguration => new DisplayConfigurationDiagnosisAction(
+                dependencies.DisplayConfiguration),
+            OptimizationActionIds.DiagnoseSessionSettings => new SessionSettingsDiagnosisAction(
+                dependencies.Registry,
+                dependencies.PowerPlans),
+            OptimizationActionIds.DiagnoseThrottlingSignal => new ThrottlingSignalDiagnosisAction(
+                dependencies.Cpu,
+                dependencies.ResourceUsage,
+                dependencies.HardwareStability,
+                dependencies.Thermal),
+            OptimizationActionIds.DiagnoseResourceUsage => new ResourceUsageDiagnosisAction(
+                dependencies.ResourceUsage),
+            OptimizationActionIds.DiagnosePciLink => new PciLinkDiagnosisAction(
+                dependencies.PciLink),
+            OptimizationActionIds.DiagnoseHardwareStability => new HardwareStabilityDiagnosisAction(
+                dependencies.HardwareStability),
+            OptimizationActionIds.ClassifyBottleneck => new BottleneckClassificationAction(
+                dependencies.SystemResources,
+                dependencies.ResourceUsage,
+                dependencies.Thermal,
+                dependencies.NetworkHealth,
+                dependencies.GpuDetails,
+                dependencies.BackgroundProcess),
+            OptimizationActionIds.DiagnoseGtaVLaunchParameters => new GtaVLaunchParametersDiagnosisAction(
+                environment.GtaVInstallationRoot),
+            OptimizationActionIds.RecommendGraphicsPreset => new GraphicsPresetRecommendationAction(
+                dependencies.GpuDetails,
+                dependencies.Cpu,
+                dependencies.RamDetails,
+                dependencies.DisplayConfiguration),
+            OptimizationActionIds.DiagnoseTextureVramFit => new TextureVramFitDiagnosisAction(
+                environment.LegacyGraphicsSettingsPath,
+                dependencies.GpuDetails),
+            OptimizationActionIds.DiagnoseCacheStorage => new CacheStorageDiagnosisAction(
+                environment.FiveMAppRoot),
+            OptimizationActionIds.DiagnoseInstallationHealth => new InstallationHealthDiagnosisAction(
+                environment.FiveMInstallationRoot,
+                environment.FiveMAppRoot),
+            OptimizationActionIds.DiagnoseCrashPatterns => new CrashPatternDiagnosisAction(
+                environment.FiveMAppRoot),
+            OptimizationActionIds.TerminateStuckFiveMProcess => new StuckProcessTerminationAction(
+                environment.FiveMInstallationRoot,
+                dependencies.StuckProcess),
+            OptimizationActionIds.RecreateFiveMLocalData => new RecreateFiveMLocalDataAction(
+                environment.FiveMAppRoot,
+                environment.FiveMInstallationRoot,
+                dependencies.ProcessInspector,
+                dependencies.FileTree),
+            OptimizationActionIds.RepairStaleAuthData => new StaleAuthDataRepairAction(
+                environment.FiveMAppRoot,
+                environment.FiveMInstallationRoot,
+                RosIdPath,
+                DigitalEntitlementsRoot,
+                AuthQuarantineRoot,
+                dependencies.ProcessInspector),
             OptimizationActionIds.CleanUserTemporaryFiles => new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(plan.Options.TemporaryFileMinimumAgeDays),
@@ -283,6 +532,56 @@ public sealed class WindowsOptimizationActionFactory
                 OptimizationProfile.Aggressive,
                 GraphicsSettingsTarget.GtaV,
                 dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyQualityLegacyGraphics => new LegacyGraphicsPresetAction(
+                environment.LegacyGraphicsSettingsPath,
+                environment.FiveMInstallationRoot,
+                GraphicsSettingsTarget.FiveM,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector,
+                OptimizationActionIds.ApplyQualityLegacyGraphics,
+                LegacyGraphicsPresets.Quality,
+                GraphicsPresetDirection.RaiseOnly),
+            OptimizationActionIds.ApplyQualityGtaVGraphics => new LegacyGraphicsPresetAction(
+                environment.GtaVGraphicsSettingsPath,
+                environment.GtaVInstallationRoot,
+                GraphicsSettingsTarget.GtaV,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector,
+                OptimizationActionIds.ApplyQualityGtaVGraphics,
+                LegacyGraphicsPresets.Quality,
+                GraphicsPresetDirection.RaiseOnly),
+            OptimizationActionIds.ApplyLegacyDisplayPreferences => new DisplayPreferencesAction(
+                environment.LegacyGraphicsSettingsPath,
+                environment.FiveMInstallationRoot,
+                GraphicsSettingsTarget.FiveM,
+                plan.Options.PreferWindowedMode,
+                plan.Options.EnableVSync,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyGtaVDisplayPreferences => new DisplayPreferencesAction(
+                environment.GtaVGraphicsSettingsPath,
+                environment.GtaVInstallationRoot,
+                GraphicsSettingsTarget.GtaV,
+                plan.Options.PreferWindowedMode,
+                plan.Options.EnableVSync,
+                dependencies.ProcessInspector,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters => new GtaVGraphicsLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                dependencies.DisplayConfiguration,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyGtaVDisplayLaunchParameters => new GtaVDisplayLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                plan.Options.PreferWindowedMode,
+                plan.Options.PreferBorderlessWindow,
+                plan.Options.GtaVLaunchDirectXVersion,
+                dependencies.GtaVProcessInspector),
+            OptimizationActionIds.ApplyGtaVRepairLaunchParameters => new GtaVRepairLaunchParametersAction(
+                environment.GtaVInstallationRoot,
+                plan.Options.UseGtaVSafeMode,
+                plan.Options.UseGtaVMinimumSettings,
+                plan.Options.UseGtaVAutoSettingsRebuild,
                 dependencies.GtaVProcessInspector),
             OptimizationActionIds.ReduceWindowsVisualEffects => new VisualEffectsAction(
                 dependencies.VisualEffects),

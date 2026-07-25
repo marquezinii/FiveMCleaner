@@ -148,6 +148,132 @@ internal sealed class FakePowerPlanController : IPowerPlanController
     }
 }
 
+internal sealed class FakeSystemResourceInspector : ISystemResourceInspector
+{
+    public SystemResourceSnapshot Snapshot { get; set; } = new(
+        TotalMemoryBytes: 16L * 1024 * 1024 * 1024,
+        AvailableMemoryBytes: 8L * 1024 * 1024 * 1024,
+        LogicalProcessorCount: 12,
+        SystemDriveFreeBytes: 64L * 1024 * 1024 * 1024,
+        TotalPageFileBytes: 20L * 1024 * 1024 * 1024,
+        AvailablePageFileBytes: 16L * 1024 * 1024 * 1024);
+
+    public SystemResourceSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeOverlaySoftwareInspector : IOverlaySoftwareInspector
+{
+    public IReadOnlyList<string> Names { get; set; } = [];
+
+    public IReadOnlyList<string> DetectRunningOverlayNames() => Names;
+}
+
+internal sealed class FakeNetworkHealthInspector : INetworkHealthInspector
+{
+    public NetworkHealthSnapshot Snapshot { get; set; } = new(
+        HasActiveInterface: true,
+        DiscardedPackets: 0,
+        ErrorPackets: 0);
+
+    public NetworkHealthSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeThermalInspector : IThermalInspector
+{
+    public ThermalSnapshot Snapshot { get; set; } = new(false, null);
+
+    public ThermalSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeGpuVendorInspector : IGpuVendorInspector
+{
+    public GpuVendorSnapshot Snapshot { get; set; } = new([]);
+
+    public GpuVendorSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeCpuInspector : ICpuInspector
+{
+    public CpuSnapshot? Snapshot { get; set; } = new(8, 16, 4000, 4800);
+
+    public CpuSnapshot? GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeGpuDetailsInspector : IGpuDetailsInspector
+{
+    public IReadOnlyList<GpuAdapterDetails> Snapshot { get; set; } = [];
+
+    public IReadOnlyList<GpuAdapterDetails> GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeRamDetailsInspector : IRamDetailsInspector
+{
+    public RamDetailsSnapshot Snapshot { get; set; } = new([]);
+
+    public RamDetailsSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeStorageHealthInspector : IStorageHealthInspector
+{
+    public StorageHealthSnapshot Snapshot { get; set; } = new([]);
+
+    public StorageHealthSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeDriverVersionInspector : IDriverVersionInspector
+{
+    public DriverVersionSnapshot Snapshot { get; set; } = new([], [], [], []);
+
+    public DriverVersionSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeDisplayConfigurationInspector : IDisplayConfigurationInspector
+{
+    public DisplayConfigurationSnapshot? Snapshot { get; set; } = new(
+        1920, 1080, 144, 144, HardwareGpuSchedulingState.NotSupportedOrUnknown);
+
+    public DisplayConfigurationSnapshot? GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeResourceUsageInspector : IResourceUsageInspector
+{
+    public ResourceUsageSnapshot Snapshot { get; set; } = new(10, 5, null, 1.5);
+
+    public ResourceUsageSnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakePciLinkInspector : IPciLinkInspector
+{
+    public IReadOnlyList<PciLinkSnapshot> Snapshot { get; set; } = [];
+
+    public IReadOnlyList<PciLinkSnapshot> GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeHardwareStabilityInspector : IHardwareStabilityInspector
+{
+    public HardwareStabilitySnapshot Snapshot { get; set; } = new(0, 0, null);
+
+    public HardwareStabilitySnapshot GetSnapshot() => Snapshot;
+}
+
+internal sealed class FakeBackgroundProcessInspector : IBackgroundProcessInspector
+{
+    public BackgroundProcessUsage? Result { get; set; }
+
+    public BackgroundProcessUsage? GetTopConsumer(IReadOnlyCollection<string> excludedProcessNames) => Result;
+}
+
+internal sealed class FakeStuckFiveMProcessInspector : IStuckFiveMProcessInspector
+{
+    public StuckFiveMProcessSnapshot Snapshot { get; set; } = new(false, 0, string.Empty);
+
+    public bool TerminateSucceeds { get; set; } = true;
+
+    public StuckFiveMProcessSnapshot GetSnapshot(string installationRoot) => Snapshot;
+
+    public bool TryTerminate(int processId) => TerminateSucceeds;
+}
+
 internal sealed class InMemoryJournalStore : IWindowsTransactionJournalStore
 {
     private readonly Dictionary<Guid, WindowsTransactionJournal> journals = [];
@@ -209,7 +335,23 @@ internal static class WindowsTestRuntime
             VisualEffects = new FakeVisualEffectsController(),
             PowerPlans = new FakePowerPlanController(),
             PowerStatus = new FakePowerStatusProvider(),
-            JournalStore = journals
+            JournalStore = journals,
+            SystemResources = new FakeSystemResourceInspector(),
+            OverlaySoftware = new FakeOverlaySoftwareInspector(),
+            NetworkHealth = new FakeNetworkHealthInspector(),
+            Thermal = new FakeThermalInspector(),
+            GpuVendor = new FakeGpuVendorInspector(),
+            Cpu = new FakeCpuInspector(),
+            GpuDetails = new FakeGpuDetailsInspector(),
+            RamDetails = new FakeRamDetailsInspector(),
+            StorageHealth = new FakeStorageHealthInspector(),
+            DriverVersions = new FakeDriverVersionInspector(),
+            DisplayConfiguration = new FakeDisplayConfigurationInspector(),
+            ResourceUsage = new FakeResourceUsageInspector(),
+            PciLink = new FakePciLinkInspector(),
+            HardwareStability = new FakeHardwareStabilityInspector(),
+            BackgroundProcess = new FakeBackgroundProcessInspector(),
+            StuckProcess = new FakeStuckFiveMProcessInspector()
         };
 
         return (
