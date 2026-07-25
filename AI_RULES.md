@@ -28,6 +28,10 @@ não tiver sido produzido por ele.
   incompleto.
 - Atualize `PROJECT_STATE.md` somente quando houver mudança relevante de
   arquitetura, decisão técnica, funcionalidade entregue ou limitação conhecida.
+- Ao final de cada sessão importante de trabalho, além do critério acima, a IA
+  deve atualizar `PROJECT_STATE.md` também com um resumo objetivo de:
+  funcionalidades concluídas; funcionalidades em andamento; próximos passos;
+  decisões de arquitetura; pendências; e bugs conhecidos.
 
 ## Ao concluir uma tarefa
 
