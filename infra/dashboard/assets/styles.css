@@ -1,0 +1,207 @@
+:root {
+  color-scheme: dark;
+  --background: #14161c;
+  --surface: #1c1f27;
+  --border: #2a2e38;
+  --text: #e7e9ee;
+  --text-muted: #9aa4b2;
+  --orange: #ff7a18;
+  --green: #37c889;
+  --red: #e5484d;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--background);
+  color: var(--text);
+  font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.login-view {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  width: 320px;
+  padding: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.login-card h1 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.login-subtitle {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 12.5px;
+}
+
+.login-card label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.login-card input {
+  padding: 9px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--text);
+}
+
+.login-card button,
+.filters button {
+  margin-top: 8px;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background: var(--orange);
+  color: #1a1200;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.login-error {
+  min-height: 16px;
+  color: var(--red);
+  font-size: 11.5px;
+  margin: 4px 0 0;
+}
+
+.dashboard-view {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 24px 20px 48px;
+}
+
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dashboard-header h1 {
+  font-size: 22px;
+  margin: 0;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 12.5px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: end;
+  margin: 18px 0;
+  padding: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.filters label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.filters input {
+  padding: 7px 8px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--text);
+}
+
+.tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tile-label {
+  font-size: 11.5px;
+  color: var(--text-muted);
+}
+
+.tile-value {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 14px;
+}
+
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.chart-card h2 {
+  margin: 0 0 10px;
+  font-size: 13px;
+}
+
+.chart-card canvas {
+  width: 100%;
+  height: 160px;
+  display: block;
+}
+
+.csv-link {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+  text-decoration: underline;
+}
+
+.dashboard-footnote {
+  margin-top: 24px;
+  font-size: 10.5px;
+  color: var(--text-muted);
+}

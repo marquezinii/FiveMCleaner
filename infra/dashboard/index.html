@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>FiveMCleaner Dashboard</title>
+  <link rel="stylesheet" href="assets/styles.css" />
+</head>
+<body>
+  <section id="login-view" class="login-view">
+    <form id="login-form" class="login-card">
+      <h1>FiveMCleaner Dashboard</h1>
+      <p class="login-subtitle">Acesso restrito a administradores.</p>
+      <label for="password">Senha</label>
+      <input type="password" id="password" name="password" autocomplete="current-password" required />
+      <button type="submit">Entrar</button>
+      <p id="login-error" class="login-error" role="alert"></p>
+    </form>
+  </section>
+
+  <section id="dashboard-view" class="dashboard-view hidden">
+    <header class="dashboard-header">
+      <h1>FiveMCleaner Dashboard</h1>
+      <button id="logout-button" type="button" class="link-button">Sair</button>
+    </header>
+
+    <form id="filter-form" class="filters">
+      <label>De <input type="date" name="from" /></label>
+      <label>Até <input type="date" name="to" /></label>
+      <label>Versão <input type="text" name="version" placeholder="1.0.4" /></label>
+      <button type="submit">Filtrar</button>
+    </form>
+
+    <div class="tiles">
+      <div class="tile">
+        <span class="tile-label">Otimizações no período</span>
+        <span id="tile-total-runs" class="tile-value">—</span>
+      </div>
+      <div class="tile">
+        <span class="tile-label">Taxa de sucesso</span>
+        <span id="tile-success-rate" class="tile-value">—</span>
+      </div>
+      <div class="tile">
+        <span class="tile-label">Tempo médio de otimização</span>
+        <span id="tile-average-time" class="tile-value">—</span>
+      </div>
+    </div>
+
+    <div class="charts">
+      <article class="chart-card">
+        <h2>Otimizações por dia</h2>
+        <canvas id="chart-runs-per-day" width="360" height="160"></canvas>
+        <a id="csv-runs-per-day" class="csv-link" download>Exportar CSV</a>
+      </article>
+      <article class="chart-card">
+        <h2>Versões do Windows</h2>
+        <canvas id="chart-os-versions" width="360" height="160"></canvas>
+        <a id="csv-os-versions" class="csv-link" download>Exportar CSV</a>
+      </article>
+      <article class="chart-card">
+        <h2>Versões do FiveMCleaner</h2>
+        <canvas id="chart-app-versions" width="360" height="160"></canvas>
+        <a id="csv-app-versions" class="csv-link" download>Exportar CSV</a>
+      </article>
+      <article class="chart-card">
+        <h2>Funções mais usadas</h2>
+        <canvas id="chart-top-actions" width="360" height="160"></canvas>
+        <a id="csv-top-actions" class="csv-link" download>Exportar CSV</a>
+      </article>
+      <article class="chart-card">
+        <h2>CPUs mais comuns</h2>
+        <canvas id="chart-top-cpu" width="360" height="160"></canvas>
+        <a id="csv-top-cpu" class="csv-link" download>Exportar CSV</a>
+      </article>
+      <article class="chart-card">
+        <h2>GPUs mais comuns</h2>
+        <canvas id="chart-top-gpu" width="360" height="160"></canvas>
+        <a id="csv-top-gpu" class="csv-link" download>Exportar CSV</a>
+      </article>
+      <article class="chart-card">
+        <h2>Memória RAM</h2>
+        <canvas id="chart-ram-buckets" width="360" height="160"></canvas>
+        <a id="csv-ram-buckets" class="csv-link" download>Exportar CSV</a>
+      </article>
+      <article class="chart-card">
+        <h2>Perfis escolhidos</h2>
+        <canvas id="chart-profiles" width="360" height="160"></canvas>
+        <a id="csv-profiles" class="csv-link" download>Exportar CSV</a>
+      </article>
+    </div>
+
+    <p class="dashboard-footnote">
+      "Otimizações" contam eventos, não usuários únicos — a telemetria do FiveMCleaner nunca envia
+      um identificador de máquina, então não há como contar pessoas de forma confiável ou correta.
+    </p>
+  </section>
+
+  <script type="module" src="assets/app.js"></script>
+</body>
+</html>

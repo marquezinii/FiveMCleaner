@@ -58,6 +58,8 @@ infra/cloudflare-worker/node_modules/
 infra/cloudflare-worker/.wrangler/
 infra/cloudflare-worker/.dev.vars
 infra/cloudflare-worker/.dev.vars.*
+infra/dashboard/node_modules/
+infra/dashboard/.wrangler/
 /.wrangler/
 website/.vercel/
 website/out/
