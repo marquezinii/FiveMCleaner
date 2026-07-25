@@ -15,7 +15,8 @@ public sealed partial class LocalizedInterfaceContractTests
         var sources = new[]
         {
             Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"),
-            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "BugReportWindow.xaml")
+            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "BugReportWindow.xaml"),
+            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "PrivacyConsentWindow.xaml")
         };
         var keys = sources
             .SelectMany(path => LocalizedKeyPattern().Matches(File.ReadAllText(path)))
@@ -81,6 +82,33 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void PrivacyConsentCodeBehind_LocalizationKeysResolve()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Views",
+            "PrivacyConsentWindow.xaml.cs"));
+        var keys = LocalizedCodeKeyPattern()
+            .Matches(source)
+            .Select(match => match.Groups["key"].Value)
+            .ToSortedSet(StringComparer.Ordinal);
+        var english = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+        var portuguese = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+
+        Assert.NotEmpty(keys);
+        foreach (var key in keys)
+        {
+            Assert.NotEqual(key, english.GetString(key));
+            Assert.NotEqual(key, portuguese.GetString(key));
+        }
+    }
+
+    [Fact]
     public void ResxCatalogs_HaveNoDuplicateKeys()
     {
         var root = FindRepositoryRoot();
@@ -123,7 +151,8 @@ public sealed partial class LocalizedInterfaceContractTests
             {
                 "{Binding MinimizeToTrayOnClose}",
                 "{Binding LaunchAtStartup}",
-                "{Binding ShareAnonymousTelemetry}"
+                "{Binding ShareAnonymousTelemetry}",
+                "{Binding ShareCrashReports}"
             },
             checkBoxBindings);
 

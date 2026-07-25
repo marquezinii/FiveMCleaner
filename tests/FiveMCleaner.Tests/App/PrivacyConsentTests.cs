@@ -315,3 +315,117 @@ public sealed class AppSettingsSerializationTests
         Assert.Null(roundTripped!.PrivacyConsentVersion);
     }
 }
+
+public sealed class PrivacyConsentOutcomeBuilderTests
+{
+    private static AppSettings SettingsWithDistinctPreferences() => new()
+    {
+        Language = AppLanguagePreference.English,
+        Theme = AppThemePreference.Dark,
+        MinimizeToTrayOnClose = false,
+        LaunchAtStartup = true,
+        CheckForUpdates = false,
+        ShareAnonymousTelemetry = true,
+        ShareCrashReports = true,
+        PrivacyConsentVersion = null
+    };
+
+    [Fact]
+    public void BuildConfirmed_BothAccepted_SetsBothTrueAndStampsCurrentVersion()
+    {
+        var result = PrivacyConsentOutcomeBuilder.BuildConfirmed(
+            SettingsWithDistinctPreferences(),
+            acceptAnonymousTelemetry: true,
+            acceptCrashReports: true);
+
+        Assert.True(result.ShareAnonymousTelemetry);
+        Assert.True(result.ShareCrashReports);
+        Assert.Equal(PrivacyConsentPolicy.CurrentVersion, result.PrivacyConsentVersion);
+    }
+
+    [Fact]
+    public void BuildConfirmed_BothDeclined_SetsBothFalseAndStampsCurrentVersion()
+    {
+        var result = PrivacyConsentOutcomeBuilder.BuildConfirmed(
+            SettingsWithDistinctPreferences(),
+            acceptAnonymousTelemetry: false,
+            acceptCrashReports: false);
+
+        Assert.False(result.ShareAnonymousTelemetry);
+        Assert.False(result.ShareCrashReports);
+        Assert.Equal(PrivacyConsentPolicy.CurrentVersion, result.PrivacyConsentVersion);
+    }
+
+    [Fact]
+    public void BuildConfirmed_OnlyTelemetryAccepted_KeepsCrashReportsFalse()
+    {
+        var result = PrivacyConsentOutcomeBuilder.BuildConfirmed(
+            SettingsWithDistinctPreferences(),
+            acceptAnonymousTelemetry: true,
+            acceptCrashReports: false);
+
+        Assert.True(result.ShareAnonymousTelemetry);
+        Assert.False(result.ShareCrashReports);
+    }
+
+    [Fact]
+    public void BuildConfirmed_OnlyCrashReportsAccepted_KeepsTelemetryFalse()
+    {
+        var result = PrivacyConsentOutcomeBuilder.BuildConfirmed(
+            SettingsWithDistinctPreferences(),
+            acceptAnonymousTelemetry: false,
+            acceptCrashReports: true);
+
+        Assert.False(result.ShareAnonymousTelemetry);
+        Assert.True(result.ShareCrashReports);
+    }
+
+    [Fact]
+    public void BuildConfirmed_PreservesEveryOtherExistingSetting()
+    {
+        var current = SettingsWithDistinctPreferences();
+
+        var result = PrivacyConsentOutcomeBuilder.BuildConfirmed(current, true, false);
+
+        Assert.Equal(current.Language, result.Language);
+        Assert.Equal(current.Theme, result.Theme);
+        Assert.Equal(current.MinimizeToTrayOnClose, result.MinimizeToTrayOnClose);
+        Assert.Equal(current.LaunchAtStartup, result.LaunchAtStartup);
+        Assert.Equal(current.CheckForUpdates, result.CheckForUpdates);
+    }
+
+    [Fact]
+    public void BuildDeclinedByClosing_ClosingTheWindowIsTreatedAsDecliningBoth()
+    {
+        var result = PrivacyConsentOutcomeBuilder.BuildDeclinedByClosing(SettingsWithDistinctPreferences());
+
+        Assert.False(result.ShareAnonymousTelemetry);
+        Assert.False(result.ShareCrashReports);
+        Assert.Equal(PrivacyConsentPolicy.CurrentVersion, result.PrivacyConsentVersion);
+    }
+
+    [Fact]
+    public void BuildDeclinedByClosing_IsEquivalentToConfirmingBothFalse()
+    {
+        var current = SettingsWithDistinctPreferences();
+
+        var closed = PrivacyConsentOutcomeBuilder.BuildDeclinedByClosing(current);
+        var confirmedFalse = PrivacyConsentOutcomeBuilder.BuildConfirmed(current, false, false);
+
+        Assert.Equal(confirmedFalse, closed);
+    }
+
+    [Fact]
+    public void BuildDeclinedByClosing_PreservesEveryOtherExistingSetting()
+    {
+        var current = SettingsWithDistinctPreferences();
+
+        var result = PrivacyConsentOutcomeBuilder.BuildDeclinedByClosing(current);
+
+        Assert.Equal(current.Language, result.Language);
+        Assert.Equal(current.Theme, result.Theme);
+        Assert.Equal(current.MinimizeToTrayOnClose, result.MinimizeToTrayOnClose);
+        Assert.Equal(current.LaunchAtStartup, result.LaunchAtStartup);
+        Assert.Equal(current.CheckForUpdates, result.CheckForUpdates);
+    }
+}
