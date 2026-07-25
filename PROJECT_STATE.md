@@ -1298,3 +1298,73 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   aprovado.
 - Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
   necessidade de revalidar `website/`.
+
+## Tela de consentimento de privacidade e integração no startup (25/07/2026)
+
+- Trabalho local, **não publicado** (nenhum push nesta etapa). Não altera
+  versão pública, instalador nem site. Segundo incremento do plano de
+  telemetria central, sobre a fundação (`PrivacyConsentPolicy`/
+  `PrivacyConsentEvaluator`/campos de `AppSettings`) registrada na entrada
+  anterior.
+- Nova janela WPF `PrivacyConsentWindow`
+  ([PrivacyConsentWindow.xaml](src/FiveMCleaner.App/Views/PrivacyConsentWindow.xaml)/
+  `.xaml.cs`), no mesmo padrão visual/arquitetural de `BugReportWindow`/
+  `OptimizationConfirmationWindow` (chrome customizado, sem DI). Mostra
+  título e introdução variando por cenário (primeira instalação, upgrade de
+  instalação antiga, renovação de versão), dois toggles independentes
+  pré-marcados conforme `AppSettings` atual, e as seções "Coletamos"/"Não
+  coletamos" com a lista completa de campos pedida. Fechar pela X ou
+  Alt+F4 é tratado pelo mesmo caminho de "Continuar", só que com os dois
+  valores como recusados — nunca impede o app de abrir.
+- Nova lógica pura `PrivacyConsentOutcomeBuilder`
+  ([PrivacyConsentOutcomeBuilder.cs](src/FiveMCleaner.App/Services/PrivacyConsentOutcomeBuilder.cs)):
+  transforma a escolha do usuário (ou o fechamento da janela) no
+  `AppSettings` a persistir, sempre preservando os demais campos e
+  carimbando `PrivacyConsentVersion = PrivacyConsentPolicy.CurrentVersion`.
+  Sem UI/disco/rede — testável isoladamente.
+- Ponto de integração escolhido: `MainViewModel.InitializeAsync` (não
+  `App.xaml.cs` nem código disperso em `MainWindow`) calcula a decisão do
+  `PrivacyConsentEvaluator` logo depois de aplicar as settings já
+  carregadas, expondo-a como a propriedade `PrivacyConsentDecision`. Um
+  novo `IAppOptimizationService.SettingsFileExists()` (checagem de
+  existência de arquivo, sem reanalisar o conteúdo) evita duplicar a
+  leitura de `settings.json` só para distinguir instalação nova de upgrade
+  antigo. `MainWindow.xaml.cs` só decide **quando** abrir a janela (mesmo
+  padrão já usado para `BugReportWindow`) e chama o novo
+  `MainViewModel.ConfirmPrivacyConsentAsync`, que reaproveita o mecanismo
+  de persistência já existente (`BuildSettingsSnapshot`/
+  `SaveSettingsRevisionAsync`) — nenhum segundo sistema de gravação foi
+  criado. A janela é exibida via `ShowDialog()` com `Owner = MainWindow`
+  logo após `InitializeAsync`, antes de qualquer outra interação (inclusive
+  antes de minimizar para a bandeja em `--startup`), bloqueando a janela
+  principal enquanto pendente; modo demo (`--demo`/`--demo-synthetic`)
+  nunca mostra a tela, para não travar smoke tests automatizados.
+- Nova seção **Privacidade** nas Configurações: card dedicado com os dois
+  toggles (`ShareAnonymousTelemetry`, já existente, e o novo
+  `ShareCrashReports`) e o mesmo resumo de "Coletamos"/"Não coletamos".
+  Alterar os toggles ali persiste imediatamente pelo `SettingsChanged` já
+  existente, mas nunca toca `PrivacyConsentVersion` nem reabre a tela
+  inicial — `BuildSettingsSnapshot` lê a versão do campo interno, não
+  recalculada pelos toggles.
+- Novas chaves de localização (`PrivacyConsent.*`, `Privacy.Collects.*`,
+  `Privacy.DoesNotCollect.*`, `Settings.Privacy.*`, `Settings.CrashReports.*`)
+  em `Strings.resx`/`Strings.pt-BR.resx`, cobertas pelo teste existente de
+  contrato de localização (agora também escaneando
+  `PrivacyConsentWindow.xaml`/`.xaml.cs`).
+- **Não implementado nesta etapa, por instrução explícita do usuário**:
+  Sentry, Cloudflare Worker, D1, fila local resiliente, transporte HTTP em
+  lote, e qualquer remoção/alteração do `FormSubmit` atual. Nenhuma
+  operação remota foi realizada.
+- Validação: `dotnet build` Release sem avisos/erros; suíte completa foi de
+  411 para **430 testes aprovados** (19 novos cobrindo
+  `PrivacyConsentOutcomeBuilder` — as quatro combinações de aceite/recusa,
+  fechamento como recusa equivalente, preservação de outras configurações
+  — e a integração `MainViewModel` com um novo double
+  `FakeAppOptimizationService`/`RecordingTelemetryService`: decisão correta
+  nos quatro cenários, estado inicial dos checkboxes refletindo valores
+  antigos, persistência correta da versão de consentimento, nenhum evento
+  de telemetria disparado só por confirmar/recusar consentimento, e
+  configurações não relacionadas preservadas); `scripts\Verify-Safety.ps1`
+  aprovado.
+- Nenhum arquivo do site ou do instalador foi tocado nesta etapa; não houve
+  necessidade de revalidar `website/`.
