@@ -1,20 +1,26 @@
 import { validateBatch } from './validateEvent.js';
+import { validateBugReport } from './bugReports/validateSubmission.js';
+import { recentBugReports } from './bugReports/queries.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
 import { buildCorsHeaders, withCorsHeaders } from './cors.js';
 
-// FiveMCleaner anonymous telemetry + admin dashboard API Worker. Not
-// deployed yet -- see wrangler.toml and README.md. The .NET client does not
-// send to /telemetry yet either; this is scaffolding for a future increment.
+// FiveMCleaner anonymous telemetry + bug reports + admin dashboard API
+// Worker. See wrangler.toml and README.md for deployment status of each
+// route -- /telemetry is live; /bugs requires a redeploy plus the R2 bucket
+// to exist first.
 //
 // Routes:
-//   POST    /telemetry            -- ingest a batch of telemetry events (no auth; validated server-side)
-//   POST    /admin/login          -- { password } -> session cookie
-//   POST    /admin/logout         -- clears the session cookie
-//   GET     /api/stats/:name      -- one chart's data (requires a valid session)
-//   GET     /api/stats/:name.csv  -- same data as CSV (requires a valid session)
-//   OPTIONS *                     -- CORS preflight for the routes above
+//   POST    /telemetry             -- ingest a batch of telemetry events (no auth; validated server-side)
+//   POST    /bugs                  -- ingest one bug report + optional screenshot (no auth; validated server-side)
+//   POST    /admin/login           -- { password } -> session cookie
+//   POST    /admin/logout          -- clears the session cookie
+//   GET     /api/stats/:name       -- one chart's data (requires a valid session)
+//   GET     /api/stats/:name.csv   -- same data as CSV (requires a valid session)
+//   GET     /api/bugs              -- recent bug reports, newest first (requires a valid session)
+//   GET     /api/bugs/:id/attachment -- streams a report's screenshot from R2 (requires a valid session)
+//   OPTIONS *                      -- CORS preflight for the routes above
 //
 // The dashboard is served from a different origin than this Worker (a
 // Cloudflare Pages domain, or a different localhost port while testing
@@ -57,6 +63,10 @@ async function route(request, env, url) {
     return handleTelemetryIngest(request, env);
   }
 
+  if (request.method === 'POST' && url.pathname === '/bugs') {
+    return handleBugReportIngest(request, env);
+  }
+
   if (request.method === 'POST' && url.pathname === '/admin/login') {
     return createPasswordAuthProvider(env).login(request);
   }
@@ -67,6 +77,15 @@ async function route(request, env, url) {
 
   if (request.method === 'GET' && url.pathname.startsWith('/api/stats/')) {
     return handleStatsRequest(request, env, url);
+  }
+
+  if (request.method === 'GET' && url.pathname === '/api/bugs') {
+    return handleBugReportsList(request, env, url);
+  }
+
+  const attachmentMatch = url.pathname.match(/^\/api\/bugs\/(\d+)\/attachment$/);
+  if (request.method === 'GET' && attachmentMatch) {
+    return handleBugReportAttachment(request, env, Number(attachmentMatch[1]));
   }
 
   return new Response('Not found', { status: 404 });
@@ -178,5 +197,102 @@ async function handleStatsRequest(request, env, url) {
   return new Response(JSON.stringify(results), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleBugReportIngest(request, env) {
+  let payload;
+  try {
+    payload = await request.json();
+  } catch {
+    return new Response('Invalid JSON', { status: 400 });
+  }
+
+  const report = validateBugReport(payload);
+  if (report === null) {
+    return new Response('Bug report failed validation', { status: 400 });
+  }
+
+  let attachmentKey = null;
+  if (report.attachment) {
+    attachmentKey = `${report.reportId}/${report.attachment.fileName}`;
+    const bytes = Uint8Array.from(atob(report.attachment.contentBase64), (c) => c.charCodeAt(0));
+    await env.BUG_REPORT_ATTACHMENTS.put(attachmentKey, bytes, {
+      httpMetadata: { contentType: report.attachment.contentType },
+    });
+  }
+
+  await env.TELEMETRY_DB
+    .prepare(
+      `INSERT INTO bug_reports
+         (report_id, category, summary, description, app_version, profile,
+          technical_summary, attachment_key, environment, received_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      report.reportId,
+      report.category,
+      report.summary,
+      report.description,
+      report.appVersion,
+      report.profile,
+      report.technicalSummary,
+      attachmentKey,
+      report.environment,
+      new Date().toISOString(),
+    )
+    .run();
+
+  return new Response(JSON.stringify({ success: true }), {
+    status: 202,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleBugReportsList(request, env, url) {
+  const auth = await createPasswordAuthProvider(env).requireSession(request);
+  if (!auth.authorized) {
+    return auth.response;
+  }
+
+  const filters = {
+    environment: url.searchParams.get('environment') || undefined,
+    category: url.searchParams.get('category') || undefined,
+    from: url.searchParams.get('from') || undefined,
+    to: url.searchParams.get('to') || undefined,
+  };
+  const limit = Number(url.searchParams.get('limit')) || undefined;
+
+  const { sql, params } = recentBugReports(filters, limit);
+  const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
+
+  return new Response(JSON.stringify(results), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleBugReportAttachment(request, env, bugReportRowId) {
+  const auth = await createPasswordAuthProvider(env).requireSession(request);
+  if (!auth.authorized) {
+    return auth.response;
+  }
+
+  const row = await env.TELEMETRY_DB
+    .prepare('SELECT attachment_key FROM bug_reports WHERE id = ?')
+    .bind(bugReportRowId)
+    .first();
+  if (!row?.attachment_key) {
+    return new Response('Not found', { status: 404 });
+  }
+
+  const object = await env.BUG_REPORT_ATTACHMENTS.get(row.attachment_key);
+  if (!object) {
+    return new Response('Not found', { status: 404 });
+  }
+
+  return new Response(object.body, {
+    status: 200,
+    headers: { 'Content-Type': object.httpMetadata?.contentType ?? 'image/png' },
   });
 }

@@ -2,13 +2,20 @@
 
 **Deployed** at `https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`.
 
-This is the Cloudflare Worker + D1 backend for the anonymous telemetry
-pipeline described in [`docs/telemetry.md`](../../docs/telemetry.md), plus
-the authenticated stats API the [dashboard](../dashboard/README.md) reads
-from. The .NET client does **not** send to it yet — telemetry is still sent
-through FormSubmit, unchanged; switching the shipped app's transport over is
-a separate, deliberate decision (see `docs/telemetry.md`), not implied by
-this Worker being live.
+This is the Cloudflare Worker + D1 (+ R2 for bug attachments) backend for the
+anonymous telemetry pipeline described in
+[`docs/telemetry.md`](../../docs/telemetry.md) and the bug-report pipeline
+described in [`docs/bug-reports.md`](../../docs/bug-reports.md), plus the
+authenticated stats/bugs API the [dashboard](../dashboard/README.md) reads
+from. FormSubmit has been fully removed from the .NET client for both
+telemetry and bug reports — this Worker is the only transport for both.
+
+The `/telemetry` route is live against the already-deployed Worker. The
+`/bugs` route and its R2 bucket (`fivemcleaner-bug-reports`) are
+code-complete and tested but **not yet deployed** — they require running
+`wrangler deploy` again and `wrangler r2 bucket create
+fivemcleaner-bug-reports` before the "Reportar um bug" flow actually works
+in the shipped app.
 
 ## What's here
 

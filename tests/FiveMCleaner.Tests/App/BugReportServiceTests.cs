@@ -1,29 +1,23 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
-using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using FiveMCleaner.App.Services;
 using Xunit;
 
 namespace FiveMCleaner.Tests.App;
 
-public sealed class BugReportServiceTests
+public sealed class CloudflareBugReportServiceTests
 {
-    private static readonly Uri TestEndpoint = new(
-        "https://formsubmit.co/ajax/test-endpoint-token",
-        UriKind.Absolute);
+    private static readonly Uri TestEndpoint = new("https://fivemcleaner-telemetry.example.workers.dev/bugs", UriKind.Absolute);
 
     [Fact]
-    public async Task SendAsync_UsesMultipartContractAndAcceptsConfirmedJsonWithoutNetwork()
+    public async Task SendAsync_PostsJsonWithTheAllowlistedFieldsAndTagsTheEnvironment()
     {
-        var handler = new RecordingHttpMessageHandler
-        {
-            StatusCode = HttpStatusCode.OK,
-            ResponseBody = "{\"success\":true,\"message\":\"received\"}"
-        };
+        var handler = new RecordingHttpMessageHandler { StatusCode = HttpStatusCode.Accepted };
         using var httpClient = new HttpClient(handler);
-        var service = CreateService(httpClient, TestEndpoint);
+        var service = CreateService(httpClient);
         var submission = ValidSubmission() with
         {
             TechnicalSummary = "Windows 11; perfil médio",
@@ -39,76 +33,55 @@ public sealed class BugReportServiceTests
         Assert.Equal(1, handler.CallCount);
         Assert.Equal(HttpMethod.Post, handler.Method);
         Assert.Equal(TestEndpoint, handler.RequestUri);
-        Assert.Contains("application/json", handler.Accept, StringComparison.Ordinal);
-        Assert.Contains("FiveMCleaner/1.0.0", handler.UserAgent, StringComparison.Ordinal);
-        Assert.Equal("https://github.com/marquezinii/FiveMCleaner", handler.Referrer);
-        Assert.Equal("https://github.com", handler.Origin);
-        Assert.StartsWith("multipart/form-data", handler.ContentType, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("_captcha", handler.RequestBody, StringComparison.Ordinal);
-        Assert.Contains("ID do relato", handler.RequestBody, StringComparison.Ordinal);
-        Assert.Contains("Descricao e passos", handler.RequestBody, StringComparison.Ordinal);
-        Assert.Contains("Versao do FiveMCleaner", handler.RequestBody, StringComparison.Ordinal);
-        Assert.Contains("Informacoes tecnicas autorizadas", handler.RequestBody, StringComparison.Ordinal);
-        Assert.DoesNotContain("=?utf-8?", handler.RequestBody, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains(submission.ReportId.ToString("D"), handler.RequestBody, StringComparison.Ordinal);
-        Assert.Contains("captura-test.png", handler.RequestBody, StringComparison.Ordinal);
-        Assert.Contains("image/png", handler.RequestBody, StringComparison.Ordinal);
-        Assert.DoesNotContain("name=email", handler.RequestBody, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("name=\"email\"", handler.RequestBody, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("name=name", handler.RequestBody, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("name=\"name\"", handler.RequestBody, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("application/json", handler.ContentType, StringComparison.OrdinalIgnoreCase);
+
+        using var body = JsonDocument.Parse(handler.RequestBody);
+        var root = body.RootElement;
+        Assert.Equal(submission.ReportId.ToString("D"), root.GetProperty("reportId").GetString());
+        Assert.Equal(submission.Category, root.GetProperty("category").GetString());
+        Assert.Equal(submission.Summary, root.GetProperty("summary").GetString());
+        Assert.Equal(submission.Description, root.GetProperty("description").GetString());
+        Assert.Equal("Production", root.GetProperty("environment").GetString());
+        Assert.Equal("captura-test.png", root.GetProperty("attachment").GetProperty("fileName").GetString());
+        Assert.False(root.TryGetProperty("email", out _));
+        Assert.False(root.TryGetProperty("name", out _));
     }
 
     [Fact]
-    public async Task SendAsync_MapsRateLimitWithoutRetryOrRealNetwork()
+    public async Task SendAsync_MapsRateLimitWithoutRetry()
     {
-        var handler = new RecordingHttpMessageHandler
-        {
-            StatusCode = HttpStatusCode.TooManyRequests,
-            ResponseBody = "{\"success\":false}"
-        };
+        var handler = new RecordingHttpMessageHandler { StatusCode = (HttpStatusCode)429 };
         using var httpClient = new HttpClient(handler);
-        var service = CreateService(httpClient, TestEndpoint);
+        var service = CreateService(httpClient);
 
         var result = await service.SendAsync(ValidSubmission(), CancellationToken.None);
 
         Assert.False(result.Accepted);
-        Assert.Contains("Aguarde", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Equal(1, handler.CallCount);
     }
 
     [Fact]
-    public async Task SendAsync_PropagatesOfflineFailureAfterSingleAttempt()
+    public async Task SendAsync_MapsTooLargeAttachment()
     {
-        var handler = new RecordingHttpMessageHandler
-        {
-            Exception = new HttpRequestException("offline")
-        };
+        var handler = new RecordingHttpMessageHandler { StatusCode = HttpStatusCode.RequestEntityTooLarge };
         using var httpClient = new HttpClient(handler);
-        var service = CreateService(httpClient, TestEndpoint);
-
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(() =>
-            service.SendAsync(ValidSubmission(), CancellationToken.None));
-
-        Assert.Equal("offline", exception.Message);
-        Assert.Equal(1, handler.CallCount);
-    }
-
-    [Fact]
-    public async Task SendAsync_TranslatesActivationRequirementToPortuguese()
-    {
-        var handler = new RecordingHttpMessageHandler
-        {
-            ResponseBody = "{\"success\":\"false\",\"message\":\"This form needs Activation. Activate Form.\"}"
-        };
-        using var httpClient = new HttpClient(handler);
-        var service = CreateService(httpClient, TestEndpoint);
+        var service = CreateService(httpClient);
 
         var result = await service.SendAsync(ValidSubmission(), CancellationToken.None);
 
         Assert.False(result.Accepted);
-        Assert.Contains("ativação", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("Activate Form", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task SendAsync_NetworkFailure_ReturnsAFailureResultInsteadOfThrowing()
+    {
+        var handler = new ThrowingHandler();
+        using var httpClient = new HttpClient(handler);
+        var service = CreateService(httpClient);
+
+        var result = await service.SendAsync(ValidSubmission(), CancellationToken.None);
+
+        Assert.False(result.Accepted);
     }
 
     [Fact]
@@ -116,85 +89,43 @@ public sealed class BugReportServiceTests
     {
         var handler = new RecordingHttpMessageHandler();
         using var httpClient = new HttpClient(handler);
-        var service = CreateService(httpClient, TestEndpoint);
+        var service = CreateService(httpClient);
         var invalid = ValidSubmission() with { Description = "   " };
 
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.SendAsync(invalid, CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentException>(() => service.SendAsync(invalid, CancellationToken.None));
 
         Assert.Equal(0, handler.CallCount);
     }
 
     [Fact]
-    public void FormatForClipboard_ContainsUsefulFieldsWithoutInventingIdentity()
+    public void Constructor_RejectsANonHttpsEndpoint()
     {
-        var submission = ValidSubmission();
+        using var httpClient = new HttpClient(new RecordingHttpMessageHandler());
 
-        var text = FormSubmitBugReportService.FormatForClipboard(submission);
-
-        Assert.Contains(submission.ReportId.ToString("D"), text, StringComparison.Ordinal);
-        Assert.Contains(submission.Category, text, StringComparison.Ordinal);
-        Assert.Contains(submission.Summary, text, StringComparison.Ordinal);
-        Assert.Contains(submission.Description, text, StringComparison.Ordinal);
-        Assert.DoesNotContain("E-mail:", text, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("Nome:", text, StringComparison.OrdinalIgnoreCase);
+        Assert.Throws<ArgumentException>(() =>
+            new CloudflareBugReportService(httpClient, new Uri("http://insecure.example.com"), "Production"));
     }
 
-    private static FormSubmitBugReportService CreateService(
-        HttpClient httpClient,
-        Uri endpoint)
-    {
-        var constructor = typeof(FormSubmitBugReportService).GetConstructor(
-            BindingFlags.Instance | BindingFlags.NonPublic,
-            binder: null,
-            [typeof(HttpClient), typeof(Uri), typeof(ILocalizationService)],
-            modifiers: null);
-        Assert.NotNull(constructor);
-        return Assert.IsType<FormSubmitBugReportService>(
-            constructor.Invoke([
-                httpClient,
-                endpoint,
-                new LocalizationService(CultureInfo.GetCultureInfo("pt-BR"))
-            ]));
-    }
+    private static CloudflareBugReportService CreateService(HttpClient httpClient) =>
+        new(httpClient, TestEndpoint, "Production", new LocalizationService(CultureInfo.GetCultureInfo("pt-BR")));
 
-    private static BugReportSubmission ValidSubmission()
+    private static BugReportSubmission ValidSubmission() => new()
     {
-        return new BugReportSubmission
-        {
-            ReportId = Guid.NewGuid(),
-            Category = "Falha na otimização",
-            Summary = "O preset não terminou",
-            Description = "Ao aplicar o perfil médio, a operação parou antes da conclusão.",
-            AppVersion = "1.0.0",
-            Profile = "Médio"
-        };
-    }
+        ReportId = Guid.NewGuid(),
+        Category = "Falha na otimização",
+        Summary = "O preset não terminou",
+        Description = "Ao aplicar o perfil médio, a operação parou antes da conclusão.",
+        AppVersion = "1.0.0",
+        Profile = "Médio"
+    };
 
     private sealed class RecordingHttpMessageHandler : HttpMessageHandler
     {
-        public HttpStatusCode StatusCode { get; init; } = HttpStatusCode.OK;
-
-        public string ResponseBody { get; init; } = "{\"success\":true}";
-
-        public Exception? Exception { get; init; }
-
+        public HttpStatusCode StatusCode { get; init; } = HttpStatusCode.Accepted;
         public int CallCount { get; private set; }
-
         public HttpMethod? Method { get; private set; }
-
         public Uri? RequestUri { get; private set; }
-
-        public string Accept { get; private set; } = string.Empty;
-
-        public string UserAgent { get; private set; } = string.Empty;
-
-        public string Referrer { get; private set; } = string.Empty;
-
-        public string Origin { get; private set; } = string.Empty;
-
         public string ContentType { get; private set; } = string.Empty;
-
         public string RequestBody { get; private set; } = string.Empty;
 
         protected override async Task<HttpResponseMessage> SendAsync(
@@ -204,28 +135,43 @@ public sealed class BugReportServiceTests
             CallCount++;
             Method = request.Method;
             RequestUri = request.RequestUri;
-            Accept = request.Headers.Accept.ToString();
-            UserAgent = request.Headers.UserAgent.ToString();
-            Referrer = request.Headers.Referrer?.ToString().TrimEnd('/') ?? string.Empty;
-            Origin = request.Headers.TryGetValues("Origin", out var origins)
-                ? origins.Single()
-                : string.Empty;
             ContentType = request.Content?.Headers.ContentType?.ToString() ?? string.Empty;
             if (request.Content is not null)
             {
-                var body = await request.Content.ReadAsByteArrayAsync(cancellationToken);
-                RequestBody = Encoding.UTF8.GetString(body);
+                RequestBody = Encoding.UTF8.GetString(await request.Content.ReadAsByteArrayAsync(cancellationToken));
             }
 
-            if (Exception is not null)
-            {
-                throw Exception;
-            }
-
-            return new HttpResponseMessage(StatusCode)
-            {
-                Content = new StringContent(ResponseBody, Encoding.UTF8, "application/json")
-            };
+            return new HttpResponseMessage(StatusCode) { Content = new StringContent("{}", Encoding.UTF8, "application/json") };
         }
+    }
+
+    private sealed class ThrowingHandler : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken) =>
+            throw new HttpRequestException("simulated network failure");
+    }
+}
+
+public sealed class DisabledBugReportServiceTests
+{
+    [Fact]
+    public async Task SendAsync_AlwaysReturnsAnHonestFailure()
+    {
+        var service = new DisabledBugReportService(new LocalizationService(CultureInfo.GetCultureInfo("pt-BR")));
+
+        var result = await service.SendAsync(new BugReportSubmission
+        {
+            ReportId = Guid.NewGuid(),
+            Category = "x",
+            Summary = "x",
+            Description = "x",
+            AppVersion = "1.0.0",
+            Profile = "Médio"
+        });
+
+        Assert.False(result.Accepted);
+        Assert.False(string.IsNullOrWhiteSpace(result.Message));
     }
 }

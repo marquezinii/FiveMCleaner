@@ -576,6 +576,14 @@
                             </Border>
                             <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">
                                 <StackPanel>
+                                    <TextBlock Text="{Binding [Settings.CheckForUpdates.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding [Settings.CheckForUpdates.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,13" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                    <Button Content="{Binding [Settings.CheckForUpdates.Button], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Click="CheckForUpdatesManually_Click" IsEnabled="{Binding CanCheckForUpdatesManually}" />
+                                    <TextBlock Text="{Binding ManualUpdateCheckMessage}" Margin="0,10,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" Visibility="{Binding ManualUpdateCheckMessage, Converter={StaticResource StringToVisibilityConverter}}" />
+                                </StackPanel>
+                            </Border>
+                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">
+                                <StackPanel>
                                     <TextBlock Text="{Binding [GtaVBenchmark.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding [GtaVBenchmark.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,13" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                     <Button Content="{Binding [GtaVBenchmark.RunButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Click="RunGtaVBenchmark_Click" IsEnabled="{Binding CanRunGtaVBenchmark}" />

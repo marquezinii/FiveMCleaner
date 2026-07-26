@@ -1,4 +1,4 @@
-import { buildStatsUrl, buildCsvUrl, requestJson } from './api.js';
+import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildBugAttachmentUrl, requestJson } from './api.js';
 import {
   toBarSeries,
   toCombinedBarSeries,
@@ -9,6 +9,7 @@ import {
   formatPercent,
   sumBy,
   toRecentFailureRow,
+  toBugReportRow,
 } from './charts.js';
 import { drawBarChart, drawLineChart } from './rendering.js';
 
@@ -49,6 +50,7 @@ async function main() {
   const filterForm = document.getElementById('filter-form');
   const recentFailuresBody = document.getElementById('recent-failures-body');
   const recentFailuresCsvLink = document.getElementById('csv-recent-failures');
+  const bugReportsBody = document.getElementById('bug-reports-body');
 
   function showLogin() {
     loginView.classList.remove('hidden');
@@ -134,16 +136,47 @@ async function main() {
     }
   }
 
+  function renderBugReports(rows) {
+    bugReportsBody.innerHTML = '';
+    if (!rows || rows.length === 0) {
+      bugReportsBody.innerHTML = '<tr><td colspan="7" class="empty-row">Sem dados ainda</td></tr>';
+      return;
+    }
+
+    for (const row of rows) {
+      const cells = toBugReportRow(row);
+      const tr = document.createElement('tr');
+      cells.forEach((value, index) => {
+        const td = document.createElement('td');
+        if (index === cells.length - 1 && row.attachment_key) {
+          const link = document.createElement('a');
+          link.href = buildBugAttachmentUrl(API_BASE, row.id);
+          link.target = '_blank';
+          link.rel = 'noopener noreferrer';
+          link.textContent = 'ver captura';
+          link.className = 'csv-link';
+          td.appendChild(link);
+        } else {
+          td.textContent = value;
+        }
+
+        tr.appendChild(td);
+      });
+      bugReportsBody.appendChild(tr);
+    }
+  }
+
   async function refreshAll() {
     const filters = currentFilters();
 
-    const [runsPerDay, successRate, averageTime, errorCategories, recentFailures, ...chartResults] =
+    const [runsPerDay, successRate, averageTime, errorCategories, recentFailures, bugReports, ...chartResults] =
       await Promise.all([
         fetchStat('runs-per-day', filters),
         fetchStat('success-rate', filters),
         fetchStat('average-time', filters),
         fetchStat('error-categories', filters),
         fetchStat('recent-failures', filters),
+        requestJson(buildBugsUrl(API_BASE, filters)),
         ...CHART_DEFINITIONS.map((definition) => fetchStat(definition.name, filters)),
       ]);
 
@@ -151,6 +184,8 @@ async function main() {
       showLogin();
       return;
     }
+
+    renderBugReports(bugReports.unauthorized || bugReports.error ? [] : bugReports.data);
 
     document.getElementById('tile-total-runs').textContent = sumBy(runsPerDay.data, 'runs');
     document.getElementById('tile-success-rate').textContent = formatPercent(

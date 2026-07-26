@@ -2,24 +2,25 @@
 
 **Deployed** at `https://fivemcleaner-dashboard.pages.dev`.
 
-Static admin dashboard for the telemetry collected by
+Static admin dashboard for the telemetry and bug reports collected by
 [`infra/cloudflare-worker`](../cloudflare-worker/README.md). Plain HTML/CSS/JS,
-no build step, no framework — served as-is by Cloudflare Pages. There is no
-real data to show yet since the .NET client does not send telemetry to the
-Worker either (still FormSubmit); the dashboard itself was verified
-end-to-end (login, real test event visible in every tile/chart, logout),
-just waiting for the client transport to be switched over in a future,
-separately-authorized step.
+no build step, no framework — served as-is by Cloudflare Pages. The .NET
+client sends telemetry to the Worker's `/telemetry` route; bug reports
+(`/bugs`) are code-complete but await a Worker redeploy + R2 bucket creation
+(see `infra/cloudflare-worker/README.md`).
 
 ## What's here
 
 - `index.html` — login screen + the dashboard itself (one page, toggled by
   whether a session cookie is currently valid), branded with the FiveMCleaner
-  logo, and organized into three sections: **Adoção** (usage/version/profile
-  charts), **Hardware** (CPU/GPU/RAM breakdowns), and **Diagnóstico de bugs**
+  logo, and organized into four sections: **Adoção** (usage/version/profile
+  charts), **Hardware** (CPU/GPU/RAM breakdowns), **Diagnóstico de bugs**
   (error categories, actions most associated with failures, errors by
   version, and a raw "últimos erros" table for spotting a fresh bug without
-  waiting for it to show up in an aggregate).
+  waiting for it to show up in an aggregate), and **Bugs reportados** (the
+  "Reportar um bug" submissions from `/api/bugs`, with a link to the
+  screenshot when one was attached, served from R2 through an authenticated
+  endpoint).
 - `assets/img/logo.png` — the app's own icon, reused as-is (same asset as
   `website/public-site/icon.png`).
 - `assets/api.js` — pure URL-building and response-shaping for the Worker's

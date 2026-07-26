@@ -112,3 +112,32 @@ export function toRecentFailureRow(row) {
     fallback(row.profile),
   ];
 }
+
+/**
+ * Truncates a long text field (e.g. a bug report summary) to a fixed length
+ * for compact table display, appending an ellipsis when it was cut.
+ */
+export function truncate(text, maxLength) {
+  if (!text) {
+    return '—';
+  }
+
+  return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text;
+}
+
+/**
+ * Maps one bug report row (from `/api/bugs`) into the exact column order
+ * the "Bugs reportados" table renders.
+ */
+export function toBugReportRow(row) {
+  const fallback = (value) => value ?? '—';
+  return [
+    formatTimestamp(row.received_at),
+    fallback(row.category),
+    truncate(row.summary, 60),
+    fallback(row.app_version),
+    fallback(row.profile),
+    fallback(row.environment),
+    row.attachment_key ? 'sim' : 'não',
+  ];
+}

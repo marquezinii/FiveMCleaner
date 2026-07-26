@@ -160,15 +160,16 @@ consentimento versionado ser confirmado (`PrivacyConsentEvaluator`); o
 contrato `AnonymousTelemetryEvent` não aceita payload livre: contém o nome
 allowlisted do evento, duração, versão, categoria de erro allowlisted em
 falha e, desde a versão 2 do consentimento, um perfil de hardware (CPU/GPU/
-RAM em faixas) e os IDs das ações aplicadas. A implementação ativa hoje
-(`FormSubmitAnonymousTelemetryService`) é best-effort e só transmite os
-quatro primeiros campos; `CloudflareTelemetryService.cs`
+RAM em faixas) e os IDs das ações aplicadas. O transporte ativo é
+`CloudflareTelemetryService.cs`
 (`LocalTelemetryQueue`/`CloudflareTelemetryTransport`/
-`QueuedCloudflareTelemetryService`) implementa o transporte completo para o
-Worker em `infra/cloudflare-worker/`, mas fica inativo até um endpoint ser
-configurado — os dois transportes nunca ficam ativos ao mesmo tempo.
-Qualquer erro de transporte é suprimido localmente para não alterar a
-execução nem os logs. Detalhes de privacidade: [telemetry.md](telemetry.md).
+`QueuedCloudflareTelemetryService`), que envia o evento completo para o
+Worker em `infra/cloudflare-worker/`. O FormSubmit foi removido do código —
+não existe mais um transporte alternativo. O relato de bug segue o mesmo
+padrão: `CloudflareBugReportService.cs` envia para a rota `/bugs` do Worker,
+com anexo opcional armazenado em R2. Qualquer erro de transporte é
+suprimido localmente para não alterar a execução nem os logs. Detalhes de
+privacidade: [telemetry.md](telemetry.md) e [bug-reports.md](bug-reports.md).
 
 ### Relatório de falhas e configuração centralizada
 

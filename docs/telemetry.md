@@ -34,12 +34,10 @@ stack traces, nomes de arquivos e caminhos locais nunca entram nesse contrato.
 Modelo de CPU/GPU e faixa de RAM são os mesmos dados já mostrados no
 diagnóstico local do app — categorias de hardware compartilhadas por muitas
 máquinas, nunca um identificador único (número de série, MAC, GUID de
-hardware). O transporte ativo hoje
-(`FormSubmitAnonymousTelemetryService`) continua enviando **somente** os
-quatro primeiros campos, exatamente como antes — os campos novos existem no
-evento em memória, mas só são de fato transmitidos pelo transporte
-Cloudflare (`CloudflareTelemetryService.cs`), que fica inativo até o Worker
-ser implantado e configurado (ver abaixo).
+hardware). O transporte é o Worker Cloudflare
+(`CloudflareTelemetryService.cs`), que transmite todos os campos da tabela
+acima. O FormSubmit foi removido por completo do app: não existe mais
+código nem configuração que envie telemetria de uso para ele.
 
 ## Dados que o aplicativo nunca envia nessa telemetria
 
@@ -60,14 +58,13 @@ sem crescer indefinidamente.
 
 ## Destino e metadados de transporte
 
-Hoje, a telemetria é enviada ao endpoint HTTPS do
-[FormSubmit](https://formsubmit.co/privacy.pdf), o mesmo provedor usado pelo
-formulário de bugs. O payload do FiveMCleaner não contém dados pessoais.
-Como em qualquer conexão HTTPS, o provedor e a infraestrutura de rede podem
-processar metadados de conexão, como endereço IP, conforme suas próprias
-políticas; isso não é controlado nem incluído como campo pelo aplicativo.
-Quando o Worker Cloudflare (abaixo) for implantado e configurado, ele passa
-a ser o único transporte — nunca os dois simultaneamente.
+A telemetria é enviada ao endpoint HTTPS do Worker Cloudflare (rota
+`/telemetry`, ver abaixo) — esse é o único transporte, o FormSubmit não é
+mais usado para nada relacionado a telemetria de uso. O payload do
+FiveMCleaner não contém dados pessoais. Como em qualquer conexão HTTPS, a
+infraestrutura de rede pode processar metadados de conexão, como endereço
+IP, conforme suas próprias políticas; isso não é controlado nem incluído
+como campo pelo aplicativo.
 
 Para relatar um problema com descrição ou imagem, use o formulário de bug
 separado e opt-in; suas regras estão em [Relatos de bug e privacidade](bug-reports.md).
@@ -128,25 +125,28 @@ validação server-side, schema D1 (incluindo uma tabela normalizada de ações
 aplicadas, para "função mais usada"), endpoints de estatística agregada
 (`/api/stats/*`) e autenticação própria protegendo esses endpoints —
 código-fonte e documentação completa em
-`infra/cloudflare-worker/README.md`. O cliente .NET ainda **não** envia
-dados para ele: a telemetria de uso continua sendo enviada pelo FormSubmit,
-sem alteração — `RemoteServicesOptions.TelemetryEndpoint` permanece `null`
-nos dois arquivos de configuração por ambiente, uma decisão deliberada e
-separada de "o Worker está no ar", já que trocar o transporte do app
-publicado é uma mudança de comportamento para usuários finais que merece
-sua própria confirmação explícita.
+`infra/cloudflare-worker/README.md`. O cliente .NET aponta
+`RemoteServicesOptions.TelemetryEndpoint` para a rota `/telemetry` desse
+Worker em ambos os arquivos de configuração por ambiente; o FormSubmit foi
+removido do código, não existe mais um caminho alternativo de telemetria.
+
+O Worker também recebe os relatos de bug (rota `/bugs`, ver
+[Relatos de bug e privacidade](bug-reports.md)), incluindo o anexo de
+captura de tela opcional, armazenado num bucket R2 (`BUG_REPORT_ATTACHMENTS`)
+e servido de volta ao painel por um endpoint autenticado.
 
 O painel administrativo está **implantado** em
 `https://fivemcleaner-dashboard.pages.dev` e consome esses endpoints para
 mostrar gráficos agregados — otimizações por dia, versões do Windows/app,
 funções mais usadas, hardware mais comum, tempo médio, taxa de sucesso e,
 para investigar bugs mais rápido, erros por categoria, ações mais
-associadas a falhas e um feed não agregado dos últimos erros. Nenhum dado
-individual de usuário é exibido nem poderia ser, já que a telemetria nunca
-carrega um identificador de máquina; o painel deixa isso explícito em vez
-de fingir uma contagem de "usuários únicos" que os dados não permitem
-calcular corretamente. Como não há dados reais ainda (o cliente não está
-conectado), o painel mostra "sem dados" até a decisão acima ser tomada.
+associadas a falhas, um feed não agregado dos últimos erros e uma aba
+**"Bugs reportados"** com os relatos recebidos pela rota `/bugs` (incluindo
+link para a captura de tela quando enviada). Nenhum dado individual de
+usuário é exibido nem poderia ser, já que a telemetria nunca carrega um
+identificador de máquina; o painel deixa isso explícito em vez de fingir
+uma contagem de "usuários únicos" que os dados não permitem calcular
+corretamente.
 
 A autenticação do painel foi uma decisão explícita do usuário: sem domínio
 próprio, sem Cloudflare Access, sem OAuth Google/GitHub — uma senha de

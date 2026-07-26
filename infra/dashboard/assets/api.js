@@ -17,6 +17,22 @@ export function buildCsvUrl(baseUrl, statName, filters = {}) {
   return url.toString();
 }
 
+/** Builds the URL for listing recent bug reports, with optional filters. */
+export function buildBugsUrl(baseUrl, filters = {}) {
+  const url = new URL('/api/bugs', baseUrl);
+  applyFilters(url, filters);
+  if (filters.category) {
+    url.searchParams.set('category', filters.category);
+  }
+
+  return url.toString();
+}
+
+/** Builds the URL for a bug report's screenshot attachment, by its row id. */
+export function buildBugAttachmentUrl(baseUrl, bugReportId) {
+  return new URL(`/api/bugs/${bugReportId}/attachment`, baseUrl).toString();
+}
+
 function applyFilters(url, filters) {
   if (filters.from) {
     url.searchParams.set('from', filters.from);

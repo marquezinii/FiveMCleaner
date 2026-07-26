@@ -11,6 +11,8 @@ import {
   sumBy,
   formatTimestamp,
   toRecentFailureRow,
+  truncate,
+  toBugReportRow,
 } from '../assets/charts.js';
 
 test('toBarSeries maps arbitrary label/value keys into a uniform shape', () => {
@@ -167,4 +169,57 @@ test('toRecentFailureRow substitutes a placeholder for missing optional fields',
   assert.equal(cells[5], '—');
   assert.equal(cells[6], '—');
   assert.equal(cells[7], '—');
+});
+
+test('truncate returns short text unchanged', () => {
+  assert.equal(truncate('short text', 60), 'short text');
+});
+
+test('truncate cuts long text and appends an ellipsis', () => {
+  const result = truncate('x'.repeat(100), 10);
+
+  assert.equal(result.length, 10);
+  assert.ok(result.endsWith('…'));
+});
+
+test('truncate renders a dash for empty or missing text', () => {
+  assert.equal(truncate('', 10), '—');
+  assert.equal(truncate(null, 10), '—');
+  assert.equal(truncate(undefined, 10), '—');
+});
+
+test('toBugReportRow maps a row into the bug report table\'s column order', () => {
+  const row = {
+    received_at: '2026-07-26T10:00:00.000Z',
+    category: 'Falha na otimização',
+    summary: 'O preset não terminou',
+    app_version: '1.0.4',
+    profile: 'Médio',
+    environment: 'Production',
+    attachment_key: '11111111-1111-1111-1111-111111111111/captura-x.png',
+  };
+
+  assert.deepEqual(toBugReportRow(row), [
+    '2026-07-26 10:00',
+    'Falha na otimização',
+    'O preset não terminou',
+    '1.0.4',
+    'Médio',
+    'Production',
+    'sim',
+  ]);
+});
+
+test('toBugReportRow shows "não" when there is no attachment', () => {
+  const row = {
+    received_at: '2026-07-26T10:00:00.000Z',
+    category: 'x',
+    summary: 'x',
+    app_version: '1.0.4',
+    profile: 'Médio',
+    environment: 'Production',
+    attachment_key: null,
+  };
+
+  assert.equal(toBugReportRow(row).at(-1), 'não');
 });

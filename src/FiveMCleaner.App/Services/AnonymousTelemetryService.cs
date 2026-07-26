@@ -1,9 +1,4 @@
-using System.Net;
-using System.Net.Http;
-using System.Net.Http.Headers;
 using System.IO;
-using System.Text;
-using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.App.Services;
 
@@ -19,10 +14,6 @@ namespace FiveMCleaner.App.Services;
 /// nomes de modelo já mostrados no diagnóstico local) e os identificadores
 /// técnicos de ação já listados na tela de consentimento. Continuam sem
 /// texto livre, caminhos ou qualquer identificador único de máquina.
-/// <see cref="FormSubmitAnonymousTelemetryService"/> (o transporte ativo
-/// hoje) ignora esses campos por completo — só
-/// <see cref="CloudflareTelemetryTransport"/> (inativo até o Worker ser
-/// implantado) os transmite.
 /// </remarks>
 public sealed record AnonymousTelemetryEvent(
     string EventName,
@@ -65,72 +56,13 @@ public sealed class DisabledAnonymousTelemetryService : IAnonymousTelemetryServi
 }
 
 /// <summary>
-/// Envia somente telemetria consentida para o mesmo endpoint HTTPS já usado
-/// pelo formulário de bugs. Falhas de rede nunca interferem na otimização.
+/// Maps an exception to one of the closed telemetry error categories.
+/// Deliberately independent of any specific transport — both the anonymous
+/// telemetry pipeline and bug reports use this same fixed allowlist so an
+/// exception's raw type/message never leaks into what gets sent.
 /// </summary>
-public sealed class FormSubmitAnonymousTelemetryService : IAnonymousTelemetryService
+public static class TelemetryErrorClassifier
 {
-    public const string Endpoint = FormSubmitBugReportService.Endpoint;
-    private const string ExecutionTimeFieldName = "Tempo de execucao (ms)";
-    private const string AppVersionFieldName = "Versao do FiveMCleaner";
-    private const string ErrorCategoryFieldName = "Categoria de erro";
-    private static readonly HttpClient SharedClient = CreateClient();
-    private readonly HttpClient httpClient;
-    private readonly Uri endpoint;
-    private volatile bool enabled;
-
-    public FormSubmitAnonymousTelemetryService()
-        : this(SharedClient, new Uri(Endpoint, UriKind.Absolute))
-    {
-    }
-
-    internal FormSubmitAnonymousTelemetryService(HttpClient httpClient, Uri endpoint)
-    {
-        this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        this.endpoint = ValidateEndpoint(endpoint);
-    }
-
-    public bool IsEnabled => enabled;
-
-    public void SetEnabled(bool value) => enabled = value;
-
-    public async Task TrackAsync(
-        AnonymousTelemetryEvent telemetryEvent,
-        CancellationToken cancellationToken = default)
-    {
-        ArgumentNullException.ThrowIfNull(telemetryEvent);
-        if (!enabled)
-        {
-            return;
-        }
-
-        ValidateEvent(telemetryEvent);
-        using var form = new MultipartFormDataContent();
-        AddField(form, "_subject", "[FiveMCleaner] Telemetria anônima");
-        AddField(form, "_template", "table");
-        AddField(form, "_captcha", "false");
-        AddField(form, "Tipo", telemetryEvent.EventName);
-        AddField(form, ExecutionTimeFieldName,
-            Math.Clamp((long)telemetryEvent.ExecutionTime.TotalMilliseconds, 0, 86_400_000).ToString(System.Globalization.CultureInfo.InvariantCulture));
-        AddField(form, AppVersionFieldName, telemetryEvent.AppVersion);
-        if (telemetryEvent.ErrorCategory is not null)
-        {
-            AddField(form, ErrorCategoryFieldName, telemetryEvent.ErrorCategory);
-        }
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint) { Content = form };
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
-        request.Headers.UserAgent.ParseAdd($"FiveMCleaner/{telemetryEvent.AppVersion}");
-        request.Headers.Referrer = new Uri(ProductIdentity.RepositoryUrl, UriKind.Absolute);
-        request.Headers.TryAddWithoutValidation("Origin", "https://github.com");
-
-        using var response = await httpClient.SendAsync(
-            request,
-            HttpCompletionOption.ResponseHeadersRead,
-            cancellationToken).ConfigureAwait(false);
-        _ = response.IsSuccessStatusCode;
-    }
-
     public static string ClassifyException(Exception exception)
     {
         ArgumentNullException.ThrowIfNull(exception);
@@ -144,52 +76,4 @@ public sealed class FormSubmitAnonymousTelemetryService : IAnonymousTelemetrySer
             _ => "unexpected"
         };
     }
-
-    private static void ValidateEvent(AnonymousTelemetryEvent telemetryEvent)
-    {
-        if (telemetryEvent.EventName is not ("optimization-completed" or "optimization-failed" or "optimization-cancelled"))
-        {
-            throw new ArgumentException("Evento de telemetria não permitido.", nameof(telemetryEvent));
-        }
-
-        if (string.IsNullOrWhiteSpace(telemetryEvent.AppVersion)
-            || telemetryEvent.AppVersion.Length > 32
-            || telemetryEvent.AppVersion.Any(character =>
-                !(char.IsAsciiLetterOrDigit(character) || character is '.' or '-')))
-        {
-            throw new ArgumentException("Versão de telemetria inválida.", nameof(telemetryEvent));
-        }
-
-        if (telemetryEvent.ErrorCategory is not null
-            && telemetryEvent.ErrorCategory is not ("cancelled" or "timeout" or "access-denied" or "io" or "invalid-data" or "unexpected"))
-        {
-            throw new ArgumentException("Categoria de erro de telemetria não permitida.", nameof(telemetryEvent));
-        }
-    }
-
-    private static Uri ValidateEndpoint(Uri value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-        if (value.Scheme != Uri.UriSchemeHttps
-            || !value.Host.Equals("formsubmit.co", StringComparison.OrdinalIgnoreCase)
-            || !value.AbsolutePath.StartsWith("/ajax/", StringComparison.Ordinal))
-        {
-            throw new ArgumentException("Endpoint de telemetria inválido.", nameof(value));
-        }
-
-        return value;
-    }
-
-    private static HttpClient CreateClient()
-    {
-        var handler = new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-        };
-        return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
-    }
-
-    private static void AddField(MultipartFormDataContent form, string name, string value) =>
-        form.Add(new StringContent(value, Encoding.UTF8), name);
 }

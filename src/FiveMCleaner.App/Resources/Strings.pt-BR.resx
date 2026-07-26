@@ -587,6 +587,11 @@
   <data name="Comparison.NoRegression" xml:space="preserve"><value>Nenhum sinal de piora foi detectado localmente após a otimização.</value></data>
   <data name="Comparison.RevertButton" xml:space="preserve"><value>Reverter esta otimização</value></data>
   <data name="Comparison.HardwareProfile" xml:space="preserve"><value>Perfil de hardware</value></data>
+  <data name="Settings.CheckForUpdates.Title" xml:space="preserve"><value>Procurar atualizações</value></data>
+  <data name="Settings.CheckForUpdates.Description" xml:space="preserve"><value>Verifique manualmente, agora mesmo, se há uma versão pública mais nova do FiveMCleaner disponível.</value></data>
+  <data name="Settings.CheckForUpdates.Button" xml:space="preserve"><value>Procurar atualizações</value></data>
+  <data name="Update.ManualCheck.UpToDate" xml:space="preserve"><value>Você já está na última versão publicada.</value></data>
+  <data name="Update.ManualCheck.Failed" xml:space="preserve"><value>Não foi possível verificar atualizações: {0}</value></data>
   <data name="GtaVBenchmark.Title" xml:space="preserve"><value>Benchmark oficial do GTA V</value></data>
   <data name="GtaVBenchmark.Description" xml:space="preserve"><value>Lança o GTA V standalone (nunca dentro do FiveM) com o parâmetro oficial -benchmark da Rockstar, roda 3 rodadas e mostra a mediana. O GTA V precisa estar fechado antes.</value></data>
   <data name="GtaVBenchmark.RunButton" xml:space="preserve"><value>Executar benchmark oficial</value></data>

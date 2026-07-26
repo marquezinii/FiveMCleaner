@@ -71,6 +71,8 @@ public sealed class MainViewModel : BindableBase
     private double updateDownloadPercent;
     private string updateBannerTitle = string.Empty;
     private string updateBannerDetail = string.Empty;
+    private bool isCheckingForUpdatesManually;
+    private string? manualUpdateCheckMessage;
     private long settingsRevision;
     private bool profileInitializedFromDiagnostic;
     private Stopwatch? operationStopwatch;
@@ -459,6 +461,26 @@ public sealed class MainViewModel : BindableBase
 
     public string UpdateReleaseNotesLabel => localization.GetString("Update.ReleaseNotes");
 
+    public bool IsCheckingForUpdatesManually
+    {
+        get => isCheckingForUpdatesManually;
+        private set
+        {
+            if (SetProperty(ref isCheckingForUpdatesManually, value))
+            {
+                OnPropertyChanged(nameof(CanCheckForUpdatesManually));
+            }
+        }
+    }
+
+    public bool CanCheckForUpdatesManually => !IsCheckingForUpdatesManually;
+
+    public string? ManualUpdateCheckMessage
+    {
+        get => manualUpdateCheckMessage;
+        private set => SetProperty(ref manualUpdateCheckMessage, value);
+    }
+
     public int SelectedActionCount => currentPlan?.Actions.Count ?? 0;
 
     public string ElevationLabel => localization.GetString(
@@ -613,6 +635,54 @@ public sealed class MainViewModel : BindableBase
         {
             // Falha de rede na inicialização não interrompe diagnóstico nem otimização.
             AddLog(localization.Format("Log.UpdateCheckFailed", exception.Message));
+        }
+    }
+
+    /// <summary>
+    /// Explicit "Procurar atualizações" entry point from Settings. Unlike
+    /// <see cref="CheckForUpdatesAsync"/> (silent, startup-only, no-ops once
+    /// an update was already found), this always performs a fresh check and
+    /// always reports an outcome -- either the existing update banner, or an
+    /// explicit "already on the latest version" message.
+    /// </summary>
+    public async Task CheckForUpdatesManuallyAsync()
+    {
+        if (releaseUpdateService is null || IsCheckingForUpdatesManually)
+        {
+            return;
+        }
+
+        IsCheckingForUpdatesManually = true;
+        ManualUpdateCheckMessage = null;
+
+        try
+        {
+            var assemblyVersion = Assembly.GetEntryAssembly()?.GetName().Version
+                ?? new Version(0, 0, 0);
+            var update = await releaseUpdateService.CheckForUpdateAsync(
+                StableSemanticVersion.FromVersion(assemblyVersion));
+
+            if (update is null)
+            {
+                ManualUpdateCheckMessage = localization.GetString("Update.ManualCheck.UpToDate");
+                return;
+            }
+
+            availableUpdate = update;
+            updatePresentationState = UpdatePresentationState.Available;
+            RefreshUpdatePresentation();
+            AddLog(localization.Format("Log.UpdateAvailable", update.Version.CoreVersion));
+            UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            AddLog(localization.Format("Log.UpdateCheckFailed", exception.Message));
+            ManualUpdateCheckMessage = localization.Format("Update.ManualCheck.Failed", exception.Message);
+        }
+        finally
+        {
+            IsCheckingForUpdatesManually = false;
         }
     }
 
@@ -797,7 +867,7 @@ public sealed class MainViewModel : BindableBase
         catch (Exception exception)
         {
             telemetryEventName = "optimization-failed";
-            telemetryErrorCategory = FormSubmitAnonymousTelemetryService.ClassifyException(exception);
+            telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
             ProgressStateLabel = localization.GetString("Status.SafeFailure");
             ProgressHeadline = localization.GetString("Status.CouldNotComplete");
             ProgressDetail = exception.Message;

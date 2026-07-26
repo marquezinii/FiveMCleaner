@@ -69,3 +69,29 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
 
 CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires_at
     ON admin_sessions (expires_at);
+
+-- Bug reports, replacing the previous FormSubmit-based flow. `attachment_key`
+-- is the R2 object key for the optional sanitized screenshot (never the
+-- image bytes themselves, which never touch D1) -- null when no screenshot
+-- was attached. No identity fields (name/e-mail) exist here, matching the
+-- opt-in, no-identity-requested design already documented in
+-- docs/bug-reports.md.
+CREATE TABLE IF NOT EXISTS bug_reports (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    report_id TEXT NOT NULL UNIQUE,
+    category TEXT NOT NULL,
+    summary TEXT NOT NULL,
+    description TEXT NOT NULL,
+    app_version TEXT NOT NULL,
+    profile TEXT NOT NULL,
+    technical_summary TEXT,
+    attachment_key TEXT,
+    environment TEXT NOT NULL,
+    received_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_bug_reports_received_at
+    ON bug_reports (received_at);
+
+CREATE INDEX IF NOT EXISTS idx_bug_reports_environment
+    ON bug_reports (environment);

@@ -1773,3 +1773,98 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   `scripts\Verify-Safety.ps1` aprovado.
 - Por instrução explícita do usuário, **sem push de desenvolvimento** nesta
   etapa — os commits ficam só locais até uma próxima sincronização.
+
+## Remoção definitiva do FormSubmit, relato de bug no Worker/R2, aba "Bugs reportados" e checagem manual de atualização (26/07/2026)
+
+- Trabalho local, **não publicado**; por instrução explícita do usuário,
+  **um único commit local** ao final, **sem push, sem deploy, sem PR**.
+- **1) Telemetria — FormSubmit removido de vez.**
+  `FormSubmitAnonymousTelemetryService` foi deletado por completo de
+  `AnonymousTelemetryService.cs` (a lógica de `ClassifyException` que ele
+  continha virou o novo `TelemetryErrorClassifier`, estático e independente
+  de transporte). `MainWindow.xaml.cs` não tem mais um fallback para
+  FormSubmit: se `RemoteServicesOptions.TelemetryEndpoint` não for uma URL
+  HTTPS válida, cai em `DisabledAnonymousTelemetryService` (telemetria
+  desligada, nunca um envio silencioso a um serviço diferente). Os dois
+  `appsettings.{Development,Production}.json` apontam
+  `telemetryEndpoint` para a rota `/telemetry` do Worker já publicado
+  (`https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry`)
+  — essa parte **já funciona de verdade**, sem depender de nenhum deploy
+  novo, pois o Worker com essa rota já estava no ar de uma sessão anterior.
+- **2) Relato de bug movido para o Worker, com anexo em R2.** Perguntado
+  explicitamente como tratar o anexo de captura de tela (D1 não é adequado
+  para blobs), o usuário escolheu **provisionar R2 agora também** em vez de
+  remover o anexo. Implementado:
+  - `FormSubmitBugReportService` removido; `CloudflareBugReportService.cs`
+    (novo) reaplica toda a validação client-side já existente (categoria,
+    resumo, descrição, versão, perfil, resumo técnico, assinatura PNG do
+    anexo) e envia JSON (anexo em `contentBase64`) para a rota `/bugs` do
+    Worker. `DisabledBugReportService` é o fallback quando
+    `BugReportEndpoint` não está configurado — mensagem clara de "não
+    configurado", nunca um envio silencioso a outro lugar.
+  - `RemoteServicesOptions.BugReportEndpoint` (novo campo) aponta para
+    `.../bugs` nos dois `appsettings.*.json`.
+  - Worker: `infra/cloudflare-worker/src/bugReports/validateSubmission.js`
+    (validação pura, espelhando as mesmas regras do lado .NET, incluindo
+    checagem de assinatura de bytes PNG — nunca confiar só na validação do
+    cliente) e `queries.js` (listagem paginada/filtrada por ambiente e
+    categoria para o painel). Tabela `bug_reports` nova em `schema.sql`.
+    Três rotas novas em `index.js`: `POST /bugs` (ingestão pública, grava
+    em D1 e no bucket R2 `BUG_REPORT_ATTACHMENTS`), `GET /api/bugs`
+    (listagem autenticada) e `GET /api/bugs/:id/attachment` (streaming
+    autenticado do anexo a partir do R2). `wrangler.toml` ganhou o binding
+    `[[r2_buckets]]` para `fivemcleaner-bug-reports`.
+  - **Decisão consciente e assumida**: a rota `/bugs` e o bucket R2 são
+    **código-completo e testado, mas não implantados** — isso exigiria
+    `wrangler deploy` e `wrangler r2 bucket create
+    fivemcleaner-bug-reports`, ações remotas que a instrução desta sessão
+    ("apenas um commit local") não autorizou. Até esse redeploy explícito
+    acontecer em uma sessão futura, o botão "Enviar relato" do app instalado
+    falha com uma mensagem clara em vez de continuar indo para o FormSubmit
+    removido.
+- **3) Painel administrativo — aba "Bugs reportados".** `infra/dashboard`:
+  `index.html` ganhou uma quarta seção com uma tabela (Quando, Categoria,
+  Resumo, Versão, Perfil, Ambiente, Captura); `assets/api.js` ganhou
+  `buildBugsUrl`/`buildBugAttachmentUrl`; `assets/charts.js` ganhou
+  `truncate`/`toBugReportRow` (resumo truncado em 60 caracteres, "sim"/"não"
+  para presença de anexo); `assets/app.js` busca `/api/bugs` em paralelo com
+  as outras estatísticas e renderiza a tabela, com link "ver captura"
+  (`target="_blank"`) quando há `attachment_key`. Sem esses dados reais até
+  o redeploy do item 2 acontecer, a tabela mostra "Sem dados ainda" como as
+  outras.
+- **4) "Procurar atualizações" manual em Configurações.** A checagem
+  automática existente (`MainViewModel.CheckForUpdatesAsync`) é silenciosa
+  e se auto-bloqueia (`return` antecipado) se já houver uma atualização
+  conhecida — não serve para um botão que o usuário clica e espera uma
+  resposta explícita sempre. Adicionado
+  `CheckForUpdatesManuallyAsync()`, um método irmão que:
+  - sempre dispara uma checagem nova contra `IReleaseUpdateService`
+    (mesmo que uma atualização já tenha sido detectada antes);
+  - se encontrar uma atualização, ativa o banner já existente
+    (`IsUpdateBannerVisible`) do jeito normal;
+  - se não encontrar, define `ManualUpdateCheckMessage` com o texto
+    localizado "Você já está na última versão publicada." — nunca fica em
+    silêncio;
+  - em falha de rede/transporte, define `ManualUpdateCheckMessage` com o
+    erro em vez de deixar a UI parada sem explicação;
+  - expõe `IsCheckingForUpdatesManually`/`CanCheckForUpdatesManually` para
+    desabilitar o botão durante a checagem em andamento.
+  Botão novo em `MainWindow.xaml` (aba Configurações, mesmo padrão visual
+  do botão de benchmark do GTA V: `SecondaryButtonStyle` + rótulo de status
+  abaixo), strings novas em `Strings.resx`/`Strings.pt-BR.resx`
+  (`Settings.CheckForUpdates.*`, `Update.ManualCheck.*`).
+- **Testes novos**: `TelemetryErrorClassifierTests`,
+  `DisabledAnonymousTelemetryServiceTests`, `CloudflareBugReportServiceTests`,
+  `DisabledBugReportServiceTests` (lado .NET); `MainViewModelUpdateCheckTests`
+  (5 testes cobrindo os cenários acima da checagem manual, com um
+  `FakeReleaseUpdateService` novo); `validateSubmission.test.js` (14 testes)
+  e `queries.test.js` (8 testes) no Worker; testes de `api.js`/`charts.js`
+  ampliados no painel para as novas funções de bug report.
+- Validação: `dotnet build` Release sem avisos/erros; suíte .NET completa
+  passou de 496 para **503 testes aprovados**; `scripts\Verify-Safety.ps1`
+  aprovado; `npm test` em `infra/cloudflare-worker` (104 testes) e
+  `infra/dashboard` (36 testes), ambos aprovados.
+- Por instrução explícita do usuário, **um único commit local** ao final
+  desta etapa, sem push, sem deploy e sem PR — a rota `/bugs` e o bucket R2
+  continuam pendentes de uma ativação remota futura e explicitamente
+  autorizada.

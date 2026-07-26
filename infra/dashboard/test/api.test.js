@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildStatsUrl, buildCsvUrl, requestJson } from '../assets/api.js';
+import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildBugAttachmentUrl, requestJson } from '../assets/api.js';
 
 const BASE = 'https://telemetry.example.workers.dev';
 
@@ -75,4 +75,19 @@ test('requestJson always sends credentials so the session cookie is included', a
   await requestJson('https://example.com', { method: 'GET' }, fakeFetch);
 
   assert.equal(capturedOptions.credentials, 'include');
+});
+
+test('buildBugsUrl builds the plain endpoint with no filters', () => {
+  assert.equal(buildBugsUrl(BASE), `${BASE}/api/bugs`);
+});
+
+test('buildBugsUrl applies environment and category filters', () => {
+  const url = new URL(buildBugsUrl(BASE, { environment: 'Production', category: 'Crash' }));
+
+  assert.equal(url.searchParams.get('environment'), 'Production');
+  assert.equal(url.searchParams.get('category'), 'Crash');
+});
+
+test('buildBugAttachmentUrl points at the numeric report id', () => {
+  assert.equal(buildBugAttachmentUrl(BASE, 42), `${BASE}/api/bugs/42/attachment`);
 });

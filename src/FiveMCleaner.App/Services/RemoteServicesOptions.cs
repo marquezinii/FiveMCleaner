@@ -17,14 +17,19 @@ public sealed record RemoteServicesOptions
     public string? SentryDsn { get; init; }
 
     /// <summary>
-    /// HTTPS endpoint of the anonymous telemetry Cloudflare Worker. Absent
-    /// or empty means the Worker has not been deployed/configured yet, in
-    /// which case telemetry keeps using
-    /// <see cref="FormSubmitAnonymousTelemetryService"/> exactly as before —
-    /// the two transports are mutually exclusive by construction, never
-    /// sending the same event to both.
+    /// HTTPS endpoint of the anonymous telemetry Cloudflare Worker. Absent,
+    /// empty, or non-HTTPS means telemetry safely sends nothing at all —
+    /// FormSubmit was removed as a transport entirely, there is no fallback.
     /// </summary>
     public string? TelemetryEndpoint { get; init; }
+
+    /// <summary>
+    /// HTTPS endpoint of the bug-report Cloudflare Worker route. Same
+    /// fail-safe rule as <see cref="TelemetryEndpoint"/>: absent, empty, or
+    /// non-HTTPS means the "Reportar um bug" flow reports a clear failure
+    /// instead of silently falling back to FormSubmit, which was removed.
+    /// </summary>
+    public string? BugReportEndpoint { get; init; }
 
     public required string Environment { get; init; }
 }

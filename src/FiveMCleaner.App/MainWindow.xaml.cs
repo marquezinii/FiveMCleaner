@@ -49,6 +49,10 @@ public partial class MainWindow : Window
             : new WindowsStartupRegistrationService();
         releaseUpdateService = demoMode ? null : new GitHubReleaseUpdateService();
         remoteServicesOptions = RemoteServicesOptionsLoader.Load(AppEnvironment.Resolve(), AppContext.BaseDirectory);
+        // Cloudflare is the sole telemetry transport (FormSubmit was
+        // removed entirely). If the configured endpoint is ever missing or
+        // malformed, telemetry safely does nothing rather than crash or
+        // silently fall back to a different destination.
         IAnonymousTelemetryService telemetryService;
         if (demoMode)
         {
@@ -56,9 +60,6 @@ public partial class MainWindow : Window
         }
         else if (TryCreateHttpsEndpoint(remoteServicesOptions.TelemetryEndpoint, out var telemetryEndpoint))
         {
-            // The Cloudflare Worker is configured: it becomes the sole
-            // telemetry transport, never alongside FormSubmit at the same
-            // time (see CloudflareTelemetryService.cs).
             queuedCloudflareTelemetry = new QueuedCloudflareTelemetryService(
                 new LocalTelemetryQueue(Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
@@ -70,7 +71,7 @@ public partial class MainWindow : Window
         }
         else
         {
-            telemetryService = new FormSubmitAnonymousTelemetryService();
+            telemetryService = DisabledAnonymousTelemetryService.Instance;
         }
 
         viewModel = new MainViewModel(
@@ -528,6 +529,8 @@ public partial class MainWindow : Window
 
     private async void RunGtaVBenchmark_Click(object sender, RoutedEventArgs e) => await viewModel.RunGtaVBenchmarkAsync();
 
+    private async void CheckForUpdatesManually_Click(object sender, RoutedEventArgs e) => await viewModel.CheckForUpdatesManuallyAsync();
+
     private async void RevertLastOptimization_Click(object sender, RoutedEventArgs e)
     {
         if (viewModel.CanRevertLastOptimization)
@@ -567,8 +570,12 @@ public partial class MainWindow : Window
 
     private void ReportBug_Click(object sender, RoutedEventArgs e)
     {
+        IBugReportService bugReportService = TryCreateHttpsEndpoint(remoteServicesOptions.BugReportEndpoint, out var bugReportEndpoint)
+            ? new CloudflareBugReportService(bugReportEndpoint, remoteServicesOptions.Environment)
+            : new DisabledBugReportService();
+
         var dialog = new BugReportWindow(
-            new FormSubmitBugReportService(),
+            bugReportService,
             viewModel.AppVersion,
             viewModel.SelectedProfileName,
             viewModel.EditionBadgeLabel)
