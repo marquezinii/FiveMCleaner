@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildBugAttachmentUrl, requestJson } from '../assets/api.js';
+import { buildStatsUrl, buildCsvUrl, buildBugsUrl, requestJson } from '../assets/api.js';
 
 const BASE = 'https://telemetry.example.workers.dev';
 
@@ -86,8 +86,4 @@ test('buildBugsUrl applies environment and category filters', () => {
 
   assert.equal(url.searchParams.get('environment'), 'Production');
   assert.equal(url.searchParams.get('category'), 'Crash');
-});
-
-test('buildBugAttachmentUrl points at the numeric report id', () => {
-  assert.equal(buildBugAttachmentUrl(BASE, 42), `${BASE}/api/bugs/42/attachment`);
 });

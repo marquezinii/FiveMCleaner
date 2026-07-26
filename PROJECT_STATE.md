@@ -1868,3 +1868,71 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   desta etapa, sem push, sem deploy e sem PR — a rota `/bugs` e o bucket R2
   continuam pendentes de uma ativação remota futura e explicitamente
   autorizada.
+
+## Push de desenvolvimento, deploy real do Worker e remoção do anexo/R2 do relato de bug (26/07/2026)
+
+- Nesta etapa o usuário autorizou explicitamente operações remotas: **push
+  de desenvolvimento** de todos os commits locais pendentes, **`wrangler
+  deploy`** do Worker e **`wrangler r2 bucket create`** para o anexo de
+  captura de tela do relato de bug.
+- **Push de desenvolvimento**: os 2 commits locais pendentes (a sessão
+  anterior de remoção do FormSubmit + esta) foram enviados para
+  `origin/dev/proxima-versao` — nunca `main`, sem PR, sem tag, como sempre.
+- **Bloqueio real do R2**: `wrangler r2 bucket create
+  fivemcleaner-bug-reports` falhou com `Please enable R2 through the
+  Cloudflare Dashboard [code: 10042]` — R2 exige uma ativação de produto na
+  conta (aceitar termos, possivelmente confirmar billing mesmo no free
+  tier) que só é feita pelo painel web da Cloudflare, não pela CLI/API.
+  Perguntado como prosseguir, o usuário decidiu **remover anexo/captura de
+  tela do relato de bug por completo**, em vez de esperar a ativação do R2.
+- **Relato de bug agora é só texto, sem R2**: removido de vez de todo o
+  projeto — `BugReportAttachment`/`BugReportImageProcessor.cs` (e seu teste)
+  deletados; `BugReportWindow.xaml`/`.xaml.cs` perderam a seção de anexo
+  (seletor de arquivo, sanitização de imagem, botões "Selecionar"/"Remover")
+  e ganharam dois campos novos, ambos opcionais: **e-mail** (validado por
+  regex simples, nunca obrigatório) e **trecho de log em texto puro**
+  (limitado a 100 KB, verificado tanto no app quanto de novo no Worker).
+  `BugReportSubmission.Attachment` virou `Email`/`LogText`.
+  `CloudflareBugReportService` não envia mais `attachment` no payload, envia
+  `email`/`logText`; a validação de assinatura PNG e o limite de 8 MB
+  desapareceram.
+- **Worker**: `validateSubmission.js` perdeu toda a validação de anexo
+  (assinatura PNG, nome de arquivo, base64) e ganhou validação de e-mail
+  (regex) e log (limite de bytes UTF-8). `index.js` perdeu
+  `handleBugReportAttachment` e a rota `GET /api/bugs/:id/attachment`, e o
+  `INSERT` em `handleBugReportIngest` não grava mais em R2 nem em
+  `attachment_key` — grava `email`/`log_text`. `queries.js` seleciona
+  `email`/`log_text` em vez de `attachment_key`. `wrangler.toml` não declara
+  mais o binding `[[r2_buckets]]`.
+- **Painel administrativo**: coluna "Captura" (com link "ver captura") saiu
+  da tabela "Bugs reportados"; entraram colunas "E-mail" e "Log" (esta
+  última só indica "sim"/"não", já que o texto completo do log não precisa
+  aparecer na tabela). `buildBugAttachmentUrl` removida de `api.js`.
+- **Migração de dados real, no D1 de produção** (`fivemcleaner-telemetry`,
+  banco já existente de sessões anteriores): a tabela `bug_reports` foi
+  criada remotamente (`CREATE TABLE IF NOT EXISTS`, ela ainda não existia de
+  fato no banco, apesar de estar no `schema.sql` desde a sessão anterior),
+  depois alterada com `ALTER TABLE ... ADD COLUMN email/log_text` e
+  `ALTER TABLE ... DROP COLUMN attachment_key` — tudo via `wrangler d1
+  execute --remote`, comandos individuais, sem perda de dados (a tabela
+  estava vazia antes desta sessão).
+- **Deploy real do Worker**: `wrangler deploy` (sem `--env`, o único
+  ambiente de fato usado) publicou a versão atual do Worker — agora **as
+  rotas `/telemetry`, `POST /bugs` e `GET /api/bugs` estão todas ao vivo em
+  produção** em
+  `https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`, sem
+  qualquer binding de R2. Validado com um envio sintético real via `curl`
+  contra `/bugs` (HTTP 202, `{"success":true}`), confirmado no D1 via
+  `wrangler d1 execute --remote` e removido logo em seguida (dado de teste,
+  não um relato real).
+- **O que isso significa para quem já usa o app hoje**: nada muda
+  automaticamente. Telemetria e relato de bug via Worker só passam a valer
+  para quem instalar a **próxima versão pública** do app — quem já tem uma
+  versão instalada continua rodando o código antigo (FormSubmit) até
+  atualizar. A infraestrutura (Worker, D1, rotas) já está pronta e ao vivo
+  agora; falta só a próxima versão pública ser lançada para o app
+  publicado de fato usar essa infraestrutura.
+- Validação: `dotnet build`/`dotnet test` Release (503 testes, sem
+  regressão); `npm test` em `infra/cloudflare-worker` (104 testes,
+  reescritos para o esquema sem anexo) e `infra/dashboard` (35 testes);
+  `scripts\Verify-Safety.ps1` aprovado.

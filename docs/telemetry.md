@@ -131,9 +131,8 @@ Worker em ambos os arquivos de configuração por ambiente; o FormSubmit foi
 removido do código, não existe mais um caminho alternativo de telemetria.
 
 O Worker também recebe os relatos de bug (rota `/bugs`, ver
-[Relatos de bug e privacidade](bug-reports.md)), incluindo o anexo de
-captura de tela opcional, armazenado num bucket R2 (`BUG_REPORT_ATTACHMENTS`)
-e servido de volta ao painel por um endpoint autenticado.
+[Relatos de bug e privacidade](bug-reports.md)) — somente texto, sem anexo
+de captura de tela e sem depender de R2, guardados só no D1.
 
 O painel administrativo está **implantado** em
 `https://fivemcleaner-dashboard.pages.dev` e consome esses endpoints para
@@ -141,12 +140,13 @@ mostrar gráficos agregados — otimizações por dia, versões do Windows/app,
 funções mais usadas, hardware mais comum, tempo médio, taxa de sucesso e,
 para investigar bugs mais rápido, erros por categoria, ações mais
 associadas a falhas, um feed não agregado dos últimos erros e uma aba
-**"Bugs reportados"** com os relatos recebidos pela rota `/bugs` (incluindo
-link para a captura de tela quando enviada). Nenhum dado individual de
-usuário é exibido nem poderia ser, já que a telemetria nunca carrega um
-identificador de máquina; o painel deixa isso explícito em vez de fingir
-uma contagem de "usuários únicos" que os dados não permitem calcular
-corretamente.
+**"Bugs reportados"** com os relatos recebidos pela rota `/bugs` (categoria,
+resumo, versão, perfil, ambiente, e-mail opcional e se um trecho de log foi
+enviado — sem captura de tela, esse formulário é só texto). Nenhum dado
+individual de usuário é exibido nem poderia ser, já que a telemetria nunca
+carrega um identificador de máquina; o painel deixa isso explícito em vez
+de fingir uma contagem de "usuários únicos" que os dados não permitem
+calcular corretamente.
 
 A autenticação do painel foi uma decisão explícita do usuário: sem domínio
 próprio, sem Cloudflare Access, sem OAuth Google/GitHub — uma senha de

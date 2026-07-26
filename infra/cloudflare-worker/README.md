@@ -2,20 +2,22 @@
 
 **Deployed** at `https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`.
 
-This is the Cloudflare Worker + D1 (+ R2 for bug attachments) backend for the
-anonymous telemetry pipeline described in
-[`docs/telemetry.md`](../../docs/telemetry.md) and the bug-report pipeline
-described in [`docs/bug-reports.md`](../../docs/bug-reports.md), plus the
-authenticated stats/bugs API the [dashboard](../dashboard/README.md) reads
-from. FormSubmit has been fully removed from the .NET client for both
-telemetry and bug reports — this Worker is the only transport for both.
+This is the Cloudflare Worker + D1 backend for the anonymous telemetry
+pipeline described in [`docs/telemetry.md`](../../docs/telemetry.md) and the
+bug-report pipeline described in
+[`docs/bug-reports.md`](../../docs/bug-reports.md), plus the authenticated
+stats/bugs API the [dashboard](../dashboard/README.md) reads from.
+FormSubmit has been fully removed from the .NET client for both telemetry
+and bug reports — this Worker is the only transport for both.
 
-The `/telemetry` route is live against the already-deployed Worker. The
-`/bugs` route and its R2 bucket (`fivemcleaner-bug-reports`) are
-code-complete and tested but **not yet deployed** — they require running
-`wrangler deploy` again and `wrangler r2 bucket create
-fivemcleaner-bug-reports` before the "Reportar um bug" flow actually works
-in the shipped app.
+Both `/telemetry` and `/bugs` are **live and deployed**. Bug reports are
+text-only — no attachment/screenshot support, no R2 dependency. That
+feature was dropped after R2 turned out to require an account-level
+activation in the Cloudflare Dashboard (accepting R2's terms, possibly
+confirming billing even on the free tier) that couldn't be done from this
+environment; rather than block on that, the report form stayed D1-only
+(category, summary, description, app version, profile, optional technical
+summary, optional email, optional plain-text log excerpt capped at 100 KB).
 
 ## What's here
 

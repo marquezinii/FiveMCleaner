@@ -8,18 +8,17 @@ import { buildCorsHeaders, withCorsHeaders } from './cors.js';
 
 // FiveMCleaner anonymous telemetry + bug reports + admin dashboard API
 // Worker. See wrangler.toml and README.md for deployment status of each
-// route -- /telemetry is live; /bugs requires a redeploy plus the R2 bucket
-// to exist first.
+// route. Bug reports are text-only -- no attachment/screenshot support, no
+// R2 dependency -- everything lives in D1.
 //
 // Routes:
 //   POST    /telemetry             -- ingest a batch of telemetry events (no auth; validated server-side)
-//   POST    /bugs                  -- ingest one bug report + optional screenshot (no auth; validated server-side)
+//   POST    /bugs                  -- ingest one bug report, text-only (no auth; validated server-side)
 //   POST    /admin/login           -- { password } -> session cookie
 //   POST    /admin/logout          -- clears the session cookie
 //   GET     /api/stats/:name       -- one chart's data (requires a valid session)
 //   GET     /api/stats/:name.csv   -- same data as CSV (requires a valid session)
 //   GET     /api/bugs              -- recent bug reports, newest first (requires a valid session)
-//   GET     /api/bugs/:id/attachment -- streams a report's screenshot from R2 (requires a valid session)
 //   OPTIONS *                      -- CORS preflight for the routes above
 //
 // The dashboard is served from a different origin than this Worker (a
@@ -81,11 +80,6 @@ async function route(request, env, url) {
 
   if (request.method === 'GET' && url.pathname === '/api/bugs') {
     return handleBugReportsList(request, env, url);
-  }
-
-  const attachmentMatch = url.pathname.match(/^\/api\/bugs\/(\d+)\/attachment$/);
-  if (request.method === 'GET' && attachmentMatch) {
-    return handleBugReportAttachment(request, env, Number(attachmentMatch[1]));
   }
 
   return new Response('Not found', { status: 404 });
@@ -213,21 +207,12 @@ async function handleBugReportIngest(request, env) {
     return new Response('Bug report failed validation', { status: 400 });
   }
 
-  let attachmentKey = null;
-  if (report.attachment) {
-    attachmentKey = `${report.reportId}/${report.attachment.fileName}`;
-    const bytes = Uint8Array.from(atob(report.attachment.contentBase64), (c) => c.charCodeAt(0));
-    await env.BUG_REPORT_ATTACHMENTS.put(attachmentKey, bytes, {
-      httpMetadata: { contentType: report.attachment.contentType },
-    });
-  }
-
   await env.TELEMETRY_DB
     .prepare(
       `INSERT INTO bug_reports
          (report_id, category, summary, description, app_version, profile,
-          technical_summary, attachment_key, environment, received_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          technical_summary, email, log_text, environment, received_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
       report.reportId,
@@ -237,7 +222,8 @@ async function handleBugReportIngest(request, env) {
       report.appVersion,
       report.profile,
       report.technicalSummary,
-      attachmentKey,
+      report.email,
+      report.logText,
       report.environment,
       new Date().toISOString(),
     )
@@ -269,30 +255,5 @@ async function handleBugReportsList(request, env, url) {
   return new Response(JSON.stringify(results), {
     status: 200,
     headers: { 'Content-Type': 'application/json' },
-  });
-}
-
-async function handleBugReportAttachment(request, env, bugReportRowId) {
-  const auth = await createPasswordAuthProvider(env).requireSession(request);
-  if (!auth.authorized) {
-    return auth.response;
-  }
-
-  const row = await env.TELEMETRY_DB
-    .prepare('SELECT attachment_key FROM bug_reports WHERE id = ?')
-    .bind(bugReportRowId)
-    .first();
-  if (!row?.attachment_key) {
-    return new Response('Not found', { status: 404 });
-  }
-
-  const object = await env.BUG_REPORT_ATTACHMENTS.get(row.attachment_key);
-  if (!object) {
-    return new Response('Not found', { status: 404 });
-  }
-
-  return new Response(object.body, {
-    status: 200,
-    headers: { 'Content-Type': object.httpMetadata?.contentType ?? 'image/png' },
   });
 }

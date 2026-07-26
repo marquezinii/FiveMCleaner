@@ -5,9 +5,9 @@
 Static admin dashboard for the telemetry and bug reports collected by
 [`infra/cloudflare-worker`](../cloudflare-worker/README.md). Plain HTML/CSS/JS,
 no build step, no framework — served as-is by Cloudflare Pages. The .NET
-client sends telemetry to the Worker's `/telemetry` route; bug reports
-(`/bugs`) are code-complete but await a Worker redeploy + R2 bucket creation
-(see `infra/cloudflare-worker/README.md`).
+client sends telemetry to the Worker's `/telemetry` route and bug reports to
+`/bugs`, both live and deployed. Bug reports are text-only (no
+attachment/screenshot, no R2) — see `infra/cloudflare-worker/README.md`.
 
 ## What's here
 
@@ -18,9 +18,9 @@ client sends telemetry to the Worker's `/telemetry` route; bug reports
   (error categories, actions most associated with failures, errors by
   version, and a raw "últimos erros" table for spotting a fresh bug without
   waiting for it to show up in an aggregate), and **Bugs reportados** (the
-  "Reportar um bug" submissions from `/api/bugs`, with a link to the
-  screenshot when one was attached, served from R2 through an authenticated
-  endpoint).
+  "Reportar um bug" submissions from `/api/bugs` — category, summary,
+  version, profile, environment, optional email, and whether a log excerpt
+  was included; no attachment/screenshot, that feature was dropped).
 - `assets/img/logo.png` — the app's own icon, reused as-is (same asset as
   `website/public-site/icon.png`).
 - `assets/api.js` — pure URL-building and response-shaping for the Worker's

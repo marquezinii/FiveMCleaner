@@ -21,10 +21,8 @@ public sealed class CloudflareBugReportServiceTests
         var submission = ValidSubmission() with
         {
             TechnicalSummary = "Windows 11; perfil médio",
-            Attachment = new BugReportAttachment(
-                "captura-test.png",
-                "image/png",
-                [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+            Email = "user@example.com",
+            LogText = "2026-07-26 crash log excerpt"
         };
 
         var result = await service.SendAsync(submission, CancellationToken.None);
@@ -42,9 +40,36 @@ public sealed class CloudflareBugReportServiceTests
         Assert.Equal(submission.Summary, root.GetProperty("summary").GetString());
         Assert.Equal(submission.Description, root.GetProperty("description").GetString());
         Assert.Equal("Production", root.GetProperty("environment").GetString());
-        Assert.Equal("captura-test.png", root.GetProperty("attachment").GetProperty("fileName").GetString());
-        Assert.False(root.TryGetProperty("email", out _));
+        Assert.Equal("user@example.com", root.GetProperty("email").GetString());
+        Assert.Equal("2026-07-26 crash log excerpt", root.GetProperty("logText").GetString());
+        Assert.False(root.TryGetProperty("attachment", out _));
         Assert.False(root.TryGetProperty("name", out _));
+    }
+
+    [Fact]
+    public async Task SendAsync_RejectsAnInvalidEmailBeforeTransport()
+    {
+        var handler = new RecordingHttpMessageHandler();
+        using var httpClient = new HttpClient(handler);
+        var service = CreateService(httpClient);
+        var invalid = ValidSubmission() with { Email = "not-an-email" };
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.SendAsync(invalid, CancellationToken.None));
+
+        Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task SendAsync_RejectsALogTextOverTheHundredKilobyteLimit()
+    {
+        var handler = new RecordingHttpMessageHandler();
+        using var httpClient = new HttpClient(handler);
+        var service = CreateService(httpClient);
+        var invalid = ValidSubmission() with { LogText = new string('a', 101 * 1024) };
+
+        await Assert.ThrowsAsync<ArgumentException>(() => service.SendAsync(invalid, CancellationToken.None));
+
+        Assert.Equal(0, handler.CallCount);
     }
 
     [Fact]
@@ -61,9 +86,9 @@ public sealed class CloudflareBugReportServiceTests
     }
 
     [Fact]
-    public async Task SendAsync_MapsTooLargeAttachment()
+    public async Task SendAsync_MapsAnyOtherNonSuccessStatusToAGenericHttpError()
     {
-        var handler = new RecordingHttpMessageHandler { StatusCode = HttpStatusCode.RequestEntityTooLarge };
+        var handler = new RecordingHttpMessageHandler { StatusCode = HttpStatusCode.InternalServerError };
         using var httpClient = new HttpClient(handler);
         var service = CreateService(httpClient);
 

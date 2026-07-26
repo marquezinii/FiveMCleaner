@@ -52,8 +52,9 @@ test('recentBugReports falls back to the default limit for an invalid value', ()
   assert.equal(params.at(-1), 50);
 });
 
-test('recentBugReports selects attachment_key so the dashboard can link to the screenshot', () => {
+test('recentBugReports selects email and log_text for the dashboard table', () => {
   const { sql } = recentBugReports();
 
-  assert.match(sql, /attachment_key/);
+  assert.match(sql, /\bemail\b/);
+  assert.match(sql, /log_text/);
 });

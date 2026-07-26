@@ -76,6 +76,7 @@ CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires_at
 -- was attached. No identity fields (name/e-mail) exist here, matching the
 -- opt-in, no-identity-requested design already documented in
 -- docs/bug-reports.md.
+-- Text-only: no attachment/screenshot support, no R2 dependency.
 CREATE TABLE IF NOT EXISTS bug_reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     report_id TEXT NOT NULL UNIQUE,
@@ -85,7 +86,8 @@ CREATE TABLE IF NOT EXISTS bug_reports (
     app_version TEXT NOT NULL,
     profile TEXT NOT NULL,
     technical_summary TEXT,
-    attachment_key TEXT,
+    email TEXT,
+    log_text TEXT,
     environment TEXT NOT NULL,
     received_at TEXT NOT NULL
 );

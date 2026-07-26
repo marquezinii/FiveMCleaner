@@ -1,10 +1,5 @@
 namespace FiveMCleaner.App.Services;
 
-public sealed record BugReportAttachment(
-    string FileName,
-    string ContentType,
-    byte[] Content);
-
 public sealed record BugReportSubmission
 {
     public required Guid ReportId { get; init; }
@@ -21,7 +16,14 @@ public sealed record BugReportSubmission
 
     public string? TechnicalSummary { get; init; }
 
-    public BugReportAttachment? Attachment { get; init; }
+    /// <summary>Optional, freely typed by the user -- never required.</summary>
+    public string? Email { get; init; }
+
+    /// <summary>
+    /// Optional plain-text log excerpt, capped at 100 KB (validated both by
+    /// the caller and again by <see cref="CloudflareBugReportService"/>).
+    /// </summary>
+    public string? LogText { get; init; }
 }
 
 public sealed record BugReportSendResult(bool Accepted, string Message);

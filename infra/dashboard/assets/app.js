@@ -1,4 +1,4 @@
-import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildBugAttachmentUrl, requestJson } from './api.js';
+import { buildStatsUrl, buildCsvUrl, buildBugsUrl, requestJson } from './api.js';
 import {
   toBarSeries,
   toCombinedBarSeries,
@@ -139,27 +139,16 @@ async function main() {
   function renderBugReports(rows) {
     bugReportsBody.innerHTML = '';
     if (!rows || rows.length === 0) {
-      bugReportsBody.innerHTML = '<tr><td colspan="7" class="empty-row">Sem dados ainda</td></tr>';
+      bugReportsBody.innerHTML = '<tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr>';
       return;
     }
 
     for (const row of rows) {
       const cells = toBugReportRow(row);
       const tr = document.createElement('tr');
-      cells.forEach((value, index) => {
+      cells.forEach((value) => {
         const td = document.createElement('td');
-        if (index === cells.length - 1 && row.attachment_key) {
-          const link = document.createElement('a');
-          link.href = buildBugAttachmentUrl(API_BASE, row.id);
-          link.target = '_blank';
-          link.rel = 'noopener noreferrer';
-          link.textContent = 'ver captura';
-          link.className = 'csv-link';
-          td.appendChild(link);
-        } else {
-          td.textContent = value;
-        }
-
+        td.textContent = value;
         tr.appendChild(td);
       });
       bugReportsBody.appendChild(tr);

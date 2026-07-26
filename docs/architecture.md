@@ -167,7 +167,7 @@ RAM em faixas) e os IDs das ações aplicadas. O transporte ativo é
 Worker em `infra/cloudflare-worker/`. O FormSubmit foi removido do código —
 não existe mais um transporte alternativo. O relato de bug segue o mesmo
 padrão: `CloudflareBugReportService.cs` envia para a rota `/bugs` do Worker,
-com anexo opcional armazenado em R2. Qualquer erro de transporte é
+somente texto (sem anexo/captura de tela, sem R2). Qualquer erro de transporte é
 suprimido localmente para não alterar a execução nem os logs. Detalhes de
 privacidade: [telemetry.md](telemetry.md) e [bug-reports.md](bug-reports.md).
 

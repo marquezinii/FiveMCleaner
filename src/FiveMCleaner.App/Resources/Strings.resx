@@ -101,10 +101,12 @@
   <data name="BugReport.Description.Label" xml:space="preserve"><value>Description, steps and expected result *</value></data>
   <data name="BugReport.Description.Tooltip" xml:space="preserve"><value>Between 20 and 8,000 characters</value></data>
   <data name="BugReport.Description.Help" xml:space="preserve"><value>Explain what you did, what appeared and what should have happened.</value></data>
-  <data name="BugReport.Attachment.Title" xml:space="preserve"><value>Optional image</value></data>
-  <data name="BugReport.Attachment.Help" xml:space="preserve"><value>PNG or JPG, up to 8 MB. Metadata will be removed.</value></data>
-  <data name="BugReport.Attachment.Select" xml:space="preserve"><value>Select</value></data>
-  <data name="BugReport.Attachment.Remove" xml:space="preserve"><value>Remove</value></data>
+  <data name="BugReport.Log.Label" xml:space="preserve"><value>Log excerpt (optional)</value></data>
+  <data name="BugReport.Log.Tooltip" xml:space="preserve"><value>Up to 100 KB of plain text</value></data>
+  <data name="BugReport.Log.Help" xml:space="preserve"><value>Paste a relevant log excerpt if you have one. Remove any personal data first — there is no attachment/screenshot support anymore.</value></data>
+  <data name="BugReport.Email.Label" xml:space="preserve"><value>Email (optional)</value></data>
+  <data name="BugReport.Email.Tooltip" xml:space="preserve"><value>Only if you want us to follow up with you</value></data>
+  <data name="BugReport.Email.Help" xml:space="preserve"><value>Never required. Only used if we need to ask a follow-up question about this report.</value></data>
   <data name="BugReport.Technical.Title" xml:space="preserve"><value>Include basic technical information</value></data>
   <data name="BugReport.Technical.Help" xml:space="preserve"><value>App version, Windows, detected edition and profile only. No name, user, hostname, paths or server.</value></data>
   <data name="BugReport.Copy" xml:space="preserve"><value>Copy report</value></data>
@@ -116,6 +118,8 @@
   <data name="BugReport.Validation.Category" xml:space="preserve"><value>Choose the issue type.</value></data>
   <data name="BugReport.Validation.Summary" xml:space="preserve"><value>The summary must be between 5 and 120 characters.</value></data>
   <data name="BugReport.Validation.Description" xml:space="preserve"><value>The description must be between 20 and 8,000 characters.</value></data>
+  <data name="BugReport.Validation.Email" xml:space="preserve"><value>Enter a valid email or leave it blank.</value></data>
+  <data name="BugReport.Validation.Log" xml:space="preserve"><value>The log excerpt exceeds the 100 KB limit.</value></data>
   <data name="Common.Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Common.Continue" xml:space="preserve"><value>Continue</value></data>
   <data name="Common.Retry" xml:space="preserve"><value>Try again</value></data>
@@ -197,10 +201,6 @@
   <data name="Dialog.CloseOptimization.Message" xml:space="preserve"><value>To close FiveMCleaner, the optimization will be safely cancelled after the current step. The app will remain open until that completes.</value></data>
   <data name="Dialog.CloseOptimization.Confirm" xml:space="preserve"><value>Cancel and close</value></data>
   <data name="Dialog.OptimizationInterruption.KeepWorking" xml:space="preserve"><value>Keep optimizing</value></data>
-  <data name="BugReport.Attachment.DialogTitle" xml:space="preserve"><value>Select an image of the issue</value></data>
-  <data name="BugReport.Attachment.Filter" xml:space="preserve"><value>PNG or JPEG images|*.png;*.jpg;*.jpeg</value></data>
-  <data name="BugReport.Attachment.Ready" xml:space="preserve"><value>Image ready and sanitized • {0}</value></data>
-  <data name="BugReport.Attachment.Sanitized" xml:space="preserve"><value>The image was re-encoded without EXIF data or its original file name.</value></data>
   <data name="BugReport.Copy.Success" xml:space="preserve"><value>Report copied. The image is not included in the text copy.</value></data>
   <data name="BugReport.Copy.Failed" xml:space="preserve"><value>Could not copy right now: {0}</value></data>
   <data name="BugReport.Send.Cancelled" xml:space="preserve"><value>Sending cancelled. The service may have received the report; we do not retry automatically.</value></data>
@@ -293,7 +293,6 @@
   <data name="Progress.RemainingFormat" xml:space="preserve"><value>About {0} remaining</value></data>
   <data name="Progress.Finishing" xml:space="preserve"><value>Finishing...</value></data>
   <data name="Progress.CompletedInFormat" xml:space="preserve"><value>Completed in {0}</value></data>
-  <data name="BugReport.Attachment.Invalid" xml:space="preserve"><value>Select a valid PNG or JPEG image up to 8 MB.</value></data>
   <data name="BugReport.Technical.Summary" xml:space="preserve"><value>{0}; edition: {1}; profile: {2}</value></data>
   <data name="BugReport.Clipboard.Title" xml:space="preserve"><value>BUG REPORT — FIVEMCLEANER</value></data>
   <data name="BugReport.Clipboard.Id" xml:space="preserve"><value>ID: {0}</value></data>
@@ -302,8 +301,9 @@
   <data name="BugReport.Clipboard.Version" xml:space="preserve"><value>Version: {0}</value></data>
   <data name="BugReport.Clipboard.Profile" xml:space="preserve"><value>Profile: {0}</value></data>
   <data name="BugReport.Clipboard.Technical" xml:space="preserve"><value>Technical information: {0}</value></data>
+  <data name="BugReport.Clipboard.Email" xml:space="preserve"><value>Email: {0}</value></data>
   <data name="BugReport.Clipboard.Description" xml:space="preserve"><value>Description and steps:</value></data>
-  <data name="BugReport.Send.ImageTooLarge" xml:space="preserve"><value>The image exceeded the delivery service limit.</value></data>
+  <data name="BugReport.Clipboard.Log" xml:space="preserve"><value>Log excerpt:</value></data>
   <data name="BugReport.Send.RateLimited" xml:space="preserve"><value>The service received too many reports. Wait a few minutes and try again.</value></data>
   <data name="BugReport.Send.ActivationRequired" xml:space="preserve"><value>The report channel is awaiting activation by the developer. Use Copy report in the meantime.</value></data>
   <data name="BugReport.Send.NotConfirmed" xml:space="preserve"><value>The delivery service did not confirm receipt. Copy the report and try again later.</value></data>
@@ -541,7 +541,6 @@
   <data name="History.State.RollbackFailed" xml:space="preserve"><value>Rollback error</value></data>
   <data name="History.State.FailedSafely" xml:space="preserve"><value>Failed safely</value></data>
   <data name="History.State.Interrupted" xml:space="preserve"><value>Interrupted</value></data>
-  <data name="BugReport.Service.ImageTooLarge" xml:space="preserve"><value>The image exceeded the delivery service limit.</value></data>
   <data name="BugReport.Service.RateLimited" xml:space="preserve"><value>The service received too many reports. Wait a few minutes and try again.</value></data>
   <data name="BugReport.Service.HttpError" xml:space="preserve"><value>The delivery service returned HTTP {0}.</value></data>
   <data name="BugReport.Service.ActivationRequired" xml:space="preserve"><value>The report channel is awaiting developer activation. Copy the report in the meantime.</value></data>

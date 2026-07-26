@@ -196,7 +196,8 @@ test('toBugReportRow maps a row into the bug report table\'s column order', () =
     app_version: '1.0.4',
     profile: 'Médio',
     environment: 'Production',
-    attachment_key: '11111111-1111-1111-1111-111111111111/captura-x.png',
+    email: 'user@example.com',
+    log_text: 'crash log excerpt',
   };
 
   assert.deepEqual(toBugReportRow(row), [
@@ -206,11 +207,12 @@ test('toBugReportRow maps a row into the bug report table\'s column order', () =
     '1.0.4',
     'Médio',
     'Production',
+    'user@example.com',
     'sim',
   ]);
 });
 
-test('toBugReportRow shows "não" when there is no attachment', () => {
+test('toBugReportRow shows a placeholder for missing email and "não" when there is no log', () => {
   const row = {
     received_at: '2026-07-26T10:00:00.000Z',
     category: 'x',
@@ -218,8 +220,11 @@ test('toBugReportRow shows "não" when there is no attachment', () => {
     app_version: '1.0.4',
     profile: 'Médio',
     environment: 'Production',
-    attachment_key: null,
+    email: null,
+    log_text: null,
   };
 
-  assert.equal(toBugReportRow(row).at(-1), 'não');
+  const cells = toBugReportRow(row);
+  assert.equal(cells[6], '—');
+  assert.equal(cells.at(-1), 'não');
 });

@@ -292,7 +292,7 @@ O diagnóstico permanece local por padrão. Relatórios exportados devem:
 - mostrar uma prévia do pacote antes de salvar ou compartilhar;
 - indicar que ETW e dumps podem conter dados sensíveis.
 
-O formulário de bug é uma exceção explícita ao processamento apenas local: depois do clique em **Enviar**, os campos autorizados e a imagem opcional são encaminhados ao Worker Cloudflare do projeto (rota `/bugs`), não mais ao FormSubmit. O app não envia esse conteúdo em segundo plano, não repete automaticamente uma falha e oferece cópia local do texto. Consulte [Relatos de bug e privacidade](bug-reports.md) antes de usar o canal.
+O formulário de bug é uma exceção explícita ao processamento apenas local: depois do clique em **Enviar**, os campos autorizados (somente texto — categoria, resumo, descrição, versão, perfil, e-mail e log opcionais) são encaminhados ao Worker Cloudflare do projeto (rota `/bugs`), não mais ao FormSubmit. Não há mais anexo/captura de tela nesse formulário. O app não envia esse conteúdo em segundo plano, não repete automaticamente uma falha e oferece cópia local do texto. Consulte [Relatos de bug e privacidade](bug-reports.md) antes de usar o canal.
 
 A telemetria técnica é uma exceção separada e opcional: ela vem habilitada por
 padrão em instalações novas, mas o usuário pode desativá-la a qualquer momento

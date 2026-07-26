@@ -127,7 +127,8 @@ export function truncate(text, maxLength) {
 
 /**
  * Maps one bug report row (from `/api/bugs`) into the exact column order
- * the "Bugs reportados" table renders.
+ * the "Bugs reportados" table renders. Text-only -- no attachment/screenshot
+ * column, since that feature (and its R2 dependency) was dropped.
  */
 export function toBugReportRow(row) {
   const fallback = (value) => value ?? '—';
@@ -138,6 +139,7 @@ export function toBugReportRow(row) {
     fallback(row.app_version),
     fallback(row.profile),
     fallback(row.environment),
-    row.attachment_key ? 'sim' : 'não',
+    fallback(row.email),
+    row.log_text ? 'sim' : 'não',
   ];
 }

@@ -2,8 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { validateBugReport } from '../../src/bugReports/validateSubmission.js';
 
-const PNG_HEADER_BASE64 = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0]).toString('base64');
-
 function validSubmission(overrides = {}) {
   return {
     reportId: '11111111-1111-1111-1111-111111111111',
@@ -13,30 +11,28 @@ function validSubmission(overrides = {}) {
     appVersion: '1.0.4',
     profile: 'Médio',
     technicalSummary: 'Windows 11; perfil médio',
+    email: null,
+    logText: null,
     environment: 'Production',
-    attachment: null,
     ...overrides,
   };
 }
 
-test('validateBugReport accepts a well-formed submission without an attachment', () => {
+test('validateBugReport accepts a well-formed submission with no email/log', () => {
   const result = validateBugReport(validSubmission());
 
   assert.ok(result);
   assert.equal(result.category, 'Falha na otimização');
-  assert.equal(result.attachment, null);
+  assert.equal(result.email, null);
+  assert.equal(result.logText, null);
 });
 
-test('validateBugReport accepts a submission with a valid PNG attachment', () => {
-  const result = validateBugReport(
-    validSubmission({
-      attachment: { fileName: 'captura-test.png', contentType: 'image/png', contentBase64: PNG_HEADER_BASE64 },
-    }),
-  );
+test('validateBugReport accepts a submission with a valid email and log excerpt', () => {
+  const result = validateBugReport(validSubmission({ email: 'user@example.com', logText: 'crash log excerpt' }));
 
   assert.ok(result);
-  assert.ok(result.attachment);
-  assert.equal(result.attachment.fileName, 'captura-test.png');
+  assert.equal(result.email, 'user@example.com');
+  assert.equal(result.logText, 'crash log excerpt');
 });
 
 test('validateBugReport trims summary and description', () => {
@@ -78,47 +74,21 @@ test('validateBugReport rejects a technical summary over the limit', () => {
   assert.equal(validateBugReport(validSubmission({ technicalSummary: 'x'.repeat(513) })), null);
 });
 
-test('validateBugReport rejects an attachment with the wrong content type', () => {
-  assert.equal(
-    validateBugReport(
-      validSubmission({
-        attachment: { fileName: 'captura-test.png', contentType: 'image/jpeg', contentBase64: PNG_HEADER_BASE64 },
-      }),
-    ),
-    null,
-  );
+test('validateBugReport rejects a malformed email', () => {
+  assert.equal(validateBugReport(validSubmission({ email: 'not-an-email' })), null);
+  assert.equal(validateBugReport(validSubmission({ email: 'x'.repeat(255) + '@example.com' })), null);
 });
 
-test('validateBugReport rejects an attachment whose filename does not match the sanitized pattern', () => {
-  assert.equal(
-    validateBugReport(
-      validSubmission({
-        attachment: { fileName: '../../etc/passwd.png', contentType: 'image/png', contentBase64: PNG_HEADER_BASE64 },
-      }),
-    ),
-    null,
-  );
-  assert.equal(
-    validateBugReport(
-      validSubmission({
-        attachment: { fileName: 'screenshot.png', contentType: 'image/png', contentBase64: PNG_HEADER_BASE64 },
-      }),
-    ),
-    null,
-  );
+test('validateBugReport accepts an empty-string email/log as "not provided"', () => {
+  const result = validateBugReport(validSubmission({ email: '', logText: '' }));
+
+  assert.ok(result);
+  assert.equal(result.email, null);
+  assert.equal(result.logText, null);
 });
 
-test('validateBugReport rejects an attachment whose bytes do not start with the PNG magic number', () => {
-  const notPng = Buffer.from('not a real png here').toString('base64');
-
-  assert.equal(
-    validateBugReport(
-      validSubmission({
-        attachment: { fileName: 'captura-test.png', contentType: 'image/png', contentBase64: notPng },
-      }),
-    ),
-    null,
-  );
+test('validateBugReport rejects a log excerpt over the 100 KB limit', () => {
+  assert.equal(validateBugReport(validSubmission({ logText: 'a'.repeat(101 * 1024) })), null);
 });
 
 test('validateBugReport rejects a payload that is not an object', () => {

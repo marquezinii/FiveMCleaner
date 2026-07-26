@@ -1,6 +1,8 @@
 // Pure, dependency-free validation for one bug report submission. Mirrors
 // FiveMCleaner.App.Services.CloudflareBugReportService's client-side rules --
 // the Worker never trusts the client alone, every field is re-checked here.
+//
+// No attachment/screenshot support: reports are text-only (D1 only, no R2).
 
 export const MAX_CATEGORY_LENGTH = 60;
 export const MAX_SUMMARY_LENGTH = 120;
@@ -10,11 +12,12 @@ export const MIN_DESCRIPTION_LENGTH = 20;
 export const MAX_APP_VERSION_LENGTH = 32;
 export const MAX_PROFILE_LENGTH = 32;
 export const MAX_TECHNICAL_SUMMARY_LENGTH = 512;
-export const MAX_ATTACHMENT_BYTES = 8 * 1024 * 1024;
+export const MAX_EMAIL_LENGTH = 254;
+export const MAX_LOG_TEXT_BYTES = 100 * 1024;
 
 export const ALLOWED_ENVIRONMENTS = new Set(['Development', 'Production']);
 
-const PNG_MAGIC_BYTES = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
 function isValidAppVersion(value) {
   return (
@@ -25,52 +28,8 @@ function isValidAppVersion(value) {
   );
 }
 
-function base64ByteLength(base64) {
-  const padding = (base64.match(/=+$/) || [''])[0].length;
-  return Math.floor((base64.length * 3) / 4) - padding;
-}
-
-function isValidAttachment(attachment) {
-  if (attachment === undefined || attachment === null) {
-    return true;
-  }
-
-  if (typeof attachment !== 'object') {
-    return false;
-  }
-
-  const { fileName, contentType, contentBase64 } = attachment;
-  if (contentType !== 'image/png') {
-    return false;
-  }
-
-  if (
-    typeof fileName !== 'string' ||
-    !fileName.startsWith('captura-') ||
-    !fileName.toLowerCase().endsWith('.png') ||
-    fileName.includes('/') ||
-    fileName.includes('\\')
-  ) {
-    return false;
-  }
-
-  if (typeof contentBase64 !== 'string' || contentBase64.length === 0) {
-    return false;
-  }
-
-  const byteLength = base64ByteLength(contentBase64);
-  if (byteLength < 8 || byteLength > MAX_ATTACHMENT_BYTES) {
-    return false;
-  }
-
-  let bytes;
-  try {
-    bytes = Uint8Array.from(atob(contentBase64.slice(0, 12)), (c) => c.charCodeAt(0));
-  } catch {
-    return false;
-  }
-
-  return PNG_MAGIC_BYTES.every((byte, index) => bytes[index] === byte);
+function utf8ByteLength(value) {
+  return new TextEncoder().encode(value).length;
 }
 
 /**
@@ -90,8 +49,9 @@ export function validateBugReport(payload) {
     appVersion,
     profile,
     technicalSummary,
+    email,
+    logText,
     environment,
-    attachment,
   } = payload;
 
   if (typeof reportId !== 'string' || reportId.length === 0 || reportId.length > 64) {
@@ -139,11 +99,25 @@ export function validateBugReport(payload) {
     return null;
   }
 
-  if (typeof environment !== 'string' || !ALLOWED_ENVIRONMENTS.has(environment)) {
+  if (
+    email !== undefined &&
+    email !== null &&
+    email !== '' &&
+    (typeof email !== 'string' || email.length > MAX_EMAIL_LENGTH || !EMAIL_PATTERN.test(email))
+  ) {
     return null;
   }
 
-  if (!isValidAttachment(attachment)) {
+  if (
+    logText !== undefined &&
+    logText !== null &&
+    logText !== '' &&
+    (typeof logText !== 'string' || utf8ByteLength(logText) > MAX_LOG_TEXT_BYTES)
+  ) {
+    return null;
+  }
+
+  if (typeof environment !== 'string' || !ALLOWED_ENVIRONMENTS.has(environment)) {
     return null;
   }
 
@@ -155,7 +129,8 @@ export function validateBugReport(payload) {
     appVersion,
     profile,
     technicalSummary: technicalSummary ?? null,
+    email: email || null,
+    logText: logText || null,
     environment,
-    attachment: attachment ?? null,
   };
 }

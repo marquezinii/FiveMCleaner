@@ -28,11 +28,6 @@ export function buildBugsUrl(baseUrl, filters = {}) {
   return url.toString();
 }
 
-/** Builds the URL for a bug report's screenshot attachment, by its row id. */
-export function buildBugAttachmentUrl(baseUrl, bugReportId) {
-  return new URL(`/api/bugs/${bugReportId}/attachment`, baseUrl).toString();
-}
-
 function applyFilters(url, filters) {
   if (filters.from) {
     url.searchParams.set('from', filters.from);

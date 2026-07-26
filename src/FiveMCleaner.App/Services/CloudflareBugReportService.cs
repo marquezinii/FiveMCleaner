@@ -6,16 +6,19 @@ using System.Text.Json;
 namespace FiveMCleaner.App.Services;
 
 /// <summary>
-/// Sends a bug report to the Cloudflare Worker's <c>/bugs</c> route (D1 for
-/// the report itself, R2 for the optional screenshot attachment), replacing
-/// <c>FormSubmitBugReportService</c> entirely. Validation mirrors what the
-/// old service enforced client-side; the Worker re-validates everything
-/// server-side regardless (see <c>infra/cloudflare-worker/src/bugReports/</c>).
+/// Sends a bug report to the Cloudflare Worker's <c>/bugs</c> route (D1 only
+/// -- there is no attachment/screenshot support and no R2 dependency),
+/// replacing <c>FormSubmitBugReportService</c> entirely. Validation mirrors
+/// what the old service enforced client-side; the Worker re-validates
+/// everything server-side regardless (see
+/// <c>infra/cloudflare-worker/src/bugReports/</c>).
 /// </summary>
 public sealed class CloudflareBugReportService : IBugReportService
 {
     private const int MaxCategoryLength = 60;
     private const int MaxTechnicalSummaryLength = 512;
+    private const int MaxEmailLength = 254;
+    private const int MaxLogTextBytes = 100 * 1024;
 
     private static readonly HttpClient SharedClient = CreateClient();
     private readonly HttpClient httpClient;
@@ -56,15 +59,9 @@ public sealed class CloudflareBugReportService : IBugReportService
             appVersion = submission.AppVersion,
             profile = submission.Profile,
             technicalSummary = submission.TechnicalSummary,
-            environment,
-            attachment = submission.Attachment is { } attachment
-                ? new
-                {
-                    fileName = attachment.FileName,
-                    contentType = attachment.ContentType,
-                    contentBase64 = Convert.ToBase64String(attachment.Content)
-                }
-                : null
+            email = submission.Email,
+            logText = submission.LogText,
+            environment
         };
 
         using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
@@ -89,11 +86,6 @@ public sealed class CloudflareBugReportService : IBugReportService
 
         using (response)
         {
-            if (response.StatusCode == HttpStatusCode.RequestEntityTooLarge)
-            {
-                return new BugReportSendResult(false, localization.GetString("BugReport.Service.ImageTooLarge"));
-            }
-
             if ((int)response.StatusCode == 429)
             {
                 return new BugReportSendResult(false, localization.GetString("BugReport.Service.RateLimited"));
@@ -155,22 +147,25 @@ public sealed class CloudflareBugReportService : IBugReportService
             throw new ArgumentException("As informações técnicas excedem o limite.", nameof(submission));
         }
 
-        if (submission.Attachment is { } attachment && !IsValidSanitizedAttachment(attachment))
+        if (submission.Email is { Length: > 0 } email
+            && (email.Length > MaxEmailLength || !LooksLikeEmail(email)))
         {
-            throw new ArgumentException("A imagem anexada não corresponde ao formato sanitizado.", nameof(submission));
+            throw new ArgumentException("O e-mail informado é inválido.", nameof(submission));
+        }
+
+        if (submission.LogText is { } logText
+            && System.Text.Encoding.UTF8.GetByteCount(logText) > MaxLogTextBytes)
+        {
+            throw new ArgumentException("O log excede o limite de 100 KB.", nameof(submission));
         }
     }
 
-    private static bool IsValidSanitizedAttachment(BugReportAttachment attachment)
-    {
-        return attachment.Content.Length is >= 8 and <= BugReportImageProcessor.MaximumAttachmentBytes
-            && attachment.ContentType.Equals("image/png", StringComparison.OrdinalIgnoreCase)
-            && System.IO.Path.GetFileName(attachment.FileName).Equals(attachment.FileName, StringComparison.Ordinal)
-            && attachment.FileName.StartsWith("captura-", StringComparison.Ordinal)
-            && attachment.FileName.EndsWith(".png", StringComparison.OrdinalIgnoreCase)
-            && attachment.Content.AsSpan(0, 8).SequenceEqual(
-                new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A });
-    }
+    private static bool LooksLikeEmail(string value) =>
+        System.Text.RegularExpressions.Regex.IsMatch(
+            value,
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+            System.Text.RegularExpressions.RegexOptions.None,
+            TimeSpan.FromMilliseconds(100));
 
     private static Uri ValidateEndpoint(Uri value)
     {

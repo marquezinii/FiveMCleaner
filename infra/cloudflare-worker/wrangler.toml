@@ -19,15 +19,12 @@
 ##   https://fivemcleaner-telemetry.felipemarquesini10.workers.dev
 ##
 ## The .NET client is fully wired to send both anonymous telemetry
-## (`POST /telemetry`, live and working since this Worker was first
-## deployed) and bug reports (`POST /bugs`, code-complete but NOT live yet --
-## see below) to this Worker. FormSubmit was removed entirely as a
-## transport for both; there is no fallback if this Worker is unreachable.
-##
-## `/bugs` requires a redeploy plus the R2 bucket below to exist before it
-## actually works -- neither has been done from this environment (no deploy
-## was authorized in the session that wrote this route; see README.md for
-## the exact commands to run before relying on bug reports in production).
+## (`POST /telemetry`) and bug reports (`POST /bugs`) to this Worker.
+## FormSubmit was removed entirely as a transport for both; there is no
+## fallback if this Worker is unreachable. Bug reports are text-only -- no
+## attachment/screenshot support, no R2 dependency (dropped after R2 turned
+## out to require an account-level activation step in the Cloudflare
+## Dashboard that couldn't be done from this environment; see README.md).
 ##
 ## Required secrets (already set on the deployed Worker via
 ## `wrangler secret put <NAME>`, NEVER written to this file or committed):
@@ -54,15 +51,6 @@ DASHBOARD_ORIGIN = "https://fivemcleaner-dashboard.pages.dev"
 binding = "TELEMETRY_DB"
 database_name = "fivemcleaner-telemetry"
 database_id = "fe276121-a71a-4ba4-ab62-81cccdf601c6"
-
-# NOT created yet -- `wrangler r2 bucket create fivemcleaner-bug-reports`
-# must run (with authorization) before this binding resolves to a real
-# bucket. Stores only the optional sanitized screenshot bytes for a bug
-# report; the report itself (text fields) always lives in D1's bug_reports
-# table, with `attachment_key` pointing at the matching R2 object.
-[[r2_buckets]]
-binding = "BUG_REPORT_ATTACHMENTS"
-bucket_name = "fivemcleaner-bug-reports"
 
 # Unused today (see note above) -- kept for a possible future need to
 # physically separate deployments instead of just tagging rows.

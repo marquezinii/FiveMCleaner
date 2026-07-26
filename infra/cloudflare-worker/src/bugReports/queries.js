@@ -38,7 +38,7 @@ export function recentBugReports({ environment, category, from, to } = {}, limit
 
   return {
     sql: `SELECT id, report_id, category, summary, description, app_version, profile,
-                 technical_summary, attachment_key, environment, received_at
+                 technical_summary, email, log_text, environment, received_at
           FROM bug_reports
           ${whereSql}
           ORDER BY received_at DESC

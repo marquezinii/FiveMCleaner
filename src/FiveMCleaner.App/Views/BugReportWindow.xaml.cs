@@ -19,7 +19,6 @@ public partial class BugReportWindow : Window
     private readonly string edition;
     private readonly ILocalizationService localization;
     private CancellationTokenSource? sendCancellation;
-    private BugReportAttachment? attachment;
     private string? category;
     private bool sending;
     private bool delivered;
@@ -53,46 +52,6 @@ public partial class BugReportWindow : Window
     private void Category_Checked(object sender, RoutedEventArgs e)
     {
         category = (sender as FrameworkElement)?.Tag as string;
-    }
-
-    private void SelectAttachment_Click(object sender, RoutedEventArgs e)
-    {
-        var dialog = new Microsoft.Win32.OpenFileDialog
-        {
-            Title = T("BugReport.Attachment.DialogTitle"),
-            Filter = T("BugReport.Attachment.Filter"),
-            Multiselect = false,
-            CheckFileExists = true
-        };
-        if (dialog.ShowDialog(this) != true)
-        {
-            return;
-        }
-
-        try
-        {
-            attachment = BugReportImageProcessor.LoadSanitizedImage(dialog.FileName);
-            AttachmentLabel.Text = F(
-                "BugReport.Attachment.Ready",
-                FormatBytes(attachment.Content.Length));
-            RemoveAttachmentButton.Visibility = Visibility.Visible;
-            ShowStatus(T("BugReport.Attachment.Sanitized"), success: true);
-        }
-        catch (Exception exception) when (exception is IOException
-            or NotSupportedException
-            or OverflowException)
-        {
-            attachment = null;
-            RemoveAttachmentButton.Visibility = Visibility.Collapsed;
-            ShowStatus(T("BugReport.Attachment.Invalid"), success: false);
-        }
-    }
-
-    private void RemoveAttachment_Click(object sender, RoutedEventArgs e)
-    {
-        attachment = null;
-        AttachmentLabel.Text = T("BugReport.Attachment.Help");
-        RemoveAttachmentButton.Visibility = Visibility.Collapsed;
     }
 
     private void Copy_Click(object sender, RoutedEventArgs e)
@@ -187,6 +146,22 @@ public partial class BugReportWindow : Window
             return false;
         }
 
+        var email = EmailTextBox.Text.Trim();
+        if (email.Length > 0 && !IsValidEmail(email))
+        {
+            ShowStatus(T("BugReport.Validation.Email"), success: false);
+            EmailTextBox.Focus();
+            return false;
+        }
+
+        var logText = LogTextBox.Text.Trim();
+        if (Encoding.UTF8.GetByteCount(logText) > MaxLogTextBytes)
+        {
+            ShowStatus(T("BugReport.Validation.Log"), success: false);
+            LogTextBox.Focus();
+            return false;
+        }
+
         submission = new BugReportSubmission
         {
             ReportId = Guid.NewGuid(),
@@ -198,10 +173,20 @@ public partial class BugReportWindow : Window
             TechnicalSummary = IncludeTechnicalInfoCheckBox.IsChecked == true
                 ? F("BugReport.Technical.Summary", RuntimeInformation.OSDescription, edition, profile)
                 : null,
-            Attachment = attachment
+            Email = email.Length > 0 ? email : null,
+            LogText = logText.Length > 0 ? logText : null
         };
         return true;
     }
+
+    private const int MaxLogTextBytes = 100 * 1024;
+
+    private static bool IsValidEmail(string value) =>
+        value.Length <= 254 && System.Text.RegularExpressions.Regex.IsMatch(
+            value,
+            @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
+            System.Text.RegularExpressions.RegexOptions.None,
+            TimeSpan.FromMilliseconds(100));
 
     private void SetFormEnabled(bool enabled)
     {
@@ -209,8 +194,8 @@ public partial class BugReportWindow : Window
         DescriptionTextBox.IsEnabled = enabled;
         CategoryPanel.IsEnabled = enabled;
         IncludeTechnicalInfoCheckBox.IsEnabled = enabled;
-        SelectAttachmentButton.IsEnabled = enabled;
-        RemoveAttachmentButton.IsEnabled = enabled;
+        LogTextBox.IsEnabled = enabled;
+        EmailTextBox.IsEnabled = enabled;
         CopyButton.IsEnabled = enabled;
     }
 
@@ -228,16 +213,6 @@ public partial class BugReportWindow : Window
         sendCancellation?.Cancel();
     }
 
-    private string FormatBytes(int bytes)
-    {
-        var value = bytes >= 1024 * 1024
-            ? bytes / 1024d / 1024d
-            : bytes / 1024d;
-        var format = bytes >= 1024 * 1024 ? "0.##" : "0.#";
-        var suffix = bytes >= 1024 * 1024 ? "MB" : "KB";
-        return $"{value.ToString(format, localization.CurrentCulture)} {suffix}";
-    }
-
     private string T(string key) => localization.GetString(key);
 
     private string F(string key, params object?[] arguments) =>
@@ -248,11 +223,6 @@ public partial class BugReportWindow : Window
         if (result.Accepted)
         {
             return T("BugReport.Send.Accepted");
-        }
-
-        if (result.Message.StartsWith("A imagem ultrapassou", StringComparison.Ordinal))
-        {
-            return T("BugReport.Send.ImageTooLarge");
         }
 
         if (result.Message.StartsWith("O serviço recebeu muitos", StringComparison.Ordinal))
@@ -287,9 +257,22 @@ public partial class BugReportWindow : Window
             builder.AppendLine(F("BugReport.Clipboard.Technical", submission.TechnicalSummary));
         }
 
+        if (!string.IsNullOrWhiteSpace(submission.Email))
+        {
+            builder.AppendLine(F("BugReport.Clipboard.Email", submission.Email));
+        }
+
         builder.AppendLine();
         builder.AppendLine(T("BugReport.Clipboard.Description"));
         builder.AppendLine(submission.Description.Trim());
+
+        if (!string.IsNullOrWhiteSpace(submission.LogText))
+        {
+            builder.AppendLine();
+            builder.AppendLine(T("BugReport.Clipboard.Log"));
+            builder.AppendLine(submission.LogText.Trim());
+        }
+
         return builder.ToString();
     }
 
