@@ -227,6 +227,26 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void ReleaseNotesLinkButton_UsesLinkButtonStyleInsteadOfTheDefaultButtonChrome()
+    {
+        // Regression guard: this button previously set Background/BorderThickness
+        // manually but kept the default Button ControlTemplate, so WPF still
+        // painted its default blue focus/hover chrome around it -- the same
+        // bug already fixed once for the "Reportar um bug" link. Using the
+        // shared LinkButtonStyle (a bare ContentPresenter template, no focus
+        // visual) is what actually removes it.
+        var root = FindRepositoryRoot();
+        var document = XDocument.Load(
+            Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"));
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var releaseNotesButton = Assert.Single(
+            document.Descendants(presentation + "Button"),
+            element => (string?)element.Attribute("Click") == "OpenReleaseNotes_Click");
+
+        Assert.Equal("{StaticResource LinkButtonStyle}", (string?)releaseNotesButton.Attribute("Style"));
+    }
+
+    [Fact]
     public void MainWindow_MaximizesToTheCurrentMonitorWorkArea()
     {
         var root = FindRepositoryRoot();

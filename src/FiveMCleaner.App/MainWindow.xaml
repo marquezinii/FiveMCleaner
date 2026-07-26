@@ -269,9 +269,7 @@
                                                 IsEnabled="{Binding CanDownloadUpdate}"
                                                 Click="DownloadUpdate_Click" />
                                         <Button Content="{Binding UpdateReleaseNotesLabel}"
-                                                Background="Transparent"
-                                                BorderThickness="0"
-                                                Foreground="{DynamicResource OrangeLightBrush}"
+                                                Style="{StaticResource LinkButtonStyle}"
                                                 FontSize="10.5"
                                                 Padding="4,7,4,0"
                                                 HorizontalAlignment="Center"

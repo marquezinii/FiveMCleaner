@@ -76,9 +76,29 @@ public sealed class TrayIconService : IDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(version);
         ThrowIfDisposed();
+        _ = ShowUpdateAvailableAsync(version);
+    }
 
+    private async Task ShowUpdateAvailableAsync(string version)
+    {
         var wasVisible = notifyIcon.Visible;
-        notifyIcon.Visible = true;
+        if (!wasVisible)
+        {
+            notifyIcon.Visible = true;
+
+            // Windows silently drops a balloon tip requested in the same
+            // tick an icon first becomes visible (a well-documented
+            // NotifyIcon/Shell_NotifyIcon quirk) — the tray host needs a
+            // moment to register the icon before it will display a balloon
+            // on it. Without this delay, the very first update notification
+            // after the icon appears could be lost.
+            await Task.Delay(TimeSpan.FromMilliseconds(300));
+            if (disposed)
+            {
+                return;
+            }
+        }
+
         notifyIcon.BalloonTipTitle = localization.GetString("Notification.UpdateAvailable.Title");
         notifyIcon.BalloonTipText = localization.Format("Notification.UpdateAvailable.Message", version);
         notifyIcon.BalloonTipIcon = Forms.ToolTipIcon.Info;

@@ -1705,3 +1705,71 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   486 para **488 testes aprovados**; `scripts\Verify-Safety.ps1` aprovado.
 - Push de desenvolvimento autorizado explicitamente pelo usuário nesta
   etapa.
+
+## Correções de UI, instância única e confiabilidade da notificação de atualização (26/07/2026)
+
+- Trabalho local, **não publicado**, e por instrução explícita do usuário
+  desta vez **sem push de desenvolvimento** ao final — fica só commitado
+  localmente.
+- **1) Botão "Ver detalhes" do banner de atualização**: usava
+  `Background="Transparent"`/`BorderThickness="0"` manuais mas mantinha o
+  `ControlTemplate` padrão do `Button`, então o WPF continuava desenhando o
+  retângulo azul de foco/hover ao redor dele — o mesmo bug já corrigido
+  antes para o link "Reportar um bug". Corrigido aplicando
+  `Style="{StaticResource LinkButtonStyle}"` (o mesmo estilo, com
+  `ControlTemplate` só de `ContentPresenter`, sem visual de foco). Teste de
+  regressão novo (`ReleaseNotesLinkButton_UsesLinkButtonStyleInsteadOf
+  TheDefaultButtonChrome`) garante que esse botão específico nunca volte a
+  usar o template padrão.
+- **2) Investigação de acúmulo de processos/ícones na bandeja**: confirmado
+  que o app **nunca teve controle de instância única** — qualquer novo
+  lançamento (clique duplo repetido, atalho de Desenvolvimento e instalado
+  rodando ao mesmo tempo, ou um processo anterior que não fechou direito)
+  cria um processo novo, cada um com seu próprio `NotifyIcon`, explicando os
+  "3 FiveMCleaner" vistos na bandeja. Adicionado `SingleInstanceGuard`
+  (`Mutex` nomeado, com o nome incluindo o ambiente —
+  `Local\FiveMCleaner.SingleInstance.Development`/`...Production`):
+  - Escopo deliberadamente **por ambiente, não global** — rodar a build de
+    Desenvolvimento e uma cópia instalada de Produção ao mesmo tempo
+    continua funcionando (fluxo já documentado em
+    `scripts/Start-DevelopmentApp.ps1`); só duplicar a *mesma* build é
+    bloqueado.
+  - `App.xaml.cs.OnStartup` tenta adquirir o mutex antes de criar
+    qualquer janela; se já estiver em uso, mostra uma mensagem localizada
+    ("O FiveMCleaner já está em execução...") e encerra o processo
+    novo sem nunca criar `MainWindow` nem o ícone de bandeja.
+  - Modo demo (`--demo`/`--demo-synthetic`, usado por smoke tests
+    automatizados) fica deliberadamente isento — ferramentas de automação
+    podem legitimamente lançar essa build repetidamente.
+  - 7 testes novos cobrindo o nome do mutex por ambiente, aquisição pelo
+    primeiro chamador, bloqueio real de um segundo chamador (usando uma
+    thread nativa separada para reproduzir a semântica real de
+    reentrância por thread do Windows, já que duas aquisições na mesma
+    thread de teste "sucederiam" trivialmente sem provar nada), liberação
+    após `Dispose` e `Dispose` seguro mesmo sem nunca ter adquirido.
+- **3) Confiabilidade da notificação nativa de atualização**: revisão do
+  código encontrou um problema real e bem documentado do
+  `System.Windows.Forms.NotifyIcon`: chamar `ShowBalloonTip` no mesmo
+  instante em que `Visible` é definido como `true` pela primeira vez pode
+  ser silenciosamente ignorado pelo Windows (o host da bandeja precisa de
+  um instante para registrar o ícone antes de aceitar um balão nele) — o
+  que acontecia exatamente no caso descrito pelo usuário (app sem
+  "minimizar para a bandeja" ativo, ícone criado só para a notificação).
+  Corrigido: `TrayIconService.ShowUpdateAvailable` agora aguarda ~300ms
+  entre tornar o ícone visível e efetivamente chamar `ShowBalloonTip`
+  quando o ícone não estava visível antes; quando já estava visível
+  (minimizado para a bandeja), a notificação continua imediata. O texto
+  da notificação (título + versão + "clique para abrir") já estava bom nas
+  duas línguas, sem necessidade de alteração de texto.
+  **Lacuna conhecida e assumida conscientemente**: `TrayIconService` não
+  tem cobertura de teste automatizado (nenhuma classe deste projeto tinha
+  antes) — `NotifyIcon` exige um shell/bandeja real do Windows para
+  funcionar de verdade, fora do alcance de `dotnet test`. A correção foi
+  validada por revisão de código contra um comportamento amplamente
+  documentado do Win32/WinForms, não por execução automatizada; recomenda-
+  se validação manual numa máquina Windows real antes de divulgar.
+- Validação: `dotnet build` Release sem avisos/erros; suíte completa foi de
+  488 para **496 testes aprovados**, estável em execuções repetidas;
+  `scripts\Verify-Safety.ps1` aprovado.
+- Por instrução explícita do usuário, **sem push de desenvolvimento** nesta
+  etapa — os commits ficam só locais até uma próxima sincronização.

@@ -9,6 +9,7 @@ namespace FiveMCleaner.App;
 public partial class App : System.Windows.Application
 {
     private static int isHandlingFatalError;
+    private SingleInstanceGuard? singleInstanceGuard;
 
     protected override void OnStartup(StartupEventArgs e)
     {
@@ -17,6 +18,28 @@ public partial class App : System.Windows.Application
         AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
         Exit += (_, _) => TryShutdownCrashReporting();
+
+        // Demo mode (used for automated smoke tests/screenshots) is
+        // intentionally exempt: it never persists settings or sends
+        // telemetry either, and tooling may legitimately launch it
+        // repeatedly in quick succession.
+        var isDemoMode = e.Args.Any(value =>
+            value.Equals("--demo", StringComparison.OrdinalIgnoreCase)
+            || value.Equals("--demo-synthetic", StringComparison.OrdinalIgnoreCase));
+
+        if (!isDemoMode)
+        {
+            singleInstanceGuard = new SingleInstanceGuard(AppEnvironment.Resolve());
+            if (!singleInstanceGuard.TryAcquire())
+            {
+                ShowAlreadyRunningMessage();
+                singleInstanceGuard.Dispose();
+                Shutdown(0);
+                return;
+            }
+
+            Exit += (_, _) => singleInstanceGuard.Dispose();
+        }
 
         try
         {
@@ -30,6 +53,22 @@ public partial class App : System.Windows.Application
             TryCaptureException(exception);
             ShowFatalError(exception);
             Shutdown(1);
+        }
+    }
+
+    private static void ShowAlreadyRunningMessage()
+    {
+        try
+        {
+            System.Windows.MessageBox.Show(
+                Services.LocalizationService.Current.GetString("Dialog.AlreadyRunning.Message"),
+                ProductIdentity.Name,
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+        }
+        catch
+        {
+            // Never let a dialog failure block shutting down the duplicate instance.
         }
     }
 
