@@ -121,25 +121,32 @@ DSN do Sentry, apenas com a tag `Environment` diferente.
 
 ### Cloudflare Worker/D1 e painel administrativo
 
-Um scaffold completo do Worker que receberia a telemetria de uso (não os
-relatórios de falha, que vão direto ao Sentry) existe em
-`infra/cloudflare-worker/`, com validação server-side, schema D1 (incluindo
-uma tabela normalizada de ações aplicadas, para "função mais usada"),
-endpoints de estatística agregada (`/api/stats/*`) e autenticação própria
-protegendo esses endpoints — documentado em seu próprio `README.md`. Ele
-**não está implantado** e o cliente .NET ainda **não** envia dados para
-ele: a telemetria de uso continua sendo enviada pelo FormSubmit, sem
-alteração, até uma etapa futura trocar o transporte
-(`CloudflareTelemetryService.cs` já existe no cliente, mas fica inativo
-enquanto `RemoteServicesOptions.TelemetryEndpoint` não for configurado).
+O Worker que recebe a telemetria de uso (não os relatórios de falha, que
+vão direto ao Sentry) está **implantado** em
+`https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`, com
+validação server-side, schema D1 (incluindo uma tabela normalizada de ações
+aplicadas, para "função mais usada"), endpoints de estatística agregada
+(`/api/stats/*`) e autenticação própria protegendo esses endpoints —
+código-fonte e documentação completa em
+`infra/cloudflare-worker/README.md`. O cliente .NET ainda **não** envia
+dados para ele: a telemetria de uso continua sendo enviada pelo FormSubmit,
+sem alteração — `RemoteServicesOptions.TelemetryEndpoint` permanece `null`
+nos dois arquivos de configuração por ambiente, uma decisão deliberada e
+separada de "o Worker está no ar", já que trocar o transporte do app
+publicado é uma mudança de comportamento para usuários finais que merece
+sua própria confirmação explícita.
 
-Um scaffold do painel (`infra/dashboard/`, também não implantado) consome
-esses endpoints para mostrar gráficos agregados — otimizações por dia,
-versões do Windows/app, funções mais usadas, hardware mais comum, tempo
-médio e taxa de sucesso. Nenhum dado individual de usuário é exibido nem
-poderia ser, já que a telemetria nunca carrega um identificador de máquina;
-o painel deixa isso explícito em vez de fingir uma contagem de "usuários
-únicos" que os dados não permitem calcular corretamente.
+O painel administrativo está **implantado** em
+`https://fivemcleaner-dashboard.pages.dev` e consome esses endpoints para
+mostrar gráficos agregados — otimizações por dia, versões do Windows/app,
+funções mais usadas, hardware mais comum, tempo médio, taxa de sucesso e,
+para investigar bugs mais rápido, erros por categoria, ações mais
+associadas a falhas e um feed não agregado dos últimos erros. Nenhum dado
+individual de usuário é exibido nem poderia ser, já que a telemetria nunca
+carrega um identificador de máquina; o painel deixa isso explícito em vez
+de fingir uma contagem de "usuários únicos" que os dados não permitem
+calcular corretamente. Como não há dados reais ainda (o cliente não está
+conectado), o painel mostra "sem dados" até a decisão acima ser tomada.
 
 A autenticação do painel foi uma decisão explícita do usuário: sem domínio
 próprio, sem Cloudflare Access, sem OAuth Google/GitHub — uma senha de

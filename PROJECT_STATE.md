@@ -1572,3 +1572,99 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   (sentry.io) — não foi reconstruído dentro do painel próprio, já que
   seria duplicar um produto que o Sentry já entrega nativamente assim que
   o DSN estiver configurado e enviando eventos reais.
+
+## Publicação real do Worker e do painel (Development/Production compartilhando um único deploy) (25-26/07/2026)
+
+- Publicação real autorizada explicitamente pelo usuário nesta etapa
+  ("conclua e publique de fato com deploy, deixe tudo funcional"). Antes de
+  qualquer comando remoto, o impacto de cada um foi explicado (schema no D1
+  real, deploy do Worker, deploy do Pages), conforme pedido.
+- **Correção pendente da etapa anterior**: `appsettings.Development.json`
+  já estava com `telemetryEndpoint: null` no repositório — o valor de teste
+  do passo 8 do guia de testes locais nunca chegou a ser commitado, então
+  não havia nada para reverter. Também foi removida uma pasta vazia
+  (`infra/cloudflare-worker/infra/`) que sobrou de um erro de `cd` numa
+  sessão anterior — sem arquivos, apenas diretórios soltos.
+- **Painel aprimorado**: logo do FiveMCleaner (login e cabeçalho, mesmo
+  ícone de `website/public-site/icon.png`), gráficos organizados em seções
+  (Adoção/Hardware/Diagnóstico de bugs), filtro de Ambiente (Produção/
+  Desenvolvimento/Todos — `environment=All` agora ignora o filtro de
+  ambiente na query em vez de comparar com um valor mágico), tile de
+  "Falhas no período" e uma tabela de "Últimos erros" não agregada.
+- **Três novas estatísticas no Worker**, pensadas especificamente para achar
+  a origem de bugs sem precisar esperar volume suficiente para aparecer nos
+  gráficos agregados: `error-categories` (erros por categoria, todas as
+  versões juntas), `top-actions-in-failures` (quais ações mais aparecem em
+  falhas especificamente) e `recent-failures` (feed cru dos últimos erros,
+  com hardware/versão/ambiente). 13 novos testes cobrindo essas queries e a
+  lógica pura nova do painel.
+- **Publicação real, passo a passo**:
+  1. Confirmado que o `wrangler` já estava autenticado nesta máquina na
+     conta real do usuário (`felipemarquesini10@gmail.com`).
+  2. Schema aplicado no D1 **remoto** (`--remote`): 4 tabelas criadas,
+     idempotente, sem dado prévio para perder (primeira migração).
+  3. A conta não tinha subdomínio `workers.dev` registrado ainda — como essa
+     escolha define a URL de todos os Workers futuros da conta, a decisão
+     foi devolvida ao usuário em vez de decidida automaticamente; ele
+     registrou `felipemarquesini10.workers.dev` pelo painel da Cloudflare.
+  4. Worker publicado: `https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`.
+  5. Secrets `ADMIN_PASSWORD_HASH` e `IP_HASH_SECRET` configurados via
+     `wrangler secret put` (nunca no repositório). A senha de administrador
+     foi gerada localmente (24 bytes aleatórios), hasheada e comunicada ao
+     usuário uma única vez pelo chat, com instrução explícita para guardá-la
+     — nunca ficou em nenhum arquivo do repositório nem em log persistente.
+  6. Painel publicado no Cloudflare Pages:
+     `https://fivemcleaner-dashboard.pages.dev` (projeto criado com
+     `wrangler pages project create`, branch de produção `production`).
+  7. `assets/app.js` do painel passou a apontar, por padrão, para a URL real
+     do Worker (antes usava `location.origin`, que aponta para a origem
+     errada já que painel e Worker não compartilham domínio).
+  8. `DASHBOARD_ORIGIN` do Worker atualizado para a URL real do painel;
+     Worker republicado.
+- **Dois bugs reais, encontrados só ao testar contra o deploy de verdade**
+  (nenhum teste unitário pegou nenhum dos dois, o que está registrado
+  honestamente no README do Worker):
+  1. `PBKDF2_ITERATIONS = 210_000` (recomendação OWASP genérica) excedia o
+     limite de 100.000 iterações que o runtime dos Workers (BoringSSL, não
+     o OpenSSL do Node) aceita para PBKDF2 — todo login lançava
+     `NotSupportedError`. Corrigido para 100.000 (ainda aceito pelo OWASP),
+     com teste de regressão novo garantindo que o padrão nunca ultrapasse
+     esse teto de novo. Hash de senha regenerado e secret atualizado.
+  2. O cookie de sessão usava `SameSite=Strict`, que nunca é enviado em
+     requisições cross-site — e painel (`*.pages.dev`) e Worker
+     (`*.workers.dev`) são domínios registráveis diferentes de verdade em
+     produção (diferente do teste local, onde eram só portas do mesmo
+     `localhost`, daí o guia anterior não ter pego esse problema). O login
+     em si funcionava (retornava sucesso), mas o cookie nunca voltava nas
+     chamadas seguintes, prendendo o painel na tela de login. Corrigido
+     para `SameSite=None` (exige `Secure`, que já estava presente).
+- **Validação end-to-end real, no navegador de verdade** (não simulada):
+  evento de teste enviado via `curl` para o Worker publicado, login feito
+  na UI real do painel em `fivemcleaner-dashboard.pages.dev`, confirmado
+  que os tiles e gráficos refletiram o evento (1 otimização, 100% de
+  sucesso, 42s, CPU `AMD Ryzen 5 5600X`). A linha de teste foi apagada do
+  banco real em seguida (`DELETE FROM telemetry_events`/
+  `telemetry_event_actions`) para não deixar dado fictício misturado com
+  dados reais futuros.
+- **Decisão deliberada, não tomada nesta etapa**: o cliente .NET continua
+  enviando telemetria pelo FormSubmit — `RemoteServicesOptions.
+  TelemetryEndpoint` permanece `null` nos dois arquivos de configuração.
+  Ligar o cliente ao Worker recém-publicado é uma mudança de comportamento
+  do app distribuído a usuários finais e foi tratada como uma decisão
+  separada, não implícita em "publicar a infraestrutura" — o usuário deve
+  confirmar explicitamente antes dessa troca.
+- **Simplificação de topologia**: as seções `env.development`/
+  `env.production` do `wrangler.toml` (Workers nomeados separados) ficaram
+  sem uso — um único Worker (ambiente padrão, implantado com `wrangler
+  deploy` sem `--env`) atende telemetria de ambos os ambientes, já que a
+  coluna `environment` de cada linha já faz essa distinção para o painel.
+  As seções foram mantidas, mas não usadas, para uma eventual necessidade
+  futura real de separação física.
+- Validação: `dotnet build`/`dotnet test` — 486 testes .NET inalterados;
+  Worker — 82 testes (`npm test`); painel — 28 testes (`npm test`). Total
+  de 596 testes automatizados. `scripts\Verify-Safety.ps1` aprovado.
+- Push de desenvolvimento autorizado explicitamente pelo usuário nesta
+  etapa: todos os commits locais acumulados desde a última sincronização
+  foram enviados para `origin/dev/proxima-versao` ao final desta tarefa —
+  ver `git log` para a lista completa; nenhuma alteração em `main`, tag ou
+  versão pública.

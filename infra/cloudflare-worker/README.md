@@ -1,24 +1,29 @@
-# FiveMCleaner telemetry + dashboard API Worker (scaffold — not deployed)
+# FiveMCleaner telemetry + dashboard API Worker
 
-This is the Cloudflare Worker + D1 scaffold for the anonymous telemetry
+**Deployed** at `https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`.
+
+This is the Cloudflare Worker + D1 backend for the anonymous telemetry
 pipeline described in [`docs/telemetry.md`](../../docs/telemetry.md), plus
 the authenticated stats API the [dashboard](../dashboard/README.md) reads
-from. It is **not deployed** and the .NET client does **not** send to it
-yet — telemetry is still sent through FormSubmit, unchanged. This directory
-exists so the Worker code, schema, auth, and validation can be reviewed and
-tested ahead of a future increment that switches the client's transport
-over.
+from. The .NET client does **not** send to it yet — telemetry is still sent
+through FormSubmit, unchanged; switching the shipped app's transport over is
+a separate, deliberate decision (see `docs/telemetry.md`), not implied by
+this Worker being live.
 
 ## What's here
 
-- `wrangler.toml` — Worker config with `Development`/`Production` environment
-  sections. Both currently bind the **same** D1 database (only one was
-  provisioned); rows are tagged with an `environment` column instead of using
-  two databases.
+- `wrangler.toml` — Worker config. A single deployed instance (the
+  top-level, unnamed environment — `wrangler deploy` with no `--env`)
+  handles both Development- and Production-tagged telemetry; the
+  `environment` column on each row is what separates them for the
+  dashboard's filters, not a second deployment. `env.development`/
+  `env.production` sections exist but are unused today — kept in case a
+  genuine need for physically separate deployments comes up later.
 - `schema.sql` — the D1 tables: `telemetry_events` (one row per optimization
   run, including the version-2-consent hardware profile), 
   `telemetry_event_actions` (one row per applied action ID, for "most used
   function"), `login_attempts` and `admin_sessions` (custom dashboard auth).
+  Applied to the real database already.
 - `src/validateEvent.js` — pure, dependency-free validation of one event or a
   batch. The Worker never trusts client-side validation alone; every field is
   re-checked against the same allowlist server-side.
@@ -50,10 +55,15 @@ URL), authentication is a small, self-contained system:
 
 - **Password**: never stored in code or in `wrangler.toml`. Run
   `npm run hash-admin-password` locally, which prompts for a password and
-  prints a self-contained `pbkdf2$<iterations>$<salt>$<hash>` string (PBKDF2-
-  SHA256, 210,000 iterations, via the Workers-native `crypto.subtle` — no
-  third-party crypto dependency). That string, and only that string, becomes
-  the `ADMIN_PASSWORD_HASH` Worker secret (`wrangler secret put
+  prints a self-contained `pbkdf2$<iterations>$<salt>$<hash>` string
+  (PBKDF2-SHA256 via the Workers-native `crypto.subtle` — no third-party
+  crypto dependency). **100,000 iterations**, not the OWASP-recommended
+  210,000: the Workers runtime (BoringSSL, not Node's OpenSSL) hard-caps
+  PBKDF2 at 100,000 and throws `NotSupportedError` above that — found only
+  once actually deployed, since Node itself has no such cap and the test
+  suite runs under Node. 100,000 remains an accepted OWASP baseline for
+  PBKDF2-SHA256. That hash string, and only that string, becomes the
+  `ADMIN_PASSWORD_HASH` Worker secret (`wrangler secret put
   ADMIN_PASSWORD_HASH`). The plaintext password is never written to disk,
   committed, or logged.
 - **Brute-force protection**: `login_attempts` tracks failed logins per
@@ -63,9 +73,14 @@ URL), authentication is a small, self-contained system:
   the window passes.
 - **Sessions**: server-side, revocable (`admin_sessions`, `src/auth/
   sessionStore.js`) — a random 256-bit session ID is the *only* thing stored
-  in the browser cookie (`HttpOnly`, `Secure`, `SameSite=Strict`), so logout
+  in the browser cookie (`HttpOnly`, `Secure`, `SameSite=None`), so logout
   or manually clearing the table actually invalidates it immediately, unlike
-  a stateless signed token that can only be waited out.
+  a stateless signed token that can only be waited out. `SameSite=None`
+  (not `Strict`/`Lax`) is required because the dashboard (`*.pages.dev`) and
+  this Worker (`*.workers.dev`) are genuinely different registrable
+  domains — a stricter policy silently never sends the cookie back on a
+  cross-site `fetch`, which is exactly what made the first deployment's
+  login appear to succeed but leave the dashboard stuck on the login screen.
 - **Swappable by design**: `src/auth/passwordAuthProvider.js` exposes exactly
   three functions — `login`, `logout`, `requireSession` — and `index.js` only
   ever calls those three. A future OAuth-based provider (Google/GitHub, or
@@ -74,37 +89,38 @@ URL), authentication is a small, self-contained system:
 
 **Known test gap**: the pure decision logic behind each of these
 (`crypto.js`, `bruteForceGuard.js`, `sessionStore.js`, `stats/queries.js`,
-`stats/csv.js`) is unit tested. The D1-touching glue in
+`stats/csv.js`, `cors.js`) is unit tested. The D1-touching glue in
 `passwordAuthProvider.js` and the routing in `index.js` are not covered by an
 automated test — that would require Miniflare (a simulated Workers/D1
-runtime), which was not set up in this environment. Review those two files
-manually, and validate them for real against `wrangler dev --local` before
-relying on them in production.
+runtime), which was not set up in this environment. Both were validated
+manually against the real deployment (see "Verified end-to-end" below); two
+real bugs (the PBKDF2 iteration cap and the `SameSite` cookie policy) were
+only caught that way, not by the unit tests, which is exactly why this gap
+is called out rather than assumed harmless.
 
-## What is intentionally not done yet
+## Verified end-to-end
 
-- **No deploy.** `npm run deploy:development` / `deploy:production` exist for
-  when deployment is explicitly authorized, but neither has been run from
-  this environment.
-- **No client wiring for the stats-producing pipeline.** The .NET app has
-  code ready for this transport (`CloudflareTelemetryService.cs`) but it
-  stays inactive until `TelemetryEndpoint` is configured post-deploy — see
-  `docs/telemetry.md`.
-- **No local D1 migration applied**, and no secrets have been set anywhere.
+Confirmed against the real, deployed Worker + dashboard: sent a test
+telemetry event via `curl`, logged in through the actual browser at
+`https://fivemcleaner-dashboard.pages.dev`, and saw the event reflected in
+the tiles and charts (then deleted that test row from the real database —
+no test data was left behind).
 
-## Applying the schema, setting secrets, and deploying (future step, requires authorization)
+## Deploying and rotating secrets
 
 ```bash
 npm install
-npm run db:migrate:local                      # local-only, safe to run anytime
+npm run db:migrate:local          # local-only, safe to run anytime
 
-npm run hash-admin-password                    # prints the ADMIN_PASSWORD_HASH value
-wrangler secret put ADMIN_PASSWORD_HASH --env development
-wrangler secret put ADMIN_PASSWORD_HASH --env production
-wrangler secret put IP_HASH_SECRET --env development   # any long random string
-wrangler secret put IP_HASH_SECRET --env production
+npm run hash-admin-password       # prints the ADMIN_PASSWORD_HASH value
+wrangler secret put ADMIN_PASSWORD_HASH
+wrangler secret put IP_HASH_SECRET   # any long random string
 
-wrangler d1 execute fivemcleaner-telemetry --env development --remote --file=./schema.sql   # touches the real database — ask first
-npm run deploy:development   # touches Cloudflare — ask first
-npm run deploy:production    # touches Cloudflare — ask first
+wrangler d1 execute fivemcleaner-telemetry --remote --file=./schema.sql   # touches the real database — ask first
+wrangler deploy   # touches Cloudflare — ask first
 ```
+
+The `env.development`/`env.production` deploy scripts in `package.json`
+(`deploy:development`/`deploy:production`) target the currently-unused
+named-environment sections mentioned above; the real deployment uses plain
+`wrangler deploy`/`npm run deploy` with no `--env`.

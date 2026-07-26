@@ -1,12 +1,15 @@
 # FiveMCleaner dashboard
 
+**Deployed** at `https://fivemcleaner-dashboard.pages.dev`.
+
 Static admin dashboard for the telemetry collected by
 [`infra/cloudflare-worker`](../cloudflare-worker/README.md). Plain HTML/CSS/JS,
 no build step, no framework — served as-is by Cloudflare Pages. There is no
 real data to show yet since the .NET client does not send telemetry to the
-Worker either (still FormSubmit); the dashboard is fully functional and
-tested, just waiting for the client transport to be switched over in a
-future step.
+Worker either (still FormSubmit); the dashboard itself was verified
+end-to-end (login, real test event visible in every tile/chart, logout),
+just waiting for the client transport to be switched over in a future,
+separately-authorized step.
 
 ## What's here
 
@@ -64,12 +67,15 @@ every "per day"/"in period" number is a count of *optimization runs*
 (events), which the UI and this README say plainly rather than mislabeling
 it as "usuários online" the way an early sketch of this dashboard did.
 
-## Deploying (future step, requires authorization)
+## Re-deploying
 
 ```bash
-npx wrangler pages deploy . --project-name=fivemcleaner-dashboard
+npx wrangler pages deploy . --project-name=fivemcleaner-dashboard --branch=production
 ```
 
-Point the Pages project's custom domain (e.g. `dashboard.fivemcleaner.com`)
-and the Worker's route at each other once both are deployed — neither step
-has been run from this environment.
+`assets/app.js` hardcodes the Worker's `workers.dev` URL as the default API
+base (no custom domain connects the two, so `location.origin` would point
+at the dashboard's own, wrong origin) — update that constant first if the
+Worker is ever redeployed under a different URL. No custom domain (e.g.
+`dashboard.fivemcleaner.com`) has been configured; ask before adding one, as
+it requires DNS changes to a real zone.
