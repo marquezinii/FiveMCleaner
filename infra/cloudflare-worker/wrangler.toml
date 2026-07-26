@@ -6,28 +6,34 @@
 ## /api/stats/* endpoints the dashboard (infra/dashboard/) reads from, and
 ## the custom admin login/logout used to protect them.
 ##
-## This Worker is NOT deployed and NOT wired to the .NET client yet -- the
-## client still sends telemetry through FormSubmit, per the current
-## increment. Deploying this requires explicit authorization; see
-## AI_RULES.md ("Operações remotas").
+## DEPLOYED: a single Worker instance (this top-level, unnamed environment)
+## handles both Development- and Production-tagged telemetry -- the
+## `environment` column on each row is what separates them for the
+## dashboard's filters, not a second deployed Worker. The `env.development`/
+## `env.production` sections below were an earlier, more elaborate design
+## (mirroring how Sentry environments work) that turned out to add no real
+## benefit here, since D1 already distinguishes rows by that column; they
+## are kept, unused, in case a genuine need for physically separate
+## deployments comes up later, but `wrangler deploy` (no --env) is what is
+## actually live at:
+##   https://fivemcleaner-telemetry.felipemarquesini10.workers.dev
 ##
-## The Development and Production environments below intentionally point at
-## the SAME D1 database (only one was provisioned) -- every row is tagged
-## with an `environment` column instead, so development traffic can still be
-## told apart from production traffic without needing a second database.
+## The .NET client does NOT send telemetry to this Worker yet -- it still
+## uses FormSubmit, unchanged. Switching the client's transport over is a
+## separate, deliberate decision (see docs/telemetry.md), not implied by
+## this Worker being deployed.
 ##
-## Required secrets (set with `wrangler secret put <NAME> --env <env>`,
-## NEVER written to this file or committed):
+## Required secrets (already set on the deployed Worker via
+## `wrangler secret put <NAME>`, NEVER written to this file or committed):
 ##   ADMIN_PASSWORD_HASH -- output of `npm run hash-admin-password`
-##   IP_HASH_SECRET      -- any long random string, used only to keep
+##   IP_HASH_SECRET      -- a long random string, used only to keep
 ##                          brute-force tracking from storing a raw IP
 ##
-## DASHBOARD_ORIGIN below is a plain, non-secret var (the exact origin the
-## dashboard is served from, e.g. "https://dashboard.fivemcleaner.com" once
-## deployed) -- it only allow-lists which origin gets CORS headers, so it is
-## safe to commit. Empty by default (no origin is allowed until set). For
-## local testing, override it per-machine in a git-ignored `.dev.vars` file
-## instead of editing this one -- see README.md.
+## DASHBOARD_ORIGIN below is a plain, non-secret var -- the exact origin the
+## dashboard is served from, so CORS headers are only ever sent back to that
+## one origin. Safe to commit (it is not a credential). For local testing,
+## override it per-machine in a git-ignored `.dev.vars` file instead of
+## editing this one -- see README.md.
 ##
 ## See README.md for the full setup walkthrough.
 
@@ -36,13 +42,15 @@ main = "src/index.js"
 compatibility_date = "2025-01-01"
 
 [vars]
-DASHBOARD_ORIGIN = ""
+DASHBOARD_ORIGIN = "https://fivemcleaner-dashboard.pages.dev"
 
 [[d1_databases]]
 binding = "TELEMETRY_DB"
 database_name = "fivemcleaner-telemetry"
 database_id = "fe276121-a71a-4ba4-ab62-81cccdf601c6"
 
+# Unused today (see note above) -- kept for a possible future need to
+# physically separate deployments instead of just tagging rows.
 [env.development]
 name = "fivemcleaner-telemetry-development"
 

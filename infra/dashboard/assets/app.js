@@ -12,11 +12,13 @@ import {
 } from './charts.js';
 import { drawBarChart, drawLineChart } from './rendering.js';
 
-// Same-origin by default: the dashboard and the Worker are expected to sit
-// behind the same Cloudflare Pages + Worker route once deployed. Override
-// via `?api=https://...` only for local testing against a `wrangler dev`
-// instance running on a different port.
-const API_BASE = new URLSearchParams(location.search).get('api') || location.origin;
+// The dashboard (Cloudflare Pages) and the Worker are deliberately two
+// separate origins -- no custom domain/routing was set up to make them
+// share one, so the deployed Worker's own workers.dev URL is the default.
+// Override via `?api=https://...` only for local testing against a
+// `wrangler dev` instance running on a different port.
+const DEFAULT_API_BASE = 'https://fivemcleaner-telemetry.felipemarquesini10.workers.dev';
+const API_BASE = new URLSearchParams(location.search).get('api') || DEFAULT_API_BASE;
 
 const CHART_DEFINITIONS = [
   { name: 'runs-per-day', title: 'Otimizações por dia', type: 'line', xKey: 'day', yKey: 'runs' },
