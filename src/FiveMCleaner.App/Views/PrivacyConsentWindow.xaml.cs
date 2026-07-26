@@ -1,6 +1,5 @@
 using System.ComponentModel;
 using System.Windows;
-using System.Windows.Input;
 using FiveMCleaner.App.Services;
 
 namespace FiveMCleaner.App.Views;
@@ -61,14 +60,6 @@ public partial class PrivacyConsentWindow : Window
         PrivacyConsentScreenVariant.ConsentRenewalRequired => T("PrivacyConsent.Intro.Renewal"),
         _ => T("PrivacyConsent.Intro.FirstInstallation")
     };
-
-    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.LeftButton == MouseButtonState.Pressed)
-        {
-            DragMove();
-        }
-    }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
 

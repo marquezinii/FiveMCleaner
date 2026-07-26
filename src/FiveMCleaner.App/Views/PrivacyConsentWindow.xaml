@@ -10,7 +10,7 @@
         MinHeight="480"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
-        ResizeMode="CanResize"
+        ResizeMode="NoResize"
         ShowInTaskbar="False"
         FontFamily="Segoe UI Variable Text, Segoe UI"
         TextOptions.TextFormattingMode="Display"
@@ -20,7 +20,7 @@
         KeyboardNavigation.TabNavigation="Cycle"
         Background="{DynamicResource BackgroundBrush}">
     <shell:WindowChrome.WindowChrome>
-        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="7" CornerRadius="0" GlassFrameThickness="0" />
+        <shell:WindowChrome CaptionHeight="0" ResizeBorderThickness="0" CornerRadius="0" GlassFrameThickness="0" />
     </shell:WindowChrome.WindowChrome>
 
     <Border Background="{DynamicResource BackgroundBrush}" BorderBrush="{DynamicResource StrongBorderBrush}" BorderThickness="1" CornerRadius="12">
@@ -31,7 +31,7 @@
                 <RowDefinition Height="70" />
             </Grid.RowDefinitions>
 
-            <Border Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="0,0,0,1" CornerRadius="12,12,0,0" MouseLeftButtonDown="TitleBar_MouseLeftButtonDown">
+            <Border Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="0,0,0,1" CornerRadius="12,12,0,0">
                 <Grid Margin="18,0,8,0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Width="30" Height="30" CornerRadius="8" Background="#1837C889">
