@@ -42,13 +42,25 @@ export function readSessionCookie(cookieHeader) {
   return null;
 }
 
-/** Builds the `Set-Cookie` header value for a new, valid session. */
+/**
+ * Builds the `Set-Cookie` header value for a new, valid session.
+ *
+ * `SameSite=None` (not `Strict`) is required here: the dashboard
+ * (`*.pages.dev`) and this Worker (`*.workers.dev`) are two different
+ * registrable domains -- genuinely cross-site, not just cross-port like the
+ * local `wrangler dev` setup. `SameSite=Strict`/`Lax` cookies are never sent
+ * on a cross-site `fetch`, even with `credentials: 'include'`, which made
+ * the dashboard's own login appear to silently fail (confirmed against the
+ * real deployment: the login POST itself succeeded, but the browser never
+ * sent the cookie back on the next request). `SameSite=None` requires
+ * `Secure`, which was already set.
+ */
 export function buildSessionCookie(sessionId, expiresAt) {
   const expires = new Date(expiresAt).toUTCString();
-  return `${SESSION_COOKIE_NAME}=${sessionId}; Path=/; Expires=${expires}; HttpOnly; Secure; SameSite=Strict`;
+  return `${SESSION_COOKIE_NAME}=${sessionId}; Path=/; Expires=${expires}; HttpOnly; Secure; SameSite=None`;
 }
 
 /** Builds the `Set-Cookie` header value that clears the session cookie. */
 export function buildExpiredSessionCookie() {
-  return `${SESSION_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=Strict`;
+  return `${SESSION_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=None`;
 }

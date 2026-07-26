@@ -64,3 +64,14 @@ test('hashIp differs for different IPs or different secrets', async () => {
   assert.notEqual(await hashIp('203.0.113.2', 'test-secret'), baseline);
   assert.notEqual(await hashIp('203.0.113.1', 'other-secret'), baseline);
 });
+
+test('hashPassword defaults to an iteration count within the Workers runtime PBKDF2 cap', async () => {
+  // The Workers runtime (BoringSSL, not Node's OpenSSL) throws
+  // NotSupportedError above 100,000 PBKDF2 iterations -- confirmed against
+  // the real deployed Worker. This guards against silently regressing to a
+  // value that only fails once actually deployed, not in this test suite.
+  const hash = await hashPassword('some password without an explicit iteration count');
+
+  const iterations = Number.parseInt(hash.split('$')[1], 10);
+  assert.ok(iterations <= 100_000, `expected <=100000 iterations, got ${iterations}`);
+});

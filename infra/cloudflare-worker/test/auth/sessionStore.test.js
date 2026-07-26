@@ -54,13 +54,17 @@ test('readSessionCookie returns null when the cookie is absent', () => {
   assert.equal(readSessionCookie(''), null);
 });
 
-test('buildSessionCookie marks the cookie HttpOnly, Secure, and SameSite=Strict', () => {
+test('buildSessionCookie marks the cookie HttpOnly, Secure, and SameSite=None', () => {
+  // SameSite=None (not Strict/Lax) is required because the dashboard and
+  // the Worker are on different registrable domains -- genuinely
+  // cross-site, so a stricter policy would silently never send the cookie
+  // back on the dashboard's own API calls.
   const cookie = buildSessionCookie('the-session-id', '2026-01-01T12:00:00Z');
 
   assert.match(cookie, new RegExp(`^${SESSION_COOKIE_NAME}=the-session-id;`));
   assert.match(cookie, /HttpOnly/);
   assert.match(cookie, /Secure/);
-  assert.match(cookie, /SameSite=Strict/);
+  assert.match(cookie, /SameSite=None/);
 });
 
 test('buildExpiredSessionCookie clears the cookie in the past', () => {

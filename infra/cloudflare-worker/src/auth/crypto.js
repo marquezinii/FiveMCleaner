@@ -3,7 +3,13 @@
 // modern Node, which is why these can be unit tested with plain `node --test`
 // without Miniflare) -- no third-party crypto dependency.
 
-const PBKDF2_ITERATIONS = 210_000; // OWASP 2023 recommendation for PBKDF2-SHA256
+// OWASP 2023 recommends 210,000 for PBKDF2-SHA256, but the Workers runtime
+// (based on BoringSSL, not Node's OpenSSL) hard-caps PBKDF2 at 100,000
+// iterations and throws NotSupportedError above that -- confirmed against
+// the real deployed Worker. 100,000 is itself still an accepted, merely
+// slightly dated, OWASP baseline for PBKDF2-SHA256, so this is a safe
+// ceiling, not a meaningful weakening.
+const PBKDF2_ITERATIONS = 100_000;
 const SALT_BYTES = 16;
 const HASH_BYTES = 32;
 
