@@ -56,7 +56,6 @@
   <data name="History.Subtitle" xml:space="preserve"><value>Cada execução guarda ações, resultados e os estados necessários para rollback.</value></data>
   <data name="History.OpenLogs" xml:space="preserve"><value>Abrir pasta de logs</value></data>
   <data name="History.LocalRuns" xml:space="preserve"><value>Execuções locais</value></data>
-  <data name="History.NoTelemetry" xml:space="preserve"><value>Sem telemetria</value></data>
   <data name="History.Undo" xml:space="preserve"><value>Desfazer</value></data>
   <data name="Settings.Title" xml:space="preserve"><value>Configurações</value></data>
   <data name="Settings.Subtitle" xml:space="preserve"><value>Personalize o aplicativo sem enfraquecer o perfil de otimização escolhido.</value></data>

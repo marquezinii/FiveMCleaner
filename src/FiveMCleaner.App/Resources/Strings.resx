@@ -56,7 +56,6 @@
   <data name="History.Subtitle" xml:space="preserve"><value>Every run records actions, results and the state required for rollback.</value></data>
   <data name="History.OpenLogs" xml:space="preserve"><value>Open logs folder</value></data>
   <data name="History.LocalRuns" xml:space="preserve"><value>Local runs</value></data>
-  <data name="History.NoTelemetry" xml:space="preserve"><value>No telemetry</value></data>
   <data name="History.Undo" xml:space="preserve"><value>Undo</value></data>
   <data name="Settings.Title" xml:space="preserve"><value>Settings</value></data>
   <data name="Settings.Subtitle" xml:space="preserve"><value>Customize the app without weakening the selected optimization profile.</value></data>
