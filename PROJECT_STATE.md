@@ -1668,3 +1668,40 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   foram enviados para `origin/dev/proxima-versao` ao final desta tarefa —
   ver `git log` para a lista completa; nenhuma alteração em `main`, tag ou
   versão pública.
+
+## Ajustes na janela de consentimento, histórico e reforço do padrão de bandeja (26/07/2026)
+
+- Trabalho local, **não publicado** (nenhuma alteração em `main`, tag ou
+  versão pública nesta etapa).
+- **`PrivacyConsentWindow` restrita ao aplicativo**: a janela permitia
+  arrastar (handler de `MouseLeftButtonDown` chamando `DragMove()`) e
+  redimensionar (`ResizeMode="CanResize"` + `ResizeBorderThickness="7"`),
+  divergindo do padrão já usado por `OptimizationConfirmationWindow`.
+  Corrigido para `ResizeMode="NoResize"`, `ResizeBorderThickness="0"` e
+  remoção completa do handler de arraste — a janela permanece centralizada
+  sobre a `MainWindow` (`WindowStartupLocation="CenterOwner"`), sem título
+  arrastável, e o único jeito de navegar o conteúdo é a rolagem já existente
+  no `ScrollViewer`. Limitação conhecida do WPF: uma `Window` própria
+  (mesmo com `Owner` definido) não é literalmente recortada dentro dos
+  limites em pixels da janela principal — não arrastar/redimensionar é o
+  que efetivamente restringe o comportamento pedido; um contêiner realmente
+  clipado exigiria trocar a janela por um overlay embutido na própria
+  `MainWindow`, mudança de arquitetura maior não feita aqui.
+- **Removido o selo "Sem telemetria" da aba Histórico**: o texto
+  (`History.NoTelemetry`) antecedia a funcionalidade de telemetria e ficou
+  incorreto assim que o consentimento passou a existir — o app pode, sim,
+  enviar telemetria quando autorizado. Removido o `TextBlock` do
+  `MainWindow.xaml` e a chave não utilizada dos dois `.resx`.
+- **"Minimizar para a bandeja" confirmado como padrão `true`** para
+  instalação nova e para atualização de instalação antiga sem esse campo
+  (`AppSettings.MinimizeToTrayOnClose = true`, sem nenhum passo do
+  instalador que sobrescreva `settings.json`). Reforçado com dois novos
+  testes dedicados (`Deserialize_JsonWithoutMinimizeToTrayOnClose_
+  DefaultsToTrue` e `Deserialize_OldInstallationThatExplicitlyDisabled
+  MinimizeToTray_PreservesTheChoice`), no mesmo padrão já usado para os
+  toggles de telemetria/crash reports, para que uma regressão futura desse
+  padrão específico nunca passe despercebida.
+- Validação: `dotnet build` Release sem avisos/erros; suíte completa foi de
+  486 para **488 testes aprovados**; `scripts\Verify-Safety.ps1` aprovado.
+- Push de desenvolvimento autorizado explicitamente pelo usuário nesta
+  etapa.
