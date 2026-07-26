@@ -23,10 +23,18 @@ over.
   batch. The Worker never trusts client-side validation alone; every field is
   re-checked against the same allowlist server-side.
 - `src/index.js` — routes: `POST /telemetry` (ingest), `POST /admin/login` /
-  `POST /admin/logout`, `GET /api/stats/:name[.csv]` (protected).
+  `POST /admin/logout`, `GET /api/stats/:name[.csv]` (protected), plus CORS
+  handling (`src/cors.js`) for every response since the dashboard is served
+  from a different origin than this Worker.
 - `src/auth/` — the custom admin authentication (see below).
 - `src/stats/` — `queries.js` (pure SQL+params builders, one per dashboard
   chart) and `csv.js` (pure CSV serialization for the export feature).
+  Available `:name` values: `runs-per-day`, `os-versions`, `app-versions`,
+  `profiles`, `top-actions`, `top-cpu`, `top-gpu`, `ram-buckets`,
+  `average-time`, `success-rate`, `error-categories`,
+  `top-actions-in-failures`, `errors-by-version`, `recent-failures`. Every
+  one accepts `?from=&to=&version=&environment=` query filters (`environment`
+  defaults to `Production`; pass `All` to look across both).
 - `test/` — unit tests for everything pure-logic above, run with Node's
   built-in test runner (no Miniflare/wrangler required):
 

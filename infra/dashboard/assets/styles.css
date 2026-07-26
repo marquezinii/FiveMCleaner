@@ -41,12 +41,21 @@ body {
   border-radius: 12px;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 10px;
+  text-align: center;
+}
+
+.login-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  margin-bottom: 4px;
 }
 
 .login-card h1 {
   margin: 0;
-  font-size: 20px;
+  font-size: 19px;
 }
 
 .login-subtitle {
@@ -56,11 +65,13 @@ body {
 }
 
 .login-card label {
+  align-self: flex-start;
   font-size: 12px;
   color: var(--text-muted);
 }
 
 .login-card input {
+  width: 100%;
   padding: 9px 10px;
   border-radius: 8px;
   border: 1px solid var(--border);
@@ -80,6 +91,10 @@ body {
   cursor: pointer;
 }
 
+.login-card button {
+  width: 100%;
+}
+
 .login-error {
   min-height: 16px;
   color: var(--red);
@@ -88,7 +103,7 @@ body {
 }
 
 .dashboard-view {
-  max-width: 1100px;
+  max-width: 1180px;
   margin: 0 auto;
   padding: 24px 20px 48px;
 }
@@ -97,11 +112,31 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 18px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brand-logo {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
 }
 
 .dashboard-header h1 {
-  font-size: 22px;
+  font-size: 19px;
   margin: 0;
+}
+
+.brand-subtitle {
+  font-size: 11px;
+  color: var(--text-muted);
 }
 
 .link-button {
@@ -118,7 +153,7 @@ body {
   flex-wrap: wrap;
   gap: 14px;
   align-items: end;
-  margin: 18px 0;
+  margin: 0 0 22px;
   padding: 14px;
   background: var(--surface);
   border: 1px solid var(--border);
@@ -133,19 +168,21 @@ body {
   color: var(--text-muted);
 }
 
-.filters input {
+.filters input,
+.filters select {
   padding: 7px 8px;
   border-radius: 6px;
   border: 1px solid var(--border);
   background: var(--background);
   color: var(--text);
+  font-family: inherit;
 }
 
 .tiles {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 14px;
-  margin-bottom: 18px;
+  margin-bottom: 24px;
 }
 
 .tile {
@@ -168,10 +205,27 @@ body {
   font-weight: 700;
 }
 
+.tile-value-success {
+  color: var(--green);
+}
+
+.tile-value-danger {
+  color: var(--red);
+}
+
+.section-title {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+}
+
 .charts {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
   gap: 14px;
+  margin-bottom: 24px;
 }
 
 .chart-card {
@@ -181,9 +235,10 @@ body {
   padding: 14px;
 }
 
-.chart-card h2 {
+.chart-card h3 {
   margin: 0 0 10px;
-  font-size: 13px;
+  font-size: 12.5px;
+  font-weight: 600;
 }
 
 .chart-card canvas {
@@ -198,6 +253,64 @@ body {
   font-size: 10.5px;
   color: var(--text-muted);
   text-decoration: underline;
+}
+
+.recent-failures-card {
+  margin-bottom: 24px;
+}
+
+.recent-failures-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.recent-failures-header h3 {
+  margin: 0;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+
+.recent-failures-header .csv-link {
+  margin-top: 0;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.recent-failures-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.recent-failures-table th,
+.recent-failures-table td {
+  padding: 7px 10px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.recent-failures-table th {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.recent-failures-table td.error-category {
+  color: var(--red);
+  font-weight: 600;
+}
+
+.recent-failures-table .empty-row {
+  color: var(--text-muted);
+  text-align: center;
+  white-space: normal;
 }
 
 .dashboard-footnote {

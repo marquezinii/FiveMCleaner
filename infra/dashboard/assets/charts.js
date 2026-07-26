@@ -17,6 +17,19 @@ export function toLineSeries(rows, xKey, yKey) {
     .sort((a, b) => (a.x < b.x ? -1 : a.x > b.x ? 1 : 0));
 }
 
+/**
+ * Same idea as {@link toBarSeries}, but joins two or more row keys into a
+ * single label -- used for two-dimensional breakdowns (e.g. version +
+ * error category) that still render fine as one bar chart once combined
+ * into one label per bar.
+ */
+export function toCombinedBarSeries(rows, labelKeys, valueKey, separator = ' · ') {
+  return (rows ?? []).map((row) => ({
+    label: labelKeys.map((key) => String(row[key])).join(separator),
+    value: Number(row[valueKey]) || 0,
+  }));
+}
+
 /** Keeps only the top N entries of an already-sorted-descending series. */
 export function topN(series, n) {
   return (series ?? []).slice(0, n);
@@ -61,4 +74,41 @@ export function formatPercent(value) {
  */
 export function sumBy(rows, valueKey) {
   return (rows ?? []).reduce((total, row) => total + (Number(row[valueKey]) || 0), 0);
+}
+
+/**
+ * Formats an ISO timestamp (as stored in `received_at`) as a compact,
+ * locale-independent "YYYY-MM-DD HH:mm" for the recent-failures table --
+ * never throws on a missing/malformed value.
+ */
+export function formatTimestamp(isoString) {
+  if (!isoString) {
+    return '—';
+  }
+
+  const date = new Date(isoString);
+  if (Number.isNaN(date.getTime())) {
+    return '—';
+  }
+
+  return isoString.slice(0, 16).replace('T', ' ');
+}
+
+/**
+ * Maps one `recentFailures` row into the exact column order the table
+ * renders, substituting a placeholder for any missing optional field
+ * instead of showing a blank cell.
+ */
+export function toRecentFailureRow(row) {
+  const fallback = (value) => value ?? '—';
+  return [
+    formatTimestamp(row.received_at),
+    fallback(row.error_category),
+    fallback(row.app_version),
+    fallback(row.environment),
+    fallback(row.os_version),
+    fallback(row.cpu_model),
+    fallback(row.gpu_model),
+    fallback(row.profile),
+  ];
 }

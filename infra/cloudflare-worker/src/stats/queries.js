@@ -15,8 +15,17 @@
 const DEFAULT_TOP_N = 10;
 
 function buildFilters({ from, to, appVersion, environment = 'Production' } = {}) {
-  const clauses = ['environment = ?'];
-  const params = [environment];
+  const clauses = [];
+  const params = [];
+
+  // 'All' is the explicit, opt-in escape hatch for looking across both
+  // environments at once (e.g. while debugging the pipeline itself) --
+  // every other value, including an unrecognized one, still defaults to
+  // filtering by it so a typo never silently becomes "show everything".
+  if (environment !== 'All') {
+    clauses.push('environment = ?');
+    params.push(environment);
+  }
 
   if (from) {
     clauses.push('received_at >= ?');
@@ -33,7 +42,7 @@ function buildFilters({ from, to, appVersion, environment = 'Production' } = {})
     params.push(appVersion);
   }
 
-  return { whereSql: clauses.join(' AND '), params };
+  return { whereSql: clauses.length > 0 ? clauses.join(' AND ') : '1=1', params };
 }
 
 /** Optimization runs (any outcome) per calendar day, oldest first. */
@@ -165,6 +174,62 @@ export function ramBucketBreakdown(filters) {
           GROUP BY ram_bucket_gib
           ORDER BY ram_bucket_gib ASC`,
     params,
+  };
+}
+
+/**
+ * Error category counts across every version at once -- complements
+ * {@link errorsByVersion} (which breaks the same data down per version) with
+ * a single, quick "what's failing the most, overall" view.
+ */
+export function errorCategoryBreakdown(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT error_category, COUNT(*) AS occurrences
+          FROM telemetry_events
+          WHERE ${whereSql} AND event_name = 'optimization-failed' AND error_category IS NOT NULL
+          GROUP BY error_category
+          ORDER BY occurrences DESC`,
+    params,
+  };
+}
+
+/**
+ * Which applied action IDs show up most often specifically in *failed*
+ * runs -- distinct from {@link topActions} (which counts every outcome) and
+ * meant to point straight at "this action correlates with failures" without
+ * having to cross-reference two charts by hand.
+ */
+export function topActionsInFailures(filters, topN = DEFAULT_TOP_N) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT a.action_id, COUNT(*) AS failures
+          FROM telemetry_event_actions a
+          JOIN telemetry_events e ON e.id = a.telemetry_event_id
+          WHERE ${whereSql} AND e.event_name = 'optimization-failed'
+          GROUP BY a.action_id
+          ORDER BY failures DESC
+          LIMIT ?`,
+    params: [...params, topN],
+  };
+}
+
+/**
+ * A raw feed of the most recent failed runs (not aggregated) -- the
+ * fastest way to see exactly what environment a fresh bug is showing up in
+ * without waiting for it to accumulate enough volume to appear in the
+ * aggregate charts above.
+ */
+export function recentFailures(filters, limit = 20) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT received_at, app_version, error_category, environment,
+                 os_version, system_architecture, cpu_model, gpu_model, profile
+          FROM telemetry_events
+          WHERE ${whereSql} AND event_name = 'optimization-failed'
+          ORDER BY received_at DESC
+          LIMIT ?`,
+    params: [...params, limit],
   };
 }
 

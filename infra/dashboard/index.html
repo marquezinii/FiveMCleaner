@@ -5,11 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
   <title>FiveMCleaner Dashboard</title>
+  <link rel="icon" href="assets/img/logo.png" />
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
   <section id="login-view" class="login-view">
     <form id="login-form" class="login-card">
+      <img class="login-logo" src="assets/img/logo.png" alt="FiveMCleaner" />
       <h1>FiveMCleaner Dashboard</h1>
       <p class="login-subtitle">Acesso restrito a administradores.</p>
       <label for="password">Senha</label>
@@ -21,7 +23,13 @@
 
   <section id="dashboard-view" class="dashboard-view hidden">
     <header class="dashboard-header">
-      <h1>FiveMCleaner Dashboard</h1>
+      <div class="brand">
+        <img class="brand-logo" src="assets/img/logo.png" alt="" />
+        <div>
+          <h1>FiveMCleaner Dashboard</h1>
+          <span class="brand-subtitle">Telemetria de uso e diagnóstico</span>
+        </div>
+      </div>
       <button id="logout-button" type="button" class="link-button">Sair</button>
     </header>
 
@@ -29,6 +37,13 @@
       <label>De <input type="date" name="from" /></label>
       <label>Até <input type="date" name="to" /></label>
       <label>Versão <input type="text" name="version" placeholder="1.0.4" /></label>
+      <label>Ambiente
+        <select name="environment">
+          <option value="Production">Produção</option>
+          <option value="Development">Desenvolvimento</option>
+          <option value="All">Todos</option>
+        </select>
+      </label>
       <button type="submit">Filtrar</button>
     </form>
 
@@ -39,56 +54,110 @@
       </div>
       <div class="tile">
         <span class="tile-label">Taxa de sucesso</span>
-        <span id="tile-success-rate" class="tile-value">—</span>
+        <span id="tile-success-rate" class="tile-value tile-value-success">—</span>
       </div>
       <div class="tile">
         <span class="tile-label">Tempo médio de otimização</span>
         <span id="tile-average-time" class="tile-value">—</span>
       </div>
+      <div class="tile">
+        <span class="tile-label">Falhas no período</span>
+        <span id="tile-total-failures" class="tile-value tile-value-danger">—</span>
+      </div>
     </div>
 
+    <h2 class="section-title">Adoção</h2>
     <div class="charts">
       <article class="chart-card">
-        <h2>Otimizações por dia</h2>
+        <h3>Otimizações por dia</h3>
         <canvas id="chart-runs-per-day" width="360" height="160"></canvas>
         <a id="csv-runs-per-day" class="csv-link" download>Exportar CSV</a>
       </article>
       <article class="chart-card">
-        <h2>Versões do Windows</h2>
+        <h3>Versões do Windows</h3>
         <canvas id="chart-os-versions" width="360" height="160"></canvas>
         <a id="csv-os-versions" class="csv-link" download>Exportar CSV</a>
       </article>
       <article class="chart-card">
-        <h2>Versões do FiveMCleaner</h2>
+        <h3>Versões do FiveMCleaner</h3>
         <canvas id="chart-app-versions" width="360" height="160"></canvas>
         <a id="csv-app-versions" class="csv-link" download>Exportar CSV</a>
       </article>
       <article class="chart-card">
-        <h2>Funções mais usadas</h2>
+        <h3>Perfis escolhidos</h3>
+        <canvas id="chart-profiles" width="360" height="160"></canvas>
+        <a id="csv-profiles" class="csv-link" download>Exportar CSV</a>
+      </article>
+      <article class="chart-card">
+        <h3>Funções mais usadas</h3>
         <canvas id="chart-top-actions" width="360" height="160"></canvas>
         <a id="csv-top-actions" class="csv-link" download>Exportar CSV</a>
       </article>
+    </div>
+
+    <h2 class="section-title">Hardware</h2>
+    <div class="charts">
       <article class="chart-card">
-        <h2>CPUs mais comuns</h2>
+        <h3>CPUs mais comuns</h3>
         <canvas id="chart-top-cpu" width="360" height="160"></canvas>
         <a id="csv-top-cpu" class="csv-link" download>Exportar CSV</a>
       </article>
       <article class="chart-card">
-        <h2>GPUs mais comuns</h2>
+        <h3>GPUs mais comuns</h3>
         <canvas id="chart-top-gpu" width="360" height="160"></canvas>
         <a id="csv-top-gpu" class="csv-link" download>Exportar CSV</a>
       </article>
       <article class="chart-card">
-        <h2>Memória RAM</h2>
+        <h3>Memória RAM</h3>
         <canvas id="chart-ram-buckets" width="360" height="160"></canvas>
         <a id="csv-ram-buckets" class="csv-link" download>Exportar CSV</a>
       </article>
+    </div>
+
+    <h2 class="section-title">Diagnóstico de bugs</h2>
+    <div class="charts">
       <article class="chart-card">
-        <h2>Perfis escolhidos</h2>
-        <canvas id="chart-profiles" width="360" height="160"></canvas>
-        <a id="csv-profiles" class="csv-link" download>Exportar CSV</a>
+        <h3>Erros por categoria</h3>
+        <canvas id="chart-error-categories" width="360" height="160"></canvas>
+        <a id="csv-error-categories" class="csv-link" download>Exportar CSV</a>
+      </article>
+      <article class="chart-card">
+        <h3>Ações mais associadas a falhas</h3>
+        <canvas id="chart-top-actions-in-failures" width="360" height="160"></canvas>
+        <a id="csv-top-actions-in-failures" class="csv-link" download>Exportar CSV</a>
+      </article>
+      <article class="chart-card">
+        <h3>Erros por versão</h3>
+        <canvas id="chart-errors-by-version" width="360" height="160"></canvas>
+        <a id="csv-errors-by-version" class="csv-link" download>Exportar CSV</a>
       </article>
     </div>
+
+    <article class="chart-card recent-failures-card">
+      <div class="recent-failures-header">
+        <h3>Últimos erros (não agregado)</h3>
+        <a id="csv-recent-failures" class="csv-link" download>Exportar CSV</a>
+      </div>
+      <div class="table-scroll">
+        <table id="recent-failures-table" class="recent-failures-table">
+          <thead>
+            <tr>
+              <th>Quando</th>
+              <th>Categoria</th>
+              <th>Versão</th>
+              <th>Ambiente</th>
+              <th>Windows</th>
+              <th>CPU</th>
+              <th>GPU</th>
+              <th>Perfil</th>
+            </tr>
+          </thead>
+          <tbody id="recent-failures-body">
+            <tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </article>
 
     <p class="dashboard-footnote">
       "Otimizações" contam eventos, não usuários únicos — a telemetria do FiveMCleaner nunca envia

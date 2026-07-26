@@ -2,12 +2,15 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   toBarSeries,
+  toCombinedBarSeries,
   toLineSeries,
   topN,
   computeSuccessRatePercent,
   formatDuration,
   formatPercent,
   sumBy,
+  formatTimestamp,
+  toRecentFailureRow,
 } from '../assets/charts.js';
 
 test('toBarSeries maps arbitrary label/value keys into a uniform shape', () => {
@@ -90,4 +93,78 @@ test('sumBy adds up a numeric column across every row', () => {
 test('sumBy returns zero for an empty or missing row set', () => {
   assert.equal(sumBy([], 'runs'), 0);
   assert.equal(sumBy(undefined, 'runs'), 0);
+});
+
+test('toCombinedBarSeries joins two keys into one label', () => {
+  const series = toCombinedBarSeries(
+    [{ app_version: '1.0.4', error_category: 'timeout', occurrences: 5 }],
+    ['app_version', 'error_category'],
+    'occurrences',
+  );
+
+  assert.deepEqual(series, [{ label: '1.0.4 · timeout', value: 5 }]);
+});
+
+test('toCombinedBarSeries accepts a custom separator', () => {
+  const series = toCombinedBarSeries(
+    [{ a: 'x', b: 'y', value: 1 }],
+    ['a', 'b'],
+    'value',
+    ' / ',
+  );
+
+  assert.deepEqual(series, [{ label: 'x / y', value: 1 }]);
+});
+
+test('formatTimestamp renders a compact, locale-independent date and time', () => {
+  assert.equal(formatTimestamp('2026-07-25T22:30:05.123Z'), '2026-07-25 22:30');
+});
+
+test('formatTimestamp renders a dash for missing or malformed values', () => {
+  assert.equal(formatTimestamp(null), '—');
+  assert.equal(formatTimestamp(undefined), '—');
+  assert.equal(formatTimestamp('not-a-date'), '—');
+});
+
+test('toRecentFailureRow maps a row into the table\'s exact column order', () => {
+  const row = {
+    received_at: '2026-07-25T22:30:05.000Z',
+    error_category: 'timeout',
+    app_version: '1.0.4',
+    environment: 'Production',
+    os_version: 'Windows 11',
+    cpu_model: 'AMD Ryzen 5 5600X',
+    gpu_model: 'NVIDIA GeForce RTX 5070',
+    profile: 'Balanced',
+  };
+
+  assert.deepEqual(toRecentFailureRow(row), [
+    '2026-07-25 22:30',
+    'timeout',
+    '1.0.4',
+    'Production',
+    'Windows 11',
+    'AMD Ryzen 5 5600X',
+    'NVIDIA GeForce RTX 5070',
+    'Balanced',
+  ]);
+});
+
+test('toRecentFailureRow substitutes a placeholder for missing optional fields', () => {
+  const row = {
+    received_at: '2026-07-25T22:30:05.000Z',
+    error_category: 'timeout',
+    app_version: '1.0.4',
+    environment: 'Production',
+    os_version: null,
+    cpu_model: null,
+    gpu_model: null,
+    profile: null,
+  };
+
+  const cells = toRecentFailureRow(row);
+  assert.equal(cells[4], '—');
+  assert.equal(cells[5], '—');
+  assert.equal(cells[6], '—');
+  assert.equal(cells[7], '—');
 });

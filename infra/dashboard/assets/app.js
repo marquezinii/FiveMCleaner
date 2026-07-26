@@ -1,12 +1,14 @@
 import { buildStatsUrl, buildCsvUrl, requestJson } from './api.js';
 import {
   toBarSeries,
+  toCombinedBarSeries,
   toLineSeries,
   topN,
   computeSuccessRatePercent,
   formatDuration,
   formatPercent,
   sumBy,
+  toRecentFailureRow,
 } from './charts.js';
 import { drawBarChart, drawLineChart } from './rendering.js';
 
@@ -20,11 +22,20 @@ const CHART_DEFINITIONS = [
   { name: 'runs-per-day', title: 'Otimizações por dia', type: 'line', xKey: 'day', yKey: 'runs' },
   { name: 'os-versions', title: 'Versões do Windows', type: 'bar', labelKey: 'os_version', valueKey: 'runs' },
   { name: 'app-versions', title: 'Versões do FiveMCleaner', type: 'bar', labelKey: 'app_version', valueKey: 'runs' },
+  { name: 'profiles', title: 'Perfis escolhidos', type: 'bar', labelKey: 'profile', valueKey: 'runs' },
   { name: 'top-actions', title: 'Funções mais usadas', type: 'bar', labelKey: 'action_id', valueKey: 'uses' },
   { name: 'top-cpu', title: 'CPUs mais comuns', type: 'bar', labelKey: 'cpu_model', valueKey: 'runs' },
   { name: 'top-gpu', title: 'GPUs mais comuns', type: 'bar', labelKey: 'gpu_model', valueKey: 'runs' },
   { name: 'ram-buckets', title: 'Memória RAM', type: 'bar', labelKey: 'ram_bucket_gib', valueKey: 'runs' },
-  { name: 'profiles', title: 'Perfis escolhidos', type: 'bar', labelKey: 'profile', valueKey: 'runs' },
+  { name: 'error-categories', title: 'Erros por categoria', type: 'bar', labelKey: 'error_category', valueKey: 'occurrences' },
+  { name: 'top-actions-in-failures', title: 'Ações associadas a falhas', type: 'bar', labelKey: 'action_id', valueKey: 'failures' },
+  {
+    name: 'errors-by-version',
+    title: 'Erros por versão',
+    type: 'bar',
+    combinedKeys: ['app_version', 'error_category'],
+    valueKey: 'occurrences',
+  },
 ];
 
 async function main() {
@@ -34,6 +45,8 @@ async function main() {
   const loginError = document.getElementById('login-error');
   const logoutButton = document.getElementById('logout-button');
   const filterForm = document.getElementById('filter-form');
+  const recentFailuresBody = document.getElementById('recent-failures-body');
+  const recentFailuresCsvLink = document.getElementById('csv-recent-failures');
 
   function showLogin() {
     loginView.classList.remove('hidden');
@@ -87,6 +100,7 @@ async function main() {
       from: data.get('from') || undefined,
       to: data.get('to') || undefined,
       version: data.get('version') || undefined,
+      environment: data.get('environment') || undefined,
     };
   }
 
@@ -95,15 +109,41 @@ async function main() {
     return requestJson(url);
   }
 
+  function renderRecentFailures(rows) {
+    recentFailuresBody.innerHTML = '';
+    if (!rows || rows.length === 0) {
+      recentFailuresBody.innerHTML = '<tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr>';
+      return;
+    }
+
+    for (const row of rows) {
+      const cells = toRecentFailureRow(row);
+      const tr = document.createElement('tr');
+      cells.forEach((value, index) => {
+        const td = document.createElement('td');
+        td.textContent = value;
+        if (index === 1) {
+          td.classList.add('error-category');
+        }
+
+        tr.appendChild(td);
+      });
+      recentFailuresBody.appendChild(tr);
+    }
+  }
+
   async function refreshAll() {
     const filters = currentFilters();
 
-    const [runsPerDay, successRate, averageTime, ...chartResults] = await Promise.all([
-      fetchStat('runs-per-day', filters),
-      fetchStat('success-rate', filters),
-      fetchStat('average-time', filters),
-      ...CHART_DEFINITIONS.map((definition) => fetchStat(definition.name, filters)),
-    ]);
+    const [runsPerDay, successRate, averageTime, errorCategories, recentFailures, ...chartResults] =
+      await Promise.all([
+        fetchStat('runs-per-day', filters),
+        fetchStat('success-rate', filters),
+        fetchStat('average-time', filters),
+        fetchStat('error-categories', filters),
+        fetchStat('recent-failures', filters),
+        ...CHART_DEFINITIONS.map((definition) => fetchStat(definition.name, filters)),
+      ]);
 
     if (runsPerDay.unauthorized || successRate.unauthorized || averageTime.unauthorized) {
       showLogin();
@@ -115,6 +155,12 @@ async function main() {
       computeSuccessRatePercent(successRate.data?.[0]),
     );
     document.getElementById('tile-average-time').textContent = formatDuration(averageTime.data?.[0]?.average_ms);
+    document.getElementById('tile-total-failures').textContent = errorCategories.unauthorized
+      ? '—'
+      : sumBy(errorCategories.data, 'occurrences');
+
+    renderRecentFailures(recentFailures.unauthorized ? [] : recentFailures.data);
+    recentFailuresCsvLink.href = buildCsvUrl(API_BASE, 'recent-failures', filters);
 
     CHART_DEFINITIONS.forEach((definition, index) => {
       const result = chartResults[index];
@@ -128,6 +174,11 @@ async function main() {
 
       if (definition.type === 'line') {
         drawLineChart(canvas, toLineSeries(result.data, definition.xKey, definition.yKey));
+      } else if (definition.combinedKeys) {
+        drawBarChart(
+          canvas,
+          topN(toCombinedBarSeries(result.data, definition.combinedKeys, definition.valueKey), 10),
+        );
       } else {
         drawBarChart(canvas, topN(toBarSeries(result.data, definition.labelKey, definition.valueKey), 10));
       }

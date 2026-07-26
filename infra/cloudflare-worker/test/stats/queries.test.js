@@ -8,6 +8,9 @@ import {
   averageOptimizationTimeMs,
   successRate,
   errorsByVersion,
+  errorCategoryBreakdown,
+  topActionsInFailures,
+  recentFailures,
   topCpuModels,
   topGpuModels,
   ramBucketBreakdown,
@@ -105,6 +108,55 @@ test('profileBreakdown excludes null profiles', () => {
   const { sql } = profileBreakdown();
 
   assert.match(sql, /profile IS NOT NULL/);
+});
+
+test('errorCategoryBreakdown counts failed runs grouped only by category, across every version', () => {
+  const { sql } = errorCategoryBreakdown();
+
+  assert.match(sql, /event_name = 'optimization-failed'/);
+  assert.match(sql, /GROUP BY error_category/);
+  assert.doesNotMatch(sql, /app_version/);
+});
+
+test('topActionsInFailures only counts actions from failed runs and applies a limit', () => {
+  const { sql, params } = topActionsInFailures({}, 5);
+
+  assert.match(sql, /e\.event_name = 'optimization-failed'/);
+  assert.match(sql, /JOIN telemetry_events/);
+  assert.equal(params.at(-1), 5);
+});
+
+test('recentFailures orders by received_at descending and applies a limit', () => {
+  const { sql, params } = recentFailures({}, 15);
+
+  assert.match(sql, /event_name = 'optimization-failed'/);
+  assert.match(sql, /ORDER BY received_at DESC/);
+  assert.equal(params.at(-1), 15);
+});
+
+test('recentFailures defaults to a limit of 20', () => {
+  const { params } = recentFailures();
+
+  assert.equal(params.at(-1), 20);
+});
+
+test('environment "All" omits the environment filter entirely instead of matching a literal "All" row', () => {
+  const { sql, params } = optimizationRunsPerDay({ environment: 'All' });
+
+  assert.doesNotMatch(sql, /environment = \?/);
+  assert.deepEqual(params, []);
+});
+
+test('environment "All" combined with other filters still applies those filters', () => {
+  const { params } = optimizationRunsPerDay({ environment: 'All', appVersion: '1.0.4' });
+
+  assert.deepEqual(params, ['1.0.4']);
+});
+
+test('an empty filter set (environment "All", nothing else) still produces valid, non-empty SQL', () => {
+  const { sql } = optimizationRunsPerDay({ environment: 'All' });
+
+  assert.match(sql, /WHERE 1=1/);
 });
 
 test('every query filters by environment as the first bound parameter, never omitted', () => {
