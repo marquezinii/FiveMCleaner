@@ -283,6 +283,36 @@ public sealed class AppSettingsSerializationTests
         Assert.Null(settings.PrivacyConsentVersion);
     }
 
+    /// <summary>
+    /// "Minimizar para a bandeja" must come pre-enabled for every fresh
+    /// install and for every upgrade from a version old enough to predate
+    /// this field, exactly like the telemetry/crash-report toggles above —
+    /// there is no installer step that writes this value, so the record's
+    /// own default initializer is the only thing guaranteeing it. Locked
+    /// down with a dedicated test per explicit request, since a silent
+    /// regression here (falling back to the CLR default of <see langword="false"/>
+    /// instead of the intended <see langword="true"/>) would be easy to miss.
+    /// </summary>
+    [Fact]
+    public void Deserialize_JsonWithoutMinimizeToTrayOnClose_DefaultsToTrue()
+    {
+        const string json = "{}";
+
+        var settings = JsonSerializer.Deserialize<AppSettings>(json, Options)!;
+
+        Assert.True(settings.MinimizeToTrayOnClose);
+    }
+
+    [Fact]
+    public void Deserialize_OldInstallationThatExplicitlyDisabledMinimizeToTray_PreservesTheChoice()
+    {
+        const string json = """{ "minimizeToTrayOnClose": false }""";
+
+        var settings = JsonSerializer.Deserialize<AppSettings>(json, Options)!;
+
+        Assert.False(settings.MinimizeToTrayOnClose);
+    }
+
     [Fact]
     public void RoundTrip_SerializeThenDeserialize_PreservesAllFieldsIncludingNewOnes()
     {
