@@ -42,11 +42,24 @@ public sealed class WindowsPowerStatusProvider : IPowerStatusProvider
     private static extern bool GetSystemPowerStatus(out SystemPowerStatus systemPowerStatus);
 }
 
+/// <summary>
+/// Result of attempting to switch to the high-performance power scheme.
+/// Distinguishes "Windows genuinely refused because of a permission/policy
+/// restriction" from "this computer simply doesn't expose that scheme" --
+/// only the former should ever prompt for elevation.
+/// </summary>
+public enum PowerPlanActivationOutcome
+{
+    Activated,
+    AccessDenied,
+    SchemeUnavailable
+}
+
 public interface IPowerPlanController
 {
     Task<Guid> GetActiveSchemeAsync(CancellationToken cancellationToken);
 
-    Task<bool> TryActivatePerformanceSchemeAsync(CancellationToken cancellationToken);
+    Task<PowerPlanActivationOutcome> TryActivatePerformanceSchemeAsync(CancellationToken cancellationToken);
 
     Task ActivateSchemeAsync(Guid schemeId, CancellationToken cancellationToken);
 }
@@ -85,7 +98,13 @@ public sealed partial class PowerCfgController : IPowerPlanController
             : throw new InvalidOperationException("powercfg did not return a valid active scheme GUID.");
     }
 
-    public async Task<bool> TryActivatePerformanceSchemeAsync(
+    // ERROR_ACCESS_DENIED. powercfg.exe surfaces this both as this exit code
+    // and (locale-dependently) in stderr text, so the exit code is checked
+    // first as the reliable signal and the text patterns are a fallback for
+    // older/odd builds that don't set it.
+    private const int AccessDeniedExitCode = 5;
+
+    public async Task<PowerPlanActivationOutcome> TryActivatePerformanceSchemeAsync(
         CancellationToken cancellationToken)
     {
         var result = await commandRunner.RunAsync(
@@ -93,7 +112,26 @@ public sealed partial class PowerCfgController : IPowerPlanController
             ["/SETACTIVE", "SCHEME_MIN"],
             TimeSpan.FromSeconds(10),
             cancellationToken).ConfigureAwait(false);
-        return result.Succeeded;
+        if (result.Succeeded)
+        {
+            return PowerPlanActivationOutcome.Activated;
+        }
+
+        return LooksLikeAccessDenied(result)
+            ? PowerPlanActivationOutcome.AccessDenied
+            : PowerPlanActivationOutcome.SchemeUnavailable;
+    }
+
+    private static bool LooksLikeAccessDenied(CommandResult result)
+    {
+        if (result.ExitCode == AccessDeniedExitCode)
+        {
+            return true;
+        }
+
+        var text = result.StandardError + result.StandardOutput;
+        return text.Contains("access is denied", StringComparison.OrdinalIgnoreCase)
+            || text.Contains("acesso negado", StringComparison.OrdinalIgnoreCase);
     }
 
     public async Task ActivateSchemeAsync(
@@ -138,11 +176,6 @@ public sealed class SessionPerformancePowerPlanAction : WindowsOptimizationActio
         WindowsActionContext context,
         CancellationToken cancellationToken)
     {
-        if (!context.IsElevated)
-        {
-            throw new UnauthorizedAccessException("O modo de energia da sessão requer elevação.");
-        }
-
         if (!powerStatus.IsOnAcPower())
         {
             return WindowsActionApplyResult.NoChange(
@@ -150,7 +183,21 @@ public sealed class SessionPerformancePowerPlanAction : WindowsOptimizationActio
         }
 
         var previous = await controller.GetActiveSchemeAsync(cancellationToken).ConfigureAwait(false);
-        if (!await controller.TryActivatePerformanceSchemeAsync(cancellationToken).ConfigureAwait(false))
+        var outcome = await controller.TryActivatePerformanceSchemeAsync(cancellationToken).ConfigureAwait(false);
+        if (outcome == PowerPlanActivationOutcome.AccessDenied)
+        {
+            // Muitas configurações do Windows permitem que um usuário comum
+            // troque o plano de energia; só chegamos aqui quando o Windows
+            // realmente recusou. Sem elevação, isso significa "precisa de
+            // UAC" (o mecanismo de tentativa-sem-admin-primeiro trata essa
+            // exceção de forma especial); já elevado, é um erro genuíno.
+            throw new UnauthorizedAccessException(
+                context.IsElevated
+                    ? "O Windows recusou a troca do plano de energia mesmo com privilégios administrativos."
+                    : "O modo de energia da sessão requer elevação.");
+        }
+
+        if (outcome == PowerPlanActivationOutcome.SchemeUnavailable)
         {
             return WindowsActionApplyResult.NoChange(
                 "Este computador não expõe um plano de alto desempenho compatível.");

@@ -209,6 +209,30 @@ A execução do usuário padrão roda com `WindowsTransactionOptions.IsolateFail
 - a transação final é `Committed` somente se nenhuma ação falhou; caso contrário `CommittedWithErrors`, e o relatório (`OptimizationReportDto`, construído por `OptimizationReportBuilder`) nunca marca a run como bem-sucedida.
 - o broker elevado continua no modo estrito (tudo-ou-nada), pois normalmente delega uma única ação administrativa por vez.
 
+**Falha da fase elevada não desfaz a fase de usuário padrão.** Quando o
+broker falha ou o UAC é cancelado, `AppOptimizationService` não chama mais
+um rollback das ações de usuário padrão já confirmadas — isso causava o
+efeito de "várias ações falhando de uma vez" quando na verdade só a ação
+administrativa (hoje só `EnableSessionPerformancePowerPlan`) havia falhado
+(ver investigação de 24/07/2026 e correção de 26/07/2026 no
+`PROJECT_STATE.md`). Em vez disso,
+`WindowsTransactionEngine.MarkAdministratorPhaseFailedAsync` marca somente
+a(s) ação(ões) administrativa(s) ainda pendente(s) como `Failed` no journal,
+preservando intactas as ações já `Committed`; a transação se estabiliza em
+`CommittedWithErrors` e o resumo deixa explícito que as demais alterações
+foram mantidas.
+
+**Ações administrativas com `AttemptWithoutElevationFirst` tentam sem UAC
+primeiro.** `EnableSessionPerformancePowerPlan` é a primeira e única ação
+com esse sinalizador em `ActionMetadataDto`: o motor a inclui na fase de
+usuário padrão mesmo sem elevação; se o Windows genuinamente recusar
+(`PowerPlanActivationOutcome.AccessDenied`, distinguido de "este PC não tem
+esse plano" via código de saída/mensagem do `powercfg`), a ação lança
+`UnauthorizedAccessException` e o motor a devolve para `DeferredPrivilege`
+em vez de marcá-la como falha — só então o broker elevado é acionado.
+Em muitas configurações do Windows um usuário comum já pode trocar o plano
+de energia, então nenhum UAC chega a aparecer.
+
 Cancelamento:
 
 - é aceito antes de iniciar uma ação ou depois de um passo atômico;

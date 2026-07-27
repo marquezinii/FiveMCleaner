@@ -1936,3 +1936,104 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   regressão); `npm test` em `infra/cloudflare-worker` (104 testes,
   reescritos para o esquema sem anexo) e `infra/dashboard` (35 testes);
   `scripts\Verify-Safety.ps1` aprovado.
+
+## Correção do "falha em 4 passos, funciona como administrador" no perfil Médio/Agressivo (26/07/2026)
+
+- Trabalho local, **um único commit local**, **sem push de desenvolvimento**
+  por instrução explícita do usuário desta vez.
+- **Contexto**: o usuário relatou que o bug já investigado em 24/07/2026
+  ("perfil Médio falha ao abrir o app normalmente, funciona como
+  administrador") continua ocorrendo, agora observado no perfil Médio e
+  suspeito nos demais. O usuário fez sua própria investigação de causa raiz
+  lendo o código-fonte e propôs uma solução detalhada, que foi verificada
+  linha a linha antes de implementar (nenhuma mudança foi feita sem
+  confirmar contra o código real primeiro — `superpowers:systematic-debugging`).
+- **Causa raiz nº 1 (a mais importante — o "efeito cascata")**: no plano
+  Médio/Agressivo, há **uma única** ação administrativa no catálogo inteiro,
+  `EnableSessionPerformancePowerPlan` (ativa o plano de energia de alto
+  desempenho). Quando o broker elevado falhava por qualquer motivo (UAC
+  cancelado, SmartScreen/antivírus interrompendo o processo elevado sem
+  assinatura, etc.), `AppOptimizationService.ExecutePlanCoreAsync` chamava
+  `runtime.Engine.RollbackAsync(..., IncludeStandardUserActions: true)` —
+  desfazendo **todas** as ações de usuário padrão já confirmadas com
+  sucesso (Modo de Jogo, preferência de GPU, captura em segundo plano,
+  etc.). O relatório então mostrava várias ações como revertidas/falhas
+  quando, na real, só a ativação do plano de energia tinha dado errado —
+  exatamente como o usuário descreveu ("o eletricista desmontando a casa
+  inteira porque uma lâmpada queimou").
+- **Correção**: novo método
+  `WindowsTransactionEngine.MarkAdministratorPhaseFailedAsync(transactionId, reason)`
+  marca **somente** as ações administrativas ainda `Pending`/`DeferredPrivilege`
+  como `Failed` no journal, sem tocar nas ações já `Committed`; a transação
+  se estabiliza em `CommittedWithErrors` em vez de `RolledBack`.
+  `AppOptimizationService` foi atualizado para chamar esse método em vez do
+  rollback completo, com duas novas mensagens localizadas
+  (`Runtime.UacCancelledPreserved`/`Runtime.AdminPhaseFailedPreserved`)
+  deixando explícito que "a otimização foi concluída, mas o Windows não
+  permitiu [ação específica]; as demais alterações foram mantidas".
+- **Causa raiz nº 2 (por que o UAC aparecia sempre)**: `SessionPerformancePowerPlanAction.ApplyAsync`
+  tinha um `throw new UnauthorizedAccessException(...)` incondicional logo
+  no início se `!context.IsElevated` — mesmo em máquinas onde o Windows
+  permite a um usuário comum trocar o plano de energia ativo (comum fora de
+  ambientes corporativos com Política de Grupo restritiva). Isso forçava
+  elevação sempre, mesmo quando desnecessária.
+- **Correção**: novo campo `ActionMetadataDto.AttemptWithoutElevationFirst`
+  (só `true` para `EnableSessionPerformancePowerPlan` até agora). O motor
+  (`WindowsTransactionEngine`, tanto no modo `IsolateFailures` quanto no
+  modo padrão) agora inclui uma ação administrativa marcada com esse campo
+  na fase de usuário padrão mesmo sem elevação; se a ação lançar
+  `UnauthorizedAccessException`, o motor a devolve para
+  `DeferredPrivilege` (como se nunca tivesse sido tentada) em vez de
+  marcá-la como falha — só então a fase elevada (broker/UAC) é acionada.
+  `PowerCfgController.TryActivatePerformanceSchemeAsync` deixou de retornar
+  só `bool`; agora retorna `PowerPlanActivationOutcome`
+  (`Activated`/`AccessDenied`/`SchemeUnavailable`), distinguindo "o Windows
+  recusou por permissão" (código de saída 5/ERROR_ACCESS_DENIED ou texto
+  "access is denied"/"acesso negado" no stderr do `powercfg`) de "este PC
+  não expõe esse plano" — só o primeiro caso dispara elevação;
+  `SessionPerformancePowerPlanAction.ApplyAsync` não tem mais o throw
+  incondicional, só lança `UnauthorizedAccessException` quando o próprio
+  Windows confirma acesso negado.
+- **Diagnóstico do broker (item 4 da proposta do usuário)**: novo
+  `BrokerDiagnosticsLog` (`src/FiveMCleaner.Broker/BrokerDiagnosticsLog.cs`)
+  grava um log local, append-only, com `FileOptions.WriteThrough` (flush
+  imediato por linha, sobrevive a um kill externo do processo) em
+  `%LOCALAPPDATA%\FiveMCleaner\Logs\broker-diagnostics.log`. Cada linha tem
+  só nome do evento + timestamp + ID de transação (nunca caminhos, nunca
+  conteúdo do plano) — marcos: `broker-started`, `pipe-connected`/
+  `pipe-connect-failed`, `elevation-confirmed`/`elevation-failed`,
+  `request-loaded`, `plan-validated`, `action-started`, `journal-saved`,
+  `execution-failed`/`execution-timeout`, `terminal-event-sent`,
+  `rollback-requested`/`rollback-completed`/`rollback-failed`,
+  `unhandled-exception`. Isso deve permitir, numa próxima ocorrência,
+  distinguir exatamente em qual etapa o broker parou (cancelamento do
+  usuário vs. bloqueio antes de iniciar vs. falha de pipe vs. antivírus
+  encerrando o processo vs. `powercfg` recusando vs. falha real do
+  Windows) — sem precisar reproduzir o bug de novo às cegas.
+  **Lacuna conhecida e assumida conscientemente**: `BrokerDiagnosticsLog`
+  não tem teste automatizado — o projeto `FiveMCleaner.Broker` não tem
+  nenhuma cobertura de teste hoje (roda elevado, sem infraestrutura de
+  teste própria), e adicionar isso agora seria desproporcional ao escopo
+  desta correção; mesma categoria de lacuna já assumida antes para
+  `TrayIconService`.
+- **Não implementado desta vez** (deliberadamente fora de escopo, e
+  registrado aqui para uma sessão futura): a matriz de testes de integração
+  real do usuário (Windows 10/11, conta admin não elevada, conta padrão,
+  credenciais de outro administrador digitadas no prompt do UAC — o cenário
+  de `PipeOptions.CurrentUserOnly` quebrar quando o token elevado pertence a
+  uma identidade Windows diferente da que abriu o pipe). Isso exige
+  hardware/VMs reais para Windows, fora do alcance deste ambiente de
+  desenvolvimento.
+- **Testes novos**: `MarkAdministratorPhaseFailedAsync_PreservesAlreadyCommittedStandardActions`,
+  `IsolatedExecution_AdministratorActionThatDoesNotNeedElevation_CommitsWithoutAwaitingUac`,
+  `IsolatedExecution_AdministratorActionThatNeedsElevation_DefersInsteadOfFailingTheRun`
+  em `WindowsTransactionEngineTests.cs`; três testes novos em
+  `WindowsActionHandlerTests.cs` para os três resultados de
+  `SessionPerformancePowerPlanAction.ApplyAsync` (ativa sem elevação,
+  acesso negado sem elevação lança `UnauthorizedAccessException`, plano
+  indisponível retorna `NoChange`).
+- Validação: `dotnet build` Release sem avisos/erros; suíte completa
+  passou de 503 para **509 testes aprovados**; `scripts\Verify-Safety.ps1`
+  aprovado.
+- Por instrução explícita do usuário, **sem push de desenvolvimento** nesta
+  etapa — o commit fica só local.

@@ -26,7 +26,8 @@ public sealed class OptimizationActionDefinition
         string detectionSummary,
         string confirmationSummary,
         string undoSummary,
-        string riskLimitations)
+        string riskLimitations,
+        bool attemptWithoutElevationFirst = false)
     {
         Id = id;
         Version = version;
@@ -50,6 +51,7 @@ public sealed class OptimizationActionDefinition
         ConfirmationSummary = confirmationSummary;
         UndoSummary = undoSummary;
         RiskLimitations = riskLimitations;
+        AttemptWithoutElevationFirst = attemptWithoutElevationFirst;
     }
 
     public string Id { get; }
@@ -94,6 +96,8 @@ public sealed class OptimizationActionDefinition
 
     public string RiskLimitations { get; }
 
+    public bool AttemptWithoutElevationFirst { get; }
+
     internal ActionOptionGate OptionGate { get; }
 
     public bool Supports(OptimizationProfile profile)
@@ -131,7 +135,8 @@ public sealed class OptimizationActionDefinition
             DetectionSummary = DetectionSummary,
             ConfirmationSummary = ConfirmationSummary,
             UndoSummary = UndoSummary,
-            RiskLimitations = RiskLimitations
+            RiskLimitations = RiskLimitations,
+            AttemptWithoutElevationFirst = AttemptWithoutElevationFirst
         };
     }
 }

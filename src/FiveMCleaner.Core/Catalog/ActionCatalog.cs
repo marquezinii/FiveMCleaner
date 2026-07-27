@@ -724,7 +724,8 @@ public sealed class ActionCatalog
                 detectionSummary: "Lê o plano de energia ativo e verifica se o computador está na tomada.",
                 confirmationSummary: "Confirma que o plano de desempenho ficou ativo.",
                 undoSummary: "Totalmente reversível: o plano anterior é restaurado no rollback.",
-                riskLimitations: "Só é aplicado na tomada; aumenta consumo e temperatura enquanto ativo."),
+                riskLimitations: "Só é aplicado na tomada; aumenta consumo e temperatura enquanto ativo.",
+                attemptWithoutElevationFirst: true),
             Define(
                 OptimizationActionIds.ApplyLightLegacyGraphics,
                 "Ajustar gráficos leves do FiveM",
@@ -1000,7 +1001,8 @@ public sealed class ActionCatalog
         string detectionSummary = "",
         string confirmationSummary = "",
         string undoSummary = "",
-        string riskLimitations = "")
+        string riskLimitations = "",
+        bool attemptWithoutElevationFirst = false)
     {
         return new OptimizationActionDefinition(
             id,
@@ -1024,6 +1026,7 @@ public sealed class ActionCatalog
             detectionSummary,
             confirmationSummary,
             undoSummary,
-            riskLimitations);
+            riskLimitations,
+            attemptWithoutElevationFirst);
     }
 }

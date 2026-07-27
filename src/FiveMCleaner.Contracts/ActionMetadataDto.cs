@@ -43,6 +43,15 @@ public sealed record ActionMetadataDto
     /// </summary>
     public bool IsCritical { get; init; }
 
+    /// <summary>
+    /// When true, an administrator-privileged action is first attempted
+    /// without elevation (many Windows configurations allow a standard user
+    /// to perform it); only a genuine access-denied result defers it to the
+    /// elevated broker phase. Ignored for <see cref="RequiredPrivilege.StandardUser"/>
+    /// actions.
+    /// </summary>
+    public bool AttemptWithoutElevationFirst { get; init; }
+
     /// <summary>Windows client versions on which this action is meaningful.</summary>
     public SupportedWindowsVersions SupportedWindows { get; init; } = SupportedWindowsVersions.All;
 

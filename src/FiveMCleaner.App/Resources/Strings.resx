@@ -526,6 +526,8 @@
   <data name="Runtime.BrokerResultUnconfirmed" xml:space="preserve"><value>The administrative component did not confirm its result: {0}</value></data>
   <data name="Runtime.UacCancelledRestored" xml:space="preserve"><value>UAC was cancelled. Reversible settings were restored; completed cleanups remain recorded.</value></data>
   <data name="Runtime.AdminPhaseFailed" xml:space="preserve"><value>The administrative phase failed safely: {0}</value></data>
+  <data name="Runtime.UacCancelledPreserved" xml:space="preserve"><value>The optimization was completed, but Windows' confirmation for the high-performance power plan was cancelled. Every other change was kept.</value></data>
+  <data name="Runtime.AdminPhaseFailedPreserved" xml:space="preserve"><value>The optimization was completed, but Windows did not allow enabling the high-performance power plan: {0} Every other change was kept.</value></data>
   <data name="Runtime.RollbackJournalError" xml:space="preserve"><value>The journal preserved a rollback error for diagnostics.</value></data>
   <data name="Runtime.RollbackConflict" xml:space="preserve"><value>Local rollback found a conflict and preserved the user's newer state.</value></data>
   <data name="Runtime.Interrupted.RolledBack" xml:space="preserve"><value>{0} Reversible local settings were restored; confirmed cleanups remain in History.</value></data>

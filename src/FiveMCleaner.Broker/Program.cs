@@ -20,6 +20,7 @@ internal static class Program
     [STAThread]
     public static async Task<int> Main(string[] args)
     {
+        BrokerDiagnosticsLog.Record("broker-started");
         BrokerCommand command;
         try
         {
@@ -27,6 +28,7 @@ internal static class Program
         }
         catch (BrokerUsageException)
         {
+            BrokerDiagnosticsLog.Record("invalid-arguments");
             return BrokerExitCode.InvalidArguments;
         }
 
@@ -36,9 +38,11 @@ internal static class Program
             events = await NamedPipeEventWriter.ConnectAsync(
                 command.PipeId,
                 CancellationToken.None).ConfigureAwait(false);
+            BrokerDiagnosticsLog.Record("pipe-connected");
         }
         catch (BrokerPipeException)
         {
+            BrokerDiagnosticsLog.Record("pipe-connect-failed");
             return BrokerExitCode.PipeConnectionFailed;
         }
 
@@ -47,6 +51,7 @@ internal static class Program
             try
             {
                 ElevationGuard.EnsureElevated();
+                BrokerDiagnosticsLog.Record("elevation-confirmed");
                 return command.Operation switch
                 {
                     BrokerOperation.ExecutePlan => await ExecutePlanAsync(command, events)
@@ -58,6 +63,7 @@ internal static class Program
             }
             catch (BrokerRequestException exception)
             {
+                BrokerDiagnosticsLog.Record("request-rejected");
                 return PublishFailure(
                     events,
                     BrokerEventKind.Rejected,
@@ -67,6 +73,7 @@ internal static class Program
             }
             catch (BrokerNotElevatedException)
             {
+                BrokerDiagnosticsLog.Record("elevation-failed");
                 return PublishFailure(
                     events,
                     BrokerEventKind.Failed,
@@ -76,12 +83,14 @@ internal static class Program
             }
             catch (BrokerPipeException)
             {
+                BrokerDiagnosticsLog.Record("pipe-disconnected");
                 return BrokerExitCode.PipeConnectionFailed;
             }
             catch (Exception exception) when (exception is not (OutOfMemoryException
                 or StackOverflowException
                 or AccessViolationException))
             {
+                BrokerDiagnosticsLog.Record("unhandled-exception");
                 var exitCode = command.Operation == BrokerOperation.Rollback
                     ? BrokerExitCode.RollbackFailed
                     : BrokerExitCode.ExecutionFailed;
@@ -102,13 +111,16 @@ internal static class Program
         var plan = await new PlanRequestFileLoader().LoadAsync(
             command.RequestPath!,
             CancellationToken.None).ConfigureAwait(false);
+        BrokerDiagnosticsLog.Record("request-loaded", plan.PlanId);
         var validated = new PlanValidator().Validate(plan);
+        BrokerDiagnosticsLog.Record("plan-validated", plan.PlanId);
 
         events.Publish(
             BrokerEventKind.Started,
             "Plano administrativo validado. Iniciando transação elevada.",
             item => item.TransactionId = plan.PlanId);
 
+        BrokerDiagnosticsLog.Record("action-started", plan.PlanId);
         var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault();
         using var timeout = new CancellationTokenSource(ExecutionTimeout);
         WindowsTransactionResult result;
@@ -121,6 +133,7 @@ internal static class Program
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
+            BrokerDiagnosticsLog.Record("execution-timeout", plan.PlanId);
             return PublishFailure(
                 events,
                 BrokerEventKind.Failed,
@@ -131,6 +144,7 @@ internal static class Program
 
         if (timeout.IsCancellationRequested)
         {
+            BrokerDiagnosticsLog.Record("execution-timeout", plan.PlanId);
             return PublishFailure(
                 events,
                 BrokerEventKind.Failed,
@@ -139,8 +153,10 @@ internal static class Program
                 BrokerExitCode.ExecutionFailed);
         }
 
+        BrokerDiagnosticsLog.Record("journal-saved", plan.PlanId);
         if (result.State != WindowsTransactionState.Committed)
         {
+            BrokerDiagnosticsLog.Record("execution-failed", plan.PlanId);
             events.Publish(
                 BrokerEventKind.Failed,
                 "A transação não foi confirmada; alterações aplicadas foram revertidas quando possível.",
@@ -152,6 +168,7 @@ internal static class Program
                     item.ErrorCode = "transaction-not-committed";
                     item.AppliedActionIds = result.AppliedActionIds;
                 });
+            BrokerDiagnosticsLog.Record("terminal-event-sent", plan.PlanId);
             return BrokerExitCode.ExecutionFailed;
         }
 
@@ -165,6 +182,7 @@ internal static class Program
                 item.State = result.State.ToString();
                 item.AppliedActionIds = result.AppliedActionIds;
             });
+        BrokerDiagnosticsLog.Record("terminal-event-sent", plan.PlanId);
         return BrokerExitCode.Success;
     }
 
@@ -173,6 +191,7 @@ internal static class Program
         NamedPipeEventWriter events)
     {
         var transactionId = command.RollbackTransactionId!.Value;
+        BrokerDiagnosticsLog.Record("rollback-requested", transactionId);
         events.Publish(
             BrokerEventKind.RollbackStarted,
             "Iniciando reversão da transação elevada.",
@@ -185,6 +204,7 @@ internal static class Program
 
         if (result.State != WindowsTransactionState.RolledBack)
         {
+            BrokerDiagnosticsLog.Record("rollback-failed", transactionId);
             events.Publish(
                 BrokerEventKind.Failed,
                 "A reversão não foi concluída. O journal preserva o estado para diagnóstico.",
@@ -197,6 +217,8 @@ internal static class Program
                 });
             return BrokerExitCode.RollbackFailed;
         }
+
+        BrokerDiagnosticsLog.Record("rollback-completed", transactionId);
 
         events.Publish(
             BrokerEventKind.RollbackCompleted,

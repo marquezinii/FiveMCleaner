@@ -262,6 +262,51 @@ public sealed class WindowsActionHandlerTests
     }
 
     [Fact]
+    public async Task SessionPowerPlan_SucceedsWithoutElevationWhenWindowsAllowsIt()
+    {
+        // Many Windows configurations let a standard user switch the active
+        // power scheme; the action must no longer refuse outright just
+        // because the process isn't elevated -- only a genuine
+        // AccessDenied result should require UAC.
+        var controller = new FakePowerPlanController();
+        var action = new SessionPerformancePowerPlanAction(controller, new FakePowerStatusProvider());
+        var context = Context(elevated: false);
+
+        var result = await action.ApplyAsync(context, CancellationToken.None);
+
+        Assert.True(result.Changed);
+        Assert.Equal(controller.PerformanceScheme, controller.ActiveScheme);
+    }
+
+    [Fact]
+    public async Task SessionPowerPlan_AccessDeniedWithoutElevation_ThrowsUnauthorizedAccessWithoutTouchingTheScheme()
+    {
+        var controller = new FakePowerPlanController { DenyAccess = true };
+        var previous = controller.ActiveScheme;
+        var action = new SessionPerformancePowerPlanAction(controller, new FakePowerStatusProvider());
+        var context = Context(elevated: false);
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(
+            () => action.ApplyAsync(context, CancellationToken.None));
+
+        Assert.Equal(previous, controller.ActiveScheme);
+    }
+
+    [Fact]
+    public async Task SessionPowerPlan_SchemeUnavailable_ReturnsNoChangeInsteadOfThrowing()
+    {
+        var controller = new FakePowerPlanController { PerformanceAvailable = false };
+        var previous = controller.ActiveScheme;
+        var action = new SessionPerformancePowerPlanAction(controller, new FakePowerStatusProvider());
+        var context = Context(elevated: false);
+
+        var result = await action.ApplyAsync(context, CancellationToken.None);
+
+        Assert.False(result.Changed);
+        Assert.Equal(previous, controller.ActiveScheme);
+    }
+
+    [Fact]
     public async Task VisualEffectsRollback_PreservesNewerUserChoice()
     {
         var controller = new FakeVisualEffectsController();

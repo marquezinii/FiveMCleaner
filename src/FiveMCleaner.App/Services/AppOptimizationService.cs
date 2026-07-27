@@ -610,22 +610,19 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
             if (!elevated.Succeeded)
             {
-                var rollback = await runtime.Engine.RollbackAsync(
+                // A falha (ou cancelamento do UAC) da fase administrativa não
+                // é motivo para desfazer as ações de usuário padrão já
+                // confirmadas -- isso é o que causava várias etapas
+                // aparentemente "quebradas" quando só o plano de energia
+                // falhava. Só a própria ação administrativa é marcada como
+                // falha; o restante permanece Committed.
+                await runtime.Engine.MarkAdministratorPhaseFailedAsync(
                     plan.PlanId,
-                    isElevated: false,
-                    new WindowsRollbackOptions
-                    {
-                        IncludeStandardUserActions = true,
-                        IncludeAdministratorActions = false
-                    },
+                    elevated.Message,
                     CancellationToken.None).ConfigureAwait(false);
                 var summary = elevated.WasCancelled
-                    ? localization.GetString("Runtime.UacCancelledRestored")
-                    : localization.Format("Runtime.AdminPhaseFailed", elevated.Message);
-                if (rollback.State == WindowsTransactionState.RollbackFailed)
-                {
-                    summary += " " + localization.GetString("Runtime.RollbackJournalError");
-                }
+                    ? localization.GetString("Runtime.UacCancelledPreserved")
+                    : localization.Format("Runtime.AdminPhaseFailedPreserved", elevated.Message);
 
                 return await CreateResultFromJournalAsync(
                     plan.PlanId,

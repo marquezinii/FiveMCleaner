@@ -36,6 +36,7 @@ public static class WindowsActionMetadata
             && metadata.ExpectedImpact == expected.ExpectedImpact
             && metadata.Prerequisites.SequenceEqual(expected.Prerequisites)
             && metadata.IsCritical == expected.IsCritical
+            && metadata.AttemptWithoutElevationFirst == expected.AttemptWithoutElevationFirst
             && metadata.SupportedWindows == expected.SupportedWindows
             && metadata.DetectionSummary == expected.DetectionSummary
             && metadata.ConfirmationSummary == expected.ConfirmationSummary

@@ -132,8 +132,18 @@ public sealed class WindowsTransactionEngine
 
                 var isAdministratorAction =
                     action.Metadata.RequiredPrivilege == RequiredPrivilege.Administrator;
+                // An action opted into "attempt without elevation first"
+                // still gets a shot in the standard-user phase even though
+                // it is otherwise gated on IsElevated -- most Windows
+                // configurations allow it, and only a genuine access-denied
+                // result (see the isolated-execution catch below) defers it
+                // to the elevated broker phase.
+                var attemptWithoutElevationFirst = isAdministratorAction
+                    && action.Metadata.AttemptWithoutElevationFirst
+                    && !context.IsElevated;
                 var include = isAdministratorAction
-                    ? options.IncludeAdministratorActions && context.IsElevated
+                    ? (options.IncludeAdministratorActions && context.IsElevated)
+                        || (attemptWithoutElevationFirst && options.IncludeStandardUserActions)
                     : options.IncludeStandardUserActions;
                 if (!include)
                 {
@@ -185,8 +195,26 @@ public sealed class WindowsTransactionEngine
                         completedWeight,
                         totalWeight));
 
-                    var result = await item.Action.ApplyAsync(context, cancellationToken)
-                        .ConfigureAwait(false);
+                    WindowsActionApplyResult result;
+                    try
+                    {
+                        result = await item.Action.ApplyAsync(context, cancellationToken)
+                            .ConfigureAwait(false);
+                    }
+                    catch (UnauthorizedAccessException) when (
+                        !context.IsElevated
+                        && item.Action.Metadata.RequiredPrivilege == RequiredPrivilege.Administrator
+                        && item.Action.Metadata.AttemptWithoutElevationFirst)
+                    {
+                        // Same "defer instead of fail" handling as the
+                        // isolated-execution path (see ExecuteIsolatedAsync).
+                        item.Entry.State = WindowsActionJournalState.DeferredPrivilege;
+                        item.Entry.StartedAtUtc = null;
+                        item.Entry.Error = null;
+                        await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+                        continue;
+                    }
+
                     item.Entry.Changed = result.Changed;
                     item.Entry.SnapshotJson = result.SnapshotJson;
                     item.Entry.Messages.AddRange(result.Messages);
@@ -351,6 +379,53 @@ public sealed class WindowsTransactionEngine
                 rollback.Select(item => item.Action.Metadata.Id).ToArray(),
                 deferredAdministratorIds,
                 journal.State == WindowsTransactionState.RollbackFailed ? journal.Error : null);
+        }
+        finally
+        {
+            executionGate.Release();
+        }
+    }
+
+    /// <summary>
+    /// Marks every still-pending/deferred administrator action as failed
+    /// without touching any already-committed standard-user action --
+    /// used when the elevated broker phase itself fails or is cancelled, so
+    /// a non-critical administrative failure (e.g. the high-performance
+    /// power plan) never rolls back independent changes that already
+    /// succeeded. The transaction settles as
+    /// <see cref="WindowsTransactionState.CommittedWithErrors"/> instead of
+    /// being torn down.
+    /// </summary>
+    public async Task<WindowsTransactionResult> MarkAdministratorPhaseFailedAsync(
+        Guid transactionId,
+        string reason,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(reason);
+        await executionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var journal = await journalStore.LoadAsync(transactionId, cancellationToken)
+                .ConfigureAwait(false)
+                ?? throw new FileNotFoundException($"Transaction journal '{transactionId}' was not found.");
+
+            foreach (var entry in journal.Actions.Where(entry =>
+                         entry.RequiredPrivilege == RequiredPrivilege.Administrator
+                         && entry.State is WindowsActionJournalState.Pending
+                             or WindowsActionJournalState.DeferredPrivilege))
+            {
+                entry.State = WindowsActionJournalState.Failed;
+                entry.Outcome = ActionExecutionOutcome.Failed;
+                entry.OutcomeReason = reason;
+                entry.Error = reason;
+                entry.CompletedAtUtc = DateTimeOffset.UtcNow;
+            }
+
+            journal.State = WindowsTransactionState.CommittedWithErrors;
+            journal.Error = reason;
+            await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+
+            return CreateResult(journal, [], [], reason);
         }
         finally
         {
@@ -615,6 +690,24 @@ public sealed class WindowsTransactionEngine
                 await IsolatedRollbackSelfAsync(journal, item, context).ConfigureAwait(false);
                 await FinalizeCancelledIsolatedRunAsync(journal).ConfigureAwait(false);
                 throw;
+            }
+            catch (UnauthorizedAccessException) when (
+                !context.IsElevated
+                && item.Action.Metadata.RequiredPrivilege == RequiredPrivilege.Administrator
+                && item.Action.Metadata.AttemptWithoutElevationFirst)
+            {
+                // This computer genuinely requires elevation for this
+                // action -- not a failure, just defer it back to the
+                // broker phase exactly as if it had never been attempted.
+                item.Entry.State = WindowsActionJournalState.DeferredPrivilege;
+                item.Entry.Error = null;
+                item.Entry.CompletedAtUtc = null;
+                item.Entry.StartedAtUtc = null;
+                await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+
+                completedWeight += weight;
+                ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
+                    ActionExecutionOutcome.Skipped);
             }
             catch (Exception exception) when (exception is not StackOverflowException)
             {

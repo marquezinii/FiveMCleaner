@@ -197,9 +197,30 @@ mas os invariantes acima continuam valendo integralmente:
   aceito apenas entre ações atômicas, nunca no meio de uma escrita.
 
 O **broker elevado** continua executando no modo estrito original
-(tudo‑ou‑nada com rollback total em falha), pois cada plano tipicamente
-delega apenas uma ação administrativa por vez (o plano de energia de
-desempenho); a superfície de falha isolada não se aplica lá.
+(tudo‑ou‑nada com rollback total em falha) *dentro da própria fase
+elevada*, pois cada plano tipicamente delega apenas uma ação administrativa
+por vez (o plano de energia de desempenho); a superfície de falha isolada
+não se aplica lá.
+
+**Mas uma falha ou cancelamento dessa fase elevada não desfaz mais as ações
+de usuário padrão já confirmadas na fase anterior.** Até 26/07/2026, quando
+o broker falhava (ou o UAC era cancelado), `AppOptimizationService` desfazia
+todas as ações de usuário padrão já aplicadas com sucesso — o que produzia
+o efeito relatado de "várias otimizações falhando de uma vez" quando, na
+prática, só a ativação do plano de alto desempenho havia falhado. Agora,
+uma falha nessa fase marca somente a própria ação administrativa como
+`Failed` (via `WindowsTransactionEngine.MarkAdministratorPhaseFailedAsync`),
+preserva as ações já `Committed` e conclui a transação como
+`CommittedWithErrors`. Isso não é uma exceção ao invariante "uma ação que
+falha reverte só a própria ação" — é a correção de um caso em que ele não
+estava sendo respeitado entre as duas fases da mesma transação.
+
+Além disso, a única ação administrativa hoje (`EnableSessionPerformancePowerPlan`)
+tenta primeiro **sem elevação**: muitas configurações do Windows permitem
+que um usuário comum troque o plano de energia ativo, e só um resultado
+genuíno de acesso negado (distinguido de "este plano não existe neste PC")
+aciona o broker e o UAC. Isso reduz quantas vezes o UAC aparece sem abrir
+mão de elevar quando o Windows realmente exige.
 
 Esse modelo atende ao requisito de "tratar erro sem interromper
 inutilmente todo o processo" sem abrir mão de nenhum dos invariantes de
@@ -265,6 +286,16 @@ A interface e a maior parte do motor executam sem elevação. O broker administr
 - retorna resultado estruturado, sem texto usado como comando subsequente.
 
 Uma operação em arquivos `%LOCALAPPDATA%` ou `%APPDATA%` normalmente não precisa do broker.
+
+Desde 26/07/2026, o broker também grava um log local de ciclo de vida
+(`%LOCALAPPDATA%\FiveMCleaner\Logs\broker-diagnostics.log`, apenas nome do
+evento + timestamp + ID de transação, sem caminhos, sem dados do plano) em
+marcos como `broker-started`, `pipe-connected`, `elevation-confirmed`,
+`action-started`, `terminal-event-sent`. Cada linha é gravada com
+`FileOptions.WriteThrough` (flush imediato em disco), justamente para
+sobreviver a um encerramento externo do processo (ver seção sobre
+antivírus/SmartScreen abaixo) e permitir distinguir, depois, em qual etapa
+exata o broker parou.
 
 ## Compatibilidade com antivírus
 

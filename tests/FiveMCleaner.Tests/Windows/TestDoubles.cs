@@ -123,21 +123,30 @@ internal sealed class FakePowerPlanController : IPowerPlanController
 
     public bool PerformanceAvailable { get; set; } = true;
 
+    /// <summary>When true, activation fails as if Windows denied permission (instead of the scheme not existing).</summary>
+    public bool DenyAccess { get; set; }
+
     public Task<Guid> GetActiveSchemeAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         return Task.FromResult(ActiveScheme);
     }
 
-    public Task<bool> TryActivatePerformanceSchemeAsync(CancellationToken cancellationToken)
+    public Task<PowerPlanActivationOutcome> TryActivatePerformanceSchemeAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        if (PerformanceAvailable)
+        if (DenyAccess)
         {
-            ActiveScheme = PerformanceScheme;
+            return Task.FromResult(PowerPlanActivationOutcome.AccessDenied);
         }
 
-        return Task.FromResult(PerformanceAvailable);
+        if (!PerformanceAvailable)
+        {
+            return Task.FromResult(PowerPlanActivationOutcome.SchemeUnavailable);
+        }
+
+        ActiveScheme = PerformanceScheme;
+        return Task.FromResult(PowerPlanActivationOutcome.Activated);
     }
 
     public Task ActivateSchemeAsync(Guid schemeId, CancellationToken cancellationToken)

@@ -1,3 +1,4 @@
+using System.Linq;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Catalog;
 using FiveMCleaner.Windows.Actions;
@@ -55,6 +56,95 @@ public sealed class WindowsTransactionEngineTests
         Assert.Equal(WindowsTransactionState.Committed, repeated.State);
         Assert.Empty(repeated.AppliedActionIds);
         Assert.Equal(1, administrator.ApplyCount);
+    }
+
+    [Fact]
+    public async Task MarkAdministratorPhaseFailedAsync_PreservesAlreadyCommittedStandardActions()
+    {
+        var standard = new TestGameModeAction();
+        var administrator = new TestPowerAction();
+        var journals = new InMemoryJournalStore();
+        var engine = new WindowsTransactionEngine(
+            new WindowsActionCatalog([standard, administrator]),
+            journals);
+        var transactionId = Guid.NewGuid();
+
+        var first = await engine.ExecuteAsync(
+            [standard, administrator],
+            Context(transactionId, elevated: false));
+        Assert.Equal(WindowsTransactionState.AwaitingElevation, first.State);
+
+        var result = await engine.MarkAdministratorPhaseFailedAsync(
+            transactionId,
+            "O Windows recusou a elevação.");
+
+        Assert.Equal(WindowsTransactionState.CommittedWithErrors, result.State);
+        var journal = journals.Get(transactionId);
+        Assert.Equal(WindowsActionJournalState.Committed, journal.Actions[0].State);
+        Assert.Equal(0, standard.RollbackCount);
+        Assert.Equal(WindowsActionJournalState.Failed, journal.Actions[1].State);
+        Assert.Equal(ActionExecutionOutcome.Failed, journal.Actions[1].Outcome);
+        Assert.Equal("O Windows recusou a elevação.", journal.Actions[1].OutcomeReason);
+    }
+
+    [Fact]
+    public async Task IsolatedExecution_AdministratorActionThatDoesNotNeedElevation_CommitsWithoutAwaitingUac()
+    {
+        var standard = new TestGameModeAction();
+        var administrator = new TestPowerAction { RequiresElevationOnThisMachine = false };
+        var journals = new InMemoryJournalStore();
+        var engine = new WindowsTransactionEngine(
+            new WindowsActionCatalog([standard, administrator]),
+            journals);
+        var transactionId = Guid.NewGuid();
+
+        var result = await engine.ExecuteAsync(
+            [standard, administrator],
+            Context(transactionId, elevated: false),
+            new WindowsTransactionOptions
+            {
+                IncludeStandardUserActions = true,
+                IncludeAdministratorActions = false,
+                IsolateFailures = true
+            });
+
+        Assert.Equal(WindowsTransactionState.Committed, result.State);
+        Assert.Empty(result.DeferredAdministratorActionIds);
+        Assert.Equal(1, administrator.ApplyCount);
+        Assert.All(journals.Get(transactionId).Actions, entry =>
+            Assert.Equal(WindowsActionJournalState.Committed, entry.State));
+    }
+
+    [Fact]
+    public async Task IsolatedExecution_AdministratorActionThatNeedsElevation_DefersInsteadOfFailingTheRun()
+    {
+        var standard = new TestGameModeAction();
+        var administrator = new TestPowerAction { RequiresElevationOnThisMachine = true };
+        var journals = new InMemoryJournalStore();
+        var engine = new WindowsTransactionEngine(
+            new WindowsActionCatalog([standard, administrator]),
+            journals);
+        var transactionId = Guid.NewGuid();
+
+        var result = await engine.ExecuteAsync(
+            [standard, administrator],
+            Context(transactionId, elevated: false),
+            new WindowsTransactionOptions
+            {
+                IncludeStandardUserActions = true,
+                IncludeAdministratorActions = false,
+                IsolateFailures = true
+            });
+
+        Assert.Equal(WindowsTransactionState.AwaitingElevation, result.State);
+        Assert.Equal([administrator.Metadata.Id], result.DeferredAdministratorActionIds);
+        Assert.Equal(0, administrator.ApplyCount);
+        Assert.Equal(
+            WindowsActionJournalState.Committed,
+            journals.Get(transactionId).Actions.Single(entry => entry.ActionId == standard.Metadata.Id).State);
+        Assert.Equal(
+            WindowsActionJournalState.DeferredPrivilege,
+            journals.Get(transactionId).Actions.Single(entry => entry.ActionId == administrator.Metadata.Id).State);
     }
 
     [Fact]
@@ -246,6 +336,21 @@ public sealed class WindowsTransactionEngineTests
     {
         public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
             OptimizationActionIds.EnableSessionPerformancePowerPlan);
+
+        /// <summary>When true, mimics a computer that genuinely requires elevation (like the real action's AccessDenied outcome).</summary>
+        public bool RequiresElevationOnThisMachine { get; set; } = true;
+
+        public override Task<WindowsActionApplyResult> ApplyAsync(
+            WindowsActionContext context,
+            CancellationToken cancellationToken)
+        {
+            if (RequiresElevationOnThisMachine && !context.IsElevated)
+            {
+                throw new UnauthorizedAccessException("simulated: this machine requires elevation for this action");
+            }
+
+            return base.ApplyAsync(context, cancellationToken);
+        }
     }
 
     private sealed class TestFailingCaptureAction : TestAction
