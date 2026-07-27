@@ -2671,3 +2671,33 @@ prematura para o que o Inno Setup já resolve em modo silencioso.
   de distribuição foi alterado — por `AI_RULES.md`, isso só acontece durante
   uma publicação oficial explicitamente solicitada, não neste push de
   desenvolvimento.
+- **Verificação real, ponta a ponta, de atalho e inicialização com o
+  Windows sobrevivendo à atualização silenciosa**: dúvida levantada pelo
+  usuário logo após esta rodada — a atualização automática também precisa
+  preservar o atalho da área de trabalho e a preferência "iniciar com o
+  Windows" quando o usuário já tinha ativado, sem duplicar nem perder nada.
+  Em vez de responder por dedução, foi feito um teste manual real e
+  completo, fora do repositório (pasta temporária, nunca a instalação real
+  da máquina): (1) instalação silenciosa com `/TASKS=desktopicon,startup`,
+  confirmando que a chave `HKCU\...\Run\FiveMCleaner` foi criada com
+  `"<app>\FiveMCleaner.exe" --startup`; (2) execução dos **argumentos
+  exatos** que `SilentUpdateInstaller.BuildArguments()` produz
+  (`/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /AUTOUPDATE=yes`,
+  sem `/TASKS`) simulando a atualização automática de verdade; (3)
+  confirmação de que a chave de registro permaneceu **idêntica** depois —
+  nem duplicada, nem removida. Isso funciona por três configurações já
+  existentes no `.iss` e não relacionadas a esta rodada:
+  `UsePreviousTasks=yes` (reaplica as tarefas escolhidas antes — atalho de
+  área de trabalho e início com o Windows — sem perguntar de novo, já que
+  `/VERYSILENT` nunca mostraria essa página de qualquer forma),
+  `UsePreviousAppDir=yes` e `UsePreviousGroup=yes` (a atualização reinstala
+  exatamente no mesmo caminho, então o atalho e a entrada do Registro
+  continuam apontando para o lugar certo em vez de quebrar ou duplicar).
+  Confirmado também que o próprio app relança de verdade após a instalação
+  silenciosa (processo `FiveMCleaner.exe` observado em execução via
+  `tasklist` logo após o passo 2). Instalação de teste, atalhos, grupo do
+  Menu Iniciar e a chave de registro de teste foram completamente
+  desinstalados e removidos ao final; a pasta `%LocalAppData%\FiveMCleaner`
+  real do desenvolvedor (compartilhada entre todas as instalações pelo
+  nome do produto, não pelo caminho) foi checada e confirmada intacta —
+  nenhum arquivo novo ou modificado por este teste.
