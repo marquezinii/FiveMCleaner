@@ -2251,3 +2251,40 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   `scripts\Verify-Safety.ps1` aprovado.
 - Por instrução explícita do usuário, **apenas commit local** nesta etapa
   — sem push de desenvolvimento.
+
+## Implementação do lote "Driver e perfil AMD" (26/07/2026, quinta rodada)
+
+- O usuário mandou o lote AMD já pedindo implementação direta ("Implementar:")
+  e push de desenvolvimento ao final. Mesma conclusão técnica da rodada
+  NVIDIA anterior: **a AMD também não publica API pública suportada para
+  escrever no perfil por aplicativo do Adrenalin**, então quase toda a
+  lista 🟡 (Anti-Lag, Chill, Boost, Image Sharpening, Radeon Super
+  Resolution, Enhanced Sync, limite de FPS, perfil por app, desativar
+  overlay) e o item 🧪 (AMD Fluid Motion Frames) caíram em 🚫 pelo mesmo
+  motivo já documentado — não é uma decisão nova, é a mesma política
+  aplicada de forma consistente contra o novo fabricante.
+- **Nenhuma ação nova de catálogo desta vez** (`CurrentVersion` continua
+  `12`) — o que dava para implementar já existia como infraestrutura
+  genérica de fabricante das rodadas anteriores; só precisou generalizar:
+  - `windows.gaming.gsync.guide`/`GSyncGuidanceDiagnosisAction` ganhou uma
+    dependência de `IGpuVendorInspector` e agora nomeia o painel certo
+    conforme o fabricante detectado ("NVIDIA Control Panel (Configurar
+    G-SYNC)" vs. "AMD Software: Adrenalin Edition (FreeSync)"),
+    generalizando o cobertura para incluir FreeSync. Nome/descrição da
+    ação no catálogo atualizados de "G-SYNC/VRR" para "G-SYNC/FreeSync/VRR".
+  - `GpuVendorDetectionAction.Classify` ganhou links de download por
+    fabricante detectado (nvidia.com/drivers, drivers.amd.com, Intel
+    download center) — cobre "direcionar ao driver oficial" para os três
+    fabricantes de uma vez.
+  - `GuidedDriverReinstallAction` e `DriverVersionsDiagnosisAction`
+    (versão/idade do driver) já eram vendor-neutros desde a rodada
+    anterior — só o texto do primeiro foi ajustado para mencionar
+    explicitamente que vale para AMD e NVIDIA.
+- **Testes novos/ajustados**: `GSyncGuidance_NamesAmdSoftwareForRadeonGpus`
+  (novo); `GSyncGuidance_SuggestsFpsCapBelowMaxRefreshWhenKnown`/
+  `GSyncGuidance_StillOrientsWhenRefreshRateIsUnavailable` atualizados para
+  a nova assinatura de `Classify` (recebe `GpuVendorSnapshot`);
+  `GpuVendorDetection_ClassifiesKnownVendorsAndNeverWritesAnything`
+  ampliado para verificar os links de download.
+- Validação: `dotnet build`/`dotnet test` Release (526 testes, eram 525);
+  `scripts\Verify-Safety.ps1` aprovado.

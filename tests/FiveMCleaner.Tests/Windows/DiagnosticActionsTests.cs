@@ -322,6 +322,8 @@ public sealed class DiagnosticActionsTests
         Assert.Contains("AMD", message, StringComparison.Ordinal);
         Assert.Contains("painel oficial", message, StringComparison.Ordinal);
         Assert.Contains("não escreve nem sobrescreve", message, StringComparison.Ordinal);
+        Assert.Contains("nvidia.com/drivers", message, StringComparison.Ordinal);
+        Assert.Contains("drivers.amd.com", message, StringComparison.Ordinal);
     }
 
     [Fact]

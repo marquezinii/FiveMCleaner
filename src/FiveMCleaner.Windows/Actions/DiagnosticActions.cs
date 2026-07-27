@@ -545,13 +545,39 @@ public sealed class GpuVendorDetectionAction : WindowsOptimizationAction
             return "Não foi possível identificar o fabricante da GPU neste momento.";
         }
 
+        var vendorNames = snapshot.DriverDescriptions
+            .Select(VendorOf)
+            .ToArray();
         var vendors = snapshot.DriverDescriptions
-            .Select(description => $"{VendorOf(description)} ({description})")
+            .Select((description, index) => $"{vendorNames[index]} ({description})")
             .ToArray();
 
-        return $"GPU(s) detectada(s): {string.Join(", ", vendors)}. Ajustes de perfil 3D devem ser feitos "
+        var message = $"GPU(s) detectada(s): {string.Join(", ", vendors)}. Ajustes de perfil 3D devem ser feitos "
             + "apenas pelo painel oficial do fabricante (NVIDIA Control Panel, AMD Software ou Intel "
             + "Graphics Command Center); o FiveMCleaner não escreve nem sobrescreve esses perfis.";
+
+        var links = new List<string>();
+        if (vendorNames.Contains("NVIDIA"))
+        {
+            links.Add("NVIDIA: nvidia.com/drivers");
+        }
+
+        if (vendorNames.Contains("AMD"))
+        {
+            links.Add("AMD: drivers.amd.com");
+        }
+
+        if (vendorNames.Contains("Intel"))
+        {
+            links.Add("Intel: intel.com/content/www/us/en/download-center/home.html");
+        }
+
+        if (links.Count > 0)
+        {
+            message += $" Baixe o driver mais recente direto do fabricante: {string.Join("; ", links)}.";
+        }
+
+        return message;
     }
 
     private static string VendorOf(string driverDescription)

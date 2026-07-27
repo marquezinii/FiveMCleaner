@@ -310,10 +310,14 @@ public sealed class DriverVersionsDiagnosisAction : WindowsOptimizationAction
 public sealed class GSyncGuidanceDiagnosisAction : WindowsOptimizationAction
 {
     private readonly IDisplayConfigurationInspector inspector;
+    private readonly IGpuVendorInspector gpuVendor;
 
-    public GSyncGuidanceDiagnosisAction(IDisplayConfigurationInspector inspector)
+    public GSyncGuidanceDiagnosisAction(
+        IDisplayConfigurationInspector inspector,
+        IGpuVendorInspector gpuVendor)
     {
         this.inspector = inspector ?? throw new ArgumentNullException(nameof(inspector));
+        this.gpuVendor = gpuVendor ?? throw new ArgumentNullException(nameof(gpuVendor));
     }
 
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
@@ -324,7 +328,8 @@ public sealed class GSyncGuidanceDiagnosisAction : WindowsOptimizationAction
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(inspector.GetSnapshot())));
+        return Task.FromResult(WindowsActionApplyResult.NoChange(
+            Classify(inspector.GetSnapshot(), gpuVendor.GetSnapshot())));
     }
 
     public override Task RollbackAsync(
@@ -332,20 +337,52 @@ public sealed class GSyncGuidanceDiagnosisAction : WindowsOptimizationAction
         string? snapshotJson,
         CancellationToken cancellationToken) => Task.CompletedTask;
 
-    internal static string Classify(DisplayConfigurationSnapshot? snapshot)
+    internal static string Classify(DisplayConfigurationSnapshot? snapshot, GpuVendorSnapshot gpuSnapshot)
     {
-        const string baseGuidance = "G-SYNC/VRR não tem uma API pública para ser ativado por este app; "
-            + "confirme e ative pelo NVIDIA Control Panel (Configurar G-SYNC) ou pelo menu do próprio monitor.";
+        var panel = DescribeControlPanel(gpuSnapshot);
+        var baseGuidance = "G-SYNC/FreeSync/VRR não tem uma API pública para ser ativado por este app; "
+            + $"confirme e ative pelo {panel} ou pelo menu do próprio monitor.";
         if (snapshot is null || snapshot.MaxRefreshHzAtCurrentResolution <= 0)
         {
             return baseGuidance;
         }
 
         var recommendedCap = Math.Max(1, snapshot.MaxRefreshHzAtCurrentResolution - 3);
-        return $"{baseGuidance} Para manter o FPS dentro da faixa variável do G-SYNC neste monitor "
-            + $"({snapshot.MaxRefreshHzAtCurrentResolution} Hz no modo atual), a NVIDIA recomenda limitar "
+        return $"{baseGuidance} Para manter o FPS dentro da faixa variável desta tecnologia neste monitor "
+            + $"({snapshot.MaxRefreshHzAtCurrentResolution} Hz no modo atual), o fabricante recomenda limitar "
             + $"o FPS a alguns quadros abaixo do máximo (por exemplo, {recommendedCap} FPS) -- use o "
             + "parâmetro -frameLimit do GTA V standalone para isso.";
+    }
+
+    /// <summary>
+    /// Names the correct vendor panel (NVIDIA Control Panel for G-SYNC, AMD
+    /// Software: Adrenalin Edition for FreeSync) when exactly one vendor is
+    /// detected; otherwise falls back to a vendor-neutral phrasing rather
+    /// than guessing which one applies.
+    /// </summary>
+    private static string DescribeControlPanel(GpuVendorSnapshot gpuSnapshot)
+    {
+        var vendors = gpuSnapshot.DriverDescriptions
+            .Select(description => description.Contains("AMD", StringComparison.OrdinalIgnoreCase)
+                || description.Contains("Radeon", StringComparison.OrdinalIgnoreCase)
+                ? "AMD"
+                : description.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase)
+                    ? "NVIDIA"
+                    : "Outro")
+            .Distinct()
+            .ToArray();
+
+        if (vendors is ["NVIDIA"])
+        {
+            return "NVIDIA Control Panel (Configurar G-SYNC)";
+        }
+
+        if (vendors is ["AMD"])
+        {
+            return "AMD Software: Adrenalin Edition (FreeSync)";
+        }
+
+        return "painel de controle oficial da sua GPU";
     }
 }
 
@@ -373,8 +410,9 @@ public sealed class GuidedDriverReinstallAction : WindowsOptimizationAction
             "Reinstalação limpa guiada (nenhum arquivo foi tocado): 1) baixe o Display Driver Uninstaller "
                 + "(DDU) e o instalador de driver mais recente do site oficial do fabricante da GPU antes de "
                 + "começar; 2) reinicie o Windows em Modo de Segurança; 3) rode o DDU e remova apenas o "
-                + "driver de vídeo; 4) reinicie normalmente e instale o driver baixado no passo 1. Este "
-                + "aplicativo não baixa, instala nem remove nenhum driver automaticamente."));
+                + "driver de vídeo; 4) reinicie normalmente e instale o driver baixado no passo 1. Válido "
+                + "tanto para GPUs NVIDIA quanto AMD (Adrenalin). Este aplicativo não baixa, instala nem "
+                + "remove nenhum driver automaticamente."));
     }
 
     public override Task RollbackAsync(

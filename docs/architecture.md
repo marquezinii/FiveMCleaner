@@ -261,6 +261,18 @@ sozinho. Nenhuma configuração de perfil 3D por aplicativo da NVIDIA
 implementada — a NVIDIA não publica API pública suportada para isso, a
 mesma política já documentada acima para o painel oficial do fabricante.
 
+**Generalização por fabricante (26/07/2026, quinta rodada — lote AMD)**:
+`GSyncGuidanceDiagnosisAction` ganhou `IGpuVendorInspector` e agora nomeia
+"NVIDIA Control Panel (Configurar G-SYNC)" ou "AMD Software: Adrenalin
+Edition (FreeSync)" conforme o fabricante detectado, em vez de citar só
+NVIDIA; `GpuVendorDetectionAction.Classify` ganhou links de download por
+fabricante (nvidia.com/drivers, drivers.amd.com, Intel). Nenhuma
+configuração de perfil por aplicativo do AMD Software: Adrenalin Edition
+(Anti-Lag, Chill, Boost, Image Sharpening, Radeon Super Resolution,
+Enhanced Sync, limite de FPS, perfil por app, AMD Fluid Motion Frames) foi
+implementada, pela mesma razão já documentada para a NVIDIA — a AMD também
+não publica API pública suportada para isso.
+
 Cancelamento:
 
 - é aceito antes de iniciar uma ação ou depois de um passo atômico;

@@ -4,6 +4,46 @@ Este documento registra a classificação de um lote de otimizações gráficas
 propostas pelo usuário para os perfis Leve/Médio/Agressivo, usando a legenda
 abaixo.
 
+## Atualização de 26/07/2026 (quinta rodada — implementação do lote AMD)
+
+O usuário mandou o lote "Driver e perfil AMD" já pedindo implementação
+direta. Mesma conclusão técnica da rodada NVIDIA: a AMD também não publica
+uma API pública oficialmente suportada para escrever no perfil por
+aplicativo do AMD Software: Adrenalin Edition — então quase toda a lista
+🟡 caiu em 🚫 pelo mesmo motivo, não por falta de tempo.
+
+**Implementado, generalizando as duas ações já existentes para os dois
+fabricantes** (nenhuma ação nova de catálogo, `CurrentVersion` continua
+`12`):
+
+- `windows.gaming.gsync.guide` foi generalizada: detecta o fabricante da
+  GPU (`IGpuVendorInspector`) e nomeia o painel certo — "NVIDIA Control
+  Panel (Configurar G-SYNC)" ou "AMD Software: Adrenalin Edition
+  (FreeSync)" — em vez de mencionar só NVIDIA. Nome/descrição da ação no
+  catálogo atualizados para "G-SYNC/FreeSync/VRR".
+- `windows.system.driver-versions.diagnose`
+  (`DriverVersionsDiagnosisAction`/`ClassifyOldDrivers`) já era genérico
+  por vendor desde a rodada anterior (lê `Win32_PnPSignedDriver` de
+  qualquer fabricante) — cobre "detectar versão do Adrenalin" e "alertar
+  sobre atualização" para AMD sem nenhuma mudança de código.
+- `windows.gaming.gpu-vendor.detect` (`GpuVendorDetectionAction.Classify`)
+  ganhou links diretos de download por fabricante detectado (nvidia.com/
+  drivers, drivers.amd.com, Intel download center) — cobre "direcionar ao
+  driver oficial".
+- `windows.system.driver-reinstall.guide`
+  (`GuidedDriverReinstallAction`) já era genérico (DDU funciona para
+  NVIDIA e AMD); o texto passou a mencionar isso explicitamente — cobre
+  "reinstalação limpa guiada".
+
+**Classificado 🚫 (mesma razão da rodada NVIDIA — sem API pública
+suportada)**: Radeon Anti-Lag, Radeon Chill, Radeon Boost, Radeon Image
+Sharpening, Radeon Super Resolution, Enhanced Sync, limite de FPS pelo
+driver, perfil de desempenho por aplicativo, desativar overlay/gravação
+automaticamente, e AMD Fluid Motion Frames (mesmo com a moldura 🧪 do
+pedido original — a limitação técnica de escrita é a mesma, não muda por
+"comparar antes e depois"). Overclock e undervolt automáticos continuam
+fora de escopo por definição do produto.
+
 ## Atualização de 26/07/2026 (quarta rodada — implementação do lote NVIDIA/G-SYNC)
 
 O usuário autorizou implementar tudo que desse do lote "Driver e perfil
@@ -223,6 +263,28 @@ proposta cai direto nessa regra já existente, não é uma decisão nova.
 | Detectar se funciona apenas em tela cheia ou também em janela | 👁 | Todos | Best-effort, mesma limitação. |
 | Oferecer indicador de verificação | 👁 | Todos | O indicador on-screen do G-SYNC é uma opção do driver NVIDIA — o produto pode no máximo orientar o usuário a ativá-lo manualmente, não ativá-lo sozinho. |
 | Criar limite de FPS compatível com a faixa do monitor | ✅ | Todos (onde já implementado) | **Já coberto** por `-frameLimit` em `gtav.legacy.launch-parameters.graphics.apply` — não depende do driver NVIDIA, funciona com qualquer GPU. |
+
+## 11. Driver e perfil AMD (lote proposto e implementado em 26/07/2026, quinta rodada)
+
+| Item | Classificação | Perfis | Observação |
+| --- | --- | --- | --- |
+| Detectar versão do Adrenalin | ✅ | Todos | **Já coberto** — `windows.system.driver-versions.diagnose` é vendor-neutro, lê qualquer driver de vídeo via WMI. |
+| Alertar sobre atualização | ✅ | Todos | **Já coberto** — `ClassifyOldDrivers` (limiar de 18 meses pela data real do driver) já era vendor-neutro. |
+| Direcionar ao driver oficial | ✅ | Todos | **Implementado em 26/07/2026** — `GpuVendorDetectionAction.Classify` agora inclui o link de download por fabricante detectado. |
+| Reinstalação limpa guiada | 🔧 | Manual, sob demanda | **Já coberto** — `windows.system.driver-reinstall.guide` já era genérico (DDU funciona para AMD e NVIDIA); texto ajustado para mencionar isso explicitamente. |
+| Radeon Anti-Lag | 🚫 | — | Configuração de perfil por aplicativo do Adrenalin; sem API pública suportada. |
+| Radeon Chill desligado quando limitar FPS sem intenção | 🚫 | — | Mesma limitação de API — mesmo com a condição "sem intenção", não há como ler/escrever esse estado com segurança de fora do Adrenalin. |
+| Radeon Boost com resolução dinâmica | 🚫 | — | Mesma limitação de API. |
+| Radeon Image Sharpening | 🚫 | — | Mesma limitação de API. |
+| Radeon Super Resolution, se compatível | 🚫 | — | Mesma limitação de API; também é uma escolha visual (reamostragem), igual à NVIDIA Image Scaling. |
+| FreeSync | 👁 | Todos | **Implementado em 26/07/2026** — coberto pela generalização de `windows.gaming.gsync.guide`, que já orienta especificamente pelo AMD Software: Adrenalin Edition quando detecta GPU AMD. |
+| Enhanced Sync, com teste | 🚫 | — | Mesma limitação de API — a moldura "com teste" não resolve a falta de um jeito seguro de escrever o valor. |
+| Limite de FPS | 🚫 | — | Mesma limitação de API. **Alternativa já implementada**: `-frameLimit` em `gtav.legacy.launch-parameters.graphics.apply`, independente do driver. |
+| Perfil de desempenho por aplicativo | 🚫 | — | Mesma limitação de API — é exatamente "criar perfil por aplicativo" da seção 9, com o mesmo motivo. |
+| Desativar overlay e gravação instantânea | 🚫 | — | Mesma limitação de API para alternar automaticamente; o app já **detecta** overlays em execução (`windows.gaming.overlays.detect`), só não os fecha. |
+| AMD Fluid Motion Frames (AFMF) | 🚫 | — | Sem API pública para alternar, apesar da moldura 🧪 do pedido original. Se implementado manualmente pelo usuário no Adrenalin, a orientação sobre os efeitos colaterais (frames interpolados, não reais; possíveis artefatos/latência) fica registrada aqui como texto de referência, não como funcionalidade do app. |
+| Não ativar automaticamente tecnologias sem verificar compatibilidade | 🚫 (regra já vigente) | — | Já é a postura do produto em toda ação opt-in/experimental existente. |
+| Não aplicar overclock ou undervolt automático | 🚫 (regra já vigente) | — | Mesma regra já registrada para a NVIDIA (seção 9), agora confirmada também para AMD. |
 
 ## Resumo por perfil
 

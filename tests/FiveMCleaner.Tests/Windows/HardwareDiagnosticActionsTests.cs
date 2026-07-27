@@ -576,7 +576,9 @@ public sealed class HardwareInspectorSmokeTests
             MaxRefreshHzAtCurrentResolution: 144,
             HardwareGpuScheduling: HardwareGpuSchedulingState.NotSupportedOrUnknown);
 
-        var message = GSyncGuidanceDiagnosisAction.Classify(snapshot);
+        var message = GSyncGuidanceDiagnosisAction.Classify(
+            snapshot,
+            new GpuVendorSnapshot(["NVIDIA GeForce RTX 4070"]));
 
         Assert.Contains("141 FPS", message, StringComparison.Ordinal);
         Assert.Contains("NVIDIA Control Panel", message, StringComparison.Ordinal);
@@ -585,9 +587,20 @@ public sealed class HardwareInspectorSmokeTests
     [Fact]
     public void GSyncGuidance_StillOrientsWhenRefreshRateIsUnavailable()
     {
-        var message = GSyncGuidanceDiagnosisAction.Classify(null);
+        var message = GSyncGuidanceDiagnosisAction.Classify(null, new GpuVendorSnapshot([]));
 
-        Assert.Contains("NVIDIA Control Panel", message, StringComparison.Ordinal);
+        Assert.Contains("painel de controle oficial", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GSyncGuidance_NamesAmdSoftwareForRadeonGpus()
+    {
+        var message = GSyncGuidanceDiagnosisAction.Classify(
+            null,
+            new GpuVendorSnapshot(["AMD Radeon RX 7800 XT"]));
+
+        Assert.Contains("AMD Software: Adrenalin Edition", message, StringComparison.Ordinal);
+        Assert.Contains("FreeSync", message, StringComparison.Ordinal);
     }
 
     [Fact]
