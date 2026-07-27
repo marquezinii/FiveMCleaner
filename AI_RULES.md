@@ -102,7 +102,16 @@ Ao ser disparada, a IA deve:
 3. Calcular automaticamente a próxima versão usando
    [Semantic Versioning](https://semver.org/lang/pt-BR/) — ver critérios
    abaixo. Não delegar essa decisão ao usuário nem incrementar números de
-   forma arbitrária.
+   forma arbitrária. A publicação **não** segue uma sequência numérica fixa
+   (ex.: sempre `1.0.3` → `1.0.4`); a IA deve levantar tudo o que mudou de
+   fato desde a última versão publicada (revisando commits, diffs e o
+   histórico da `dev/proxima-versao` desde a última tag) e classificar essa
+   mudança acumulada segundo os critérios de patch/minor/major abaixo. Se o
+   conjunto de mudanças desde a última versão justificar um salto maior
+   (por exemplo, várias funcionalidades novas compatíveis acumuladas desde
+   a última publicação), o incremento correto pode ser `minor` ou `major`
+   diretamente, sem depender de quantas versões patch "deveriam" ter vindo
+   antes.
 4. Atualizar todos os arquivos de versão (projeto/app, assemblies,
    instalador, manifestos, pacote portátil, metadados de release, workflows,
    atualizador, site, README e demais arquivos de distribuição), sem deixar
@@ -183,10 +192,15 @@ concreta da verificação realizada.
   instalação, atualização, dados persistidos ou comportamento público que exija
   migração, atenção explícita ou perda de compatibilidade.
 
-Incrementar somente o último componente numérico enquanto possível:
-`1.0.0` → `1.0.1` → ... → `1.0.99` → `1.1.0` → `1.1.1` → ... A mesma regra
-vale para todos os componentes posteriores (`1.2.99` → `1.3.0`, e assim por
-diante).
+Dentro de uma mesma categoria (patch, minor ou major), o componente
+correspondente evolui numericamente a partir do que já existe: `1.0.0` →
+`1.0.1` → ... → `1.0.99` → `1.1.0` → `1.1.1` → ... A mesma regra vale para
+todos os componentes posteriores (`1.2.99` → `1.3.0`, e assim por diante).
+Isso descreve apenas a mecânica de contagem dentro de cada categoria — não
+significa que toda publicação precise passar por patch antes de minor, ou
+por minor antes de major. A categoria em si (qual componente é incrementado)
+é sempre decidida pela classificação real do conjunto de mudanças desde a
+última versão publicada, conforme os critérios acima.
 
 O bloco **Últimas atualizações** deve refletir somente alterações realmente
 presentes no commit e na release, sem inventar correções ou prometer
