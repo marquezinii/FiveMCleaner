@@ -2716,6 +2716,9 @@ prematura para o que o Inno Setup já resolve em modo silencioso.
   próximo patch. Ele aceita exclusivamente o próximo incremento SemVer válido
   de patch, minor ou major; a classificação continua sendo responsabilidade da
   revisão de release, conforme `AI_RULES.md`.
+- A PR automática do Dependabot que atualizava seis ações oficiais do GitHub
+  (checkout, setup .NET, Pages e atestação) foi revisada e integrada antes da
+  tag final, para que a própria release `v1.1.0` use a cadeia de CI atualizada.
 - Validação local de release: progressão `v1.0.3 → v1.1.0` aprovada; build
   Release sem avisos; 570 testes .NET aprovados; `Verify-Safety.ps1` e contrato
   do instalador aprovados; lint, typecheck, build e 3 testes do site aprovados;

@@ -33,6 +33,9 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
   consentimento ficaram mais claras, sem ampliar permissões do aplicativo.
 - Documentação de segurança, privacidade, arquitetura, atualização e catálogo
   foi revisada para refletir os limites e o comportamento efetivamente entregue.
+- Pipelines de CI, GitHub Pages e release passaram a usar as revisões atuais
+  das ações oficiais do GitHub, mantendo checkout, setup, Pages e atestação
+  de proveniência atualizados.
 
 ## [1.0.3] - 2026-07-25
 
