@@ -288,6 +288,25 @@ existe. A maior parte do lote Intel já estava coberta por infraestrutura
 vendor-neutra das rodadas anteriores (detecção de GPU/driver, preferência
 de GPU de alto desempenho, diagnóstico de throttling térmico).
 
+**Energia e CPU (26/07/2026, sétima rodada) — limite arquitetural
+importante para o roadmap**: `windows.power.pcie-aspm.adjust`
+(`PciExpressPowerManagementAction`, Médio/Agressivo) e
+`windows.gaming.mouse-polling-rate.guide` (`MousePollingRateGuidanceAction`,
+todos os perfis) foram implementados por caberem no modelo transacional
+atual (ajuste único, reversível, sem depender de vigilância contínua). A
+maior parte do lote pedido nessa rodada — plano de energia próprio
+ativado/restaurado por sessão, prioridade de processo restaurada ao
+fechar, afinidade de CPU, core parking, timer resolution solicitado
+enquanto o jogo está aberto — **não foi implementada porque pressupõe um
+processo de vigilância de ciclo de vida do FiveM/GTA V (detectar
+início/fim em tempo real) que este produto não tem**. O FiveMCleaner é
+hoje "aplicar uma vez, verificar, confirmar, reverter se necessário", não
+um serviço residente que reage a um processo abrindo/fechando. Ver
+`docs/graphics-optimizations-backlog.md`, seção 13, para a lista completa
+e a recomendação de que uma sessão futura decida essa arquitetura de
+vigilância explicitamente antes de portar qualquer um desses itens para o
+catálogo.
+
 Cancelamento:
 
 - é aceito antes de iniciar uma ação ou depois de um passo atômico;

@@ -2340,3 +2340,76 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   `DisabledOptions_RemoveTheirActionsButKeepSafetyPreflight` atualizadas.
 - Validação: `dotnet build`/`dotnet test` Release (530 testes, eram 526);
   `scripts\Verify-Safety.ps1` aprovado.
+
+## Implementação parcial do lote "Energia e CPU" (26/07/2026, sétima rodada) — decisão de arquitetura pendente
+
+- O usuário mandou um lote grande sobre plano de energia próprio,
+  prioridade de processo, afinidade de CPU, core parking, timer
+  resolution e polling rate de mouse, pedindo implementação direta.
+- **Decisão central desta rodada, importante para sessões futuras**: a
+  maior parte deste lote (plano de energia "ativado só durante a sessão e
+  restaurado ao fechar o FiveM", prioridade de processo "testada e
+  restaurada ao fechar", afinidade de CPU, core parking, timer resolution
+  "enquanto o jogo estiver aberto") **pressupõe um processo de vigilância
+  de ciclo de vida do FiveM/GTA V (detectar início e fim em tempo real)
+  que este produto não tem hoje**. O FiveMCleaner é uma ferramenta
+  transacional de "aplicar uma vez, verificar, confirmar, reverter se
+  necessário" — não existe um serviço/watcher residente que aplique algo
+  quando o jogo abre e desfaça quando ele fecha.
+- Implementar esses itens de forma incompleta (ex.: subir a prioridade do
+  processo do GTA sem qualquer garantia de restaurá-la quando o jogo
+  fechar, possivelmente com o FiveMCleaner já encerrado) quebraria o
+  princípio de segurança central do projeto — toda ação reversível precisa
+  de um caminho garantido de reversão. Por isso, **esses itens não foram
+  implementados** e ficaram documentados como **decisão de arquitetura
+  pendente** em `docs/graphics-optimizations-backlog.md` (seção 13),
+  com uma recomendação explícita: antes de portá-los para o catálogo, uma
+  sessão futura precisa decidir e documentar em `docs/architecture.md`
+  como o app vai detectar o ciclo de vida do FiveM/GTA V em tempo real e
+  garantir reversão mesmo se o FiveMCleaner for fechado antes do jogo.
+- **O que foi implementado, por caber no modelo transacional atual (ajuste
+  único, reversível, sem depender de vigilância contínua)**: catálogo
+  subiu de `CurrentVersion = 13` para `14` com 2 ações novas.
+  - `windows.power.pcie-aspm.adjust` (✅, Médio e Agressivo,
+    `PciExpressPowerManagementAction`): desativa o PCI Express Link State
+    Power Management (ASPM) do plano de energia ativo via `powercfg /Q` +
+    `/setacvalueindex`/`/setdcvalueindex` (mesmo mecanismo documentado já
+    usado pela ação de plano de energia), reduzindo picos de latência.
+    Totalmente reversível; se o computador não expõe essa configuração ou
+    a leitura do texto do `powercfg` não bate (varia por idioma do
+    Windows), a ação simplesmente não faz nada — nunca falha, nunca
+    quebra a transação.
+  - `windows.gaming.mouse-polling-rate.guide` (👁, todos os perfis,
+    `MousePollingRateGuidanceAction`): quando a CPU está sob carga alta
+    (reaproveitando `IResourceUsageInspector`, mesma medição já usada nos
+    diagnósticos existentes), orienta testar reduzir mouses de 4000/8000
+    Hz para 1000 Hz. Documentado explicitamente que este app **não
+    consegue ler a taxa de polling real do mouse** (sem API pública para
+    isso) nem correlacionar stutter com movimento de mouse em tempo real —
+    a orientação é sempre condicionada à carga de CPU observada, nunca
+    uma afirmação de fato sobre o mouse do usuário.
+- **Já coberto, sem mudança de código**: "não manter CPU em 100%
+  permanentemente"/"não usar Ultimate Performance como religião oficial"
+  (o plano de alto desempenho já é sempre temporário e reversível); as
+  regras de nunca usar Realtime, nunca elevar processos indiscriminadamente,
+  nunca reduzir processos essenciais, nunca desativar CPU 0/SMT
+  automaticamente, nunca editar registro permanentemente — todas já eram a
+  postura do produto, confirmadas aqui contra a lista específica, sem
+  precisar de código novo.
+- **Testes novos**: `GetPciExpressAspmPolicyAsync_ParsesTheCurrentAcValueFromPowercfgQuery`,
+  `GetPciExpressAspmPolicyAsync_ReturnsNullWhenPowercfgFails`,
+  `GetPciExpressAspmPolicyAsync_ReturnsNullWhenOutputFormatIsUnrecognized`,
+  `TrySetPciExpressAspmPolicyAsync_SetsBothAcAndDcThenAppliesTheScheme`,
+  `TrySetPciExpressAspmPolicyAsync_ReturnsFalseWhenPowercfgFails`,
+  `TrySetPciExpressAspmPolicyAsync_RejectsOutOfRangeValues`
+  (`PowerCfgControllerTests.cs`); `PciExpressPowerManagement_SetsOffAndRollbackRestoresPreviousPolicy`,
+  `PciExpressPowerManagement_NoChangeWhenAlreadyOff`,
+  `PciExpressPowerManagement_NoChangeWhenNotExposed`,
+  `PciExpressPowerManagement_NoChangeWhenSetFails`,
+  `MousePollingRateGuidance_MentionsHighCpuLoadAndCpuPercentAboveThreshold`,
+  `MousePollingRateGuidance_StillOrientsWhenCpuIsNotUnderHeavyLoad`,
+  `MousePollingRateGuidance_HandlesMissingCpuReadingGracefully`
+  (`WindowsActionHandlerTests.cs`); listas de ação esperadas em
+  `PlanBuilderTests.cs` atualizadas.
+- Validação: `dotnet build`/`dotnet test` Release (543 testes, eram 530);
+  `scripts\Verify-Safety.ps1` aprovado.

@@ -262,6 +262,7 @@ public sealed class PlanBuilder : IPlanBuilder
             ActionOptionGate.ToggleFullscreenOptimizations => options.ToggleFullscreenOptimizationsExperiment,
             ActionOptionGate.ToggleHags => options.ToggleHagsExperiment,
             ActionOptionGate.GuideDriverReinstall => options.GuideDriverReinstall,
+            ActionOptionGate.AdjustPciExpressPowerManagement => options.AdjustPciExpressPowerManagement,
             _ => throw new ArgumentOutOfRangeException(nameof(gate), gate, "Unknown option gate value.")
         };
     }

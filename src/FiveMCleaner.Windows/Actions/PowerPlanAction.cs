@@ -79,6 +79,16 @@ public interface IPowerPlanController
     Task<PowerPlanActivationOutcome> TryActivatePerformanceSchemeAsync(CancellationToken cancellationToken);
 
     Task ActivateSchemeAsync(Guid schemeId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Reads the PCI Express Link State Power Management policy of the
+    /// active scheme (0 = Off, 1 = Moderate, 2 = Maximum power savings).
+    /// Null when the setting is not exposed on this machine (some
+    /// motherboards/chipsets do not surface it).
+    /// </summary>
+    Task<int?> GetPciExpressAspmPolicyAsync(CancellationToken cancellationToken);
+
+    Task<bool> TrySetPciExpressAspmPolicyAsync(int policyValue, CancellationToken cancellationToken);
 }
 
 public sealed partial class PowerCfgController : IPowerPlanController
@@ -167,10 +177,73 @@ public sealed partial class PowerCfgController : IPowerPlanController
         }
     }
 
+    // SUB_PCIEXPRESS / ASPM_POLICY, documented Windows power setting GUIDs.
+    private const string PciExpressSubgroupGuid = "501a4d13-42af-4429-9fd1-a8218c268e20";
+    private const string AspmPolicySettingGuid = "ee12f906-d277-404b-b6da-e5fa1a576df5";
+
+    public async Task<int?> GetPciExpressAspmPolicyAsync(CancellationToken cancellationToken)
+    {
+        var result = await commandRunner.RunAsync(
+            powerCfgPath,
+            ["/Q", "SCHEME_CURRENT", PciExpressSubgroupGuid, AspmPolicySettingGuid],
+            TimeSpan.FromSeconds(10),
+            cancellationToken).ConfigureAwait(false);
+        if (!result.Succeeded)
+        {
+            return null;
+        }
+
+        var match = AspmCurrentValueRegex().Match(result.StandardOutput);
+        return match.Success
+            && int.TryParse(
+                match.Groups["value"].Value,
+                System.Globalization.NumberStyles.HexNumber,
+                System.Globalization.CultureInfo.InvariantCulture,
+                out var value)
+            ? value
+            : null;
+    }
+
+    public async Task<bool> TrySetPciExpressAspmPolicyAsync(int policyValue, CancellationToken cancellationToken)
+    {
+        if (policyValue is < 0 or > 2)
+        {
+            throw new ArgumentOutOfRangeException(nameof(policyValue));
+        }
+
+        var indexText = policyValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var ac = await commandRunner.RunAsync(
+            powerCfgPath,
+            ["/setacvalueindex", "SCHEME_CURRENT", PciExpressSubgroupGuid, AspmPolicySettingGuid, indexText],
+            TimeSpan.FromSeconds(10),
+            cancellationToken).ConfigureAwait(false);
+        var dc = await commandRunner.RunAsync(
+            powerCfgPath,
+            ["/setdcvalueindex", "SCHEME_CURRENT", PciExpressSubgroupGuid, AspmPolicySettingGuid, indexText],
+            TimeSpan.FromSeconds(10),
+            cancellationToken).ConfigureAwait(false);
+        if (!ac.Succeeded || !dc.Succeeded)
+        {
+            return false;
+        }
+
+        var apply = await commandRunner.RunAsync(
+            powerCfgPath,
+            ["/S", "SCHEME_CURRENT"],
+            TimeSpan.FromSeconds(10),
+            cancellationToken).ConfigureAwait(false);
+        return apply.Succeeded;
+    }
+
     [GeneratedRegex(
         @"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
         RegexOptions.CultureInvariant)]
     private static partial Regex PowerSchemeGuidRegex();
+
+    [GeneratedRegex(
+        @"Current AC Power Setting Index:\s*0x0*(?<value>[0-9a-fA-F]+)",
+        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
+    private static partial Regex AspmCurrentValueRegex();
 }
 
 public sealed class SessionPerformancePowerPlanAction : WindowsOptimizationAction
@@ -262,6 +335,70 @@ public sealed class SessionPerformancePowerPlanAction : WindowsOptimizationActio
         }
 
         await controller.ActivateSchemeAsync(snapshot.PreviousScheme, cancellationToken)
+            .ConfigureAwait(false);
+    }
+}
+
+internal sealed record PciExpressAspmSnapshot(int PreviousPolicy);
+
+/// <summary>
+/// Sets PCI Express Link State Power Management (ASPM) on the active power
+/// scheme to "Off" (0) to reduce link-latency spikes during gaming,
+/// documented and fully reversible via <c>powercfg /Q</c> and
+/// <c>/set{a,d}cvalueindex</c> -- the same official mechanism
+/// <see cref="SessionPerformancePowerPlanAction"/> already relies on for
+/// scheme changes. Never touches any setting outside this one, documented
+/// power-setting GUID pair.
+/// </summary>
+public sealed class PciExpressPowerManagementAction : WindowsOptimizationAction
+{
+    private const int OffPolicy = 0;
+
+    private readonly IPowerPlanController controller;
+
+    public PciExpressPowerManagementAction(IPowerPlanController controller)
+    {
+        this.controller = controller ?? throw new ArgumentNullException(nameof(controller));
+    }
+
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.AdjustPciExpressPowerManagement);
+
+    public override async Task<WindowsActionApplyResult> ApplyAsync(
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        var previous = await controller.GetPciExpressAspmPolicyAsync(cancellationToken).ConfigureAwait(false);
+        if (previous is null)
+        {
+            return WindowsActionApplyResult.NoChange(
+                "Este computador não expõe a configuração de PCI Express Link State Power Management.");
+        }
+
+        if (previous == OffPolicy)
+        {
+            return WindowsActionApplyResult.NoChange(
+                "PCI Express Link State Power Management já estava desativado (Off).");
+        }
+
+        if (!await controller.TrySetPciExpressAspmPolicyAsync(OffPolicy, cancellationToken).ConfigureAwait(false))
+        {
+            return WindowsActionApplyResult.NoChange(
+                "Não foi possível alterar o PCI Express Link State Power Management neste computador.");
+        }
+
+        return WindowsActionApplyResult.ChangedWith(
+            new PciExpressAspmSnapshot(previous.Value),
+            "PCI Express Link State Power Management definido como Off; o valor anterior foi salvo para rollback.");
+    }
+
+    public override async Task RollbackAsync(
+        WindowsActionContext context,
+        string? snapshotJson,
+        CancellationToken cancellationToken)
+    {
+        var snapshot = WindowsActionSnapshot.Deserialize<PciExpressAspmSnapshot>(snapshotJson);
+        await controller.TrySetPciExpressAspmPolicyAsync(snapshot.PreviousPolicy, cancellationToken)
             .ConfigureAwait(false);
     }
 }

@@ -287,6 +287,8 @@ public sealed class WindowsOptimizationActionFactory
             new SessionPerformancePowerPlanAction(
                 dependencies.PowerPlans,
                 dependencies.PowerStatus),
+            new PciExpressPowerManagementAction(dependencies.PowerPlans),
+            new MousePollingRateGuidanceAction(dependencies.ResourceUsage),
             new LegacyGraphicsPresetAction(
                 environment.LegacyGraphicsSettingsPath,
                 environment.FiveMInstallationRoot,
@@ -522,6 +524,10 @@ public sealed class WindowsOptimizationActionFactory
                 new SessionPerformancePowerPlanAction(
                     dependencies.PowerPlans,
                     dependencies.PowerStatus),
+            OptimizationActionIds.AdjustPciExpressPowerManagement => new PciExpressPowerManagementAction(
+                dependencies.PowerPlans),
+            OptimizationActionIds.GuideMousePollingRate => new MousePollingRateGuidanceAction(
+                dependencies.ResourceUsage),
             OptimizationActionIds.ApplyLightLegacyGraphics => new LegacyGraphicsPresetAction(
                 environment.LegacyGraphicsSettingsPath,
                 environment.FiveMInstallationRoot,

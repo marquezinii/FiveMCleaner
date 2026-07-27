@@ -302,6 +302,77 @@ proposta cai direto nessa regra já existente, não é uma decisão nova.
 | Ativar perfil Performance do fabricante | 🚫 | — | Mesma limitação técnica das seções 9/10/11: os utilitários de notebook (Armoury Crate, MSI Center, Lenovo Vantage etc.) não publicam API pública oficialmente suportada para ativar perfis de desempenho por fora do próprio app do fabricante. |
 | Não tentar controlar MUX ou BIOS por métodos genéricos não documentados | 🚫 (regra já vigente) | — | Confirmado nesta rodada; é a mesma razão pela qual "detectar MUX switch" virou detecção do utilitário instalado, nunca do próprio switch. |
 
+## 13. Energia e CPU (lote proposto e parcialmente implementado em 26/07/2026, sétima rodada)
+
+**Contexto que decide a maior parte desta seção**: o FiveMCleaner hoje é
+uma ferramenta transacional de "aplicar uma vez, verificar, confirmar,
+reverter se necessário" — o usuário clica em "Otimizar", o app aplica um
+conjunto de ações e confirma. **Não existe hoje um processo de segundo
+plano que observe o FiveM/GTA V iniciar e terminar** para aplicar algo "só
+durante a sessão" e desfazê-lo automaticamente "ao fechar o jogo". A maior
+parte deste lote (plano de energia próprio ativado só durante a sessão,
+prioridade de processo testada e restaurada ao fechar, afinidade de CPU,
+core parking, timer resolution solicitado enquanto o jogo está aberto)
+**pressupõe exatamente esse tipo de vigilância de ciclo de vida**, que este
+produto não tem.
+
+Implementar esses itens "pela metade" — por exemplo, subir a prioridade do
+processo do GTA uma vez, sem qualquer garantia de que ela será restaurada
+quando o jogo fechar minutos ou horas depois, com o FiveMCleaner já
+fechado — quebraria o princípio central de segurança deste projeto: toda
+ação reversível tem que ter um caminho garantido de reversão. Por isso,
+esta rodada **implementou o que já cabe no modelo atual (ajuste único,
+reversível, sem depender de vigilância contínua)** e documentou o resto
+como uma decisão de arquitetura pendente, não como algo "esquecido".
+
+### Implementado nesta rodada
+
+| Item | Classificação | Perfis | Observação |
+| --- | --- | --- | --- |
+| Ajustar PCI Express Link State Power Management | ✅ | Médio e Agressivo | **Implementado** — `windows.power.pcie-aspm.adjust`/`PciExpressPowerManagementAction`, via `powercfg /Q` + `/set{a,d}cvalueindex` no plano ativo (mesmo mecanismo documentado já usado por `SessionPerformancePowerPlanAction`). Totalmente reversível; se o computador não expõe essa configuração, ou a leitura do texto do `powercfg` não bate (varia por idioma do Windows), a ação simplesmente não faz nada, nunca falha. |
+
+### Já coberto por infraestrutura existente, sem mudança de código
+
+| Item | Observação |
+| --- | --- |
+| Não manter CPU em 100% permanentemente / Não usar Ultimate Performance como religião oficial | Já é a postura do produto: o plano de energia de alto desempenho só é ativado durante a otimização e é totalmente reversível; nunca fixado como "sempre ligado". |
+| Nunca usar Realtime / Não elevar todos os processos indiscriminadamente / Não reduzir processos essenciais para Low | Já são regras implícitas do produto — nenhuma ação deste projeto jamais tocou prioridade de processo. |
+| Não desativar CPU 0 / Não desativar SMT automaticamente / Não limitar o jogo a 4 núcleos | Já são regras implícitas — nenhuma ação deste projeto jamais tocou afinidade de CPU. |
+| Não editar atributos ocultos do Registro permanentemente / Não desativar core parking sem medir | Já é a postura do produto para qualquer ajuste de registro (sempre reversível, nunca "permanente"). |
+| Não instalar serviço permanente de timer / Não modificar HPET | Já é a postura do produto — nenhum serviço em segundo plano é instalado por este app. |
+| Não tentar alterar software proprietário do mouse sem integração oficial | Já é a postura do produto (mesma razão de "não escrever perfil da NVIDIA/AMD/notebook" das seções 9–12). |
+| Mouse polling: alertar/recomendar teste de 1000 Hz | **Implementado** — `windows.gaming.mouse-polling-rate.guide`/`MousePollingRateGuidanceAction`, condicionado à carga de CPU observada (não à taxa de polling real do mouse, que este app não consegue ler — ver limitação abaixo). |
+| Mouse polling: detectar stutter coincidente com movimento do mouse | 🚫 **Não implementado** — exigiria telemetria contínua correlacionando eventos de mouse com frametime em tempo real; este produto só faz leituras pontuais (snapshot), não telemetria contínua. |
+
+### Pendente de decisão de arquitetura (não implementado nesta rodada)
+
+Todos os itens abaixo pressupõem um processo de vigilância de ciclo de
+vida (detectar início/fim do FiveM/GTA V) que este produto não tem hoje.
+Implementá-los exigiria antes uma decisão de arquitetura (ex.: um serviço
+leve residente na bandeja, já existente para notificações, ganhar essa
+responsabilidade; ou um processo separado) — decisão que deve ser tomada
+explicitamente pelo usuário/mantenedor antes de qualquer código, não
+decidida implicitamente ao implementar um item isolado.
+
+| Item | Classificação pedida | Por que depende de vigilância de sessão |
+| --- | --- | --- |
+| Criar plano `FiveMCleaner Gaming` (duplicar, ativar só na sessão, restaurar ao fechar) | ✅ | "Ativar apenas durante a sessão" e "restaurar ao fechar FiveM" exigem saber quando o FiveM abre/fecha. `powercfg` já suporta duplicar/criar/importar planos — a parte tecnicamente viável (`powercfg -duplicatescheme`) não é o problema; o problema é o gatilho de início/fim. |
+| Configurar comportamento diferente para desktop/notebook | ✅ | Viável tecnicamente (já detectamos bateria/notebook na seção 12), mas só faz sentido dentro do plano de sessão acima. |
+| Não permitir economia agressiva de CPU / não desligar disco durante o jogo | ✅ | Mesma dependência — são configurações do plano de sessão proposto. |
+| Configurar refrigeração ativa em notebooks | 🟡 | Depende do utilitário do fabricante (seção 12) — mesma limitação de API, mesma dependência de sessão. |
+| Ajustar estado mínimo do processador / modo de boost | 🟡 | Tecnicamente são configurações de `powercfg` (viável), mas "só durante a sessão" tem a mesma dependência. |
+| Detectar processo real do GTA dentro do FiveM | ✅ | Tecnicamente simples (o app já tem `IFiveMProcessInspector`/`IGtaVProcessInspector`); o que falta é o gatilho de sessão para as ações que dependem dessa detecção continuamente. |
+| Prioridade `Above Normal`/teste `High`, restaurar ao fechar | 🟡/🧪 | Exige monitorar o processo até ele fechar para restaurar — sem isso, "restaurar ao fechar" não pode ser garantido. |
+| Afinidade de CPU (P-cores/E-cores, CCDs, restaurar ao terminar) | 🧪 | Mesma dependência; também exige detectar a topologia real da CPU (híbrida Intel, múltiplos CCDs AMD) de forma confiável, pesquisa ainda não feita. |
+| Core parking (alterar só dentro do plano, restaurar ao fechar) | 🧪 | Mesma dependência de sessão. |
+| Timer resolution (solicitar enquanto o jogo está aberto, liberar ao fechar, medir latência/consumo) | 🧪 | Mesma dependência de sessão; medir "latência e consumo" também exigiria a infraestrutura de benchmark antes/depois ainda não construída para esse propósito. |
+
+**Recomendação para uma futura sessão**: antes de implementar qualquer um
+destes, decidir e documentar (em `docs/architecture.md`) como o app vai
+detectar o ciclo de vida do FiveM/GTA V em tempo real e garantir reversão
+mesmo se o FiveMCleaner for fechado antes do jogo. Só depois faz sentido
+portar os itens ✅/🟡/🧪 desta tabela para o catálogo.
+
 ## Resumo por perfil
 
 - **Leve**: nada novo entra aqui além do que já existe hoje (GPU de alto desempenho, Modo de Jogo) — este lote não adiciona itens automáticos ao perfil Leve, mantendo-o o mais conservador.

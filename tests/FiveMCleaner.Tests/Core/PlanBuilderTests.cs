@@ -55,7 +55,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.ApplyLightGtaVGraphics,
                 OptimizationActionIds.DiagnoseGpuPreferenceMismatch,
                 OptimizationActionIds.GuideGSync,
-                OptimizationActionIds.DiagnoseHybridLaptop
+                OptimizationActionIds.DiagnoseHybridLaptop,
+                OptimizationActionIds.GuideMousePollingRate
             ],
             Ids(plan));
         Assert.All(plan.Actions, action =>
@@ -306,7 +307,8 @@ public sealed class PlanBuilderTests
             UseSessionPerformancePowerPlan = false,
             ApplyLegacyGraphicsPreset = false,
             ApplyGtaVGraphicsPreset = false,
-            ReduceWindowsVisualEffects = false
+            ReduceWindowsVisualEffects = false,
+            AdjustPciExpressPowerManagement = false
         };
 
         var plan = Build(OptimizationProfile.Aggressive, options);
@@ -346,7 +348,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnoseGtaVLaunchParameters,
                 OptimizationActionIds.DiagnoseGpuPreferenceMismatch,
                 OptimizationActionIds.GuideGSync,
-                OptimizationActionIds.DiagnoseHybridLaptop
+                OptimizationActionIds.DiagnoseHybridLaptop,
+                OptimizationActionIds.GuideMousePollingRate
             ],
             Ids(plan));
         Assert.False(plan.RequiresElevation);

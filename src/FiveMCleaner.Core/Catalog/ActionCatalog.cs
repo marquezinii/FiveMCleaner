@@ -5,7 +5,7 @@ namespace FiveMCleaner.Core.Catalog;
 
 public sealed class ActionCatalog
 {
-    public const int CurrentVersion = 13;
+    public const int CurrentVersion = 14;
 
     private static readonly string[] NoPrerequisites = [];
     private static readonly string[] RequiresFiveMStoppedFirst = [OptimizationActionIds.VerifyFiveMIsStopped];
@@ -732,6 +732,23 @@ public sealed class ActionCatalog
                 riskLimitations: "Só é aplicado na tomada; aumenta consumo e temperatura enquanto ativo.",
                 attemptWithoutElevationFirst: true),
             Define(
+                OptimizationActionIds.AdjustPciExpressPowerManagement,
+                "Ajustar PCI Express Link State Power Management",
+                "Desativa o gerenciamento de energia de link do PCI Express (ASPM) no plano de energia ativo, reduzindo picos de latência em troca de um consumo levemente maior.",
+                ActionCategory.Power,
+                ActionRisk.Low,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                BalancedAndAggressive,
+                requiresFiveMStopped: false,
+                progressWeight: 3,
+                expectedImpact: "Reduz picos de latência de link do PCI Express (armazenamento/rede/GPU); aumenta levemente o consumo de energia.",
+                ActionOptionGate.AdjustPciExpressPowerManagement,
+                detectionSummary: "Lê o índice atual da configuração ASPM (`powercfg /Q`) do plano de energia ativo.",
+                confirmationSummary: "Confirma que o valor foi definido como Off (0) no plano ativo.",
+                undoSummary: "Totalmente reversível: o valor anterior é restaurado no rollback via powercfg.",
+                riskLimitations: "Nem todo chipset/placa-mãe expõe essa configuração; quando ausente, a ação não altera nada. A leitura do valor atual depende do texto de saída do `powercfg /Q`, que varia por idioma do Windows -- em builds não testadas nesse idioma, a ação pode não conseguir ler o valor e simplesmente não fará nada."),
+            Define(
                 OptimizationActionIds.ApplyLightLegacyGraphics,
                 "Ajustar gráficos leves do FiveM",
                 "Desliga apenas antialiasing de maior custo no arquivo existente do FiveM, com backup.",
@@ -1069,6 +1086,23 @@ public sealed class ActionCatalog
                 confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
                 undoSummary: "Somente leitura: não altera energia, GPU nem instala/remove nada.",
                 riskLimitations: "Não controla MUX switch nem BIOS por métodos genéricos não documentados; detectar o utilitário do fabricante instalado não confirma que o notebook tem MUX switch ou GPU dedicada."),
+            Define(
+                OptimizationActionIds.GuideMousePollingRate,
+                "Orientar sobre polling rate do mouse",
+                "Quando a CPU está sob carga alta, orienta testar reduzir mouses configurados para 4000/8000 Hz de polling para 1000 Hz, sem alterar nada.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Informational,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 1,
+                expectedImpact: "Orienta um teste de baixo risco (reduzir polling rate) quando a CPU já está sob carga alta, sem prometer que resolve stutter.",
+                ActionOptionGate.Always,
+                detectionSummary: "Lê o uso atual de CPU (mesma medição já usada nos diagnósticos de recursos existentes).",
+                confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
+                undoSummary: "Somente leitura: não altera nenhuma configuração de mouse ou de sistema.",
+                riskLimitations: "Não lê a taxa de polling real do mouse (não há API pública documentada para isso) nem correlaciona stutter com movimento do mouse em tempo real; a orientação é sempre condicionada à carga de CPU observada no momento do diagnóstico."),
             Define(
                 OptimizationActionIds.ReduceWindowsVisualEffects,
                 "Reduzir efeitos visuais do Windows",

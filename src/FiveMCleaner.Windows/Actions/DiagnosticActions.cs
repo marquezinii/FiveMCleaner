@@ -767,3 +767,59 @@ public sealed class HybridLaptopDiagnosisAction : WindowsOptimizationAction
         return string.Join(" ", parts);
     }
 }
+
+/// <summary>
+/// Read-only guidance about very-high-polling-rate mice (4000/8000 Hz)
+/// increasing CPU interrupt overhead, shown only when the CPU is currently
+/// under heavy load. This app has no public, reliable way to read a mouse's
+/// actual USB polling rate (it would require querying the raw USB
+/// descriptor, not exposed by a documented Windows API) or to correlate
+/// stutter with mouse movement in real time (this product only takes
+/// point-in-time snapshots, not continuous telemetry) -- so this stays
+/// text guidance tied to an existing, real signal (CPU load), never a
+/// claim of having detected the mouse or its actual polling rate.
+/// </summary>
+public sealed class MousePollingRateGuidanceAction : WindowsOptimizationAction
+{
+    private const double HighCpuLoadPercent = 85d;
+
+    private readonly IResourceUsageInspector resourceUsage;
+
+    public MousePollingRateGuidanceAction(IResourceUsageInspector resourceUsage)
+    {
+        this.resourceUsage = resourceUsage ?? throw new ArgumentNullException(nameof(resourceUsage));
+    }
+
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.GuideMousePollingRate);
+
+    public override Task<WindowsActionApplyResult> ApplyAsync(
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(WindowsActionApplyResult.NoChange(
+            Classify(resourceUsage.GetSnapshot().CpuPercent)));
+    }
+
+    public override Task RollbackAsync(
+        WindowsActionContext context,
+        string? snapshotJson,
+        CancellationToken cancellationToken) => Task.CompletedTask;
+
+    internal static string Classify(double? cpuPercent)
+    {
+        if (cpuPercent is { } percent && percent >= HighCpuLoadPercent)
+        {
+            return $"CPU sob carga alta agora ({percent:0}%). Se você usa um mouse configurado para 4000 Hz "
+                + "ou 8000 Hz de polling e nota stutter que parece coincidir com o movimento do mouse, teste "
+                + "reduzir para 1000 Hz -- taxas muito altas aumentam a sobrecarga de interrupções da CPU, "
+                + "que pode ser perceptível justamente quando a CPU já está no limite.";
+        }
+
+        return "CPU não está sob carga alta neste momento. Se notar stutter que parece coincidir com o "
+            + "movimento do mouse em algum jogo, e ele estiver configurado para 4000 Hz ou 8000 Hz de "
+            + "polling, teste reduzir para 1000 Hz como diagnóstico -- este app não consegue ler a taxa de "
+            + "polling real do seu mouse nem correlacionar isso com stutter automaticamente.";
+    }
+}

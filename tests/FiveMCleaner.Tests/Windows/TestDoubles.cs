@@ -159,6 +159,29 @@ internal sealed class FakePowerPlanController : IPowerPlanController
         ActiveScheme = schemeId;
         return Task.CompletedTask;
     }
+
+    /// <summary>Null means "not exposed on this machine", matching the real controller's contract.</summary>
+    public int? AspmPolicy { get; set; } = 1;
+
+    public bool AspmSetShouldFail { get; set; }
+
+    public Task<int?> GetPciExpressAspmPolicyAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(AspmPolicy);
+    }
+
+    public Task<bool> TrySetPciExpressAspmPolicyAsync(int policyValue, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        if (AspmSetShouldFail)
+        {
+            return Task.FromResult(false);
+        }
+
+        AspmPolicy = policyValue;
+        return Task.FromResult(true);
+    }
 }
 
 internal sealed class FakeSystemResourceInspector : ISystemResourceInspector

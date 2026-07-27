@@ -141,4 +141,11 @@ public sealed record OptimizationOptionsDto
     /// -- never touches any driver file itself.
     /// </summary>
     public bool GuideDriverReinstall { get; init; }
+
+    /// <summary>
+    /// Automatic safe adjustment, Balanced/Aggressive profiles. Disables
+    /// PCI Express Link State Power Management (ASPM) on the active power
+    /// scheme to reduce link-latency spikes; fully reversible via powercfg.
+    /// </summary>
+    public bool AdjustPciExpressPowerManagement { get; init; } = true;
 }

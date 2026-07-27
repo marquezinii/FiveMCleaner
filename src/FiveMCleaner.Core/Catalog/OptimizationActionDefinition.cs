@@ -165,5 +165,6 @@ internal enum ActionOptionGate
     ApplyGtaVRepairLaunchParameters,
     ToggleFullscreenOptimizations,
     ToggleHags,
-    GuideDriverReinstall
+    GuideDriverReinstall,
+    AdjustPciExpressPowerManagement
 }

@@ -462,6 +462,10 @@
   <data name="Actions.windows.system.driver-reinstall.guide.Description" xml:space="preserve"><value>Mostra o passo a passo oficial de reinstalação limpa do driver de vídeo (DDU + instalador oficial) quando há suspeita de corrupção. Nunca baixa, instala ou remove nada sozinho. Nunca faz parte de perfis automáticos.</value></data>
   <data name="Actions.windows.gaming.hybrid-laptop.diagnose.Name" xml:space="preserve"><value>Diagnosticar notebook híbrido/gaming</value></data>
   <data name="Actions.windows.gaming.hybrid-laptop.diagnose.Description" xml:space="preserve"><value>Verifica se o notebook está na bateria ou com Economia de Energia ativa e detecta utilitários conhecidos de troca de GPU/desempenho do fabricante (Armoury Crate, MSI Center, Lenovo Vantage, etc.), sem alterar nada.</value></data>
+  <data name="Actions.windows.power.pcie-aspm.adjust.Name" xml:space="preserve"><value>Ajustar PCI Express Link State Power Management</value></data>
+  <data name="Actions.windows.power.pcie-aspm.adjust.Description" xml:space="preserve"><value>Desativa o gerenciamento de energia de link do PCI Express (ASPM) no plano de energia ativo, reduzindo picos de latência em troca de um consumo levemente maior.</value></data>
+  <data name="Actions.windows.gaming.mouse-polling-rate.guide.Name" xml:space="preserve"><value>Orientar sobre polling rate do mouse</value></data>
+  <data name="Actions.windows.gaming.mouse-polling-rate.guide.Description" xml:space="preserve"><value>Quando a CPU está sob carga alta, orienta testar reduzir mouses configurados para 4000/8000 Hz de polling para 1000 Hz, sem alterar nada.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Name" xml:space="preserve"><value>Reduzir efeitos visuais do Windows</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Description" xml:space="preserve"><value>Reduz animações e transparências, preservando legibilidade e suavização de fontes.</value></data>
   <data name="Runtime.ApplyingAction" xml:space="preserve"><value>Aplicando {0}</value></data>

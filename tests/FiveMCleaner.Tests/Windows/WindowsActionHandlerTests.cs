@@ -408,6 +408,83 @@ public sealed class WindowsActionHandlerTests
     }
 
     [Fact]
+    public async Task PciExpressPowerManagement_SetsOffAndRollbackRestoresPreviousPolicy()
+    {
+        var controller = new FakePowerPlanController { AspmPolicy = 1 };
+        var action = new PciExpressPowerManagementAction(controller);
+        var context = Context();
+
+        var result = await action.ApplyAsync(context, CancellationToken.None);
+
+        Assert.True(result.Changed);
+        Assert.Equal(0, controller.AspmPolicy);
+
+        await action.RollbackAsync(context, result.SnapshotJson, CancellationToken.None);
+        Assert.Equal(1, controller.AspmPolicy);
+    }
+
+    [Fact]
+    public async Task PciExpressPowerManagement_NoChangeWhenAlreadyOff()
+    {
+        var controller = new FakePowerPlanController { AspmPolicy = 0 };
+        var action = new PciExpressPowerManagementAction(controller);
+
+        var result = await action.ApplyAsync(Context(), CancellationToken.None);
+
+        Assert.False(result.Changed);
+    }
+
+    [Fact]
+    public async Task PciExpressPowerManagement_NoChangeWhenNotExposed()
+    {
+        var controller = new FakePowerPlanController { AspmPolicy = null };
+        var action = new PciExpressPowerManagementAction(controller);
+
+        var result = await action.ApplyAsync(Context(), CancellationToken.None);
+
+        Assert.False(result.Changed);
+        Assert.Contains(result.Messages, message => message.Contains("não expõe", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task PciExpressPowerManagement_NoChangeWhenSetFails()
+    {
+        var controller = new FakePowerPlanController { AspmPolicy = 1, AspmSetShouldFail = true };
+        var action = new PciExpressPowerManagementAction(controller);
+
+        var result = await action.ApplyAsync(Context(), CancellationToken.None);
+
+        Assert.False(result.Changed);
+        Assert.Equal(1, controller.AspmPolicy);
+    }
+
+    [Fact]
+    public void MousePollingRateGuidance_MentionsHighCpuLoadAndCpuPercentAboveThreshold()
+    {
+        var message = MousePollingRateGuidanceAction.Classify(92);
+
+        Assert.Contains("92%", message, StringComparison.Ordinal);
+        Assert.Contains("1000 Hz", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MousePollingRateGuidance_StillOrientsWhenCpuIsNotUnderHeavyLoad()
+    {
+        var message = MousePollingRateGuidanceAction.Classify(20);
+
+        Assert.DoesNotContain("carga alta agora", message, StringComparison.Ordinal);
+        Assert.Contains("1000 Hz", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void MousePollingRateGuidance_HandlesMissingCpuReadingGracefully()
+    {
+        var message = MousePollingRateGuidanceAction.Classify(null);
+
+        Assert.Contains("1000 Hz", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task VisualEffectsRollback_PreservesNewerUserChoice()
     {
         var controller = new FakeVisualEffectsController();
