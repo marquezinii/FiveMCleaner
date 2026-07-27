@@ -514,6 +514,8 @@
   <data name="Dialog.UpdateInstall.Title" xml:space="preserve"><value>Install verified update</value></data>
   <data name="Dialog.UpdateInstall.Message" xml:space="preserve"><value>Open the verified FiveMCleaner {0} installer now? The app will close so the update can replace its files.</value></data>
   <data name="Dialog.UpdateInstall.Failed" xml:space="preserve"><value>Windows could not open the verified installer: {0}</value></data>
+  <data name="Dialog.OpenExternal.Title" xml:space="preserve"><value>Could not open</value></data>
+  <data name="Dialog.OpenExternal.Message" xml:space="preserve"><value>Windows could not open this item: {0}</value></data>
   <data name="Log.UpdateAvailable" xml:space="preserve"><value>Update {0} is available from the official GitHub release.</value></data>
   <data name="Log.UpdateCheckFailed" xml:space="preserve"><value>Could not check for updates: {0}</value></data>
   <data name="Log.UpdateVerified" xml:space="preserve"><value>Update downloaded and verified with SHA-256.</value></data>

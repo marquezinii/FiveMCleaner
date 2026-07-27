@@ -2478,3 +2478,78 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   JSON do enum).
 - Validação: `dotnet build`/`dotnet test` Release (547 testes, eram 543);
   `scripts\Verify-Safety.ps1` aprovado.
+
+## Rodada de robustez: elos fracos, bugs e limites reais (27/07/2026)
+
+Rodada dedicada a caçar fragilidades em vez de adicionar funcionalidade. O
+app foi executado (`--demo-synthetic --capture=`) antes e depois para
+confirmar que continua iniciando e renderizando.
+
+- **Crash ao abrir link/pasta externa (bug real, alto impacto)**:
+  `App.xaml.cs` trata `DispatcherUnhandledException` chamando `Shutdown(1)`,
+  ou seja, qualquer exceção não tratada na UI **encerra o aplicativo**. Três
+  handlers de `MainWindow.xaml.cs` chamavam `Process.Start` sem proteção:
+  `OpenReleaseNotes_Click` ("Ver alterações"), `OpenRepository_Click`
+  ("Abrir GitHub") e `OpenLogs_Click` ("Abrir pasta de logs" — que ainda
+  fazia `Directory.CreateDirectory` fora de try). Sem navegador padrão
+  registrado, com a policy do Windows bloqueando o verbo, ou com acesso
+  negado à pasta, clicar nesses botões fechava o FiveMCleaner inteiro.
+  Agora existe um único helper `TryOpenExternal(Action)` que captura a falha
+  e mostra um aviso localizado (novas chaves `Dialog.OpenExternal.Title` e
+  `Dialog.OpenExternal.Message` nos três catálogos).
+- **`ProcessCommandRunner` podia travar indefinidamente (elo fraco)**: as
+  leituras de stdout/stderr usavam o `cancellationToken` do chamador, não o
+  token com timeout. Quando um processo filho repassa o handle de saída para
+  um neto que sobrevive a ele, o `await outputTask` ficava bloqueado até o
+  neto morrer — ignorando completamente o timeout solicitado. Além disso, no
+  caminho de timeout/cancelamento as duas tasks de leitura eram simplesmente
+  abandonadas, virando *unobserved task exceptions*. Agora as leituras usam
+  o mesmo `linkedSource` do `WaitForExitAsync`, e o caminho de erro observa
+  ambas via `ObserveAsync` antes de propagar.
+- **Limpeza em `finally` mascarando sucesso (elo fraco, 3 ocorrências)**:
+  `JsonWindowsTransactionJournalStore.SaveAsync`,
+  `ElevatedBrokerClient.WriteRequestAsync` e
+  `AppOptimizationService.SaveSettingsAsync` gravavam em arquivo temporário,
+  faziam `File.Move` e então, no `finally`, chamavam `File.Delete` **sem
+  proteção**. Como antivírus costuma segurar o handle de um arquivo recém
+  gravado, uma falha de limpeza transformava uma gravação já concluída e
+  durável em exceção. No caso do journal isso é especialmente grave: o
+  journal é o que torna o rollback possível, e o motor passaria a acreditar
+  que não pode reverter uma transação que na verdade pode. Os três agora
+  usam limpeza best-effort.
+- **Fila de telemetria reenviando o mesmo evento para sempre (bug real)**:
+  `LocalTelemetryQueue.TryDelete` capturava apenas `IOException`, mas
+  `File.Delete` lança `UnauthorizedAccessException` (que **não** é
+  `IOException`) para arquivo somente-leitura ou com ACL negando acesso.
+  Como `Remove()` roda logo após um envio **bem-sucedido**, um único arquivo
+  não deletável escapava da exceção e fazia o mesmo evento voltar em todo
+  flush seguinte, indefinidamente.
+- **Fila de telemetria sem limite real (ponto simples → mais trabalhado)**:
+  `PurgeOlderThan` limitava só por idade (14 dias). Idade sozinha não é um
+  limite: cada execução enfileira eventos, mas um flush drena apenas um lote
+  (`MaxBatchSize = 20`), então um período offline prolongado fazia a fila
+  crescer durante toda a janela de retenção sem nada para contê-la. Foi
+  introduzido `Prune(maxAge, maxFiles)`, que limita por idade **e** por
+  contagem (`MaxQueuedEvents = 200`), descartando os mais antigos primeiro
+  (nomes têm prefixo de timestamp, então ordem ordinal é cronológica).
+  `PurgeOlderThan` permanece como atalho compatível.
+- **Testes novos**: novo arquivo `ProcessCommandRunnerTests.cs` —
+  `RunAsync_ReturnsOutputAndExitCodeForACommandThatCompletes`,
+  `RunAsync_KillsAndReportsATimeoutWhenTheProcessNeverExits`,
+  `RunAsync_TimesOutInsteadOfHangingWhenAGrandchildInheritsTheOutputPipe`
+  (regressão real: com o código antigo a chamada levava ~30s e retornava
+  sucesso em vez de respeitar o timeout de 2s),
+  `RunAsync_PropagatesCallerCancellationRatherThanATimeout`,
+  `RunAsync_RejectsExecutablesThatAreNotFullyQualified`. Em
+  `CloudflareTelemetryServiceTests.cs`:
+  `Prune_DropsTheOldestEventsOnceTheCountCeilingIsExceeded`,
+  `Prune_KeepsEverythingWhenTheQueueIsWithinBothBounds` e
+  `Remove_DoesNotThrowWhenTheQueuedFileCannotBeDeleted`.
+- **Verificado e considerado saudável, sem mudança**: `AddLog` já limita o
+  log de atividade a 100 itens; os métodos `async` do `MainViewModel` já
+  capturam exceções internamente (os `async void` do code-behind não ficam
+  desprotegidos por isso); `CancelOptimization` e o `finally` que descarta o
+  `CancellationTokenSource` rodam ambos na thread de UI, sem corrida.
+- Validação: `dotnet build`/`dotnet test` Release (555 testes, eram 547);
+  `scripts\Verify-Safety.ps1` aprovado; app iniciado e renderizado antes e
+  depois das mudanças.

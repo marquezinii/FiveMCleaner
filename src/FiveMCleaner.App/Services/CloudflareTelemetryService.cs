@@ -181,20 +181,42 @@ public sealed class LocalTelemetryQueue
     /// Drops queued events older than <paramref name="maxAge"/> so an
     /// extended offline period does not grow the queue forever.
     /// </summary>
-    public void PurgeOlderThan(TimeSpan maxAge)
+    public void PurgeOlderThan(TimeSpan maxAge) => Prune(maxAge, maxFiles: int.MaxValue);
+
+    /// <summary>
+    /// Bounds the queue by age *and* by count. Age alone is not a real bound:
+    /// each run enqueues events but a flush only drains one batch, so while
+    /// sending keeps failing the queue grows for the whole retention window
+    /// with nothing to stop it. When the count ceiling is exceeded the oldest
+    /// events are dropped first — they are the least useful and the most
+    /// likely to already be stale.
+    /// </summary>
+    public void Prune(TimeSpan maxAge, int maxFiles)
     {
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(maxFiles);
         if (!Directory.Exists(queueDirectory))
         {
             return;
         }
 
         var cutoffUtc = DateTimeOffset.UtcNow - maxAge;
-        foreach (var filePath in Directory.EnumerateFiles(queueDirectory, "*.json"))
+        var survivors = new List<string>();
+        foreach (var filePath in Directory.EnumerateFiles(queueDirectory, "*.json")
+            .OrderBy(path => path, StringComparer.Ordinal))
         {
             if (File.GetCreationTimeUtc(filePath) < cutoffUtc)
             {
                 TryDelete(filePath);
+                continue;
             }
+
+            survivors.Add(filePath);
+        }
+
+        // Filenames are timestamp-prefixed, so ordinal order is chronological.
+        for (var index = 0; index < survivors.Count - maxFiles; index++)
+        {
+            TryDelete(survivors[index]);
         }
     }
 
@@ -204,9 +226,14 @@ public sealed class LocalTelemetryQueue
         {
             File.Delete(path);
         }
-        catch (IOException)
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException)
         {
-            // Best-effort cleanup; a locked/missing file is not fatal.
+            // Best-effort cleanup; a locked, read-only or missing file is not
+            // fatal. UnauthorizedAccessException is not an IOException, so
+            // leaving it uncaught let a single undeletable file escape out of
+            // Remove() after a *successful* send — which resurfaced the same
+            // event on the next flush, forever.
         }
     }
 }
@@ -314,6 +341,7 @@ public sealed class CloudflareTelemetryTransport
 public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryService
 {
     private const int MaxBatchSize = 20;
+    private const int MaxQueuedEvents = 200;
     private static readonly TimeSpan MaxQueueAge = TimeSpan.FromDays(14);
 
     private readonly LocalTelemetryQueue queue;
@@ -359,7 +387,7 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
     {
         try
         {
-            queue.PurgeOlderThan(MaxQueueAge);
+            queue.Prune(MaxQueueAge, MaxQueuedEvents);
             var pending = queue.ReadPending(MaxBatchSize);
             if (pending.Count == 0)
             {

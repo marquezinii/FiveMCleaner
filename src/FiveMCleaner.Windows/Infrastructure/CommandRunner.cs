@@ -71,32 +71,60 @@ public sealed class ProcessCommandRunner : ICommandRunner
             throw new InvalidOperationException($"Failed to start '{executable}'.");
         }
 
-        var outputTask = process.StandardOutput.ReadToEndAsync(cancellationToken);
-        var errorTask = process.StandardError.ReadToEndAsync(cancellationToken);
         using var timeoutSource = new CancellationTokenSource(timeout);
         using var linkedSource = CancellationTokenSource.CreateLinkedTokenSource(
             cancellationToken,
             timeoutSource.Token);
 
+        // The reads must be bounded by the same token as the wait. A child that
+        // hands its stdout/stderr handle to a grandchild keeps the pipe open
+        // after exiting, so an unbounded read here would hang forever despite
+        // the timeout. Reading and waiting together also means both drain on
+        // the failure path instead of being abandoned as unobserved tasks.
+        var outputTask = process.StandardOutput.ReadToEndAsync(linkedSource.Token);
+        var errorTask = process.StandardError.ReadToEndAsync(linkedSource.Token);
+
+        string output;
+        string error;
         try
         {
             await process.WaitForExitAsync(linkedSource.Token).ConfigureAwait(false);
+            output = await outputTask.ConfigureAwait(false);
+            error = await errorTask.ConfigureAwait(false);
         }
         catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested
             && !cancellationToken.IsCancellationRequested)
         {
             TryKill(process);
+            await ObserveAsync(outputTask, errorTask).ConfigureAwait(false);
             throw new TimeoutException($"'{executable}' exceeded the {timeout} timeout.");
         }
         catch
         {
             TryKill(process);
+            await ObserveAsync(outputTask, errorTask).ConfigureAwait(false);
             throw;
         }
 
-        var output = await outputTask.ConfigureAwait(false);
-        var error = await errorTask.ConfigureAwait(false);
         return new CommandResult(process.ExitCode, output, error);
+    }
+
+    /// <summary>
+    /// Killing the process closes the pipes, so the pending reads complete
+    /// (or fault) shortly after. Awaiting them here keeps their exceptions
+    /// from surfacing later as unobserved task exceptions on the finalizer
+    /// thread, far from the call that actually failed.
+    /// </summary>
+    private static async Task ObserveAsync(params Task[] tasks)
+    {
+        try
+        {
+            await Task.WhenAll(tasks).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+        }
     }
 
     private static void TryKill(Process process)

@@ -171,10 +171,13 @@ public sealed class JsonWindowsTransactionJournalStore : IWindowsTransactionJour
             }
             finally
             {
-                if (File.Exists(temporary))
-                {
-                    File.Delete(temporary);
-                }
+                // Best-effort only. After a successful Move the temp file is
+                // already gone; if cleanup still fails (antivirus commonly
+                // holds a handle on a file moments after it is written), the
+                // journal on disk is already correct and throwing here would
+                // report a durable save as a failure — leaving the engine
+                // believing it cannot roll back a transaction it actually can.
+                TryDeleteTemporary(temporary);
             }
         }
         finally
@@ -236,6 +239,21 @@ public sealed class JsonWindowsTransactionJournalStore : IWindowsTransactionJour
     private string GetPath(Guid transactionId)
     {
         return Path.Combine(rootDirectory, $"{transactionId:N}.json");
+    }
+
+    private static void TryDeleteTemporary(string path)
+    {
+        try
+        {
+            if (File.Exists(path))
+            {
+                File.Delete(path);
+            }
+        }
+        catch (Exception exception) when (exception is IOException
+            or UnauthorizedAccessException)
+        {
+        }
     }
 
     private static void EnsureDirectoryIsNotReparsePoint(string path)

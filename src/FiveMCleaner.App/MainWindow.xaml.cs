@@ -493,11 +493,37 @@ public partial class MainWindow : Window
             return;
         }
 
-        Process.Start(new ProcessStartInfo
+        TryOpenExternal(() => Process.Start(new ProcessStartInfo
         {
             FileName = releaseNotesUri.AbsoluteUri,
             UseShellExecute = true
-        });
+        }));
+    }
+
+    /// <summary>
+    /// Shell launches fail for reasons outside the app's control (no default
+    /// browser or folder handler registered, group policy blocking the verb,
+    /// denied access to the folder). Unhandled, they reach
+    /// DispatcherUnhandledException, which shuts FiveMCleaner down — closing
+    /// the app over a failed "open this link" is never the right outcome.
+    /// </summary>
+    private static void TryOpenExternal(Action launch)
+    {
+        try
+        {
+            launch();
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            System.Windows.MessageBox.Show(
+                LocalizationService.Current.Format(
+                    "Dialog.OpenExternal.Message",
+                    exception.Message),
+                LocalizationService.Current.GetString("Dialog.OpenExternal.Title"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Warning);
+        }
     }
 
     private void CancelOptimization_Click(object sender, RoutedEventArgs e)
@@ -564,12 +590,15 @@ public partial class MainWindow : Window
 
     private void OpenLogs_Click(object sender, RoutedEventArgs e)
     {
-        Directory.CreateDirectory(viewModel.LogsDirectory);
-        Process.Start(new ProcessStartInfo
+        TryOpenExternal(() =>
         {
-            FileName = "explorer.exe",
-            Arguments = $"\"{viewModel.LogsDirectory}\"",
-            UseShellExecute = true
+            Directory.CreateDirectory(viewModel.LogsDirectory);
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                Arguments = $"\"{viewModel.LogsDirectory}\"",
+                UseShellExecute = true
+            });
         });
     }
 
@@ -592,11 +621,11 @@ public partial class MainWindow : Window
 
     private void OpenRepository_Click(object sender, RoutedEventArgs e)
     {
-        Process.Start(new ProcessStartInfo
+        TryOpenExternal(() => Process.Start(new ProcessStartInfo
         {
             FileName = ProductIdentity.RepositoryUrl,
             UseShellExecute = true
-        });
+        }));
     }
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)

@@ -201,9 +201,18 @@ public sealed class AppOptimizationService : IAppOptimizationService
         }
         finally
         {
-            if (File.Exists(temporary))
+            // Best-effort: settings are already durable once Move succeeds, so
+            // a failed temp cleanup must not surface as a failed save.
+            try
             {
-                File.Delete(temporary);
+                if (File.Exists(temporary))
+                {
+                    File.Delete(temporary);
+                }
+            }
+            catch (Exception exception) when (exception is IOException
+                or UnauthorizedAccessException)
+            {
             }
         }
     }

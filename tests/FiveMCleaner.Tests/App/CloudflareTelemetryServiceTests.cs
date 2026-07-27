@@ -203,6 +203,63 @@ public sealed class LocalTelemetryQueueTests : IDisposable
 
         Assert.Empty(queue.ReadPending(10));
     }
+
+    [Fact]
+    public async Task Prune_DropsTheOldestEventsOnceTheCountCeilingIsExceeded()
+    {
+        // Age alone never bounded the queue: a run enqueues events but a flush
+        // only drains one batch, so a long offline period grew the queue for
+        // the whole retention window with nothing to stop it.
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        for (var index = 0; index < 8; index++)
+        {
+            await queue.EnqueueAsync(SampleEvent());
+        }
+
+        var oldest = Directory.GetFiles(tempDirectory, "*.json")
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .Take(5)
+            .ToArray();
+
+        queue.Prune(TimeSpan.FromDays(14), maxFiles: 3);
+
+        Assert.Equal(3, Directory.GetFiles(tempDirectory, "*.json").Length);
+        Assert.All(oldest, path => Assert.False(File.Exists(path)));
+    }
+
+    [Fact]
+    public async Task Prune_KeepsEverythingWhenTheQueueIsWithinBothBounds()
+    {
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        await queue.EnqueueAsync(SampleEvent());
+        await queue.EnqueueAsync(SampleEvent());
+
+        queue.Prune(TimeSpan.FromDays(14), maxFiles: 200);
+
+        Assert.Equal(2, queue.ReadPending(10).Count);
+    }
+
+    [Fact]
+    public async Task Remove_DoesNotThrowWhenTheQueuedFileCannotBeDeleted()
+    {
+        // Regression guard: File.Delete throws UnauthorizedAccessException
+        // (not IOException) for a read-only file. Remove() runs right after a
+        // *successful* send, so letting that escape resurfaced the very same
+        // event on every later flush.
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        await queue.EnqueueAsync(SampleEvent());
+        var filePath = Directory.GetFiles(tempDirectory, "*.json").Single();
+        File.SetAttributes(filePath, FileAttributes.ReadOnly);
+
+        try
+        {
+            queue.Remove(filePath);
+        }
+        finally
+        {
+            File.SetAttributes(filePath, FileAttributes.Normal);
+        }
+    }
 }
 
 public sealed class CloudflareTelemetryTransportTests

@@ -281,9 +281,12 @@ internal sealed class ElevatedBrokerClient
         }
         finally
         {
+            // Best-effort only: after a successful Move the temp file is
+            // already gone, and a cleanup failure (antivirus still holding the
+            // handle) must never replace a completed write with an exception.
             if (File.Exists(temporary))
             {
-                File.Delete(temporary);
+                TryDeleteRequest(temporary);
             }
         }
     }

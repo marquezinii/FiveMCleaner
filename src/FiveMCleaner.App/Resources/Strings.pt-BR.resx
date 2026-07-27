@@ -514,6 +514,8 @@
   <data name="Dialog.UpdateInstall.Title" xml:space="preserve"><value>Instalar atualização verificada</value></data>
   <data name="Dialog.UpdateInstall.Message" xml:space="preserve"><value>Abrir agora o instalador verificado do FiveMCleaner {0}? O aplicativo será fechado para que a atualização possa substituir os arquivos.</value></data>
   <data name="Dialog.UpdateInstall.Failed" xml:space="preserve"><value>O Windows não conseguiu abrir o instalador verificado: {0}</value></data>
+  <data name="Dialog.OpenExternal.Title" xml:space="preserve"><value>Não foi possível abrir</value></data>
+  <data name="Dialog.OpenExternal.Message" xml:space="preserve"><value>O Windows não conseguiu abrir este item: {0}</value></data>
   <data name="Log.UpdateAvailable" xml:space="preserve"><value>A atualização {0} está disponível na release oficial do GitHub.</value></data>
   <data name="Log.UpdateCheckFailed" xml:space="preserve"><value>Não foi possível verificar atualizações: {0}</value></data>
   <data name="Log.UpdateVerified" xml:space="preserve"><value>Atualização baixada e verificada com SHA-256.</value></data>
