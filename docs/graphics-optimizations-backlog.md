@@ -135,17 +135,69 @@ completo, usando a legenda abaixo.
 | Desativar por aplicativo se causar problemas | 🔧 | **Manual, sob demanda** | Reclassificado de 🟡 para 🔧 (Reparo): só se usa quando já existe um problema relatado (ex.: cores erradas, crash), nunca como manutenção rotineira. |
 | Não classificar HDR como otimização de FPS | 🚫 (regra de copy) | — | Regra de texto/UI: toda comunicação sobre HDR/Auto HDR deve deixar claro que é ajuste visual, nunca prometer FPS. |
 
+## 9. Driver e perfil NVIDIA (lote proposto em 26/07/2026, terceira rodada)
+
+**Contexto que decide quase toda essa seção**: a NVIDIA não publica uma API
+pública e documentada para escrever no perfil 3D por aplicativo (o que o
+NVIDIA Control Panel/NVIDIA App chama de "configurações do programa"). As
+ferramentas que fazem isso (nvidiaProfileInspector e similares) usam a
+NVAPI de forma não documentada/não suportada oficialmente. Isso já é a
+política registrada em `docs/safety.md` e reforçada pelo próprio texto do
+`GpuVendorDetectionAction`: *"Ajustes de perfil 3D devem ser feitos apenas
+pelo painel oficial do fabricante... o FiveMCleaner não escreve nem
+sobrescreve esses perfis."* Quase toda a lista de "configurações possíveis"
+proposta cai direto nessa regra já existente, não é uma decisão nova.
+
+| Item | Classificação | Perfis | Observação |
+| --- | --- | --- | --- |
+| Detectar versão do driver | ✅ | Todos | **Já implementado** — `windows.system.driver-versions.diagnose`. |
+| Alertar sobre driver muito antigo | ✅ | Todos | Extensão de baixo risco do diagnóstico acima (definir um limiar de "antigo" por idade do driver, não por versão exata, já que a NVIDIA lança builds com frequência). |
+| Direcionar ao driver oficial | ✅ | Todos | Só um link/mensagem para nvidia.com/drivers — nunca baixa nem instala nada sozinho. |
+| Oferecer reinstalação limpa guiada quando houver corrupção | 🔧 | Manual, sob demanda | Guiado (passo a passo para o usuário rodar a desinstalação limpa oficial), nunca executado automaticamente pelo app — reinstalar um driver de vídeo errado pode deixar a tela preta, isso é reparo assistido, não uma ação do motor de otimização. |
+| Criar perfil por aplicativo, quando houver API ou integração segura | 🚫 | — | Não existe API pública/suportada para isso (ver contexto acima). "Quando houver integração segura" nunca se confirmou nas pesquisas feitas até agora. |
+| Modo de gerenciamento de energia: preferir desempenho máximo para o FiveM | 🚫 | — | Configuração de perfil 3D por aplicativo — mesma limitação de API. |
+| Modo de baixa latência: ligado | 🚫 | — | Mesma limitação de API — é um valor do perfil 3D por aplicativo (`OGL_LOW_LATENCY_MODE`/equivalente), não documentado publicamente para escrita externa seguro. |
+| Modo de baixa latência: Ultra, com benchmark | 🚫 | — | Mesma limitação técnica que o item acima; a moldura "🧪 experimental com benchmark" não muda o fato de não haver como escrever o valor com segurança. |
+| Limite de FPS pelo driver | 🚫 | — | Mesma limitação de API. **Alternativa já implementada**: `-frameLimit` em `gtav.legacy.launch-parameters.graphics.apply` limita o FPS no nível do próprio jogo, sem depender do driver. |
+| Sincronização vertical conforme estratégia de VRR | 🚫 | — | Mesma limitação de API (perfil 3D por aplicativo). |
+| G-SYNC em tela cheia ou também em janela | 🚫 | — | Mesma limitação de API — ver também a seção G-SYNC abaixo. |
+| Shader Cache Size | 🚫 | — | Mesma limitação de API. |
+| Texture Filtering Quality | 🚫 | — | Mesma limitação de API. |
+| Threaded Optimization | 🚫 | — | Mesma limitação de API. |
+| NVIDIA Image Scaling | 🚫 | — | Mesma limitação de API; também altera a imagem renderizada (reamostragem), o que é uma escolha visual do usuário, não uma otimização segura por padrão. |
+| Desativar DSR se estiver causando resolução excessiva | 🚫 | — | Mesma limitação de API. |
+| Desativar overlay da NVIDIA durante o jogo, se não utilizado | 👁/🟡 | Todos (orientação apenas) | Sem mecanismo de escrita confirmado e documentado; o produto pode, no máximo, **orientar** o usuário a desativar manualmente no NVIDIA App, nunca alternar sozinho. |
+| Detectar gravação instantânea ativa (Instant Replay) | 👁 | Todos | Diagnóstico novo e factível: detectar o processo/serviço da GeForce Experience/NVIDIA App e, se possível, o estado do Instant Replay — só leitura, mesmo espírito do detector de streaming já existente (`StreamingSoftwareDetector`). Não implementado ainda. |
+| Detectar filtros Freestyle ativos | 👁 | Todos | Mesmo caráter best-effort do item acima — não implementado ainda. |
+| Não alterar perfil global da GPU | 🚫 (regra já vigente) | — | Já é a política documentada em `docs/safety.md`; este item só confirma a regra, não muda nada. |
+| Não apagar shader cache a cada execução | 🚫 (regra já vigente) | — | Nunca foi cogitado como limpeza automática neste projeto; confirmado aqui para constar. |
+| Não forçar overclock | 🚫 (regra já vigente) | — | Fora de escopo deste produto por definição (`docs/safety.md`). |
+| Não modificar voltagem ou power limit automaticamente | 🚫 (regra já vigente) | — | Mesma regra. |
+
+## 10. G-SYNC (lote proposto em 26/07/2026, terceira rodada)
+
+| Item | Classificação | Perfis | Observação |
+| --- | --- | --- | --- |
+| Detectar monitor compatível | 👁 | Todos | Mesma limitação já registrada na seção 6 (VRR): sem SDK do fabricante, a detecção é best-effort, nunca um fato garantido. |
+| Orientar habilitação | 👁 | Todos | **Orientar, nunca habilitar sozinho** — habilitar G-SYNC é uma opção do NVIDIA Control Panel (perfil por aplicativo/global), sujeita à mesma limitação de API da seção 9. |
+| Detectar se funciona apenas em tela cheia ou também em janela | 👁 | Todos | Best-effort, mesma limitação. |
+| Oferecer indicador de verificação | 👁 | Todos | O indicador on-screen do G-SYNC é uma opção do driver NVIDIA — o produto pode no máximo orientar o usuário a ativá-lo manualmente, não ativá-lo sozinho. |
+| Criar limite de FPS compatível com a faixa do monitor | ✅ | Todos (onde já implementado) | **Já coberto** por `-frameLimit` em `gtav.legacy.launch-parameters.graphics.apply` — não depende do driver NVIDIA, funciona com qualquer GPU. |
+
 ## Resumo por perfil
 
 - **Leve**: nada novo entra aqui além do que já existe hoje (GPU de alto desempenho, Modo de Jogo) — este lote não adiciona itens automáticos ao perfil Leve, mantendo-o o mais conservador.
 - **Médio**: ganha a troca de frequência do monitor com confirmação (🟡) além do que já existe.
 - **Agressivo**: ganha todos os itens 🧪 (janela sem bordas Win11, Fullscreen Optimizations por app, HAGS, Modo de Jogo desligado condicional) e a troca de frequência do monitor.
 - **Diagnóstico (👁, todos os perfis, sem alterar nada)**: detecção de GPU integrada por engano, suporte/estado de VRR, cabo/porta inadequados, frequência do monitor abaixo do máximo.
-- **Manual, fora de qualquer perfil automático**: HDR/Auto HDR (🟡 ativar por preferência, 🔧 desativar em caso de problema).
+- **Manual, fora de qualquer perfil automático**: HDR/Auto HDR (🟡 ativar por preferência, 🔧 desativar em caso de problema); reinstalação limpa de driver guiada (🔧, sob demanda).
 - **Pendente de pesquisa antes de qualquer código**: habilitar VRR do Windows programaticamente — só vira ✅/🟡 codificável depois de confirmar um mecanismo público e testá-lo em hardware real.
+- **🚫 Não implementar (lote NVIDIA, terceira rodada)**: praticamente toda configuração de perfil 3D por aplicativo do driver NVIDIA (baixa latência, limite de FPS pelo driver, G-SYNC por aplicativo, Shader Cache Size, Texture Filtering Quality, Threaded Optimization, NVIDIA Image Scaling, DSR, gerenciamento de energia por app, criar perfil por aplicativo) — não existe API pública e oficialmente suportada da NVIDIA para escrever essas configurações; a política já registrada em `docs/safety.md` ("ajustes de perfil 3D só pelo painel oficial do fabricante") já cobria isso antes mesmo desta lista chegar. Overclock, voltagem e power limit continuam fora de escopo por definição do produto, sem exceção.
+- **Diagnóstico novo, ainda não implementado**: alertar sobre driver muito antigo (extensão do diagnóstico de versão já existente), detectar gravação instantânea (Instant Replay) e filtros Freestyle ativos (extensão do detector de streaming já existente), orientar (nunca habilitar) G-SYNC e seu indicador.
 
 ## Próximos passos
 
-1. Nenhuma dessas ações foi implementada nesta rodada — este documento é o guia de priorização para quando a implementação começar.
+1. Nenhuma das ações das seções 9 e 10 foi implementada nesta rodada — este documento é o guia de priorização para quando a implementação começar. As seções 1–6 (primeira/segunda rodada) já têm 6 itens implementados; ver `PROJECT_STATE.md` para o estado atual de cada um.
 2. Antes de implementar qualquer item 🧪, revisar `docs/safety.md` para garantir que o padrão de comparação antes/depois e reversão automática siga o mesmo modelo já usado por `OptimizationComparisonResult`/`ComputeRegressionReasonKeys`.
 3. A pesquisa sobre o mecanismo de habilitar VRR via Windows precisa ser registrada em `docs/research.md` (Fato/Inferência/Fora de escopo) antes de qualquer código ser escrito para esse item específico.
+4. Os diagnósticos novos da seção 9 (driver antigo, Instant Replay, Freestyle) são candidatos de baixo risco para uma próxima rodada de implementação, seguindo o mesmo padrão de `GpuPreferenceMismatchDiagnosisAction` (só leitura, `ActionOptionGate.Always`, todos os perfis).

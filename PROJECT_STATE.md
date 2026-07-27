@@ -2157,3 +2157,36 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   `FullscreenOptimizations_TogglesBackOffWhenAlreadyDisabled`.
 - Validação: `dotnet build`/`dotnet test` Release (518 testes, eram 509);
   `scripts\Verify-Safety.ps1` aprovado.
+
+## Classificação do lote "Driver e perfil NVIDIA" + G-SYNC (26/07/2026, terceira rodada)
+
+- Terceira leva de otimizações propostas pelo usuário (driver/perfil NVIDIA
+  e G-SYNC), classificada com a mesma legenda das rodadas anteriores. Desta
+  vez **só classificação e documentação, sem autorização explícita de
+  implementação** (diferente da rodada anterior) — nenhum código novo foi
+  escrito. Decisão completa em
+  [`docs/graphics-optimizations-backlog.md`](docs/graphics-optimizations-backlog.md)
+  (seções 9 e 10, novas).
+- **Decisão central desta rodada**: quase toda a lista de "configurações
+  possíveis" do driver NVIDIA (baixa latência, limite de FPS pelo driver,
+  G-SYNC por aplicativo, Shader Cache Size, Texture Filtering Quality,
+  Threaded Optimization, NVIDIA Image Scaling, DSR, gerenciamento de
+  energia por app, criar perfil por aplicativo) foi classificada **🚫 Não
+  implementar** pelo mesmo motivo técnico: a NVIDIA não publica uma API
+  oficialmente suportada para escrever no perfil 3D por aplicativo — isso
+  já era a política registrada em `docs/safety.md`
+  ("ajustes de perfil 3D devem ser feitos apenas pelo painel oficial do
+  fabricante... o FiveMCleaner não escreve nem sobrescreve esses perfis"),
+  então esta rodada só confirma e documenta essa regra contra a lista
+  específica pedida, não inventa uma decisão nova.
+- O que sobrou como implementável (ainda não implementado, registrado como
+  backlog): diagnóstico de driver muito antigo (extensão do diagnóstico de
+  versão já existente), detecção de gravação instantânea (NVIDIA Instant
+  Replay) e filtros Freestyle ativos (extensão do detector de streaming já
+  existente, só leitura), orientação (nunca ativação automática) de G-SYNC
+  e seu indicador on-screen, e reinstalação limpa de driver guiada (🔧,
+  passo a passo manual, nunca executada pelo app). O limite de FPS
+  compatível com a faixa do monitor **já está coberto** pelo `-frameLimit`
+  existente em `gtav.legacy.launch-parameters.graphics.apply`, que não
+  depende do driver NVIDIA.
+- Nenhuma mudança de código, teste ou build nesta etapa — só documentação.
