@@ -96,6 +96,17 @@ public sealed class OverlaySoftwareDetectionAction : WindowsOptimizationAction
         var message = found.Count == 0
             ? "Nenhum overlay ou software de captura conhecido foi detectado em execução."
             : $"Overlay(s) detectado(s): {string.Join(", ", found)}. Nenhum deles foi fechado; feche manualmente se notar instabilidade.";
+        if (found.Any(name => name.Contains("ShadowPlay", StringComparison.OrdinalIgnoreCase)))
+        {
+            // "NVIDIA Share" is the actual process behind Instant Replay; its
+            // presence is the closest reliable, read-only signal this
+            // product has for it. Freestyle filters run inside the same
+            // overlay and have no separate process signal, so this can only
+            // suggest checking manually, never assert filters are active.
+            message += " O processo do NVIDIA Share/ShadowPlay pode indicar Instant Replay ativo; "
+                + "se filtros do Freestyle estiverem configurados, também podem estar em uso -- confira no NVIDIA App.";
+        }
+
         return Task.FromResult(WindowsActionApplyResult.NoChange(message));
     }
 

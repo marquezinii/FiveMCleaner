@@ -11,7 +11,7 @@ public sealed class ActionCatalogTests
     {
         var catalog = ActionCatalog.Current;
 
-        Assert.Equal(11, ActionCatalog.CurrentVersion);
+        Assert.Equal(12, ActionCatalog.CurrentVersion);
         Assert.NotEmpty(catalog.Actions);
         Assert.Equal(
             catalog.Actions.Count,

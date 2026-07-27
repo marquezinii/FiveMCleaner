@@ -133,4 +133,12 @@ public sealed record OptimizationOptionsDto
     /// guaranteed FPS gain. Fully reversible.
     /// </summary>
     public bool ToggleHagsExperiment { get; init; }
+
+    /// <summary>
+    /// Opt-in repair guidance, never part of automatic profile composition.
+    /// Off by default; only meant to be turned on when the user suspects
+    /// display driver corruption and wants the guided clean-reinstall steps
+    /// -- never touches any driver file itself.
+    /// </summary>
+    public bool GuideDriverReinstall { get; init; }
 }

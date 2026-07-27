@@ -201,6 +201,8 @@ public sealed class WindowsOptimizationActionFactory
             new StorageHealthDiagnosisAction(dependencies.StorageHealth),
             new DriverVersionsDiagnosisAction(dependencies.DriverVersions),
             new DisplayConfigurationDiagnosisAction(dependencies.DisplayConfiguration),
+            new GSyncGuidanceDiagnosisAction(dependencies.DisplayConfiguration),
+            new GuidedDriverReinstallAction(),
             new SessionSettingsDiagnosisAction(dependencies.Registry, dependencies.PowerPlans),
             new ThrottlingSignalDiagnosisAction(
                 dependencies.Cpu,
@@ -418,6 +420,9 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.DriverVersions),
             OptimizationActionIds.DiagnoseDisplayConfiguration => new DisplayConfigurationDiagnosisAction(
                 dependencies.DisplayConfiguration),
+            OptimizationActionIds.GuideGSync => new GSyncGuidanceDiagnosisAction(
+                dependencies.DisplayConfiguration),
+            OptimizationActionIds.GuideDriverReinstall => new GuidedDriverReinstallAction(),
             OptimizationActionIds.DiagnoseSessionSettings => new SessionSettingsDiagnosisAction(
                 dependencies.Registry,
                 dependencies.PowerPlans),

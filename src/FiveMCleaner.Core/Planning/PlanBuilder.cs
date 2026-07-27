@@ -261,6 +261,7 @@ public sealed class PlanBuilder : IPlanBuilder
             ActionOptionGate.ApplyGtaVRepairLaunchParameters => options.ApplyGtaVRepairLaunchParameters,
             ActionOptionGate.ToggleFullscreenOptimizations => options.ToggleFullscreenOptimizationsExperiment,
             ActionOptionGate.ToggleHags => options.ToggleHagsExperiment,
+            ActionOptionGate.GuideDriverReinstall => options.GuideDriverReinstall,
             _ => throw new ArgumentOutOfRangeException(nameof(gate), gate, "Unknown option gate value.")
         };
     }

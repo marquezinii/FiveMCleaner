@@ -164,5 +164,6 @@ internal enum ActionOptionGate
     ApplyGtaVDisplayLaunchParameters,
     ApplyGtaVRepairLaunchParameters,
     ToggleFullscreenOptimizations,
-    ToggleHags
+    ToggleHags,
+    GuideDriverReinstall
 }

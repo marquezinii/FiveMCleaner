@@ -2190,3 +2190,64 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   existente em `gtav.legacy.launch-parameters.graphics.apply`, que não
   depende do driver NVIDIA.
 - Nenhuma mudança de código, teste ou build nesta etapa — só documentação.
+
+## Implementação do lote NVIDIA driver/G-SYNC que dava para fazer (26/07/2026, quarta rodada)
+
+- O usuário pediu para implementar "tudo que der" do lote classificado na
+  rodada anterior. Catálogo subiu de `CurrentVersion = 11` para `12` com 2
+  ações novas e 2 diagnósticos existentes ampliados.
+- **`windows.gaming.gsync.guide`** (👁, todos os perfis,
+  `ActionOptionGate.Always`): `GSyncGuidanceDiagnosisAction` em
+  `HardwareDiagnosticActions.cs`. Reaproveita
+  `IDisplayConfigurationInspector.MaxRefreshHzAtCurrentResolution` (já
+  existente) para sugerir um limite de FPS alguns quadros abaixo do máximo
+  detectado (recomendação real da NVIDIA para manter o FPS dentro da faixa
+  variável do G-SYNC), referenciando o `-frameLimit` que o app já aplica.
+  Nunca ativa G-SYNC sozinho — não existe API pública para isso.
+- **`windows.system.driver-reinstall.guide`** (🔧, opt-in via
+  `OptimizationOptionsDto.GuideDriverReinstall`, todos os perfis quando
+  ativado): `GuidedDriverReinstallAction` — texto informativo com os passos
+  oficiais (DDU em Modo de Segurança + instalador mais recente do site do
+  fabricante). Nunca baixa, instala ou remove nenhum driver; risco real de
+  tela sem vídeo se o passo a passo for feito errado é do usuário, não do
+  app, e o texto deixa isso explícito.
+- **`DiagnoseDriverVersions` ampliado**: `DriverVersionInfo` ganhou
+  `DriverDate` (novo campo opcional, lido de
+  `Win32_PnPSignedDriver.DriverDate` via parsing do formato DMTF do WMI).
+  `DriverVersionsDiagnosisAction.ClassifyOldDrivers(snapshot, now)` alerta
+  quando o driver de vídeo está há mais de 18 meses sem atualização — sinal
+  objetivo (data real do driver), nunca um palpite pela string de versão
+  (que cada fabricante formata de um jeito).
+- **`DetectOverlaysAndCaptureSoftware` ampliado**: o detector de overlays
+  já reconhecia o processo real do Instant Replay/ShadowPlay ("NVIDIA
+  Share") desde antes; a mensagem passou a mencionar isso explicitamente
+  quando detectado, e também menciona (sem afirmar como fato, já que não
+  há sinal de processo isolado) que filtros do Freestyle podem estar em
+  uso — cobre "detectar gravação instantânea ativa" e parcialmente
+  "detectar filtros Freestyle ativos" do lote proposto.
+- **O que ficou de fora, com justificativa técnica**: praticamente toda a
+  lista de configurações do perfil 3D por aplicativo da NVIDIA (baixa
+  latência, limite de FPS pelo driver, G-SYNC por aplicativo, Shader Cache
+  Size, Texture Filtering Quality, Threaded Optimization, NVIDIA Image
+  Scaling, DSR, gerenciamento de energia por app, criar perfil por
+  aplicativo, desativar overlay automaticamente) — a NVIDIA não publica uma
+  API oficialmente suportada para escrever essas configurações; essa não é
+  uma decisão nova desta sessão, é a mesma política já registrada em
+  `docs/safety.md` aplicada de forma consistente contra a lista pedida.
+- **Testes novos**: `ClassifyOldDrivers_FlagsAVideoDriverOlderThan18Months`,
+  `ClassifyOldDrivers_ReturnsNullWhenDriverIsRecentOrDateIsUnknown`,
+  `GSyncGuidance_SuggestsFpsCapBelowMaxRefreshWhenKnown`,
+  `GSyncGuidance_StillOrientsWhenRefreshRateIsUnavailable`,
+  `GuidedDriverReinstall_NeverTouchesAnythingAndExplainsTheOfficialSteps`
+  (`HardwareDiagnosticActionsTests.cs`);
+  `OverlaySoftwareDetectionAction_MentionsInstantReplayAndFreestyleWhenShadowPlayIsDetected`
+  (`DiagnosticActionsTests.cs`);
+  `GuideDriverReinstall_IsOptInAndNeverPartOfAnyDefaultProfile`
+  (`PlanBuilderTests.cs`); listas de ação esperadas em
+  `LightProfile_UsesOnlyLowImpactStandardUserActions`/
+  `DisabledOptions_RemoveTheirActionsButKeepSafetyPreflight` atualizadas
+  para incluir o novo diagnóstico G-SYNC (sempre ativo).
+- Validação: `dotnet build`/`dotnet test` Release (525 testes, eram 518);
+  `scripts\Verify-Safety.ps1` aprovado.
+- Por instrução explícita do usuário, **apenas commit local** nesta etapa
+  — sem push de desenvolvimento.

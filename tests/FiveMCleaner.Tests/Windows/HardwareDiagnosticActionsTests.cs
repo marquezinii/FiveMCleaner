@@ -529,4 +529,83 @@ public sealed class HardwareInspectorSmokeTests
         // exclusions, so only the absence of an exception is asserted here.
         _ = new WindowsBackgroundProcessInspector().GetTopConsumer(["FiveMCleaner"]);
     }
+
+    [Fact]
+    public void ClassifyOldDrivers_FlagsAVideoDriverOlderThan18Months()
+    {
+        var now = new DateTimeOffset(2026, 7, 27, 0, 0, 0, TimeSpan.Zero);
+        var snapshot = new DriverVersionSnapshot(
+            Video: [new DriverVersionInfo("NVIDIA GeForce RTX 4070", "31.0.15.5222", now.AddMonths(-24))],
+            Network: [],
+            Audio: [],
+            Chipset: []);
+
+        var warning = DriverVersionsDiagnosisAction.ClassifyOldDrivers(snapshot, now);
+
+        Assert.NotNull(warning);
+        Assert.Contains("NVIDIA GeForce RTX 4070", warning, StringComparison.Ordinal);
+        Assert.Contains("18 meses", warning, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void ClassifyOldDrivers_ReturnsNullWhenDriverIsRecentOrDateIsUnknown()
+    {
+        var now = new DateTimeOffset(2026, 7, 27, 0, 0, 0, TimeSpan.Zero);
+        var recent = new DriverVersionSnapshot(
+            Video: [new DriverVersionInfo("NVIDIA GeForce RTX 4070", "31.0.15.5222", now.AddMonths(-2))],
+            Network: [],
+            Audio: [],
+            Chipset: []);
+        var unknownDate = new DriverVersionSnapshot(
+            Video: [new DriverVersionInfo("NVIDIA GeForce RTX 4070", "31.0.15.5222", null)],
+            Network: [],
+            Audio: [],
+            Chipset: []);
+
+        Assert.Null(DriverVersionsDiagnosisAction.ClassifyOldDrivers(recent, now));
+        Assert.Null(DriverVersionsDiagnosisAction.ClassifyOldDrivers(unknownDate, now));
+    }
+
+    [Fact]
+    public void GSyncGuidance_SuggestsFpsCapBelowMaxRefreshWhenKnown()
+    {
+        var snapshot = new DisplayConfigurationSnapshot(
+            Width: 2560,
+            Height: 1440,
+            CurrentRefreshHz: 144,
+            MaxRefreshHzAtCurrentResolution: 144,
+            HardwareGpuScheduling: HardwareGpuSchedulingState.NotSupportedOrUnknown);
+
+        var message = GSyncGuidanceDiagnosisAction.Classify(snapshot);
+
+        Assert.Contains("141 FPS", message, StringComparison.Ordinal);
+        Assert.Contains("NVIDIA Control Panel", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void GSyncGuidance_StillOrientsWhenRefreshRateIsUnavailable()
+    {
+        var message = GSyncGuidanceDiagnosisAction.Classify(null);
+
+        Assert.Contains("NVIDIA Control Panel", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GuidedDriverReinstall_NeverTouchesAnythingAndExplainsTheOfficialSteps()
+    {
+        var action = new GuidedDriverReinstallAction();
+
+        var result = await action.ApplyAsync(
+            new WindowsActionContext
+            {
+                TransactionId = Guid.NewGuid(),
+                StartedAtUtc = DateTimeOffset.UtcNow,
+                IsElevated = false
+            },
+            CancellationToken.None);
+
+        Assert.False(result.Changed);
+        Assert.Contains("DDU", result.Messages[0], StringComparison.Ordinal);
+        Assert.Contains("não baixa, instala nem remove", result.Messages[0], StringComparison.Ordinal);
+    }
 }

@@ -247,6 +247,20 @@ interface do app. Ver `docs/graphics-optimizations-backlog.md` para a
 classificação completa e o que ainda não foi implementado (VRR, janela sem
 bordas do Windows 11, HDR, troca automática de frequência do monitor).
 
+**Diagnósticos/orientações somente leitura, todos os perfis** (26/07/2026,
+quarta rodada): `windows.gaming.gsync.guide` (orienta habilitar G-SYNC/VRR
+pelo painel do fabricante, nunca ativa sozinho, sugere `-frameLimit` com
+base na taxa de atualização detectada) e a extensão de
+`DiagnoseDriverVersions` para alertar sobre driver de vídeo com mais de 18
+meses (pela data real do driver, `DriverDate`, não pela string de versão).
+`windows.system.driver-reinstall.guide` (🔧, opt-in, todos os perfis) segue
+o mesmo padrão das outras ações de reparo opt-in: mostra os passos oficiais
+de reinstalação limpa (DDU + instalador do fabricante), nunca executa nada
+sozinho. Nenhuma configuração de perfil 3D por aplicativo da NVIDIA
+(baixa latência, G-SYNC por app, limite de FPS pelo driver, etc.) foi
+implementada — a NVIDIA não publica API pública suportada para isso, a
+mesma política já documentada acima para o painel oficial do fabricante.
+
 Cancelamento:
 
 - é aceito antes de iniciar uma ação ou depois de um passo atômico;

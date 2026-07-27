@@ -5,7 +5,7 @@ namespace FiveMCleaner.Core.Catalog;
 
 public sealed class ActionCatalog
 {
-    public const int CurrentVersion = 11;
+    public const int CurrentVersion = 12;
 
     private static readonly string[] NoPrerequisites = [];
     private static readonly string[] RequiresFiveMStoppedFirst = [OptimizationActionIds.VerifyFiveMIsStopped];
@@ -1018,6 +1018,40 @@ public sealed class ActionCatalog
                 undoSummary: "Totalmente reversível: o valor anterior é restaurado no rollback (também exige reinício para valer).",
                 riskLimitations: "O resultado varia por combinação de GPU/driver; a Microsoft não garante ganho de FPS com HAGS ativado ou desativado.",
                 attemptWithoutElevationFirst: true),
+            Define(
+                OptimizationActionIds.GuideGSync,
+                "Orientar sobre G-SYNC/VRR",
+                "Orienta como conferir e ativar o G-SYNC/VRR pelo NVIDIA Control Panel ou pelo monitor, e sugere um limite de FPS compatível com a faixa variável, sem alterar nada.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Informational,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 2,
+                expectedImpact: "Ajuda o usuário a ativar G-SYNC/VRR corretamente e a escolher um limite de FPS compatível, sem prometer o que este app não pode garantir.",
+                ActionOptionGate.Always,
+                detectionSummary: "Lê a taxa de atualização máxima detectada na resolução atual.",
+                confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
+                undoSummary: "Somente leitura: não ativa nem desativa G-SYNC/VRR.",
+                riskLimitations: "Não existe API pública para confirmar ou ativar G-SYNC/VRR; a orientação é best-effort, nunca um fato garantido."),
+            Define(
+                OptimizationActionIds.GuideDriverReinstall,
+                "Orientar reinstalação limpa do driver de vídeo",
+                "Mostra o passo a passo oficial de reinstalação limpa do driver de vídeo (DDU + instalador oficial) quando há suspeita de corrupção. Nunca baixa, instala ou remove nada sozinho. Nunca faz parte de perfis automáticos.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Informational,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 2,
+                expectedImpact: "Ajuda a resolver problemas causados por instalação corrompida do driver de vídeo, com os passos oficiais do fabricante.",
+                ActionOptionGate.GuideDriverReinstall,
+                detectionSummary: "Nenhuma detecção automática de corrupção; é acionado manualmente pelo usuário.",
+                confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
+                undoSummary: "Somente leitura: não baixa, instala nem remove nenhum driver.",
+                riskLimitations: "É orientação, não reparo automático; reinstalar o driver errado ou interromper a instalação pode deixar o computador sem saída de vídeo -- siga os passos com cuidado."),
             Define(
                 OptimizationActionIds.ReduceWindowsVisualEffects,
                 "Reduzir efeitos visuais do Windows",

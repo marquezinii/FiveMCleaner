@@ -456,6 +456,10 @@
   <data name="Actions.windows.gaming.fullscreen-optimizations.toggle.Description" xml:space="preserve"><value>Toggles the "Disable fullscreen optimizations" compatibility flag for FiveM and GTA V as an opt-in compatibility test. Never part of automatic profiles beyond Aggressive.</value></data>
   <data name="Actions.windows.gaming.hags.toggle.Name" xml:space="preserve"><value>Test Hardware-Accelerated GPU Scheduling (HAGS)</value></data>
   <data name="Actions.windows.gaming.hags.toggle.Description" xml:space="preserve"><value>Toggles HAGS between enabled and Windows' default as an opt-in compatibility test. Never part of automatic profiles beyond Aggressive.</value></data>
+  <data name="Actions.windows.gaming.gsync.guide.Name" xml:space="preserve"><value>Guide G-SYNC/VRR setup</value></data>
+  <data name="Actions.windows.gaming.gsync.guide.Description" xml:space="preserve"><value>Guides checking and enabling G-SYNC/VRR through the NVIDIA Control Panel or the monitor itself, and suggests an FPS limit compatible with the variable range, without changing anything.</value></data>
+  <data name="Actions.windows.system.driver-reinstall.guide.Name" xml:space="preserve"><value>Guide clean video driver reinstall</value></data>
+  <data name="Actions.windows.system.driver-reinstall.guide.Description" xml:space="preserve"><value>Shows the official clean-reinstall steps for the video driver (DDU + official installer) when corruption is suspected. Never downloads, installs, or removes anything by itself. Never part of automatic profiles.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Name" xml:space="preserve"><value>Reduce Windows visual effects</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Description" xml:space="preserve"><value>Reduces animations and transparency while preserving readability and font smoothing.</value></data>
   <data name="Runtime.ApplyingAction" xml:space="preserve"><value>Applying {0}</value></data>

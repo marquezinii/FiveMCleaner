@@ -235,8 +235,15 @@ public sealed class DriverVersionsDiagnosisAction : WindowsOptimizationAction
         var buildLabel = OperatingSystem.IsWindows()
             ? $"build {Environment.OSVersion.Version.Build}"
             : "build desconhecido";
-        return Task.FromResult(WindowsActionApplyResult.NoChange(
-            $"Windows {buildLabel}. {Classify(inspector.GetSnapshot())}"));
+        var snapshot = inspector.GetSnapshot();
+        var message = $"Windows {buildLabel}. {Classify(snapshot)}";
+        var oldDriverWarning = ClassifyOldDrivers(snapshot, DateTimeOffset.UtcNow);
+        if (oldDriverWarning is not null)
+        {
+            message += $" {oldDriverWarning}";
+        }
+
+        return Task.FromResult(WindowsActionApplyResult.NoChange(message));
     }
 
     public override Task RollbackAsync(
@@ -263,6 +270,117 @@ public sealed class DriverVersionsDiagnosisAction : WindowsOptimizationAction
             ? "Não foi possível ler versões de driver de vídeo/rede/áudio/chipset."
             : joined;
     }
+
+    /// <summary>
+    /// Flags a video driver whose <c>DriverDate</c> (WMI-reported, the same
+    /// date shown in Device Manager's Driver tab) is older than 18 months --
+    /// an objective, verifiable signal rather than guessing from the version
+    /// string, which vendors format inconsistently. Only video drivers are
+    /// checked: the graphics driver is what this product's optimizations
+    /// actually depend on. Returns null when there is nothing to flag (date
+    /// unavailable, or driver recent enough) -- never a false alarm.
+    /// </summary>
+    internal static string? ClassifyOldDrivers(DriverVersionSnapshot snapshot, DateTimeOffset now)
+    {
+        var threshold = now.AddMonths(-18);
+        var old = snapshot.Video
+            .Where(item => item.DriverDate is { } date && date < threshold)
+            .ToArray();
+        if (old.Length == 0)
+        {
+            return null;
+        }
+
+        var names = string.Join(", ", old.Select(item =>
+            $"{item.DeviceName} ({item.DriverDate!.Value:yyyy-MM})"));
+        return $"Driver de vídeo com mais de 18 meses sem atualização: {names}. "
+            + "Considere atualizar pelo site oficial do fabricante.";
+    }
+}
+
+/// <summary>
+/// Read-only guidance for G-SYNC/VRR: orients the user on how to check and
+/// enable it (NVIDIA Control Panel/monitor OSD) and on the FPS limit NVIDIA
+/// itself recommends (a few frames below the monitor's maximum refresh
+/// rate, to keep the frame rate inside G-SYNC's variable range) -- reusing
+/// the same <c>-frameLimit</c> launch parameter this product already
+/// supports. Never enables G-SYNC itself: there is no public, documented
+/// API for that (see docs/graphics-optimizations-backlog.md, seção 10).
+/// </summary>
+public sealed class GSyncGuidanceDiagnosisAction : WindowsOptimizationAction
+{
+    private readonly IDisplayConfigurationInspector inspector;
+
+    public GSyncGuidanceDiagnosisAction(IDisplayConfigurationInspector inspector)
+    {
+        this.inspector = inspector ?? throw new ArgumentNullException(nameof(inspector));
+    }
+
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.GuideGSync);
+
+    public override Task<WindowsActionApplyResult> ApplyAsync(
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(inspector.GetSnapshot())));
+    }
+
+    public override Task RollbackAsync(
+        WindowsActionContext context,
+        string? snapshotJson,
+        CancellationToken cancellationToken) => Task.CompletedTask;
+
+    internal static string Classify(DisplayConfigurationSnapshot? snapshot)
+    {
+        const string baseGuidance = "G-SYNC/VRR não tem uma API pública para ser ativado por este app; "
+            + "confirme e ative pelo NVIDIA Control Panel (Configurar G-SYNC) ou pelo menu do próprio monitor.";
+        if (snapshot is null || snapshot.MaxRefreshHzAtCurrentResolution <= 0)
+        {
+            return baseGuidance;
+        }
+
+        var recommendedCap = Math.Max(1, snapshot.MaxRefreshHzAtCurrentResolution - 3);
+        return $"{baseGuidance} Para manter o FPS dentro da faixa variável do G-SYNC neste monitor "
+            + $"({snapshot.MaxRefreshHzAtCurrentResolution} Hz no modo atual), a NVIDIA recomenda limitar "
+            + $"o FPS a alguns quadros abaixo do máximo (por exemplo, {recommendedCap} FPS) -- use o "
+            + "parâmetro -frameLimit do GTA V standalone para isso.";
+    }
+}
+
+/// <summary>
+/// Guided repair, never automatic: points the user to the official steps
+/// for a clean NVIDIA driver reinstall (DDU in Safe Mode, then the latest
+/// driver from nvidia.com/drivers) when there is a suspected driver
+/// corruption issue. This product never downloads, installs, or removes a
+/// display driver itself -- picking the wrong driver package or interrupting
+/// a driver install can leave a machine without video output, which is
+/// exactly the kind of irreversible, high-blast-radius risk this product's
+/// safety model (docs/safety.md) exists to avoid.
+/// </summary>
+public sealed class GuidedDriverReinstallAction : WindowsOptimizationAction
+{
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.GuideDriverReinstall);
+
+    public override Task<WindowsActionApplyResult> ApplyAsync(
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult(WindowsActionApplyResult.NoChange(
+            "Reinstalação limpa guiada (nenhum arquivo foi tocado): 1) baixe o Display Driver Uninstaller "
+                + "(DDU) e o instalador de driver mais recente do site oficial do fabricante da GPU antes de "
+                + "começar; 2) reinicie o Windows em Modo de Segurança; 3) rode o DDU e remova apenas o "
+                + "driver de vídeo; 4) reinicie normalmente e instale o driver baixado no passo 1. Este "
+                + "aplicativo não baixa, instala nem remove nenhum driver automaticamente."));
+    }
+
+    public override Task RollbackAsync(
+        WindowsActionContext context,
+        string? snapshotJson,
+        CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
 public sealed class DisplayConfigurationDiagnosisAction : WindowsOptimizationAction

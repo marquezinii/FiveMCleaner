@@ -53,7 +53,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.PreferHighPerformanceGpu,
                 OptimizationActionIds.ApplyLightLegacyGraphics,
                 OptimizationActionIds.ApplyLightGtaVGraphics,
-                OptimizationActionIds.DiagnoseGpuPreferenceMismatch
+                OptimizationActionIds.DiagnoseGpuPreferenceMismatch,
+                OptimizationActionIds.GuideGSync
             ],
             Ids(plan));
         Assert.All(plan.Actions, action =>
@@ -153,6 +154,25 @@ public sealed class PlanBuilderTests
             notice.Code == "local-data-recreation-is-a-repair-not-daily-optimization");
         Assert.Contains(repairPlan.Notices, notice =>
             notice.Code == "auth-data-repair-requires-detected-error-pattern");
+    }
+
+    [Fact]
+    public void GuideDriverReinstall_IsOptInAndNeverPartOfAnyDefaultProfile()
+    {
+        var light = Build(OptimizationProfile.Light);
+        var balanced = Build(OptimizationProfile.Balanced);
+        var aggressive = Build(OptimizationProfile.Aggressive);
+
+        foreach (var plan in new[] { light, balanced, aggressive })
+        {
+            Assert.DoesNotContain(OptimizationActionIds.GuideDriverReinstall, Ids(plan));
+        }
+
+        var guidedPlan = Build(
+            OptimizationProfile.Aggressive,
+            new OptimizationOptionsDto { GuideDriverReinstall = true });
+
+        Assert.Contains(OptimizationActionIds.GuideDriverReinstall, Ids(guidedPlan));
     }
 
     [Fact]
@@ -323,7 +343,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.RecommendGraphicsPreset,
                 OptimizationActionIds.DiagnoseTextureVramFit,
                 OptimizationActionIds.DiagnoseGtaVLaunchParameters,
-                OptimizationActionIds.DiagnoseGpuPreferenceMismatch
+                OptimizationActionIds.DiagnoseGpuPreferenceMismatch,
+                OptimizationActionIds.GuideGSync
             ],
             Ids(plan));
         Assert.False(plan.RequiresElevation);

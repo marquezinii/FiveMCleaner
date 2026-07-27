@@ -2,7 +2,7 @@ using System.Management;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
-public sealed record DriverVersionInfo(string DeviceName, string DriverVersion);
+public sealed record DriverVersionInfo(string DeviceName, string DriverVersion, DateTimeOffset? DriverDate = null);
 
 public sealed record DriverVersionSnapshot(
     IReadOnlyList<DriverVersionInfo> Video,
@@ -34,7 +34,7 @@ public sealed class WindowsDriverVersionInspector : IDriverVersionInspector
         try
         {
             using var searcher = new ManagementObjectSearcher(
-                "SELECT DeviceName, DriverVersion, DeviceClass FROM Win32_PnPSignedDriver "
+                "SELECT DeviceName, DriverVersion, DriverDate, DeviceClass FROM Win32_PnPSignedDriver "
                     + "WHERE DeviceClass = 'DISPLAY' OR DeviceClass = 'NET' "
                     + "OR DeviceClass = 'MEDIA' OR DeviceClass = 'SYSTEM'");
             using var results = searcher.Get();
@@ -50,7 +50,8 @@ public sealed class WindowsDriverVersionInspector : IDriverVersionInspector
                         continue;
                     }
 
-                    var info = new DriverVersionInfo(name, version);
+                    var driverDate = ParseWmiDate(entry["DriverDate"] as string);
+                    var info = new DriverVersionInfo(name, version, driverDate);
                     switch (deviceClass)
                     {
                         case "DISPLAY":
@@ -79,5 +80,30 @@ public sealed class WindowsDriverVersionInspector : IDriverVersionInspector
         }
 
         return new DriverVersionSnapshot(video, network, audio, chipset);
+    }
+
+    /// <summary>
+    /// Parses WMI's DMTF datetime format (e.g. "20230115000000.000000-000")
+    /// for <c>DriverDate</c>. Returns null on anything unexpected instead of
+    /// throwing -- driver age is an informational extra, never load-bearing.
+    /// </summary>
+    private static DateTimeOffset? ParseWmiDate(string? dmtfDate)
+    {
+        if (string.IsNullOrWhiteSpace(dmtfDate) || dmtfDate.Length < 8)
+        {
+            return null;
+        }
+
+        try
+        {
+            var year = int.Parse(dmtfDate[..4], System.Globalization.CultureInfo.InvariantCulture);
+            var month = int.Parse(dmtfDate[4..6], System.Globalization.CultureInfo.InvariantCulture);
+            var day = int.Parse(dmtfDate[6..8], System.Globalization.CultureInfo.InvariantCulture);
+            return new DateTimeOffset(year, month, day, 0, 0, 0, TimeSpan.Zero);
+        }
+        catch (Exception exception) when (exception is ArgumentOutOfRangeException or FormatException)
+        {
+            return null;
+        }
     }
 }

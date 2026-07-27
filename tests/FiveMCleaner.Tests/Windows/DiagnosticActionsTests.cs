@@ -109,6 +109,18 @@ public sealed class DiagnosticActionsTests
     }
 
     [Fact]
+    public async Task OverlaySoftwareDetectionAction_MentionsInstantReplayAndFreestyleWhenShadowPlayIsDetected()
+    {
+        var inspector = new FakeOverlaySoftwareInspector { Names = ["NVIDIA Share / ShadowPlay"] };
+        var action = new OverlaySoftwareDetectionAction(inspector);
+
+        var result = await action.ApplyAsync(Context(), CancellationToken.None);
+
+        Assert.Contains(result.Messages, message => message.Contains("Instant Replay", StringComparison.Ordinal));
+        Assert.Contains(result.Messages, message => message.Contains("Freestyle", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task OverlaySoftwareDetectionAction_ReportsNoneFoundWhenListIsEmpty()
     {
         var action = new OverlaySoftwareDetectionAction(new FakeOverlaySoftwareInspector());
