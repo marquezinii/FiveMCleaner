@@ -511,6 +511,18 @@ public sealed class HardwareInspectorSmokeTests
     }
 
     [Fact]
+    public void WindowsVendorLaptopSoftwareInspector_NeverThrows()
+    {
+        Assert.NotNull(new WindowsVendorLaptopSoftwareInspector().DetectInstalledToolNames());
+    }
+
+    [Fact]
+    public void WindowsPowerStatusProvider_IsBatterySaverActive_NeverThrows()
+    {
+        _ = new WindowsPowerStatusProvider().IsBatterySaverActive();
+    }
+
+    [Fact]
     public void WindowsPciLinkInspector_NeverThrows()
     {
         Assert.NotNull(new WindowsPciLinkInspector().GetSnapshot());
@@ -620,5 +632,31 @@ public sealed class HardwareInspectorSmokeTests
         Assert.False(result.Changed);
         Assert.Contains("DDU", result.Messages[0], StringComparison.Ordinal);
         Assert.Contains("não baixa, instala nem remove", result.Messages[0], StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HybridLaptopDiagnosis_RecommendsChargerAndBatterySaverWhenOnBattery()
+    {
+        var message = HybridLaptopDiagnosisAction.Classify(
+            onAc: false,
+            batterySaverActive: true,
+            detectedTools: []);
+
+        Assert.Contains("conecte-o antes de jogar", message, StringComparison.Ordinal);
+        Assert.Contains("Economia de Energia", message, StringComparison.Ordinal);
+        Assert.Contains("Nenhum utilitário conhecido", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HybridLaptopDiagnosis_MentionsDetectedVendorToolOnAc()
+    {
+        var message = HybridLaptopDiagnosisAction.Classify(
+            onAc: true,
+            batterySaverActive: false,
+            detectedTools: ["ASUS Armoury Crate"]);
+
+        Assert.DoesNotContain("conecte-o antes de jogar", message, StringComparison.Ordinal);
+        Assert.Contains("ASUS Armoury Crate", message, StringComparison.Ordinal);
+        Assert.Contains("não controla isso diretamente", message, StringComparison.Ordinal);
     }
 }

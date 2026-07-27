@@ -12,6 +12,13 @@ internal sealed record PowerPlanSnapshot(Guid PreviousScheme, Guid AppliedScheme
 public interface IPowerStatusProvider
 {
     bool IsOnAcPower();
+
+    /// <summary>
+    /// True when Windows Battery Saver is currently active -- read from the
+    /// same <c>GetSystemPowerStatus</c> call as <see cref="IsOnAcPower"/>,
+    /// documented by Microsoft as bit 0 of <c>SystemStatusFlag</c>.
+    /// </summary>
+    bool IsBatterySaverActive();
 }
 
 public sealed class WindowsPowerStatusProvider : IPowerStatusProvider
@@ -24,6 +31,16 @@ public sealed class WindowsPowerStatusProvider : IPowerStatusProvider
         }
 
         return status.AcLineStatus == 1;
+    }
+
+    public bool IsBatterySaverActive()
+    {
+        if (!GetSystemPowerStatus(out var status))
+        {
+            throw new Win32Exception(Marshal.GetLastWin32Error());
+        }
+
+        return (status.SystemStatusFlag & 1) == 1;
     }
 
     [StructLayout(LayoutKind.Sequential)]

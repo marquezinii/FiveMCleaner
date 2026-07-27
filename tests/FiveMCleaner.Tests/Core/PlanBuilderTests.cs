@@ -54,7 +54,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.ApplyLightLegacyGraphics,
                 OptimizationActionIds.ApplyLightGtaVGraphics,
                 OptimizationActionIds.DiagnoseGpuPreferenceMismatch,
-                OptimizationActionIds.GuideGSync
+                OptimizationActionIds.GuideGSync,
+                OptimizationActionIds.DiagnoseHybridLaptop
             ],
             Ids(plan));
         Assert.All(plan.Actions, action =>
@@ -344,7 +345,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnoseTextureVramFit,
                 OptimizationActionIds.DiagnoseGtaVLaunchParameters,
                 OptimizationActionIds.DiagnoseGpuPreferenceMismatch,
-                OptimizationActionIds.GuideGSync
+                OptimizationActionIds.GuideGSync,
+                OptimizationActionIds.DiagnoseHybridLaptop
             ],
             Ids(plan));
         Assert.False(plan.RequiresElevation);

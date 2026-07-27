@@ -286,6 +286,22 @@ proposta cai direto nessa regra já existente, não é uma decisão nova.
 | Não ativar automaticamente tecnologias sem verificar compatibilidade | 🚫 (regra já vigente) | — | Já é a postura do produto em toda ação opt-in/experimental existente. |
 | Não aplicar overclock ou undervolt automático | 🚫 (regra já vigente) | — | Mesma regra já registrada para a NVIDIA (seção 9), agora confirmada também para AMD. |
 
+## 12. Driver Intel e notebooks híbridos (lote proposto e implementado em 26/07/2026, sexta rodada)
+
+| Item | Classificação | Perfis | Observação |
+| --- | --- | --- | --- |
+| Detectar Intel Arc ou Intel integrada | ✅ | Todos | **Já coberto** — `windows.gaming.gpu-vendor.detect` e `windows.gaming.gpu-preference-mismatch.diagnose` já distinguem GPU integrada (`Intel(R) UHD/HD/Iris`) de dedicada; uma Arc não bate com esses marcadores e cai naturalmente no lado "dedicada". |
+| Detectar driver | ✅ | Todos | **Já coberto** — `windows.system.driver-versions.diagnose` é vendor-neutro (lê qualquer driver de vídeo via WMI). |
+| Direcionar para atualização oficial | ✅ | Todos | **Já coberto** — `GpuVendorDetectionAction.Classify` já inclui o link de download da Intel desde a rodada NVIDIA. |
+| Forçar FiveM para a GPU dedicada pelo Windows | ✅ | Todos | **Já implementado antes desta rodada** — `windows.gaming.high-performance-gpu.prefer` já faz exatamente isso (registra preferência de GPU de alto desempenho para FiveM/GTA V). |
+| Detectar notebook em modo economia | 👁 | Todos | **Implementado em 26/07/2026** — `windows.gaming.hybrid-laptop.diagnose`, via `IPowerStatusProvider.IsBatterySaverActive()` (novo) + estado de CA/bateria já existente. |
+| Detectar MUX switch quando exposto pelo fabricante | 👁 | Todos | **Implementado como proxy honesto** — detecta se um utilitário conhecido do fabricante que expõe MUX switch está instalado (Armoury Crate, MSI Center, Lenovo Vantage, Dell Power Manager, Alienware/HP/Acer/Gigabyte). Não confirma a existência do MUX em si, só que a ferramenta que o controlaria está presente. |
+| Recomendar modo GPU dedicada no software do notebook | 👁 | Todos | **Implementado junto com o item acima** — a mesma ação orienta usar o utilitário detectado para ativar o modo de GPU dedicada. |
+| Recomendar conectar carregador | 👁 | Todos | **Implementado em 26/07/2026** — mesma ação, mensagem quando `IsOnAcPower()` é falso. |
+| Detectar limite térmico ou de potência | 👁 | Todos | **Já coberto**, sem nenhuma mudança — `safety.throttling-signal.diagnose`/`safety.thermal.diagnose` já existem; a nova ação não duplica essa cobertura. |
+| Ativar perfil Performance do fabricante | 🚫 | — | Mesma limitação técnica das seções 9/10/11: os utilitários de notebook (Armoury Crate, MSI Center, Lenovo Vantage etc.) não publicam API pública oficialmente suportada para ativar perfis de desempenho por fora do próprio app do fabricante. |
+| Não tentar controlar MUX ou BIOS por métodos genéricos não documentados | 🚫 (regra já vigente) | — | Confirmado nesta rodada; é a mesma razão pela qual "detectar MUX switch" virou detecção do utilitário instalado, nunca do próprio switch. |
+
 ## Resumo por perfil
 
 - **Leve**: nada novo entra aqui além do que já existe hoje (GPU de alto desempenho, Modo de Jogo) — este lote não adiciona itens automáticos ao perfil Leve, mantendo-o o mais conservador.

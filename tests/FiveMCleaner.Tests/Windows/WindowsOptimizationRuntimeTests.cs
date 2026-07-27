@@ -123,7 +123,8 @@ public sealed class WindowsOptimizationRuntimeTests
             PciLink = new FakePciLinkInspector(),
             HardwareStability = new FakeHardwareStabilityInspector(),
             BackgroundProcess = new FakeBackgroundProcessInspector(),
-            StuckProcess = new FakeStuckFiveMProcessInspector()
+            StuckProcess = new FakeStuckFiveMProcessInspector(),
+            VendorLaptopSoftware = new FakeVendorLaptopSoftwareInspector()
         };
 
         Assert.Throws<InvalidOperationException>(() =>

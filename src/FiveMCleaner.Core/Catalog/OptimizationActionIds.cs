@@ -60,4 +60,5 @@ public static class OptimizationActionIds
     public const string ToggleHags = "windows.gaming.hags.toggle";
     public const string GuideGSync = "windows.gaming.gsync.guide";
     public const string GuideDriverReinstall = "windows.system.driver-reinstall.guide";
+    public const string DiagnoseHybridLaptop = "windows.gaming.hybrid-laptop.diagnose";
 }

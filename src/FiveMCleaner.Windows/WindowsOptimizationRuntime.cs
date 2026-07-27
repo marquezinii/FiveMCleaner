@@ -108,6 +108,8 @@ public sealed record WindowsOptimizationDependencies
 
     public required IStuckFiveMProcessInspector StuckProcess { get; init; }
 
+    public required IVendorLaptopSoftwareInspector VendorLaptopSoftware { get; init; }
+
     public static WindowsOptimizationDependencies CreateDefault(
         WindowsOptimizationEnvironment environment)
     {
@@ -138,7 +140,8 @@ public sealed record WindowsOptimizationDependencies
             PciLink = new WindowsPciLinkInspector(),
             HardwareStability = new WindowsHardwareStabilityInspector(),
             BackgroundProcess = new WindowsBackgroundProcessInspector(),
-            StuckProcess = new WindowsStuckFiveMProcessInspector()
+            StuckProcess = new WindowsStuckFiveMProcessInspector(),
+            VendorLaptopSoftware = new WindowsVendorLaptopSoftwareInspector()
         };
     }
 }
@@ -203,6 +206,7 @@ public sealed class WindowsOptimizationActionFactory
             new DisplayConfigurationDiagnosisAction(dependencies.DisplayConfiguration),
             new GSyncGuidanceDiagnosisAction(dependencies.DisplayConfiguration, dependencies.GpuVendor),
             new GuidedDriverReinstallAction(),
+            new HybridLaptopDiagnosisAction(dependencies.PowerStatus, dependencies.VendorLaptopSoftware),
             new SessionSettingsDiagnosisAction(dependencies.Registry, dependencies.PowerPlans),
             new ThrottlingSignalDiagnosisAction(
                 dependencies.Cpu,
@@ -424,6 +428,9 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.DisplayConfiguration,
                 dependencies.GpuVendor),
             OptimizationActionIds.GuideDriverReinstall => new GuidedDriverReinstallAction(),
+            OptimizationActionIds.DiagnoseHybridLaptop => new HybridLaptopDiagnosisAction(
+                dependencies.PowerStatus,
+                dependencies.VendorLaptopSoftware),
             OptimizationActionIds.DiagnoseSessionSettings => new SessionSettingsDiagnosisAction(
                 dependencies.Registry,
                 dependencies.PowerPlans),

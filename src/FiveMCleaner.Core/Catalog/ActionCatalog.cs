@@ -5,7 +5,7 @@ namespace FiveMCleaner.Core.Catalog;
 
 public sealed class ActionCatalog
 {
-    public const int CurrentVersion = 12;
+    public const int CurrentVersion = 13;
 
     private static readonly string[] NoPrerequisites = [];
     private static readonly string[] RequiresFiveMStoppedFirst = [OptimizationActionIds.VerifyFiveMIsStopped];
@@ -1052,6 +1052,23 @@ public sealed class ActionCatalog
                 confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
                 undoSummary: "Somente leitura: não baixa, instala nem remove nenhum driver.",
                 riskLimitations: "É orientação, não reparo automático; reinstalar o driver errado ou interromper a instalação pode deixar o computador sem saída de vídeo -- siga os passos com cuidado."),
+            Define(
+                OptimizationActionIds.DiagnoseHybridLaptop,
+                "Diagnosticar notebook híbrido/gaming",
+                "Verifica se o notebook está na bateria ou com Economia de Energia ativa e detecta utilitários conhecidos de troca de GPU/desempenho do fabricante (Armoury Crate, MSI Center, Lenovo Vantage, etc.), sem alterar nada.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Informational,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 2,
+                expectedImpact: "Ajuda o usuário a identificar quando o notebook não está no melhor estado de energia/GPU para jogar, e para qual utilitário do fabricante recorrer.",
+                ActionOptionGate.Always,
+                detectionSummary: "Lê o estado de energia (CA/bateria, Economia de Energia) e a lista de utilitários de fabricante instalados.",
+                confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
+                undoSummary: "Somente leitura: não altera energia, GPU nem instala/remove nada.",
+                riskLimitations: "Não controla MUX switch nem BIOS por métodos genéricos não documentados; detectar o utilitário do fabricante instalado não confirma que o notebook tem MUX switch ou GPU dedicada."),
             Define(
                 OptimizationActionIds.ReduceWindowsVisualEffects,
                 "Reduzir efeitos visuais do Windows",

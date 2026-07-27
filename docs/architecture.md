@@ -273,6 +273,21 @@ Enhanced Sync, limite de FPS, perfil por app, AMD Fluid Motion Frames) foi
 implementada, pela mesma razão já documentada para a NVIDIA — a AMD também
 não publica API pública suportada para isso.
 
+**Notebooks híbridos (26/07/2026, sexta rodada — lote Intel)**:
+`windows.gaming.hybrid-laptop.diagnose`/`HybridLaptopDiagnosisAction` (👁,
+todos os perfis) combina `IPowerStatusProvider.IsBatterySaverActive()`
+(novo) com a detecção já existente de CA/bateria, e um novo
+`IVendorLaptopSoftwareInspector`/`WindowsVendorLaptopSoftwareInspector`
+que detecta (via registro de desinstalação, mesmo padrão do
+`StreamingSoftwareDetector`) utilitários conhecidos de troca de
+GPU/desempenho do fabricante do notebook (Armoury Crate, MSI Center,
+Lenovo Vantage etc.). É a única forma honesta de "detectar MUX switch"
+sem controlar BIOS/MUX por método genérico não documentado — detecta a
+ferramenta que controlaria o switch, nunca afirma que o switch em si
+existe. A maior parte do lote Intel já estava coberta por infraestrutura
+vendor-neutra das rodadas anteriores (detecção de GPU/driver, preferência
+de GPU de alto desempenho, diagnóstico de throttling térmico).
+
 Cancelamento:
 
 - é aceito antes de iniciar uma ação ou depois de um passo atômico;

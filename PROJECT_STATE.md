@@ -2288,3 +2288,55 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   ampliado para verificar os links de download.
 - Validação: `dotnet build`/`dotnet test` Release (526 testes, eram 525);
   `scripts\Verify-Safety.ps1` aprovado.
+
+## Implementação do lote "Driver Intel e notebooks híbridos" (26/07/2026, sexta rodada)
+
+- O usuário mandou o lote Intel/híbridos já pedindo implementação direta e
+  push ao final. Catálogo subiu de `CurrentVersion = 12` para `13` com 1
+  ação nova; a maior parte do lote **já estava coberta** por
+  infraestrutura das rodadas anteriores (GPU vendor detection, GPU
+  preference, driver version/age, links de download).
+- **Nova ação**: `windows.gaming.hybrid-laptop.diagnose` (👁, todos os
+  perfis, `ActionOptionGate.Always`) — `HybridLaptopDiagnosisAction` em
+  `DiagnosticActions.cs`. Combina:
+  - `IPowerStatusProvider.IsBatterySaverActive()` (novo método na
+    interface, lê o bit 0 de `SystemStatusFlag` do `GetSystemPowerStatus`
+    já usado por `IsOnAcPower()`) + o estado de CA/bateria já existente —
+    cobre "detectar notebook em modo economia" e "recomendar conectar
+    carregador".
+  - `IVendorLaptopSoftwareInspector`/`WindowsVendorLaptopSoftwareInspector`
+    (novo, em `VendorLaptopSoftwareInspector.cs`) — detecta, via
+    enumeração read-only do registro de desinstalação (mesmo padrão do
+    `StreamingSoftwareDetector`), se um utilitário conhecido de
+    troca de GPU/desempenho do fabricante do notebook está instalado
+    (Armoury Crate, MSI Center, Dragon Center, Lenovo Vantage, Dell Power
+    Manager, Alienware Command Center, HP Omen Gaming Hub, Acer
+    PredatorSense, Gigabyte Control Center) — cobre "detectar MUX switch
+    quando exposto pelo fabricante" (como proxy honesto: detecta a
+    ferramenta que controlaria o MUX, nunca afirma que o MUX em si
+    existe) e "recomendar modo GPU dedicada no software do notebook".
+- **Já estava coberto, sem mudança de código**: "detectar Intel Arc ou
+  integrada" (a mesma heurística de marcadores já distingue Intel
+  integrada de qualquer GPU dedicada, incluindo Arc, que não bate com os
+  marcadores de integrada); "detectar driver"/"direcionar ao driver
+  oficial" (diagnóstico de driver e links por fabricante, já vendor-neutros
+  desde a rodada NVIDIA, já incluíam Intel); "forçar FiveM para a GPU
+  dedicada pelo Windows" (`windows.gaming.high-performance-gpu.prefer`,
+  já implementado há várias sessões); "detectar limite térmico ou de
+  potência" (`safety.throttling-signal.diagnose`/`safety.thermal.diagnose`,
+  não duplicados pela ação nova).
+- **Classificado 🚫 (mesma razão das rodadas NVIDIA/AMD)**: "ativar perfil
+  Performance do fabricante" — os utilitários de notebook (Armoury Crate,
+  MSI Center, Lenovo Vantage etc.) também não publicam API pública
+  suportada para ativar perfis de desempenho de fora do próprio app; e a
+  regra já vigente de nunca controlar MUX/BIOS por método genérico não
+  documentado, confirmada mais uma vez.
+- **Testes novos**: `WindowsVendorLaptopSoftwareInspector_NeverThrows`,
+  `WindowsPowerStatusProvider_IsBatterySaverActive_NeverThrows`,
+  `HybridLaptopDiagnosis_RecommendsChargerAndBatterySaverWhenOnBattery`,
+  `HybridLaptopDiagnosis_MentionsDetectedVendorToolOnAc`
+  (`HardwareDiagnosticActionsTests.cs`); listas de ação esperadas em
+  `LightProfile_UsesOnlyLowImpactStandardUserActions`/
+  `DisabledOptions_RemoveTheirActionsButKeepSafetyPreflight` atualizadas.
+- Validação: `dotnet build`/`dotnet test` Release (530 testes, eram 526);
+  `scripts\Verify-Safety.ps1` aprovado.

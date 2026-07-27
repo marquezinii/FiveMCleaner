@@ -460,6 +460,8 @@
   <data name="Actions.windows.gaming.gsync.guide.Description" xml:space="preserve"><value>Guides checking and enabling G-SYNC (NVIDIA) or FreeSync (AMD) through the official vendor panel or the monitor itself, and suggests an FPS limit compatible with the variable range, without changing anything.</value></data>
   <data name="Actions.windows.system.driver-reinstall.guide.Name" xml:space="preserve"><value>Guide clean video driver reinstall</value></data>
   <data name="Actions.windows.system.driver-reinstall.guide.Description" xml:space="preserve"><value>Shows the official clean-reinstall steps for the video driver (DDU + official installer) when corruption is suspected. Never downloads, installs, or removes anything by itself. Never part of automatic profiles.</value></data>
+  <data name="Actions.windows.gaming.hybrid-laptop.diagnose.Name" xml:space="preserve"><value>Diagnose hybrid/gaming laptop</value></data>
+  <data name="Actions.windows.gaming.hybrid-laptop.diagnose.Description" xml:space="preserve"><value>Checks whether the laptop is on battery or has Battery Saver active, and detects known manufacturer GPU-switch/performance utilities (Armoury Crate, MSI Center, Lenovo Vantage, etc.), without changing anything.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Name" xml:space="preserve"><value>Reduce Windows visual effects</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Description" xml:space="preserve"><value>Reduces animations and transparency while preserving readability and font smoothing.</value></data>
   <data name="Runtime.ApplyingAction" xml:space="preserve"><value>Applying {0}</value></data>

@@ -112,7 +112,11 @@ internal sealed class FakePowerStatusProvider(bool isOnAcPower = true) : IPowerS
 {
     public bool OnAcPower { get; set; } = isOnAcPower;
 
+    public bool BatterySaverActive { get; set; }
+
     public bool IsOnAcPower() => OnAcPower;
+
+    public bool IsBatterySaverActive() => BatterySaverActive;
 }
 
 internal sealed class FakePowerPlanController : IPowerPlanController
@@ -175,6 +179,13 @@ internal sealed class FakeOverlaySoftwareInspector : IOverlaySoftwareInspector
     public IReadOnlyList<string> Names { get; set; } = [];
 
     public IReadOnlyList<string> DetectRunningOverlayNames() => Names;
+}
+
+internal sealed class FakeVendorLaptopSoftwareInspector : IVendorLaptopSoftwareInspector
+{
+    public IReadOnlyList<string> Names { get; set; } = [];
+
+    public IReadOnlyList<string> DetectInstalledToolNames() => Names;
 }
 
 internal sealed class FakeNetworkHealthInspector : INetworkHealthInspector
@@ -360,7 +371,8 @@ internal static class WindowsTestRuntime
             PciLink = new FakePciLinkInspector(),
             HardwareStability = new FakeHardwareStabilityInspector(),
             BackgroundProcess = new FakeBackgroundProcessInspector(),
-            StuckProcess = new FakeStuckFiveMProcessInspector()
+            StuckProcess = new FakeStuckFiveMProcessInspector(),
+            VendorLaptopSoftware = new FakeVendorLaptopSoftwareInspector()
         };
 
         return (

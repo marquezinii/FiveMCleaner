@@ -694,3 +694,76 @@ public sealed class GpuPreferenceMismatchDiagnosisAction : WindowsOptimizationAc
             driverDescription.Contains(marker, StringComparison.OrdinalIgnoreCase));
     }
 }
+
+/// <summary>
+/// Read-only guidance for hybrid/gaming laptops: reports whether the
+/// machine is running on battery (dedicated-GPU/performance modes usually
+/// only engage on AC) or with Windows Battery Saver active, and whether a
+/// known manufacturer utility that exposes GPU-switch (MUX) or performance
+/// mode controls (Armoury Crate, MSI Center, Lenovo Vantage, etc.) is
+/// installed. Never controls a MUX switch or BIOS setting itself through an
+/// undocumented, vendor-specific mechanism -- see
+/// docs/graphics-optimizations-backlog.md, seção 12, for why that stays
+/// out of scope. Thermal/power throttling itself is already covered by the
+/// separate <c>safety.throttling-signal.diagnose</c> diagnostic; this
+/// action does not duplicate that.
+/// </summary>
+public sealed class HybridLaptopDiagnosisAction : WindowsOptimizationAction
+{
+    private readonly IPowerStatusProvider powerStatus;
+    private readonly IVendorLaptopSoftwareInspector vendorSoftware;
+
+    public HybridLaptopDiagnosisAction(
+        IPowerStatusProvider powerStatus,
+        IVendorLaptopSoftwareInspector vendorSoftware)
+    {
+        this.powerStatus = powerStatus ?? throw new ArgumentNullException(nameof(powerStatus));
+        this.vendorSoftware = vendorSoftware ?? throw new ArgumentNullException(nameof(vendorSoftware));
+    }
+
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.DiagnoseHybridLaptop);
+
+    public override Task<WindowsActionApplyResult> ApplyAsync(
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var onAc = powerStatus.IsOnAcPower();
+        var batterySaver = !onAc && powerStatus.IsBatterySaverActive();
+        var tools = vendorSoftware.DetectInstalledToolNames();
+        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(onAc, batterySaver, tools)));
+    }
+
+    public override Task RollbackAsync(
+        WindowsActionContext context,
+        string? snapshotJson,
+        CancellationToken cancellationToken) => Task.CompletedTask;
+
+    internal static string Classify(bool onAc, bool batterySaverActive, IReadOnlyList<string> detectedTools)
+    {
+        var parts = new List<string>();
+        if (!onAc)
+        {
+            parts.Add("O notebook está na bateria; modos de GPU dedicada e desempenho máximo do fabricante "
+                + "costumam só se aplicar com o carregador conectado -- conecte-o antes de jogar para "
+                + "melhor desempenho.");
+        }
+
+        if (batterySaverActive)
+        {
+            parts.Add("A Economia de Energia do Windows está ativa, o que reduz desempenho geral -- "
+                + "desative-a antes de jogar.");
+        }
+
+        parts.Add(detectedTools.Count == 0
+            ? "Nenhum utilitário conhecido de troca de GPU/modo de desempenho do fabricante do notebook "
+                + "(Armoury Crate, MSI Center, Lenovo Vantage, etc.) foi detectado; se este notebook tiver "
+                + "GPU dedicada e MUX switch, consulte o utilitário do fabricante para ativá-lo."
+            : $"Utilitário(s) do fabricante detectado(s): {string.Join(", ", detectedTools)}. Use-o para "
+                + "ativar o modo de GPU dedicada/MUX switch e o perfil de desempenho, se disponíveis -- "
+                + "o FiveMCleaner não controla isso diretamente.");
+
+        return string.Join(" ", parts);
+    }
+}
