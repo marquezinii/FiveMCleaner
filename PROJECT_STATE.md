@@ -2037,3 +2037,46 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   aprovado.
 - Por instrução explícita do usuário, **sem push de desenvolvimento** nesta
   etapa — o commit fica só local.
+
+## Classificação de um lote de otimizações gráficas propostas pelo usuário (26/07/2026)
+
+- O usuário trouxe uma lista de otimizações gráficas do Windows que quer
+  adicionar (GPU de alto desempenho, otimizações para jogos em janela do
+  Windows 11, Fullscreen Optimizations, HAGS, Modo de Jogo, VRR, frequência
+  do monitor, HDR/Auto HDR) e pediu para classificar cada item em
+  Leve/Médio/Agressivo usando uma legenda (✅ automático seguro, 🟡
+  opcional/condicional, 🧪 experimental com reversão automática, 🔧 reparo,
+  👁 diagnóstico sem alterar, 🚫 não implementar).
+- **Isto foi só classificação e planejamento, nenhum código novo foi
+  escrito nesta rodada.** A decisão completa, item a item, está em
+  [`docs/graphics-optimizations-backlog.md`](docs/graphics-optimizations-backlog.md)
+  (novo arquivo).
+- Resumo da decisão:
+  - GPU de alto desempenho e Modo de Jogo: a maior parte **já está
+    implementada** hoje (`windows.gaming.high-performance-gpu.prefer`,
+    `windows.gaming.game-mode.enable`, ambas `AllProfiles`); só "detectar
+    GPU integrada usada por engano" é novo, e é diagnóstico de baixo risco.
+  - Janela sem bordas (Win11), Fullscreen Optimizations por app, HAGS e
+    "desligar Modo de Jogo condicionalmente": todos classificados **🧪
+    Experimental, só no perfil Agressivo, opt-in, com comparação
+    antes/depois e reversão automática obrigatória** — nunca em Leve/Médio,
+    nunca silencioso.
+  - VRR e frequência do monitor: a parte de **detecção/diagnóstico** (👁)
+    já está parcialmente coberta por `windows.gaming.display-configuration.diagnose`/
+    `windows.gaming.session-settings.diagnose`, que já documentam a
+    limitação real de "G-SYNC/FreeSync/VRR não têm API pública sem driver
+    do fabricante". **Habilitar VRR programaticamente ficou pendente de
+    pesquisa** (precisa entrar em `docs/research.md` como Fato/Inferência
+    antes de qualquer código) — não foi classificado como implementável
+    ainda. Trocar a frequência do monitor entra como 🟡 condicional, com
+    confirmação obrigatória (Médio e Agressivo).
+  - HDR/Auto HDR: **fora de qualquer perfil automático** — ativar é
+    preferência visual manual (🟡), desativar por app vira reparo sob
+    demanda (🔧) quando já existe um problema relatado; nunca apresentado
+    como ganho de FPS (regra de copy/UI, não uma ação).
+- Próxima sessão que for implementar qualquer um desses itens deve seguir
+  a ordem sugerida no próprio backlog: primeiro os itens 🧪 do perfil
+  Agressivo (reaproveitando a infraestrutura de comparação antes/depois já
+  existente, `OptimizationComparisonResult`), depois os diagnósticos 👁
+  (extensões de baixo risco dos diagnósticos já existentes), e só depois
+  de pesquisa documentada o item de VRR habilitável.
