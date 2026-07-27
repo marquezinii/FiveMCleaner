@@ -2080,3 +2080,80 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   existente, `OptimizationComparisonResult`), depois os diagnósticos 👁
   (extensões de baixo risco dos diagnósticos já existentes), e só depois
   de pesquisa documentada o item de VRR habilitável.
+
+## Implementação de 3 itens do backlog de otimizações gráficas (26/07/2026)
+
+- O usuário autorizou explicitamente implementar (não só classificar) o
+  lote de otimizações gráficas do item anterior. Catálogo de ações subiu de
+  `CurrentVersion = 10` para `11` com 3 ações novas.
+- **`windows.gaming.gpu-preference-mismatch.diagnose`** (👁, todos os
+  perfis, `ActionOptionGate.Always`): `GpuPreferenceMismatchDiagnosisAction`
+  em `DiagnosticActions.cs`. Cruza a detecção de GPU integrada+dedicada
+  (`IGpuVendorInspector`, heurística por nome de driver) com a preferência
+  de GPU já configurada para o FiveM no mesmo local de registro que
+  `GpuPreferenceRegistryAction` já escreve
+  (`HKCU\Software\Microsoft\DirectX\UserGpuPreferences`). Só leitura, nunca
+  altera nada; deliberadamente não tenta confirmar qual GPU o jogo está de
+  fato usando numa sessão ao vivo (isso exigiria hook de DXGI/ETW, fora de
+  escopo).
+- **`windows.gaming.fullscreen-optimizations.toggle`** (🧪, **Agressivo
+  apenas**, opt-in via `OptimizationOptionsDto.ToggleFullscreenOptimizationsExperiment`):
+  `FullscreenOptimizationsRegistryAction` em `RegistryActions.cs`, baseada
+  no mesmo padrão de `AllowlistedRegistryAction` (merge/preserva outras
+  flags, snapshot/rollback byte-a-byte) já usado por
+  `GpuPreferenceRegistryAction`. Alterna a flag de compatibilidade
+  `DISABLEDXMAXIMIZEDWINDOWEDMODE` em
+  `HKCU\...\AppCompatFlags\Layers` para FiveM.exe e (quando detectado)
+  GTA5.exe. Documentado explicitamente como mecanismo de **convenção
+  observada, não API oficial da Microsoft** — por isso a reversibilidade
+  exata (não a correção semântica da flag) é o que garante a segurança.
+- **`windows.gaming.hags.toggle`** (🧪, **Agressivo apenas**, opt-in via
+  `OptimizationOptionsDto.ToggleHagsExperiment`,
+  `RequiredPrivilege.Administrator`, `RequiresRestart = true`): `HagsToggleAction`
+  em `RegistryActions.cs`, alterna `HwSchMode` (`HKLM\SYSTEM\...\GraphicsDrivers`)
+  para o estado oposto ao atual (nunca uma direção fixa — "testar ligado e
+  desligado" literal). Reaproveita o mecanismo `AttemptWithoutElevationFirst`
+  criado na sessão anterior (mesmo padrão do plano de energia): tenta sem
+  admin primeiro (praticamente sempre falha por ACL do HKLM, mas é
+  consistente com o resto do código), só depois aciona o broker.
+- **O que ficou de fora, deliberadamente**: a comparação automática de
+  frametime/latência antes-e-depois com decisão automática de reverter
+  (a parte "🧪 completa" do item) não foi implementada — só o mecanismo
+  seguro de aplicar/reverter. Isso seguiria o mesmo padrão já usado por
+  outras opções "opt-in, nunca automáticas" deste projeto (ex.:
+  `ApplyGtaVRepairLaunchParameters`): o usuário ativa, testa manualmente, e
+  reverte pelo histórico. Automatizar a medição exigiria orquestrar um
+  benchmark real em torno de cada toggle — trabalho maior e separado,
+  registrado em `docs/graphics-optimizations-backlog.md`.
+- **Sem UI nova**: os dois toggles opt-in não têm checkbox no
+  `MainWindow.xaml` ainda — consistente com o padrão já estabelecido neste
+  projeto (`TerminateStuckFiveMProcess`, `RecreateFiveMLocalData`,
+  `ApplyGtaVRepairLaunchParameters` etc. também não têm UI própria hoje).
+- **Continuam fora de escopo** (não implementados, motivo técnico/segurança
+  documentado em `docs/graphics-optimizations-backlog.md`): otimizações
+  para jogos em janela do Windows 11, habilitar VRR programaticamente,
+  troca automática de frequência do monitor, e qualquer toggle de HDR/Auto
+  HDR — todos exigiriam validação em hardware real que este ambiente não
+  tem, ou não têm mecanismo público confirmado.
+- **Testes novos**: `MarkAdministratorPhaseFailedAsync`... (já cobertos
+  antes); desta sessão:
+  `GpuPreferenceMismatch_FlagsDualGpuLaptopWithoutHighPerformancePreferenceConfigured`,
+  `GpuPreferenceMismatch_ReportsAlreadyConfiguredWhenPreferenceIsSet`,
+  `GpuPreferenceMismatch_SkipsSingleGpuMachines` (`DiagnosticActionsTests.cs`);
+  `HagsToggle_FlipsToTheOppositeStateAndRollbackRestoresOriginal`,
+  `HagsToggle_FlipsBackToDisabledWhenCurrentlyEnabled`,
+  `HagsToggle_TreatsMissingValueAsDefaultAndFlipsToEnabled`,
+  `FullscreenOptimizations_TogglesFlagForFiveMAndGtaVPreservingOtherFlags`,
+  `FullscreenOptimizations_TogglesBackOffWhenAlreadyDisabled`
+  (`WindowsActionHandlerTests.cs`); `GraphicsExperiments_AreOptInAggressiveOnlyAndNeverPartOfAnyDefaultProfile`
+  (`PlanBuilderTests.cs`); `ElevatedActions_AreExplicitlyMarkedAndReversible`
+  atualizado para as duas ações administrativas agora existentes
+  (`ActionCatalogTests.cs`).
+- **Bug pego durante o próprio desenvolvimento**: a primeira versão de
+  `FullscreenOptimizationsRegistryAction.ToggleFlag` re-adicionava a flag
+  quando ela era o único token e estava sendo removida (retornava a flag de
+  volta em vez de string vazia quando a lista de tokens ficava vazia) —
+  corrigido antes do commit, coberto pelo teste
+  `FullscreenOptimizations_TogglesBackOffWhenAlreadyDisabled`.
+- Validação: `dotnet build`/`dotnet test` Release (518 testes, eram 509);
+  `scripts\Verify-Safety.ps1` aprovado.

@@ -259,6 +259,8 @@ public sealed class PlanBuilder : IPlanBuilder
             ActionOptionGate.ApplyGtaVGraphicsLaunchParameters => options.ApplyGtaVGraphicsLaunchParameters,
             ActionOptionGate.ApplyGtaVDisplayLaunchParameters => options.ApplyGtaVDisplayLaunchParameters,
             ActionOptionGate.ApplyGtaVRepairLaunchParameters => options.ApplyGtaVRepairLaunchParameters,
+            ActionOptionGate.ToggleFullscreenOptimizations => options.ToggleFullscreenOptimizationsExperiment,
+            ActionOptionGate.ToggleHags => options.ToggleHagsExperiment,
             _ => throw new ArgumentOutOfRangeException(nameof(gate), gate, "Unknown option gate value.")
         };
     }

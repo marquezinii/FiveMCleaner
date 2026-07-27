@@ -52,7 +52,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.EnableGameMode,
                 OptimizationActionIds.PreferHighPerformanceGpu,
                 OptimizationActionIds.ApplyLightLegacyGraphics,
-                OptimizationActionIds.ApplyLightGtaVGraphics
+                OptimizationActionIds.ApplyLightGtaVGraphics,
+                OptimizationActionIds.DiagnoseGpuPreferenceMismatch
             ],
             Ids(plan));
         Assert.All(plan.Actions, action =>
@@ -152,6 +153,39 @@ public sealed class PlanBuilderTests
             notice.Code == "local-data-recreation-is-a-repair-not-daily-optimization");
         Assert.Contains(repairPlan.Notices, notice =>
             notice.Code == "auth-data-repair-requires-detected-error-pattern");
+    }
+
+    [Fact]
+    public void GraphicsExperiments_AreOptInAggressiveOnlyAndNeverPartOfAnyDefaultProfile()
+    {
+        var light = Build(OptimizationProfile.Light);
+        var balanced = Build(OptimizationProfile.Balanced);
+        var aggressive = Build(OptimizationProfile.Aggressive);
+
+        foreach (var plan in new[] { light, balanced, aggressive })
+        {
+            Assert.DoesNotContain(OptimizationActionIds.ToggleFullscreenOptimizations, Ids(plan));
+            Assert.DoesNotContain(OptimizationActionIds.ToggleHags, Ids(plan));
+        }
+
+        var experimentOptions = new OptimizationOptionsDto
+        {
+            ToggleFullscreenOptimizationsExperiment = true,
+            ToggleHagsExperiment = true
+        };
+
+        // Even opted in, these experiments only ever show up in Aggressive.
+        Assert.DoesNotContain(
+            OptimizationActionIds.ToggleFullscreenOptimizations,
+            Ids(Build(OptimizationProfile.Light, experimentOptions)));
+        Assert.DoesNotContain(
+            OptimizationActionIds.ToggleHags,
+            Ids(Build(OptimizationProfile.Balanced, experimentOptions)));
+
+        var aggressiveWithExperiments = Build(OptimizationProfile.Aggressive, experimentOptions);
+        Assert.Contains(OptimizationActionIds.ToggleFullscreenOptimizations, Ids(aggressiveWithExperiments));
+        Assert.Contains(OptimizationActionIds.ToggleHags, Ids(aggressiveWithExperiments));
+        Assert.True(aggressiveWithExperiments.RequiresElevation);
     }
 
     [Fact]
@@ -288,7 +322,8 @@ public sealed class PlanBuilderTests
                 OptimizationActionIds.DiagnoseCrashPatterns,
                 OptimizationActionIds.RecommendGraphicsPreset,
                 OptimizationActionIds.DiagnoseTextureVramFit,
-                OptimizationActionIds.DiagnoseGtaVLaunchParameters
+                OptimizationActionIds.DiagnoseGtaVLaunchParameters,
+                OptimizationActionIds.DiagnoseGpuPreferenceMismatch
             ],
             Ids(plan));
         Assert.False(plan.RequiresElevation);

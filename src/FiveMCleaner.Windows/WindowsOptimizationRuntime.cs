@@ -268,7 +268,16 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.Registry,
                 environment.FiveMExecutablePath,
                 environment.FiveMInstallationRoot),
+            new GpuPreferenceMismatchDiagnosisAction(
+                dependencies.GpuVendor,
+                dependencies.Registry,
+                environment.FiveMExecutablePath),
             new GameDvrRegistryAction(dependencies.Registry),
+            new FullscreenOptimizationsRegistryAction(
+                dependencies.Registry,
+                environment.FiveMExecutablePath,
+                environment.GtaVExecutablePath),
+            new HagsToggleAction(dependencies.Registry),
             new SessionPerformancePowerPlanAction(
                 dependencies.PowerPlans,
                 dependencies.PowerStatus),
@@ -485,8 +494,17 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.Registry,
                 environment.FiveMExecutablePath,
                 environment.FiveMInstallationRoot),
+            OptimizationActionIds.DiagnoseGpuPreferenceMismatch => new GpuPreferenceMismatchDiagnosisAction(
+                dependencies.GpuVendor,
+                dependencies.Registry,
+                environment.FiveMExecutablePath),
             OptimizationActionIds.DisableBackgroundCapture => new GameDvrRegistryAction(
                 dependencies.Registry),
+            OptimizationActionIds.ToggleFullscreenOptimizations => new FullscreenOptimizationsRegistryAction(
+                dependencies.Registry,
+                environment.FiveMExecutablePath,
+                environment.GtaVExecutablePath),
+            OptimizationActionIds.ToggleHags => new HagsToggleAction(dependencies.Registry),
             OptimizationActionIds.EnableSessionPerformancePowerPlan =>
                 new SessionPerformancePowerPlanAction(
                     dependencies.PowerPlans,

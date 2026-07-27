@@ -2,9 +2,52 @@
 
 Este documento registra a classificação de um lote de otimizações gráficas
 propostas pelo usuário para os perfis Leve/Médio/Agressivo, usando a legenda
-abaixo. **Isto é um backlog priorizado, não uma implementação** — nenhum
-código novo foi escrito nesta rodada; a decisão aqui é só "o que é seguro
-fazer, em qual perfil, e como" para guiar o desenvolvimento futuro.
+abaixo.
+
+## Atualização de 26/07/2026 (segunda rodada — implementação autorizada)
+
+O usuário autorizou explicitamente implementar os itens abaixo. Três novas
+ações entraram no catálogo (versão 11):
+
+- `windows.gaming.gpu-preference-mismatch.diagnose` (👁, todos os perfis) —
+  **implementado**. `GpuPreferenceMismatchDiagnosisAction`.
+- `windows.gaming.fullscreen-optimizations.toggle` (🧪, **Agressivo
+  apenas**, opt-in via `OptimizationOptionsDto.ToggleFullscreenOptimizationsExperiment`)
+  — **implementado**. `FullscreenOptimizationsRegistryAction`.
+- `windows.gaming.hags.toggle` (🧪, **Agressivo apenas**, opt-in via
+  `OptimizationOptionsDto.ToggleHagsExperiment`, `RequiresRestart=true`,
+  `RequiredPrivilege.Administrator` com `AttemptWithoutElevationFirst`) —
+  **implementado**. `HagsToggleAction`.
+
+**O que foi implementado, especificamente:** o mecanismo de aplicar/reverter
+com segurança (registro, snapshot, rollback byte-a-byte). **O que NÃO foi
+implementado:** a medição automática de frametime/latência antes-e-depois
+com decisão automática de manter o melhor estado — isso exigiria orquestrar
+um benchmark real (reaproveitando `WindowsGtaVBenchmarkRunner`) em torno de
+cada toggle, o que é uma peça de trabalho maior e separada. Por ora, esses
+dois itens 🧪 seguem o mesmo padrão já usado por outras opções "opt-in,
+nunca automáticas" deste projeto (ex.: `ApplyGtaVRepairLaunchParameters`):
+o usuário ativa, testa manualmente, e reverte pelo histórico se não gostar.
+
+**Ainda sem UI**: como as demais opções opt-in já existentes
+(`TerminateStuckFiveMProcess`, `RecreateFiveMLocalData`,
+`ApplyGtaVRepairLaunchParameters` etc.), os dois novos toggles existem em
+`OptimizationOptionsDto` mas ainda não têm checkbox no `MainWindow.xaml` —
+consistente com o padrão já estabelecido neste projeto para opções opt-in
+recém-adicionadas.
+
+**Deliberadamente NÃO implementado nesta rodada** (continuam só como
+backlog, pelos motivos técnicos/de segurança já registrados abaixo):
+otimizações para jogos em janela do Windows 11 (sem API pública
+confirmada), habilitar VRR programaticamente (mesma razão), troca
+automática de frequência do monitor (risco real de tela preta sem hardware
+variado para validar) e qualquer toggle de HDR/Auto HDR (mesma razão de
+risco de exibição).
+
+---
+
+Este documento registra a classificação original (primeira rodada) do lote
+completo, usando a legenda abaixo.
 
 ## Legenda
 
@@ -21,7 +64,7 @@ fazer, em qual perfil, e como" para guiar o desenvolvimento futuro.
 | --- | --- | --- | --- |
 | Registrar FiveM e GTA V nas preferências gráficas do Windows | ✅ | Todos | **Já implementado** — `windows.gaming.high-performance-gpu.prefer`, `AllProfiles`. |
 | Selecionar a GPU de alto desempenho em notebooks com duas GPUs | ✅ | Todos | Coberto pela mesma ação acima — o Windows resolve automaticamente qual adaptador é "de alto desempenho". |
-| Detectar quando o jogo está usando a integrada por engano | ✅ | Todos | **Novo, mas de baixo risco**: extensão de diagnóstico sobre `windows.gaming.gpu-vendor.detect`/`windows.gaming.gpu-details.diagnose` — comparar o adaptador configurado com o que está de fato renderizando. Só leitura. |
+| Detectar quando o jogo está usando a integrada por engano | ✅ | Todos | **Implementado em 26/07/2026** como `windows.gaming.gpu-preference-mismatch.diagnose` — só leitura, cruza a detecção de duas GPUs com a preferência já configurada para o FiveM. |
 | Restaurar a preferência original | ✅ | Todos | **Já implementado** — rollback padrão da ação existente. |
 
 ## 2. Otimizações para jogos em janela (Windows 11)
@@ -41,7 +84,7 @@ fazer, em qual perfil, e como" para guiar o desenvolvimento futuro.
 | Item | Classificação | Perfis | Observação |
 | --- | --- | --- | --- |
 | Manter ativado por padrão | ✅ | Todos | Não é uma ação — é a recomendação de **não mexer** por padrão (a própria Microsoft diz que o desempenho médio é igual ou melhor que fullscreen exclusivo). |
-| Oferecer teste com desativação por aplicativo | 🧪 | **Agressivo apenas** | Nunca apresentar "desativar Fullscreen Optimizations" como otimização recomendada — é estritamente um teste de compatibilidade opt-in. |
+| Oferecer teste com desativação por aplicativo | 🧪 | **Agressivo apenas** | **Implementado em 26/07/2026** como `windows.gaming.fullscreen-optimizations.toggle` (toggle reversível; comparação automática de frametime ainda não implementada, ver nota no topo do documento). Nunca apresentado como otimização recomendada — é estritamente um teste de compatibilidade opt-in. |
 | Medir frametime e latência nos dois estados | ✅ | Agressivo | Reaproveita a infraestrutura de benchmark/comparação já existente (`WindowsGtaVBenchmarkRunner`, `ResourceComparisonSnapshot`) em vez de criar um medidor novo do zero. |
 | Restaurar o padrão se não houver melhora | ✅ | Agressivo | Reversão automática obrigatória, igual ao item 2. |
 
@@ -49,7 +92,7 @@ fazer, em qual perfil, e como" para guiar o desenvolvimento futuro.
 
 | Item | Classificação | Perfis | Observação |
 | --- | --- | --- | --- |
-| Testar HAGS ligado e desligado | 🧪 | **Agressivo apenas** | Exige reinício do Windows para ter efeito — não pode fazer parte de um fluxo "aplicar e já ver resultado" como as outras ações. |
+| Testar HAGS ligado e desligado | 🧪 | **Agressivo apenas** | **Implementado em 26/07/2026** como `windows.gaming.hags.toggle` (toggle reversível entre os dois estados). Exige reinício do Windows para ter efeito — não pode fazer parte de um fluxo "aplicar e já ver resultado" como as outras ações. |
 | Registrar necessidade de reinicialização | ✅ | Agressivo | Usar o campo já existente `ActionMetadataDto.RequiresRestart`. |
 | Manter resultado que oferecer melhor consistência | ✅ | Agressivo | Decisão automática dentro do fluxo 🧪, baseada na mesma comparação antes/depois do item 3. |
 | Reverter facilmente | ✅ | Agressivo | Reversão do valor de registro (`HwSchMode`) já lido hoje só para diagnóstico. |

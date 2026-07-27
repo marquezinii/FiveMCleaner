@@ -489,3 +489,227 @@ public sealed class GpuPreferenceRegistryAction : AllowlistedRegistryAction
         return false;
     }
 }
+
+/// <summary>
+/// Toggles Hardware-Accelerated GPU Scheduling (HAGS) between its default
+/// (1) and enabled (2) states, always flipping to whichever the machine is
+/// NOT currently using -- this is the "test on/off" experiment from the
+/// graphics optimizations backlog (see docs/graphics-optimizations-backlog.md),
+/// never a one-directional "always enable". Writing
+/// <c>HKLM\SYSTEM\CurrentControlSet\Control\GraphicsDrivers\HwSchMode</c>
+/// requires elevation on virtually every machine; the action still opts
+/// into <see cref="ActionMetadataDto.AttemptWithoutElevationFirst"/> for
+/// consistency with the rest of the codebase (harmless extra attempt, and
+/// correct for the rare relaxed-ACL case). Requires a Windows restart to
+/// take effect -- reported via <see cref="ActionMetadataDto.RequiresRestart"/>,
+/// never silently assumed to apply immediately.
+/// </summary>
+public sealed class HagsToggleAction : AllowlistedRegistryAction
+{
+    private const int DisabledValue = 1;
+    private const int EnabledValue = 2;
+
+    private static readonly RegistryAddress Address = new(
+        RegistryHive.LocalMachine,
+        @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers",
+        "HwSchMode");
+
+    public HagsToggleAction(IRegistryStore registry)
+        : base(registry)
+    {
+    }
+
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.ToggleHags);
+
+    protected override IReadOnlyList<RegistryMutation> GetMutations()
+    {
+        // The desired value here is only a placeholder; ResolveDesiredValue
+        // below decides the real target based on the current state.
+        return [new RegistryMutation(Address, RegistryValueState.FromDword(EnabledValue))];
+    }
+
+    protected override RegistryValueState? ResolveDesiredValue(
+        RegistryMutation mutation,
+        RegistryValueState previousValue)
+    {
+        var current = previousValue.Exists && previousValue.Kind == RegistryValueKind.DWord
+            ? previousValue.NumericValue ?? DisabledValue
+            : DisabledValue;
+        var flipped = current == EnabledValue ? DisabledValue : EnabledValue;
+        return RegistryValueState.FromDword((int)flipped);
+    }
+
+    protected override bool IsAllowedRollbackEntry(
+        RegistryAddress address,
+        RegistryValueState previousValue,
+        RegistryValueState appliedValue,
+        IReadOnlyList<RegistryMutation> currentMutations)
+    {
+        if (address.Hive != Address.Hive
+            || !address.SubKey.Equals(Address.SubKey, StringComparison.OrdinalIgnoreCase)
+            || !address.ValueName.Equals(Address.ValueName, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        return ResolveDesiredValue(currentMutations[0], previousValue) is { } expected
+            && Equivalent(appliedValue, expected);
+    }
+}
+
+/// <summary>
+/// Toggles the "Disable fullscreen optimizations" compatibility flag for
+/// FiveM and (when detected) standalone GTA V, per
+/// <c>HKCU\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers</c>
+/// -- the same per-user, per-executable registry location the
+/// Compatibility tab of an .exe's Properties dialog writes to. This is a
+/// community-documented convention, not an officially published Microsoft
+/// API, so the action is always fully reversible (the exact previous
+/// string is restored byte-for-byte on rollback) regardless of whether the
+/// flag format assumption holds on a given Windows build. Existing,
+/// unrelated compatibility flags for the same executable are preserved.
+/// </summary>
+public sealed class FullscreenOptimizationsRegistryAction : AllowlistedRegistryAction
+{
+    private const string DisableFlag = "DISABLEDXMAXIMIZEDWINDOWEDMODE";
+    private static readonly RegistryHive Hive = RegistryHive.CurrentUser;
+    private static readonly string SubKeyPath = @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers";
+
+    private readonly IReadOnlyList<RegistryAddress> addresses;
+
+    public FullscreenOptimizationsRegistryAction(
+        IRegistryStore registry,
+        string fiveMExecutablePath,
+        string? gtaVExecutablePath)
+        : base(registry)
+    {
+        var targets = new List<string> { ValidateExecutable(fiveMExecutablePath, nameof(fiveMExecutablePath)) };
+        if (!string.IsNullOrWhiteSpace(gtaVExecutablePath))
+        {
+            targets.Add(ValidateExecutable(gtaVExecutablePath, nameof(gtaVExecutablePath)));
+        }
+
+        addresses = targets
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Select(target => new RegistryAddress(Hive, SubKeyPath, target))
+            .ToArray();
+    }
+
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.ToggleFullscreenOptimizations);
+
+    protected override IReadOnlyList<RegistryMutation> GetMutations()
+    {
+        return addresses
+            .Select(address => new RegistryMutation(address, RegistryValueState.FromString(DisableFlag)))
+            .ToArray();
+    }
+
+    protected override RegistryValueState? ResolveDesiredValue(
+        RegistryMutation mutation,
+        RegistryValueState previousValue)
+    {
+        return ToggleFlag(previousValue) is { } desired
+            ? RegistryValueState.FromString(desired)
+            : null;
+    }
+
+    protected override bool IsAllowedRollbackEntry(
+        RegistryAddress address,
+        RegistryValueState previousValue,
+        RegistryValueState appliedValue,
+        IReadOnlyList<RegistryMutation> currentMutations)
+    {
+        if (address.Hive != Hive
+            || !address.SubKey.Equals(SubKeyPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return false;
+        }
+
+        string target;
+        try
+        {
+            if (!Path.IsPathFullyQualified(address.ValueName))
+            {
+                return false;
+            }
+
+            target = Path.GetFullPath(address.ValueName);
+            if (!target.Equals(address.ValueName, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+        }
+        catch (Exception exception) when (exception is ArgumentException
+            or NotSupportedException
+            or PathTooLongException)
+        {
+            return false;
+        }
+
+        if (!addresses.Any(known => known.ValueName.Equals(target, StringComparison.OrdinalIgnoreCase)))
+        {
+            return false;
+        }
+
+        return ToggleFlag(previousValue) is { } expected
+            && Equivalent(appliedValue, RegistryValueState.FromString(expected));
+    }
+
+    /// <summary>
+    /// Adds the disable-fullscreen-optimizations flag if absent, or removes
+    /// it if present -- this is the "toggle on/off" behavior the
+    /// experiment needs, always preserving every other flag token already
+    /// set for that executable. Returns null when the existing value's
+    /// shape is not a plain space-separated token list this action
+    /// recognizes (never guesses at a format it cannot safely round-trip).
+    /// </summary>
+    private static string? ToggleFlag(RegistryValueState current)
+    {
+        if (!current.Exists)
+        {
+            return DisableFlag;
+        }
+
+        if (current.Kind != RegistryValueKind.String
+            || string.IsNullOrWhiteSpace(current.StringValue)
+            || current.StringValue.IndexOfAny(['\r', '\n']) >= 0)
+        {
+            return null;
+        }
+
+        var tokens = current.StringValue
+            .Split(' ', StringSplitOptions.RemoveEmptyEntries)
+            .ToList();
+        foreach (var token in tokens)
+        {
+            if (token.Length > 64 || !token.All(character =>
+                    char.IsAsciiLetterOrDigit(character) || character is '~' or '_' or '.'))
+            {
+                return null;
+            }
+        }
+
+        if (tokens.RemoveAll(token => token.Equals(DisableFlag, StringComparison.OrdinalIgnoreCase)) == 0)
+        {
+            tokens.Add(DisableFlag);
+        }
+
+        // Empty is a legitimate outcome here: it means the disable flag was
+        // the only token present and this call is toggling it back off.
+        return tokens.Count == 0 ? string.Empty : string.Join(' ', tokens);
+    }
+
+    private static string ValidateExecutable(string path, string parameterName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        var fullPath = Path.GetFullPath(path);
+        if (!Path.GetExtension(fullPath).Equals(".exe", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new ArgumentException("Target must be an executable.", parameterName);
+        }
+
+        return fullPath;
+    }
+}

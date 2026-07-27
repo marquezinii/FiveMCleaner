@@ -1,6 +1,7 @@
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Catalog;
 using FiveMCleaner.Windows.Infrastructure;
+using Microsoft.Win32;
 
 namespace FiveMCleaner.Windows.Actions;
 
@@ -561,5 +562,98 @@ public sealed class GpuVendorDetectionAction : WindowsOptimizationAction
         }
 
         return "Desconhecido";
+    }
+}
+
+/// <summary>
+/// Read-only cross-check between "this looks like a dual-GPU laptop" (from
+/// <see cref="IGpuVendorInspector"/>'s driver descriptions) and "the
+/// per-app GPU preference registry entry for FiveM is actually set to high
+/// performance" (the same
+/// <c>HKCU\Software\Microsoft\DirectX\UserGpuPreferences</c> location
+/// <see cref="GpuPreferenceRegistryAction"/> writes to). Item from the
+/// graphics optimizations backlog: "detectar quando o jogo está usando a
+/// integrada por engano" -- deliberately scoped to what can be checked
+/// without hooking the running game's actual DXGI adapter (which this
+/// product does not do), never alters anything.
+/// </summary>
+public sealed class GpuPreferenceMismatchDiagnosisAction : WindowsOptimizationAction
+{
+    private static readonly string[] IntegratedMarkers =
+        ["Intel(R) UHD", "Intel(R) HD", "Intel(R) Iris", "Intel UHD", "Intel HD", "Intel Iris", "AMD Radeon(TM) Graphics", "AMD Radeon Graphics"];
+
+    private readonly IGpuVendorInspector gpuVendor;
+    private readonly IRegistryStore registry;
+    private readonly string fiveMExecutable;
+
+    public GpuPreferenceMismatchDiagnosisAction(
+        IGpuVendorInspector gpuVendor,
+        IRegistryStore registry,
+        string fiveMExecutablePath)
+    {
+        this.gpuVendor = gpuVendor ?? throw new ArgumentNullException(nameof(gpuVendor));
+        this.registry = registry ?? throw new ArgumentNullException(nameof(registry));
+        fiveMExecutable = Path.GetFullPath(fiveMExecutablePath);
+    }
+
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.DiagnoseGpuPreferenceMismatch);
+
+    public override Task<WindowsActionApplyResult> ApplyAsync(
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var snapshot = gpuVendor.GetSnapshot();
+        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(snapshot)));
+    }
+
+    public override Task RollbackAsync(
+        WindowsActionContext context,
+        string? snapshotJson,
+        CancellationToken cancellationToken)
+    {
+        return Task.CompletedTask;
+    }
+
+    private string Classify(GpuVendorSnapshot snapshot)
+    {
+        var hasIntegrated = snapshot.DriverDescriptions.Any(IsIntegrated);
+        var hasDedicated = snapshot.DriverDescriptions.Any(description => !IsIntegrated(description));
+        if (!hasIntegrated || !hasDedicated)
+        {
+            return "Não foi detectado um par de GPU integrada + dedicada; esta verificação só se aplica a "
+                + "notebooks com duas GPUs.";
+        }
+
+        var configured = IsHighPerformancePreferenceConfigured();
+        return configured
+            ? "Duas GPUs detectadas e o FiveM já está configurado para preferir a GPU de alto desempenho."
+            : "Duas GPUs detectadas (uma integrada e uma dedicada), mas o FiveM não está configurado para "
+                + "preferir a GPU de alto desempenho nas preferências gráficas do Windows -- ative a opção "
+                + "correspondente para evitar que o jogo rode na GPU integrada por engano.";
+    }
+
+    private bool IsHighPerformancePreferenceConfigured()
+    {
+        var value = registry.Read(new RegistryAddress(
+            RegistryHive.CurrentUser,
+            @"Software\Microsoft\DirectX\UserGpuPreferences",
+            fiveMExecutable));
+        if (!value.Exists || value.Kind != RegistryValueKind.String || string.IsNullOrWhiteSpace(value.StringValue))
+        {
+            return false;
+        }
+
+        return value.StringValue
+            .Split(';', StringSplitOptions.RemoveEmptyEntries)
+            .Select(segment => segment.Trim())
+            .Any(segment => segment.Equals("GpuPreference=2", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsIntegrated(string driverDescription)
+    {
+        return IntegratedMarkers.Any(marker =>
+            driverDescription.Contains(marker, StringComparison.OrdinalIgnoreCase));
     }
 }

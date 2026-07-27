@@ -240,6 +240,107 @@ public sealed class WindowsActionHandlerTests
     }
 
     [Fact]
+    public async Task HagsToggle_FlipsToTheOppositeStateAndRollbackRestoresOriginal()
+    {
+        var registry = new FakeRegistryStore();
+        var address = new RegistryAddress(
+            RegistryHive.LocalMachine,
+            @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers",
+            "HwSchMode");
+        registry.Write(address, RegistryValueState.FromDword(1));
+        var action = new HagsToggleAction(registry);
+        var context = Context();
+
+        var result = await action.ApplyAsync(context, CancellationToken.None);
+
+        Assert.True(result.Changed);
+        Assert.Equal(2, registry.Read(address).NumericValue);
+
+        await action.RollbackAsync(context, result.SnapshotJson, CancellationToken.None);
+        Assert.Equal(1, registry.Read(address).NumericValue);
+    }
+
+    [Fact]
+    public async Task HagsToggle_FlipsBackToDisabledWhenCurrentlyEnabled()
+    {
+        var registry = new FakeRegistryStore();
+        var address = new RegistryAddress(
+            RegistryHive.LocalMachine,
+            @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers",
+            "HwSchMode");
+        registry.Write(address, RegistryValueState.FromDword(2));
+        var action = new HagsToggleAction(registry);
+
+        var result = await action.ApplyAsync(Context(), CancellationToken.None);
+
+        Assert.True(result.Changed);
+        Assert.Equal(1, registry.Read(address).NumericValue);
+    }
+
+    [Fact]
+    public async Task HagsToggle_TreatsMissingValueAsDefaultAndFlipsToEnabled()
+    {
+        var registry = new FakeRegistryStore();
+        var address = new RegistryAddress(
+            RegistryHive.LocalMachine,
+            @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers",
+            "HwSchMode");
+        var action = new HagsToggleAction(registry);
+
+        var result = await action.ApplyAsync(Context(), CancellationToken.None);
+
+        Assert.True(result.Changed);
+        Assert.Equal(2, registry.Read(address).NumericValue);
+    }
+
+    [Fact]
+    public async Task FullscreenOptimizations_TogglesFlagForFiveMAndGtaVPreservingOtherFlags()
+    {
+        var registry = new FakeRegistryStore();
+        const string subKey = @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers";
+        var fiveM = @"C:\FiveM\FiveM.exe";
+        var gtaV = @"C:\Games\GTAV\GTA5.exe";
+        var fiveMAddress = new RegistryAddress(RegistryHive.CurrentUser, subKey, fiveM);
+        registry.Write(fiveMAddress, RegistryValueState.FromString("HIGHDPIAWARE"));
+        var action = new FullscreenOptimizationsRegistryAction(registry, fiveM, gtaV);
+        var context = Context();
+
+        var result = await action.ApplyAsync(context, CancellationToken.None);
+
+        Assert.True(result.Changed);
+        Assert.Equal(
+            "HIGHDPIAWARE DISABLEDXMAXIMIZEDWINDOWEDMODE",
+            registry.Read(fiveMAddress).StringValue);
+        Assert.Equal(
+            "DISABLEDXMAXIMIZEDWINDOWEDMODE",
+            registry.Read(new RegistryAddress(RegistryHive.CurrentUser, subKey, gtaV)).StringValue);
+
+        await action.RollbackAsync(context, result.SnapshotJson, CancellationToken.None);
+        Assert.Equal("HIGHDPIAWARE", registry.Read(fiveMAddress).StringValue);
+        Assert.False(registry.Read(new RegistryAddress(RegistryHive.CurrentUser, subKey, gtaV)).Exists);
+    }
+
+    [Fact]
+    public async Task FullscreenOptimizations_TogglesBackOffWhenAlreadyDisabled()
+    {
+        var registry = new FakeRegistryStore();
+        const string subKey = @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers";
+        var fiveM = @"C:\FiveM\FiveM.exe";
+        var fiveMAddress = new RegistryAddress(RegistryHive.CurrentUser, subKey, fiveM);
+        registry.Write(fiveMAddress, RegistryValueState.FromString("DISABLEDXMAXIMIZEDWINDOWEDMODE"));
+        var action = new FullscreenOptimizationsRegistryAction(registry, fiveM, gtaVExecutablePath: null);
+
+        var context = Context();
+        var result = await action.ApplyAsync(context, CancellationToken.None);
+
+        Assert.True(result.Changed);
+        Assert.Equal(string.Empty, registry.Read(fiveMAddress).StringValue);
+
+        await action.RollbackAsync(context, result.SnapshotJson, CancellationToken.None);
+        Assert.Equal("DISABLEDXMAXIMIZEDWINDOWEDMODE", registry.Read(fiveMAddress).StringValue);
+    }
+
+    [Fact]
     public async Task SessionPowerPlan_RequiresAcAndRestoresPreviousScheme()
     {
         var controller = new FakePowerPlanController();

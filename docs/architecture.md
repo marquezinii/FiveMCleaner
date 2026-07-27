@@ -212,10 +212,9 @@ A execução do usuário padrão roda com `WindowsTransactionOptions.IsolateFail
 **Falha da fase elevada não desfaz a fase de usuário padrão.** Quando o
 broker falha ou o UAC é cancelado, `AppOptimizationService` não chama mais
 um rollback das ações de usuário padrão já confirmadas — isso causava o
-efeito de "várias ações falhando de uma vez" quando na verdade só a ação
-administrativa (hoje só `EnableSessionPerformancePowerPlan`) havia falhado
-(ver investigação de 24/07/2026 e correção de 26/07/2026 no
-`PROJECT_STATE.md`). Em vez disso,
+efeito de "várias ações falhando de uma vez" quando na verdade só uma ação
+administrativa havia falhado (ver investigação de 24/07/2026 e correção de
+26/07/2026 no `PROJECT_STATE.md`). Em vez disso,
 `WindowsTransactionEngine.MarkAdministratorPhaseFailedAsync` marca somente
 a(s) ação(ões) administrativa(s) ainda pendente(s) como `Failed` no journal,
 preservando intactas as ações já `Committed`; a transação se estabiliza em
@@ -223,15 +222,30 @@ preservando intactas as ações já `Committed`; a transação se estabiliza em
 foram mantidas.
 
 **Ações administrativas com `AttemptWithoutElevationFirst` tentam sem UAC
-primeiro.** `EnableSessionPerformancePowerPlan` é a primeira e única ação
-com esse sinalizador em `ActionMetadataDto`: o motor a inclui na fase de
-usuário padrão mesmo sem elevação; se o Windows genuinamente recusar
-(`PowerPlanActivationOutcome.AccessDenied`, distinguido de "este PC não tem
-esse plano" via código de saída/mensagem do `powercfg`), a ação lança
-`UnauthorizedAccessException` e o motor a devolve para `DeferredPrivilege`
-em vez de marcá-la como falha — só então o broker elevado é acionado.
-Em muitas configurações do Windows um usuário comum já pode trocar o plano
-de energia, então nenhum UAC chega a aparecer.
+primeiro.** `EnableSessionPerformancePowerPlan` e (desde 26/07/2026)
+`ToggleHags` usam esse sinalizador em `ActionMetadataDto`: o motor a inclui
+na fase de usuário padrão mesmo sem elevação; se o Windows genuinamente
+recusar (`UnauthorizedAccessException`, distinguido de outros tipos de
+"não deu certo" — por exemplo `PowerPlanActivationOutcome.AccessDenied`
+versus "este PC não tem esse plano" via código de saída/mensagem do
+`powercfg`), o motor devolve a ação para `DeferredPrivilege` em vez de
+marcá-la como falha — só então o broker elevado é acionado. Em muitas
+configurações do Windows um usuário comum já pode trocar o plano de
+energia, então nenhum UAC chega a aparecer; `ToggleHags` na prática quase
+sempre precisa de elevação (escreve em `HKLM`), mas usa o mesmo mecanismo
+por consistência.
+
+**Ações opt-in de perfil Agressivo, nunca automáticas** (também desde
+26/07/2026): `windows.gaming.gpu-preference-mismatch.diagnose` (👁,
+diagnóstico, todos os perfis), `windows.gaming.fullscreen-optimizations.toggle`
+e `windows.gaming.hags.toggle` (🧪, ambas Agressivo apenas, desligadas por
+padrão via `OptimizationOptionsDto.ToggleFullscreenOptimizationsExperiment`/
+`ToggleHagsExperiment`) — mesmo padrão já usado por outras opções opt-in
+deste projeto (`TerminateStuckFiveMProcess`, `ApplyGtaVRepairLaunchParameters`
+etc.): existem no backend e no catálogo, mas ainda não têm controle na
+interface do app. Ver `docs/graphics-optimizations-backlog.md` para a
+classificação completa e o que ainda não foi implementado (VRR, janela sem
+bordas do Windows 11, HDR, troca automática de frequência do monitor).
 
 Cancelamento:
 

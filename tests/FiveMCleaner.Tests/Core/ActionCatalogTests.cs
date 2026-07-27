@@ -11,7 +11,7 @@ public sealed class ActionCatalogTests
     {
         var catalog = ActionCatalog.Current;
 
-        Assert.Equal(10, ActionCatalog.CurrentVersion);
+        Assert.Equal(11, ActionCatalog.CurrentVersion);
         Assert.NotEmpty(catalog.Actions);
         Assert.Equal(
             catalog.Actions.Count,
@@ -96,10 +96,19 @@ public sealed class ActionCatalogTests
             .Where(action => action.RequiredPrivilege == RequiredPrivilege.Administrator)
             .ToArray();
 
-        var powerAction = Assert.Single(elevated);
-        Assert.Equal(OptimizationActionIds.EnableSessionPerformancePowerPlan, powerAction.Id);
-        Assert.Equal(ActionReversibility.FullyReversible, powerAction.Reversibility);
+        Assert.Equal(2, elevated.Length);
+        Assert.All(elevated, action =>
+            Assert.Equal(ActionReversibility.FullyReversible, action.Reversibility));
+
+        var powerAction = Assert.Single(elevated, action =>
+            action.Id == OptimizationActionIds.EnableSessionPerformancePowerPlan);
         Assert.True(powerAction.RequiresAcPower);
+        Assert.True(powerAction.AttemptWithoutElevationFirst);
+
+        var hagsAction = Assert.Single(elevated, action =>
+            action.Id == OptimizationActionIds.ToggleHags);
+        Assert.True(hagsAction.RequiresRestart);
+        Assert.True(hagsAction.AttemptWithoutElevationFirst);
     }
 
     [Fact]

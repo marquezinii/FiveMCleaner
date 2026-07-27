@@ -450,6 +450,12 @@
   <data name="Actions.gtav.legacy.launch-parameters.display.apply.Description" xml:space="preserve"><value>Writes the display mode (-fullscreen/-windowed/-borderless) and, when chosen, the DirectX version (-DX10/-DX10_1/-DX11) to standalone GTA V's commandline.txt. Never changes resolution. Never part of automatic profiles.</value></data>
   <data name="Actions.gtav.legacy.launch-parameters.repair.apply.Name" xml:space="preserve"><value>Apply GTA V repair launch parameters</value></data>
   <data name="Actions.gtav.legacy.launch-parameters.repair.apply.Description" xml:space="preserve"><value>Writes temporary repair parameters (-safemode, -useMinimumSettings, -UseAutoSettings) to standalone GTA V's commandline.txt to diagnose a specific problem. Never part of automatic profiles and should not stay active permanently.</value></data>
+  <data name="Actions.windows.gaming.gpu-preference-mismatch.diagnose.Name" xml:space="preserve"><value>Diagnose GPU preference on dual-GPU laptops</value></data>
+  <data name="Actions.windows.gaming.gpu-preference-mismatch.diagnose.Description" xml:space="preserve"><value>Compares detected integrated + dedicated GPU with the GPU preference already configured in Windows Graphics settings for FiveM, without changing anything.</value></data>
+  <data name="Actions.windows.gaming.fullscreen-optimizations.toggle.Name" xml:space="preserve"><value>Test disabling fullscreen optimizations</value></data>
+  <data name="Actions.windows.gaming.fullscreen-optimizations.toggle.Description" xml:space="preserve"><value>Toggles the "Disable fullscreen optimizations" compatibility flag for FiveM and GTA V as an opt-in compatibility test. Never part of automatic profiles beyond Aggressive.</value></data>
+  <data name="Actions.windows.gaming.hags.toggle.Name" xml:space="preserve"><value>Test Hardware-Accelerated GPU Scheduling (HAGS)</value></data>
+  <data name="Actions.windows.gaming.hags.toggle.Description" xml:space="preserve"><value>Toggles HAGS between enabled and Windows' default as an opt-in compatibility test. Never part of automatic profiles beyond Aggressive.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Name" xml:space="preserve"><value>Reduce Windows visual effects</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.Description" xml:space="preserve"><value>Reduces animations and transparency while preserving readability and font smoothing.</value></data>
   <data name="Runtime.ApplyingAction" xml:space="preserve"><value>Applying {0}</value></data>

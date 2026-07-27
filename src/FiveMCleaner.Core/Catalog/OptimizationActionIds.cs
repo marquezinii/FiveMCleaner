@@ -55,4 +55,7 @@ public static class OptimizationActionIds
     public const string ApplyGtaVGraphicsLaunchParameters = "gtav.legacy.launch-parameters.graphics.apply";
     public const string ApplyGtaVDisplayLaunchParameters = "gtav.legacy.launch-parameters.display.apply";
     public const string ApplyGtaVRepairLaunchParameters = "gtav.legacy.launch-parameters.repair.apply";
+    public const string DiagnoseGpuPreferenceMismatch = "windows.gaming.gpu-preference-mismatch.diagnose";
+    public const string ToggleFullscreenOptimizations = "windows.gaming.fullscreen-optimizations.toggle";
+    public const string ToggleHags = "windows.gaming.hags.toggle";
 }

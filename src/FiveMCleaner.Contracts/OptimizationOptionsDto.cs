@@ -113,4 +113,24 @@ public sealed record OptimizationOptionsDto
     public bool UseGtaVMinimumSettings { get; init; }
 
     public bool UseGtaVAutoSettingsRebuild { get; init; }
+
+    /// <summary>
+    /// Opt-in experiment, Aggressive profile only, never part of automatic
+    /// profile composition. Toggles the "Disable fullscreen optimizations"
+    /// compatibility flag for FiveM/GTA V -- a compatibility test, not a
+    /// guaranteed improvement (Microsoft's own guidance is that Fullscreen
+    /// Optimizations perform the same or better on average). Fully
+    /// reversible; the user is expected to compare and revert manually if
+    /// there is no improvement.
+    /// </summary>
+    public bool ToggleFullscreenOptimizationsExperiment { get; init; }
+
+    /// <summary>
+    /// Opt-in experiment, Aggressive profile only, never part of automatic
+    /// profile composition. Flips Hardware-Accelerated GPU Scheduling
+    /// (HAGS) to whichever state the machine is not currently using.
+    /// Requires a Windows restart to take effect and never presented as a
+    /// guaranteed FPS gain. Fully reversible.
+    /// </summary>
+    public bool ToggleHagsExperiment { get; init; }
 }

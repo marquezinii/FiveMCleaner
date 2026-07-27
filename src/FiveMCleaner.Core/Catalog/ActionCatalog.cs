@@ -5,7 +5,7 @@ namespace FiveMCleaner.Core.Catalog;
 
 public sealed class ActionCatalog
 {
-    public const int CurrentVersion = 10;
+    public const int CurrentVersion = 11;
 
     private static readonly string[] NoPrerequisites = [];
     private static readonly string[] RequiresFiveMStoppedFirst = [OptimizationActionIds.VerifyFiveMIsStopped];
@@ -21,6 +21,11 @@ public sealed class ActionCatalog
     private static readonly OptimizationProfile[] BalancedAndAggressive =
     [
         OptimizationProfile.Balanced,
+        OptimizationProfile.Aggressive
+    ];
+
+    private static readonly OptimizationProfile[] AggressiveOnly =
+    [
         OptimizationProfile.Aggressive
     ];
 
@@ -960,6 +965,59 @@ public sealed class ActionCatalog
                 confirmationSummary: "Confirma que apenas os parâmetros de reparo escolhidos foram adicionados e as demais linhas do arquivo foram preservadas.",
                 undoSummary: "Totalmente reversível: use \"Reverter esta otimização\" assim que terminar de diagnosticar, para não deixar o parâmetro de reparo ativo permanentemente.",
                 riskLimitations: "É um parâmetro de reparo, não uma otimização diária; deixá-lo ativo indefinidamente pode reduzir a qualidade gráfica sem necessidade."),
+            Define(
+                OptimizationActionIds.DiagnoseGpuPreferenceMismatch,
+                "Diagnosticar preferência de GPU em notebooks com duas GPUs",
+                "Compara a detecção de GPU integrada + dedicada com a preferência configurada nas preferências gráficas do Windows para o FiveM, sem alterar nada.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Informational,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 2,
+                expectedImpact: "Evita que o jogo rode na GPU integrada por engano em notebooks híbridos, sem nunca alterar nada sozinho.",
+                ActionOptionGate.Always,
+                detectionSummary: "Lê os adaptadores de vídeo do registro e a preferência de GPU já configurada para o FiveM.",
+                confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
+                undoSummary: "Somente leitura: não altera a preferência de GPU.",
+                riskLimitations: "Não consegue confirmar qual GPU o jogo está de fato usando numa sessão ao vivo; a verificação é limitada à configuração registrada."),
+            Define(
+                OptimizationActionIds.ToggleFullscreenOptimizations,
+                "Testar desativar otimizações de tela cheia",
+                "Ativa ou desativa (alternando) a sinalização 'Desativar otimizações de tela cheia' para FiveM e GTA V, como teste de compatibilidade opt-in. Nunca faz parte de perfis automáticos além do Agressivo.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Moderate,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                AggressiveOnly,
+                requiresFiveMStopped: false,
+                progressWeight: 3,
+                expectedImpact: "Serve para testar se desativar Fullscreen Optimizations melhora algo neste hardware específico; a Microsoft afirma que, na média, não há ganho.",
+                ActionOptionGate.ToggleFullscreenOptimizations,
+                detectionSummary: "Lê a sinalização de compatibilidade existente para os executáveis do FiveM/GTA V.",
+                confirmationSummary: "Confirma que apenas a sinalização de tela cheia foi alternada, preservando outras sinalizações de compatibilidade já presentes.",
+                undoSummary: "Totalmente reversível: o valor anterior exato é restaurado no rollback.",
+                riskLimitations: "Mecanismo baseado em convenção observada da chave AppCompatFlags\\Layers, não em documentação oficial da Microsoft; compare o resultado você mesmo e reverta se não notar melhora."),
+            Define(
+                OptimizationActionIds.ToggleHags,
+                "Testar Hardware-Accelerated GPU Scheduling (HAGS)",
+                "Alterna o HAGS entre ativado e o padrão do Windows, como teste de compatibilidade opt-in. Nunca faz parte de perfis automáticos além do Agressivo.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Moderate,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.Administrator,
+                AggressiveOnly,
+                requiresFiveMStopped: false,
+                progressWeight: 3,
+                requiresRestart: true,
+                expectedImpact: "Serve para testar se o outro estado do HAGS melhora a consistência de frametime neste hardware; nunca é um aumento garantido de FPS.",
+                optionGate: ActionOptionGate.ToggleHags,
+                detectionSummary: "Lê o valor atual de HwSchMode no registro dos drivers de vídeo.",
+                confirmationSummary: "Confirma que o valor foi alternado; exige reiniciar o Windows para ter efeito.",
+                undoSummary: "Totalmente reversível: o valor anterior é restaurado no rollback (também exige reinício para valer).",
+                riskLimitations: "O resultado varia por combinação de GPU/driver; a Microsoft não garante ganho de FPS com HAGS ativado ou desativado.",
+                attemptWithoutElevationFirst: true),
             Define(
                 OptimizationActionIds.ReduceWindowsVisualEffects,
                 "Reduzir efeitos visuais do Windows",

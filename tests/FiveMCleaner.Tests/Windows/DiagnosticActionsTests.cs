@@ -1,6 +1,7 @@
 using FiveMCleaner.Core.Catalog;
 using FiveMCleaner.Windows.Actions;
 using FiveMCleaner.Windows.Infrastructure;
+using Microsoft.Win32;
 using Xunit;
 
 namespace FiveMCleaner.Tests.Windows;
@@ -317,6 +318,61 @@ public sealed class DiagnosticActionsTests
         var message = GpuVendorDetectionAction.Classify(new GpuVendorSnapshot([]));
 
         Assert.Contains("Não foi possível identificar", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task GpuPreferenceMismatch_FlagsDualGpuLaptopWithoutHighPerformancePreferenceConfigured()
+    {
+        var gpuVendor = new FakeGpuVendorInspector
+        {
+            Snapshot = new GpuVendorSnapshot(["Intel(R) UHD Graphics 620", "NVIDIA GeForce GTX 1650"])
+        };
+        var registry = new FakeRegistryStore();
+        var action = new GpuPreferenceMismatchDiagnosisAction(gpuVendor, registry, @"C:\FiveM\FiveM.exe");
+
+        var result = await action.ApplyAsync(Context(), CancellationToken.None);
+
+        Assert.False(result.Changed);
+        Assert.Contains(result.Messages, message =>
+            message.Contains("preferir a GPU de alto desempenho", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task GpuPreferenceMismatch_ReportsAlreadyConfiguredWhenPreferenceIsSet()
+    {
+        var gpuVendor = new FakeGpuVendorInspector
+        {
+            Snapshot = new GpuVendorSnapshot(["Intel(R) UHD Graphics 620", "NVIDIA GeForce GTX 1650"])
+        };
+        var registry = new FakeRegistryStore();
+        var fiveM = @"C:\FiveM\FiveM.exe";
+        registry.Write(
+            new RegistryAddress(RegistryHive.CurrentUser, @"Software\Microsoft\DirectX\UserGpuPreferences", fiveM),
+            RegistryValueState.FromString("GpuPreference=2;"));
+        var action = new GpuPreferenceMismatchDiagnosisAction(gpuVendor, registry, fiveM);
+
+        var result = await action.ApplyAsync(Context(), CancellationToken.None);
+
+        Assert.False(result.Changed);
+        Assert.Contains(result.Messages, message =>
+            message.Contains("já está configurado", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task GpuPreferenceMismatch_SkipsSingleGpuMachines()
+    {
+        var gpuVendor = new FakeGpuVendorInspector
+        {
+            Snapshot = new GpuVendorSnapshot(["NVIDIA GeForce RTX 4070"])
+        };
+        var registry = new FakeRegistryStore();
+        var action = new GpuPreferenceMismatchDiagnosisAction(gpuVendor, registry, @"C:\FiveM\FiveM.exe");
+
+        var result = await action.ApplyAsync(Context(), CancellationToken.None);
+
+        Assert.False(result.Changed);
+        Assert.Contains(result.Messages, message =>
+            message.Contains("só se aplica a", StringComparison.Ordinal));
     }
 
     [Fact]

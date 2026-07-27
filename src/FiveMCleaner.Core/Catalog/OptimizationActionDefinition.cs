@@ -162,5 +162,7 @@ internal enum ActionOptionGate
     ApplyGtaVDisplayPreferences,
     ApplyGtaVGraphicsLaunchParameters,
     ApplyGtaVDisplayLaunchParameters,
-    ApplyGtaVRepairLaunchParameters
+    ApplyGtaVRepairLaunchParameters,
+    ToggleFullscreenOptimizations,
+    ToggleHags
 }
