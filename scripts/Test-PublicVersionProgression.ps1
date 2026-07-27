@@ -43,15 +43,19 @@ if ($previous.Tag -eq 'v0.2.0' -and $Version -eq '1.0.0') {
     exit 0
 }
 
-$expected = if ($previous.Parts.Patch -lt 99) {
+$patchVersion = if ($previous.Parts.Patch -lt 99) {
     "{0}.{1}.{2}" -f $previous.Parts.Major, $previous.Parts.Minor, ($previous.Parts.Patch + 1)
 }
 else {
     "{0}.{1}.0" -f $previous.Parts.Major, ($previous.Parts.Minor + 1)
 }
 
-if ($Version -ne $expected) {
-    throw "Invalid public version '$Version'. After '$($previous.Tag)', the required next stable version is '$expected'."
+$minorVersion = "{0}.{1}.0" -f $previous.Parts.Major, ($previous.Parts.Minor + 1)
+$majorVersion = "{0}.0.0" -f ($previous.Parts.Major + 1)
+$allowedVersions = @($patchVersion, $minorVersion, $majorVersion) | Select-Object -Unique
+
+if ($Version -notin $allowedVersions) {
+    throw "Invalid public version '$Version'. After '$($previous.Tag)', allowed SemVer increments are: $($allowedVersions -join ', ')."
 }
 
-Write-Host "Public version progression accepted: $($previous.Tag) -> v$Version"
+Write-Host "Public SemVer progression accepted: $($previous.Tag) -> v$Version"

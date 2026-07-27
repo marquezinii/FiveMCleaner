@@ -20,7 +20,7 @@ ver `PrivacyConsentPolicy`):
 | --- | --- | --- |
 | Tipo | `optimization-completed` | distinguir conclusão, falha ou cancelamento |
 | Tempo de execução | `18342` ms | identificar operações anormalmente longas |
-| Versão | `1.0.3` | correlacionar comportamento com uma versão |
+| Versão | `1.1.0` | correlacionar comportamento com uma versão |
 | Categoria de erro | `timeout` | presente apenas em falhas; é uma lista fechada |
 | Versão do Windows e arquitetura | `Windows 11`, `x64` | estatística agregada de compatibilidade |
 | Modelo de CPU e GPU | `AMD Ryzen 5 5600X`, `NVIDIA GeForce RTX 5070` | estatística agregada de hardware mais comum |
@@ -90,7 +90,7 @@ autorizado, envia ao Sentry:
 | --- | --- | --- |
 | Tipo e mensagem sanitizados da exceção | `IOException: could not read %APPDATA%\...` | identificar a causa técnica |
 | Stack trace sanitizado | caminhos do usuário substituídos por `%APPDATA%`/`%USERPROFILE%`/etc. | localizar o ponto de falha no código |
-| Versão do aplicativo | `1.0.3` | correlacionar com uma versão específica |
+| Versão do aplicativo | `1.1.0` | correlacionar com uma versão específica |
 | Ambiente | `Development` ou `Production` | nunca mistura erros de desenvolvimento com erros de usuários finais |
 
 O SDK do Sentry é inicializado apenas quando autorizado, com

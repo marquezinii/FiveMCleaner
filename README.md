@@ -37,17 +37,17 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 > Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
 
 > [!NOTE]
-> A `v1.0.3` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
+> A `v1.1.0` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
 
 ## Últimas atualizações
 
-**Versão 1.0.3**
+**Versão 1.1.0**
 
-- Corrigido: cancelamentos transacionais, preferências independentes de FiveM/GTA V e progresso administrativo do broker.
-- Melhorado: confirmação segura para cancelar ou fechar durante otimização, recomendação dinâmica e notificação nativa de atualização.
-- Atualizado: diagnósticos, ajustes opt-in de FiveM/GTA V, documentação de privacidade e licença source-available.
+- Corrigido: isolamento entre ações comuns e etapas elevadas, instância única, notificações e fila local de telemetria.
+- Melhorado: atualização estável de um clique, consentimento de privacidade, interface e mensagens de privilégio administrativo.
+- Atualizado: Worker Cloudflare para telemetria/relatos, diagnósticos gráficos e de hardware, idiomas e documentação de segurança.
 
-## Estado da v1.0.3
+## Estado da v1.1.0
 
 - preferências gerais enxutas: idioma pt-BR/inglês, tema do sistema/claro/escuro,
   comportamento do X e inicialização com Windows;
@@ -61,9 +61,10 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 - journal por ação, rollback por privilégio e restauração que preserva mudanças posteriores do usuário;
 - instalador moderno e pacote portátil autossuficientes para `win-x64`, com
   checksums SHA-256, manifesto e atestação de proveniência na release;
-- atualização estável opt-in pelo GitHub Releases, com verificação de origem,
-  tamanho e SHA-256 antes de abrir o instalador;
-- formulário de bug explícito, sem nome/e-mail obrigatório e com imagem opcional sanitizada;
+- atualização estável de um clique pelo GitHub Releases, com verificação de
+  origem, tamanho e SHA-256 antes da instalação silenciosa e reabertura;
+- consentimento versionado, telemetria técnica opcional e relato de bug em
+  texto via Worker Cloudflare, com e-mail e trecho de log opcional;
 - GTAV Enhanced bloqueado até uma integração separada ser documentada e testada.
 
 ## Download e integridade

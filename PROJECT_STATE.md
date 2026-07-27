@@ -2701,3 +2701,22 @@ prematura para o que o Inno Setup já resolve em modo silencioso.
   real do desenvolvedor (compartilhada entre todas as instalações pelo
   nome do produto, não pelo caminho) foi checada e confirmada intacta —
   nenhum arquivo novo ou modificado por este teste.
+
+## Preparação da publicação v1.1.0 (27/07/2026)
+
+- O conjunto acumulado desde `v1.0.3` foi classificado como **minor**: ele
+  adiciona capacidades públicas compatíveis — consentimento de privacidade,
+  telemetria/relatos pelo Worker Cloudflare, atualização silenciosa de um
+  clique, novos diagnósticos/ações e idioma Espanhol — sem quebrar o contrato
+  de instalação existente. A próxima versão estável é `v1.1.0`.
+- `Directory.Build.props`, o fallback do instalador, README, changelog,
+  telemetria de exemplo e a central de download foram alinhados para `1.1.0`.
+  A página pública resume somente mudanças efetivamente presentes nesta versão.
+- `Test-PublicVersionProgression.ps1` deixou de impor erroneamente somente o
+  próximo patch. Ele aceita exclusivamente o próximo incremento SemVer válido
+  de patch, minor ou major; a classificação continua sendo responsabilidade da
+  revisão de release, conforme `AI_RULES.md`.
+- Validação local de release: progressão `v1.0.3 → v1.1.0` aprovada; build
+  Release sem avisos; 570 testes .NET aprovados; `Verify-Safety.ps1` e contrato
+  do instalador aprovados; lint, typecheck, build e 3 testes do site aprovados;
+  104 testes do Worker e 35 do painel administrativo aprovados.

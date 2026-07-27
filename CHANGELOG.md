@@ -5,6 +5,35 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.1.0] - 2026-07-27
+
+### Adicionado
+
+- Novo consentimento de privacidade versionado, telemetria técnica opcional
+  via Worker Cloudflare e relato de bugs em texto com rota própria, validação
+  no servidor e painel administrativo protegido.
+- Atualização estável de um clique: após a confirmação, o instalador já
+  verificado é executado silenciosamente, preserva a instalação e reabre o
+  FiveMCleaner atualizado.
+- Diagnósticos e ações adicionais para HAGS, Fullscreen Optimizations,
+  G-SYNC/FreeSync, drivers, GPUs híbridas, bateria, PCIe ASPM e mouse polling;
+  idioma Espanhol incluído na interface.
+
+### Corrigido
+
+- O broker administrativo não desfaz mais ações comuns já concluídas quando
+  uma etapa elevada falha; reforçadas leituras de processo, escritas atômicas,
+  launches restritos e a fila local de telemetria.
+- Corrigidos instância única, detalhes de atualização, notificações de bandeja
+  e campos de telemetria para manter os dados enviados válidos e limitados.
+
+### Melhorado
+
+- Barra inferior do plano, dica de privilégio administrativo e telas de
+  consentimento ficaram mais claras, sem ampliar permissões do aplicativo.
+- Documentação de segurança, privacidade, arquitetura, atualização e catálogo
+  foi revisada para refletir os limites e o comportamento efetivamente entregue.
+
 ## [1.0.3] - 2026-07-25
 
 ### Corrigido
