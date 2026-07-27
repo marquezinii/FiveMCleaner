@@ -10,13 +10,15 @@ public enum AppLanguagePreference
 {
     Automatic,
     English,
-    PortugueseBrazil
+    PortugueseBrazil,
+    Spanish
 }
 
 public enum AppLanguage
 {
     English,
-    PortugueseBrazil
+    PortugueseBrazil,
+    Spanish
 }
 
 public sealed record AppLanguageOption(

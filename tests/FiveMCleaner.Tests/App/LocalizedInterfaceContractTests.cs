@@ -26,12 +26,15 @@ public sealed partial class LocalizedInterfaceContractTests
             System.Globalization.CultureInfo.GetCultureInfo("en-US"));
         var portuguese = new LocalizationService(
             System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+        var spanish = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo("es"));
 
         Assert.NotEmpty(keys);
         foreach (var key in keys)
         {
             Assert.NotEqual(key, english.GetString(key));
             Assert.NotEqual(key, portuguese.GetString(key));
+            Assert.NotEqual(key, spanish.GetString(key));
         }
     }
 
@@ -42,6 +45,8 @@ public sealed partial class LocalizedInterfaceContractTests
             System.Globalization.CultureInfo.GetCultureInfo("en-US"));
         var portuguese = new LocalizationService(
             System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+        var spanish = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo("es"));
 
         foreach (var action in ActionCatalog.Current.Actions)
         {
@@ -50,6 +55,7 @@ public sealed partial class LocalizedInterfaceContractTests
                 var key = $"Actions.{action.Id}.{suffix}";
                 Assert.NotEqual(key, english.GetString(key));
                 Assert.NotEqual(key, portuguese.GetString(key));
+                Assert.NotEqual(key, spanish.GetString(key));
             }
         }
     }
@@ -72,12 +78,15 @@ public sealed partial class LocalizedInterfaceContractTests
             System.Globalization.CultureInfo.GetCultureInfo("en-US"));
         var portuguese = new LocalizationService(
             System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+        var spanish = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo("es"));
 
         Assert.NotEmpty(keys);
         foreach (var key in keys)
         {
             Assert.NotEqual(key, english.GetString(key));
             Assert.NotEqual(key, portuguese.GetString(key));
+            Assert.NotEqual(key, spanish.GetString(key));
         }
     }
 
@@ -99,12 +108,15 @@ public sealed partial class LocalizedInterfaceContractTests
             System.Globalization.CultureInfo.GetCultureInfo("en-US"));
         var portuguese = new LocalizationService(
             System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+        var spanish = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo("es"));
 
         Assert.NotEmpty(keys);
         foreach (var key in keys)
         {
             Assert.NotEqual(key, english.GetString(key));
             Assert.NotEqual(key, portuguese.GetString(key));
+            Assert.NotEqual(key, spanish.GetString(key));
         }
     }
 
@@ -112,7 +124,7 @@ public sealed partial class LocalizedInterfaceContractTests
     public void ResxCatalogs_HaveNoDuplicateKeys()
     {
         var root = FindRepositoryRoot();
-        foreach (var fileName in new[] { "Strings.resx", "Strings.pt-BR.resx" })
+        foreach (var fileName in new[] { "Strings.resx", "Strings.pt-BR.resx", "Strings.es.resx" })
         {
             var path = Path.Combine(
                 root,

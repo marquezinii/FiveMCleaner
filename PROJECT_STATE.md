@@ -2413,3 +2413,68 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   `PlanBuilderTests.cs` atualizadas.
 - Validação: `dotnet build`/`dotnet test` Release (543 testes, eram 530);
   `scripts\Verify-Safety.ps1` aprovado.
+
+## Simplificação da barra inferior, dica visual de UAC e idioma Espanhol (27/07/2026)
+
+- **Barra de resumo/ação (rodapé do Otimizador)**: removido o texto
+  "N ações verificadas • sem elevação" e "Limpezas permanentes aparecem
+  identificadas no plano. Configurações possuem rollback." do `Border` que
+  fica logo acima dos botões "Revisar plano"/"Otimizar agora" em
+  `MainWindow.xaml`. O card passou a conter apenas os dois botões,
+  alinhados à direita, com padding maior — aplica-se aos três perfis
+  (Leve/Médio/Agressivo) porque é um único controle compartilhado, não
+  marcação por perfil. As propriedades de view-model que alimentavam esse
+  texto (`PlanSummary`, `ElevationLabel`, `SelectedActionCount`) foram
+  mantidas (não são usadas por nenhum teste e removê-las seria além do
+  escopo pedido), apenas o binding XAML foi retirado.
+- **Dica de possível UAC**: adicionado um ícone minimalista "i" circulado
+  (glifo Segoe MDL2 Assets `&#xE946;`, o mesmo já usado como ícone de
+  fallback em outro lugar do catálogo de ações) ao lado do nome do perfil,
+  apenas nos cartões Médio (Balanced) e Agressivo (Aggressive) — nunca no
+  Leve, que não tem nenhuma ação administrativa. O `ToolTip` usa a nova
+  chave `Profiles.MayRequireElevation` ("Pode requisitar confirmação de
+  Administrador do Windows (UAC)" / "May request Windows Administrator
+  confirmation (UAC)" / "Puede solicitar confirmación de Administrador de
+  Windows (UAC)"), adicionada aos três catálogos de recursos.
+- **Suporte a Espanhol**: terceiro idioma de interface, ao lado de
+  Português (Brasil) e Inglês.
+  - `LocalizationModels.cs`: `Spanish` adicionado a `AppLanguage` e
+    `AppLanguagePreference`.
+  - `LocalizationService.cs`: nova `SpanishCulture` (`CultureInfo.GetCultureInfo("es")`,
+    cultura neutra — não uma variante regional como `es-ES`, para casar
+    com o padrão de fallback do `ResourceManager`), entrada em
+    `LanguageOptions`, ramo em `DetectLanguage` (ISO `"es"` → Spanish),
+    `Resolve`, `SetLanguage` e `CultureFor`.
+  - `MainViewModel.cs`: nova propriedade `IsSpanishSelected`; `SelectLanguage`
+    ganhou o ramo `AppLanguage.Spanish => AppLanguagePreference.Spanish`;
+    os dois pontos que notificavam `IsPortugueseSelected` via
+    `OnPropertyChanged` agora também notificam `IsSpanishSelected`.
+  - `MainWindow.xaml`: terceiro `ComboBoxItem` (`Tag="es"`) no
+    `LanguageSelector`, usando a nova chave `Settings.Language.Spanish`.
+  - `MainWindow.xaml.cs`: `LanguageSelector_SelectionChanged` passou de
+    ternário binário para `switch` de três ramos por `Tag`
+    (`pt-BR`/`es`/padrão inglês); a inicialização de `SelectedIndex`
+    também passou a considerar os três casos (0=pt-BR, 1=en, 2=es,
+    consistente com a ordem dos itens no XAML).
+  - Novo arquivo `src/FiveMCleaner.App/Resources/Strings.es.resx`,
+    espelhando integralmente as ~450 chaves de `Strings.resx` com tradução
+    completa para o espanhol (nenhuma chave ausente — coberto pelo teste
+    `EnglishAndSpanishCatalogs_HaveExactlyTheSameKeys`, que segue o mesmo
+    padrão já existente para português). O `.resx` não precisou ser
+    referenciado manualmente no `.csproj`: o SDK do WPF já faz glob
+    automático dos `Strings.*.resx` como recurso satélite, do mesmo jeito
+    que já acontecia com `Strings.pt-BR.resx`.
+- **Testes novos/ajustados**: `LocalizedInterfaceContractTests.cs` passou a
+  também instanciar um `LocalizationService` em `es` e verificar que toda
+  chave usada em XAML/code-behind (`[Key]`, `T("Key")`/`F("Key")`) resolve
+  nessa cultura, incluindo o teste de duplicidade de chaves nos `.resx`
+  (agora cobre `Strings.es.resx` também) e o teste de nome/descrição de
+  cada ação do catálogo. Em `LocalizationServiceTests.cs`: `es-ES`/`es-MX`
+  passaram a esperar `AppLanguage.Spanish` na detecção automática (antes
+  caíam no fallback inglês); novo teste
+  `EnglishAndSpanishCatalogs_HaveExactlyTheSameKeys` (paridade de chaves);
+  novo teste `SetLanguage_Spanish_UpdatesCultureAndPreference`; novo teste
+  `SpanishLanguagePreference_RoundTripsThroughSettingsJson` (serialização
+  JSON do enum).
+- Validação: `dotnet build`/`dotnet test` Release (547 testes, eram 543);
+  `scripts\Verify-Safety.ps1` aprovado.

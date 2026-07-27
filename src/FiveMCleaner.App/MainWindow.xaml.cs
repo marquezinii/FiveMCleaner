@@ -97,7 +97,9 @@ public partial class MainWindow : Window
     {
         await viewModel.InitializeAsync();
         themeManager.Apply(viewModel.ThemePreference);
-        LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected ? 0 : 1;
+        LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected
+            ? 0
+            : viewModel.IsSpanishSelected ? 2 : 1;
         ThemeSelector.SelectedIndex = viewModel.ThemePreference switch
         {
             AppThemePreference.Dark => 1,
@@ -367,9 +369,12 @@ public partial class MainWindow : Window
             return;
         }
 
-        ApplyLanguage(string.Equals(item.Tag as string, "pt-BR", StringComparison.Ordinal)
-            ? AppLanguage.PortugueseBrazil
-            : AppLanguage.English);
+        ApplyLanguage((item.Tag as string) switch
+        {
+            "pt-BR" => AppLanguage.PortugueseBrazil,
+            "es" => AppLanguage.Spanish,
+            _ => AppLanguage.English
+        });
     }
 
     private void ThemeSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)

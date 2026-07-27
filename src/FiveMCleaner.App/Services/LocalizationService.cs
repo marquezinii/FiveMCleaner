@@ -37,13 +37,15 @@ public sealed class LocalizationService : ILocalizationService
     private const string ResourceBaseName = "FiveMCleaner.App.Resources.Strings";
     private static readonly CultureInfo EnglishCulture = CultureInfo.GetCultureInfo("en-US");
     private static readonly CultureInfo PortugueseBrazilCulture = CultureInfo.GetCultureInfo("pt-BR");
+    private static readonly CultureInfo SpanishCulture = CultureInfo.GetCultureInfo("es");
     private static readonly ResourceManager Resources = new(
         ResourceBaseName,
         typeof(LocalizationService).Assembly);
     private static readonly IReadOnlyList<AppLanguageOption> LanguageOptions = Array.AsReadOnly(
     [
         new AppLanguageOption(AppLanguage.English, EnglishCulture.Name, "English"),
-        new AppLanguageOption(AppLanguage.PortugueseBrazil, PortugueseBrazilCulture.Name, "Português (Brasil)")
+        new AppLanguageOption(AppLanguage.PortugueseBrazil, PortugueseBrazilCulture.Name, "Português (Brasil)"),
+        new AppLanguageOption(AppLanguage.Spanish, SpanishCulture.Name, "Español")
     ]);
 
     private readonly object sync = new();
@@ -145,6 +147,7 @@ public sealed class LocalizationService : ILocalizationService
         {
             AppLanguage.English => AppLanguagePreference.English,
             AppLanguage.PortugueseBrazil => AppLanguagePreference.PortugueseBrazil,
+            AppLanguage.Spanish => AppLanguagePreference.Spanish,
             _ => throw new ArgumentOutOfRangeException(nameof(language))
         });
     }
@@ -156,12 +159,23 @@ public sealed class LocalizationService : ILocalizationService
             return AppLanguage.English;
         }
 
-        return string.Equals(
+        if (string.Equals(
             systemUiCulture.TwoLetterISOLanguageName,
             "pt",
-            StringComparison.OrdinalIgnoreCase)
-            ? AppLanguage.PortugueseBrazil
-            : AppLanguage.English;
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return AppLanguage.PortugueseBrazil;
+        }
+
+        if (string.Equals(
+            systemUiCulture.TwoLetterISOLanguageName,
+            "es",
+            StringComparison.OrdinalIgnoreCase))
+        {
+            return AppLanguage.Spanish;
+        }
+
+        return AppLanguage.English;
     }
 
     public static AppLanguage Resolve(
@@ -174,6 +188,7 @@ public sealed class LocalizationService : ILocalizationService
                 systemUiCulture ?? CultureInfo.CurrentUICulture),
             AppLanguagePreference.English => AppLanguage.English,
             AppLanguagePreference.PortugueseBrazil => AppLanguage.PortugueseBrazil,
+            AppLanguagePreference.Spanish => AppLanguage.Spanish,
             _ => throw new ArgumentOutOfRangeException(nameof(preference))
         };
     }
@@ -182,6 +197,7 @@ public sealed class LocalizationService : ILocalizationService
     {
         AppLanguage.English => EnglishCulture,
         AppLanguage.PortugueseBrazil => PortugueseBrazilCulture,
+        AppLanguage.Spanish => SpanishCulture,
         _ => EnglishCulture
     };
 }

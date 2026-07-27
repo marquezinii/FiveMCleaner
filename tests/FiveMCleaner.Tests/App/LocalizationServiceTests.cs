@@ -14,7 +14,8 @@ public sealed class LocalizationServiceTests
     [InlineData("pt-BR", AppLanguage.PortugueseBrazil)]
     [InlineData("pt-PT", AppLanguage.PortugueseBrazil)]
     [InlineData("en-US", AppLanguage.English)]
-    [InlineData("es-ES", AppLanguage.English)]
+    [InlineData("es-ES", AppLanguage.Spanish)]
+    [InlineData("es-MX", AppLanguage.Spanish)]
     [InlineData("fr-FR", AppLanguage.English)]
     public void AutomaticDetection_UsesPortugueseForPtAndEnglishAsFallback(
         string cultureName,
@@ -125,6 +126,43 @@ public sealed class LocalizationServiceTests
     }
 
     [Fact]
+    public void EnglishAndSpanishCatalogs_HaveExactlyTheSameKeys()
+    {
+        var manager = new ResourceManager(
+            "FiveMCleaner.App.Resources.Strings",
+            typeof(LocalizationService).Assembly);
+        using var english = manager.GetResourceSet(
+            CultureInfo.GetCultureInfo("en-US"),
+            createIfNotExists: true,
+            tryParents: true);
+        using var spanish = manager.GetResourceSet(
+            CultureInfo.GetCultureInfo("es"),
+            createIfNotExists: true,
+            tryParents: false);
+
+        Assert.NotNull(english);
+        Assert.NotNull(spanish);
+        var englishKeys = KeysOf(english!);
+        var spanishKeys = KeysOf(spanish!);
+
+        Assert.True(englishKeys.Count >= 100);
+        Assert.Equal(englishKeys, spanishKeys);
+    }
+
+    [Fact]
+    public void SetLanguage_Spanish_UpdatesCultureAndPreference()
+    {
+        var service = new LocalizationService(CultureInfo.GetCultureInfo("en-US"));
+
+        service.SetLanguage(AppLanguage.Spanish);
+
+        Assert.Equal(AppLanguage.Spanish, service.CurrentLanguage);
+        Assert.Equal(AppLanguagePreference.Spanish, service.CurrentPreference);
+        Assert.Equal("es", service.CurrentCulture.Name);
+        Assert.Equal("Configuración", service["Settings.Title"]);
+    }
+
+    [Fact]
     public void ExistingSettingsJson_DefaultsToAutomaticLanguage()
     {
         const string previousVersionJson = "{\"theme\":\"dark\"}";
@@ -154,6 +192,23 @@ public sealed class LocalizationServiceTests
         Assert.Contains("\"language\":\"portugueseBrazil\"", json, StringComparison.Ordinal);
         Assert.NotNull(result);
         Assert.Equal(AppLanguagePreference.PortugueseBrazil, result!.Language);
+    }
+
+    [Fact]
+    public void SpanishLanguagePreference_RoundTripsThroughSettingsJson()
+    {
+        var source = new AppSettings
+        {
+            Language = AppLanguagePreference.Spanish,
+            Theme = AppThemePreference.System
+        };
+
+        var json = JsonSerializer.Serialize(source, FiveMCleanerJson.Options);
+        var result = JsonSerializer.Deserialize<AppSettings>(json, FiveMCleanerJson.Options);
+
+        Assert.Contains("\"language\":\"spanish\"", json, StringComparison.Ordinal);
+        Assert.NotNull(result);
+        Assert.Equal(AppLanguagePreference.Spanish, result!.Language);
     }
 
     private static SortedSet<string> KeysOf(ResourceSet resourceSet)

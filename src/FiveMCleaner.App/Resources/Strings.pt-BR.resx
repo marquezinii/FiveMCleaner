@@ -35,6 +35,7 @@
   <data name="Profiles.Light.Description" xml:space="preserve"><value>Ajustes suaves e redução apenas de efeitos gráficos pesados.</value></data>
   <data name="Profiles.Balanced.Name" xml:space="preserve"><value>Médio</value></data>
   <data name="Profiles.RecommendedBadge" xml:space="preserve"><value>RECOMENDADO</value></data>
+  <data name="Profiles.MayRequireElevation" xml:space="preserve"><value>Pode requisitar confirmação de Administrador do Windows (UAC)</value></data>
   <data name="Profiles.Balanced.Description" xml:space="preserve"><value>Equilíbrio entre qualidade de imagem, energia, captura e responsividade.</value></data>
   <data name="Profiles.Aggressive.Name" xml:space="preserve"><value>Agressivo</value></data>
   <data name="Profiles.Aggressive.Badge" xml:space="preserve"><value>FPS PRIMEIRO</value></data>
@@ -64,6 +65,7 @@
   <data name="Settings.Language.Description" xml:space="preserve"><value>Detectado pelo Windows na primeira abertura. Você pode alterar quando quiser.</value></data>
   <data name="Settings.Language.English" xml:space="preserve"><value>English</value></data>
   <data name="Settings.Language.PortugueseBrazil" xml:space="preserve"><value>Português (Brasil)</value></data>
+  <data name="Settings.Language.Spanish" xml:space="preserve"><value>Espanhol</value></data>
   <data name="Settings.Appearance.Title" xml:space="preserve"><value>Aparência</value></data>
   <data name="Settings.Appearance.Description" xml:space="preserve"><value>Escolha um tema ou acompanhe automaticamente o Windows.</value></data>
   <data name="Settings.Appearance.System" xml:space="preserve"><value>Sistema</value></data>

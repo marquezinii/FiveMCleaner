@@ -289,6 +289,8 @@ public sealed class MainViewModel : BindableBase
 
     public bool IsPortugueseSelected => CurrentLanguage == AppLanguage.PortugueseBrazil;
 
+    public bool IsSpanishSelected => CurrentLanguage == AppLanguage.Spanish;
+
     public bool IsCloseAppOnCloseSelected
     {
         get => !MinimizeToTrayOnClose;
@@ -772,6 +774,7 @@ public sealed class MainViewModel : BindableBase
         {
             AppLanguage.English => AppLanguagePreference.English,
             AppLanguage.PortugueseBrazil => AppLanguagePreference.PortugueseBrazil,
+            AppLanguage.Spanish => AppLanguagePreference.Spanish,
             _ => AppLanguagePreference.English
         };
         if (languagePreference == preference)
@@ -1221,6 +1224,7 @@ public sealed class MainViewModel : BindableBase
         OnPropertyChanged(nameof(CurrentLanguage));
         OnPropertyChanged(nameof(IsEnglishSelected));
         OnPropertyChanged(nameof(IsPortugueseSelected));
+        OnPropertyChanged(nameof(IsSpanishSelected));
         OnPropertyChanged(nameof(ThemePreference));
         OnPropertyChanged(nameof(IsSystemThemeSelected));
         OnPropertyChanged(nameof(IsDarkThemeSelected));
@@ -1765,6 +1769,7 @@ public sealed class MainViewModel : BindableBase
         OnPropertyChanged(nameof(CurrentLanguage));
         OnPropertyChanged(nameof(IsEnglishSelected));
         OnPropertyChanged(nameof(IsPortugueseSelected));
+        OnPropertyChanged(nameof(IsSpanishSelected));
         OnPropertyChanged(nameof(SelectedProfileLabel));
         OnPropertyChanged(nameof(SelectedProfileName));
         OnPropertyChanged(nameof(ElevationLabel));

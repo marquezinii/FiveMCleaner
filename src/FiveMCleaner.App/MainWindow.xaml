@@ -379,7 +379,10 @@
                                 <RadioButton Grid.Column="2" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsBalancedSelected}" Checked="BalancedProfile_Checked">
                                     <StackPanel>
                                         <Grid><Border Width="34" Height="34" CornerRadius="9" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left"><Canvas Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center"><Path Data="M 4,21 A 10,10 0 0 1 24,21" Stroke="{DynamicResource TextSubtleBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" /><Line X1="14" Y1="21" X2="14" Y2="10" Stroke="{DynamicResource OrangeLightBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" /><Ellipse Canvas.Left="12" Canvas.Top="19" Width="4" Height="4" Fill="{DynamicResource OrangeLightBrush}" /></Canvas></Border><Border MinHeight="25" Padding="9,0" Background="#24FF7A18" CornerRadius="7" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="{Binding IsBalancedRecommended, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding [Profiles.RecommendedBadge], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" /></Border></Grid>
-                                        <TextBlock Text="{Binding [Profiles.Balanced.Name], Source={StaticResource LocalizedStrings}}" Margin="0,13,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,13,0,0">
+                                            <TextBlock Text="{Binding [Profiles.Balanced.Name], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TextSubtleBrush}" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="{Binding [Profiles.MayRequireElevation], Source={StaticResource LocalizedStrings}}" />
+                                        </StackPanel>
                                         <TextBlock Text="{Binding [Profiles.Balanced.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                         <TextBlock Text="{Binding BalancedImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource OrangeLightBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                                     </StackPanel>
@@ -387,7 +390,10 @@
                                 <RadioButton Grid.Column="4" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsAggressiveSelected}" Checked="AggressiveProfile_Checked">
                                     <StackPanel>
                                         <Grid><Border Width="34" Height="34" CornerRadius="9" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left"><Canvas Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center"><Path Data="M 4,21 A 10,10 0 0 1 24,21" Stroke="{DynamicResource TextSubtleBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" /><Line X1="14" Y1="21" X2="21" Y2="17" Stroke="{DynamicResource RedBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" /><Ellipse Canvas.Left="12" Canvas.Top="19" Width="4" Height="4" Fill="{DynamicResource RedBrush}" /></Canvas></Border><Border MinHeight="25" Padding="9,0" Background="#24FF7A18" CornerRadius="7" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="{Binding IsAggressiveRecommended, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding [Profiles.RecommendedBadge], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" /></Border></Grid>
-                                        <TextBlock Text="{Binding [Profiles.Aggressive.Name], Source={StaticResource LocalizedStrings}}" Margin="0,13,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,13,0,0">
+                                            <TextBlock Text="{Binding [Profiles.Aggressive.Name], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                            <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TextSubtleBrush}" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="{Binding [Profiles.MayRequireElevation], Source={StaticResource LocalizedStrings}}" />
+                                        </StackPanel>
                                         <TextBlock Text="{Binding [Profiles.Aggressive.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                         <TextBlock Text="{Binding AggressiveImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource RedBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                                     </StackPanel>
@@ -421,17 +427,10 @@
                             </Border>
 
                             <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0" Padding="16">
-                                <Grid>
-                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                    <StackPanel VerticalAlignment="Center">
-                                        <TextBlock FontSize="13.5" FontWeight="SemiBold" TextWrapping="Wrap"><Run Text="{Binding SelectedActionCount, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding [Plan.VerifiedActions.Label], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /><Run Text="  •  " /><Run Text="{Binding ElevationLabel, Mode=OneWay}" Foreground="{DynamicResource TextMutedBrush}" /></TextBlock>
-                                        <TextBlock Text="{Binding PlanSummary}" Margin="0,5,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                    <StackPanel Grid.Column="1" Orientation="Horizontal">
-                                        <Button Content="{Binding [Plan.Review], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="42" Margin="0,0,9,0" Click="ReviewPlan_Click" />
-                                        <Button Content="{Binding [Plan.OptimizeNow], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="42" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
-                                    </StackPanel>
-                                </Grid>
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                    <Button Content="{Binding [Plan.Review], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="42" Padding="20,0" Margin="0,0,9,0" Click="ReviewPlan_Click" />
+                                    <Button Content="{Binding [Plan.OptimizeNow], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="42" Padding="24,0" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
+                                </StackPanel>
                             </Border>
                         </StackPanel>
                     </ScrollViewer>
@@ -526,6 +525,7 @@
                                     <ComboBox x:Name="LanguageSelector" Style="{StaticResource SettingsComboBoxStyle}" SelectionChanged="LanguageSelector_SelectionChanged">
                                         <ComboBoxItem Tag="pt-BR" Content="{Binding [Settings.Language.PortugueseBrazil], Source={StaticResource LocalizedStrings}}" />
                                         <ComboBoxItem Tag="en" Content="{Binding [Settings.Language.English], Source={StaticResource LocalizedStrings}}" />
+                                        <ComboBoxItem Tag="es" Content="{Binding [Settings.Language.Spanish], Source={StaticResource LocalizedStrings}}" />
                                     </ComboBox>
                                     <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
                                     <TextBlock Text="{Binding [Settings.Appearance.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,4" FontSize="12.5" FontWeight="SemiBold" />

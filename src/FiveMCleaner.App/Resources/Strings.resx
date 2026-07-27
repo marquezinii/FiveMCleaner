@@ -35,6 +35,7 @@
   <data name="Profiles.Light.Description" xml:space="preserve"><value>Gentle adjustments with reductions limited to expensive visual effects.</value></data>
   <data name="Profiles.Balanced.Name" xml:space="preserve"><value>Balanced</value></data>
   <data name="Profiles.RecommendedBadge" xml:space="preserve"><value>RECOMMENDED</value></data>
+  <data name="Profiles.MayRequireElevation" xml:space="preserve"><value>May request Windows Administrator confirmation (UAC)</value></data>
   <data name="Profiles.Balanced.Description" xml:space="preserve"><value>A balance of image quality, power, capture and responsiveness.</value></data>
   <data name="Profiles.Aggressive.Name" xml:space="preserve"><value>Aggressive</value></data>
   <data name="Profiles.Aggressive.Badge" xml:space="preserve"><value>FPS FIRST</value></data>
@@ -64,6 +65,7 @@
   <data name="Settings.Language.Description" xml:space="preserve"><value>Detected from Windows on first launch. You can change it at any time.</value></data>
   <data name="Settings.Language.English" xml:space="preserve"><value>English</value></data>
   <data name="Settings.Language.PortugueseBrazil" xml:space="preserve"><value>Português (Brasil)</value></data>
+  <data name="Settings.Language.Spanish" xml:space="preserve"><value>Español</value></data>
   <data name="Settings.Appearance.Title" xml:space="preserve"><value>Appearance</value></data>
   <data name="Settings.Appearance.Description" xml:space="preserve"><value>Choose a theme or automatically follow Windows.</value></data>
   <data name="Settings.Appearance.System" xml:space="preserve"><value>System</value></data>
