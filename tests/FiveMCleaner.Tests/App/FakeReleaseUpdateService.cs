@@ -12,14 +12,24 @@ internal sealed class FakeReleaseUpdateService : IReleaseUpdateService
 {
     private readonly ReleaseUpdate? updateToReturn;
     private readonly Exception? exceptionToThrow;
+    private readonly DownloadedUpdate? downloadToReturn;
+    private readonly Exception? downloadExceptionToThrow;
 
-    public FakeReleaseUpdateService(ReleaseUpdate? updateToReturn = null, Exception? exceptionToThrow = null)
+    public FakeReleaseUpdateService(
+        ReleaseUpdate? updateToReturn = null,
+        Exception? exceptionToThrow = null,
+        DownloadedUpdate? downloadToReturn = null,
+        Exception? downloadExceptionToThrow = null)
     {
         this.updateToReturn = updateToReturn;
         this.exceptionToThrow = exceptionToThrow;
+        this.downloadToReturn = downloadToReturn;
+        this.downloadExceptionToThrow = downloadExceptionToThrow;
     }
 
     public int CheckForUpdateCallCount { get; private set; }
+
+    public int DownloadUpdateCallCount { get; private set; }
 
     public static ReleaseUpdate CreateUpdate(string version = "9.9.9") => new(
         StableSemanticVersion.Parse(version),
@@ -43,6 +53,16 @@ internal sealed class FakeReleaseUpdateService : IReleaseUpdateService
     public Task<DownloadedUpdate> DownloadUpdateAsync(
         ReleaseUpdate update,
         IProgress<UpdateDownloadProgress>? progress = null,
-        CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException("Not exercised by these tests.");
+        CancellationToken cancellationToken = default)
+    {
+        DownloadUpdateCallCount++;
+        if (downloadExceptionToThrow is not null)
+        {
+            return Task.FromException<DownloadedUpdate>(downloadExceptionToThrow);
+        }
+
+        return downloadToReturn is not null
+            ? Task.FromResult(downloadToReturn)
+            : throw new NotSupportedException("Not exercised by these tests.");
+    }
 }

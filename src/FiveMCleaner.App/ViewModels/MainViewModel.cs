@@ -17,6 +17,7 @@ public sealed class MainViewModel : BindableBase
     private readonly ILocalizationService localization;
     private readonly IStartupRegistrationService startupRegistration;
     private readonly IReleaseUpdateService? releaseUpdateService;
+    private readonly ISilentUpdateInstaller? silentUpdateInstaller;
     private readonly IAnonymousTelemetryService telemetry;
     private readonly ProgressTimingEstimator progressTimingEstimator = new();
     private readonly SemaphoreSlim settingsSaveGate = new(1, 1);
@@ -68,6 +69,7 @@ public sealed class MainViewModel : BindableBase
     private UpdatePresentationState updatePresentationState;
     private string? updateFailureMessage;
     private bool isUpdateDownloading;
+    private bool isInstallingUpdate;
     private double updateDownloadPercent;
     private string updateBannerTitle = string.Empty;
     private string updateBannerDetail = string.Empty;
@@ -103,13 +105,15 @@ public sealed class MainViewModel : BindableBase
         ILocalizationService? localization = null,
         IStartupRegistrationService? startupRegistration = null,
         IReleaseUpdateService? releaseUpdateService = null,
-        IAnonymousTelemetryService? telemetry = null)
+        IAnonymousTelemetryService? telemetry = null,
+        ISilentUpdateInstaller? silentUpdateInstaller = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
         this.planBuilder = planBuilder ?? new PlanBuilder();
         this.localization = localization ?? LocalizationService.Current;
         this.startupRegistration = startupRegistration ?? new WindowsStartupRegistrationService();
         this.releaseUpdateService = releaseUpdateService;
+        this.silentUpdateInstaller = silentUpdateInstaller;
         this.telemetry = telemetry ?? DisabledAnonymousTelemetryService.Instance;
         StepLedger.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasStepLedgerItems));
         ResetLocalizedPlaceholders();
@@ -418,7 +422,8 @@ public sealed class MainViewModel : BindableBase
     public PrivacyConsentDecision? PrivacyConsentDecision { get; private set; }
 
     public bool IsUpdateBannerVisible => availableUpdate is not null
-        || updatePresentationState == UpdatePresentationState.Failed;
+        || updatePresentationState == UpdatePresentationState.Failed
+        || JustUpdatedToVersion is not null;
 
     public bool IsUpdateDownloading
     {
@@ -432,9 +437,41 @@ public sealed class MainViewModel : BindableBase
         }
     }
 
-    public bool CanDownloadUpdate => availableUpdate is not null && !IsUpdateDownloading;
+    public bool IsInstallingUpdate
+    {
+        get => isInstallingUpdate;
+        private set
+        {
+            if (SetProperty(ref isInstallingUpdate, value))
+            {
+                OnPropertyChanged(nameof(CanDownloadUpdate));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Updating replaces the running executable and restarts the app. Doing
+    /// that while a transaction is applying changes, rolling back or writing
+    /// its journal would abandon the operation halfway with no way to finish
+    /// or revert it, so the update button stays disabled until the app is idle.
+    /// </summary>
+    public bool CanDownloadUpdate => availableUpdate is not null
+        && !IsUpdateDownloading
+        && !IsInstallingUpdate
+        && !IsBusy;
+
+    /// <summary>
+    /// Non-null only on the launch that immediately follows a successful
+    /// automatic update (the installer relaunches the app with
+    /// <c>--updated=X.Y.Z</c>), so the banner can confirm what happened.
+    /// </summary>
+    public string? JustUpdatedToVersion { get; private set; }
 
     public Uri? ReleaseNotesUri => availableUpdate?.ReleaseNotesUri;
+
+    /// <summary>Core version string (e.g. "1.2.3") of the pending update, for
+    /// the one confirmation dialog shown before the silent install starts.</summary>
+    public string? AvailableUpdateVersion => availableUpdate?.Version.CoreVersion;
 
     public bool CanOpenReleaseNotes => ReleaseNotesUri is not null;
 
@@ -456,10 +493,20 @@ public sealed class MainViewModel : BindableBase
         private set => SetProperty(ref updateBannerDetail, value);
     }
 
+    /// <summary>
+    /// The post-update confirmation banner has nothing left to act on, so the
+    /// action button disappears instead of offering a redundant update.
+    /// </summary>
+    public bool IsUpdateActionVisible => JustUpdatedToVersion is null;
+
+    /// <summary>
+    /// One button, one meaning: the whole update is a single click. It only
+    /// changes wording to reflect a retry after a failure.
+    /// </summary>
     public string UpdateActionLabel => localization.GetString(
-        updatePresentationState == UpdatePresentationState.Ready
-            ? "Update.OpenInstaller"
-            : "Update.Download");
+        updatePresentationState == UpdatePresentationState.Failed
+            ? "Common.Retry"
+            : "Update.InstallNow");
 
     public string UpdateReleaseNotesLabel => localization.GetString("Update.ReleaseNotes");
 
@@ -729,6 +776,106 @@ public sealed class MainViewModel : BindableBase
         {
             IsUpdateDownloading = false;
         }
+    }
+
+    /// <summary>
+    /// The whole one-click update: download the verified installer, then run it
+    /// silently. Returns <see langword="true"/> only when the installer is
+    /// actually running and the caller must now close the app so its files can
+    /// be replaced — the installer reopens the new version by itself. Any
+    /// failure returns <see langword="false"/> with the banner already
+    /// explaining what happened, and the app must stay open.
+    /// </summary>
+    public async Task<bool> DownloadAndInstallUpdateAsync()
+    {
+        if (!CanDownloadUpdate)
+        {
+            return false;
+        }
+
+        var downloaded = await DownloadAvailableUpdateAsync().ConfigureAwait(true);
+        if (downloaded is null)
+        {
+            return false;
+        }
+
+        return await InstallDownloadedUpdateAsync(downloaded).ConfigureAwait(true);
+    }
+
+    /// <summary>
+    /// Runs an already downloaded and hash-verified installer in silent mode.
+    /// Kept separate from the download so a retry does not re-download an
+    /// installer that is already on disk and already verified.
+    /// </summary>
+    public async Task<bool> InstallDownloadedUpdateAsync(DownloadedUpdate downloaded)
+    {
+        ArgumentNullException.ThrowIfNull(downloaded);
+        if (silentUpdateInstaller is null || IsInstallingUpdate || IsBusy)
+        {
+            return false;
+        }
+
+        IsInstallingUpdate = true;
+        updatePresentationState = UpdatePresentationState.Installing;
+        RefreshUpdatePresentation();
+
+        try
+        {
+            var launch = await silentUpdateInstaller
+                .StartAsync(downloaded)
+                .ConfigureAwait(true);
+            if (launch.Started)
+            {
+                AddLog(localization.Format(
+                    "Log.UpdateInstallStarted",
+                    downloaded.Version.CoreVersion));
+                return true;
+            }
+
+            updateFailureMessage = launch.FailureReason
+                ?? localization.GetString("Common.Unknown");
+            updatePresentationState = UpdatePresentationState.Failed;
+            RefreshUpdatePresentation();
+            AddLog(localization.Format("Log.UpdateInstallFailed", updateFailureMessage));
+            return false;
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            updateFailureMessage = exception.Message;
+            updatePresentationState = UpdatePresentationState.Failed;
+            RefreshUpdatePresentation();
+            AddLog(localization.Format("Log.UpdateInstallFailed", exception.Message));
+            return false;
+        }
+        finally
+        {
+            IsInstallingUpdate = false;
+        }
+    }
+
+    /// <summary>
+    /// Called at startup when the app was relaunched by its own installer after
+    /// an automatic update. Shows the confirmation banner instead of the
+    /// "update available" one.
+    /// </summary>
+    public void ReportCompletedUpdate(string installedVersion)
+    {
+        if (string.IsNullOrWhiteSpace(installedVersion))
+        {
+            return;
+        }
+
+        JustUpdatedToVersion = installedVersion;
+        availableUpdate = null;
+        updatePresentationState = UpdatePresentationState.None;
+        UpdateBannerTitle = localization.Format("Update.Completed.Title", installedVersion);
+        UpdateBannerDetail = localization.GetString("Update.Completed.Detail");
+        AddLog(localization.Format("Log.UpdateCompleted", installedVersion));
+        OnPropertyChanged(nameof(JustUpdatedToVersion));
+        OnPropertyChanged(nameof(IsUpdateBannerVisible));
+        OnPropertyChanged(nameof(CanDownloadUpdate));
+        OnPropertyChanged(nameof(IsUpdateActionVisible));
     }
 
     public void SelectProfile(OptimizationProfile profile)
@@ -1806,6 +1953,8 @@ public sealed class MainViewModel : BindableBase
         OnPropertyChanged(nameof(CanCancel));
         OnPropertyChanged(nameof(CanRevertLastOptimization));
         OnPropertyChanged(nameof(CanRunGtaVBenchmark));
+        // Updating restarts the app, so the button has to follow IsBusy.
+        OnPropertyChanged(nameof(CanDownloadUpdate));
     }
 
     private void RefreshUpdatePresentation()
@@ -1832,6 +1981,12 @@ public sealed class MainViewModel : BindableBase
                     availableUpdate.Version.CoreVersion);
                 UpdateBannerDetail = localization.GetString("Update.Ready.Detail");
                 break;
+            case UpdatePresentationState.Installing when availableUpdate is not null:
+                UpdateBannerTitle = localization.Format(
+                    "Update.Installing.Title",
+                    availableUpdate.Version.CoreVersion);
+                UpdateBannerDetail = localization.GetString("Update.Installing.Detail");
+                break;
             case UpdatePresentationState.Failed:
                 UpdateBannerTitle = localization.GetString("Update.Failed.Title");
                 UpdateBannerDetail = localization.Format(
@@ -1841,6 +1996,7 @@ public sealed class MainViewModel : BindableBase
         }
 
         OnPropertyChanged(nameof(IsUpdateBannerVisible));
+        OnPropertyChanged(nameof(IsUpdateActionVisible));
         OnPropertyChanged(nameof(UpdateActionLabel));
         OnPropertyChanged(nameof(UpdateReleaseNotesLabel));
         OnPropertyChanged(nameof(CanDownloadUpdate));
@@ -1936,6 +2092,7 @@ public sealed class MainViewModel : BindableBase
         Available,
         Downloading,
         Ready,
+        Installing,
         Failed
     }
 }

@@ -260,13 +260,17 @@
                                         <TextBlock Text="{Binding UpdateBannerTitle}" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
                                         <TextBlock Text="{Binding UpdateBannerDetail}" Margin="0,4,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
                                     </StackPanel>
-                                    <StackPanel Grid.Column="2" VerticalAlignment="Center">
+                                    <StackPanel Grid.Column="2"
+                                                VerticalAlignment="Center"
+                                                Visibility="{Binding IsUpdateActionVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <Button Content="{Binding UpdateActionLabel}"
                                                 Style="{StaticResource PrimaryButtonStyle}"
                                                 Height="36"
                                                 MinWidth="132"
                                                 Padding="15,0"
                                                 IsEnabled="{Binding CanDownloadUpdate}"
+                                                ToolTip="{Binding [Update.BlockedWhileBusy], Source={StaticResource LocalizedStrings}}"
+                                                ToolTipService.ShowOnDisabled="True"
                                                 Click="DownloadUpdate_Click" />
                                         <Button Content="{Binding UpdateReleaseNotesLabel}"
                                                 Style="{StaticResource LinkButtonStyle}"

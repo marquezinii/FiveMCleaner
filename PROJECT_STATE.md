@@ -2553,3 +2553,121 @@ confirmar que continua iniciando e renderizando.
 - Validação: `dotnet build`/`dotnet test` Release (555 testes, eram 547);
   `scripts\Verify-Safety.ps1` aprovado; app iniciado e renderizado antes e
   depois das mudanças.
+
+## Atualizador automático de um clique (27/07/2026)
+
+Substitui o fluxo antigo ("Baixar atualização" → confirmar → o instalador
+abre visivelmente com wizard completo → app fecha) por um fluxo de um único
+clique: o usuário clica em "Atualizar agora", confirma uma vez, e a partir
+daí tudo acontece sozinho — download verificado, instalação totalmente
+silenciosa (sem wizard, sem reaceitar termos), fechamento do app e reabertura
+automática já na versão nova. Implementa a "primeira etapa" recomendada
+(instalador atual em modo silencioso), deixando a "segunda etapa" (um
+`FiveMCleaner.Updater.exe` próprio com atualização incremental, canais
+estável/beta, download retomável) como evolução futura documentada mas não
+construída agora — não havia necessidade de um segundo executável só para
+isto, e um updater separado "com 48 bibliotecas" seria complexidade
+prematura para o que o Inno Setup já resolve em modo silencioso.
+
+- **`installer/FiveMCleaner.iss`**: nova entrada `[Run]` condicionada por
+  uma função Pascal `IsAutomaticUpdateRelaunch()`, que só retorna
+  verdadeiro quando a instalação é silenciosa (`WizardSilent`) **e** foi
+  iniciada explicitamente com `/AUTOUPDATE=yes`. Só nesse caso o instalador
+  reabre `{app}\FiveMCleaner.exe --updated={#AppVersion}` ao final. Qualquer
+  outra instalação silenciosa (ex.: deploy administrativo via
+  `/VERYSILENT` sem essa flag) continua sem abrir nada, preservando o
+  comportamento silencioso padrão do Inno Setup. A entrada `postinstall
+  skipifsilent` original (abrir o app ao final de uma instalação manual)
+  continua intacta e sem relação com esta.
+- **`scripts/Verify-Installer.ps1`**: três novos padrões obrigatórios no
+  contrato do instalador — `Check: IsAutomaticUpdateRelaunch`, o gate
+  `WizardSilent and ... {param:AUTOUPDATE|no}` (garante que o flag precisa
+  ser passado explicitamente, nunca assumido) e a entrada `Parameters:
+  "--updated=` apontando para o próprio `{app}\{#AppExeName}`. O `.iss` foi
+  compilado de ponta a ponta com `ISCC.exe` contra o publish existente para
+  confirmar que o Pascal Script novo não quebra a compilação.
+- **Novo `src/FiveMCleaner.App/Services/SilentUpdateInstaller.cs`**: executa
+  o instalador já baixado e verificado por SHA-256
+  (`GitHubReleaseUpdateService.DownloadUpdateAsync`) com
+  `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /NOCANCEL /AUTOUPDATE=yes`
+  (mais `/LOG=` opcional). Duas proteções de segurança antes de executar
+  qualquer coisa: (1) o caminho do instalador precisa estar contido dentro
+  da própria pasta de atualizações verificadas (mesmo padrão de
+  `GetContainedPath` já usado no download) — um valor manipulado nunca vira
+  um "execute qualquer coisa"; (2) precisa terminar em `.exe` e existir de
+  fato no disco. Depois de iniciar o processo, aguarda uma janela de
+  "assentamento" de 4s (`SettleWindow`): a maioria dos problemas de startup
+  do Inno Setup (mutex de instalação concorrente, payload corrompido, pasta
+  sem permissão de escrita) aparece como saída quase imediata com código
+  diferente de zero — capturar isso é o que permite ao app **continuar
+  aberto e explicar a falha** em vez de fechar rumo a uma atualização que
+  nunca vai acontecer. Se o processo ainda está rodando ao fim da janela,
+  isso é o caminho normal: o app fecha e o `[Run]` do instalador cuida da
+  reabertura. Interface `IInstallerProcessLauncher`/`IInstallerProcess`
+  isola o `Process.Start` real para permitir teste sem instalar nada de
+  verdade.
+- **`MainViewModel.cs`**: novo estado `UpdatePresentationState.Installing`;
+  `DownloadAndInstallUpdateAsync()` (baixa e instala em sequência) e
+  `InstallDownloadedUpdateAsync(DownloadedUpdate)` (só instala, para retry
+  sem baixar de novo); `CanDownloadUpdate` passou a exigir também `!IsBusy`
+  — **atualizar substitui o executável em execução, então nunca deve ficar
+  disponível enquanto uma otimização, rollback ou gravação de configurações
+  estiver em andamento**, já que isso abandonaria a operação pela metade
+  sem forma segura de terminar ou reverter; `ReportCompletedUpdate(string)`,
+  chamado uma única vez na inicialização quando o processo foi relançado
+  pelo próprio instalador (`--updated=X.Y.Z`), mostra o banner de
+  confirmação "FiveMCleaner atualizado para a versão X.Y.Z" em vez do
+  banner de "atualização disponível". `RaiseCommandState()` agora também
+  notifica `CanDownloadUpdate`, então o botão reage imediatamente a
+  qualquer mudança de `IsBusy`.
+- **`MainWindow.xaml.cs`**: lê `--updated=<versão>` na linha de comando e
+  chama `viewModel.ReportCompletedUpdate(...)` antes do primeiro
+  `MainWindow_Loaded`. `DownloadUpdate_Click` virou o clique único
+  completo: confirma uma vez (mensagem já deixa claro que o app vai
+  fechar e reabrir sozinho, sem instalador visível), chama
+  `DownloadAndInstallUpdateAsync()`, e só fecha a janela se a instalação
+  silenciosa realmente começou — uma falha em qualquer etapa mantém o app
+  aberto com o banner explicando o problema, nunca fecha "no escuro".
+- **`MainWindow.xaml`**: o botão de ação do banner de atualização some
+  inteiramente (`IsUpdateActionVisible`) na tela de confirmação pós-update,
+  já que não há mais nada a fazer; ganhou um `ToolTip` explicando por que
+  está desabilitado enquanto ocupado.
+- **Textos novos, nos três catálogos** (`Strings.resx`, `Strings.pt-BR.resx`,
+  `Strings.es.resx`): `Update.InstallNow`, `Update.Installing.Title/Detail`,
+  `Update.Completed.Title/Detail`, `Update.BlockedWhileBusy`,
+  `Log.UpdateInstallStarted`, `Log.UpdateInstallFailed`,
+  `Log.UpdateCompleted`. `Dialog.UpdateInstall.Message/Failed` foram
+  reescritos para descrever o comportamento novo (instalação silenciosa e
+  automática, não mais "abrir o instalador"). As chaves `Update.Download` e
+  `Update.OpenInstaller`, que descreviam o fluxo antigo de dois cliques e
+  ficaram sem nenhuma referência em código após esta mudança, foram
+  removidas dos três catálogos.
+- **Testes novos**: `SilentUpdateInstallerTests.cs` (contrato de argumentos,
+  rejeição de caminho fora da pasta de atualizações, rejeição de arquivo
+  não-`.exe`, rejeição de arquivo inexistente, mensagens de erro nunca
+  vazias para os códigos de saída documentados do Inno Setup, validação de
+  pasta relativa); `MainViewModelAutoUpdateTests.cs` (fluxo completo de
+  sucesso, falha do instalador mantém o banner visível e retorna false,
+  ausência de instalador configurado não lança exceção, exceção do launcher
+  é capturada, e — o teste mais importante desta rodada —
+  `CanDownloadUpdate` fica `false` durante um rollback em andamento e volta
+  a `true` ao terminar, usando um `IAppOptimizationService` fake com
+  `TaskCompletionSource` para observar `IsBusy` no meio da operação).
+  `FakeReleaseUpdateService` e `FakeSilentUpdateInstaller` (novo) permitem
+  orquestrar os cenários sem rede real ou processo real.
+- **Decisão de arquitetura registrada para o futuro**: a "segunda etapa"
+  do atualizador (executável dedicado `FiveMCleaner.Updater.exe`,
+  atualização incremental, rollback de atualização, canais estável/beta,
+  download retomável, reparo de instalação) não foi implementada nesta
+  rodada. O modo silencioso do Inno Setup já entrega toda a experiência
+  pedida (um clique, sem wizard, reabertura automática) sem introduzir um
+  segundo processo com seu próprio ciclo de vida, telemetria e superfície
+  de bugs.
+- Validação: `dotnet build`/`dotnet test` Release (570 testes, eram 555);
+  `scripts\Verify-Installer.ps1 -ScriptOnly` aprovado (incluindo compilação
+  real do `.iss` via `ISCC.exe` contra o publish existente);
+  `scripts\Verify-Safety.ps1` aprovado; app iniciado e renderizado antes e
+  depois das mudanças. Nenhum arquivo de versão, `CHANGELOG.md` ou artefato
+  de distribuição foi alterado — por `AI_RULES.md`, isso só acontece durante
+  uma publicação oficial explicitamente solicitada, não neste push de
+  desenvolvimento.

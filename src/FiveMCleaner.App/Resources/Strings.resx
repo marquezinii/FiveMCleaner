@@ -502,23 +502,30 @@
   <data name="Results.VisualEffectsUpdated" xml:space="preserve"><value>Windows visual effects were updated through the official API.</value></data>
   <data name="Update.Available.Title" xml:space="preserve"><value>FiveMCleaner {0} is available</value></data>
   <data name="Update.Available.Detail" xml:space="preserve"><value>Official installer found ({0}). Its size and GitHub SHA-256 will be verified before it can open.</value></data>
-  <data name="Update.Download" xml:space="preserve"><value>Download update</value></data>
   <data name="Update.Downloading.Title" xml:space="preserve"><value>Downloading verified update</value></data>
   <data name="Update.Downloading.Detail" xml:space="preserve"><value>{0:0}% downloaded • the installer will not run automatically</value></data>
   <data name="Update.Ready.Title" xml:space="preserve"><value>Update {0} is ready</value></data>
   <data name="Update.Ready.Detail" xml:space="preserve"><value>SHA-256 verified. Windows will ask before the installer opens.</value></data>
-  <data name="Update.OpenInstaller" xml:space="preserve"><value>Open installer</value></data>
+  <data name="Update.InstallNow" xml:space="preserve"><value>Update now</value></data>
+  <data name="Update.Installing.Title" xml:space="preserve"><value>Installing update {0}</value></data>
+  <data name="Update.Installing.Detail" xml:space="preserve"><value>FiveMCleaner will close and reopen automatically on the new version.</value></data>
+  <data name="Update.Completed.Title" xml:space="preserve"><value>FiveMCleaner updated to version {0}</value></data>
+  <data name="Update.Completed.Detail" xml:space="preserve"><value>The update was installed and verified. Nothing else is needed.</value></data>
+  <data name="Update.BlockedWhileBusy" xml:space="preserve"><value>Finish or cancel the current optimization before updating.</value></data>
   <data name="Update.ReleaseNotes" xml:space="preserve"><value>View changes</value></data>
   <data name="Update.Failed.Title" xml:space="preserve"><value>Update was not downloaded</value></data>
   <data name="Update.Failed.Detail" xml:space="preserve"><value>Nothing was installed. {0}</value></data>
   <data name="Dialog.UpdateInstall.Title" xml:space="preserve"><value>Install verified update</value></data>
-  <data name="Dialog.UpdateInstall.Message" xml:space="preserve"><value>Open the verified FiveMCleaner {0} installer now? The app will close so the update can replace its files.</value></data>
-  <data name="Dialog.UpdateInstall.Failed" xml:space="preserve"><value>Windows could not open the verified installer: {0}</value></data>
+  <data name="Dialog.UpdateInstall.Message" xml:space="preserve"><value>Install the verified FiveMCleaner {0} update now? FiveMCleaner will close, update automatically and reopen on its own — no other steps needed.</value></data>
+  <data name="Dialog.UpdateInstall.Failed" xml:space="preserve"><value>The verified update could not be installed: {0}</value></data>
   <data name="Dialog.OpenExternal.Title" xml:space="preserve"><value>Could not open</value></data>
   <data name="Dialog.OpenExternal.Message" xml:space="preserve"><value>Windows could not open this item: {0}</value></data>
   <data name="Log.UpdateAvailable" xml:space="preserve"><value>Update {0} is available from the official GitHub release.</value></data>
   <data name="Log.UpdateCheckFailed" xml:space="preserve"><value>Could not check for updates: {0}</value></data>
   <data name="Log.UpdateVerified" xml:space="preserve"><value>Update downloaded and verified with SHA-256.</value></data>
+  <data name="Log.UpdateInstallStarted" xml:space="preserve"><value>Installing update {0} silently; FiveMCleaner will reopen automatically.</value></data>
+  <data name="Log.UpdateInstallFailed" xml:space="preserve"><value>The update was not installed: {0}</value></data>
+  <data name="Log.UpdateCompleted" xml:space="preserve"><value>FiveMCleaner was updated to version {0}.</value></data>
   <data name="Log.UpdateDownloadFailed" xml:space="preserve"><value>Update download failed safely: {0}</value></data>
   <data name="Diagnosis.MemoryAvailable" xml:space="preserve"><value>{0:0.#} GB • {1:0.#} GB available</value></data>
   <data name="Diagnosis.MemoryTotal" xml:space="preserve"><value>{0:0} GB</value></data>

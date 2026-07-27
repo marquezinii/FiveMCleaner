@@ -134,6 +134,13 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram}"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
+; Automatic update only. The running app launches this installer with
+; /VERYSILENT /AUTOUPDATE=yes, closes itself so its files can be replaced, and
+; relies on this entry to bring the freshly installed version back up. The
+; --updated argument is what lets the app show "updated to X" on that launch.
+; Without /AUTOUPDATE=yes (any other silent install, including an admin
+; deployment) nothing is launched, which is the expected silent behavior.
+Filename: "{app}\{#AppExeName}"; Parameters: "--updated={#AppVersion}"; WorkingDir: "{app}"; Flags: nowait runasoriginaluser; Check: IsAutomaticUpdateRelaunch
 
 [UninstallDelete]
 Type: dirifempty; Name: "{app}\broker"
@@ -142,6 +149,15 @@ Type: dirifempty; Name: "{app}"
 [Code]
 var
   RemoveUserData: Boolean;
+
+{ True only for the app's own one-click update: a silent run explicitly
+  started with /AUTOUPDATE=yes. Both conditions are required so that a plain
+  /VERYSILENT deployment never gets an unexpected application launch. }
+function IsAutomaticUpdateRelaunch(): Boolean;
+begin
+  Result := WizardSilent and
+    (CompareText(ExpandConstant('{param:AUTOUPDATE|no}'), 'yes') = 0);
+end;
 
 function InitializeUninstall(): Boolean;
 begin

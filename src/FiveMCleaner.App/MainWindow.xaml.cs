@@ -44,10 +44,24 @@ public partial class MainWindow : Window
             .Any(value => value.Equals("--demo", StringComparison.OrdinalIgnoreCase));
         startupLaunch = commandLine
             .Any(value => value.Equals("--startup", StringComparison.OrdinalIgnoreCase));
+        var justUpdatedVersion = commandLine
+            .FirstOrDefault(value => value.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase))
+            ?["--updated=".Length..];
         IStartupRegistrationService startupRegistration = demoMode
             ? new SessionStartupRegistrationService()
             : new WindowsStartupRegistrationService();
         releaseUpdateService = demoMode ? null : new GitHubReleaseUpdateService();
+        ISilentUpdateInstaller? silentUpdateInstaller = demoMode
+            ? null
+            : new SilentUpdateInstaller(
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    ProductIdentity.Name,
+                    "Updates"),
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    ProductIdentity.Name,
+                    "Logs"));
         remoteServicesOptions = RemoteServicesOptionsLoader.Load(AppEnvironment.Resolve(), AppContext.BaseDirectory);
         // Cloudflare is the sole telemetry transport (FormSubmit was
         // removed entirely). If the configured endpoint is ever missing or
@@ -79,7 +93,12 @@ public partial class MainWindow : Window
             localization: LocalizationService.Current,
             startupRegistration: startupRegistration,
             releaseUpdateService: releaseUpdateService,
-            telemetry: telemetryService);
+            telemetry: telemetryService,
+            silentUpdateInstaller: silentUpdateInstaller);
+        if (!string.IsNullOrWhiteSpace(justUpdatedVersion))
+        {
+            viewModel.ReportCompletedUpdate(justUpdatedVersion);
+        }
         trayIcon = new TrayIconService(LocalizationService.Current);
         trayIcon.ShowRequested += TrayIcon_ShowRequested;
         trayIcon.ExitRequested += TrayIcon_ExitRequested;
@@ -442,18 +461,24 @@ public partial class MainWindow : Window
         }
     }
 
+    /// <summary>
+    /// The whole one-click update: confirm once, then the view model downloads
+    /// the hash-verified installer and runs it silently. There is no second
+    /// dialog and no installer wizard to click through — a successful launch
+    /// means the installer is already running its own [Run] entry to relaunch
+    /// FiveMCleaner, so this window closes immediately to let it replace the
+    /// files. A failure at any point (download or install) leaves the app open
+    /// with the banner explaining what happened.
+    /// </summary>
     private async void DownloadUpdate_Click(object sender, RoutedEventArgs e)
     {
-        var downloaded = await viewModel.DownloadAvailableUpdateAsync();
-        if (downloaded is null || !File.Exists(downloaded.InstallerPath))
+        if (!viewModel.CanDownloadUpdate || viewModel.AvailableUpdateVersion is not { } pendingVersion)
         {
             return;
         }
 
         var decision = System.Windows.MessageBox.Show(
-            LocalizationService.Current.Format(
-                "Dialog.UpdateInstall.Message",
-                downloaded.Version.CoreVersion),
+            LocalizationService.Current.Format("Dialog.UpdateInstall.Message", pendingVersion),
             LocalizationService.Current.GetString("Dialog.UpdateInstall.Title"),
             MessageBoxButton.YesNo,
             MessageBoxImage.Information);
@@ -462,28 +487,17 @@ public partial class MainWindow : Window
             return;
         }
 
-        try
+        var installing = await viewModel.DownloadAndInstallUpdateAsync();
+        if (!installing)
         {
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = downloaded.InstallerPath,
-                UseShellExecute = true
-            });
-            allowClose = true;
-            trayIcon.Hide();
-            Close();
+            // The banner already shows the failure; the app stays open so the
+            // user can retry or keep working on the current version.
+            return;
         }
-        catch (Exception exception) when (exception is not (
-            OutOfMemoryException or StackOverflowException or AccessViolationException))
-        {
-            System.Windows.MessageBox.Show(
-                LocalizationService.Current.Format(
-                    "Dialog.UpdateInstall.Failed",
-                    exception.Message),
-                LocalizationService.Current.GetString("Dialog.UpdateInstall.Title"),
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-        }
+
+        allowClose = true;
+        trayIcon.Hide();
+        Close();
     }
 
     private void OpenReleaseNotes_Click(object sender, RoutedEventArgs e)

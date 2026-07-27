@@ -502,23 +502,30 @@
   <data name="Results.VisualEffectsUpdated" xml:space="preserve"><value>Los efectos visuales de Windows se actualizaron a través de la API oficial.</value></data>
   <data name="Update.Available.Title" xml:space="preserve"><value>FiveMCleaner {0} está disponible</value></data>
   <data name="Update.Available.Detail" xml:space="preserve"><value>Instalador oficial encontrado ({0}). Su tamaño y SHA-256 de GitHub se verificarán antes de que pueda abrirse.</value></data>
-  <data name="Update.Download" xml:space="preserve"><value>Descargar actualización</value></data>
   <data name="Update.Downloading.Title" xml:space="preserve"><value>Descargando actualización verificada</value></data>
   <data name="Update.Downloading.Detail" xml:space="preserve"><value>{0:0}% descargado • el instalador no se ejecutará automáticamente</value></data>
   <data name="Update.Ready.Title" xml:space="preserve"><value>La actualización {0} está lista</value></data>
   <data name="Update.Ready.Detail" xml:space="preserve"><value>SHA-256 verificado. Windows preguntará antes de que se abra el instalador.</value></data>
-  <data name="Update.OpenInstaller" xml:space="preserve"><value>Abrir instalador</value></data>
+  <data name="Update.InstallNow" xml:space="preserve"><value>Actualizar ahora</value></data>
+  <data name="Update.Installing.Title" xml:space="preserve"><value>Instalando la actualización {0}</value></data>
+  <data name="Update.Installing.Detail" xml:space="preserve"><value>FiveMCleaner se cerrará y volverá a abrirse solo en la nueva versión.</value></data>
+  <data name="Update.Completed.Title" xml:space="preserve"><value>FiveMCleaner actualizado a la versión {0}</value></data>
+  <data name="Update.Completed.Detail" xml:space="preserve"><value>La actualización se instaló y verificó. No hace falta nada más.</value></data>
+  <data name="Update.BlockedWhileBusy" xml:space="preserve"><value>Termina o cancela la optimización actual antes de actualizar.</value></data>
   <data name="Update.ReleaseNotes" xml:space="preserve"><value>Ver cambios</value></data>
   <data name="Update.Failed.Title" xml:space="preserve"><value>La actualización no se descargó</value></data>
   <data name="Update.Failed.Detail" xml:space="preserve"><value>No se instaló nada. {0}</value></data>
   <data name="Dialog.UpdateInstall.Title" xml:space="preserve"><value>Instalar actualización verificada</value></data>
-  <data name="Dialog.UpdateInstall.Message" xml:space="preserve"><value>¿Abrir ahora el instalador verificado de FiveMCleaner {0}? La app se cerrará para que la actualización pueda reemplazar sus archivos.</value></data>
-  <data name="Dialog.UpdateInstall.Failed" xml:space="preserve"><value>Windows no pudo abrir el instalador verificado: {0}</value></data>
+  <data name="Dialog.UpdateInstall.Message" xml:space="preserve"><value>¿Instalar ahora la actualización verificada de FiveMCleaner {0}? FiveMCleaner se cerrará, se actualizará solo y volverá a abrirse automáticamente — no hace falta ningún otro paso.</value></data>
+  <data name="Dialog.UpdateInstall.Failed" xml:space="preserve"><value>No se pudo instalar la actualización verificada: {0}</value></data>
   <data name="Dialog.OpenExternal.Title" xml:space="preserve"><value>No se pudo abrir</value></data>
   <data name="Dialog.OpenExternal.Message" xml:space="preserve"><value>Windows no pudo abrir este elemento: {0}</value></data>
   <data name="Log.UpdateAvailable" xml:space="preserve"><value>La actualización {0} está disponible desde el lanzamiento oficial de GitHub.</value></data>
   <data name="Log.UpdateCheckFailed" xml:space="preserve"><value>No se pudo buscar actualizaciones: {0}</value></data>
   <data name="Log.UpdateVerified" xml:space="preserve"><value>Actualización descargada y verificada con SHA-256.</value></data>
+  <data name="Log.UpdateInstallStarted" xml:space="preserve"><value>Instalando la actualización {0} en segundo plano; FiveMCleaner volverá a abrirse solo.</value></data>
+  <data name="Log.UpdateInstallFailed" xml:space="preserve"><value>La actualización no se instaló: {0}</value></data>
+  <data name="Log.UpdateCompleted" xml:space="preserve"><value>FiveMCleaner se actualizó a la versión {0}.</value></data>
   <data name="Log.UpdateDownloadFailed" xml:space="preserve"><value>La descarga de la actualización falló de forma segura: {0}</value></data>
   <data name="Diagnosis.MemoryAvailable" xml:space="preserve"><value>{0:0.#} GB • {1:0.#} GB disponibles</value></data>
   <data name="Diagnosis.MemoryTotal" xml:space="preserve"><value>{0:0} GB</value></data>

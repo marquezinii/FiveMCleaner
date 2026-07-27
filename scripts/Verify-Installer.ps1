@@ -36,6 +36,9 @@ $requiredPatterns = [ordered]@{
     'optional startup'              = 'Name: "startup";.*Flags: unchecked'
     'startup ownership cleanup'     = 'ValueName: "FiveMCleaner"; Flags: deletevalue uninsdeletevalue; Tasks: not startup'
     'no launch in silent installs'  = 'Flags: nowait postinstall skipifsilent'
+    'auto-update relaunch gated'    = 'Check: IsAutomaticUpdateRelaunch'
+    'auto-update needs explicit opt-in' = "WizardSilent and[\s\S]*\{param:AUTOUPDATE\|no\}"
+    'auto-update relaunch is the app' = 'Filename: "\{app\}\\\{#AppExeName\}"; Parameters: "--updated='
     'redirection guard'             = 'RedirectionGuard=yes'
     'explicit user-data removal'    = 'RemoveUserDataQuestion='
     'silent uninstall preserves data' = 'SuppressibleMsgBox\([\s\S]*IDNO\) = IDYES'
