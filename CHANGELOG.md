@@ -5,6 +5,25 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.1.1] - 2026-07-30
+
+### Corrigido
+
+- Corrigido o contrato de telemetria de produção: o cliente agora envia o
+  ambiente exigido pelo Worker e descarta rejeições permanentes em vez de
+  manter lotes inválidos em fila.
+- Corrigidos o consentimento e a fila local para impedir transmissão após a
+  revogação da opção e envios duplicados por flushes concorrentes.
+- Corrigido o filtro de data final do dashboard e dos relatos de bug, que
+  agora inclui integralmente o dia selecionado.
+
+### Melhorado
+
+- Relatos de bug passam pelo Worker e D1 do FiveMCleaner e ficam disponíveis
+  no painel administrativo autenticado; o FormSubmit não é mais usado.
+- Atualizadas as instruções de operação e a documentação de segurança para
+  refletir o fluxo de telemetria e relato de bugs validado em produção.
+
 ## [1.1.0] - 2026-07-27
 
 ### Adicionado

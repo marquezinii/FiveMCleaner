@@ -301,6 +301,29 @@ public sealed class CloudflareTelemetryTransportTests
         Assert.Contains("1.0.4", handler.Body, StringComparison.Ordinal);
         Assert.Contains("1.0.5", handler.Body, StringComparison.Ordinal);
         Assert.Contains("AMD Ryzen 5 5600X", handler.Body, StringComparison.Ordinal);
+        Assert.Contains("\"environment\":\"Production\"", handler.Body, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("Development")]
+    [InlineData("Production")]
+    public async Task SendBatchAsync_AlwaysIncludesTheConfiguredRuntimeEnvironment(string environment)
+    {
+        var handler = new RecordingHandler();
+        using var client = new HttpClient(handler);
+        var transport = new CloudflareTelemetryTransport(client, TestEndpoint, environment);
+
+        await transport.SendBatchAsync([SampleEvent()]);
+
+        Assert.Contains($"\"environment\":\"{environment}\"", handler.Body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Constructor_RejectsAnEnvironmentTheWorkerWillNotAccept()
+    {
+        using var client = new HttpClient(new RecordingHandler());
+
+        Assert.Throws<ArgumentException>(() => new CloudflareTelemetryTransport(client, TestEndpoint, "Staging"));
     }
 
     [Fact]
@@ -313,6 +336,18 @@ public sealed class CloudflareTelemetryTransportTests
         var result = await transport.SendBatchAsync([SampleEvent()]);
 
         Assert.False(result);
+    }
+
+    [Fact]
+    public async Task SendBatchAsync_AcceptsTheWorker202Response()
+    {
+        var handler = new RecordingHandler(HttpStatusCode.Accepted);
+        using var client = new HttpClient(handler);
+        var transport = new CloudflareTelemetryTransport(client, TestEndpoint);
+
+        var result = await transport.SendBatchAsync([SampleEvent()]);
+
+        Assert.True(result);
     }
 
     [Fact]
@@ -430,6 +465,21 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task FlushPendingAsync_PermanentClientRejection_DropsTheRejectedEvent()
+    {
+        var handler = new CountingHandler(HttpStatusCode.BadRequest);
+        using var client = new HttpClient(handler);
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
+        service.SetEnabled(true);
+        await queue.EnqueueAsync(SampleEvent());
+
+        await service.FlushPendingAsync();
+
+        Assert.Empty(queue.ReadPending(10));
+    }
+
+    [Fact]
     public async Task FlushPendingAsync_EmptyQueue_DoesNotSendAnyRequest()
     {
         var handler = new CountingHandler(HttpStatusCode.Accepted);
@@ -442,6 +492,21 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         await service.FlushPendingAsync();
 
         Assert.Equal(0, handler.CallCount);
+    }
+
+    [Fact]
+    public async Task FlushPendingAsync_DoesNotSendQueuedEventsWithoutConsent()
+    {
+        var handler = new CountingHandler(HttpStatusCode.Accepted);
+        using var client = new HttpClient(handler);
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
+        await queue.EnqueueAsync(SampleEvent());
+
+        await service.FlushPendingAsync();
+
+        Assert.Equal(0, handler.CallCount);
+        Assert.Single(queue.ReadPending(10));
     }
 
     [Fact]
@@ -458,6 +523,26 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         Assert.Empty(queue.ReadPending(10));
     }
 
+    [Fact]
+    public async Task ConcurrentFlushes_SendEachQueuedBatchOnlyOnce()
+    {
+        var handler = new BlockingHandler();
+        using var client = new HttpClient(handler);
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
+        service.SetEnabled(true);
+        await queue.EnqueueAsync(SampleEvent());
+
+        var firstFlush = service.FlushPendingAsync();
+        await handler.Started.Task;
+        var secondFlush = service.FlushPendingAsync();
+        handler.Release();
+        await Task.WhenAll(firstFlush, secondFlush);
+
+        Assert.Equal(1, handler.CallCount);
+        Assert.Empty(queue.ReadPending(10));
+    }
+
     private sealed class CountingHandler(HttpStatusCode statusCode) : HttpMessageHandler
     {
         public int CallCount { get; private set; }
@@ -468,6 +553,27 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         {
             CallCount++;
             return Task.FromResult(new HttpResponseMessage(statusCode));
+        }
+    }
+
+    private sealed class BlockingHandler : HttpMessageHandler
+    {
+        private readonly TaskCompletionSource started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public int CallCount { get; private set; }
+        public TaskCompletionSource Started => started;
+
+        public void Release() => release.SetResult();
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            CallCount++;
+            started.SetResult();
+            await release.Task.WaitAsync(cancellationToken);
+            return new HttpResponseMessage(HttpStatusCode.Accepted);
         }
     }
 }

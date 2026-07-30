@@ -1,5 +1,8 @@
 # Telemetria opcional e privacidade
 
+Para contrato, troubleshooting e checklist de release da infraestrutura, veja
+[Operação da telemetria em produção](telemetry-operations.md).
+
 ## Consentimento
 
 A opção **Ajude a melhorar o FiveMCleaner** fica em **Configurações** e vem
@@ -134,8 +137,7 @@ O Worker também recebe os relatos de bug (rota `/bugs`, ver
 [Relatos de bug e privacidade](bug-reports.md)) — somente texto, sem anexo
 de captura de tela e sem depender de R2, guardados só no D1.
 
-O painel administrativo está **implantado** em
-`https://fivemcleaner-dashboard.pages.dev` e consome esses endpoints para
+O painel administrativo privado consome esses endpoints para
 mostrar gráficos agregados — otimizações por dia, versões do Windows/app,
 funções mais usadas, hardware mais comum, tempo médio, taxa de sucesso e,
 para investigar bugs mais rápido, erros por categoria, ações mais

@@ -18,7 +18,12 @@ Atualize para a versão mais recente antes de relatar um problema já corrigido.
 
 Não abra uma issue pública, não publique prova de conceito e não anexe logs com dados pessoais.
 
-O formulário **Relatar um bug** do aplicativo usa o serviço externo FormSubmit e é destinado apenas a bugs comuns. Não envie por ele vulnerabilidades, credenciais, provas de conceito, dumps ou outros dados sensíveis. O fluxo e os dados processados estão descritos em [docs/bug-reports.md](docs/bug-reports.md).
+O formulário **Relatar um bug** do aplicativo envia o relato autorizado para a
+rota `/bugs` do Worker Cloudflare do projeto, persistida no D1 e exibida no
+dashboard administrativo quando a versão publicada dele inclui a seção
+**Bugs reportados**. Não envie por ele vulnerabilidades, credenciais, provas
+de conceito, dumps ou outros dados sensíveis. O fluxo e os dados processados
+estão descritos em [docs/bug-reports.md](docs/bug-reports.md).
 
 1. Abra a aba **Security** do repositório.
 2. Escolha **Report a vulnerability** para iniciar um relato privado.

@@ -62,7 +62,8 @@ public partial class MainWindow : Window
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     ProductIdentity.Name,
                     "Logs"));
-        remoteServicesOptions = RemoteServicesOptionsLoader.Load(AppEnvironment.Resolve(), AppContext.BaseDirectory);
+        var runtimeEnvironment = AppEnvironment.Resolve();
+        remoteServicesOptions = RemoteServicesOptionsLoader.Load(runtimeEnvironment, AppContext.BaseDirectory);
         // Cloudflare is the sole telemetry transport (FormSubmit was
         // removed entirely). If the configured endpoint is ever missing or
         // malformed, telemetry safely does nothing rather than crash or
@@ -72,7 +73,11 @@ public partial class MainWindow : Window
         {
             telemetryService = DisabledAnonymousTelemetryService.Instance;
         }
-        else if (TryCreateHttpsEndpoint(remoteServicesOptions.TelemetryEndpoint, out var telemetryEndpoint))
+        else if (TelemetryEndpointPolicy.TryCreate(
+            remoteServicesOptions.TelemetryEndpoint,
+            runtimeEnvironment,
+            out var telemetryEndpoint,
+            out _))
         {
             queuedCloudflareTelemetry = new QueuedCloudflareTelemetryService(
                 new LocalTelemetryQueue(Path.Combine(
@@ -80,7 +85,7 @@ public partial class MainWindow : Window
                     ProductIdentity.Name,
                     "Telemetry",
                     "pending")),
-                new CloudflareTelemetryTransport(telemetryEndpoint));
+                new CloudflareTelemetryTransport(telemetryEndpoint, remoteServicesOptions.Environment));
             telemetryService = queuedCloudflareTelemetry;
         }
         else

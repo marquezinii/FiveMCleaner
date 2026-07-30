@@ -1,5 +1,90 @@
 # Estado do Projeto
 
+## Relatos de bug e dashboard publicado — 30/07/2026
+
+- O caminho de ingestão foi validado de ponta a ponta até o D1: um relato
+  sintético válido enviado para `POST /bugs` recebeu `202`, foi persistido
+  com categoria, resumo, versão, perfil, ambiente e horário corretos, e foi
+  removido após a prova. O código do app usa somente
+  `CloudflareBugReportService`; não há endpoint, pacote ou chamada ativa do
+  FormSubmit.
+- O dashboard administrativo foi publicado com a versão que consulta e
+  renderiza `GET /api/bugs`, inclusive sem exigir filtros de data ou versão.
+  Relatos enviados ao Worker e persistidos no D1 agora ficam visíveis na
+  seção **Bugs reportados** após autenticação.
+
+## Validação final de telemetria — 30/07/2026
+
+- O teste de produção enviou telemetria e relato de bug válidos; ambos
+  receberam HTTP 202 e foram confirmados no D1 antes da limpeza dos dados
+  sintéticos. Endpoints administrativos sem sessão responderam HTTP 401 e não
+  aceitaram uma origem CORS não autorizada.
+- URLs do dashboard foram removidas de documentação destinada ao repositório.
+  A confidencialidade dos dados é garantida pela sessão administrativa do
+  Worker; o endereço estático por si só não é um mecanismo de segurança.
+- `SECURITY.md` foi corrigido para não afirmar incorretamente que o formulário
+  ainda envia dados ao FormSubmit.
+
+## Filtros do dashboard — 30/07/2026
+
+- Sem data e sem versão, o dashboard publicado já carrega todos os eventos de
+  Produção; a verificação visual confirmou a requisição somente com
+  `environment=Production`. Informar versão acrescenta esse filtro às mesmas
+  consultas e retornou o evento correspondente.
+- Corrigido no Worker o limite final de data: `Até 30/07/2026` antes excluía
+  eventos com horário naquele dia. Agora a consulta usa o início do dia
+  seguinte como limite exclusivo, incluindo integralmente a data final. A
+  mesma correção foi aplicada aos relatos de bugs e coberta por testes.
+- A correção está somente no commit local até um deploy explicitamente
+  autorizado; o dashboard publicado mantém o comportamento anterior para
+  filtro de data até receber esse Worker.
+
+## Prova ponta a ponta da telemetria em produção — 30/07/2026
+
+- Teste externo completo do caminho real: um evento `Production` válido foi
+  enviado para `POST /telemetry`, recebeu `202 Accepted`, foi localizado no
+  D1 pelo conector oficial e apareceu no dashboard publicado com o filtro de
+  Produção e versão exata: 1 otimização, 100% de sucesso e 1 s de duração.
+- A tela de dashboard não apresentou erros de console. Todos os eventos
+  sintéticos usados nesta e na validação anterior foram apagados com suas
+  linhas auxiliares; a consulta final ao D1 confirmou zero remanescentes.
+- Portanto, para instalações que tenham a correção de contrato `environment`
+  e consentimento ativo, há evidência direta do percurso app/cliente ->
+  Worker -> D1 -> dashboard. A versão pública antiga sem `environment` segue
+  incompatível e deve receber o patch antes de ser considerada coberta.
+
+## Validação pós-correção da telemetria — 30/07/2026
+
+- Corrigidos dois problemas locais confirmados durante a revisão: tentativas de
+  flush concorrentes podiam enviar o mesmo lote mais de uma vez; e eventos que
+  já estavam na fila podiam ser enviados depois de o usuário retirar o
+  consentimento. `QueuedCloudflareTelemetryService` agora serializa o flush e
+  só transmite quando a telemetria continua autorizada.
+- Cobertura de regressão: fila sem consentimento preserva o evento sem abrir
+  conexão; dois flushes simultâneos fazem uma única requisição e removem a
+  fila somente uma vez. A suíte .NET Release, a validação de segurança e os
+  104 testes do Worker foram aprovados.
+- Conexão externa validada novamente em `POST /telemetry`: o Worker ativo
+  respondeu `202 Accepted` a um evento sintético marcado como `Development`.
+  A consulta/limpeza direta no D1 permanece bloqueada nesta máquina pela
+  ausência de `CLOUDFLARE_API_TOKEN`; não registrar token no repositório.
+
+## Telemetria de produção — investigação de 30/07/2026
+
+- A versão pública `1.1.0` tinha uma incompatibilidade de contrato: o Worker
+  exige `environment`, porém o serializador .NET não incluía esse campo. O
+  Worker respondia HTTP 400 e o cliente retinha o lote como falha transitória;
+  por isso o dashboard permanecia vazio mesmo com consentimento válido.
+- A correção em desenvolvimento serializa o ambiente real (`Development` ou
+  `Production`), restringe configuração de produção ao host/rota Cloudflare
+  autorizados e descarta rejeições HTTP 4xx permanentes. Falhas de rede, 429
+  e 5xx continuam na fila local para tentativa futura.
+- A validação remota comprovou HTTP 400 para o payload antigo e HTTP 202 para
+  o mesmo evento com `environment: Production`. Consulta direta ao D1, logs e
+  deploy do Worker e confirmação visual no dashboard dependem de credencial
+  Cloudflare nesta sessão; não há prova completa até executar o checklist em
+  `docs/telemetry-operations.md` com essa credencial.
+
 ## Visão geral e objetivo
 
 FiveMCleaner é um aplicativo desktop para Windows voltado à otimização
@@ -1613,9 +1698,9 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
      foi gerada localmente (24 bytes aleatórios), hasheada e comunicada ao
      usuário uma única vez pelo chat, com instrução explícita para guardá-la
      — nunca ficou em nenhum arquivo do repositório nem em log persistente.
-  6. Painel publicado no Cloudflare Pages:
-     `https://fivemcleaner-dashboard.pages.dev` (projeto criado com
-     `wrangler pages project create`, branch de produção `production`).
+  6. Painel administrativo publicado no Cloudflare Pages (projeto criado com
+     `wrangler pages project create`, branch de produção `production`); a URL
+     não é documentada em materiais públicos.
   7. `assets/app.js` do painel passou a apontar, por padrão, para a URL real
      do Worker (antes usava `location.origin`, que aponta para a origem
      errada já que painel e Worker não compartilham domínio).

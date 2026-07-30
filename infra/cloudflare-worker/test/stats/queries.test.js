@@ -29,6 +29,7 @@ test('optimizationRunsPerDay applies date range and version filters as bound par
 
   assert.doesNotMatch(sql, /2026-01-01/);
   assert.doesNotMatch(sql, /1\.0\.4/);
+  assert.match(sql, /received_at < date\(\?, '\+1 day'\)/);
   assert.deepEqual(params, ['Production', '2026-01-01', '2026-01-31', '1.0.4']);
 });
 

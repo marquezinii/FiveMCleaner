@@ -29,7 +29,7 @@ export function recentBugReports({ environment, category, from, to } = {}, limit
   }
 
   if (to) {
-    clauses.push('received_at <= ?');
+    clauses.push("received_at < date(?, '+1 day')");
     params.push(to);
   }
 

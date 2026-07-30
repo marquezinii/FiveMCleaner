@@ -33,7 +33,10 @@ function buildFilters({ from, to, appVersion, environment = 'Production' } = {})
   }
 
   if (to) {
-    clauses.push('received_at <= ?');
+    // The dashboard sends a calendar date, while received_at is UTC with a
+    // time component. An inclusive string comparison would exclude every
+    // event later on the selected final day.
+    clauses.push("received_at < date(?, '+1 day')");
     params.push(to);
   }
 
