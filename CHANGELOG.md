@@ -5,6 +5,15 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.1.2] - 2026-07-30
+
+### Corrigido
+
+- Corrigida a inicialização silenciosa do instalador de atualização em PCs
+  onde a pasta de logs ainda não existe. A criação do log é preparada antes
+  de iniciar o setup e, se o log não puder ser criado, não bloqueia a
+  atualização verificada.
+
 ## [1.1.1] - 2026-07-30
 
 ### Corrigido

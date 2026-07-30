@@ -101,12 +101,31 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             "/AUTOUPDATE=yes",
         };
 
-        if (!string.IsNullOrWhiteSpace(logDirectory))
+        if (TryPrepareLogDirectory())
         {
             arguments.Add($"/LOG={Path.Combine(logDirectory, "update-install.log")}");
         }
 
         return arguments;
+    }
+
+    private bool TryPrepareLogDirectory()
+    {
+        if (string.IsNullOrWhiteSpace(logDirectory))
+        {
+            return false;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(logDirectory);
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            // Diagnostics must never prevent a verified installer from running.
+            return false;
+        }
     }
 
     public async Task<SilentUpdateLaunch> StartAsync(

@@ -98,7 +98,7 @@ test("keeps the public download page aligned with the latest published release",
     page.indexOf('ATUALIZAÇÕES SEGURAS') < page.indexOf('id="atualizacoes"'),
     'A seção de atualizações deve vir imediatamente após os três pilares.'
   );
-  assert.match(page, /<strong id="updates-version">1\.1\.1<\/strong>/i);
+  assert.match(page, /<strong id="updates-version">1\.1\.2<\/strong>/i);
   assert.match(page, /Atualização estável/i);
   assert.match(page, /CHANGELOG\.md/i);
   assert.match(styles, /\.updates-section\{/i);

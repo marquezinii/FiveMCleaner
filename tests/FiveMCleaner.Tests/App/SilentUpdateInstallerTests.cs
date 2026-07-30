@@ -58,6 +58,18 @@ public sealed class SilentUpdateInstallerTests : IDisposable
     }
 
     [Fact]
+    public void BuildArguments_CreatesTheConfiguredLogDirectoryBeforePassingItToSetup()
+    {
+        var logDirectory = Path.Combine(updatesRoot, "missing", "logs");
+        var installer = new SilentUpdateInstaller(updatesRoot, logDirectory: logDirectory);
+
+        var arguments = installer.BuildArguments();
+
+        Assert.True(Directory.Exists(logDirectory));
+        Assert.Contains(arguments, argument => argument.StartsWith("/LOG=", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public async Task StartAsync_RejectsAnInstallerPathOutsideTheUpdatesRoot()
     {
         // Regression guard: only a file the update service itself placed in
