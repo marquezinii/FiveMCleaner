@@ -5,6 +5,16 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.1.3] - 2026-07-30
+
+### Corrigido
+
+- Eliminado o impasse entre o aplicativo e o instalador automático: depois
+  que o setup verificado é iniciado pelo Windows, o aplicativo fecha
+  imediatamente e libera os próprios arquivos para substituição. Antes, o
+  app aguardava o setup enquanto o setup aguardava o app fechar, podendo
+  encerrar com código 1 em alguns computadores.
+
 ## [1.1.2] - 2026-07-30
 
 ### Corrigido

@@ -24,20 +24,9 @@ public interface ISilentUpdateInstaller
         CancellationToken cancellationToken = default);
 }
 
-/// <summary>Minimal surface over a launched installer process, so the launch
-/// contract can be tested without actually installing anything.</summary>
-public interface IInstallerProcess : IDisposable
-{
-    bool HasExited { get; }
-
-    int ExitCode { get; }
-
-    Task<bool> WaitForExitAsync(TimeSpan timeout, CancellationToken cancellationToken);
-}
-
 public interface IInstallerProcessLauncher
 {
-    IInstallerProcess Start(string installerPath, IReadOnlyList<string> arguments);
+    void Start(string installerPath, IReadOnlyList<string> arguments);
 }
 
 /// <summary>
@@ -49,16 +38,6 @@ public interface IInstallerProcessLauncher
 /// </summary>
 public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
 {
-    /// <summary>
-    /// How long to watch a freshly started installer before trusting it. Inno
-    /// Setup reports its own startup problems (a corrupt payload, a directory
-    /// it cannot write to, a concurrent setup holding the mutex) by exiting
-    /// almost immediately with a non-zero code. Catching that here is what
-    /// allows the app to stay open and explain the failure instead of closing
-    /// into an update that never happens.
-    /// </summary>
-    internal static readonly TimeSpan SettleWindow = TimeSpan.FromSeconds(4);
-
     private readonly IInstallerProcessLauncher launcher;
     private readonly string updatesRootDirectory;
     private readonly string? logDirectory;
@@ -101,38 +80,40 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             "/AUTOUPDATE=yes",
         };
 
-        if (TryPrepareLogDirectory())
+        var preparedLogDirectory = TryPrepareLogDirectory();
+        if (preparedLogDirectory is not null)
         {
-            arguments.Add($"/LOG={Path.Combine(logDirectory, "update-install.log")}");
+            arguments.Add($"/LOG={Path.Combine(preparedLogDirectory, "update-install.log")}");
         }
 
         return arguments;
     }
 
-    private bool TryPrepareLogDirectory()
+    private string? TryPrepareLogDirectory()
     {
         if (string.IsNullOrWhiteSpace(logDirectory))
         {
-            return false;
+            return null;
         }
 
         try
         {
             Directory.CreateDirectory(logDirectory);
-            return true;
+            return logDirectory;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             // Diagnostics must never prevent a verified installer from running.
-            return false;
+            return null;
         }
     }
 
-    public async Task<SilentUpdateLaunch> StartAsync(
+    public Task<SilentUpdateLaunch> StartAsync(
         DownloadedUpdate update,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(update);
+        cancellationToken.ThrowIfCancellationRequested();
 
         string installerPath;
         try
@@ -141,45 +122,22 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
         }
         catch (UpdateSecurityException exception)
         {
-            return SilentUpdateLaunch.Failed(null, exception.Message);
+            return Task.FromResult(SilentUpdateLaunch.Failed(null, exception.Message));
         }
 
-        IInstallerProcess process;
         try
         {
-            process = launcher.Start(installerPath, BuildArguments());
+            launcher.Start(installerPath, BuildArguments());
+            // The caller must close immediately. Waiting here creates a
+            // deadlock: Inno Setup waits for this executable to release the
+            // installed files while this executable waits for Setup to stay
+            // alive before closing.
+            return Task.FromResult(SilentUpdateLaunch.Running());
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            return SilentUpdateLaunch.Failed(null, exception.Message);
-        }
-
-        using (process)
-        {
-            try
-            {
-                var exited = await process
-                    .WaitForExitAsync(SettleWindow, cancellationToken)
-                    .ConfigureAwait(false);
-                if (!exited)
-                {
-                    // Still installing. This is the normal path: the caller now
-                    // closes the app so its files can be replaced.
-                    return SilentUpdateLaunch.Running();
-                }
-
-                return process.ExitCode == 0
-                    ? SilentUpdateLaunch.Running()
-                    : SilentUpdateLaunch.Failed(
-                        process.ExitCode,
-                        DescribeInnoExitCode(process.ExitCode));
-            }
-            catch (Exception exception) when (exception is not (
-                OutOfMemoryException or StackOverflowException or AccessViolationException))
-            {
-                return SilentUpdateLaunch.Failed(null, exception.Message);
-            }
+            return Task.FromResult(SilentUpdateLaunch.Failed(null, exception.Message));
         }
     }
 
@@ -222,21 +180,9 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
         return fullPath;
     }
 
-    /// <summary>Documented Inno Setup exit codes, translated into something a
-    /// player can act on.</summary>
-    internal static string DescribeInnoExitCode(int exitCode) => exitCode switch
-    {
-        1 => "O instalador da atualização não pôde ser iniciado.",
-        2 or 5 => "A atualização foi cancelada antes de ser aplicada.",
-        3 or 4 => "O instalador da atualização encontrou um erro e não aplicou mudanças.",
-        6 => "A atualização foi interrompida.",
-        8 => "A atualização precisa que o Windows seja reiniciado antes de continuar.",
-        _ => $"O instalador da atualização terminou com o código {exitCode}.",
-    };
-
     private sealed class ProcessInstallerLauncher : IInstallerProcessLauncher
     {
-        public IInstallerProcess Start(string installerPath, IReadOnlyList<string> arguments)
+        public void Start(string installerPath, IReadOnlyList<string> arguments)
         {
             var startInfo = new ProcessStartInfo
             {
@@ -251,42 +197,9 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
                 startInfo.ArgumentList.Add(argument);
             }
 
-            var process = Process.Start(startInfo)
+            using var process = Process.Start(startInfo)
                 ?? throw new InvalidOperationException(
                     "O Windows não iniciou o instalador da atualização.");
-            return new ProcessHandle(process);
-        }
-
-        private sealed class ProcessHandle(Process process) : IInstallerProcess
-        {
-            public bool HasExited => process.HasExited;
-
-            public int ExitCode => process.ExitCode;
-
-            public async Task<bool> WaitForExitAsync(
-                TimeSpan timeout,
-                CancellationToken cancellationToken)
-            {
-                using var timeoutSource = new CancellationTokenSource(timeout);
-                using var linked = CancellationTokenSource.CreateLinkedTokenSource(
-                    cancellationToken,
-                    timeoutSource.Token);
-                try
-                {
-                    await process.WaitForExitAsync(linked.Token).ConfigureAwait(false);
-                    return true;
-                }
-                catch (OperationCanceledException) when (
-                    timeoutSource.IsCancellationRequested
-                    && !cancellationToken.IsCancellationRequested)
-                {
-                    // The installer is still working, which is what we want.
-                    // It deliberately outlives this process.
-                    return false;
-                }
-            }
-
-            public void Dispose() => process.Dispose();
         }
     }
 }
