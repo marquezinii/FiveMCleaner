@@ -37,17 +37,17 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 > Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
 
 > [!NOTE]
-> A `v1.1.0` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
+> A `v1.1.1` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
 
 ## Últimas atualizações
 
-**Versão 1.1.0**
+**Versão 1.1.1**
 
-- Corrigido: isolamento entre ações comuns e etapas elevadas, instância única, notificações e fila local de telemetria.
-- Melhorado: atualização estável de um clique, consentimento de privacidade, interface e mensagens de privilégio administrativo.
-- Atualizado: Worker Cloudflare para telemetria/relatos, diagnósticos gráficos e de hardware, idiomas e documentação de segurança.
+- Corrigido: contrato de telemetria, consentimento/fila local e filtro final de data do dashboard.
+- Melhorado: relatos de bugs centralizados no Worker e painel administrativo autenticado.
+- Atualizado: documentação de operação, segurança e privacidade para o fluxo de produção validado.
 
-## Estado da v1.1.0
+## Estado da v1.1.1
 
 - preferências gerais enxutas: idioma pt-BR/inglês, tema do sistema/claro/escuro,
   comportamento do X e inicialização com Windows;
