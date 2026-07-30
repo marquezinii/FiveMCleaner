@@ -383,6 +383,7 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
 
     private readonly LocalTelemetryQueue queue;
     private readonly CloudflareTelemetryTransport transport;
+    private readonly SemaphoreSlim flushLock = new(1, 1);
     private volatile bool enabled;
 
     public QueuedCloudflareTelemetryService(LocalTelemetryQueue queue, CloudflareTelemetryTransport transport)
@@ -422,6 +423,11 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
     /// </summary>
     public async Task FlushPendingAsync(CancellationToken cancellationToken = default)
     {
+        if (!enabled || !await flushLock.WaitAsync(0, cancellationToken).ConfigureAwait(false))
+        {
+            return;
+        }
+
         try
         {
             queue.Prune(MaxQueueAge, MaxQueuedEvents);
@@ -446,6 +452,10 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
         {
             // A flush failure must never affect the optimization flow or
             // startup sequence that triggered it.
+        }
+        finally
+        {
+            flushLock.Release();
         }
     }
 }

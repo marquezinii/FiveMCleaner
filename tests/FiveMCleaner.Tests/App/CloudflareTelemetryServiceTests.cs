@@ -495,6 +495,21 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task FlushPendingAsync_DoesNotSendQueuedEventsWithoutConsent()
+    {
+        var handler = new CountingHandler(HttpStatusCode.Accepted);
+        using var client = new HttpClient(handler);
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
+        await queue.EnqueueAsync(SampleEvent());
+
+        await service.FlushPendingAsync();
+
+        Assert.Equal(0, handler.CallCount);
+        Assert.Single(queue.ReadPending(10));
+    }
+
+    [Fact]
     public async Task TrackAsync_InvalidEvent_ThrowsAndNeverQueuesIt()
     {
         var handler = new CountingHandler(HttpStatusCode.Accepted);
@@ -508,6 +523,26 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         Assert.Empty(queue.ReadPending(10));
     }
 
+    [Fact]
+    public async Task ConcurrentFlushes_SendEachQueuedBatchOnlyOnce()
+    {
+        var handler = new BlockingHandler();
+        using var client = new HttpClient(handler);
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
+        service.SetEnabled(true);
+        await queue.EnqueueAsync(SampleEvent());
+
+        var firstFlush = service.FlushPendingAsync();
+        await handler.Started.Task;
+        var secondFlush = service.FlushPendingAsync();
+        handler.Release();
+        await Task.WhenAll(firstFlush, secondFlush);
+
+        Assert.Equal(1, handler.CallCount);
+        Assert.Empty(queue.ReadPending(10));
+    }
+
     private sealed class CountingHandler(HttpStatusCode statusCode) : HttpMessageHandler
     {
         public int CallCount { get; private set; }
@@ -518,6 +553,27 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         {
             CallCount++;
             return Task.FromResult(new HttpResponseMessage(statusCode));
+        }
+    }
+
+    private sealed class BlockingHandler : HttpMessageHandler
+    {
+        private readonly TaskCompletionSource started = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly TaskCompletionSource release = new(TaskCreationOptions.RunContinuationsAsynchronously);
+
+        public int CallCount { get; private set; }
+        public TaskCompletionSource Started => started;
+
+        public void Release() => release.SetResult();
+
+        protected override async Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken)
+        {
+            CallCount++;
+            started.SetResult();
+            await release.Task.WaitAsync(cancellationToken);
+            return new HttpResponseMessage(HttpStatusCode.Accepted);
         }
     }
 }

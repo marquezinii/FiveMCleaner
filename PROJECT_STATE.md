@@ -1,5 +1,21 @@
 # Estado do Projeto
 
+## Validação pós-correção da telemetria — 30/07/2026
+
+- Corrigidos dois problemas locais confirmados durante a revisão: tentativas de
+  flush concorrentes podiam enviar o mesmo lote mais de uma vez; e eventos que
+  já estavam na fila podiam ser enviados depois de o usuário retirar o
+  consentimento. `QueuedCloudflareTelemetryService` agora serializa o flush e
+  só transmite quando a telemetria continua autorizada.
+- Cobertura de regressão: fila sem consentimento preserva o evento sem abrir
+  conexão; dois flushes simultâneos fazem uma única requisição e removem a
+  fila somente uma vez. A suíte .NET Release, a validação de segurança e os
+  104 testes do Worker foram aprovados.
+- Conexão externa validada novamente em `POST /telemetry`: o Worker ativo
+  respondeu `202 Accepted` a um evento sintético marcado como `Development`.
+  A consulta/limpeza direta no D1 permanece bloqueada nesta máquina pela
+  ausência de `CLOUDFLARE_API_TOKEN`; não registrar token no repositório.
+
 ## Telemetria de produção — investigação de 30/07/2026
 
 - A versão pública `1.1.0` tinha uma incompatibilidade de contrato: o Worker
