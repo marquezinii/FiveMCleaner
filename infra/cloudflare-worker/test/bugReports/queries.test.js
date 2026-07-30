@@ -24,13 +24,14 @@ test('recentBugReports omits the environment filter when it is "All"', () => {
 });
 
 test('recentBugReports applies category and date range filters together', () => {
-  const { params } = recentBugReports({
+  const { sql, params } = recentBugReports({
     environment: 'Production',
     category: 'Falha na otimização',
     from: '2026-01-01',
     to: '2026-01-31',
   });
 
+  assert.match(sql, /received_at < date\(\?, '\+1 day'\)/);
   assert.deepEqual(params, ['Production', 'Falha na otimização', '2026-01-01', '2026-01-31', 50]);
 });
 

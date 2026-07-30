@@ -1,5 +1,19 @@
 # Estado do Projeto
 
+## Filtros do dashboard — 30/07/2026
+
+- Sem data e sem versão, o dashboard publicado já carrega todos os eventos de
+  Produção; a verificação visual confirmou a requisição somente com
+  `environment=Production`. Informar versão acrescenta esse filtro às mesmas
+  consultas e retornou o evento correspondente.
+- Corrigido no Worker o limite final de data: `Até 30/07/2026` antes excluía
+  eventos com horário naquele dia. Agora a consulta usa o início do dia
+  seguinte como limite exclusivo, incluindo integralmente a data final. A
+  mesma correção foi aplicada aos relatos de bugs e coberta por testes.
+- A correção está somente no commit local até um deploy explicitamente
+  autorizado; o dashboard publicado mantém o comportamento anterior para
+  filtro de data até receber esse Worker.
+
 ## Prova ponta a ponta da telemetria em produção — 30/07/2026
 
 - Teste externo completo do caminho real: um evento `Production` válido foi
