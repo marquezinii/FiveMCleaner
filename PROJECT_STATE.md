@@ -1,5 +1,19 @@
 # Estado do Projeto
 
+## Prova ponta a ponta da telemetria em produção — 30/07/2026
+
+- Teste externo completo do caminho real: um evento `Production` válido foi
+  enviado para `POST /telemetry`, recebeu `202 Accepted`, foi localizado no
+  D1 pelo conector oficial e apareceu no dashboard publicado com o filtro de
+  Produção e versão exata: 1 otimização, 100% de sucesso e 1 s de duração.
+- A tela de dashboard não apresentou erros de console. Todos os eventos
+  sintéticos usados nesta e na validação anterior foram apagados com suas
+  linhas auxiliares; a consulta final ao D1 confirmou zero remanescentes.
+- Portanto, para instalações que tenham a correção de contrato `environment`
+  e consentimento ativo, há evidência direta do percurso app/cliente ->
+  Worker -> D1 -> dashboard. A versão pública antiga sem `environment` segue
+  incompatível e deve receber o patch antes de ser considerada coberta.
+
 ## Validação pós-correção da telemetria — 30/07/2026
 
 - Corrigidos dois problemas locais confirmados durante a revisão: tentativas de
