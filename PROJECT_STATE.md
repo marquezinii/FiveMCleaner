@@ -8,10 +8,20 @@
   removido após a prova. O código do app usa somente
   `CloudflareBugReportService`; não há endpoint, pacote ou chamada ativa do
   FormSubmit.
-- O dashboard público em `fivemcleaner-dashboard.pages.dev` foi publicado com
-  a versão que consulta e renderiza `GET /api/bugs`, inclusive sem exigir
-  filtros de data ou versão. Relatos enviados ao Worker e persistidos no D1
-  agora ficam visíveis na seção **Bugs reportados** da interface publicada.
+- O dashboard administrativo foi publicado com a versão que consulta e
+  renderiza `GET /api/bugs`, inclusive sem exigir filtros de data ou versão.
+  Relatos enviados ao Worker e persistidos no D1 agora ficam visíveis na
+  seção **Bugs reportados** após autenticação.
+
+## Validação final de telemetria — 30/07/2026
+
+- O teste de produção enviou telemetria e relato de bug válidos; ambos
+  receberam HTTP 202 e foram confirmados no D1 antes da limpeza dos dados
+  sintéticos. Endpoints administrativos sem sessão responderam HTTP 401 e não
+  aceitaram uma origem CORS não autorizada.
+- URLs do dashboard foram removidas de documentação destinada ao repositório.
+  A confidencialidade dos dados é garantida pela sessão administrativa do
+  Worker; o endereço estático por si só não é um mecanismo de segurança.
 - `SECURITY.md` foi corrigido para não afirmar incorretamente que o formulário
   ainda envia dados ao FormSubmit.
 
@@ -1688,9 +1698,9 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
      foi gerada localmente (24 bytes aleatórios), hasheada e comunicada ao
      usuário uma única vez pelo chat, com instrução explícita para guardá-la
      — nunca ficou em nenhum arquivo do repositório nem em log persistente.
-  6. Painel publicado no Cloudflare Pages:
-     `https://fivemcleaner-dashboard.pages.dev` (projeto criado com
-     `wrangler pages project create`, branch de produção `production`).
+  6. Painel administrativo publicado no Cloudflare Pages (projeto criado com
+     `wrangler pages project create`, branch de produção `production`); a URL
+     não é documentada em materiais públicos.
   7. `assets/app.js` do painel passou a apontar, por padrão, para a URL real
      do Worker (antes usava `location.origin`, que aponta para a origem
      errada já que painel e Worker não compartilham domínio).

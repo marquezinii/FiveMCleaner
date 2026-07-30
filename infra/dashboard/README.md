@@ -1,7 +1,5 @@
 # FiveMCleaner dashboard
 
-**Deployed** at `https://fivemcleaner-dashboard.pages.dev`.
-
 Static admin dashboard for the telemetry and bug reports collected by
 [`infra/cloudflare-worker`](../cloudflare-worker/README.md). Plain HTML/CSS/JS,
 no build step, no framework — served as-is by Cloudflare Pages. The .NET
