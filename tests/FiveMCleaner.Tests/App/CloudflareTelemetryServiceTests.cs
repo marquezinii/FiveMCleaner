@@ -301,6 +301,29 @@ public sealed class CloudflareTelemetryTransportTests
         Assert.Contains("1.0.4", handler.Body, StringComparison.Ordinal);
         Assert.Contains("1.0.5", handler.Body, StringComparison.Ordinal);
         Assert.Contains("AMD Ryzen 5 5600X", handler.Body, StringComparison.Ordinal);
+        Assert.Contains("\"environment\":\"Production\"", handler.Body, StringComparison.Ordinal);
+    }
+
+    [Theory]
+    [InlineData("Development")]
+    [InlineData("Production")]
+    public async Task SendBatchAsync_AlwaysIncludesTheConfiguredRuntimeEnvironment(string environment)
+    {
+        var handler = new RecordingHandler();
+        using var client = new HttpClient(handler);
+        var transport = new CloudflareTelemetryTransport(client, TestEndpoint, environment);
+
+        await transport.SendBatchAsync([SampleEvent()]);
+
+        Assert.Contains($"\"environment\":\"{environment}\"", handler.Body, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Constructor_RejectsAnEnvironmentTheWorkerWillNotAccept()
+    {
+        using var client = new HttpClient(new RecordingHandler());
+
+        Assert.Throws<ArgumentException>(() => new CloudflareTelemetryTransport(client, TestEndpoint, "Staging"));
     }
 
     [Fact]
@@ -313,6 +336,18 @@ public sealed class CloudflareTelemetryTransportTests
         var result = await transport.SendBatchAsync([SampleEvent()]);
 
         Assert.False(result);
+    }
+
+    [Fact]
+    public async Task SendBatchAsync_AcceptsTheWorker202Response()
+    {
+        var handler = new RecordingHandler(HttpStatusCode.Accepted);
+        using var client = new HttpClient(handler);
+        var transport = new CloudflareTelemetryTransport(client, TestEndpoint);
+
+        var result = await transport.SendBatchAsync([SampleEvent()]);
+
+        Assert.True(result);
     }
 
     [Fact]
@@ -427,6 +462,21 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         await service.FlushPendingAsync();
 
         Assert.Single(queue.ReadPending(10));
+    }
+
+    [Fact]
+    public async Task FlushPendingAsync_PermanentClientRejection_DropsTheRejectedEvent()
+    {
+        var handler = new CountingHandler(HttpStatusCode.BadRequest);
+        using var client = new HttpClient(handler);
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
+        service.SetEnabled(true);
+        await queue.EnqueueAsync(SampleEvent());
+
+        await service.FlushPendingAsync();
+
+        Assert.Empty(queue.ReadPending(10));
     }
 
     [Fact]

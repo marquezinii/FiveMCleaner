@@ -1,5 +1,21 @@
 # Estado do Projeto
 
+## Telemetria de produção — investigação de 30/07/2026
+
+- A versão pública `1.1.0` tinha uma incompatibilidade de contrato: o Worker
+  exige `environment`, porém o serializador .NET não incluía esse campo. O
+  Worker respondia HTTP 400 e o cliente retinha o lote como falha transitória;
+  por isso o dashboard permanecia vazio mesmo com consentimento válido.
+- A correção em desenvolvimento serializa o ambiente real (`Development` ou
+  `Production`), restringe configuração de produção ao host/rota Cloudflare
+  autorizados e descarta rejeições HTTP 4xx permanentes. Falhas de rede, 429
+  e 5xx continuam na fila local para tentativa futura.
+- A validação remota comprovou HTTP 400 para o payload antigo e HTTP 202 para
+  o mesmo evento com `environment: Production`. Consulta direta ao D1, logs e
+  deploy do Worker e confirmação visual no dashboard dependem de credencial
+  Cloudflare nesta sessão; não há prova completa até executar o checklist em
+  `docs/telemetry-operations.md` com essa credencial.
+
 ## Visão geral e objetivo
 
 FiveMCleaner é um aplicativo desktop para Windows voltado à otimização

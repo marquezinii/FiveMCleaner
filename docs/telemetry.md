@@ -1,5 +1,8 @@
 # Telemetria opcional e privacidade
 
+Para contrato, troubleshooting e checklist de release da infraestrutura, veja
+[Operação da telemetria em produção](telemetry-operations.md).
+
 ## Consentimento
 
 A opção **Ajude a melhorar o FiveMCleaner** fica em **Configurações** e vem

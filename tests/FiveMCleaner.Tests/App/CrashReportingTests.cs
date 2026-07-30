@@ -114,7 +114,7 @@ public sealed class RemoteServicesOptionsLoaderTests : IDisposable
 
         var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Development, tempDirectory);
 
-        Assert.Equal("Production", options.Environment);
+        Assert.Equal("Development", options.Environment);
         Assert.Null(options.SentryDsn);
     }
 
@@ -135,6 +135,52 @@ public sealed class RemoteServicesOptionsLoaderTests : IDisposable
         var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Development, tempDirectory);
 
         Assert.Null(options.SentryDsn);
+    }
+
+    [Fact]
+    public void Load_UsesTheRuntimeEnvironmentInsteadOfTheConfigValue()
+    {
+        WriteConfigFile(
+            "appsettings.Production.json",
+            """{ "environment": "Development", "telemetryEndpoint": "https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry" }""");
+
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Production, tempDirectory);
+
+        Assert.Equal("Production", options.Environment);
+    }
+}
+
+public sealed class TelemetryEndpointPolicyTests
+{
+    [Fact]
+    public void TryCreate_ProductionWorkerEndpoint_IsAccepted()
+    {
+        var accepted = TelemetryEndpointPolicy.TryCreate(
+            "https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry",
+            AppRuntimeEnvironment.Production,
+            out var endpoint,
+            out var error);
+
+        Assert.True(accepted);
+        Assert.Null(error);
+        Assert.Equal("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry", endpoint.AbsoluteUri);
+    }
+
+    [Theory]
+    [InlineData("http://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry")]
+    [InlineData("https://telemetry.example.test/telemetry")]
+    [InlineData("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/other")]
+    [InlineData("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry?redirect=1")]
+    public void TryCreate_UnsafeProductionEndpoint_IsRejected(string value)
+    {
+        var accepted = TelemetryEndpointPolicy.TryCreate(
+            value,
+            AppRuntimeEnvironment.Production,
+            out _,
+            out var error);
+
+        Assert.False(accepted);
+        Assert.False(string.IsNullOrWhiteSpace(error));
     }
 }
 

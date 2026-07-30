@@ -68,11 +68,66 @@ public static class RemoteServicesOptionsLoader
         try
         {
             using var stream = File.OpenRead(path);
-            return JsonSerializer.Deserialize<RemoteServicesOptions>(stream, FiveMCleanerJson.Options) ?? fallback;
+            var loaded = JsonSerializer.Deserialize<RemoteServicesOptions>(stream, FiveMCleanerJson.Options);
+            // The environment is selected by the executable, never by a
+            // mutable JSON file. Otherwise a stale or edited Production file
+            // could make real user events appear as Development in D1.
+            return loaded is null
+                ? fallback
+                : loaded with { Environment = environment.ToString() };
         }
         catch (Exception exception) when (exception is JsonException or IOException or NotSupportedException)
         {
             return fallback;
         }
+    }
+}
+
+/// <summary>
+/// Production-only guard for the anonymous telemetry destination. This is
+/// deliberately stricter than generic HTTPS validation: the app must never
+/// silently start reporting to an arbitrary host because a local config file
+/// was stale, missing, or edited. Development remains HTTPS-only so test
+/// traffic receives the same transport security guarantees.
+/// </summary>
+public static class TelemetryEndpointPolicy
+{
+    public const string ProductionHost = "fivemcleaner-telemetry.felipemarquesini10.workers.dev";
+    public const string TelemetryPath = "/telemetry";
+
+    public static bool TryCreate(
+        string? configuredValue,
+        AppRuntimeEnvironment runtimeEnvironment,
+        out Uri endpoint,
+        out string? error)
+    {
+        endpoint = null!;
+        error = null;
+        if (string.IsNullOrWhiteSpace(configuredValue)
+            || !Uri.TryCreate(configuredValue, UriKind.Absolute, out var candidate)
+            || candidate.Scheme != Uri.UriSchemeHttps
+            || !string.IsNullOrEmpty(candidate.UserInfo)
+            || !string.IsNullOrEmpty(candidate.Query)
+            || !string.IsNullOrEmpty(candidate.Fragment))
+        {
+            error = "O endpoint de telemetria não é uma URL HTTPS absoluta válida.";
+            return false;
+        }
+
+        if (!string.Equals(candidate.AbsolutePath, TelemetryPath, StringComparison.Ordinal))
+        {
+            error = "O endpoint de telemetria não usa a rota esperada.";
+            return false;
+        }
+
+        if (runtimeEnvironment == AppRuntimeEnvironment.Production
+            && !string.Equals(candidate.Host, ProductionHost, StringComparison.OrdinalIgnoreCase))
+        {
+            error = "O endpoint de telemetria de produção não usa o host autorizado.";
+            return false;
+        }
+
+        endpoint = candidate;
+        return true;
     }
 }

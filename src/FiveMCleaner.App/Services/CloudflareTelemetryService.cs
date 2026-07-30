@@ -240,6 +240,13 @@ public sealed class LocalTelemetryQueue
 
 public sealed record QueuedTelemetryFile(string FilePath, AnonymousTelemetryEvent Event);
 
+internal enum TelemetrySendOutcome
+{
+    Accepted,
+    TransientFailure,
+    PermanentlyRejected
+}
+
 /// <summary>
 /// Sends a batch of telemetry events to the anonymous telemetry Cloudflare
 /// Worker as a single HTTPS request. Never throws to the caller: any
@@ -252,30 +259,38 @@ public sealed class CloudflareTelemetryTransport
     private readonly HttpClient httpClient;
     private readonly Uri endpoint;
 
-    public CloudflareTelemetryTransport(Uri endpoint)
-        : this(SharedClient, endpoint)
+    private readonly string environment;
+
+    public CloudflareTelemetryTransport(Uri endpoint, string environment)
+        : this(SharedClient, endpoint, environment)
     {
     }
 
-    internal CloudflareTelemetryTransport(HttpClient httpClient, Uri endpoint)
+    internal CloudflareTelemetryTransport(HttpClient httpClient, Uri endpoint, string environment = "Production")
     {
         this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         this.endpoint = ValidateEndpoint(endpoint);
+        this.environment = ValidateEnvironment(environment);
     }
 
     public async Task<bool> SendBatchAsync(
+        IReadOnlyList<AnonymousTelemetryEvent> events,
+        CancellationToken cancellationToken = default)
+        => await SendBatchWithOutcomeAsync(events, cancellationToken).ConfigureAwait(false) == TelemetrySendOutcome.Accepted;
+
+    internal async Task<TelemetrySendOutcome> SendBatchWithOutcomeAsync(
         IReadOnlyList<AnonymousTelemetryEvent> events,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(events);
         if (events.Count == 0)
         {
-            return true;
+            return TelemetrySendOutcome.Accepted;
         }
 
         try
         {
-            var payload = events.Select(ToWirePayload).ToArray();
+            var payload = events.Select(eventItem => ToWirePayload(eventItem, environment)).ToArray();
             using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
             {
                 Content = JsonContent.Create(payload)
@@ -285,15 +300,26 @@ public sealed class CloudflareTelemetryTransport
                 request,
                 HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken).ConfigureAwait(false);
-            return response.IsSuccessStatusCode;
+            if (response.IsSuccessStatusCode)
+            {
+                return TelemetrySendOutcome.Accepted;
+            }
+
+            // A malformed/unauthorized payload will not become valid by being
+            // retried forever. 429 and 5xx remain transient because the same
+            // queue item may succeed after the service recovers.
+            return (int)response.StatusCode is >= 400 and < 500
+                && response.StatusCode != HttpStatusCode.TooManyRequests
+                ? TelemetrySendOutcome.PermanentlyRejected
+                : TelemetrySendOutcome.TransientFailure;
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException or IOException)
         {
-            return false;
+            return TelemetrySendOutcome.TransientFailure;
         }
     }
 
-    private static object ToWirePayload(AnonymousTelemetryEvent telemetryEvent) => new
+    private static object ToWirePayload(AnonymousTelemetryEvent telemetryEvent, string environment) => new
     {
         eventName = telemetryEvent.EventName,
         executionTimeMs = (long)Math.Clamp(telemetryEvent.ExecutionTime.TotalMilliseconds, 0, 86_400_000),
@@ -305,7 +331,8 @@ public sealed class CloudflareTelemetryTransport
         gpuModel = telemetryEvent.GpuModel,
         ramBucketGiB = telemetryEvent.RamBucketGiB,
         profile = telemetryEvent.Profile,
-        actionIds = telemetryEvent.ActionIds
+        actionIds = telemetryEvent.ActionIds,
+        environment
     };
 
     private static Uri ValidateEndpoint(Uri value)
@@ -314,6 +341,16 @@ public sealed class CloudflareTelemetryTransport
         if (value.Scheme != Uri.UriSchemeHttps)
         {
             throw new ArgumentException("Endpoint de telemetria inválido.", nameof(value));
+        }
+
+        return value;
+    }
+
+    private static string ValidateEnvironment(string value)
+    {
+        if (value is not ("Development" or "Production"))
+        {
+            throw new ArgumentException("Ambiente de telemetria inválido.", nameof(value));
         }
 
         return value;
@@ -394,10 +431,10 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
                 return;
             }
 
-            var succeeded = await transport
-                .SendBatchAsync(pending.Select(item => item.Event).ToArray(), cancellationToken)
+            var outcome = await transport
+                .SendBatchWithOutcomeAsync(pending.Select(item => item.Event).ToArray(), cancellationToken)
                 .ConfigureAwait(false);
-            if (succeeded)
+            if (outcome is TelemetrySendOutcome.Accepted or TelemetrySendOutcome.PermanentlyRejected)
             {
                 foreach (var item in pending)
                 {
