@@ -1,5 +1,20 @@
 # Estado do Projeto
 
+## Relatos de bug e dashboard publicado — 30/07/2026
+
+- O caminho de ingestão foi validado de ponta a ponta até o D1: um relato
+  sintético válido enviado para `POST /bugs` recebeu `202`, foi persistido
+  com categoria, resumo, versão, perfil, ambiente e horário corretos, e foi
+  removido após a prova. O código do app usa somente
+  `CloudflareBugReportService`; não há endpoint, pacote ou chamada ativa do
+  FormSubmit.
+- O dashboard público em `fivemcleaner-dashboard.pages.dev` foi publicado com
+  a versão que consulta e renderiza `GET /api/bugs`, inclusive sem exigir
+  filtros de data ou versão. Relatos enviados ao Worker e persistidos no D1
+  agora ficam visíveis na seção **Bugs reportados** da interface publicada.
+- `SECURITY.md` foi corrigido para não afirmar incorretamente que o formulário
+  ainda envia dados ao FormSubmit.
+
 ## Filtros do dashboard — 30/07/2026
 
 - Sem data e sem versão, o dashboard publicado já carrega todos os eventos de
