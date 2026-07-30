@@ -1,5 +1,17 @@
 # Estado do Projeto
 
+## Hotfix do atualizador — 30/07/2026
+
+- Identificado um impasse no fluxo de atualização silenciosa: o aplicativo
+  aguardava quatro segundos pelo instalador, enquanto o Inno Setup podia
+  aguardar o aplicativo liberar os arquivos instalados. Em PCs onde o
+  Restart Manager detectava o bloqueio imediatamente, o setup encerrava com
+  código 1. O app agora fecha assim que o processo verificado do instalador é
+  criado, permitindo a substituição dos arquivos sem espera circular.
+- A validação de caminho, extensão, origem, tamanho e SHA-256 permanece
+  intacta. A pasta de logs continua preparada quando possível, mas falhas de
+  diagnóstico não impedem a execução do instalador.
+
 ## Relatos de bug e dashboard publicado — 30/07/2026
 
 - O caminho de ingestão foi validado de ponta a ponta até o D1: um relato

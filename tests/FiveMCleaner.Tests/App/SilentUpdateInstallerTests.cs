@@ -129,21 +129,32 @@ public sealed class SilentUpdateInstallerTests : IDisposable
         Assert.False(launch.Started);
     }
 
-    [Theory]
-    [InlineData(1)]
-    [InlineData(3)]
-    [InlineData(6)]
-    [InlineData(42)]
-    public void DescribeInnoExitCode_NeverReturnsAnEmptyExplanation(int exitCode)
+    [Fact]
+    public async Task StartAsync_ReturnsImmediatelyAfterTheVerifiedInstallerStarts()
     {
-        var description = SilentUpdateInstaller.DescribeInnoExitCode(exitCode);
+        var launcher = new RecordingLauncher();
+        var installer = new SilentUpdateInstaller(updatesRoot, launcher: launcher);
+        var update = CreateVerifiedInstaller();
 
-        Assert.False(string.IsNullOrWhiteSpace(description));
+        var launch = await installer.StartAsync(update);
+
+        Assert.True(launch.Started);
+        Assert.True(launcher.WasStarted);
     }
 
     [Fact]
     public void Constructor_RejectsARelativeUpdatesRoot()
     {
         Assert.Throws<ArgumentException>(() => new SilentUpdateInstaller("relative\\path"));
+    }
+
+    private sealed class RecordingLauncher : IInstallerProcessLauncher
+    {
+        public bool WasStarted { get; private set; }
+
+        public void Start(string installerPath, IReadOnlyList<string> arguments)
+        {
+            WasStarted = true;
+        }
     }
 }
