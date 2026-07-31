@@ -268,8 +268,8 @@
                                                 </Border.Style>
                                                 <Grid>
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <Path Width="18" Height="18" Stretch="Uniform" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" VerticalAlignment="Center">
-                                                        <Path.Style><Style TargetType="Path"><Setter Property="Data" Value="M 4,4 L 14,14 M 14,4 L 4,14" /><Setter Property="Stroke" Value="{DynamicResource RedBrush}" /><Style.Triggers><DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True"><Setter Property="Data" Value="M 1,9 L 4,12 L 14,3" /><Setter Property="Stroke" Value="#5BCF98" /></DataTrigger></Style.Triggers></Style></Path.Style>
+                                                    <Path Width="14" Height="14" Stretch="Uniform" StrokeThickness="1.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" VerticalAlignment="Center">
+                                                        <Path.Style><Style TargetType="Path"><Setter Property="Data" Value="M 3,3 L 11,11 M 11,3 L 3,11" /><Setter Property="Stroke" Value="{DynamicResource RedBrush}" /><Style.Triggers><DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True"><Setter Property="Data" Value="M 2.5,7 L 5.5,10 L 11.5,4.5" /><Setter Property="Stroke" Value="#5BCF98" /></DataTrigger></Style.Triggers></Style></Path.Style>
                                                     </Path>
                                                     <TextBlock Text="{Binding EditionLabel}" Margin="8,0,2,0">
                                                         <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource DetectionBadgeLabelStyle}"><Style.Triggers><DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True"><Setter Property="Foreground" Value="#5BCF98" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
@@ -290,8 +290,8 @@
                                                 </Border.Style>
                                                 <Grid>
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <Path Width="18" Height="18" Stretch="Uniform" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" VerticalAlignment="Center">
-                                                        <Path.Style><Style TargetType="Path"><Setter Property="Data" Value="M 4,4 L 14,14 M 14,4 L 4,14" /><Setter Property="Stroke" Value="{DynamicResource RedBrush}" /><Style.Triggers><DataTrigger Binding="{Binding IsGtaVLegacyDetected}" Value="True"><Setter Property="Data" Value="M 1,9 L 4,12 L 14,3" /><Setter Property="Stroke" Value="#5BCF98" /></DataTrigger></Style.Triggers></Style></Path.Style>
+                                                    <Path Width="14" Height="14" Stretch="Uniform" StrokeThickness="1.4" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" VerticalAlignment="Center">
+                                                        <Path.Style><Style TargetType="Path"><Setter Property="Data" Value="M 3,3 L 11,11 M 11,3 L 3,11" /><Setter Property="Stroke" Value="{DynamicResource RedBrush}" /><Style.Triggers><DataTrigger Binding="{Binding IsGtaVLegacyDetected}" Value="True"><Setter Property="Data" Value="M 2.5,7 L 5.5,10 L 11.5,4.5" /><Setter Property="Stroke" Value="#5BCF98" /></DataTrigger></Style.Triggers></Style></Path.Style>
                                                     </Path>
                                                     <TextBlock Text="{Binding GtaStatusLabel}" Margin="8,0,2,0">
                                                         <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource DetectionBadgeLabelStyle}"><Style.Triggers><DataTrigger Binding="{Binding IsGtaVLegacyDetected}" Value="True"><Setter Property="Foreground" Value="#5BCF98" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
