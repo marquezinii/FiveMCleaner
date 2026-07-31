@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using Microsoft.Win32;
+using Wpf.Ui.Appearance;
 
 namespace FiveMCleaner.App.Services;
 
@@ -169,6 +170,11 @@ public sealed class ThemeManager : IDisposable
             },
             new System.Windows.Point(0, 0),
             new System.Windows.Point(1, 1));
+
+        var accent = useLightTheme ? ParseColor("#E85D04") : ParseColor("#FF7A18");
+        var wpfUiTheme = useLightTheme ? ApplicationTheme.Light : ApplicationTheme.Dark;
+        ApplicationAccentColorManager.Apply(accent, wpfUiTheme, systemGlassColor: false, systemAccentColor: false);
+        ApplicationThemeManager.Apply(wpfUiTheme, updateAccent: false);
 
         IsLightTheme = useLightTheme;
     }
