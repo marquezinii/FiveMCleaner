@@ -238,7 +238,7 @@
                     <Setter Property="Template">
                         <Setter.Value>
                             <ControlTemplate TargetType="ComboBoxItem">
-                                <Border x:Name="ItemRoot" Background="{TemplateBinding Background}" CornerRadius="6" Padding="{TemplateBinding Padding}">
+                                <Border x:Name="ItemRoot" Background="{TemplateBinding Background}" CornerRadius="0" Padding="{TemplateBinding Padding}">
                                     <ContentPresenter />
                                 </Border>
                                 <ControlTemplate.Triggers>
@@ -273,7 +273,7 @@
                                             Background="{TemplateBinding Background}"
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="11">
+                                            CornerRadius="0">
                                         <Grid>
                                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                                               HorizontalAlignment="Left"
@@ -312,7 +312,7 @@
                                     Background="{DynamicResource SurfaceRaisedBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="11">
+                                    CornerRadius="0">
                                 <ScrollViewer MaxHeight="220" CanContentScroll="True" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                                     <ItemsPresenter />
                                 </ScrollViewer>

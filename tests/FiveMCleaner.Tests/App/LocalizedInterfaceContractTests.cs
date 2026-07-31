@@ -280,6 +280,10 @@ public sealed partial class LocalizedInterfaceContractTests
             (string?)style.Attribute("TargetType") == "ComboBoxItem");
         Assert.Contains(selectorStyle.Descendants(presentation + "Popup"), popup =>
             (string?)popup.Attribute(xaml + "Name") == "PART_Popup");
+        Assert.All(
+            selectorStyle.Descendants(presentation + "Border")
+                .Where(border => border.Attribute("CornerRadius") is not null),
+            border => Assert.Equal("0", (string?)border.Attribute("CornerRadius")));
     }
 
     [Fact]
