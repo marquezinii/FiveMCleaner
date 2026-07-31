@@ -260,23 +260,18 @@
                                                     <Style TargetType="Border" BasedOn="{StaticResource DetectionBadgeStyle}">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True">
-                                                                <Setter Property="BorderBrush" Value="#2F7960" />
-                                                                <Setter Property="Background">
-                                                                    <Setter.Value>
-                                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#1C3A2E" Offset="0" /><GradientStop Color="#14261F" Offset="1" /></LinearGradientBrush>
-                                                                    </Setter.Value>
-                                                                </Setter>
+                                                                <Setter Property="BorderBrush" Value="#2D5E4C" />
+                                                                <Setter Property="Background" Value="#15231C" />
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Border.Style>
                                                 <Grid>
-                                                    <Border Margin="1" BorderBrush="#33FFFFFF" BorderThickness="1,1,1,0" CornerRadius="10" IsHitTestVisible="False" />
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                     <Border VerticalAlignment="Center">
                                                         <Border.Style>
                                                             <Style TargetType="Border" BasedOn="{StaticResource DetectionBadgeIconStyle}">
-                                                                <Style.Triggers><DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True"><Setter Property="Background" Value="#1B4B3A" /></DataTrigger></Style.Triggers>
+                                                                <Style.Triggers />
                                                             </Style>
                                                         </Border.Style>
                                                         <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -284,7 +279,7 @@
                                                         </TextBlock>
                                                     </Border>
                                                     <TextBlock Text="{Binding EditionLabel}" Margin="8,0,2,0">
-                                                        <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource DetectionBadgeLabelStyle}"><Style.Triggers><DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True"><Setter Property="Foreground" Value="#62E0A4" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                                        <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource DetectionBadgeLabelStyle}"><Style.Triggers><DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True"><Setter Property="Foreground" Value="#5BCF98" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                                                     </TextBlock>
                                                     </StackPanel>
                                                 </Grid>
@@ -294,23 +289,18 @@
                                                     <Style TargetType="Border" BasedOn="{StaticResource DetectionBadgeStyle}">
                                                         <Style.Triggers>
                                                             <DataTrigger Binding="{Binding IsGtaVLegacyDetected}" Value="True">
-                                                                <Setter Property="BorderBrush" Value="#2F7960" />
-                                                                <Setter Property="Background">
-                                                                    <Setter.Value>
-                                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1"><GradientStop Color="#1C3A2E" Offset="0" /><GradientStop Color="#14261F" Offset="1" /></LinearGradientBrush>
-                                                                    </Setter.Value>
-                                                                </Setter>
+                                                                <Setter Property="BorderBrush" Value="#2D5E4C" />
+                                                                <Setter Property="Background" Value="#15231C" />
                                                             </DataTrigger>
                                                         </Style.Triggers>
                                                     </Style>
                                                 </Border.Style>
                                                 <Grid>
-                                                    <Border Margin="1" BorderBrush="#33FFFFFF" BorderThickness="1,1,1,0" CornerRadius="10" IsHitTestVisible="False" />
                                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                                     <Border VerticalAlignment="Center">
                                                         <Border.Style>
                                                             <Style TargetType="Border" BasedOn="{StaticResource DetectionBadgeIconStyle}">
-                                                                <Style.Triggers><DataTrigger Binding="{Binding IsGtaVLegacyDetected}" Value="True"><Setter Property="Background" Value="#1B4B3A" /></DataTrigger></Style.Triggers>
+                                                                <Style.Triggers />
                                                             </Style>
                                                         </Border.Style>
                                                         <TextBlock FontFamily="Segoe MDL2 Assets" FontSize="10" HorizontalAlignment="Center" VerticalAlignment="Center">
@@ -318,7 +308,7 @@
                                                         </TextBlock>
                                                     </Border>
                                                     <TextBlock Text="{Binding GtaStatusLabel}" Margin="8,0,2,0">
-                                                        <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource DetectionBadgeLabelStyle}"><Style.Triggers><DataTrigger Binding="{Binding IsGtaVLegacyDetected}" Value="True"><Setter Property="Foreground" Value="#62E0A4" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
+                                                        <TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource DetectionBadgeLabelStyle}"><Style.Triggers><DataTrigger Binding="{Binding IsGtaVLegacyDetected}" Value="True"><Setter Property="Foreground" Value="#5BCF98" /></DataTrigger></Style.Triggers></Style></TextBlock.Style>
                                                     </TextBlock>
                                                     </StackPanel>
                                                 </Grid>

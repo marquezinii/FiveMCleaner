@@ -41,39 +41,26 @@
     </Style>
 
     <Style x:Key="DetectionBadgeStyle" TargetType="Border">
-        <Setter Property="MinHeight" Value="38" />
-        <Setter Property="Padding" Value="8,6" />
-        <Setter Property="CornerRadius" Value="11" />
+        <Setter Property="MinHeight" Value="36" />
+        <Setter Property="Padding" Value="10,0" />
+        <Setter Property="CornerRadius" Value="9" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="BorderBrush" Value="#7A3C45" />
-        <Setter Property="Background">
-            <Setter.Value>
-                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                    <GradientStop Color="#302022" Offset="0" />
-                    <GradientStop Color="#211819" Offset="1" />
-                </LinearGradientBrush>
-            </Setter.Value>
-        </Setter>
-        <Setter Property="Effect">
-            <Setter.Value>
-                <DropShadowEffect Color="#000000" BlurRadius="10" ShadowDepth="2" Opacity="0.28" />
-            </Setter.Value>
-        </Setter>
+        <Setter Property="BorderBrush" Value="#51363A" />
+        <Setter Property="Background" Value="#21191A" />
     </Style>
 
     <Style x:Key="DetectionBadgeIconStyle" TargetType="Border">
-        <Setter Property="Width" Value="22" />
-        <Setter Property="Height" Value="22" />
-        <Setter Property="CornerRadius" Value="7" />
-        <Setter Property="Background" Value="#452629" />
+        <Setter Property="Width" Value="18" />
+        <Setter Property="Height" Value="18" />
+        <Setter Property="Background" Value="Transparent" />
     </Style>
 
     <Style x:Key="DetectionBadgeLabelStyle" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="Segoe UI Variable Display, Segoe UI" />
-        <Setter Property="FontSize" Value="10.5" />
+        <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+        <Setter Property="FontSize" Value="11.5" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
-        <Setter Property="Foreground" Value="#F17D82" />
+        <Setter Property="Foreground" Value="#C9757B" />
         <Setter Property="VerticalAlignment" Value="Center" />
     </Style>
 
