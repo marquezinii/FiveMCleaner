@@ -174,6 +174,11 @@ public sealed partial class LocalizedInterfaceContractTests
             "FiveMCleaner.App",
             "Themes",
             "Controls.xaml"));
+        var mainWindow = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml"));
 
         Assert.DoesNotContain("ScaleTransform", styles, StringComparison.Ordinal);
         Assert.True(Regex.Matches(styles, "Property=\"IsKeyboardFocused\"").Count >= 3);
@@ -185,6 +190,7 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("x:Key=\"DetectionBadgeLabelStyle\"", styles, StringComparison.Ordinal);
         Assert.Contains("Segoe UI Variable Text, Segoe UI", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"10\"", styles, StringComparison.Ordinal);
+        Assert.Equal(2, Regex.Matches(mainWindow, "M 1,9 L 4,12 L 9,6 M 5,9 L 8,12 L 14,5").Count);
     }
 
     [Fact]

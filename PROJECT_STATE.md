@@ -23,6 +23,8 @@
 - Os badges de detecção do Dashboard usam superfícies planas, borda discreta,
   ícone simples e a fonte `Segoe UI Variable Text` em tamanho ligeiramente
   maior, preservando os estados verde e vermelho sem brilho, gradiente ou sombra.
+- Quando detectado, o ícone desses badges é uma confirmação dupla desenhada em
+  vetor, em vez do check único; quando não detectado, ele continua exibindo X.
 
 ## Ajustes de interação da interface Fluent — 31/07/2026
 

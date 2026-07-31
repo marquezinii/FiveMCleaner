@@ -49,12 +49,6 @@
         <Setter Property="Background" Value="#21191A" />
     </Style>
 
-    <Style x:Key="DetectionBadgeIconStyle" TargetType="Border">
-        <Setter Property="Width" Value="18" />
-        <Setter Property="Height" Value="18" />
-        <Setter Property="Background" Value="Transparent" />
-    </Style>
-
     <Style x:Key="DetectionBadgeLabelStyle" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
         <Setter Property="FontSize" Value="11.5" />
