@@ -26,15 +26,15 @@
     <ui:FluentWindow.Resources>
         <DataTemplate x:Key="ActionTemplate">
             <ui:CardControl Margin="0,0,0,9" Padding="14">
-                <ui:CardControl.Icon>
-                    <Border Width="30" Height="30" CornerRadius="8" Background="#20FF7A18">
-                        <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                </ui:CardControl.Icon>
                 <ui:CardControl.Header>
-                    <StackPanel>
-                        <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" />
-                        <TextBlock Text="{Binding Description}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="30" Height="30" CornerRadius="8" Background="#20FF7A18" VerticalAlignment="Top">
+                            <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Margin="8,0,0,0">
+                            <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding Description}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
+                        </StackPanel>
                     </StackPanel>
                 </ui:CardControl.Header>
             </ui:CardControl>
@@ -84,17 +84,17 @@
 
         <DataTemplate x:Key="HistoryTemplate">
             <ui:CardControl Margin="0,0,0,10" Padding="17">
-                <ui:CardControl.Icon>
-                    <Border Width="38" Height="38" CornerRadius="10" Background="#1C37C889">
-                        <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource GreenBrush}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                    </Border>
-                </ui:CardControl.Icon>
                 <ui:CardControl.Header>
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="SemiBold" />
-                        <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5">
-                            <Run Text="{Binding DateLabel, Mode=OneWay}" /><Run Text="  •  " /><Run Text="{Binding Summary, Mode=OneWay}" />
-                        </TextBlock>
+                    <StackPanel Orientation="Horizontal">
+                        <Border Width="38" Height="38" CornerRadius="10" Background="#1C37C889" VerticalAlignment="Top">
+                            <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource GreenBrush}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Margin="8,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="SemiBold" />
+                            <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5">
+                                <Run Text="{Binding DateLabel, Mode=OneWay}" /><Run Text="  •  " /><Run Text="{Binding Summary, Mode=OneWay}" />
+                            </TextBlock>
+                        </StackPanel>
                     </StackPanel>
                 </ui:CardControl.Header>
                 <Button Content="{Binding [History.Undo], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Padding="16,0" Tag="{Binding}" Click="RollbackHistory_Click" IsEnabled="{Binding CanRollback}" />
