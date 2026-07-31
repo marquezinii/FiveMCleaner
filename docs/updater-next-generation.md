@@ -34,6 +34,24 @@ assinatura de código/manifesto com chave pública fixa do FiveMCleaner.
    há callback permissivo de certificado, redirecionamento livre ou fallback
    HTTP.
 
+### Proteção contra downgrade
+
+O feed assinado também declara `minimumAllowedVersion` por canal. O Launcher
+nunca ativa, baixa ou instala uma versão menor que a ativa ou menor que esse
+piso, mesmo que alguém entregue um manifesto antigo, substitua a URL ou tente
+abrir um pacote local. O estado local registra a maior versão já confirmada e
+o hash do feed que a autorizou; esse estado é protegido por DPAPI do usuário e
+é reconciliado apenas com um feed cuja assinatura seja válida.
+
+Rollback não é um downgrade genérico: é uma transação limitada ao par
+`previousVersion` registrado antes da ativação da candidata, dentro de uma
+janela de recuperação curta e com journal/health receipt correspondente. O
+Recovery Agent não aceita retornar a uma versão abaixo de
+`minimumAllowedVersion`; se a única versão anterior estiver revogada, ele
+mantém a versão atual, registra a falha e exige uma release corretiva mais
+nova. Assim, uma correção de segurança pode elevar o piso sem perder a
+capacidade de recuperar uma atualização comum que falhou.
+
 ## Atualização e rollback verificáveis
 
 O pacote novo é baixado em `staging/<transaction-id>`, recebe hash do bundle e
@@ -90,6 +108,9 @@ usuário escolhe compartilhar.
 
 - chave privada não existe no repositório, artefato ou máquina de usuário;
 - bundle, feed, versão e hash inválidos não são instalados;
+- uma versão abaixo da ativa ou de `minimumAllowedVersion` não é ativada;
+- rollback só pode retornar ao predecessor registrado e nunca atravessa o
+  piso de segurança assinado;
 - perda de processo, rede ou energia não ativa pacote parcialmente estagiado;
 - falha pós-atualização reativa a versão anterior e deixa evidência local;
 - nenhuma migração automática torna dados incompatíveis com rollback;

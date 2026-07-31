@@ -12,6 +12,9 @@
 - Telemetria de falha do updater será estruturada, consentida e sanitizada,
   com rota/tabela/aba administrativa própria; logs completos permanecem locais.
   O desenho completo está em `docs/updater-next-generation.md`.
+- A arquitetura inclui proteção contra downgrade: `minimumAllowedVersion`
+  assinado por canal e estado local DPAPI impedem ativar versões antigas;
+  rollback é limitado ao predecessor registrado e respeita o mesmo piso.
 
 ## Hardening do atualizador independente — 31/07/2026
 
