@@ -10,6 +10,7 @@
         MinHeight="480"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None"
+        ExtendsContentIntoTitleBar="True"
         WindowBackdropType="Mica"
         ResizeMode="NoResize"
         ShowInTaskbar="False"

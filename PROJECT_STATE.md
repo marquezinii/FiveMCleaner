@@ -1,5 +1,75 @@
 # Estado do Projeto
 
+## Redesign visual completo — Fluent Design via WPF-UI — 31/07/2026
+
+- Rodada de redesign visual pedida pelo usuário ("aplicativo quase novo"),
+  seguindo `docs/superpowers/specs/2026-07-31-redesign-visual-fluent-design.md`
+  e `docs/superpowers/plans/2026-07-31-redesign-visual-fluent-design.md`.
+  Escopo puramente visual/UX: nenhuma mudança em `ViewModels`, fluxo de
+  otimização, contratos ou textos localizados.
+- Adicionada a biblioteca `WPF-UI` (Lepo.co, versão 4.3.0) ao
+  `FiveMCleaner.App`, com `ui:ThemesDictionary`/`ui:ControlsDictionary`
+  mescladas em `App.xaml` antes dos dicionários próprios do app.
+- `ThemeManager` (que já fazia patch direto de brushes para claro/escuro)
+  ganhou uma chamada adicional: `ApplicationAccentColorManager.Apply` fixa o
+  accent do WPF-UI como o laranja FiveM (`#FF7A18` escuro / `#E85D04` claro,
+  nunca o accent do sistema Windows) e `ApplicationThemeManager.Apply`
+  sincroniza o tema nativo da lib com a escolha do usuário.
+- `MainWindow` migrou de `Window`/`WindowChrome` manual para
+  `Wpf.Ui.Controls.FluentWindow` com `WindowBackdropType="Mica"` e
+  `ui:TitleBar` no lugar da barra de título/botões desenhados à mão; todo o
+  código de maximizar/restaurar/arrastar manual (`ToggleMaximize`,
+  `MainWindow_StateChanged`, `TitleBar_MouseLeftButtonDown`) foi removido. O
+  hook nativo `WM_GETMINMAXINFO` (`WindowMessageHook`, corrige maximizar
+  cobrindo a barra de tarefas) foi mantido intacto, pois é independente do
+  chrome e continua necessário.
+- A sidebar de navegação (4 botões nomeados + `Navigate(page, nav)` alternando
+  `Visibility`) virou `ui:NavigationView`, mas **sem** migrar para navegação
+  por `Page`/`TargetPageType` — decisão documentada no plano: os 4
+  `NavigationViewItem` continuam mapeados às mesmas 4 seções nomeadas
+  existentes via `SelectionChanged`/`RootNavigationView.Navigate(string tag)`,
+  evitando quebrar o único `MainWindow.xaml` monolítico em vários arquivos
+  `Page`, o que estaria fora do escopo puramente visual pedido.
+- Cards migraram para `ui:CardControl` (ícone + cabeçalho + conteúdo:
+  `ActionTemplate`, `HistoryTemplate`) e `ui:Card` (container simples: tiles
+  de hardware do Dashboard, cartões de apresentação de perfil, cartões de
+  Configurações/Histórico). O card do hero (`HeroGradientBrush`) permanece
+  `Border` puro por ter fundo em gradiente customizado, fora do padrão simples
+  de card.
+- Motion adicionada: `PrimaryButtonStyle` ganhou glow laranja animado
+  (`DropShadowEffect` com `BlurRadius` animado no hover); `ui:CardControl`/
+  `ui:Card` ganharam leve elevação (`ScaleTransform` ~1.015–1.02 no hover); a
+  barra de progresso do Otimizador ganhou um brilho em gradiente que desliza
+  em loop enquanto `IsBusy` é verdadeiro (`LinearGradientBrush` com
+  `TranslateTransform` animado via `Storyboard.TargetProperty` composto,
+  sem `Storyboard.TargetName`, pois um `TranslateTransform` criado dentro de
+  um `Setter.Value` de `Style` não fica registrado em nenhum `NameScope`).
+- As três janelas secundárias (`OptimizationConfirmationWindow`,
+  `BugReportWindow`, `PrivacyConsentWindow`) migraram para `ui:FluentWindow`
+  com `WindowBackdropType="Mica"` e `ui:TitleBar` próprio (exceto
+  `PrivacyConsentWindow`, que continua **sem** `ui:TitleBar`/botão de fechar
+  visível, preservando `WindowStyle="None"` e o bloqueio de `Alt+F4` via
+  `Closing` já existente).
+- Estilos órfãos removidos de `Themes/Controls.xaml` após a migração
+  (`WindowButtonStyle`, `CloseWindowButtonStyle`, `NavButtonStyle` — sem
+  nenhum consumidor restante no app). Um teste de contrato
+  (`LocalizedInterfaceContractTests.
+  SettingsAndWindowChrome_UseTheRefinedSpacingAndHoverContracts`) que
+  verificava a existência de `CloseWindowButtonStyle` em `MainWindow.xaml`
+  foi atualizado para verificar a presença de `<ui:TitleBar` no lugar.
+- Validação: build Release sem avisos, 602 testes .NET (mesma contagem de
+  antes, 1 ajustado — nenhum novo/removido) e `Verify-Safety.ps1` aprovados.
+  O app foi iniciado várias vezes via `scripts/Start-DevelopmentApp.ps1`
+  durante a implementação, confirmando ausência de crash em cada tarefa.
+  **Limitação desta validação**: não foi possível tirar screenshot do
+  aplicativo nesta sessão (o executável de desenvolvimento não está
+  registrado como aplicativo instalado, então as ferramentas de captura de
+  tela disponíveis não conseguem selecioná-lo); a conferência visual
+  pixel-a-pixel (Mica renderizando, glow do botão, elevação dos cards,
+  gradiente animado da barra de progresso, seleção destacada no
+  `NavigationView`, e o comportamento em tema claro) ainda depende de uma
+  inspeção manual da pessoa usuária.
+
 ## Hotfix do atalho de desenvolvimento — 31/07/2026
 
 - A linha do tempo compacta usava `Run.Text` com o modo padrão TwoWay. Como
