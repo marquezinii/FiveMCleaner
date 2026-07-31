@@ -26,4 +26,23 @@ public sealed class RecoveryCoordinatorTests : IDisposable
             new RecoveryCoordinator(root).Reconcile(transaction.CandidateLaunchedAtUtc!.Value.AddMinutes(2), TimeSpan.FromMinutes(1)));
         Assert.Equal("1.0.0", runtime.ReadActiveVersion());
     }
+
+    [Fact]
+    public void Reconcile_DefersInsteadOfThrowingWhenActivePointerIsTransientlyLocked()
+    {
+        var runtime = new RuntimeActivationStore(root);
+        Directory.CreateDirectory(Path.Combine(runtime.VersionsRoot, "1.0.0"));
+        Directory.CreateDirectory(Path.Combine(runtime.VersionsRoot, "1.1.0"));
+        runtime.Activate("1.0.0");
+        var journal = new UpdateRecoveryJournal(root);
+        journal.Begin("1.0.0", "1.1.0");
+        var pointerPath = Path.Combine(root, "active.json");
+
+        using (new FileStream(pointerPath, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            Assert.Equal(
+                RecoveryDecision.Pending,
+                new RecoveryCoordinator(root).Reconcile(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1)));
+        }
+    }
 }

@@ -1,5 +1,34 @@
 # Estado do Projeto
 
+## Rodada de audit and remediation — 31/07/2026
+
+- Auditoria manual (sem ferramenta automatizada) cobrindo instalador/updater
+  .NET, broker elevado, e o Worker Cloudflare (auth, CORS, queries D1,
+  dashboard). A maior parte do código já é defensiva (allowlist de paths,
+  SQL sempre parametrizado, cookies HttpOnly/Secure, PBKDF2 com comparação
+  em tempo constante); nenhum problema crítico novo encontrado nessas
+  camadas.
+- Bug real corrigido: `UpdateHealthReceiptStore.Confirms`,
+  `UpdateRecoveryJournal.TryRead` e `RecoveryCoordinator.Reconcile` liam
+  `health.json`/`recovery.json`/`active.json` sem tratar `IOException`/
+  `UnauthorizedAccessException` transitórias (por exemplo, um antivírus
+  segurando o arquivo por alguns milissegundos durante o `File.Replace`
+  concorrente de outro processo). Isso propagava para
+  `FiveMCleaner.Launcher`, que exibia um erro ao usuário e recusava abrir o
+  app por causa de um lock passageiro, não de um problema real de
+  recuperação. As três leituras agora tratam essa falha transitória como
+  "ainda não confirmado"/"pendente" em vez de propagar, sem alterar o
+  comportamento de corrupção real (JSON malformado continua sendo
+  quarentenado como antes).
+- Cobertura nova: um teste por store, cada um segurando o arquivo com
+  `FileShare.None` para reproduzir o lock de forma determinística e
+  confirmar que a leitura seguinte, já sem o lock, volta a funcionar
+  normalmente.
+- Validação: build Release sem avisos, 597 testes .NET (3 novos) e
+  `Verify-Safety.ps1` aprovados. Nenhuma mudança no Worker Cloudflare, no
+  broker ou no instalador Inno Setup nesta rodada — a auditoria os revisou,
+  mas não encontrou correção necessária ali.
+
 ## Hardening agressivo da cadeia do instalador — 31/07/2026
 
 - `SilentUpdateInstaller.CopyUpdaterOutsideInstallDirectory` agora recalcula

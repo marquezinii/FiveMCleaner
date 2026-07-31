@@ -42,7 +42,14 @@ public sealed class UpdateHealthReceiptStore
             return receipt is not null && receipt.TransactionId == transaction.Id
                 && receipt.Version == transaction.CandidateVersion && receipt.Nonce == transaction.Nonce;
         }
-        catch (JsonException) { return false; }
+        // A transient read failure (e.g. another process mid-File.Replace, or an
+        // AV scan holding a short-lived lock) is not proof the receipt is
+        // missing or invalid; treat it the same as "not confirmed yet" so a
+        // momentary lock never fails the health check or triggers a rollback.
+        catch (Exception exception) when (exception is JsonException or IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     private sealed record HealthReceipt(string TransactionId, string Version, string Nonce, DateTimeOffset ConfirmedAtUtc);

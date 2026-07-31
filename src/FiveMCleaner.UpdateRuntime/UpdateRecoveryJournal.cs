@@ -63,6 +63,14 @@ public sealed class UpdateRecoveryJournal
             catch (Exception moveException) when (moveException is IOException or UnauthorizedAccessException) { }
             return false;
         }
+        // A transient read failure (another process mid-File.Replace, a short-lived
+        // AV lock) does not mean the journal is corrupt: leave the file alone so the
+        // next reconciliation attempt can read it, instead of quarantining a healthy
+        // journal and losing the recovery transaction.
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 
     public void Complete()

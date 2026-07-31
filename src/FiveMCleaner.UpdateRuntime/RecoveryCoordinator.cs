@@ -22,7 +22,19 @@ public sealed class RecoveryCoordinator
             journal.Complete();
             return RecoveryDecision.Healthy;
         }
-        if (activation.ReadActiveVersion() != transaction.CandidateVersion) return RecoveryDecision.Pending;
+        string activeVersion;
+        try
+        {
+            activeVersion = activation.ReadActiveVersion();
+        }
+        // A transient lock on active.json (concurrent Activate() elsewhere, an AV
+        // scan) is not proof the pointer is broken; defer this reconciliation
+        // instead of letting the exception surface as a launch failure.
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return RecoveryDecision.Pending;
+        }
+        if (activeVersion != transaction.CandidateVersion) return RecoveryDecision.Pending;
         if (transaction.CandidateLaunchedAtUtc is null
             || nowUtc - transaction.CandidateLaunchedAtUtc < healthTimeout) return RecoveryDecision.Pending;
         activation.Activate(transaction.PreviousVersion);
