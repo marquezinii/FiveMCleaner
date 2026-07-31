@@ -190,7 +190,7 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("x:Key=\"DetectionBadgeLabelStyle\"", styles, StringComparison.Ordinal);
         Assert.Contains("Segoe UI Variable Text, Segoe UI", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"10\"", styles, StringComparison.Ordinal);
-        Assert.Equal(2, Regex.Matches(mainWindow, "M 1,9 L 4,12 L 9,6 M 5,9 L 8,12 L 14,5").Count);
+        Assert.Equal(2, Regex.Matches(mainWindow, "M 1,9 L 4,12 L 14,3 M 5,9 L 8,12 L 12,8").Count);
     }
 
     [Fact]
