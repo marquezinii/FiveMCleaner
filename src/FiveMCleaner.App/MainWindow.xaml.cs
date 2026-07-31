@@ -15,7 +15,7 @@ using FiveMCleaner.UpdateRuntime;
 
 namespace FiveMCleaner.App;
 
-public partial class MainWindow : Window
+public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 {
     private const uint MonitorDefaultToNearest = 2;
     private const int WmGetMinMaxInfo = 0x0024;
@@ -128,7 +128,6 @@ public partial class MainWindow : Window
         SourceInitialized += MainWindow_SourceInitialized;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
-        StateChanged += MainWindow_StateChanged;
         System.Windows.Application.Current.SessionEnding += Application_SessionEnding;
     }
 
@@ -259,39 +258,6 @@ public partial class MainWindow : Window
 
         endpoint = null!;
         return false;
-    }
-
-    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount == 2)
-        {
-            ToggleMaximize();
-            return;
-        }
-
-        if (e.LeftButton == MouseButtonState.Pressed)
-        {
-            DragMove();
-        }
-    }
-
-    private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
-
-    private void Maximize_Click(object sender, RoutedEventArgs e) => ToggleMaximize();
-
-    private void Close_Click(object sender, RoutedEventArgs e) => Close();
-
-    private void ToggleMaximize()
-    {
-        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-    }
-
-    private void MainWindow_StateChanged(object? sender, EventArgs e)
-    {
-        var maximized = WindowState == WindowState.Maximized;
-        MaximizeGlyph.Text = maximized ? "\uE923" : "\uE922";
-        MaximizeButton.ToolTip = LocalizationService.Current.GetString(
-            maximized ? "Window.Restore" : "Window.Maximize");
     }
 
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
@@ -485,7 +451,6 @@ public partial class MainWindow : Window
         if (IsLoaded)
         {
             viewModel.SelectLanguage(language);
-            MainWindow_StateChanged(this, EventArgs.Empty);
         }
     }
 
