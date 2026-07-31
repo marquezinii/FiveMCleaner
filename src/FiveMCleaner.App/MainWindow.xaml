@@ -501,25 +501,25 @@
                     <ScrollViewer x:Name="SettingsPage" Padding="0,0,26,0" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock Text="{Binding [Settings.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,18" FontSize="25" FontWeight="Bold" />
-                            <ui:Card Margin="0,0,0,13">
+                            <ui:Card Margin="0,0,0,13" Padding="16">
                                 <StackPanel>
                                     <TextBlock Text="{Binding [Settings.General.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding [Settings.Language.Title], Source={StaticResource LocalizedStrings}}" Margin="0,15,0,0" FontSize="12.5" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding [Settings.Language.Description], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,11" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding [Settings.Language.Title], Source={StaticResource LocalizedStrings}}" Margin="0,10,0,0" FontSize="12.5" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding [Settings.Language.Description], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,6" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                     <ComboBox x:Name="LanguageSelector" Style="{StaticResource SettingsComboBoxStyle}" SelectedValuePath="Content" SelectionChanged="LanguageSelector_SelectionChanged">
                                         <ComboBoxItem Tag="pt-BR" Content="{Binding [Settings.Language.PortugueseBrazil], Source={StaticResource LocalizedStrings}}" />
                                         <ComboBoxItem Tag="en" Content="{Binding [Settings.Language.English], Source={StaticResource LocalizedStrings}}" />
                                         <ComboBoxItem Tag="es" Content="{Binding [Settings.Language.Spanish], Source={StaticResource LocalizedStrings}}" />
                                     </ComboBox>
-                                    <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
+                                    <Separator Margin="0,8" Background="{DynamicResource BorderSoftBrush}" />
                                     <TextBlock Text="{Binding [Settings.Appearance.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,4" FontSize="12.5" FontWeight="SemiBold" />
-                                    <TextBlock Text="{Binding [Settings.Appearance.Description], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,11" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding [Settings.Appearance.Description], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,6" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                     <ComboBox x:Name="ThemeSelector" Style="{StaticResource SettingsComboBoxStyle}" SelectedValuePath="Content" SelectionChanged="ThemeSelector_SelectionChanged">
                                         <ComboBoxItem Tag="system" Content="{Binding [Settings.Appearance.System], Source={StaticResource LocalizedStrings}}" />
                                         <ComboBoxItem Tag="dark" Content="{Binding [Settings.Appearance.Dark], Source={StaticResource LocalizedStrings}}" />
                                         <ComboBoxItem Tag="light" Content="{Binding [Settings.Appearance.Light], Source={StaticResource LocalizedStrings}}" />
                                     </ComboBox>
-                                    <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
+                                    <Separator Margin="0,8" Background="{DynamicResource BorderSoftBrush}" />
                                     <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding MinimizeToTrayOnClose}">
                                         <StackPanel>
                                             <TextBlock Text="{Binding [Settings.CloseBehavior.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />

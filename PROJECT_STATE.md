@@ -10,7 +10,8 @@
   elimina o efeito de controle encaixado e dá aos dois campos altura, respiro e
   popup compatíveis com o restante das configurações. Esses dois seletores e
   suas listas usam cantos retos, conforme a direção visual definida para a área
-  Geral.
+  Geral; o card Geral e os seletores receberam espaçamento vertical mais
+  compacto para reduzir áreas vazias sem prejudicar a leitura.
 - A rolagem vertical usa uma faixa transparente de 12 px na extremidade direita
   da janela, enquanto o conteúdo preserva 26 px de respiro interno. O único
   `Shield24` branco do
