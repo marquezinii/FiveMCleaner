@@ -48,15 +48,9 @@ public partial class MainWindow : Window
         var justUpdatedVersion = commandLine
             .FirstOrDefault(value => value.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase))
             ?["--updated=".Length..];
-        var versionDirectory = Directory.GetParent(Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory));
-        var versionsDirectory = versionDirectory?.Parent;
-        var runtimeDirectory = versionsDirectory?.Parent;
-        var installRoot = runtimeDirectory?.Parent?.FullName;
-        var runtimeRoot = versionsDirectory?.Name.Equals("versions", StringComparison.OrdinalIgnoreCase) == true
-            && runtimeDirectory?.Name.Equals("Runtime", StringComparison.OrdinalIgnoreCase) == true
-            && installRoot is not null
-            ? runtimeDirectory.FullName
-            : null;
+        var runtimeLayout = RuntimeLayout.Resolve(AppContext.BaseDirectory);
+        var installRoot = runtimeLayout.InstallRoot;
+        var runtimeRoot = runtimeLayout.RuntimeRoot;
         IStartupRegistrationService startupRegistration = demoMode
             ? new SessionStartupRegistrationService()
             : runtimeRoot is null
@@ -170,12 +164,7 @@ public partial class MainWindow : Window
         var arguments = Environment.GetCommandLineArgs();
         var transaction = arguments.FirstOrDefault(value => value.StartsWith("--update-transaction=", StringComparison.OrdinalIgnoreCase))?["--update-transaction=".Length..];
         var nonce = arguments.FirstOrDefault(value => value.StartsWith("--update-nonce=", StringComparison.OrdinalIgnoreCase))?["--update-nonce=".Length..];
-        var versionDirectory = Directory.GetParent(Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory));
-        var versionsDirectory = versionDirectory?.Parent;
-        var runtimeRoot = versionsDirectory?.Name.Equals("versions", StringComparison.OrdinalIgnoreCase) == true
-            && versionsDirectory.Parent?.Name.Equals("Runtime", StringComparison.OrdinalIgnoreCase) == true
-            ? versionsDirectory.Parent.FullName
-            : null;
+        var runtimeRoot = RuntimeLayout.Resolve(AppContext.BaseDirectory).RuntimeRoot;
         var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3);
         if (version is null || runtimeRoot is null) return;
         var dataRoot = Path.Combine(

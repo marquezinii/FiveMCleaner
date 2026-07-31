@@ -1,5 +1,57 @@
 # Estado do Projeto
 
+## Teste real do fluxo de update — dois bugs críticos encontrados e corrigidos — 31/07/2026
+
+- Montado um harness de integração real (fora do repositório, em scratchpad):
+  um `FakeApp` que substitui `FiveMCleaner.exe` em várias versões de teste e
+  simula cenários (confirma saúde rápido, crasha, demora a confirmar, sai
+  sem confirmar, trava sem nunca confirmar), e um `Harness` que semeia
+  `active.json`/journal e inspeciona o estado depois. O `FiveMCleaner.Launcher.exe`
+  **real** (compilado, não simulado) foi executado de verdade contra um
+  `runtimeRoot` isolado, com um processo "pai" real (PID e horário de início
+  reais) para exercitar `WaitForParent`. O `%LOCALAPPDATA%\FiveMCleaner` real
+  desta máquina foi copiado para backup antes de rodar e restaurado ao final
+  (script com `try/finally`), para nunca arriscar o estado real.
+- **Bug crítico 1 (o sistema novo nunca rodava em produção)**: o cálculo de
+  `runtimeRoot` no construtor de `MainWindow` e em `ConfirmUpdateHealthIfRequested`
+  subia os níveis de diretório errados — comparava o nome de pasta errado em
+  cada nível (`versionsDirectory.Name == "versions"` quando `versionsDirectory`
+  já era a pasta "Runtime", não "versions"). Na prática, a condição nunca era
+  satisfeita, então `runtimeRoot` era **sempre `null`** em produção: o app
+  sempre caía no caminho legado (`GitHubReleaseUpdateService`/
+  `SilentUpdateInstaller`/`FiveMCleaner.Updater.exe` rodando o instalador Inno
+  Setup), e nunca usava o sistema transacional novo
+  (`SignedManifestUpdateService`/`AtomicUpdateInstaller`/`FiveMCleaner.Launcher`)
+  documentado e testado em unidade nas rodadas anteriores. Confirmado
+  matematicamente com um teste isolado de `Directory.GetParent` antes de
+  corrigir. Extraída a lógica para `FiveMCleaner.App.Services.RuntimeLayout`
+  (método único, usado pelos dois call sites, com teste de unidade cobrindo o
+  layout real do instalador e layouts inválidos/dev).
+- **Bug crítico 2 (rollback perdido quando o processo antigo não sai a
+  tempo)**: no `FiveMCleaner.Launcher`, `currentTransaction` (usado pelo
+  `catch` geral para decidir a recuperação) só era lido **depois** de
+  `WaitForParent(args)` — exatamente o passo que lança `TimeoutException`
+  quando o app anterior não fecha em 30s. Nesse cenário, o `catch` nunca via
+  a transação, nada era revertido, e `active.json` ficava apontando para a
+  versão candidata **que nunca chegou a rodar**; a próxima abertura tentaria
+  essa versão de novo sem qualquer prova de que funciona. Corrigido lendo o
+  journal antes de `WaitForParent`, e adicionado `RecoveryCoordinator.Abandon`
+  — reverte incondicionalmente um candidato que nunca foi lançado (diferente
+  de `Reconcile`, que só reverte um candidato já lançado após seu timeout de
+  saúde). O `catch` agora relê o journal do disco (não confia no snapshot) e
+  chama `Abandon` quando o candidato nunca foi marcado como lançado.
+- Validado via harness real (não simulado) que, com os dois fixes: caminho
+  feliz confirma saúde e fecha limpo; app que crasha ou sai sem confirmar
+  reverte a versão em menos de 1s; app que demora mas confirma dentro do
+  timeout de 45s é aceito; app que trava sem nunca confirmar reverte após os
+  45s; e o processo anterior nunca saindo agora reverte a ativação
+  imediatamente em vez de deixar `active.json` na versão nunca executada.
+- Validação: build Release sem avisos, 603 testes .NET (6 novos:
+  `RuntimeLayoutTests` cobrindo o layout real e inválidos, mais dois
+  `RecoveryCoordinatorTests` para `Abandon`), `Verify-Safety.ps1` aprovado.
+  O `%LOCALAPPDATA%\FiveMCleaner` real desta máquina foi confirmado intacto
+  após a restauração do backup.
+
 ## Varredura de dívida técnica no Updater — 31/07/2026
 
 - `AtomicUpdateInstaller.StartAsync`: o caminho de rollback do `catch`

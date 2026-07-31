@@ -23,9 +23,14 @@ internal static class Program
         try
         {
             await diagnostics.FlushPendingAsync(UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
-            WaitForParent(args);
+            // Read the journal before WaitForParent (not after): WaitForParent
+            // is exactly the step that can fail (the previous process not
+            // exiting in time), and the catch block below needs
+            // currentTransaction populated to be able to abandon/roll back a
+            // candidate that never got the chance to launch.
             var journal = new UpdateRecoveryJournal(runtimeRoot);
             journal.TryRead(out currentTransaction!);
+            WaitForParent(args);
             var recovery = new RecoveryCoordinator(runtimeRoot);
             var initialDecision = recovery.Reconcile(DateTimeOffset.UtcNow, HealthTimeout);
             if (initialDecision == RecoveryDecision.RolledBack && currentTransaction is not null)
@@ -85,7 +90,27 @@ internal static class Program
         {
             if (currentTransaction is not null)
             {
-                try { new RecoveryCoordinator(runtimeRoot).Reconcile(DateTimeOffset.UtcNow, TimeSpan.Zero); }
+                try
+                {
+                    var recovery = new RecoveryCoordinator(runtimeRoot);
+                    // Re-read the journal instead of trusting the snapshot taken
+                    // before WaitForParent: MarkCandidateLaunched may have run
+                    // since then, and only the current on-disk state can say
+                    // whether the candidate actually got its process started.
+                    var latest = new UpdateRecoveryJournal(runtimeRoot).TryRead(out var current)
+                        ? current
+                        : currentTransaction;
+                    // A candidate that was never launched (this failure struck
+                    // before Process.Start, e.g. the previous process did not
+                    // exit in time) has no running process for Reconcile's
+                    // health-timeout wait to apply to -- Abandon reverts it
+                    // unconditionally instead of leaving active.json pointed
+                    // at a version that never ran.
+                    if (latest.CandidateLaunchedAtUtc is null)
+                        recovery.Abandon(latest);
+                    else
+                        recovery.Reconcile(DateTimeOffset.UtcNow, TimeSpan.Zero);
+                }
                 catch (Exception recoveryException) when (recoveryException is not (
                     OutOfMemoryException or StackOverflowException or AccessViolationException)) { }
                 await RecordAsync(diagnostics, currentTransaction, "activation", "failed", Classify(exception), exception.ToString(), dataRoot);

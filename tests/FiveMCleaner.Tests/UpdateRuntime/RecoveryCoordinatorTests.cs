@@ -28,6 +28,45 @@ public sealed class RecoveryCoordinatorTests : IDisposable
     }
 
     [Fact]
+    public void Abandon_RevertsACandidateThatWasActivatedButNeverLaunched()
+    {
+        var runtime = new RuntimeActivationStore(root);
+        Directory.CreateDirectory(Path.Combine(runtime.VersionsRoot, "1.0.0"));
+        Directory.CreateDirectory(Path.Combine(runtime.VersionsRoot, "1.1.0"));
+        runtime.Activate("1.0.0");
+        var journal = new UpdateRecoveryJournal(root);
+        var transaction = journal.Begin("1.0.0", "1.1.0");
+        runtime.Activate(transaction.CandidateVersion);
+
+        // Reconcile alone must not roll this back -- it never launched, so
+        // there is no health timeout to wait out (see the test above).
+        Assert.Equal(RecoveryDecision.Pending, new RecoveryCoordinator(root).Reconcile(DateTimeOffset.UtcNow, TimeSpan.Zero));
+        Assert.Equal("1.1.0", runtime.ReadActiveVersion());
+
+        new RecoveryCoordinator(root).Abandon(transaction);
+
+        Assert.Equal("1.0.0", runtime.ReadActiveVersion());
+        Assert.False(journal.TryRead(out _));
+    }
+
+    [Fact]
+    public void Abandon_IsSafeWhenTheActivePointerAlreadyMovedOn()
+    {
+        var runtime = new RuntimeActivationStore(root);
+        Directory.CreateDirectory(Path.Combine(runtime.VersionsRoot, "1.0.0"));
+        Directory.CreateDirectory(Path.Combine(runtime.VersionsRoot, "1.1.0"));
+        Directory.CreateDirectory(Path.Combine(runtime.VersionsRoot, "1.2.0"));
+        runtime.Activate("1.2.0");
+        var journal = new UpdateRecoveryJournal(root);
+        var transaction = journal.Begin("1.0.0", "1.1.0");
+
+        new RecoveryCoordinator(root).Abandon(transaction);
+
+        Assert.Equal("1.2.0", runtime.ReadActiveVersion());
+        Assert.False(journal.TryRead(out _));
+    }
+
+    [Fact]
     public void Reconcile_DefersInsteadOfThrowingWhenActivePointerIsTransientlyLocked()
     {
         var runtime = new RuntimeActivationStore(root);
