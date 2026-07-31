@@ -25,21 +25,19 @@
 
     <ui:FluentWindow.Resources>
         <DataTemplate x:Key="ActionTemplate">
-            <Border Margin="0,0,0,9" Padding="14" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="38" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border Width="30" Height="30" CornerRadius="8" Background="#20FF7A18" VerticalAlignment="Top">
+            <ui:CardControl Margin="0,0,0,9" Padding="14">
+                <ui:CardControl.Icon>
+                    <Border Width="30" Height="30" CornerRadius="8" Background="#20FF7A18">
                         <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="14" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <StackPanel Grid.Column="1" Margin="8,0,0,0">
+                </ui:CardControl.Icon>
+                <ui:CardControl.Header>
+                    <StackPanel>
                         <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" />
                         <TextBlock Text="{Binding Description}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
                     </StackPanel>
-                </Grid>
-            </Border>
+                </ui:CardControl.Header>
+            </ui:CardControl>
         </DataTemplate>
 
         <DataTemplate x:Key="LogTemplate">
@@ -85,25 +83,22 @@
         </DataTemplate>
 
         <DataTemplate x:Key="HistoryTemplate">
-            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,10" Padding="17">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="48" />
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+            <ui:CardControl Margin="0,0,0,10" Padding="17">
+                <ui:CardControl.Icon>
                     <Border Width="38" Height="38" CornerRadius="10" Background="#1C37C889">
                         <TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource GreenBrush}" FontSize="16" HorizontalAlignment="Center" VerticalAlignment="Center" />
                     </Border>
-                    <StackPanel Grid.Column="1" Margin="4,0,18,0" VerticalAlignment="Center">
+                </ui:CardControl.Icon>
+                <ui:CardControl.Header>
+                    <StackPanel VerticalAlignment="Center">
                         <TextBlock Text="{Binding Title}" FontSize="13.5" FontWeight="SemiBold" />
                         <TextBlock Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5">
                             <Run Text="{Binding DateLabel, Mode=OneWay}" /><Run Text="  •  " /><Run Text="{Binding Summary, Mode=OneWay}" />
                         </TextBlock>
                     </StackPanel>
-                    <Button Grid.Column="2" Content="{Binding [History.Undo], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Padding="16,0" Tag="{Binding}" Click="RollbackHistory_Click" IsEnabled="{Binding CanRollback}" />
-                </Grid>
-            </Border>
+                </ui:CardControl.Header>
+                <Button Content="{Binding [History.Undo], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Padding="16,0" Tag="{Binding}" Click="RollbackHistory_Click" IsEnabled="{Binding CanRollback}" />
+            </ui:CardControl>
         </DataTemplate>
     </ui:FluentWindow.Resources>
 
@@ -339,12 +334,12 @@
                             </Border>
 
                             <primitives:UniformGrid Columns="2" Margin="0,0,0,16">
-                                <Border Style="{StaticResource CardStyle}" Padding="15" Margin="0,0,8,8"><StackPanel><TextBlock Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuName}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding CpuName}" /></StackPanel></Border>
-                                <Border Style="{StaticResource CardStyle}" Padding="15" Margin="8,0,0,8"><StackPanel><TextBlock Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuDetail}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" /></StackPanel></Border>
-                                <Border Style="{StaticResource CardStyle}" Padding="15" Margin="0,8,8,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding RamLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel></Border>
-                                <Border Style="{StaticResource CardStyle}" Padding="15" Margin="8,8,0,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel></Border>
-                                <Border Style="{StaticResource CardStyle}" Padding="15" Margin="0,8,8,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Windows], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding WindowsLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding WindowsLabel}" /></StackPanel></Border>
-                                <Border Style="{StaticResource CardStyle}" Padding="15" Margin="8,8,0,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Architecture], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding ArchitectureLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel></Border>
+                                <ui:Card Padding="15" Margin="0,0,8,8"><StackPanel><TextBlock Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuName}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding CpuName}" /></StackPanel></ui:Card>
+                                <ui:Card Padding="15" Margin="8,0,0,8"><StackPanel><TextBlock Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuDetail}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" /></StackPanel></ui:Card>
+                                <ui:Card Padding="15" Margin="0,8,8,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding RamLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel></ui:Card>
+                                <ui:Card Padding="15" Margin="8,8,0,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel></ui:Card>
+                                <ui:Card Padding="15" Margin="0,8,8,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Windows], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding WindowsLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding WindowsLabel}" /></StackPanel></ui:Card>
+                                <ui:Card Padding="15" Margin="8,8,0,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Architecture], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding ArchitectureLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel></ui:Card>
                             </primitives:UniformGrid>
 
                             <Grid Margin="0,2,0,9">
@@ -390,7 +385,7 @@
                                 </RadioButton>
                             </Grid>
 
-                            <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0" Padding="16">
+                            <ui:Card Margin="0,14,0,0" Padding="16">
                                 <StackPanel>
                                     <TextBlock Text="{Binding [Profiles.Presentation.Benefits.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
                                     <TextBlock Text="{Binding ProfilePresentationBenefits}" Margin="0,4,0,0" FontSize="11.5" TextWrapping="Wrap" />
@@ -414,14 +409,14 @@
                                     </primitives:UniformGrid>
                                     <TextBlock Text="{Binding ProfilePresentationVariability}" Margin="0,10,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" FontStyle="Italic" TextWrapping="Wrap" />
                                 </StackPanel>
-                            </Border>
+                            </ui:Card>
 
-                            <Border Style="{StaticResource CardStyle}" Margin="0,14,0,0" Padding="16">
+                            <ui:Card Margin="0,14,0,0" Padding="16">
                                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                     <Button Content="{Binding [Plan.Review], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="42" Padding="20,0" Margin="0,0,9,0" Click="ReviewPlan_Click" />
                                     <Button Content="{Binding [Plan.OptimizeNow], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="42" Padding="24,0" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
                                 </StackPanel>
-                            </Border>
+                            </ui:Card>
                         </StackPanel>
                     </ScrollViewer>
 
@@ -435,7 +430,7 @@
                         </Grid>
                         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                             <StackPanel>
-                                <Border Style="{StaticResource CardStyle}" Padding="26">
+                                <ui:Card Padding="26">
                                     <Grid>
                                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                         <Grid>
@@ -462,7 +457,7 @@
                                             <Button Grid.Column="2" Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" HorizontalAlignment="Right" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />
                                         </Grid>
                                     </Grid>
-                                </Border>
+                                </ui:Card>
                                 <Border Margin="0,13,0,0" Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Visibility="{Binding IsReportAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <StackPanel>
                                             <TextBlock Text="{Binding [Report.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
@@ -492,19 +487,19 @@
                     <Grid x:Name="HistoryPage" Visibility="Collapsed">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                         <Grid Margin="0,0,0,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,18,0"><TextBlock Text="{Binding [History.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" /><TextBlock Text="{Binding [History.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" TextWrapping="Wrap" /></StackPanel><Button Grid.Column="1" Content="{Binding [History.OpenLogs], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Right" Style="{StaticResource SecondaryButtonStyle}" Height="38" Click="OpenLogs_Click" /></Grid>
-                        <Border Grid.Row="1" Style="{StaticResource CardStyle}" Padding="18">
+                        <ui:Card Grid.Row="1" Padding="18">
                             <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                                 <Grid Margin="0,0,0,14"><TextBlock Text="{Binding [History.LocalRuns], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /></Grid>
                                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding HistoryItems}" ItemTemplate="{StaticResource HistoryTemplate}" /></ScrollViewer>
                             </Grid>
-                        </Border>
+                        </ui:Card>
                     </Grid>
 
                     <!-- Settings -->
                     <ScrollViewer x:Name="SettingsPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock Text="{Binding [Settings.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,18" FontSize="25" FontWeight="Bold" />
-                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">
+                            <ui:Card Margin="0,0,0,13">
                                 <StackPanel>
                                     <TextBlock Text="{Binding [Settings.General.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding [Settings.Language.Title], Source={StaticResource LocalizedStrings}}" Margin="0,15,0,0" FontSize="12.5" FontWeight="SemiBold" />
@@ -537,8 +532,8 @@
                                         </StackPanel>
                                     </CheckBox>
                                 </StackPanel>
-                            </Border>
-                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">
+                            </ui:Card>
+                            <ui:Card Margin="0,0,0,13">
                                 <StackPanel>
                                     <TextBlock Text="{Binding [Settings.Privacy.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
                                     <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding ShareAnonymousTelemetry}" Margin="0,15,0,0">
@@ -560,23 +555,23 @@
                                     <TextBlock Text="{Binding [Privacy.DoesNotCollect.Title], Source={StaticResource LocalizedStrings}}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource RedBrush}" />
                                     <TextBlock Text="{Binding [Privacy.DoesNotCollect.Items], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" TextWrapping="Wrap" />
                                 </StackPanel>
-                            </Border>
-                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">
+                            </ui:Card>
+                            <ui:Card Margin="0,0,0,13">
                                 <StackPanel>
                                     <TextBlock Text="{Binding [Settings.CheckForUpdates.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding [Settings.CheckForUpdates.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,13" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                     <Button Content="{Binding [Settings.CheckForUpdates.Button], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Click="CheckForUpdatesManually_Click" IsEnabled="{Binding CanCheckForUpdatesManually}" />
                                     <TextBlock Text="{Binding ManualUpdateCheckMessage}" Margin="0,10,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" Visibility="{Binding ManualUpdateCheckMessage, Converter={StaticResource StringToVisibilityConverter}}" />
                                 </StackPanel>
-                            </Border>
-                            <Border Style="{StaticResource CardStyle}" Margin="0,0,0,13">
+                            </ui:Card>
+                            <ui:Card Margin="0,0,0,13">
                                 <StackPanel>
                                     <TextBlock Text="{Binding [GtaVBenchmark.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding [GtaVBenchmark.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,13" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                     <Button Content="{Binding [GtaVBenchmark.RunButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Click="RunGtaVBenchmark_Click" IsEnabled="{Binding CanRunGtaVBenchmark}" />
                                     <TextBlock Text="{Binding GtaVBenchmarkStatusLabel}" Margin="0,10,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                 </StackPanel>
-                            </Border>
+                            </ui:Card>
                         </StackPanel>
                     </ScrollViewer>
                 </Grid>
