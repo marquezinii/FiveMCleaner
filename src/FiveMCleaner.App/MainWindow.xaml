@@ -280,6 +280,20 @@
                                                 IsEnabled="{Binding CanOpenReleaseNotes}"
                                                 Click="OpenReleaseNotes_Click" />
                                     </StackPanel>
+                                    <Button Grid.Column="2"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Top"
+                                            Width="22"
+                                            Height="22"
+                                            Padding="0"
+                                            Style="{StaticResource LinkButtonStyle}"
+                                            Foreground="{DynamicResource TextMutedBrush}"
+                                            Opacity="0.72"
+                                            ToolTip="{Binding [Window.Close], Source={StaticResource LocalizedStrings}}"
+                                            Visibility="{Binding IsUpdateCompletedBannerVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                            Click="DismissCompletedUpdate_Click">
+                                        <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="9" />
+                                    </Button>
                                     <ProgressBar Grid.Row="1"
                                                  Grid.Column="1"
                                                  Grid.ColumnSpan="2"

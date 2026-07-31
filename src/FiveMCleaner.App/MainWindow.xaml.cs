@@ -519,6 +519,9 @@ public partial class MainWindow : Window
         }));
     }
 
+    private void DismissCompletedUpdate_Click(object sender, RoutedEventArgs e) =>
+        viewModel.DismissCompletedUpdateBanner();
+
     /// <summary>
     /// Shell launches fail for reasons outside the app's control (no default
     /// browser or folder handler registered, group policy blocking the verb,

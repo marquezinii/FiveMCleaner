@@ -1,5 +1,13 @@
 # Estado do Projeto
 
+## Banner pós-atualização dispensável — 30/07/2026
+
+- O aviso exibido após o instalador relançar o app com `--updated=X.Y.Z` agora
+  inclui um botão X minimalista no canto superior direito do banner, permitindo
+  fechar a confirmação sem ação adicional.
+- `MainViewModel.DismissCompletedUpdateBanner()` limpa o estado
+  `JustUpdatedToVersion` e oculta o banner; coberto por testes unitários.
+
 ## Hotfix do atualizador — 30/07/2026
 
 - Identificado um impasse no fluxo de atualização silenciosa: o aplicativo

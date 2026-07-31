@@ -500,6 +500,12 @@ public sealed class MainViewModel : BindableBase
     public bool IsUpdateActionVisible => JustUpdatedToVersion is null;
 
     /// <summary>
+    /// True on the launch that follows a successful automatic update, when the
+    /// confirmation banner can be dismissed once the user has read it.
+    /// </summary>
+    public bool IsUpdateCompletedBannerVisible => JustUpdatedToVersion is not null;
+
+    /// <summary>
     /// One button, one meaning: the whole update is a single click. It only
     /// changes wording to reflect a retry after a failure.
     /// </summary>
@@ -876,6 +882,26 @@ public sealed class MainViewModel : BindableBase
         OnPropertyChanged(nameof(IsUpdateBannerVisible));
         OnPropertyChanged(nameof(CanDownloadUpdate));
         OnPropertyChanged(nameof(IsUpdateActionVisible));
+        OnPropertyChanged(nameof(IsUpdateCompletedBannerVisible));
+    }
+
+    /// <summary>
+    /// Hides the post-update confirmation banner after the user dismisses it.
+    /// </summary>
+    public void DismissCompletedUpdateBanner()
+    {
+        if (JustUpdatedToVersion is null)
+        {
+            return;
+        }
+
+        JustUpdatedToVersion = null;
+        UpdateBannerTitle = string.Empty;
+        UpdateBannerDetail = string.Empty;
+        OnPropertyChanged(nameof(JustUpdatedToVersion));
+        OnPropertyChanged(nameof(IsUpdateBannerVisible));
+        OnPropertyChanged(nameof(IsUpdateActionVisible));
+        OnPropertyChanged(nameof(IsUpdateCompletedBannerVisible));
     }
 
     public void SelectProfile(OptimizationProfile profile)
