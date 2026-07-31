@@ -6,6 +6,9 @@
   canônico de manifesto, verificação Ed25519, HTTPS/hash/tamanho e política
   anti-downgrade são cobertos por teste. Ainda não está conectado ao updater
   público; o próximo passo é o Launcher/Recovery transacional.
+- `RuntimeActivationStore` agora materializa a ativação por ponteiro atômico:
+  versões estagiadas são imutáveis e `active.json` troca somente entre
+  diretórios existentes, preservando a versão anterior para rollback.
 - Reavaliado o requisito de custo zero: MSIX/App Installer foi descartado para
   distribuição pública, pois exige certificado confiável ou etapa manual de
   confiança no PC. O projeto agora prevê runtime próprio versionado, com
