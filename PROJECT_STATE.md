@@ -10,9 +10,9 @@
   elimina o efeito de controle encaixado e dá aos dois campos altura, respiro e
   popup compatíveis com o restante das configurações.
 - A rolagem vertical reservou uma faixa de 12 px e ganhou thumb arredondado,
-  com margens internas que a afastam dos cards. O item de proteção da sidebar
-  recebeu `Shield24`, mantendo o escudo verde disponível quando o painel está
-  compacto.
+  com margens internas que a afastam dos cards. O único `Shield24` branco do
+  item de proteção permanece no modo compacto e, ao expandir, revela o estado
+  e a versão; o ícone verde duplicado foi removido.
 
 ## Ajustes de interação da interface Fluent — 31/07/2026
 
