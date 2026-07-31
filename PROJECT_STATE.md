@@ -2,9 +2,11 @@
 
 ## Arquitetura de próxima geração do updater — 31/07/2026
 
-- Decidido em projeto migrar gradualmente do fluxo Inno para MSIX/App
-  Installer, assinatura de pacote e feed Ed25519, com Recovery Agent separado
-  para health-check e rollback verificável. A mudança ainda não foi
+- Reavaliado o requisito de custo zero: MSIX/App Installer foi descartado para
+  distribuição pública, pois exige certificado confiável ou etapa manual de
+  confiança no PC. O projeto agora prevê runtime próprio versionado, com
+  Launcher/Recovery Agent, diretórios imutáveis, ponteiro atômico e feed
+  Ed25519. A mudança ainda não foi
   implementada nem publicada; exige pipeline de chaves, pacote de transição e
   validação em Windows limpo antes de qualquer release.
 - Telemetria de falha do updater será estruturada, consentida e sanitizada,
