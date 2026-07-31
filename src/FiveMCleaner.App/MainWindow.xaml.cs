@@ -133,6 +133,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        RootNavigationView.Navigate("Dashboard");
         await viewModel.InitializeAsync();
         themeManager.Apply(viewModel.ThemePreference);
         LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected
@@ -349,28 +350,31 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         public uint Flags;
     }
 
-    private void DashboardNav_Click(object sender, RoutedEventArgs e) => Navigate(DashboardPage, DashboardNav);
+    private void RootNavigationView_SelectionChanged(object sender, RoutedEventArgs e)
+    {
+        if (RootNavigationView.SelectedItem is not FrameworkElement { Tag: string tag })
+        {
+            return;
+        }
 
-    private void OptimizerNav_Click(object sender, RoutedEventArgs e) => Navigate(OptimizerPage, OptimizerNav);
+        Navigate(tag switch
+        {
+            "Optimizer" => OptimizerPage,
+            "History" => HistoryPage,
+            "Settings" => SettingsPage,
+            _ => DashboardPage
+        });
+    }
 
-    private void HistoryNav_Click(object sender, RoutedEventArgs e) => Navigate(HistoryPage, HistoryNav);
+    private void ReviewPlan_Click(object sender, RoutedEventArgs e) => RootNavigationView.Navigate("Optimizer");
 
-    private void SettingsNav_Click(object sender, RoutedEventArgs e) => Navigate(SettingsPage, SettingsNav);
-
-    private void ReviewPlan_Click(object sender, RoutedEventArgs e) => Navigate(OptimizerPage, OptimizerNav);
-
-    private void Navigate(UIElement page, FrameworkElement navigation)
+    private void Navigate(UIElement page)
     {
         DashboardPage.Visibility = Visibility.Collapsed;
         OptimizerPage.Visibility = Visibility.Collapsed;
         HistoryPage.Visibility = Visibility.Collapsed;
         SettingsPage.Visibility = Visibility.Collapsed;
-        DashboardNav.Tag = null;
-        OptimizerNav.Tag = null;
-        HistoryNav.Tag = null;
-        SettingsNav.Tag = null;
         page.Visibility = Visibility.Visible;
-        navigation.Tag = "Selected";
     }
 
     private void LightProfile_Checked(object sender, RoutedEventArgs e) => viewModel.SelectProfile(OptimizationProfile.Light);
@@ -458,7 +462,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private async void StartOptimization_Click(object sender, RoutedEventArgs e)
     {
-        Navigate(OptimizerPage, OptimizerNav);
+        RootNavigationView.Navigate("Optimizer");
         await viewModel.StartOptimizationAsync();
         if (closeAfterOptimizationStops)
         {
