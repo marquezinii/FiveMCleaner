@@ -6,7 +6,9 @@ param(
     [Parameter(Mandatory)]
     [string]$PublishDirectory,
 
-    [string]$ExpectedVersion
+    [string]$ExpectedVersion,
+
+    [switch]$AllowExistingInstallation
 )
 
 Set-StrictMode -Version Latest
@@ -56,13 +58,17 @@ function Get-RegistryValueOrNull {
 
 Assert-UnderArtifacts $smokeRoot
 
-if (Test-Path -LiteralPath $uninstallRegistryPath) {
+if (-not $AllowExistingInstallation -and (Test-Path -LiteralPath $uninstallRegistryPath)) {
     throw 'A real FiveMCleaner installation already exists; refusing to replace it during a smoke test.'
 }
 
 $existingRunValue = Get-RegistryValueOrNull -Path $runRegistryPath -Name $runValueName
-if ($null -ne $existingRunValue) {
+if (-not $AllowExistingInstallation -and $null -ne $existingRunValue) {
     throw 'A FiveMCleaner startup entry already exists; refusing to overwrite it during a smoke test.'
+}
+
+if ($AllowExistingInstallation) {
+    Write-Warning 'Existing FiveMCleaner registration is allowed for this smoke test by explicit operator request.'
 }
 
 & (Join-Path $PSScriptRoot 'Verify-Installer.ps1') `

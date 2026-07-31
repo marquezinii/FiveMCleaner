@@ -196,6 +196,10 @@ Dentro de uma mesma categoria (patch, minor ou major), o componente
 correspondente evolui numericamente a partir do que já existe: `1.0.0` →
 `1.0.1` → ... → `1.0.99` → `1.1.0` → `1.1.1` → ... A mesma regra vale para
 todos os componentes posteriores (`1.2.99` → `1.3.0`, e assim por diante).
+O componente final (`Z`) é um inteiro decimal SemVer, sem largura fixa e sem
+zero à esquerda: `1.1.9`, `1.1.10`, `1.1.99` e `1.1.100` são todos válidos.
+Assim, a apresentação `X.X.XX` significa apenas que o patch pode ter duas ou
+mais casas; ela não cria um quarto componente nem usa fração decimal.
 Isso descreve apenas a mecânica de contagem dentro de cada categoria — não
 significa que toda publicação precise passar por patch antes de minor, ou
 por minor antes de major. A categoria em si (qual componente é incrementado)

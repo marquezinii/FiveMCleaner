@@ -58,7 +58,10 @@ a assinatura Authenticode de `Pyrsys B.V.` antes de executar o compilador.
 O teste instala silenciosamente em uma pasta temporária sob `artifacts`, confere
 byte a byte todo o payload, valida a entrada opcional de inicialização, executa a
 desinstalação e confirma a remoção. Ele se recusa a rodar se encontrar uma
-instalação real ou uma entrada de inicialização existente.
+instalação real ou uma entrada de inicialização existente. Somente para uma
+validação local explicitamente autorizada, `-AllowExistingInstallation` libera
+essa trava; como o AppId é o mesmo, esse modo pode alterar o registro da
+instalação local e não deve ser usado como gate de release.
 
 ## Contrato de atualização
 

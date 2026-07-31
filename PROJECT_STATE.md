@@ -1,5 +1,27 @@
 # Estado do Projeto
 
+## SemVer de patch com múltiplas casas — 31/07/2026
+
+- A regra de publicação explicita que `X.Y.Z` continua sendo SemVer: `Z` é
+  um inteiro decimal sem largura fixa, portanto `1.1.10`, `1.1.99` e
+  `1.1.100` são patches válidos; `X.X.XX` é somente uma forma visual de
+  indicar duas ou mais casas no último componente, não uma versão fracionária
+  nem um quarto componente.
+- O selo da versão na barra lateral ganhou largura mínima para acomodar o
+  patch de duas casas. O parser já usava componentes numéricos arbitrários;
+  testes de contrato agora cobrem aceitação e ordenação numérica de
+  `1.1.9`, `1.1.10` e `1.1.99`.
+- O smoke do instalador mantém a proteção padrão contra instalação existente.
+  Para este ambiente de desenvolvimento, a chave explícita
+  `-AllowExistingInstallation` permite executar a prova isolada quando o
+  operador autorizar conscientemente a alteração temporária do registro.
+- Validação desta rodada: build Release sem avisos, 594 testes .NET, safety
+  check, contrato do instalador e smoke real de instalação silenciosa,
+  upgrade in-place e desinstalação aprovados com o payload atual. O smoke usou
+  a exceção explicitamente autorizada para a instalação existente e removeu a
+  árvore temporária ao final; um Windows limpo continua sendo o gate externo
+  de uma futura publicação oficial.
+
 ## Arquitetura de próxima geração do updater — 31/07/2026
 
 - O fluxo foi conectado de ponta a ponta no código: o app consulta o manifesto

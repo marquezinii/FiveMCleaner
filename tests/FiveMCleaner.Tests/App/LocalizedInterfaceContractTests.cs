@@ -339,6 +339,7 @@ public sealed partial class LocalizedInterfaceContractTests
             "Controls.xaml"));
 
         Assert.Contains("VerticalAlignment=\"Center\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("MinWidth=\"76\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding AppVersion, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Foreground=\"{DynamicResource TextBrush}\"", mainWindow, StringComparison.Ordinal);
