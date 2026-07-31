@@ -21,6 +21,10 @@ public sealed class MainViewModel : BindableBase
     private readonly IAnonymousTelemetryService telemetry;
     private readonly ProgressTimingEstimator progressTimingEstimator = new();
     private readonly SemaphoreSlim settingsSaveGate = new(1, 1);
+    private readonly Queue<string> pendingHeadlines = new();
+    private static readonly TimeSpan HeadlineMinimumDwell = TimeSpan.FromSeconds(4);
+    private DispatcherTimer? headlineDwellTimer;
+    private DateTime headlineShownAtUtc;
     private CancellationTokenSource? operationCancellation;
     private AppDiagnostic? diagnostic;
     private IReadOnlyList<AppHistoryRecord> historyRecords = [];
@@ -1042,9 +1046,9 @@ public sealed class MainViewModel : BindableBase
                 : result.WasCancelled
                     ? localization.GetString("Status.Cancelled")
                     : localization.GetString("Status.Warning");
-            ProgressHeadline = result.Succeeded
+            FinalizeHeadline(result.Succeeded
                 ? localization.GetString("Status.OptimizationCompleted")
-                : result.Summary;
+                : result.Summary);
             ProgressDetail = result.BytesFreed > 0
                 ? localization.Format(
                     "Plan.ActionsCompletedFreed",
@@ -1065,7 +1069,7 @@ public sealed class MainViewModel : BindableBase
             telemetryEventName = "optimization-cancelled";
             telemetryErrorCategory = "cancelled";
             ProgressStateLabel = localization.GetString("Status.Cancelled");
-            ProgressHeadline = localization.GetString("Status.SafeCancellation.Headline");
+            FinalizeHeadline(localization.GetString("Status.SafeCancellation.Headline"));
             ProgressDetail = localization.GetString("Status.SafeCancellation.Detail");
             AddLog(localization.GetString("Log.CancellationConfirmed"));
         }
@@ -1074,7 +1078,7 @@ public sealed class MainViewModel : BindableBase
             telemetryEventName = "optimization-failed";
             telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
             ProgressStateLabel = localization.GetString("Status.SafeFailure");
-            ProgressHeadline = localization.GetString("Status.CouldNotComplete");
+            FinalizeHeadline(localization.GetString("Status.CouldNotComplete"));
             ProgressDetail = exception.Message;
             AddLog(localization.Format("Log.Error", exception.Message));
         }
@@ -1201,7 +1205,7 @@ public sealed class MainViewModel : BindableBase
         catch (Exception exception)
         {
             ProgressStateLabel = localization.GetString("Status.SafeFailure");
-            ProgressHeadline = localization.GetString("Status.CouldNotRestore");
+            FinalizeHeadline(localization.GetString("Status.CouldNotRestore"));
             ProgressDetail = exception.Message;
             AddLog(localization.Format("Log.RollbackFailed", exception.Message));
             return false;
@@ -1655,7 +1659,7 @@ public sealed class MainViewModel : BindableBase
     private void ApplyProgress(AppProgressUpdate update)
     {
         ProgressPercent = Math.Clamp(update.Percent, 0, 100);
-        ProgressHeadline = update.Headline;
+        EnqueueHeadline(update.Headline);
         ProgressDetail = update.Detail;
         ProgressStateLabel = update.Kind switch
         {
@@ -1689,11 +1693,92 @@ public sealed class MainViewModel : BindableBase
 
     private void ClearProgressHistory()
     {
+        headlineDwellTimer?.Stop();
+        headlineDwellTimer = null;
+        pendingHeadlines.Clear();
+        headlineShownAtUtc = default;
         previousProgressHeadline = string.Empty;
         progressHeadline = string.Empty;
         OnPropertyChanged(nameof(PreviousProgressHeadline));
         OnPropertyChanged(nameof(HasPreviousProgressHeadline));
         OnPropertyChanged(nameof(ProgressHeadline));
+    }
+
+    /// <summary>
+    /// Cada passo do otimizador fica visível pelo menos <see cref="HeadlineMinimumDwell"/>
+    /// antes de dar lugar ao próximo, em qualquer modo (leve/médio/agressivo).
+    /// </summary>
+    private void EnqueueHeadline(string headline)
+    {
+        if (string.IsNullOrWhiteSpace(headline)
+            || string.Equals(headline, ProgressHeadline, StringComparison.Ordinal)
+            || (pendingHeadlines.Count > 0 && string.Equals(pendingHeadlines.Last(), headline, StringComparison.Ordinal)))
+        {
+            return;
+        }
+
+        pendingHeadlines.Enqueue(headline);
+        AdvanceHeadlineQueue();
+    }
+
+    private void AdvanceHeadlineQueue()
+    {
+        if (headlineDwellTimer is not null || pendingHeadlines.Count == 0)
+        {
+            return;
+        }
+
+        var elapsed = DateTime.UtcNow - headlineShownAtUtc;
+        if (elapsed >= HeadlineMinimumDwell)
+        {
+            ShowNextQueuedHeadline();
+        }
+        else
+        {
+            StartHeadlineDwellTimer(HeadlineMinimumDwell - elapsed);
+        }
+    }
+
+    private void ShowNextQueuedHeadline()
+    {
+        ProgressHeadline = pendingHeadlines.Dequeue();
+        headlineShownAtUtc = DateTime.UtcNow;
+        StartHeadlineDwellTimer(HeadlineMinimumDwell);
+    }
+
+    private void StartHeadlineDwellTimer(TimeSpan due)
+    {
+        headlineDwellTimer?.Stop();
+        headlineDwellTimer = new DispatcherTimer
+        {
+            Interval = due > TimeSpan.Zero ? due : TimeSpan.FromMilliseconds(1)
+        };
+        headlineDwellTimer.Tick += OnHeadlineDwellTimerTick;
+        headlineDwellTimer.Start();
+    }
+
+    private void OnHeadlineDwellTimerTick(object? sender, EventArgs e)
+    {
+        headlineDwellTimer?.Stop();
+        headlineDwellTimer = null;
+
+        if (pendingHeadlines.Count > 0)
+        {
+            ShowNextQueuedHeadline();
+        }
+    }
+
+    /// <summary>
+    /// Usado para estados terminais (concluído, cancelado, falhou): descarta a fila de
+    /// passos pendentes e mostra o resultado final imediatamente, sem esperar o dwell.
+    /// </summary>
+    private void FinalizeHeadline(string headline)
+    {
+        headlineDwellTimer?.Stop();
+        headlineDwellTimer = null;
+        pendingHeadlines.Clear();
+        ProgressHeadline = headline;
+        headlineShownAtUtc = DateTime.UtcNow;
     }
 
     private void UpsertStepLedgerItem(string actionId, ActionExecutionOutcome outcome)

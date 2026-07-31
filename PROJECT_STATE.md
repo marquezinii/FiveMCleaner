@@ -1,5 +1,28 @@
 # Estado do Projeto
 
+## Linha do tempo do Otimizador: bolinha de passo atual e dwell mínimo — 31/07/2026
+
+- A linha do tempo compacta do Otimizador ganhou uma bolinha (`Ellipse` laranja)
+  à esquerda do passo atual, conforme pedido pelo usuário; o passo anterior
+  continua abaixo, menor e mais opaco/esmaecido, sem bolinha, e desaparece
+  assim que um terceiro passo chega (`HasPreviousProgressHeadline`).
+- Cada passo (`ProgressHeadline`) agora fica visível por no mínimo 4 segundos
+  antes de dar lugar ao próximo, em qualquer perfil (Leve, Médio, Agressivo):
+  `MainViewModel` enfileira os cabeçalhos recebidos via `EnqueueHeadline` e um
+  `DispatcherTimer` (`headlineDwellTimer`) libera o próximo da fila somente
+  após o dwell mínimo, mesmo que o serviço de otimização produza atualizações
+  mais rápido que isso. Estados terminais (concluído, cancelado, falhou,
+  restauração) usam `FinalizeHeadline`, que esvazia a fila e mostra o
+  resultado final imediatamente, sem esperar o dwell de um passo intermediário
+  que não teve tempo de aparecer.
+- Validação: build Release sem avisos, 603 testes .NET aprovados e
+  `Verify-Safety.ps1` aprovado. App iniciado via
+  `scripts/Start-DevelopmentApp.ps1`, confirmado processo rodando sem crash.
+  **Limitação**: como já registrado em rodadas anteriores, não há ferramenta de
+  captura de tela disponível para o executável de desenvolvimento neste
+  ambiente; a conferência visual pixel-a-pixel do dwell e da bolinha depende de
+  inspeção manual da pessoa usuária.
+
 ## Rodada de Hardening (Resistência e Resiliência) — 31/07/2026
 
 - **Hardening de arquivo atômico (`AtomicFile`)**: adicionada a garantia `EnsureDirectory(path)` antes da escrita de arquivos temporários em `AtomicFile.WriteBytes`/`WriteText`, prevenindo falhas quando diretórios de destino ainda não existem. Em `ReplaceInto`, adicionado fallback atômico para `File.Move(overwrite: true)` caso `File.Replace` falhe por bloqueios transitórios de arquivo ou características de plataforma.

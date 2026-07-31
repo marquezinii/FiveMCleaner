@@ -457,10 +457,13 @@
                                             </Grid>
                                         </StackPanel>
                                         <StackPanel Grid.Row="2" Margin="0,28,0,24" HorizontalAlignment="Center">
-                                            <TextBlock Text="{Binding PreviousProgressHeadline}" Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" Foreground="{DynamicResource TextSubtleBrush}" Opacity="0.58" FontSize="11.5" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
-                                            <TextBlock Margin="0,6,0,0" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center">
-                                                <Run Text="{Binding ProgressStateLabel, Mode=OneWay}" /><Run Text=": " /><Run Text="{Binding ProgressHeadline, Mode=OneWay}" />
-                                            </TextBlock>
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <Ellipse Width="7" Height="7" Fill="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" />
+                                                <TextBlock Margin="8,0,0,0" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center">
+                                                    <Run Text="{Binding ProgressStateLabel, Mode=OneWay}" /><Run Text=": " /><Run Text="{Binding ProgressHeadline, Mode=OneWay}" />
+                                                </TextBlock>
+                                            </StackPanel>
+                                            <TextBlock Margin="0,7,0,0" Text="{Binding PreviousProgressHeadline}" Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" Foreground="{DynamicResource TextSubtleBrush}" Opacity="0.5" FontSize="11" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
                                         </StackPanel>
                                         <Grid Grid.Row="3"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                             <Button Grid.Column="1" Content="{Binding [Optimizer.RunPlan], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Padding="24,0" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
