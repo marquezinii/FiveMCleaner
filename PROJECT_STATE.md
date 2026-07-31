@@ -1,5 +1,12 @@
 # Estado do Projeto
 
+## Hotfix do atalho de desenvolvimento — 31/07/2026
+
+- A linha do tempo compacta usava `Run.Text` com o modo padrão TwoWay. Como
+  `ProgressStateLabel` e `ProgressHeadline` são propriedades somente leitura,
+  a criação da janela falhava antes de abrir. Os dois bindings agora são
+  explicitamente `Mode=OneWay` e o atalho de desenvolvimento volta a iniciar.
+
 ## Linha do tempo compacta do Otimizador — 31/07/2026
 
 - A aba Otimizador não mostra mais o plano técnico, avisos, lista de ações,

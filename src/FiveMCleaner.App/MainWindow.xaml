@@ -483,7 +483,7 @@
                                         <StackPanel Grid.Row="2" Margin="0,28,0,24" HorizontalAlignment="Center">
                                             <TextBlock Text="{Binding PreviousProgressHeadline}" Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" Foreground="{DynamicResource TextSubtleBrush}" Opacity="0.58" FontSize="11.5" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
                                             <TextBlock Margin="0,6,0,0" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center">
-                                                <Run Text="{Binding ProgressStateLabel}" /><Run Text=": " /><Run Text="{Binding ProgressHeadline}" />
+                                                <Run Text="{Binding ProgressStateLabel, Mode=OneWay}" /><Run Text=": " /><Run Text="{Binding ProgressHeadline, Mode=OneWay}" />
                                             </TextBlock>
                                         </StackPanel>
                                         <Grid Grid.Row="3"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
