@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildStatsUrl, buildCsvUrl, buildBugsUrl, requestJson } from '../assets/api.js';
+import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildUpdaterEventsUrl, requestJson } from '../assets/api.js';
 
 const BASE = 'https://telemetry.example.workers.dev';
 
@@ -86,4 +86,10 @@ test('buildBugsUrl applies environment and category filters', () => {
 
   assert.equal(url.searchParams.get('environment'), 'Production');
   assert.equal(url.searchParams.get('category'), 'Crash');
+});
+
+test('buildUpdaterEventsUrl applies version and environment filters', () => {
+  const url = new URL(buildUpdaterEventsUrl(BASE, { version: '1.2.0', environment: 'Production' }));
+  assert.equal(url.pathname, '/api/updater-events');
+  assert.equal(url.searchParams.get('version'), '1.2.0');
 });

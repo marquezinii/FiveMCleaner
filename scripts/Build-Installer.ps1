@@ -192,12 +192,13 @@ try {
     }
 
     foreach ($requiredPayload in @(
-        'FiveMCleaner.exe',
-        'FiveMCleaner.runtimeconfig.json',
-        'coreclr.dll',
-        'hostfxr.dll',
-        'broker\FiveMCleaner.Broker.exe',
-        'updater\FiveMCleaner.Updater.exe'
+        'FiveMCleaner.Launcher.exe',
+        'Runtime\active.json',
+        "Runtime\versions\$Version\FiveMCleaner.exe",
+        "Runtime\versions\$Version\FiveMCleaner.runtimeconfig.json",
+        "Runtime\versions\$Version\coreclr.dll",
+        "Runtime\versions\$Version\hostfxr.dll",
+        "Runtime\versions\$Version\broker\FiveMCleaner.Broker.exe"
     )) {
         if (-not (Test-Path -LiteralPath (Join-Path $publishDirectory $requiredPayload) -PathType Leaf)) {
             throw "Publish payload is incomplete: $requiredPayload"
@@ -268,10 +269,15 @@ try {
     }
 
     $portableArchive = Join-Path $artifactsRoot 'FiveMCleaner-win-x64.zip'
+    $runtimeArchive = Join-Path $artifactsRoot 'FiveMCleaner-Runtime-win-x64.zip'
     if (-not (Test-Path -LiteralPath $portableArchive -PathType Leaf)) {
         throw "Portable archive not found: $portableArchive"
     }
     $portableHash = (Get-FileHash -LiteralPath $portableArchive -Algorithm SHA256).Hash.ToLowerInvariant()
+    if (-not (Test-Path -LiteralPath $runtimeArchive -PathType Leaf)) {
+        throw "Atomic runtime archive not found: $runtimeArchive"
+    }
+    $runtimeHash = (Get-FileHash -LiteralPath $runtimeArchive -Algorithm SHA256).Hash.ToLowerInvariant()
 
     $manifest = [ordered]@{
         schemaVersion = 1
@@ -286,8 +292,9 @@ try {
         payload = [ordered]@{
             fileCount = $payloadFiles.Count
             sizeBytes = [long](($payloadFiles | Measure-Object -Property Length -Sum).Sum)
-            mainExecutableSha256 = (Get-FileHash -LiteralPath (Join-Path $publishDirectory 'FiveMCleaner.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
-            brokerExecutableSha256 = (Get-FileHash -LiteralPath (Join-Path $publishDirectory 'broker\FiveMCleaner.Broker.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
+            launcherExecutableSha256 = (Get-FileHash -LiteralPath (Join-Path $publishDirectory 'FiveMCleaner.Launcher.exe') -Algorithm SHA256).Hash.ToLowerInvariant()
+            mainExecutableSha256 = (Get-FileHash -LiteralPath (Join-Path $publishDirectory "Runtime\versions\$Version\FiveMCleaner.exe") -Algorithm SHA256).Hash.ToLowerInvariant()
+            brokerExecutableSha256 = (Get-FileHash -LiteralPath (Join-Path $publishDirectory "Runtime\versions\$Version\broker\FiveMCleaner.Broker.exe") -Algorithm SHA256).Hash.ToLowerInvariant()
         }
         artifacts = @(
             [ordered]@{
@@ -299,6 +306,11 @@ try {
                 name = [System.IO.Path]::GetFileName($portableArchive)
                 sizeBytes = (Get-Item -LiteralPath $portableArchive).Length
                 sha256 = $portableHash
+            },
+            [ordered]@{
+                name = [System.IO.Path]::GetFileName($runtimeArchive)
+                sizeBytes = (Get-Item -LiteralPath $runtimeArchive).Length
+                sha256 = $runtimeHash
             }
         )
     }

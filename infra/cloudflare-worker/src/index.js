@@ -1,6 +1,8 @@
 import { validateBatch } from './validateEvent.js';
 import { validateBugReport } from './bugReports/validateSubmission.js';
 import { recentBugReports } from './bugReports/queries.js';
+import { validateUpdaterEvent } from './updaterEvents/validateSubmission.js';
+import { recentUpdaterEvents } from './updaterEvents/queries.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
@@ -65,6 +67,12 @@ async function route(request, env, url) {
   if (request.method === 'POST' && url.pathname === '/bugs') {
     return handleBugReportIngest(request, env);
   }
+  if (request.method === 'POST' && url.pathname === '/updater-events') {
+    return handleUpdaterEventIngest(request, env);
+  }
+  if (request.method === 'GET' && url.pathname === '/update/manifest') {
+    return handleSignedReleaseManifest(env);
+  }
 
   if (request.method === 'POST' && url.pathname === '/admin/login') {
     return createPasswordAuthProvider(env).login(request);
@@ -81,8 +89,77 @@ async function route(request, env, url) {
   if (request.method === 'GET' && url.pathname === '/api/bugs') {
     return handleBugReportsList(request, env, url);
   }
+  if (request.method === 'GET' && url.pathname === '/api/updater-events') {
+    return handleUpdaterEventsList(request, env, url);
+  }
 
   return new Response('Not found', { status: 404 });
+}
+
+function handleSignedReleaseManifest(env) {
+  const manifest = env.RELEASE_MANIFEST_JSON;
+  if (typeof manifest !== 'string' || manifest.length === 0) {
+    return new Response('Release manifest unavailable', {
+      status: 503,
+      headers: { 'Cache-Control': 'no-store' },
+    });
+  }
+  if (manifest.length > 65_536) {
+    return new Response('Release manifest invalid', { status: 500 });
+  }
+  let parsed;
+  try { parsed = JSON.parse(manifest); } catch {
+    return new Response('Release manifest invalid', { status: 500 });
+  }
+  const keys = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
+    ? Object.keys(parsed)
+    : [];
+  const allowed = ['channel', 'version', 'minimumAllowedVersion', 'packageUrl',
+    'packageSha256', 'packageSizeBytes', 'signatureBase64'];
+  if (keys.length !== allowed.length || keys.some((key) => !allowed.includes(key))
+      || parsed.channel !== 'stable'
+      || !/^\d+\.\d+\.\d+$/.test(parsed.version)
+      || !/^\d+\.\d+\.\d+$/.test(parsed.minimumAllowedVersion)
+      || typeof parsed.packageUrl !== 'string'
+      || !/^https:\/\/github\.com\/marquezinii\/FiveMCleaner\/releases\/download\//.test(parsed.packageUrl)
+      || !/^[a-f0-9]{64}$/i.test(parsed.packageSha256)
+      || !Number.isSafeInteger(parsed.packageSizeBytes) || parsed.packageSizeBytes <= 0
+      || typeof parsed.signatureBase64 !== 'string'
+      || parsed.signatureBase64.length < 80 || parsed.signatureBase64.length > 256) {
+    return new Response('Release manifest invalid', { status: 500 });
+  }
+  return new Response(manifest, {
+    status: 200,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8',
+      'Cache-Control': 'no-store',
+    },
+  });
+}
+
+async function handleUpdaterEventIngest(request, env) {
+  let payload;
+  try { payload = await request.json(); } catch { return new Response('Invalid JSON', { status: 400 }); }
+  const event = validateUpdaterEvent(payload);
+  if (event === null) return new Response('Updater event failed validation', { status: 400 });
+  await env.TELEMETRY_DB.prepare(
+    `INSERT OR IGNORE INTO updater_events
+       (event_id, stage, outcome, error_code, previous_version, candidate_version, environment, received_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).bind(event.eventId, event.stage, event.outcome, event.errorCode, event.previousVersion,
+    event.candidateVersion, event.environment, new Date().toISOString()).run();
+  return new Response(null, { status: 202 });
+}
+
+async function handleUpdaterEventsList(request, env, url) {
+  const auth = await createPasswordAuthProvider(env).requireSession(request);
+  if (!auth.authorized) return auth.response;
+  const { sql, params } = recentUpdaterEvents({
+    environment: url.searchParams.get('environment') || undefined,
+    version: url.searchParams.get('version') || undefined,
+  }, url.searchParams.get('limit'));
+  const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
+  return new Response(JSON.stringify(results), { status: 200, headers: { 'Content-Type': 'application/json' } });
 }
 
 async function handleTelemetryIngest(request, env) {

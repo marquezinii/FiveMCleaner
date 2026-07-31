@@ -62,40 +62,32 @@ instalação real ou uma entrada de inicialização existente.
 
 ## Contrato de atualização
 
-O arquivo `installer/release-contract.json` define nomes estáveis para o
-instalador, checksum, manifesto e pacote portátil. O aplicativo deve consultar
-somente a API oficial da última release estável do GitHub, comparar versões e
-mostrar uma notificação; ele não deve forçar, baixar ou instalar uma atualização
-sem confirmação.
+O Inno Setup é somente o instalador inicial e a ponte para instalações legadas.
+Atalhos apontam para `FiveMCleaner.Launcher.exe`; cada versão do app fica
+imutável em `Runtime\versions\<versão>`. O aplicativo consulta somente o
+manifesto estável assinado do Worker e nunca atualiza sem confirmação.
 
 Depois do clique do usuário, o atualizador:
 
 1. exibe a página oficial das alterações da release, quando disponível;
-2. baixa somente o instalador com nome permitido, via HTTPS e de origem GitHub
-   validada;
-3. confere tamanho, digest SHA-256 fornecido pela API do GitHub e hash do
-   arquivo baixado antes de qualquer abertura;
-4. grava o pacote concluído de forma atômica em
-   `%LOCALAPPDATA%\FiveMCleaner\Updates` e mantém arquivos parciais sem uso;
-5. copia o `FiveMCleaner.Updater.exe` autocontido para
-   `%LOCALAPPDATA%\FiveMCleaner\Updater`, fora da pasta que será substituída,
-   e o inicia com somente caminho, tamanho, SHA-256 e PID do processo atual;
-6. o processo independente valida novamente caminho, tamanho e SHA-256, espera
-   o processo principal encerrar sem forçá-lo, executa o setup silencioso e
-   mostra uma mensagem nativa com o log caso o setup falhe;
-7. nunca desativa SmartScreen, Defender, UAC ou antivírus de terceiros.
+2. valida contrato fechado, assinatura ECDSA P-256, chave pública incorporada,
+   SemVer, `minimumAllowedVersion`, URL GitHub allowlisted, tamanho e SHA-256;
+3. baixa somente `FiveMCleaner-Runtime-win-x64.zip` via TLS 1.2/1.3, valida
+   revogação e cada redirecionamento, limita tamanho e grava com nome parcial;
+4. valida novamente o ZIP e o `SHA256SUMS.txt`; arquivos extras, ausentes,
+   duplicados, alterados, caminhos externos e pacotes de extração excessiva são
+   rejeitados;
+5. move a árvore completa para `Runtime\versions\<versão>`, registra journal e
+   troca `active.json` atomicamente;
+6. fecha o app anterior e chama o launcher. A candidata precisa gravar um
+   health receipt com nonce em até 45 segundos;
+7. sem receipt, o launcher restaura somente o predecessor registrado. Uma
+   versão saudável avança o piso anti-downgrade protegido por DPAPI;
+8. nunca desativa SmartScreen, Defender, UAC ou antivírus de terceiros.
 
-Previews não aparecem no endpoint `/releases/latest`; portanto, uma instalação
-estável nunca migra para uma preview sem uma escolha explícita de canal.
-
-Se a consulta, download, cópia do atualizador ou validação falhar, nenhum
-setup é aberto e a versão instalada continua utilizável. Depois que o processo
-independente inicia, ele é responsável por informar falhas posteriores; o app
-nunca fica aberto esperando o setup liberar seus próprios arquivos. O setup
-aceita atualização por cima da instalação anterior e preserva os dados locais.
-O Inno Setup não fornece rollback transacional completo após uma falha externa
-durante a cópia; nesse caso o atualizador mostra o log e a pessoa pode abrir o
-app atual ou executar novamente o instalador verificado.
+Falhas de manifesto, download, staging, ativação e saúde preservam a versão
+anterior. Logs detalhados ficam locais; eventos sanitizados chegam à área
+administrativa somente após consentimento explícito de telemetria.
 
 ## Publicação no GitHub
 
@@ -105,17 +97,18 @@ execução. A criação pública exige uma tag exata (`vX.Y.Z` ou
 `vX.Y.Z-preview`), `publish=true` e o canal correspondente.
 
 Antes de criar a release, o workflow repete build, testes, instalação e
-desinstalação; gera checksums; e produz uma atestação de proveniência do
+desinstalação; gera checksums; assina e verifica o manifesto do runtime; aplica
+o schema D1; implanta o Worker/feed; e produz uma atestação de proveniência do
 instalador. O binário permanece sem assinatura de código até existir um
 certificado Authenticode. SHA-256 e atestação aumentam a transparência, mas não
 substituem reputação ou uma assinatura pública.
 
 ### Sequência de versões públicas
 
-A linha pública inicia em `1.0.0`. Para manter a numeração simples, cada nova
-release estável incrementa apenas o último dígito até `1.0.99`; a próxima passa
-para `1.1.0`. O script `scripts/Test-PublicVersionProgression.ps1` é executado
-no workflow e recusa uma versão que não seja a próxima permitida.
+A versão segue SemVer conforme `AI_RULES.md`: correção compatível usa patch,
+nova capacidade compatível usa minor e mudança incompatível usa major. O script
+`scripts/Test-PublicVersionProgression.ps1` recusa regressões e saltos que não
+sejam uma progressão SemVer pública válida.
 
 Fontes oficiais usadas no desenho:
 
@@ -135,8 +128,9 @@ Fontes oficiais usadas no desenho:
 3. Faça commit, envie `main`, crie a tag exata `vX.Y.Z` e envie a tag.
 4. Em **Actions → Build installer and publish release**, escolha a tag, canal
    `stable` e `publish=true`.
-5. Verifique no GitHub a release pública, o instalador, os checksums, o
-   manifesto e a atestação antes de divulgar o link.
+5. Verifique no GitHub a release pública, o instalador, o runtime ZIP, os
+   checksums, o manifesto assinado e a atestação; confirme também o feed do
+   Worker antes de divulgar o link.
 
 O workflow nunca publica por `push`; a etapa de criação de release exige o
 disparo manual com `publish=true`. A página pública de download é

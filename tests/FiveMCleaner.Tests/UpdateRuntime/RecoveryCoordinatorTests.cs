@@ -15,10 +15,15 @@ public sealed class RecoveryCoordinatorTests : IDisposable
         Directory.CreateDirectory(Path.Combine(runtime.VersionsRoot, "1.0.0"));
         Directory.CreateDirectory(Path.Combine(runtime.VersionsRoot, "1.1.0"));
         runtime.Activate("1.0.0");
-        var transaction = new UpdateRecoveryJournal(root).Begin("1.0.0", "1.1.0");
+        var journal = new UpdateRecoveryJournal(root);
+        var transaction = journal.Begin("1.0.0", "1.1.0");
         runtime.Activate(transaction.CandidateVersion);
 
-        Assert.Equal(RecoveryDecision.RolledBack, new RecoveryCoordinator(root).Reconcile());
+        Assert.Equal(RecoveryDecision.Pending, new RecoveryCoordinator(root).Reconcile(DateTimeOffset.UtcNow, TimeSpan.FromMinutes(1)));
+        transaction = journal.MarkCandidateLaunched(transaction);
+        Assert.Equal(
+            RecoveryDecision.RolledBack,
+            new RecoveryCoordinator(root).Reconcile(transaction.CandidateLaunchedAtUtc!.Value.AddMinutes(2), TimeSpan.FromMinutes(1)));
         Assert.Equal("1.0.0", runtime.ReadActiveVersion());
     }
 }

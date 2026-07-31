@@ -30,7 +30,11 @@ public sealed class RuntimeActivationStore
             if (File.Exists(PointerPath)) File.Replace(temporary, PointerPath, destinationBackupFileName: null);
             else File.Move(temporary, PointerPath);
         }
-        finally { if (File.Exists(temporary)) File.Delete(temporary); }
+        finally
+        {
+            try { if (File.Exists(temporary)) File.Delete(temporary); }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
+        }
     }
 
     public string ReadActiveVersion()

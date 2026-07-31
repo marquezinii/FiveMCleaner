@@ -23,6 +23,7 @@ Thumbs.db
 .pypirc
 *.pem
 *.key
+!src/FiveMCleaner.App/Assets/release-public-key.pem
 *.pfx
 *.p12
 *.snk

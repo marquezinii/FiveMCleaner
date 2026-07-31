@@ -16,10 +16,12 @@
     <ProjectReference Include="../FiveMCleaner.Contracts/FiveMCleaner.Contracts.csproj" />
     <ProjectReference Include="../FiveMCleaner.Core/FiveMCleaner.Core.csproj" />
     <ProjectReference Include="../FiveMCleaner.Windows/FiveMCleaner.Windows.csproj" />
+    <ProjectReference Include="../FiveMCleaner.UpdateRuntime/FiveMCleaner.UpdateRuntime.csproj" />
     <ProjectReference Include="../FiveMCleaner.Broker/FiveMCleaner.Broker.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Assets/FiveMCleaner.png" />
+    <EmbeddedResource Include="Assets/release-public-key.pem" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config/appsettings.json;Config/appsettings.Development.json;Config/appsettings.Production.json">

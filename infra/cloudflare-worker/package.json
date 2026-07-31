@@ -5,7 +5,7 @@
   "type": "module",
   "description": "FiveMCleaner anonymous telemetry + admin dashboard API Cloudflare Worker (D1-backed). Deployed at https://fivemcleaner-telemetry.felipemarquesini10.workers.dev.",
   "scripts": {
-    "test": "node --test test/*.test.js test/auth/*.test.js test/stats/*.test.js test/bugReports/*.test.js",
+    "test": "node --test",
     "hash-admin-password": "node scripts/hash-admin-password.mjs",
     "dev": "wrangler dev",
     "db:migrate:local": "wrangler d1 execute fivemcleaner-telemetry --local --file=./schema.sql",
@@ -14,6 +14,6 @@
     "deploy:production": "wrangler deploy --env production"
   },
   "devDependencies": {
-    "wrangler": "^3.90.0"
+    "wrangler": "^4.116.0"
   }
 }

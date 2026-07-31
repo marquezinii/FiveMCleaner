@@ -1,4 +1,4 @@
-import { buildStatsUrl, buildCsvUrl, buildBugsUrl, requestJson } from './api.js';
+import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildUpdaterEventsUrl, requestJson } from './api.js';
 import {
   toBarSeries,
   toCombinedBarSeries,
@@ -10,6 +10,7 @@ import {
   sumBy,
   toRecentFailureRow,
   toBugReportRow,
+  toUpdaterEventRow,
 } from './charts.js';
 import { drawBarChart, drawLineChart } from './rendering.js';
 
@@ -51,6 +52,7 @@ async function main() {
   const recentFailuresBody = document.getElementById('recent-failures-body');
   const recentFailuresCsvLink = document.getElementById('csv-recent-failures');
   const bugReportsBody = document.getElementById('bug-reports-body');
+  const updaterEventsBody = document.getElementById('updater-events-body');
 
   function showLogin() {
     loginView.classList.remove('hidden');
@@ -155,10 +157,27 @@ async function main() {
     }
   }
 
+  function renderUpdaterEvents(rows) {
+    updaterEventsBody.innerHTML = '';
+    if (!rows || rows.length === 0) {
+      updaterEventsBody.innerHTML = '<tr><td colspan="7" class="empty-row">Sem dados ainda</td></tr>';
+      return;
+    }
+    for (const row of rows) {
+      const tr = document.createElement('tr');
+      for (const value of toUpdaterEventRow(row)) {
+        const td = document.createElement('td');
+        td.textContent = value;
+        tr.appendChild(td);
+      }
+      updaterEventsBody.appendChild(tr);
+    }
+  }
+
   async function refreshAll() {
     const filters = currentFilters();
 
-    const [runsPerDay, successRate, averageTime, errorCategories, recentFailures, bugReports, ...chartResults] =
+    const [runsPerDay, successRate, averageTime, errorCategories, recentFailures, bugReports, updaterEvents, ...chartResults] =
       await Promise.all([
         fetchStat('runs-per-day', filters),
         fetchStat('success-rate', filters),
@@ -166,6 +185,7 @@ async function main() {
         fetchStat('error-categories', filters),
         fetchStat('recent-failures', filters),
         requestJson(buildBugsUrl(API_BASE, filters)),
+        requestJson(buildUpdaterEventsUrl(API_BASE, filters)),
         ...CHART_DEFINITIONS.map((definition) => fetchStat(definition.name, filters)),
       ]);
 
@@ -175,6 +195,7 @@ async function main() {
     }
 
     renderBugReports(bugReports.unauthorized || bugReports.error ? [] : bugReports.data);
+    renderUpdaterEvents(updaterEvents.unauthorized || updaterEvents.error ? [] : updaterEvents.data);
 
     document.getElementById('tile-total-runs').textContent = sumBy(runsPerDay.data, 'runs');
     document.getElementById('tile-success-rate').textContent = formatPercent(

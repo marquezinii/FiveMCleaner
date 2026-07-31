@@ -2,26 +2,40 @@
 
 ## Arquitetura de próxima geração do updater — 31/07/2026
 
-- A implementação começou no projeto `FiveMCleaner.UpdateRuntime`: contrato
-  canônico de manifesto, verificação Ed25519, HTTPS/hash/tamanho e política
-  anti-downgrade são cobertos por teste. Ainda não está conectado ao updater
-  público; o próximo passo é o Launcher/Recovery transacional.
-- `RuntimeActivationStore` agora materializa a ativação por ponteiro atômico:
-  versões estagiadas são imutáveis e `active.json` troca somente entre
-  diretórios existentes, preservando a versão anterior para rollback.
+- O fluxo foi conectado de ponta a ponta no código: o app consulta o manifesto
+  estável assinado no Worker, valida ECDSA P-256/SHA-256 com chave pública
+  incorporada, TLS/revogação, host, tamanho, hash, SemVer e piso
+  anti-downgrade antes de baixar o ZIP de runtime.
+- `FiveMCleaner.Launcher.exe` é o único alvo de atalhos e inicialização. O app
+  fica em `Runtime/versions/<versão>`; staging valida `SHA256SUMS.txt` fechado
+  (arquivos ausentes, extras, duplicados ou alterados são rejeitados) e
+  `active.json` é trocado atomicamente.
+- A primeira inicialização da candidata usa journal, nonce e health receipt.
+  Falha, saída precoce ou timeout de 45 segundos restaura apenas o predecessor
+  registrado. A maior versão saudável é persistida com DPAPI e o launcher
+  recusa um ponteiro abaixo desse piso.
+- O instalador Inno permanece somente como entrada inicial/transição para PCs
+  que ainda usam o layout legado; ele instala o launcher e a primeira árvore
+  imutável. Atualizações seguintes não executam nem substituem o instalador.
 - Reavaliado o requisito de custo zero: MSIX/App Installer foi descartado para
   distribuição pública, pois exige certificado confiável ou etapa manual de
-  confiança no PC. O projeto agora prevê runtime próprio versionado, com
-  Launcher/Recovery Agent, diretórios imutáveis, ponteiro atômico e feed
-  Ed25519. A mudança ainda não foi
-  implementada nem publicada; exige pipeline de chaves, pacote de transição e
-  validação em Windows limpo antes de qualquer release.
-- Telemetria de falha do updater será estruturada, consentida e sanitizada,
-  com rota/tabela/aba administrativa própria; logs completos permanecem locais.
-  O desenho completo está em `docs/updater-next-generation.md`.
-- A arquitetura inclui proteção contra downgrade: `minimumAllowedVersion`
-  assinado por canal e estado local DPAPI impedem ativar versões antigas;
-  rollback é limitado ao predecessor registrado e respeita o mesmo piso.
+  confiança no PC. A solução usa somente .NET/Windows, GitHub Releases e a
+  infraestrutura Cloudflare já existente.
+- O pipeline de release gera o runtime ZIP separado, assina offline, verifica
+  a chave pública incorporada, publica os artefatos e só então migra D1,
+  implanta o Worker e troca o feed. A chave privada fica fora do repositório;
+  a cópia local está criptografada fora do workspace e CI exige secrets.
+- Eventos de manifesto, download, staging, ativação, saúde e rollback geram
+  log JSONL local rotacionado. Com consentimento v3, somente o evento
+  estruturado/sanitizado entra numa fila local limitada e idempotente, que
+  reenvia após falha/rede offline para `POST /updater-events`; D1 e a área
+  administrativa possuem a seção **Bugs do updater**.
+- Validação local desta rodada: build Release sem avisos, 592 testes .NET,
+  107 testes Worker, 36 testes dashboard, safety check, pacote self-contained,
+  ZIP atômico e compilação/contrato do instalador. O smoke de instalação
+  isolada não foi executado porque existe uma instalação real registrada e o
+  script corretamente se recusou a sobrescrevê-la; Windows limpo continua
+  sendo gate obrigatório da publicação oficial.
 
 ## Hardening do atualizador independente — 31/07/2026
 

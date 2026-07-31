@@ -1,7 +1,7 @@
 #define AppName "FiveMCleaner"
 #define AppPublisher "Felipe Marquezini"
 #define AppUrl "https://github.com/marquezinii/FiveMCleaner"
-#define AppExeName "FiveMCleaner.exe"
+#define AppExeName "FiveMCleaner.Launcher.exe"
 #define StableAppId "{{49338651-127F-4FD3-BEAD-88D8C9377672}"
 
 #ifndef AppVersion
@@ -134,16 +134,15 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: 
 
 [Run]
 Filename: "{app}\{#AppExeName}"; Description: "{cm:LaunchProgram}"; WorkingDir: "{app}"; Flags: nowait postinstall skipifsilent
-; Automatic update only. The running app launches this installer with
-; /VERYSILENT /AUTOUPDATE=yes, closes itself so its files can be replaced, and
-; relies on this entry to bring the freshly installed version back up. The
-; --updated argument is what lets the app show "updated to X" on that launch.
+; Migration update only. Existing installations launch this installer once;
+; it installs the immutable runtime layout and starts the stable launcher.
 ; Without /AUTOUPDATE=yes (any other silent install, including an admin
 ; deployment) nothing is launched, which is the expected silent behavior.
 Filename: "{app}\{#AppExeName}"; Parameters: "--updated={#AppVersion}"; WorkingDir: "{app}"; Flags: nowait runasoriginaluser; Check: IsAutomaticUpdateRelaunch
 
 [UninstallDelete]
-Type: dirifempty; Name: "{app}\broker"
+Type: dirifempty; Name: "{app}\Runtime\versions"
+Type: dirifempty; Name: "{app}\Runtime"
 Type: dirifempty; Name: "{app}"
 
 [Code]

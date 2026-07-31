@@ -11,6 +11,7 @@ using FiveMCleaner.App.Services;
 using FiveMCleaner.App.ViewModels;
 using FiveMCleaner.App.Views;
 using FiveMCleaner.Contracts;
+using FiveMCleaner.UpdateRuntime;
 
 namespace FiveMCleaner.App;
 
@@ -21,7 +22,7 @@ public partial class MainWindow : Window
     private readonly MainViewModel viewModel;
     private readonly ThemeManager themeManager;
     private readonly TrayIconService trayIcon;
-    private readonly GitHubReleaseUpdateService? releaseUpdateService;
+    private readonly IReleaseUpdateService? releaseUpdateService;
     private readonly bool startupLaunch;
     private readonly bool demoMode;
     private readonly RemoteServicesOptions remoteServicesOptions;
@@ -47,13 +48,28 @@ public partial class MainWindow : Window
         var justUpdatedVersion = commandLine
             .FirstOrDefault(value => value.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase))
             ?["--updated=".Length..];
+        var versionDirectory = Directory.GetParent(Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory));
+        var versionsDirectory = versionDirectory?.Parent;
+        var runtimeDirectory = versionsDirectory?.Parent;
+        var installRoot = runtimeDirectory?.Parent?.FullName;
+        var runtimeRoot = versionsDirectory?.Name.Equals("versions", StringComparison.OrdinalIgnoreCase) == true
+            && runtimeDirectory?.Name.Equals("Runtime", StringComparison.OrdinalIgnoreCase) == true
+            && installRoot is not null
+            ? runtimeDirectory.FullName
+            : null;
         IStartupRegistrationService startupRegistration = demoMode
             ? new SessionStartupRegistrationService()
-            : new WindowsStartupRegistrationService();
-        releaseUpdateService = demoMode ? null : new GitHubReleaseUpdateService();
-        ISilentUpdateInstaller? silentUpdateInstaller = demoMode
+            : runtimeRoot is null
+                ? new WindowsStartupRegistrationService()
+                : new WindowsStartupRegistrationService(
+                    Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"));
+        releaseUpdateService = demoMode
             ? null
-            : new SilentUpdateInstaller(
+            : runtimeRoot is null ? new GitHubReleaseUpdateService() : new SignedManifestUpdateService();
+        ISilentUpdateInstaller? silentUpdateInstaller = demoMode ? null
+            : runtimeRoot is not null
+                ? new AtomicUpdateInstaller(runtimeRoot, Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"))
+                : new SilentUpdateInstaller(
                 Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     ProductIdentity.Name,
@@ -137,6 +153,7 @@ public partial class MainWindow : Window
         };
         if (!demoMode)
         {
+            ConfirmUpdateHealthIfRequested();
             await ShowPrivacyConsentIfNeededAsync();
             InitializeCrashReportingIfAuthorized();
             await FlushPendingTelemetryIfAnyAsync();
@@ -146,6 +163,32 @@ public partial class MainWindow : Window
             HideToTray();
         }
         await CaptureIfRequestedAsync();
+    }
+
+    private static void ConfirmUpdateHealthIfRequested()
+    {
+        var arguments = Environment.GetCommandLineArgs();
+        var transaction = arguments.FirstOrDefault(value => value.StartsWith("--update-transaction=", StringComparison.OrdinalIgnoreCase))?["--update-transaction=".Length..];
+        var nonce = arguments.FirstOrDefault(value => value.StartsWith("--update-nonce=", StringComparison.OrdinalIgnoreCase))?["--update-nonce=".Length..];
+        var versionDirectory = Directory.GetParent(Path.TrimEndingDirectorySeparator(AppContext.BaseDirectory));
+        var versionsDirectory = versionDirectory?.Parent;
+        var runtimeRoot = versionsDirectory?.Name.Equals("versions", StringComparison.OrdinalIgnoreCase) == true
+            && versionsDirectory.Parent?.Name.Equals("Runtime", StringComparison.OrdinalIgnoreCase) == true
+            ? versionsDirectory.Parent.FullName
+            : null;
+        var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3);
+        if (version is null || runtimeRoot is null) return;
+        var dataRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            ProductIdentity.Name);
+        if (transaction is not null && nonce is not null)
+            new UpdateHealthReceiptStore(runtimeRoot).Confirm(transaction, version, nonce);
+        try { new VersionFloorStore(dataRoot).Advance(version); }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
+        {
+            // A falha preserva o app ativo; a próxima consulta de update falha
+            // fechada ao não conseguir validar o piso DPAPI.
+        }
     }
 
     /// <summary>
@@ -706,7 +749,7 @@ public partial class MainWindow : Window
         viewModel.UpdateAvailableDetected -= ViewModel_UpdateAvailableDetected;
         themeManager.Dispose();
         trayIcon.Dispose();
-        releaseUpdateService?.Dispose();
+        (releaseUpdateService as IDisposable)?.Dispose();
     }
 
     private void Application_SessionEnding(object? sender, SessionEndingCancelEventArgs e)
@@ -776,6 +819,8 @@ public partial class MainWindow : Window
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         await using var stream = File.Create(outputPath);
         encoder.Save(stream);
+        allowClose = true;
+        trayIcon.Hide();
         Close();
     }
 }

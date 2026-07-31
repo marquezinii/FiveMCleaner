@@ -1,0 +1,98 @@
+using System.Diagnostics;
+using System.IO;
+using FiveMCleaner.UpdateRuntime;
+
+namespace FiveMCleaner.App.Services;
+
+public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
+{
+    private readonly string runtimeRoot;
+    private readonly string launcherPath;
+    private readonly string dataRoot;
+    private readonly UpdaterDiagnostics diagnostics;
+
+    public AtomicUpdateInstaller(string runtimeRoot, string launcherPath)
+    {
+        this.runtimeRoot = Path.GetFullPath(runtimeRoot);
+        this.launcherPath = Path.GetFullPath(launcherPath);
+        dataRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FiveMCleaner");
+        diagnostics = new UpdaterDiagnostics(
+            dataRoot,
+            new Uri("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/updater-events"));
+    }
+
+    public async Task<SilentUpdateLaunch> StartAsync(DownloadedUpdate update, CancellationToken cancellationToken = default)
+    {
+        string? previous = null;
+        var activated = false;
+        var journalStarted = false;
+        try
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (!File.Exists(launcherPath)) throw new FileNotFoundException("O launcher transacional não foi encontrado.", launcherPath);
+            var activation = new RuntimeActivationStore(runtimeRoot);
+            previous = activation.ReadActiveVersion();
+            new RuntimePackageStager(runtimeRoot).Stage(
+                update.InstallerPath, update.Version.CoreVersion, update.Sha256Hex, update.SizeBytes);
+            var journal = new UpdateRecoveryJournal(runtimeRoot);
+            journal.Begin(previous, update.Version.CoreVersion);
+            journalStarted = true;
+            activation.Activate(update.Version.CoreVersion);
+            activated = true;
+            using var current = Process.GetCurrentProcess();
+            var start = new ProcessStartInfo(launcherPath)
+            {
+                WorkingDirectory = Path.GetDirectoryName(launcherPath)!,
+                UseShellExecute = false,
+            };
+            start.ArgumentList.Add($"--wait-for-pid={current.Id}");
+            start.ArgumentList.Add($"--wait-for-start={current.StartTime.ToUniversalTime().ToFileTimeUtc()}");
+            start.ArgumentList.Add($"--updated={update.Version.CoreVersion}");
+            using var launcher = Process.Start(start)
+                ?? throw new InvalidOperationException("O Windows não iniciou o launcher transacional.");
+            return SilentUpdateLaunch.Running();
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            if (previous is not null && (activated || journalStarted))
+            {
+                try
+                {
+                    if (new RuntimeActivationStore(runtimeRoot).ReadActiveVersion() != previous)
+                        new RuntimeActivationStore(runtimeRoot).Activate(previous);
+                    new UpdateRecoveryJournal(runtimeRoot).Complete();
+                }
+                catch (Exception rollbackException) when (rollbackException is not (
+                    OutOfMemoryException or StackOverflowException or AccessViolationException))
+                {
+                    await RecordFailureAsync(update, previous, "rollback", "rollback-failed", rollbackException);
+                    return SilentUpdateLaunch.Failed(
+                        null, $"{exception.Message} A restauração imediata também falhou: {rollbackException.Message}");
+                }
+            }
+            await RecordFailureAsync(
+                update, previous, activated ? "activation" : "staging", Classify(exception), exception);
+            return SilentUpdateLaunch.Failed(null, exception.Message);
+        }
+    }
+
+    private Task RecordFailureAsync(
+        DownloadedUpdate update, string? previous, string stage, string code, Exception exception) =>
+        diagnostics.RecordAsync(
+            new UpdaterEvent(
+                Guid.NewGuid().ToString("N"), stage, "failed", code,
+                previous, update.Version.CoreVersion, "Production"),
+            exception.ToString(),
+            UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
+
+    private static string Classify(Exception exception) => exception switch
+    {
+        System.Security.Cryptography.CryptographicException => "signature-invalid",
+        InvalidDataException => "invalid-data",
+        UnauthorizedAccessException => "access-denied",
+        IOException => "io",
+        _ => "unexpected",
+    };
+}

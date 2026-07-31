@@ -28,6 +28,12 @@ export function buildBugsUrl(baseUrl, filters = {}) {
   return url.toString();
 }
 
+export function buildUpdaterEventsUrl(baseUrl, filters = {}) {
+  const url = new URL('/api/updater-events', baseUrl);
+  applyFilters(url, filters);
+  return url.toString();
+}
+
 function applyFilters(url, filters) {
   if (filters.from) {
     url.searchParams.set('from', filters.from);

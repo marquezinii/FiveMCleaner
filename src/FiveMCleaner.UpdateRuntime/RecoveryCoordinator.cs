@@ -14,12 +14,19 @@ public sealed class RecoveryCoordinator
         receipt = new UpdateHealthReceiptStore(runtimeRoot);
     }
 
-    public RecoveryDecision Reconcile()
+    public RecoveryDecision Reconcile(DateTimeOffset nowUtc, TimeSpan healthTimeout)
     {
-        var transaction = journal.Read();
-        if (receipt.Confirms(transaction)) return RecoveryDecision.Healthy;
+        if (!journal.TryRead(out var transaction)) return RecoveryDecision.Healthy;
+        if (receipt.Confirms(transaction))
+        {
+            journal.Complete();
+            return RecoveryDecision.Healthy;
+        }
         if (activation.ReadActiveVersion() != transaction.CandidateVersion) return RecoveryDecision.Pending;
+        if (transaction.CandidateLaunchedAtUtc is null
+            || nowUtc - transaction.CandidateLaunchedAtUtc < healthTimeout) return RecoveryDecision.Pending;
         activation.Activate(transaction.PreviousVersion);
+        journal.Complete();
         return RecoveryDecision.RolledBack;
     }
 }

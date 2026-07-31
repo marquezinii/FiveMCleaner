@@ -92,7 +92,7 @@ try {
     }
     $installed = $true
 
-    $installedExecutable = Join-Path $installDirectory 'FiveMCleaner.exe'
+    $installedExecutable = Join-Path $installDirectory 'FiveMCleaner.Launcher.exe'
     $uninstaller = Join-Path $installDirectory 'unins000.exe'
     foreach ($required in @($installedExecutable, $uninstaller)) {
         if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
@@ -162,7 +162,7 @@ try {
     }
 
     $upgradedExecutableHash = (Get-FileHash -LiteralPath $installedExecutable -Algorithm SHA256).Hash
-    $sourceExecutableHash = (Get-FileHash -LiteralPath (Join-Path $resolvedPublish 'FiveMCleaner.exe') -Algorithm SHA256).Hash
+    $sourceExecutableHash = (Get-FileHash -LiteralPath (Join-Path $resolvedPublish 'FiveMCleaner.Launcher.exe') -Algorithm SHA256).Hash
     if ($upgradedExecutableHash -ne $sourceExecutableHash) {
         throw 'Main executable hash mismatch after in-place upgrade.'
     }

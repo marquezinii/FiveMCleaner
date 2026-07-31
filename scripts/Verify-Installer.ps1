@@ -121,14 +121,19 @@ if ($signature.Status -notin @('NotSigned', 'Valid')) {
 
 if (-not [string]::IsNullOrWhiteSpace($PublishDirectory)) {
     $resolvedPublish = [System.IO.Path]::GetFullPath($PublishDirectory)
+    if ([string]::IsNullOrWhiteSpace($ExpectedVersion)) {
+        throw 'ExpectedVersion is required for the versioned runtime payload.'
+    }
+    $versionRoot = "Runtime\versions\$ExpectedVersion"
     foreach ($requiredFile in @(
-        'FiveMCleaner.exe',
-        'FiveMCleaner.runtimeconfig.json',
-        'coreclr.dll',
-        'hostfxr.dll',
-        'broker\FiveMCleaner.Broker.exe',
-        'broker\FiveMCleaner.Broker.runtimeconfig.json',
-        'updater\FiveMCleaner.Updater.exe'
+        'FiveMCleaner.Launcher.exe',
+        'Runtime\active.json',
+        "$versionRoot\FiveMCleaner.exe",
+        "$versionRoot\FiveMCleaner.runtimeconfig.json",
+        "$versionRoot\coreclr.dll",
+        "$versionRoot\hostfxr.dll",
+        "$versionRoot\broker\FiveMCleaner.Broker.exe",
+        "$versionRoot\broker\FiveMCleaner.Broker.runtimeconfig.json"
     )) {
         $candidate = Join-Path $resolvedPublish $requiredFile
         if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) {
@@ -136,7 +141,7 @@ if (-not [string]::IsNullOrWhiteSpace($PublishDirectory)) {
         }
     }
 
-    $runtimeConfig = Get-Content -LiteralPath (Join-Path $resolvedPublish 'FiveMCleaner.runtimeconfig.json') -Raw | ConvertFrom-Json
+    $runtimeConfig = Get-Content -LiteralPath (Join-Path $resolvedPublish "$versionRoot\FiveMCleaner.runtimeconfig.json") -Raw | ConvertFrom-Json
     if (-not $runtimeConfig.runtimeOptions.includedFrameworks -or
         @($runtimeConfig.runtimeOptions.includedFrameworks).Count -lt 2) {
         throw 'Runtime config does not prove a self-contained Windows Desktop publish.'
