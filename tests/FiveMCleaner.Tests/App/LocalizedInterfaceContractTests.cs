@@ -181,6 +181,9 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("HorizontalAlignment=\"Right\"", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"5\"", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("Width=\"3\" Height=\"3\"", styles, StringComparison.Ordinal);
+        Assert.Contains("x:Key=\"DetectionBadgeStyle\"", styles, StringComparison.Ordinal);
+        Assert.Contains("x:Key=\"DetectionBadgeLabelStyle\"", styles, StringComparison.Ordinal);
+        Assert.Contains("Segoe UI Variable Display, Segoe UI", styles, StringComparison.Ordinal);
     }
 
     [Fact]

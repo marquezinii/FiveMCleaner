@@ -20,6 +20,9 @@
 - O controle de rolagem foi simplificado para um thumb neutro de 4 px, sem
   trilho visível, contorno, sombra ou grip. No hover e durante o arraste ele
   cresce para 6 px e mantém cores cinza discretas.
+- Os badges de detecção do Dashboard agora usam superfícies em gradiente,
+  brilho superior discreto, sombra baixa, ícone em camada própria e a fonte
+  `Segoe UI Variable Display`, com estado verde ou vermelho preservado.
 
 ## Ajustes de interação da interface Fluent — 31/07/2026
 
