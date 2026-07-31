@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Reflection;
 using System.Security.Authentication;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using FiveMCleaner.UpdateRuntime;
@@ -32,7 +33,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
             SslOptions =
             {
                 EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
-                CertificateRevocationCheckMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.Online,
+                CertificateRevocationCheckMode = X509RevocationMode.Online,
             },
         };
         client = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(15) };
@@ -42,9 +43,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
             "FiveMCleaner");
         updatesRoot = Path.Combine(dataRoot, "Updates");
         versionFloor = new VersionFloorStore(dataRoot);
-        diagnostics = new UpdaterDiagnostics(
-            dataRoot,
-            new Uri("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/updater-events"));
+        diagnostics = new UpdaterDiagnostics(dataRoot, UpdaterDiagnostics.UpdaterEventsEndpoint);
         using var keyStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
             "FiveMCleaner.App.Assets.release-public-key.pem")
             ?? throw new InvalidOperationException("A chave pública de releases não foi incorporada.");

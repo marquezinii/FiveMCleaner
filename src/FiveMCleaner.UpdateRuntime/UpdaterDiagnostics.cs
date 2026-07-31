@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Security.Authentication;
+using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
 namespace FiveMCleaner.UpdateRuntime;
@@ -11,6 +12,17 @@ public sealed record UpdaterEvent(
 
 public sealed class UpdaterDiagnostics
 {
+    /// <summary>
+    /// Host of the Cloudflare Worker that receives updater diagnostics events.
+    /// The single source of truth for every caller that needs to build the
+    /// updater-events endpoint (the App, the transactional Launcher, and this
+    /// class's own validation below).
+    /// </summary>
+    public const string TelemetryHost = "fivemcleaner-telemetry.felipemarquesini10.workers.dev";
+
+    /// <summary>The one allowed endpoint for <see cref="RecordAsync"/>/<see cref="FlushPendingAsync"/>.</summary>
+    public static readonly Uri UpdaterEventsEndpoint = new($"https://{TelemetryHost}/updater-events");
+
     private readonly string logPath;
     private readonly string pendingRoot;
     private readonly Uri endpoint;
@@ -24,7 +36,7 @@ public sealed class UpdaterDiagnostics
             && string.IsNullOrEmpty(endpoint.UserInfo)
             && string.IsNullOrEmpty(endpoint.Query)
             && string.IsNullOrEmpty(endpoint.Fragment)
-            && endpoint.Host.Equals("fivemcleaner-telemetry.felipemarquesini10.workers.dev", StringComparison.OrdinalIgnoreCase)
+            && endpoint.Host.Equals(TelemetryHost, StringComparison.OrdinalIgnoreCase)
             && endpoint.AbsolutePath == "/updater-events"
             ? endpoint : throw new ArgumentException("Endpoint do updater inválido.", nameof(endpoint));
     }
@@ -102,7 +114,7 @@ public sealed class UpdaterDiagnostics
                 SslOptions =
                 {
                     EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
-                    CertificateRevocationCheckMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.Online,
+                    CertificateRevocationCheckMode = X509RevocationMode.Online,
                 },
             };
             using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };

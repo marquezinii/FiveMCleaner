@@ -1,5 +1,35 @@
 # Estado do Projeto
 
+## Varredura de dívida técnica no Updater — 31/07/2026
+
+- `AtomicUpdateInstaller.StartAsync`: o caminho de rollback do `catch`
+  recriava `new RuntimeActivationStore(runtimeRoot)` e
+  `new UpdateRecoveryJournal(runtimeRoot)` do zero, em vez de reaproveitar
+  as instâncias já existentes no método (`activation`/`journal`). Sem bug
+  funcional (ambas as classes são wrappers sem estado sobre `runtimeRoot`),
+  mas instanciava objetos redundantes sem motivo; agora reaproveita as
+  mesmas instâncias.
+- URL do endpoint `/updater-events` do Worker Cloudflare estava com o
+  literal completo duplicado em três lugares (`AtomicUpdateInstaller`,
+  `SignedManifestUpdateService`, `FiveMCleaner.Launcher/Program.cs`), além
+  do host repetido de novo dentro da validação em `UpdaterDiagnostics`.
+  Consolidado em `UpdaterDiagnostics.TelemetryHost`/`UpdaterEventsEndpoint`
+  (constante e `Uri` estático, únicos), reaproveitado pelos três chamadores
+  e pela própria validação do construtor.
+- Qualificação de tipo totalmente por extenso em vez de `using`, em 4
+  arquivos: `CryptographicException` (`AtomicUpdateInstaller`),
+  `Win32Exception` (`FiveMCleaner.Updater/Program.cs`),
+  `X509RevocationMode` (`SignedManifestUpdateService`,
+  `UpdaterDiagnostics`) e `CultureInfo` (`SignedReleaseManifest`).
+- Revisados sem achado de dívida adicional: `RuntimePackageStager`,
+  `RecoveryCoordinator`, `GitHubReleaseUpdateService` (caminho legado do
+  instalador Inno, mantido de propósito para PCs ainda no layout antigo —
+  ver "Arquitetura de próxima geração do updater" abaixo), `UpdateModels`,
+  `UpdateHandoff`.
+- Nenhuma mudança de comportamento observável. Validação: build Release
+  sem avisos e os mesmos 597 testes .NET, mais `Verify-Safety.ps1`,
+  aprovados.
+
 ## Refactoring pass do Updater (novo sistema) — 31/07/2026
 
 - `FiveMCleaner.UpdateRuntime`: `VersionFloorStore.Advance`,

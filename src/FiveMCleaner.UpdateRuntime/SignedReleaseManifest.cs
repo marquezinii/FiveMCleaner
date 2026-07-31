@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -16,7 +17,7 @@ public sealed record SignedReleaseManifest(
 {
     public byte[] CanonicalPayload() => Encoding.UTF8.GetBytes(string.Join("\n", [
         Channel, Version, MinimumAllowedVersion, PackageUrl, PackageSha256.ToLowerInvariant(),
-        PackageSizeBytes.ToString(System.Globalization.CultureInfo.InvariantCulture)]));
+        PackageSizeBytes.ToString(CultureInfo.InvariantCulture)]));
 }
 
 public static class ReleaseTrustPolicy

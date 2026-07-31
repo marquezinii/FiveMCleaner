@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 using FiveMCleaner.UpdateRuntime;
 
 namespace FiveMCleaner.App.Services;
@@ -17,9 +18,7 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
         this.launcherPath = Path.GetFullPath(launcherPath);
         dataRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FiveMCleaner");
-        diagnostics = new UpdaterDiagnostics(
-            dataRoot,
-            new Uri("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/updater-events"));
+        diagnostics = new UpdaterDiagnostics(dataRoot, UpdaterDiagnostics.UpdaterEventsEndpoint);
     }
 
     public async Task<SilentUpdateLaunch> StartAsync(DownloadedUpdate update, CancellationToken cancellationToken = default)
@@ -27,15 +26,15 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
         string? previous = null;
         var activated = false;
         var journalStarted = false;
+        var activation = new RuntimeActivationStore(runtimeRoot);
+        var journal = new UpdateRecoveryJournal(runtimeRoot);
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (!File.Exists(launcherPath)) throw new FileNotFoundException("O launcher transacional não foi encontrado.", launcherPath);
-            var activation = new RuntimeActivationStore(runtimeRoot);
             previous = activation.ReadActiveVersion();
             new RuntimePackageStager(runtimeRoot).Stage(
                 update.InstallerPath, update.Version.CoreVersion, update.Sha256Hex, update.SizeBytes);
-            var journal = new UpdateRecoveryJournal(runtimeRoot);
             journal.Begin(previous, update.Version.CoreVersion);
             journalStarted = true;
             activation.Activate(update.Version.CoreVersion);
@@ -60,9 +59,8 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
             {
                 try
                 {
-                    if (new RuntimeActivationStore(runtimeRoot).ReadActiveVersion() != previous)
-                        new RuntimeActivationStore(runtimeRoot).Activate(previous);
-                    new UpdateRecoveryJournal(runtimeRoot).Complete();
+                    if (activation.ReadActiveVersion() != previous) activation.Activate(previous);
+                    journal.Complete();
                 }
                 catch (Exception rollbackException) when (rollbackException is not (
                     OutOfMemoryException or StackOverflowException or AccessViolationException))
@@ -89,7 +87,7 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
 
     private static string Classify(Exception exception) => exception switch
     {
-        System.Security.Cryptography.CryptographicException => "signature-invalid",
+        CryptographicException => "signature-invalid",
         InvalidDataException => "invalid-data",
         UnauthorizedAccessException => "access-denied",
         IOException => "io",
