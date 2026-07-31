@@ -25,6 +25,9 @@
   maior, preservando os estados verde e vermelho sem brilho, gradiente ou sombra.
 - Quando detectado, o ícone desses badges é um check vetorial único, compacto
   e minimalista; quando não detectado, ele continua exibindo X.
+- A cor laranja permanece reservada para ações e estados selecionados; as
+  bordas das janelas Fluent (principal, relato de bug e consentimento) usam
+  o acento neutro do tema.
 
 ## Ajustes de interação da interface Fluent — 31/07/2026
 
