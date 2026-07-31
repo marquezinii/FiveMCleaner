@@ -1,5 +1,29 @@
 # Estado do Projeto
 
+## Refactoring pass do instalador — 31/07/2026
+
+- `Assert-UnderArtifacts` estava duplicada, byte a byte, em
+  `scripts/Build-Installer.ps1` e `scripts/Test-Installer.ps1`. Extraída para
+  `scripts/Installer.Common.ps1` (nova função `Assert-PathUnderRoot`,
+  parametrizada por `-Root` em vez de depender de uma variável de escopo),
+  dot-sourced pelos dois scripts. Cada script mantém um wrapper local
+  `Assert-UnderArtifacts` de uma linha para não precisar tocar nas chamadas
+  existentes.
+- Em `Test-Installer.ps1`, as três listas de argumentos do Inno Setup
+  (instalação, upgrade, desinstalação) repetiam
+  `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART`; agora vêm de
+  `$commonSilentArguments`, reaproveitado também pela desinstalação de
+  limpeza no bloco `finally`.
+- `scripts/Build-Portable.ps1` tem a mesma função duplicada, mas foi
+  deixado de fora por não ser exclusivo do instalador (também serve o
+  pacote portátil standalone) — fora do escopo pedido nesta rodada.
+- Nenhuma mudança de comportamento: mesmos parâmetros, mesmas mensagens de
+  erro, mesmos argumentos passados ao Inno Setup. Validação: build Release
+  sem avisos, 597 testes .NET, `Verify-Safety.ps1`,
+  `Verify-Installer.ps1 -ScriptOnly`, `Build-Installer.ps1` completo (gerou
+  o instalador `1.1.3` de novo) e `Test-Installer.ps1` real (instalação,
+  upgrade in-place e desinstalação silenciosas) todos aprovados.
+
 ## Rodada de audit and remediation — 31/07/2026
 
 - Auditoria manual (sem ferramenta automatizada) cobrindo instalador/updater

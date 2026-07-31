@@ -28,15 +28,14 @@ $uninstallRegistryPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninst
 $runRegistryPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $runValueName = 'FiveMCleaner'
 $installed = $false
+$commonSilentArguments = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART')
+
+. (Join-Path $PSScriptRoot 'Installer.Common.ps1')
 
 function Assert-UnderArtifacts {
     param([Parameter(Mandatory)][string]$Path)
 
-    $resolved = [System.IO.Path]::GetFullPath($Path)
-    $prefix = $artifactsRoot.TrimEnd('\') + '\'
-    if (-not $resolved.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Refusing to modify a path outside artifacts: $resolved"
-    }
+    Assert-PathUnderRoot -Path $Path -Root $artifactsRoot
 }
 
 function Get-RegistryValueOrNull {
@@ -80,9 +79,7 @@ New-Item -ItemType Directory -Force -Path $smokeRoot | Out-Null
 
 try {
     $installArguments = @(
-        '/VERYSILENT',
-        '/SUPPRESSMSGBOXES',
-        '/NORESTART',
+        $commonSilentArguments
         '/CLOSEAPPLICATIONS',
         '/NORESTARTAPPLICATIONS',
         '/NOICONS',
@@ -145,9 +142,7 @@ try {
     }
 
     $upgradeArguments = @(
-        '/VERYSILENT',
-        '/SUPPRESSMSGBOXES',
-        '/NORESTART',
+        $commonSilentArguments
         '/CLOSEAPPLICATIONS',
         '/NORESTARTAPPLICATIONS',
         '/NOICONS',
@@ -178,9 +173,7 @@ try {
     Set-ItemProperty -LiteralPath $runRegistryPath -Name $runValueName -Value $expectedStartupValue -Type String
 
     $uninstallArguments = @(
-        '/VERYSILENT',
-        '/SUPPRESSMSGBOXES',
-        '/NORESTART',
+        $commonSilentArguments
         "/LOG=$uninstallLog"
     )
     $uninstallProcess = Start-Process -FilePath $uninstaller -ArgumentList $uninstallArguments -WindowStyle Hidden -Wait -PassThru
@@ -220,7 +213,7 @@ finally {
         $uninstaller = Join-Path $installDirectory 'unins000.exe'
         if (Test-Path -LiteralPath $uninstaller -PathType Leaf) {
             $cleanup = Start-Process -FilePath $uninstaller `
-                -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART') `
+                -ArgumentList $commonSilentArguments `
                 -WindowStyle Hidden -Wait -PassThru
             if ($cleanup.ExitCode -ne 0) {
                 Write-Warning "Cleanup uninstaller exited with $($cleanup.ExitCode)."

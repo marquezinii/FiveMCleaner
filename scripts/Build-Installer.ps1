@@ -28,14 +28,12 @@ $innoDownloadUrl = "https://github.com/jrsoftware/issrc/releases/download/is-6_7
 $innoSha256 = '9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732'
 $innoCompilerSha256 = '0a8757031b33777e4c9cbffee40f11a5062b36d25cbe144c1db73b6102b80ad7'
 
+. (Join-Path $PSScriptRoot 'Installer.Common.ps1')
+
 function Assert-UnderArtifacts {
     param([Parameter(Mandatory)][string]$Path)
 
-    $resolved = [System.IO.Path]::GetFullPath($Path)
-    $prefix = $artifactsRoot.TrimEnd('\') + '\'
-    if (-not $resolved.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Refusing to modify a path outside artifacts: $resolved"
-    }
+    Assert-PathUnderRoot -Path $Path -Root $artifactsRoot
 }
 
 function Get-ProjectVersion {
