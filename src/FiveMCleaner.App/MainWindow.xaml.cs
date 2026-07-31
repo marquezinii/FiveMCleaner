@@ -133,7 +133,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
-        RootNavigationView.Navigate("Dashboard");
+        ActivateNavItem(DashboardNav);
         await viewModel.InitializeAsync();
         themeManager.Apply(viewModel.ThemePreference);
         LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected
@@ -350,13 +350,14 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         public uint Flags;
     }
 
-    private void RootNavigationView_SelectionChanged(object sender, RoutedEventArgs e)
+    private void NavItem_Click(object sender, RoutedEventArgs e)
     {
-        if (RootNavigationView.SelectedItem is not FrameworkElement { Tag: string tag })
+        if (sender is not Wpf.Ui.Controls.NavigationViewItem { Tag: string tag } item)
         {
             return;
         }
 
+        ActivateNavItem(item);
         Navigate(tag switch
         {
             "Optimizer" => OptimizerPage,
@@ -366,7 +367,19 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         });
     }
 
-    private void ReviewPlan_Click(object sender, RoutedEventArgs e) => RootNavigationView.Navigate("Optimizer");
+    private void ActivateNavItem(Wpf.Ui.Controls.NavigationViewItem selected)
+    {
+        DashboardNav.IsActive = ReferenceEquals(selected, DashboardNav);
+        OptimizerNav.IsActive = ReferenceEquals(selected, OptimizerNav);
+        HistoryNav.IsActive = ReferenceEquals(selected, HistoryNav);
+        SettingsNav.IsActive = ReferenceEquals(selected, SettingsNav);
+    }
+
+    private void ReviewPlan_Click(object sender, RoutedEventArgs e)
+    {
+        ActivateNavItem(OptimizerNav);
+        Navigate(OptimizerPage);
+    }
 
     private void Navigate(UIElement page)
     {
@@ -462,7 +475,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private async void StartOptimization_Click(object sender, RoutedEventArgs e)
     {
-        RootNavigationView.Navigate("Optimizer");
+        ActivateNavItem(OptimizerNav);
+        Navigate(OptimizerPage);
         await viewModel.StartOptimizationAsync();
         if (closeAfterOptimizationStops)
         {
