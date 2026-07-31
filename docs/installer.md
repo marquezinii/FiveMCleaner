@@ -77,20 +77,25 @@ Depois do clique do usuário, o atualizador:
    arquivo baixado antes de qualquer abertura;
 4. grava o pacote concluído de forma atômica em
    `%LOCALAPPDATA%\FiveMCleaner\Updates` e mantém arquivos parciais sem uso;
-5. pede uma segunda confirmação e abre o instalador interativo normal; o
-   Restart Manager solicita o fechamento seguro do app para a substituição;
-6. nunca desativa SmartScreen, Defender, UAC ou antivírus de terceiros.
+5. copia o `FiveMCleaner.Updater.exe` autocontido para
+   `%LOCALAPPDATA%\FiveMCleaner\Updater`, fora da pasta que será substituída,
+   e o inicia com somente caminho, tamanho, SHA-256 e PID do processo atual;
+6. o processo independente valida novamente caminho, tamanho e SHA-256, espera
+   o processo principal encerrar sem forçá-lo, executa o setup silencioso e
+   mostra uma mensagem nativa com o log caso o setup falhe;
+7. nunca desativa SmartScreen, Defender, UAC ou antivírus de terceiros.
 
 Previews não aparecem no endpoint `/releases/latest`; portanto, uma instalação
 estável nunca migra para uma preview sem uma escolha explícita de canal.
 
-Se a consulta, download ou validação falhar, nenhum instalador é aberto e a
-versão já instalada continua utilizável. O setup aceita atualização por cima
-da instalação anterior e preserva os dados locais. O Inno Setup não fornece um
-rollback transacional completo após uma falha externa durante a cópia de
-arquivos; nesse caso a pessoa deve executar novamente o instalador da mesma
-release ou a release anterior verificada. Isso é uma limitação explicitamente
-assumida, não uma promessa de rollback automático.
+Se a consulta, download, cópia do atualizador ou validação falhar, nenhum
+setup é aberto e a versão instalada continua utilizável. Depois que o processo
+independente inicia, ele é responsável por informar falhas posteriores; o app
+nunca fica aberto esperando o setup liberar seus próprios arquivos. O setup
+aceita atualização por cima da instalação anterior e preserva os dados locais.
+O Inno Setup não fornece rollback transacional completo após uma falha externa
+durante a cópia; nesse caso o atualizador mostra o log e a pessoa pode abrir o
+app atual ou executar novamente o instalador verificado.
 
 ## Publicação no GitHub
 

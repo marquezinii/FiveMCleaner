@@ -1,5 +1,18 @@
 # Estado do Projeto
 
+## Atualizador independente e durável — 31/07/2026
+
+- O fluxo de instalação da atualização foi separado do WPF: o novo projeto
+  self-contained `FiveMCleaner.Updater` é incluído no payload, copiado para
+  `%LOCALAPPDATA%\FiveMCleaner\Updater` antes do uso e executado fora da pasta
+  que o Inno Setup substitui.
+- O contrato entre app e atualizador é fechado: somente instalador sob
+  `Updates`, tamanho, SHA-256, PID do app e log sob `Logs`. O atualizador
+  revalida todos esses dados, espera o app sair sem encerramento forçado,
+  executa o setup e exibe erro nativo com log em caso de falha. Testes cobrem o
+  contrato e a cópia externa; a publicação permanece pendente de autorização
+  explícita de release.
+
 ## Banner pós-atualização dispensável — 30/07/2026
 
 - O aviso exibido após o instalador relançar o app com `--updated=X.Y.Z` agora

@@ -36,6 +36,7 @@ try {
     & (Join-Path $PSScriptRoot 'Verify-Safety.ps1')
 
     $brokerOutput = Join-Path $stagingRoot 'broker'
+    $updaterOutput = Join-Path $stagingRoot 'updater'
     $appOutput = Join-Path $stagingRoot 'app'
     $pathMap = "$workspace=/_/FiveMCleaner"
 
@@ -56,6 +57,24 @@ try {
     )
     & dotnet @brokerPublishArguments
     if ($LASTEXITCODE -ne 0) { throw 'Broker publish failed.' }
+
+    $updaterPublishArguments = @(
+        'publish',
+        '.\src\FiveMCleaner.Updater\FiveMCleaner.Updater.csproj',
+        '--configuration', $Configuration,
+        '--runtime', $Runtime,
+        '--self-contained', 'true',
+        '-p:PublishSingleFile=true',
+        '-p:PublishTrimmed=false',
+        '-p:PublishReadyToRun=false',
+        '-p:ContinuousIntegrationBuild=true',
+        '-p:DebugType=None',
+        '-p:DebugSymbols=false',
+        "-p:PathMap=$pathMap",
+        '--output', $updaterOutput
+    )
+    & dotnet @updaterPublishArguments
+    if ($LASTEXITCODE -ne 0) { throw 'Updater publish failed.' }
 
     $appPublishArguments = @(
         'publish',
@@ -93,6 +112,8 @@ try {
         }
     }
     Copy-Item -LiteralPath $brokerOutput -Destination $copiedBroker -Recurse
+    $copiedUpdater = Join-Path $appOutput 'updater'
+    Copy-Item -LiteralPath $updaterOutput -Destination $copiedUpdater -Recurse
     Copy-Item -LiteralPath '.\README.md', '.\LICENSE', '.\SECURITY.md', '.\CONTRIBUTING.md', '.\CODE_OF_CONDUCT.md' -Destination $appOutput
     Copy-Item -LiteralPath '.\docs' -Destination (Join-Path $appOutput 'docs') -Recurse
 

@@ -26,5 +26,6 @@
     <ProjectReference Include="../../src/FiveMCleaner.Contracts/FiveMCleaner.Contracts.csproj" />
     <ProjectReference Include="../../src/FiveMCleaner.Core/FiveMCleaner.Core.csproj" />
     <ProjectReference Include="../../src/FiveMCleaner.Windows/FiveMCleaner.Windows.csproj" />
+    <ProjectReference Include="../../src/FiveMCleaner.Updater/FiveMCleaner.Updater.csproj" />
   </ItemGroup>
 </Project>

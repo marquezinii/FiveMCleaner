@@ -127,7 +127,8 @@ if (-not [string]::IsNullOrWhiteSpace($PublishDirectory)) {
         'coreclr.dll',
         'hostfxr.dll',
         'broker\FiveMCleaner.Broker.exe',
-        'broker\FiveMCleaner.Broker.runtimeconfig.json'
+        'broker\FiveMCleaner.Broker.runtimeconfig.json',
+        'updater\FiveMCleaner.Updater.exe'
     )) {
         $candidate = Join-Path $resolvedPublish $requiredFile
         if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) {

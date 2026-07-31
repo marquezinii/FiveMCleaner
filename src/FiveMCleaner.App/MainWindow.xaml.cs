@@ -61,7 +61,12 @@ public partial class MainWindow : Window
                 Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     ProductIdentity.Name,
-                    "Logs"));
+                    "Logs"),
+                Path.Combine(AppContext.BaseDirectory, "updater", "FiveMCleaner.Updater.exe"),
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    ProductIdentity.Name,
+                    "Updater"));
         var runtimeEnvironment = AppEnvironment.Resolve();
         remoteServicesOptions = RemoteServicesOptionsLoader.Load(runtimeEnvironment, AppContext.BaseDirectory);
         // Cloudflare is the sole telemetry transport (FormSubmit was

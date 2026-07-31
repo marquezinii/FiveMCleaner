@@ -350,6 +350,17 @@ Testes de integração que alteram Windows ou FiveM devem ser opt-in, isolados e
 
 ## Distribuição
 
+### Atualizador independente
+
+O processo WPF não instala sua própria atualização. Após a confirmação do
+usuário, ele baixa e verifica o setup oficial, copia o
+`FiveMCleaner.Updater.exe` self-contained para `%LOCALAPPDATA%\FiveMCleaner\Updater`
+e encerra. O atualizador aceita apenas um contrato fixo: instalador sob
+`Updates`, tamanho, SHA-256, PID do processo pai e log sob `Logs`; ele repete a
+verificação de integridade, espera o PID terminar sem encerrar processos de
+forma forçada e só então executa o Inno Setup. Assim, o processo que aguarda e
+o diretório que o setup substitui nunca são o mesmo.
+
 O pipeline público deve:
 
 - compilar no Windows com o SDK fixado em `global.json`;

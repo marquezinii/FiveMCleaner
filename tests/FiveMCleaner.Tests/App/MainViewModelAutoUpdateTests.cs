@@ -18,6 +18,7 @@ public sealed class MainViewModelAutoUpdateTests
         StableSemanticVersion.Parse(version),
         InstallerPath: $@"C:\Updates\FiveMCleaner-Setup-{version}-win-x64.exe",
         SizeBytes: 10 * 1024 * 1024,
+        Sha256Hex: new string('a', 64),
         WasAlreadyDownloaded: false);
 
     private static HistoryDisplayItem CreateRollbackableHistoryItem() => new(

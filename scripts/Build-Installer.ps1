@@ -196,7 +196,8 @@ try {
         'FiveMCleaner.runtimeconfig.json',
         'coreclr.dll',
         'hostfxr.dll',
-        'broker\FiveMCleaner.Broker.exe'
+        'broker\FiveMCleaner.Broker.exe',
+        'updater\FiveMCleaner.Updater.exe'
     )) {
         if (-not (Test-Path -LiteralPath (Join-Path $publishDirectory $requiredPayload) -PathType Leaf)) {
             throw "Publish payload is incomplete: $requiredPayload"

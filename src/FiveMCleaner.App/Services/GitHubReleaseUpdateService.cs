@@ -174,6 +174,7 @@ public sealed class GitHubReleaseUpdateService : IReleaseUpdateService, IDisposa
                 validatedUpdate.Version,
                 finalPath,
                 validatedUpdate.SizeBytes,
+                Convert.ToHexString(validatedUpdate.Sha256Bytes).ToLowerInvariant(),
                 WasAlreadyDownloaded: true);
         }
 
@@ -212,6 +213,7 @@ public sealed class GitHubReleaseUpdateService : IReleaseUpdateService, IDisposa
                 validatedUpdate.Version,
                 finalPath,
                 validatedUpdate.SizeBytes,
+                Convert.ToHexString(validatedUpdate.Sha256Bytes).ToLowerInvariant(),
                 WasAlreadyDownloaded: false);
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
