@@ -12,7 +12,7 @@ namespace FiveMCleaner.App.Views;
 /// only presents the two toggles and reports back the choices confirmed by
 /// the user with "Continue".
 /// </summary>
-public partial class PrivacyConsentWindow : Window
+public partial class PrivacyConsentWindow : Wpf.Ui.Controls.FluentWindow
 {
     private readonly ILocalizationService localization;
     private bool confirmedByUser;
