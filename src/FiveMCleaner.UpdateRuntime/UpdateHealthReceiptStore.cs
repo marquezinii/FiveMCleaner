@@ -20,17 +20,7 @@ public sealed class UpdateHealthReceiptStore
             throw new ArgumentException("Recibo de saúde inválido.");
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var receipt = new HealthReceipt(transactionId, version, nonce, DateTimeOffset.UtcNow);
-        var temporary = path + $".{Guid.NewGuid():N}.new";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(receipt));
-        try
-        {
-            if (File.Exists(path)) File.Replace(temporary, path, null); else File.Move(temporary, path);
-        }
-        finally
-        {
-            try { File.Delete(temporary); }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
-        }
+        AtomicFile.WriteText(path, JsonSerializer.Serialize(receipt));
     }
 
     public bool Confirms(UpdateTransaction transaction)

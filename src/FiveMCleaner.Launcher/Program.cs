@@ -61,22 +61,21 @@ internal static class Program
 
             var receipt = new UpdateHealthReceiptStore(runtimeRoot);
             var deadline = DateTimeOffset.UtcNow + HealthTimeout;
-            while (!process.HasExited && DateTimeOffset.UtcNow < deadline)
+
+            async Task<bool> TryConfirmHealthAsync()
             {
-                if (receipt.Confirms(transaction))
-                {
-                    recovery.Reconcile(DateTimeOffset.UtcNow, HealthTimeout);
-                    await RecordAsync(diagnostics, transaction, "health-check", "completed", "healthy", null, dataRoot);
-                    return 0;
-                }
-                await Task.Delay(250);
-            }
-            if (receipt.Confirms(transaction))
-            {
+                if (!receipt.Confirms(transaction)) return false;
                 recovery.Reconcile(DateTimeOffset.UtcNow, HealthTimeout);
                 await RecordAsync(diagnostics, transaction, "health-check", "completed", "healthy", null, dataRoot);
-                return 0;
+                return true;
             }
+
+            while (!process.HasExited && DateTimeOffset.UtcNow < deadline)
+            {
+                if (await TryConfirmHealthAsync()) return 0;
+                await Task.Delay(250);
+            }
+            if (await TryConfirmHealthAsync()) return 0;
             recovery.Reconcile(DateTimeOffset.UtcNow, TimeSpan.Zero);
             await RecordAsync(diagnostics, transaction, "rollback", "rolled-back", "health-timeout", null, dataRoot);
             MessageBox.Show(
@@ -91,9 +90,8 @@ internal static class Program
                 try { new RecoveryCoordinator(runtimeRoot).Reconcile(DateTimeOffset.UtcNow, TimeSpan.Zero); }
                 catch (Exception recoveryException) when (recoveryException is not (
                     OutOfMemoryException or StackOverflowException or AccessViolationException)) { }
-            }
-            if (currentTransaction is not null)
                 await RecordAsync(diagnostics, currentTransaction, "activation", "failed", Classify(exception), exception.ToString(), dataRoot);
+            }
             MessageBox.Show(exception.Message, "FiveMCleaner", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 2;
         }

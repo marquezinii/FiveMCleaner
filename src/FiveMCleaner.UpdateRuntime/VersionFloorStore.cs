@@ -37,17 +37,13 @@ public sealed class VersionFloorStore
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var encrypted = ProtectedData.Protect(
             Encoding.UTF8.GetBytes(version), Entropy, DataProtectionScope.CurrentUser);
-        var temporary = path + $".{Guid.NewGuid():N}.new";
-        File.WriteAllBytes(temporary, encrypted);
         try
         {
-            if (File.Exists(path)) File.Replace(temporary, path, null); else File.Move(temporary, path);
+            AtomicFile.WriteBytes(path, encrypted);
         }
         finally
         {
             CryptographicOperations.ZeroMemory(encrypted);
-            try { File.Delete(temporary); }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
         }
     }
 }

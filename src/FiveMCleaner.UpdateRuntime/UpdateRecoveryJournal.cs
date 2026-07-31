@@ -82,17 +82,6 @@ public sealed class UpdateRecoveryJournal
     private void Write(UpdateTransaction transaction)
     {
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        var temporary = path + $".{Guid.NewGuid():N}.new";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(transaction));
-        try
-        {
-            if (File.Exists(path)) File.Replace(temporary, path, null);
-            else File.Move(temporary, path);
-        }
-        finally
-        {
-            try { if (File.Exists(temporary)) File.Delete(temporary); }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
-        }
+        AtomicFile.WriteText(path, JsonSerializer.Serialize(transaction));
     }
 }

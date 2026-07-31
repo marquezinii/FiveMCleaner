@@ -1,5 +1,34 @@
 # Estado do Projeto
 
+## Refactoring pass do Updater (novo sistema) — 31/07/2026
+
+- `FiveMCleaner.UpdateRuntime`: `VersionFloorStore.Advance`,
+  `RuntimeActivationStore.Activate`, `UpdateRecoveryJournal.Write` e
+  `UpdateHealthReceiptStore.Confirm` repetiam byte a byte o mesmo padrão de
+  escrita atômica (arquivo temporário + `File.Replace`/`Move` + limpeza do
+  temporário no `finally`). Extraído para `AtomicFile`
+  (`AtomicFile.WriteBytes`/`WriteText`, `internal`, só para este assembly).
+  Os quatro stores caíram para uma linha cada nesse trecho; `VersionFloorStore`
+  mantém seu `CryptographicOperations.ZeroMemory` do buffer sensível em torno
+  da chamada.
+- `FiveMCleaner.Updater`: o record `UpdateHandoff` (parsing/validação dos
+  argumentos do handoff) morava no mesmo arquivo que `Program`; movido para
+  `UpdateHandoff.cs` próprio (um tipo por arquivo). `Program.cs` também
+  trocou `System.ComponentModel.Win32Exception` totalmente qualificado por
+  `using System.ComponentModel`.
+- `FiveMCleaner.Launcher/Program.cs`: o bloco
+  `receipt.Confirms(transaction) → Reconcile → RecordAsync → return 0`
+  aparecia duas vezes idêntico (dentro do loop de espera de saúde e de novo
+  logo depois, para cobrir o caso do processo já ter saído ou o timeout ter
+  batido antes do loop rodar). Extraído para a função local
+  `TryConfirmHealthAsync()`, chamada nos dois pontos. O `catch` final também
+  tinha dois `if (currentTransaction is not null)` consecutivos; unificados
+  em um só bloco.
+- Nenhuma mudança de comportamento: mesmos argumentos do Inno Setup, mesmo
+  fluxo de reconciliação/rollback, mesmos contratos de arquivo. Validação:
+  build Release sem avisos e 597 testes .NET (mesmos de antes, sem novos
+  nem removidos) e `Verify-Safety.ps1` aprovados.
+
 ## Refactoring pass do instalador — 31/07/2026
 
 - `Assert-UnderArtifacts` estava duplicada, byte a byte, em

@@ -23,18 +23,7 @@ public sealed class RuntimeActivationStore
         if (!Directory.Exists(versionPath)) throw new DirectoryNotFoundException("A versão candidata não está estagiada.");
 
         Directory.CreateDirectory(runtimeRoot);
-        var temporary = Path.Combine(runtimeRoot, $".active.{Guid.NewGuid():N}.json");
-        File.WriteAllText(temporary, JsonSerializer.Serialize(new ActiveRuntime(version)));
-        try
-        {
-            if (File.Exists(PointerPath)) File.Replace(temporary, PointerPath, destinationBackupFileName: null);
-            else File.Move(temporary, PointerPath);
-        }
-        finally
-        {
-            try { if (File.Exists(temporary)) File.Delete(temporary); }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
-        }
+        AtomicFile.WriteText(PointerPath, JsonSerializer.Serialize(new ActiveRuntime(version)));
     }
 
     public string ReadActiveVersion()
