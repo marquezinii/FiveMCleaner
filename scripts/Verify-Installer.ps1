@@ -33,8 +33,8 @@ $requiredPatterns = [ordered]@{
     'no automatic app restart'      = 'RestartApplications=no'
     'no automatic reboot after run' = 'RestartIfNeededByRun=no'
     'concurrent setup guard'        = 'SetupMutex=FiveMCleaner\.Setup\.'
-    'optional desktop shortcut'     = 'Name: "desktopicon";.*Flags: unchecked'
-    'optional startup'              = 'Name: "startup";.*Flags: unchecked'
+    'desktop shortcut enabled by default' = 'Name: "desktopicon"; Description: "\{cm:DesktopIcon\}"; GroupDescription:'
+    'startup enabled by default'    = 'Name: "startup"; Description: "\{cm:StartWithWindows\}"; GroupDescription:'
     'startup ownership cleanup'     = 'ValueName: "FiveMCleaner"; Flags: deletevalue uninsdeletevalue; Tasks: not startup'
     'no launch in silent installs'  = 'Flags: nowait postinstall skipifsilent'
     'auto-update relaunch gated'    = 'Check: IsAutomaticUpdateRelaunch'
@@ -61,6 +61,8 @@ $forbiddenPatterns = [ordered]@{
     'forced reboot'           = '(?im)^\s*AlwaysRestart\s*=\s*yes'
     'shell execution helper'  = '(?im)\b(ShellExec|Exec|CreateProcess)\s*\('
     'broad install deletion'  = '(?im)^\s*Type\s*:\s*filesandordirs\b'
+    'unchecked desktop shortcut' = 'Name: "desktopicon";.*Flags: unchecked'
+    'unchecked startup task'  = 'Name: "startup";.*Flags: unchecked'
 }
 
 foreach ($entry in $forbiddenPatterns.GetEnumerator()) {

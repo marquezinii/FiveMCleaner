@@ -117,8 +117,8 @@ ptbr.LaunchProgram=Abrir o FiveMCleaner
 ptbr.RemoveUserDataQuestion=Também remover configurações, logs, backups e atualizações baixadas do FiveMCleaner? Escolher Não preserva esses dados para uma instalação futura.
 
 [Tasks]
-Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:AdditionalShortcuts}:"; Flags: unchecked
-Name: "startup"; Description: "{cm:StartWithWindows}"; GroupDescription: "{cm:AdditionalShortcuts}:"; Flags: unchecked
+Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:AdditionalShortcuts}:"
+Name: "startup"; Description: "{cm:StartWithWindows}"; GroupDescription: "{cm:AdditionalShortcuts}:"
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs notimestamp

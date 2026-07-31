@@ -1,5 +1,12 @@
 # Estado do Projeto
 
+## Instalador: tarefas padrão configuráveis — 31/07/2026
+
+- No instalador interativo, criar o atalho na área de trabalho e iniciar com
+  o Windows são tarefas marcadas por padrão, mas o usuário pode desmarcá-las
+  antes de concluir. O atualizador silencioso permanece sem páginas nem
+  alteração própria de tarefas.
+
 ## Refinamento visual de cards, seletores, rolagem e sidebar — 31/07/2026
 
 - Os cards Fluent simples e os `CardControl` agora adotam cantos de 18 px por
