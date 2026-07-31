@@ -36,8 +36,18 @@
         <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}" />
         <Setter Property="BorderThickness" Value="1" />
-        <Setter Property="CornerRadius" Value="14" />
+        <Setter Property="CornerRadius" Value="18" />
         <Setter Property="Padding" Value="20" />
+    </Style>
+
+    <Style TargetType="ui:Card" BasedOn="{StaticResource {x:Type ui:Card}}">
+        <Style.Resources>
+            <CornerRadius x:Key="ControlCornerRadius">18</CornerRadius>
+        </Style.Resources>
+    </Style>
+
+    <Style TargetType="ui:CardControl" BasedOn="{StaticResource {x:Type ui:CardControl}}">
+        <Setter Property="CornerRadius" Value="18" />
     </Style>
 
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
@@ -208,8 +218,8 @@
 
     <Style x:Key="SettingsComboBoxStyle" TargetType="ComboBox">
         <Setter Property="MinWidth" Value="218" />
-        <Setter Property="Height" Value="38" />
-        <Setter Property="Padding" Value="17,0,11,0" />
+        <Setter Property="Height" Value="42" />
+        <Setter Property="Padding" Value="14,0,38,0" />
         <Setter Property="Foreground" Value="{DynamicResource TextBrush}" />
         <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}" />
@@ -263,14 +273,12 @@
                                             Background="{TemplateBinding Background}"
                                             BorderBrush="{TemplateBinding BorderBrush}"
                                             BorderThickness="{TemplateBinding BorderThickness}"
-                                            CornerRadius="8">
+                                            CornerRadius="11">
                                         <Grid>
                                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                                               HorizontalAlignment="Left"
                                                               VerticalAlignment="Center"
-                                                              Content="{Binding SelectionBoxItem, RelativeSource={RelativeSource AncestorType=ComboBox}}"
-                                                              ContentTemplate="{Binding SelectionBoxItemTemplate, RelativeSource={RelativeSource AncestorType=ComboBox}}"
-                                                              ContentTemplateSelector="{Binding ItemTemplateSelector, RelativeSource={RelativeSource AncestorType=ComboBox}}" />
+                                                              Content="{Binding SelectedValue, RelativeSource={RelativeSource AncestorType=ComboBox}}" />
                                             <Path HorizontalAlignment="Right"
                                                   VerticalAlignment="Center"
                                                   Margin="0,0,13,0"
@@ -304,7 +312,7 @@
                                     Background="{DynamicResource SurfaceRaisedBrush}"
                                     BorderBrush="{DynamicResource BorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="8">
+                                    CornerRadius="11">
                                 <ScrollViewer MaxHeight="220" CanContentScroll="True" HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
                                     <ItemsPresenter />
                                 </ScrollViewer>
@@ -395,21 +403,21 @@
     </Style>
 
     <Style TargetType="ScrollBar">
-        <Setter Property="Width" Value="8" />
+        <Setter Property="Width" Value="12" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
-                    <Grid Width="8" Background="{TemplateBinding Background}">
+                    <Grid Width="12" Background="{TemplateBinding Background}">
                         <Track x:Name="PART_Track" IsDirectionReversed="True" Focusable="False">
                             <Track.DecreaseRepeatButton>
                                 <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}" Focusable="False" Opacity="0" />
                             </Track.DecreaseRepeatButton>
                             <Track.Thumb>
-                                <Thumb MinHeight="34" Background="{DynamicResource ScrollThumbBrush}">
+                                <Thumb MinHeight="40" Background="{DynamicResource ScrollThumbBrush}">
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Border x:Name="ThumbRoot" Margin="2,0" Background="{TemplateBinding Background}" CornerRadius="2" />
+                                            <Border x:Name="ThumbRoot" Margin="4,6,2,6" Background="{TemplateBinding Background}" CornerRadius="4" />
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter TargetName="ThumbRoot" Property="Background" Value="{DynamicResource ScrollThumbHoverBrush}" />

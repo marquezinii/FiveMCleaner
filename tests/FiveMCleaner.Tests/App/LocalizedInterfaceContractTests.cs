@@ -376,7 +376,10 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("Text=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Text=\"{Binding [Settings.Subtitle]", mainWindow, StringComparison.Ordinal);
         Assert.Contains("<ui:TitleBar", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Padding\" Value=\"17,0,11,0\"", controls, StringComparison.Ordinal);
+        Assert.Contains("Padding\" Value=\"14,0,38,0\"", controls, StringComparison.Ordinal);
+        Assert.Contains("Content=\"{Binding SelectedValue, RelativeSource={RelativeSource AncestorType=ComboBox}}\"", controls, StringComparison.Ordinal);
+        Assert.Contains("SelectedValuePath=\"Content\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
     }
 
     [Fact]

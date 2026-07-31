@@ -1,5 +1,19 @@
 # Estado do Projeto
 
+## Refinamento visual de cards, seletores, rolagem e sidebar — 31/07/2026
+
+- Os cards Fluent simples e os `CardControl` agora adotam cantos de 18 px por
+  meio dos recursos nativos de cada controle; os painéis customizados seguem o
+  mesmo raio visual. O escopo permanece exclusivamente de apresentação.
+- Os seletores de idioma e tema passaram a renderizar diretamente o valor
+  selecionado, sem reutilizar o `ComboBoxItem` como conteúdo interno. Isso
+  elimina o efeito de controle encaixado e dá aos dois campos altura, respiro e
+  popup compatíveis com o restante das configurações.
+- A rolagem vertical reservou uma faixa de 12 px e ganhou thumb arredondado,
+  com margens internas que a afastam dos cards. O item de proteção da sidebar
+  recebeu `Shield24`, mantendo o escudo verde disponível quando o painel está
+  compacto.
+
 ## Ajustes de interação da interface Fluent — 31/07/2026
 
 - A revisão da migração para WPF-UI removeu a escala dos cartões ao passar o

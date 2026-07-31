@@ -137,7 +137,7 @@
                     <ui:NavigationViewItem x:Name="SettingsNav" Content="{Binding [Navigation.Settings], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon Settings24}" Tag="Settings" Click="NavItem_Click" />
                 </ui:NavigationView.MenuItems>
                 <ui:NavigationView.FooterMenuItems>
-                    <ui:NavigationViewItem IsEnabled="False">
+                    <ui:NavigationViewItem IsEnabled="False" Icon="{ui:SymbolIcon Shield24}">
                         <ui:NavigationViewItem.Content>
                             <StackPanel Margin="0,4,0,4">
                                 <Border Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="11" ToolTip="{Binding [Safety.SnapshotRollback], Source={StaticResource LocalizedStrings}}">
@@ -527,7 +527,7 @@
                                     <TextBlock Text="{Binding [Settings.General.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding [Settings.Language.Title], Source={StaticResource LocalizedStrings}}" Margin="0,15,0,0" FontSize="12.5" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding [Settings.Language.Description], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,11" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                                    <ComboBox x:Name="LanguageSelector" Style="{StaticResource SettingsComboBoxStyle}" SelectionChanged="LanguageSelector_SelectionChanged">
+                                    <ComboBox x:Name="LanguageSelector" Style="{StaticResource SettingsComboBoxStyle}" SelectedValuePath="Content" SelectionChanged="LanguageSelector_SelectionChanged">
                                         <ComboBoxItem Tag="pt-BR" Content="{Binding [Settings.Language.PortugueseBrazil], Source={StaticResource LocalizedStrings}}" />
                                         <ComboBoxItem Tag="en" Content="{Binding [Settings.Language.English], Source={StaticResource LocalizedStrings}}" />
                                         <ComboBoxItem Tag="es" Content="{Binding [Settings.Language.Spanish], Source={StaticResource LocalizedStrings}}" />
@@ -535,7 +535,7 @@
                                     <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
                                     <TextBlock Text="{Binding [Settings.Appearance.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,4" FontSize="12.5" FontWeight="SemiBold" />
                                     <TextBlock Text="{Binding [Settings.Appearance.Description], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,11" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                                    <ComboBox x:Name="ThemeSelector" Style="{StaticResource SettingsComboBoxStyle}" SelectionChanged="ThemeSelector_SelectionChanged">
+                                    <ComboBox x:Name="ThemeSelector" Style="{StaticResource SettingsComboBoxStyle}" SelectedValuePath="Content" SelectionChanged="ThemeSelector_SelectionChanged">
                                         <ComboBoxItem Tag="system" Content="{Binding [Settings.Appearance.System], Source={StaticResource LocalizedStrings}}" />
                                         <ComboBoxItem Tag="dark" Content="{Binding [Settings.Appearance.Dark], Source={StaticResource LocalizedStrings}}" />
                                         <ComboBoxItem Tag="light" Content="{Binding [Settings.Appearance.Light], Source={StaticResource LocalizedStrings}}" />
