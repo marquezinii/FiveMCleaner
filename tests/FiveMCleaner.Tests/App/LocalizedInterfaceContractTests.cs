@@ -178,8 +178,9 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("ScaleTransform", styles, StringComparison.Ordinal);
         Assert.True(Regex.Matches(styles, "Property=\"IsKeyboardFocused\"").Count >= 3);
         Assert.Contains("<Style TargetType=\"ScrollBar\">", styles, StringComparison.Ordinal);
-        Assert.Contains("DropShadowEffect Color=\"#000000\" BlurRadius=\"5\"", styles, StringComparison.Ordinal);
-        Assert.True(Regex.Matches(styles, "Width=\"3\" Height=\"3\"").Count >= 3);
+        Assert.Contains("HorizontalAlignment=\"Right\"", styles, StringComparison.Ordinal);
+        Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"5\"", styles, StringComparison.Ordinal);
+        Assert.DoesNotContain("Width=\"3\" Height=\"3\"", styles, StringComparison.Ordinal);
     }
 
     [Fact]

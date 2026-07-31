@@ -162,9 +162,9 @@
                 </ui:NavigationView.FooterMenuItems>
 
                 <ui:NavigationView.ContentOverlay>
-                <Grid Margin="26,22,26,24">
+                <Grid Margin="26,22,0,24">
                     <!-- Dashboard -->
-                    <ScrollViewer x:Name="DashboardPage" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ScrollViewer x:Name="DashboardPage" Padding="0,0,26,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
                             <Grid Margin="0,0,0,18">
                                 <Grid.ColumnDefinitions>
@@ -397,12 +397,12 @@
                     <!-- Optimizer -->
                     <Grid x:Name="OptimizerPage" Visibility="Collapsed">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                        <Grid Margin="0,0,0,18">
+                        <Grid Margin="0,0,26,18">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <StackPanel Margin="0,0,18,0"><TextBlock Text="{Binding [Optimizer.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" /><TextBlock Text="{Binding [Optimizer.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" TextWrapping="Wrap" /></StackPanel>
                             <Border Grid.Column="1" HorizontalAlignment="Right" Padding="10,5" Background="#1837C889" CornerRadius="8" VerticalAlignment="Center"><TextBlock Text="{Binding [Optimizer.NoRemoteScripts], Source={StaticResource LocalizedStrings}}" Foreground="{DynamicResource GreenBrush}" FontSize="9" FontWeight="Bold" /></Border>
                         </Grid>
-                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ScrollViewer Grid.Row="1" Padding="0,0,26,0" VerticalScrollBarVisibility="Auto">
                             <StackPanel>
                                 <ui:Card Padding="26">
                                     <Grid>
@@ -486,7 +486,7 @@
                     </Grid>
 
                     <!-- History -->
-                    <Grid x:Name="HistoryPage" Visibility="Collapsed">
+                    <Grid x:Name="HistoryPage" Margin="0,0,26,0" Visibility="Collapsed">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
                         <Grid Margin="0,0,0,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,18,0"><TextBlock Text="{Binding [History.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" /><TextBlock Text="{Binding [History.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" TextWrapping="Wrap" /></StackPanel><Button Grid.Column="1" Content="{Binding [History.OpenLogs], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Right" Style="{StaticResource SecondaryButtonStyle}" Height="38" Click="OpenLogs_Click" /></Grid>
                         <ui:Card Grid.Row="1" Padding="18">
@@ -498,7 +498,7 @@
                     </Grid>
 
                     <!-- Settings -->
-                    <ScrollViewer x:Name="SettingsPage" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer x:Name="SettingsPage" Padding="0,0,26,0" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock Text="{Binding [Settings.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,18" FontSize="25" FontWeight="Bold" />
                             <ui:Card Margin="0,0,0,13">

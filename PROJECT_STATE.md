@@ -9,13 +9,14 @@
   selecionado, sem reutilizar o `ComboBoxItem` como conteúdo interno. Isso
   elimina o efeito de controle encaixado e dá aos dois campos altura, respiro e
   popup compatíveis com o restante das configurações.
-- A rolagem vertical reservou uma faixa de 18 px e ganhou thumb arredondado,
-  com margens internas que a afastam dos cards. O único `Shield24` branco do
+- A rolagem vertical usa uma faixa transparente de 12 px na extremidade direita
+  da janela, enquanto o conteúdo preserva 26 px de respiro interno. O único
+  `Shield24` branco do
   item de proteção permanece no modo compacto e, ao expandir, revela o estado
   e a versão; o ícone verde duplicado foi removido.
-- O controle de rolagem foi elevado para um trilho encaixado de 18 px, com
-  thumb em relevo, borda, sombra e grip central. O laranja aparece apenas
-  durante o arraste, preservando a leitura neutra do restante da interface.
+- O controle de rolagem foi simplificado para um thumb neutro de 4 px, sem
+  trilho visível, contorno, sombra ou grip. No hover e durante o arraste ele
+  cresce para 6 px e mantém cores cinza discretas.
 
 ## Ajustes de interação da interface Fluent — 31/07/2026
 

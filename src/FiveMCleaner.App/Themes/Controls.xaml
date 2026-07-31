@@ -403,58 +403,36 @@
     </Style>
 
     <Style TargetType="ScrollBar">
-        <Setter Property="Width" Value="18" />
+        <Setter Property="Width" Value="12" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ScrollBar">
-                    <Grid Width="18" Background="{TemplateBinding Background}">
-                        <Border Width="10"
-                                Margin="0,10"
-                                HorizontalAlignment="Center"
-                                Background="#16191E"
-                                BorderBrush="#343A44"
-                                BorderThickness="1"
-                                CornerRadius="5" />
-                        <Track x:Name="PART_Track" IsDirectionReversed="True" Focusable="False">
+                    <Grid Width="12" Background="{TemplateBinding Background}">
+                        <Track x:Name="PART_Track" Margin="0,6,2,6" IsDirectionReversed="True" Focusable="False">
                             <Track.DecreaseRepeatButton>
                                 <RepeatButton Command="{x:Static ScrollBar.PageUpCommand}" Focusable="False" Opacity="0" />
                             </Track.DecreaseRepeatButton>
                             <Track.Thumb>
-                                <Thumb MinHeight="48" Background="{DynamicResource ScrollThumbBrush}">
+                                <Thumb MinHeight="42" Background="{DynamicResource ScrollThumbBrush}">
                                     <Thumb.Template>
                                         <ControlTemplate TargetType="Thumb">
-                                            <Grid Margin="3,5">
-                                                <Border x:Name="ThumbRoot"
-                                                        Background="{TemplateBinding Background}"
-                                                        BorderBrush="#697280"
-                                                        BorderThickness="1"
-                                                        CornerRadius="6">
-                                                    <Border.Effect>
-                                                        <DropShadowEffect Color="#000000" BlurRadius="5" ShadowDepth="1" Opacity="0.65" />
-                                                    </Border.Effect>
-                                                </Border>
-                                                <Border Margin="2"
-                                                        BorderBrush="#66FFFFFF"
-                                                        BorderThickness="1,1,1,0"
-                                                        CornerRadius="4"
-                                                        IsHitTestVisible="False" />
-                                                <StackPanel HorizontalAlignment="Center"
-                                                            VerticalAlignment="Center"
-                                                            IsHitTestVisible="False">
-                                                    <Border Width="3" Height="3" Margin="0,1" Background="#B9C0CA" CornerRadius="2" />
-                                                    <Border Width="3" Height="3" Margin="0,1" Background="#B9C0CA" CornerRadius="2" />
-                                                    <Border Width="3" Height="3" Margin="0,1" Background="#B9C0CA" CornerRadius="2" />
-                                                </StackPanel>
-                                            </Grid>
+                                            <Border x:Name="ThumbRoot"
+                                                    Width="4"
+                                                    HorizontalAlignment="Right"
+                                                    Background="{TemplateBinding Background}"
+                                                    CornerRadius="2"
+                                                    Opacity="0.72" />
                                             <ControlTemplate.Triggers>
                                                 <Trigger Property="IsMouseOver" Value="True">
                                                     <Setter TargetName="ThumbRoot" Property="Background" Value="{DynamicResource ScrollThumbHoverBrush}" />
-                                                    <Setter TargetName="ThumbRoot" Property="BorderBrush" Value="#AAB4C2" />
+                                                    <Setter TargetName="ThumbRoot" Property="Width" Value="6" />
+                                                    <Setter TargetName="ThumbRoot" Property="Opacity" Value="1" />
                                                 </Trigger>
                                                 <Trigger Property="IsDragging" Value="True">
-                                                    <Setter TargetName="ThumbRoot" Property="Background" Value="{DynamicResource OrangeBrush}" />
-                                                    <Setter TargetName="ThumbRoot" Property="BorderBrush" Value="#FFC28D" />
+                                                    <Setter TargetName="ThumbRoot" Property="Background" Value="{DynamicResource TextMutedBrush}" />
+                                                    <Setter TargetName="ThumbRoot" Property="Width" Value="6" />
+                                                    <Setter TargetName="ThumbRoot" Property="Opacity" Value="1" />
                                                 </Trigger>
                                             </ControlTemplate.Triggers>
                                         </ControlTemplate>
