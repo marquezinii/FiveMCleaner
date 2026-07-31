@@ -1,5 +1,16 @@
 # Estado do Projeto
 
+## Arquitetura de próxima geração do updater — 31/07/2026
+
+- Decidido em projeto migrar gradualmente do fluxo Inno para MSIX/App
+  Installer, assinatura de pacote e feed Ed25519, com Recovery Agent separado
+  para health-check e rollback verificável. A mudança ainda não foi
+  implementada nem publicada; exige pipeline de chaves, pacote de transição e
+  validação em Windows limpo antes de qualquer release.
+- Telemetria de falha do updater será estruturada, consentida e sanitizada,
+  com rota/tabela/aba administrativa própria; logs completos permanecem locais.
+  O desenho completo está em `docs/updater-next-generation.md`.
+
 ## Hardening do atualizador independente — 31/07/2026
 
 - O handoff identifica o processo principal por PID e instante de criacao:
