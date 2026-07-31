@@ -2,6 +2,10 @@
 
 ## Arquitetura de próxima geração do updater — 31/07/2026
 
+- A implementação começou no projeto `FiveMCleaner.UpdateRuntime`: contrato
+  canônico de manifesto, verificação Ed25519, HTTPS/hash/tamanho e política
+  anti-downgrade são cobertos por teste. Ainda não está conectado ao updater
+  público; o próximo passo é o Launcher/Recovery transacional.
 - Reavaliado o requisito de custo zero: MSIX/App Installer foi descartado para
   distribuição pública, pois exige certificado confiável ou etapa manual de
   confiança no PC. O projeto agora prevê runtime próprio versionado, com

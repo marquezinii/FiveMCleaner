@@ -9,6 +9,7 @@
     <NoWarn>$(NoWarn);NETSDK1086</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\FiveMCleaner.UpdateRuntime\FiveMCleaner.UpdateRuntime.csproj" />
     <FrameworkReference Include="Microsoft.WindowsDesktop.App.WPF" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
     <PackageReference Include="xunit" Version="2.9.3" />
