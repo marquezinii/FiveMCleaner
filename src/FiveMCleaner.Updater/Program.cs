@@ -20,8 +20,8 @@ public static class Program
 
         try
         {
-            WaitForParentExit(handoff.ParentProcessId);
-            VerifyInstaller(handoff);
+            WaitForParentExit(handoff.ParentProcessId, handoff.ParentStartTimeUtcFileTime);
+            using var verifiedInstaller = VerifyInstaller(handoff);
             RunInstaller(handoff);
             return 0;
         }
@@ -32,12 +32,14 @@ public static class Program
         }
     }
 
-    private static void WaitForParentExit(int parentProcessId)
+    private static void WaitForParentExit(int parentProcessId, long parentStartTimeUtcFileTime)
     {
         try
         {
             using var parent = Process.GetProcessById(parentProcessId);
-            if (!parent.HasExited && !parent.WaitForExit(ParentExitTimeoutMilliseconds))
+            if (!parent.HasExited
+                && parent.StartTime.ToUniversalTime().ToFileTimeUtc() == parentStartTimeUtcFileTime
+                && !parent.WaitForExit(ParentExitTimeoutMilliseconds))
             {
                 throw new TimeoutException("O FiveMCleaner não foi encerrado a tempo para instalar a atualização.");
             }
@@ -45,7 +47,7 @@ public static class Program
         catch (ArgumentException) { }
     }
 
-    private static void VerifyInstaller(UpdateHandoff handoff)
+    private static FileStream VerifyInstaller(UpdateHandoff handoff)
     {
         if (!File.Exists(handoff.InstallerPath)) throw new FileNotFoundException("O instalador baixado não foi encontrado.", handoff.InstallerPath);
         if (new FileInfo(handoff.InstallerPath).Length != handoff.InstallerSizeBytes)
@@ -53,11 +55,23 @@ public static class Program
             throw new InvalidDataException("O tamanho do instalador baixado não confere com a atualização verificada.");
         }
 
-        using var stream = File.OpenRead(handoff.InstallerPath);
+        var stream = new FileStream(
+            handoff.InstallerPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read);
+        if (stream.Length != handoff.InstallerSizeBytes)
+        {
+            stream.Dispose();
+            throw new InvalidDataException("Installer size changed during verification.");
+        }
         if (!Convert.ToHexString(SHA256.HashData(stream)).Equals(handoff.InstallerSha256, StringComparison.OrdinalIgnoreCase))
         {
+            stream.Dispose();
             throw new InvalidDataException("A verificação de integridade do instalador falhou.");
         }
+
+        return stream;
     }
 
     private static void RunInstaller(UpdateHandoff handoff)
@@ -83,7 +97,13 @@ public static class Program
         "Atualização do FiveMCleaner", MessageBoxButtons.OK, MessageBoxIcon.Error);
 }
 
-public sealed record UpdateHandoff(string InstallerPath, long InstallerSizeBytes, string InstallerSha256, int ParentProcessId, string? LogPath)
+public sealed record UpdateHandoff(
+    string InstallerPath,
+    long InstallerSizeBytes,
+    string InstallerSha256,
+    int ParentProcessId,
+    long ParentStartTimeUtcFileTime,
+    string? LogPath)
 {
     public string LogHint => LogPath is null ? string.Empty : $"Log: {LogPath}";
 
@@ -98,7 +118,7 @@ public sealed record UpdateHandoff(string InstallerPath, long InstallerSizeBytes
     {
         handoff = null!;
         error = "Os dados da atualização são inválidos.";
-        if (args is null || args.Length is 0 or > 10 || args.Length % 2 != 0) return false;
+        if (args is null || args.Length is 0 or > 12 || args.Length % 2 != 0) return false;
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         for (var index = 0; index < args.Length; index += 2)
         {
@@ -113,11 +133,13 @@ public sealed record UpdateHandoff(string InstallerPath, long InstallerSizeBytes
             || !values.TryGetValue("--installer-sha256", out var hash) || hash.Length != 64 || !hash.All(char.IsAsciiHexDigit)
             || !values.TryGetValue("--parent-pid", out var pidText)
             || !int.TryParse(pidText, NumberStyles.None, CultureInfo.InvariantCulture, out var pid) || pid <= 0
-            || values.Keys.Any(key => key is not "--installer" and not "--installer-size" and not "--installer-sha256" and not "--parent-pid" and not "--log")) return false;
+            || !values.TryGetValue("--parent-start-time", out var startTimeText)
+            || !long.TryParse(startTimeText, NumberStyles.None, CultureInfo.InvariantCulture, out var startTime) || startTime <= 0
+            || values.Keys.Any(key => key is not "--installer" and not "--installer-size" and not "--installer-sha256" and not "--parent-pid" and not "--parent-start-time" and not "--log")) return false;
 
         values.TryGetValue("--log", out var logPath);
         if (logPath is not null && !IsUnderLocalData("Logs", logPath)) return false;
-        handoff = new UpdateHandoff(Path.GetFullPath(installerPath), size, hash, pid, logPath);
+        handoff = new UpdateHandoff(Path.GetFullPath(installerPath), size, hash, pid, startTime, logPath);
         return true;
     }
 

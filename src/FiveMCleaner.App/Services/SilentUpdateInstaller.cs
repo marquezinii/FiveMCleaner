@@ -50,7 +50,10 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
         this.launcher = launcher ?? new ProcessUpdateLauncher();
     }
 
-    internal IReadOnlyList<string> BuildHandoffArguments(DownloadedUpdate update, int parentProcessId)
+    internal IReadOnlyList<string> BuildHandoffArguments(
+        DownloadedUpdate update,
+        int parentProcessId,
+        long parentStartTimeUtcFileTime)
     {
         var arguments = new List<string>
         {
@@ -58,6 +61,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             "--installer-size", update.SizeBytes.ToString(System.Globalization.CultureInfo.InvariantCulture),
             "--installer-sha256", update.Sha256Hex,
             "--parent-pid", parentProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            "--parent-start-time", parentStartTimeUtcFileTime.ToString(System.Globalization.CultureInfo.InvariantCulture),
         };
         var preparedLogDirectory = TryPrepareLogDirectory();
         if (preparedLogDirectory is not null)
@@ -77,7 +81,13 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
         {
             ResolveVerifiedInstallerPath(update);
             var updaterPath = CopyUpdaterOutsideInstallDirectory();
-            launcher.Start(updaterPath, BuildHandoffArguments(update, Environment.ProcessId));
+            using var currentProcess = Process.GetCurrentProcess();
+            launcher.Start(
+                updaterPath,
+                BuildHandoffArguments(
+                    update,
+                    currentProcess.Id,
+                    currentProcess.StartTime.ToUniversalTime().ToFileTimeUtc()));
             return Task.FromResult(SilentUpdateLaunch.Running());
         }
         catch (Exception exception) when (exception is not (

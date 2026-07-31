@@ -1,5 +1,15 @@
 # Estado do Projeto
 
+## Hardening do atualizador independente — 31/07/2026
+
+- O handoff identifica o processo principal por PID e instante de criacao:
+  se o Windows reutilizar o PID depois do fechamento, o updater não aguarda um
+  processo alheio. O campo é obrigatório e coberto pelo parser testado.
+- Durante hash e execucao, o updater retém um handle somente-leitura do setup,
+  negando escrita/troca concorrente no mesmo caminho até o processo do Inno
+  Setup iniciar e terminar. Build/testes Release e validação do pacote seguem
+  obrigatórios antes de uma futura publicação.
+
 ## Atualizador independente e durável — 31/07/2026
 
 - O fluxo de instalação da atualização foi separado do WPF: o novo projeto

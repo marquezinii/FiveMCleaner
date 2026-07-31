@@ -38,11 +38,13 @@ public sealed class SilentUpdateInstallerTests : IDisposable
     [Fact]
     public void BuildHandoffArguments_PassesOnlyIntegrityAndLifecycleData()
     {
-        var arguments = Create(logDirectory: Path.Combine(root, "logs")).BuildHandoffArguments(CreateVerifiedInstaller(), parentProcessId: 42);
+        var arguments = Create(logDirectory: Path.Combine(root, "logs")).BuildHandoffArguments(
+            CreateVerifiedInstaller(), parentProcessId: 42, parentStartTimeUtcFileTime: 123);
 
         Assert.Contains("--installer", arguments);
         Assert.Contains("--installer-sha256", arguments);
         Assert.Contains("--parent-pid", arguments);
+        Assert.Contains("--parent-start-time", arguments);
         Assert.Contains("42", arguments);
         Assert.Contains("--log", arguments);
         Assert.DoesNotContain(arguments, argument => argument.StartsWith("/VERYSILENT", StringComparison.Ordinal));
