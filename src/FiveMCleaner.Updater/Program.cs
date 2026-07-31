@@ -8,6 +8,7 @@ namespace FiveMCleaner.Updater;
 public static class Program
 {
     private const int ParentExitTimeoutMilliseconds = 120_000;
+    private const int InstallerTimeoutMilliseconds = 600_000;
 
     [STAThread]
     public static int Main(string[] args)
@@ -85,11 +86,21 @@ public static class Program
         };
         foreach (var argument in handoff.BuildInstallerArguments()) startInfo.ArgumentList.Add(argument);
         using var installer = Process.Start(startInfo) ?? throw new InvalidOperationException("O Windows não iniciou o instalador da atualização.");
-        installer.WaitForExit();
+        if (!installer.WaitForExit(InstallerTimeoutMilliseconds))
+        {
+            TryKill(installer);
+            throw new TimeoutException($"O instalador da atualização não terminou a tempo e foi encerrado. {handoff.LogHint}");
+        }
         if (installer.ExitCode != 0)
         {
             throw new InvalidOperationException($"A instalação da atualização foi encerrada com código {installer.ExitCode}. {handoff.LogHint}");
         }
+    }
+
+    private static void TryKill(Process process)
+    {
+        try { process.Kill(entireProcessTree: true); }
+        catch (Exception exception) when (exception is InvalidOperationException or System.ComponentModel.Win32Exception) { }
     }
 
     private static void ShowFailure(string? detail) => MessageBox.Show(

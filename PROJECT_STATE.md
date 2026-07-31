@@ -1,5 +1,27 @@
 # Estado do Projeto
 
+## Hardening agressivo da cadeia do instalador — 31/07/2026
+
+- `SilentUpdateInstaller.CopyUpdaterOutsideInstallDirectory` agora recalcula
+  SHA-256 duas vezes: logo após a cópia para o arquivo temporário (antes do
+  rename) e de novo no caminho final, imediatamente antes de retornar para o
+  `Process.Start`. Isso fecha a janela TOCTOU entre copiar/renomear o
+  atualizador independente para `%LOCALAPPDATA%` e executá-lo, contra troca
+  do arquivo por outro processo do mesmo usuário nesse intervalo.
+- `FiveMCleaner.Updater` (processo que roda o setup silencioso) agora limita
+  `WaitForExit` a 10 minutos; se o Inno Setup travar (por exemplo, uma caixa
+  de diálogo do Restart Manager que escapou de `/SUPPRESSMSGBOXES`), o
+  atualizador mata a árvore de processos e reporta timeout em vez de
+  bloquear indefinidamente sem feedback ao usuário.
+- `Verify-Installer.ps1` passou a travar também `RestartIfNeededByRun=no` no
+  contrato do `.iss`, impedindo que uma edição futura do script reintroduza
+  reinício automático de máquina após a instalação silenciosa.
+- Escopo desta rodada foi deliberadamente restrito ao instalador e a tudo que
+  o cerca (Inno Setup, `FiveMCleaner.Updater`, cópia/handoff do atualizador,
+  contrato de verificação); nenhuma mudança em diagnóstico, perfis ou
+  telemetria. Validação: build Release sem avisos, 594 testes .NET,
+  `Verify-Safety.ps1` e `Verify-Installer.ps1 -ScriptOnly` aprovados.
+
 ## SemVer de patch com múltiplas casas — 31/07/2026
 
 - A regra de publicação explicita que `X.Y.Z` continua sendo SemVer: `Z` é

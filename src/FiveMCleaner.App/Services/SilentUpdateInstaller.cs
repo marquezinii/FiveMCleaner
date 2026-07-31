@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.IO;
+using System.Security.Cryptography;
 
 namespace FiveMCleaner.App.Services;
 
@@ -149,13 +150,27 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             throw new FileNotFoundException("O atualizador independente não foi encontrado na instalação.", updaterSourcePath);
         }
 
+        var sourceHash = ComputeSha256(updaterSourcePath);
         Directory.CreateDirectory(updaterRuntimeDirectory);
         var destination = Path.Combine(updaterRuntimeDirectory, UpdaterFileName);
         var temporary = Path.Combine(updaterRuntimeDirectory, $"{UpdaterFileName}.{Guid.NewGuid():N}.new");
         try
         {
             File.Copy(updaterSourcePath, temporary, overwrite: false);
+            // Reverify before the rename so a swap of the temp file mid-copy is caught
+            // before it ever occupies the path we are about to execute.
+            if (!ComputeSha256(temporary).Equals(sourceHash, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UpdateSecurityException("A cópia local do atualizador independente falhou na verificação de integridade.");
+            }
             File.Move(temporary, destination, overwrite: true);
+            // Reverify again immediately before launch: closes the race window between
+            // the rename and Process.Start where another local process could have
+            // replaced the destination file at the same path.
+            if (!ComputeSha256(destination).Equals(sourceHash, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new UpdateSecurityException("O atualizador independente foi alterado após a cópia local.");
+            }
             return destination;
         }
         finally
@@ -163,6 +178,12 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             try { File.Delete(temporary); }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
         }
+    }
+
+    private static string ComputeSha256(string path)
+    {
+        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+        return Convert.ToHexString(SHA256.HashData(stream));
     }
 
     private static bool IsSha256(string? value) => value is { Length: 64 }

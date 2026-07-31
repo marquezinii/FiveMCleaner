@@ -31,6 +31,7 @@ $requiredPatterns = [ordered]@{
     'payload timestamps normalized' = 'Flags: .*notimestamp'
     'safe close through RM'         = 'CloseApplications=yes'
     'no automatic app restart'      = 'RestartApplications=no'
+    'no automatic reboot after run' = 'RestartIfNeededByRun=no'
     'concurrent setup guard'        = 'SetupMutex=FiveMCleaner\.Setup\.'
     'optional desktop shortcut'     = 'Name: "desktopicon";.*Flags: unchecked'
     'optional startup'              = 'Name: "startup";.*Flags: unchecked'
