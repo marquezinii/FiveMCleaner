@@ -1,5 +1,15 @@
 # Estado do Projeto
 
+## Linha do tempo compacta do Otimizador — 31/07/2026
+
+- A aba Otimizador não mostra mais o plano técnico, avisos, lista de ações,
+  ledger ou log ao vivo. Ela foi substituída por uma única barra horizontal
+  com percentual, tempo decorrido, estimativa restante conservadora baseada no
+  progresso ponderado real e uma linha do tempo central: a etapa atual e,
+  apenas quando existe, a etapa anterior em menor opacidade.
+- O relatório e a comparação pós-execução continuam disponíveis após a rodada;
+  a prévia técnica permanece no fluxo próprio de revisão, antes da execução.
+
 ## Consentimento de privacidade obrigatório — 31/07/2026
 
 - A tela de consentimento de telemetria e relatórios de falhas não possui mais

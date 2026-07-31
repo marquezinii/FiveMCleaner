@@ -462,38 +462,37 @@
                             <StackPanel Margin="0,0,18,0"><TextBlock Text="{Binding [Optimizer.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" /><TextBlock Text="{Binding [Optimizer.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" TextWrapping="Wrap" /></StackPanel>
                             <Border Grid.Column="1" HorizontalAlignment="Right" Padding="10,5" Background="#1837C889" CornerRadius="8" VerticalAlignment="Center"><TextBlock Text="{Binding [Optimizer.NoRemoteScripts], Source={StaticResource LocalizedStrings}}" Foreground="{DynamicResource GreenBrush}" FontSize="9" FontWeight="Bold" /></Border>
                         </Grid>
-                        <Grid Grid.Row="1">
-                            <Grid.ColumnDefinitions><ColumnDefinition Width="1.08*" /><ColumnDefinition Width="15" /><ColumnDefinition Width="0.92*" /></Grid.ColumnDefinitions>
-                            <Border Grid.Column="0" Style="{StaticResource CardStyle}" Padding="18">
-                                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                    <Grid Margin="0,0,0,13"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,12,0"><TextBlock Text="{Binding [Optimizer.CurrentPlan], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /></StackPanel><Border Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center" MinHeight="28" Padding="9,0" Background="{DynamicResource ChipBrush}" CornerRadius="7"><TextBlock Text="{Binding SelectedProfileLabel}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" /></Border></Grid>
-                                    <Border Grid.Row="1" Margin="0,0,0,11" Padding="11,8" Background="#1FFF7A18" BorderBrush="#45FF7A18" BorderThickness="1" CornerRadius="8"><TextBlock Text="{Binding PlanNoticesText}" Foreground="{DynamicResource OrangeLightBrush}" FontSize="10" TextWrapping="Wrap" /></Border>
-                                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding PlannedActions}" ItemTemplate="{StaticResource ActionTemplate}" /></ScrollViewer>
-                                    <Grid Grid.Row="3" Margin="0,13,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><Button Content="{Binding [Optimizer.RunPlan], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" /><TextBlock Grid.Column="1" Text="{Binding SafetySummary}" Margin="12,0,0,0" HorizontalAlignment="Right" VerticalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" TextAlignment="Right" /></Grid>
-                                </Grid>
-                            </Border>
-                            <Border Grid.Column="2" Style="{StaticResource CardStyle}" Padding="20">
-                                <Grid><Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel Margin="0,0,12,0"><TextBlock Text="{Binding [Progress.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="{Binding ProgressStateLabel}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11" TextWrapping="Wrap" /></StackPanel><TextBlock Grid.Column="1" Text="{Binding ProgressPercent, Mode=OneWay, StringFormat={}{0:0}%}" HorizontalAlignment="Right" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" /></Grid>
-                                    <StackPanel Grid.Row="1" Margin="0,18,0,15">
-                                        <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100" />
-                                        <Grid Margin="0,7,0,0">
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding ElapsedTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" TextTrimming="CharacterEllipsis" />
-                                            <TextBlock Grid.Column="1" Text="{Binding RemainingTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" HorizontalAlignment="Right" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <StackPanel>
+                                <Border Style="{StaticResource CardStyle}" Padding="26">
+                                    <Grid>
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding [Progress.Title], Source={StaticResource LocalizedStrings}}" FontSize="16" FontWeight="SemiBold" />
+                                            <TextBlock Grid.Column="1" Text="{Binding ProgressPercent, Mode=OneWay, StringFormat={}{0:0}%}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
                                         </Grid>
-                                        <TextBlock Text="{Binding StepCounterLabel}" Margin="0,7,0,0" Foreground="{DynamicResource OrangeLightBrush}" FontSize="10" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                                        <TextBlock Text="{Binding ProgressHeadline}" Margin="0,11,0,0" FontSize="13" FontWeight="SemiBold" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
-                                        <TextBlock Text="{Binding ProgressDetail}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" HorizontalAlignment="Center" TextAlignment="Center" />
-                                    </StackPanel>
-                                    <Border Grid.Row="2" Margin="0,0,0,11" MaxHeight="120" Visibility="{Binding HasStepLedgerItems, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding [Optimizer.StepLedger.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,6" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
-                                            <ScrollViewer VerticalScrollBarVisibility="Auto" MaxHeight="96"><ItemsControl ItemsSource="{Binding StepLedger}" ItemTemplate="{StaticResource StepLedgerTemplate}" /></ScrollViewer>
+                                        <StackPanel Grid.Row="1" Margin="0,20,0,0">
+                                            <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100" />
+                                            <Grid Margin="0,8,0,0">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                <TextBlock Text="{Binding ElapsedTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Grid.Column="1" Text="{Binding RemainingTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" HorizontalAlignment="Right" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
+                                            </Grid>
                                         </StackPanel>
-                                    </Border>
-                                    <Border Grid.Row="3" Background="{DynamicResource InsetBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Padding="13"><ScrollViewer VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding ActivityLog}" ItemTemplate="{StaticResource LogTemplate}" /></ScrollViewer></Border>
-                                    <Border Grid.Row="4" Margin="0,13,0,0" Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Visibility="{Binding IsReportAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <StackPanel Grid.Row="2" Margin="0,28,0,24" HorizontalAlignment="Center">
+                                            <TextBlock Text="{Binding PreviousProgressHeadline}" Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" Foreground="{DynamicResource TextSubtleBrush}" Opacity="0.58" FontSize="11.5" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
+                                            <TextBlock Margin="0,6,0,0" FontSize="14" FontWeight="SemiBold" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center">
+                                                <Run Text="{Binding ProgressStateLabel}" /><Run Text=": " /><Run Text="{Binding ProgressHeadline}" />
+                                            </TextBlock>
+                                        </StackPanel>
+                                        <Grid Grid.Row="3"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <Button Grid.Column="1" Content="{Binding [Optimizer.RunPlan], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Padding="24,0" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
+                                            <Button Grid.Column="2" Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" HorizontalAlignment="Right" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />
+                                        </Grid>
+                                    </Grid>
+                                </Border>
+                                <Border Margin="0,13,0,0" Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Visibility="{Binding IsReportAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <StackPanel>
                                             <TextBlock Text="{Binding [Report.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
                                             <TextBlock Text="{Binding ReportSummaryLabel}" Margin="0,6,0,0" FontSize="10.5" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" />
@@ -505,19 +504,17 @@
                                                 <Button Grid.Column="2" Content="{Binding [Report.SaveButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Click="SaveTechnicalReport_Click" />
                                             </Grid>
                                         </StackPanel>
-                                    </Border>
-                                    <Border Grid.Row="5" Margin="0,13,0,0" Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Visibility="{Binding IsComparisonAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                </Border>
+                                <Border Margin="0,13,0,0" Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Visibility="{Binding IsComparisonAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
                                         <StackPanel>
                                             <TextBlock Text="{Binding [Comparison.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
                                             <TextBlock Text="{Binding ComparisonSummaryLabel}" Margin="0,6,0,0" FontSize="10.5" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" />
                                             <TextBlock Text="{Binding ComparisonHardwareProfileLabel}" Margin="0,4,0,0" FontSize="9.5" TextWrapping="Wrap" Foreground="{DynamicResource TextSubtleBrush}" />
                                             <Button Content="{Binding [Comparison.RevertButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,10,0,0" HorizontalAlignment="Stretch" Click="RevertLastOptimization_Click" Visibility="{Binding ComparisonRegressionSuspected, Converter={StaticResource BooleanToVisibilityConverter}}" IsEnabled="{Binding CanRevertLastOptimization}" />
                                         </StackPanel>
-                                    </Border>
-                                    <Button Grid.Row="6" Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,13,0,0" HorizontalAlignment="Stretch" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />
-                                </Grid>
-                            </Border>
-                        </Grid>
+                                </Border>
+                            </StackPanel>
+                        </ScrollViewer>
                     </Grid>
 
                     <!-- History -->

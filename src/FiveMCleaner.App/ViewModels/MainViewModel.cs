@@ -30,6 +30,7 @@ public sealed class MainViewModel : BindableBase
     private bool isInitializing = true;
     private double progressPercent;
     private string progressHeadline = string.Empty;
+    private string previousProgressHeadline = string.Empty;
     private string progressDetail = string.Empty;
     private string progressStateLabel = string.Empty;
     private string elapsedTimeLabel = string.Empty;
@@ -224,7 +225,34 @@ public sealed class MainViewModel : BindableBase
 
     public double ProgressPercent { get => progressPercent; private set => SetProperty(ref progressPercent, value); }
 
-    public string ProgressHeadline { get => progressHeadline; private set => SetProperty(ref progressHeadline, value); }
+    public string ProgressHeadline
+    {
+        get => progressHeadline;
+        private set
+        {
+            if (!string.Equals(progressHeadline, value, StringComparison.Ordinal)
+                && !string.IsNullOrWhiteSpace(progressHeadline))
+            {
+                PreviousProgressHeadline = progressHeadline;
+            }
+
+            SetProperty(ref progressHeadline, value);
+        }
+    }
+
+    public string PreviousProgressHeadline
+    {
+        get => previousProgressHeadline;
+        private set
+        {
+            if (SetProperty(ref previousProgressHeadline, value))
+            {
+                OnPropertyChanged(nameof(HasPreviousProgressHeadline));
+            }
+        }
+    }
+
+    public bool HasPreviousProgressHeadline => !string.IsNullOrWhiteSpace(PreviousProgressHeadline);
 
     public string ProgressDetail { get => progressDetail; private set => SetProperty(ref progressDetail, value); }
 
@@ -983,6 +1011,7 @@ public sealed class MainViewModel : BindableBase
         operationCancellation = new CancellationTokenSource();
         IsBusy = true;
         ProgressPercent = 0;
+        ClearProgressHistory();
         ProgressStateLabel = localization.GetString("Status.Preparing");
         StartOperationTiming();
         ActivityLog.Clear();
@@ -1151,6 +1180,7 @@ public sealed class MainViewModel : BindableBase
         operationCancellation = new CancellationTokenSource();
         IsBusy = true;
         ProgressPercent = 0;
+        ClearProgressHistory();
         StartOperationTiming();
         var progress = new Progress<AppProgressUpdate>(ApplyProgress);
         var completedSuccessfully = false;
@@ -1655,6 +1685,15 @@ public sealed class MainViewModel : BindableBase
 
         UpdateOperationTiming();
         AddLog(update.Detail);
+    }
+
+    private void ClearProgressHistory()
+    {
+        previousProgressHeadline = string.Empty;
+        progressHeadline = string.Empty;
+        OnPropertyChanged(nameof(PreviousProgressHeadline));
+        OnPropertyChanged(nameof(HasPreviousProgressHeadline));
+        OnPropertyChanged(nameof(ProgressHeadline));
     }
 
     private void UpsertStepLedgerItem(string actionId, ActionExecutionOutcome outcome)

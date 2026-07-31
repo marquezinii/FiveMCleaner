@@ -143,6 +143,26 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void Optimizer_UsesACompactProgressTimelineInsteadOfThePlanAndLedgerLists()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml"));
+        var optimizer = source[source.IndexOf("<!-- Optimizer -->", StringComparison.Ordinal)..source.IndexOf("<!-- History -->", StringComparison.Ordinal)];
+
+        Assert.DoesNotContain("PlannedActions", optimizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("StepLedger", optimizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ActivityLog", optimizer, StringComparison.Ordinal);
+        Assert.Contains("ProgressBar Value=\"{Binding ProgressPercent", optimizer, StringComparison.Ordinal);
+        Assert.Contains("PreviousProgressHeadline", optimizer, StringComparison.Ordinal);
+        Assert.Contains("ElapsedTimeLabel", optimizer, StringComparison.Ordinal);
+        Assert.Contains("RemainingTimeLabel", optimizer, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ResxCatalogs_HaveNoDuplicateKeys()
     {
         var root = FindRepositoryRoot();
