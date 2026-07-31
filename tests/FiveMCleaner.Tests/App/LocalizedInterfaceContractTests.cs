@@ -121,6 +121,28 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void PrivacyConsentWindow_CanOnlyCloseAfterContinue()
+    {
+        var root = FindRepositoryRoot();
+        var xaml = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Views",
+            "PrivacyConsentWindow.xaml"));
+        var codeBehind = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Views",
+            "PrivacyConsentWindow.xaml.cs"));
+
+        Assert.DoesNotContain("Click=\"Close_Click\"", xaml, StringComparison.Ordinal);
+        Assert.Contains("e.Cancel = !confirmedByUser;", codeBehind, StringComparison.Ordinal);
+        Assert.Contains("confirmedByUser = true;", codeBehind, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void ResxCatalogs_HaveNoDuplicateKeys()
     {
         var root = FindRepositoryRoot();

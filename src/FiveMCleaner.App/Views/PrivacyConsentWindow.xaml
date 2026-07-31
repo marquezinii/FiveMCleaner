@@ -32,16 +32,13 @@
             </Grid.RowDefinitions>
 
             <Border Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="0,0,0,1" CornerRadius="12,12,0,0">
-                <Grid Margin="18,0,8,0">
+                <Grid Margin="18,0">
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                         <Border Width="30" Height="30" CornerRadius="8" Background="#1837C889">
                             <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource GreenBrush}" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
                         <TextBlock Text="{Binding [PrivacyConsent.WindowTitle], Source={StaticResource LocalizedStrings}}" Margin="10,0,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
                     </StackPanel>
-                    <Button HorizontalAlignment="Right" Style="{StaticResource WindowButtonStyle}" Click="Close_Click" ToolTip="{Binding [Window.Close], Source={StaticResource LocalizedStrings}}">
-                        <TextBlock Text="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="10" />
-                    </Button>
                 </Grid>
             </Border>
 

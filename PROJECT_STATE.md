@@ -1,5 +1,12 @@
 # Estado do Projeto
 
+## Consentimento de privacidade obrigatório — 31/07/2026
+
+- A tela de consentimento de telemetria e relatórios de falhas não possui mais
+  botão de fechar. Tentativas de encerrá-la (inclusive Alt+F4) são canceladas
+  até que a pessoa escolha os seletores desejados e clique em `Continuar`; só
+  então as preferências e a versão de consentimento são persistidas.
+
 ## Teste real do fluxo de update — dois bugs críticos encontrados e corrigidos — 31/07/2026
 
 - Montado um harness de integração real (fora do repositório, em scratchpad):
