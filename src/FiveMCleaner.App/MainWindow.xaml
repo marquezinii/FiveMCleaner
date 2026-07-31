@@ -439,7 +439,35 @@
                                             <TextBlock Grid.Column="1" Text="{Binding ProgressPercent, Mode=OneWay, StringFormat={}{0:0}%}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
                                         </Grid>
                                         <StackPanel Grid.Row="1" Margin="0,20,0,0">
-                                            <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100" />
+                                            <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100">
+                                                <ProgressBar.Style>
+                                                    <Style TargetType="ProgressBar" BasedOn="{StaticResource {x:Type ProgressBar}}">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                                <Setter Property="Foreground">
+                                                                    <Setter.Value>
+                                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                                                            <LinearGradientBrush.Transform>
+                                                                                <TranslateTransform X="0" />
+                                                                            </LinearGradientBrush.Transform>
+                                                                            <GradientStop Color="#FF7A18" Offset="0" />
+                                                                            <GradientStop Color="#FFAA62" Offset="0.5" />
+                                                                            <GradientStop Color="#FF7A18" Offset="1" />
+                                                                        </LinearGradientBrush>
+                                                                    </Setter.Value>
+                                                                </Setter>
+                                                                <DataTrigger.EnterActions>
+                                                                    <BeginStoryboard>
+                                                                        <Storyboard RepeatBehavior="Forever">
+                                                                            <DoubleAnimation Storyboard.TargetProperty="(ProgressBar.Foreground).(LinearGradientBrush.Transform).(TranslateTransform.X)" From="-1" To="1" Duration="0:0:1.4" />
+                                                                        </Storyboard>
+                                                                    </BeginStoryboard>
+                                                                </DataTrigger.EnterActions>
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </ProgressBar.Style>
+                                            </ProgressBar>
                                             <Grid Margin="0,8,0,0">
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding ElapsedTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextTrimming="CharacterEllipsis" />
