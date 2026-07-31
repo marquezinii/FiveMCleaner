@@ -27,8 +27,8 @@ public sealed class SingleInstanceGuardTests
     [Fact]
     public void TryAcquire_FirstCaller_Succeeds()
     {
-        var environment = TestEnvironment;
-        using var guard = new SingleInstanceGuard(environment);
+        var mutexName = NewTestMutexName();
+        using var guard = new SingleInstanceGuard(mutexName);
 
         Assert.True(guard.TryAcquire());
     }
@@ -42,14 +42,14 @@ public sealed class SingleInstanceGuardTests
         // contention is always across different processes (different
         // threads). Holding the first guard on a background thread
         // reproduces that genuine cross-thread blocking behavior.
-        var environment = TestEnvironment;
-        using var second = new SingleInstanceGuard(environment);
+        var mutexName = NewTestMutexName();
+        using var second = new SingleInstanceGuard(mutexName);
         var firstAcquired = new ManualResetEventSlim();
         var releaseFirst = new ManualResetEventSlim();
 
         var holderThread = new Thread(() =>
         {
-            using var first = new SingleInstanceGuard(environment);
+            using var first = new SingleInstanceGuard(mutexName);
             first.TryAcquire();
             firstAcquired.Set();
             releaseFirst.Wait();
@@ -74,35 +74,26 @@ public sealed class SingleInstanceGuardTests
     [Fact]
     public void TryAcquire_AfterTheFirstInstanceDisposes_SucceedsForANewOne()
     {
-        var environment = TestEnvironment;
-        var first = new SingleInstanceGuard(environment);
+        var mutexName = NewTestMutexName();
+        var first = new SingleInstanceGuard(mutexName);
         Assert.True(first.TryAcquire());
         first.Dispose();
 
-        using var second = new SingleInstanceGuard(environment);
+        using var second = new SingleInstanceGuard(mutexName);
         Assert.True(second.TryAcquire());
     }
 
     [Fact]
     public void Dispose_WithoutEverAcquiring_DoesNotThrow()
     {
-        var environment = TestEnvironment;
-        var guard = new SingleInstanceGuard(environment);
+        var mutexName = NewTestMutexName();
+        var guard = new SingleInstanceGuard(mutexName);
 
         var exception = Record.Exception(guard.Dispose);
 
         Assert.Null(exception);
     }
 
-    /// <summary>
-    /// Named Mutexes are process- and session-wide. Every acquiring test
-    /// below releases its guard(s) via <c>using</c>/explicit
-    /// <see cref="SingleInstanceGuard.Dispose"/> before returning, so as long
-    /// as xUnit does not run methods within this class in parallel (the
-    /// default), reusing the same environment/name across tests is safe.
-    /// Running a real FiveMCleaner Development instance at the same time as
-    /// this test suite could theoretically collide; that is an acceptable,
-    /// narrow window for a local test run.
-    /// </summary>
-    private static AppRuntimeEnvironment TestEnvironment => AppRuntimeEnvironment.Development;
+    private static string NewTestMutexName() =>
+        $"Local\\FiveMCleaner.SingleInstance.Test_{Guid.NewGuid():N}";
 }

@@ -35,12 +35,22 @@ public static partial class ReportSanitizer
         string token)
     {
         var path = Environment.GetFolderPath(folder);
-        return string.IsNullOrEmpty(path)
-            ? text
-            : text.Replace(path, token, StringComparison.OrdinalIgnoreCase);
+        if (string.IsNullOrEmpty(path))
+        {
+            return text;
+        }
+
+        var result = text.Replace(path, token, StringComparison.OrdinalIgnoreCase);
+        var altPath = path.Replace('\\', '/');
+        if (!string.Equals(path, altPath, StringComparison.Ordinal))
+        {
+            result = result.Replace(altPath, token, StringComparison.OrdinalIgnoreCase);
+        }
+
+        return result;
     }
 
-    [GeneratedRegex(@"[A-Za-z]:\\Users\\[^\\/:*?""<>|\r\n]+\\", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"[A-Za-z]:[/\\]Users[/\\][^\\/:*?""<>|\r\n]+[/\\]", RegexOptions.IgnoreCase)]
     private static partial Regex UsersPathPattern();
 }
 

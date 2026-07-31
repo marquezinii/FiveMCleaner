@@ -1,5 +1,12 @@
 # Estado do Projeto
 
+## Rodada de Hardening (Resistência e Resiliência) — 31/07/2026
+
+- **Hardening de arquivo atômico (`AtomicFile`)**: adicionada a garantia `EnsureDirectory(path)` antes da escrita de arquivos temporários em `AtomicFile.WriteBytes`/`WriteText`, prevenindo falhas quando diretórios de destino ainda não existem. Em `ReplaceInto`, adicionado fallback atômico para `File.Move(overwrite: true)` caso `File.Replace` falhe por bloqueios transitórios de arquivo ou características de plataforma.
+- **Hardening do guardião de instância única (`SingleInstanceGuard`)**: adicionado suporte a construtor interno para nomes de Mutex customizados e tratamento para `UnauthorizedAccessException` na criação, aquisição e descarte do Mutex. Os testes em `SingleInstanceGuardTests` foram isolados com nomes de Mutex únicos por teste, eliminando falhas de execução quando o aplicativo em modo de desenvolvimento está aberto na máquina local.
+- **Hardening do sanitizador de privacidade (`ReportSanitizer`)**: aprimorada a substituição em `ReportSanitizer` para reconhecer e sanitizar variações de caminhos formatados com barras normais (`/`) além de barras invertidas (`\`) para pastas do usuário (`%LOCALAPPDATA%`, `%APPDATA%`, `%USERPROFILE%`) e o padrão regex `Users`, eliminando vazamento inadvertido de nome de conta em caminhos tipo URI/URL ou logs de exceção.
+- Validação: 603 testes .NET aprovados (0 falhas), 0 avisos/erros de compilação, e `scripts/Verify-Safety.ps1` aprovado com sucesso.
+
 ## Instalador: tarefas padrão configuráveis — 31/07/2026
 
 - No instalador interativo, criar o atalho na área de trabalho e iniciar com
