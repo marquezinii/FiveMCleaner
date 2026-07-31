@@ -1,5 +1,12 @@
 # Estado do Projeto
 
+## Ajustes de interação da interface Fluent — 31/07/2026
+
+- A revisão da migração para WPF-UI removeu a escala dos cartões ao passar o
+  mouse, que deslocava listas e adicionava movimento desnecessário. Botões
+  primário, secundário e de link agora têm foco de teclado claramente visível,
+  sem alterar os fluxos de otimização nem a identidade visual Fluent.
+
 ## Redesign visual completo — Fluent Design via WPF-UI — 31/07/2026
 
 - Rodada de redesign visual pedida pelo usuário ("aplicativo quase novo"),

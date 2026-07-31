@@ -165,6 +165,21 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void FluentInteractionStyles_KeepListsStableAndKeyboardFocusVisible()
+    {
+        var root = FindRepositoryRoot();
+        var styles = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Themes",
+            "Controls.xaml"));
+
+        Assert.DoesNotContain("ScaleTransform", styles, StringComparison.Ordinal);
+        Assert.True(Regex.Matches(styles, "Property=\"IsKeyboardFocused\"").Count >= 3);
+    }
+
+    [Fact]
     public void ResxCatalogs_HaveNoDuplicateKeys()
     {
         var root = FindRepositoryRoot();
