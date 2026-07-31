@@ -360,9 +360,7 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("ToolTip=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Text=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Text=\"{Binding [Settings.Subtitle]", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Style=\"{StaticResource CloseWindowButtonStyle}\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("<Style x:Key=\"CloseWindowButtonStyle\"", controls, StringComparison.Ordinal);
-        Assert.Contains("BorderBrush\" Value=\"{DynamicResource RedBrush}\"", controls, StringComparison.Ordinal);
+        Assert.Contains("<ui:TitleBar", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Padding\" Value=\"17,0,11,0\"", controls, StringComparison.Ordinal);
     }
 
