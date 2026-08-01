@@ -159,6 +159,9 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("PlannedActions", optimizer, StringComparison.Ordinal);
         Assert.Contains("PlanDetailsExpander", optimizer, StringComparison.Ordinal);
         Assert.Contains("ProfileSelectorSection", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsLightRecommended", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsBalancedRecommended", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsAggressiveRecommended", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("StepLedger", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("ActivityLog", optimizer, StringComparison.Ordinal);
         Assert.Contains("ProgressBar Value=\"{Binding ProgressPercent", optimizer, StringComparison.Ordinal);

@@ -1,5 +1,11 @@
 # Estado do Projeto
 
+## Selo de perfil recomendado no Otimizador — 01/08/2026
+
+- Os três cards do Otimizador agora usam as mesmas bindings de recomendação da
+  Visão geral: o selo `RECOMENDADO` aparece no perfil Leve, Médio ou Agressivo
+  que o diagnóstico tiver indicado, e não fica preso ao card Médio.
+
 ## Redesign completo do Otimizador — 01/08/2026
 
 - O estado inicial do Otimizador agora apresenta uma recomendação principal,
