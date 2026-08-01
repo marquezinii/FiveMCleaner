@@ -379,7 +379,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         ActivateNavItem(OptimizerNav);
         Navigate(OptimizerPage);
+        PlanDetailsExpander.IsExpanded = true;
+        PlanDetailsExpander.BringIntoView();
     }
+
+    private void ChangeMode_Click(object sender, RoutedEventArgs e) => ProfileSelectorSection.BringIntoView();
 
     private void Navigate(UIElement page)
     {

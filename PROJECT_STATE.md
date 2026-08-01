@@ -1,5 +1,23 @@
 # Estado do Projeto
 
+## Redesign completo do Otimizador — 01/08/2026
+
+- O estado inicial do Otimizador agora apresenta uma recomendação principal,
+  dados reais do computador e das instalações detectadas, seleção dos três
+  perfis e um plano expansível com as ações, descrições, risco e
+  reversibilidade. O layout mantém a estética Fluent escura atual e reserva o
+  laranja para seleção, chamada principal e progresso.
+- A execução ganhou um card dedicado com etapa, percentual, tempos e
+  cancelamento seguro; o resultado possui resumo, orientação de reinício,
+  relatório e ações de copiar/salvar. Métricas que o produto ainda não mede de
+  forma confiável — como FPS, duração fixa, quantidade de processos e tamanho
+  prévio de cache — não foram inventadas na interface.
+- Inspeção visual automatizada aprovada em tela cheia e janela restaurada de
+  1160×680, incluindo plano recolhido/expandido e execução sintética. Um corte
+  dos selos de detecção na coluna lateral foi encontrado e corrigido com quebra
+  responsiva. Validação final: build Release sem avisos, 604 testes .NET,
+  `Verify-Safety.ps1`, format e `git diff --check` aprovados.
+
 ## Janela principal maximizada ao abrir — 01/08/2026
 
 - `MainWindow` agora inicia sempre maximizada e, ao ser restaurada pela bandeja,

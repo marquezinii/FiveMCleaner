@@ -43,9 +43,20 @@
   <data name="Plan.VerifiedActions" xml:space="preserve"><value>{0} acciones verificadas  •  {1}</value></data>
   <data name="Plan.Review" xml:space="preserve"><value>Revisar plan</value></data>
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Optimizar ahora</value></data>
-  <data name="Optimizer.Title" xml:space="preserve"><value>Optimizador</value></data>
-  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Plan determinista: el asistente solo acepta acciones integradas conocidas.</value></data>
-  <data name="Optimizer.NoRemoteScripts" xml:space="preserve"><value>SIN SCRIPTS REMOTOS</value></data>
+  <data name="Optimizer.Title" xml:space="preserve"><value>Optimizador de FiveM</value></data>
+  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Prepara tu equipo para jugar con menos interrupciones, procesos innecesarios y problemas de caché.</value></data>
+  <data name="Optimizer.NoRemoteScripts" xml:space="preserve"><value>100% LOCAL</value></data>
+  <data name="Optimizer.SystemReady" xml:space="preserve"><value>Sistema listo</value></data>
+  <data name="Optimizer.Recommended" xml:space="preserve"><value>OPTIMIZACIÓN RECOMENDADA</value></data>
+  <data name="Optimizer.Computer" xml:space="preserve"><value>Tu equipo</value></data>
+  <data name="Optimizer.Impact" xml:space="preserve"><value>Impacto esperado</value></data>
+  <data name="Optimizer.Execution" xml:space="preserve"><value>Ejecución</value></data>
+  <data name="Optimizer.ChangeMode" xml:space="preserve"><value>Cambiar modo</value></data>
+  <data name="Optimizer.RunningTitle" xml:space="preserve"><value>Optimizando tu equipo</value></data>
+  <data name="Optimizer.ShowDetails" xml:space="preserve"><value>Mostrar detalles</value></data>
+  <data name="Optimizer.CompletedTitle" xml:space="preserve"><value>Optimización completada</value></data>
+  <data name="Optimizer.NextStep" xml:space="preserve"><value>SIGUIENTE PASO RECOMENDADO</value></data>
+  <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Plan de optimización</value></data>
   <data name="Optimizer.CurrentPlan" xml:space="preserve"><value>Plan actual</value></data>
   <data name="Optimizer.RunPlan" xml:space="preserve"><value>Ejecutar plan</value></data>
   <data name="Progress.Title" xml:space="preserve"><value>Progreso</value></data>

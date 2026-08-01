@@ -43,9 +43,20 @@
   <data name="Plan.VerifiedActions" xml:space="preserve"><value>{0} verified actions  •  {1}</value></data>
   <data name="Plan.Review" xml:space="preserve"><value>Review plan</value></data>
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Optimize now</value></data>
-  <data name="Optimizer.Title" xml:space="preserve"><value>Optimizer</value></data>
-  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Deterministic plan: the helper accepts only known built-in actions.</value></data>
-  <data name="Optimizer.NoRemoteScripts" xml:space="preserve"><value>NO REMOTE SCRIPTS</value></data>
+  <data name="Optimizer.Title" xml:space="preserve"><value>FiveM Optimizer</value></data>
+  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Prepare your computer for FiveM with fewer interruptions, unnecessary processes and cache issues.</value></data>
+  <data name="Optimizer.NoRemoteScripts" xml:space="preserve"><value>100% LOCAL</value></data>
+  <data name="Optimizer.SystemReady" xml:space="preserve"><value>System ready</value></data>
+  <data name="Optimizer.Recommended" xml:space="preserve"><value>RECOMMENDED OPTIMIZATION</value></data>
+  <data name="Optimizer.Computer" xml:space="preserve"><value>Your computer</value></data>
+  <data name="Optimizer.Impact" xml:space="preserve"><value>Expected impact</value></data>
+  <data name="Optimizer.Execution" xml:space="preserve"><value>Execution</value></data>
+  <data name="Optimizer.ChangeMode" xml:space="preserve"><value>Change mode</value></data>
+  <data name="Optimizer.RunningTitle" xml:space="preserve"><value>Optimizing your computer</value></data>
+  <data name="Optimizer.ShowDetails" xml:space="preserve"><value>Show details</value></data>
+  <data name="Optimizer.CompletedTitle" xml:space="preserve"><value>Optimization completed</value></data>
+  <data name="Optimizer.NextStep" xml:space="preserve"><value>NEXT RECOMMENDED STEP</value></data>
+  <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Optimization plan</value></data>
   <data name="Optimizer.CurrentPlan" xml:space="preserve"><value>Current plan</value></data>
   <data name="Optimizer.RunPlan" xml:space="preserve"><value>Run plan</value></data>
   <data name="Progress.Title" xml:space="preserve"><value>Progress</value></data>

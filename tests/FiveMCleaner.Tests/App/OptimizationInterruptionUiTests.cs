@@ -21,7 +21,7 @@ public sealed class OptimizationInterruptionUiTests
     }
 
     [Fact]
-    public void OptimizerPlan_HidesImplementationChipsButPreservesActionDescriptions()
+    public void OptimizerPlan_ShowsUserFacingRiskAndPrivilegeChips()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -32,9 +32,9 @@ public sealed class OptimizationInterruptionUiTests
 
         Assert.Contains("Text=\"{Binding Name}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding Description}\"", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("Text=\"{Binding RiskLabel}\"", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("Text=\"{Binding PrivilegeLabel}\"", source, StringComparison.Ordinal);
-        Assert.DoesNotContain("Text=\"{Binding PlanHeader}\"", source, StringComparison.Ordinal);
+        Assert.Contains("Text=\"{Binding RiskLabel}\"", source, StringComparison.Ordinal);
+        Assert.Contains("Text=\"{Binding PrivilegeLabel}\"", source, StringComparison.Ordinal);
+        Assert.Contains("Text=\"{Binding PlanHeader}\"", source, StringComparison.Ordinal);
     }
 
     private static string FindRepositoryRoot()

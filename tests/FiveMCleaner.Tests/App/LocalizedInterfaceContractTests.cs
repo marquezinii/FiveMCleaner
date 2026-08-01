@@ -143,7 +143,7 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
-    public void Optimizer_UsesACompactProgressTimelineInsteadOfThePlanAndLedgerLists()
+    public void Optimizer_SeparatesPreparationProgressAndResults()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -153,7 +153,12 @@ public sealed partial class LocalizedInterfaceContractTests
             "MainWindow.xaml"));
         var optimizer = source[source.IndexOf("<!-- Optimizer -->", StringComparison.Ordinal)..source.IndexOf("<!-- History -->", StringComparison.Ordinal)];
 
-        Assert.DoesNotContain("PlannedActions", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsOptimizerIdle", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsBusy", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsReportAvailable", optimizer, StringComparison.Ordinal);
+        Assert.Contains("PlannedActions", optimizer, StringComparison.Ordinal);
+        Assert.Contains("PlanDetailsExpander", optimizer, StringComparison.Ordinal);
+        Assert.Contains("ProfileSelectorSection", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("StepLedger", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("ActivityLog", optimizer, StringComparison.Ordinal);
         Assert.Contains("ProgressBar Value=\"{Binding ProgressPercent", optimizer, StringComparison.Ordinal);
@@ -161,6 +166,7 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("ProgressHeadline, Mode=OneWay", optimizer, StringComparison.Ordinal);
         Assert.Contains("ElapsedTimeLabel", optimizer, StringComparison.Ordinal);
         Assert.Contains("RemainingTimeLabel", optimizer, StringComparison.Ordinal);
+        Assert.Contains("ReportLines", optimizer, StringComparison.Ordinal);
     }
 
     [Fact]

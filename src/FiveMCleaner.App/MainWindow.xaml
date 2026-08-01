@@ -35,6 +35,14 @@
                         <StackPanel Margin="8,0,0,0">
                             <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" />
                             <TextBlock Text="{Binding Description}" Margin="0,4,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5" TextWrapping="Wrap" />
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Border Padding="7,3" Background="{DynamicResource ChipBrush}" CornerRadius="6">
+                                    <TextBlock Text="{Binding RiskLabel}" FontSize="9" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" />
+                                </Border>
+                                <Border Margin="6,0,0,0" Padding="7,3" Background="{DynamicResource ChipBrush}" CornerRadius="6">
+                                    <TextBlock Text="{Binding PrivilegeLabel}" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" />
+                                </Border>
+                            </StackPanel>
                         </StackPanel>
                     </StackPanel>
                 </ui:CardControl.Header>
@@ -406,88 +414,114 @@
                     <!-- Optimizer -->
                     <Grid x:Name="OptimizerPage" Visibility="Collapsed">
                         <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /></Grid.RowDefinitions>
-                        <Grid Margin="0,0,26,18">
+                        <Grid Margin="0,0,26,20">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                            <StackPanel Margin="0,0,18,0"><TextBlock Text="{Binding [Optimizer.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" /><TextBlock Text="{Binding [Optimizer.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13" TextWrapping="Wrap" /></StackPanel>
-                            <Border Grid.Column="1" HorizontalAlignment="Right" Padding="10,5" Background="#1837C889" CornerRadius="8" VerticalAlignment="Center"><TextBlock Text="{Binding [Optimizer.NoRemoteScripts], Source={StaticResource LocalizedStrings}}" Foreground="{DynamicResource GreenBrush}" FontSize="9" FontWeight="Bold" /></Border>
+                            <StackPanel Margin="0,0,22,0" HorizontalAlignment="Left">
+                                <TextBlock Text="{Binding [Optimizer.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="27" FontWeight="Bold" />
+                                <TextBlock Text="{Binding [Optimizer.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13.5" TextWrapping="Wrap" MaxWidth="760" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Border Padding="10,5" Background="#1837C889" CornerRadius="8" Visibility="{Binding CanStart, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <StackPanel Orientation="Horizontal"><Ellipse Width="6" Height="6" Fill="{DynamicResource GreenBrush}" VerticalAlignment="Center" /><TextBlock Text="{Binding [Optimizer.SystemReady], Source={StaticResource LocalizedStrings}}" Margin="7,0,0,0" Foreground="{DynamicResource GreenBrush}" FontSize="9.5" FontWeight="SemiBold" /></StackPanel>
+                                </Border>
+                                <Border Margin="8,0,0,0" Padding="10,5" Background="{DynamicResource ChipBrush}" CornerRadius="8">
+                                    <TextBlock Text="{Binding [Optimizer.NoRemoteScripts], Source={StaticResource LocalizedStrings}}" Foreground="{DynamicResource TextMutedBrush}" FontSize="9.5" FontWeight="SemiBold" />
+                                </Border>
+                            </StackPanel>
                         </Grid>
+
                         <ScrollViewer Grid.Row="1" Padding="0,0,26,0" VerticalScrollBarVisibility="Auto">
                             <StackPanel>
-                                <ui:Card Padding="26">
+                                <StackPanel Visibility="{Binding IsOptimizerIdle, Converter={StaticResource BooleanToVisibilityConverter}}">
                                     <Grid>
-                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
-                                        <Grid>
-                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding [Progress.Title], Source={StaticResource LocalizedStrings}}" FontSize="16" FontWeight="SemiBold" />
-                                            <TextBlock Grid.Column="1" Text="{Binding ProgressPercent, Mode=OneWay, StringFormat={}{0:0}%}" FontSize="22" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
-                                        </Grid>
-                                        <StackPanel Grid.Row="1" Margin="0,20,0,0">
-                                            <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100">
-                                                <ProgressBar.Style>
-                                                    <Style TargetType="ProgressBar" BasedOn="{StaticResource {x:Type ProgressBar}}">
-                                                        <Style.Triggers>
-                                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                                                <Setter Property="Foreground">
-                                                                    <Setter.Value>
-                                                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
-                                                                            <LinearGradientBrush.Transform>
-                                                                                <TranslateTransform X="0" />
-                                                                            </LinearGradientBrush.Transform>
-                                                                            <GradientStop Color="#FF7A18" Offset="0" />
-                                                                            <GradientStop Color="#FFAA62" Offset="0.5" />
-                                                                            <GradientStop Color="#FF7A18" Offset="1" />
-                                                                        </LinearGradientBrush>
-                                                                    </Setter.Value>
-                                                                </Setter>
-                                                                <DataTrigger.EnterActions>
-                                                                    <BeginStoryboard>
-                                                                        <Storyboard RepeatBehavior="Forever">
-                                                                            <DoubleAnimation Storyboard.TargetProperty="(ProgressBar.Foreground).(LinearGradientBrush.Transform).(TranslateTransform.X)" From="-1" To="1" Duration="0:0:1.4" />
-                                                                        </Storyboard>
-                                                                    </BeginStoryboard>
-                                                                </DataTrigger.EnterActions>
-                                                            </DataTrigger>
-                                                        </Style.Triggers>
-                                                    </Style>
-                                                </ProgressBar.Style>
-                                            </ProgressBar>
-                                            <Grid Margin="0,8,0,0">
-                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                                <TextBlock Text="{Binding ElapsedTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Center" Margin="10,0">
-                                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource GreenBrush}" VerticalAlignment="Center" />
-                                                    <TextBlock Margin="7,0,0,0" Text="{Binding ProgressHeadline, Mode=OneWay}" FontSize="11.5" FontStyle="Italic" FontWeight="Normal" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" />
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="5*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="3*" /></Grid.ColumnDefinitions>
+                                        <ui:Card Grid.Column="0" Padding="22">
+                                            <Grid>
+                                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                    <StackPanel>
+                                                        <TextBlock Text="{Binding [Optimizer.Recommended], Source={StaticResource LocalizedStrings}}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
+                                                        <TextBlock Text="{Binding SelectedProfileLabel}" Margin="0,7,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="21" FontWeight="SemiBold" />
+                                                    </StackPanel>
+                                                    <Border Grid.Column="1" Width="42" Height="42" Background="#20FF7A18" CornerRadius="12"><TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                                                </Grid>
+                                                <TextBlock Grid.Row="1" Text="{Binding ProfilePresentationBenefits}" Margin="0,13,0,0" FontSize="12.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
+                                                <primitives:UniformGrid Grid.Row="2" Columns="3" Margin="0,18,0,0">
+                                                    <StackPanel Margin="0,0,12,0"><TextBlock Text="{Binding SelectedActionCount}" FontSize="18" FontWeight="Bold" /><TextBlock Text="{Binding [Plan.VerifiedActions.Label], Source={StaticResource LocalizedStrings}}" Margin="0,2,0,0" FontSize="9.5" Foreground="{DynamicResource TextSubtleBrush}" /></StackPanel>
+                                                    <StackPanel Margin="0,0,12,0"><TextBlock Text="{Binding ProfilePresentationImpact}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock Text="{Binding [Optimizer.Impact], Source={StaticResource LocalizedStrings}}" Margin="0,2,0,0" FontSize="9.5" Foreground="{DynamicResource TextSubtleBrush}" /></StackPanel>
+                                                    <StackPanel><TextBlock Text="{Binding ElevationLabel}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock Text="{Binding [Optimizer.Execution], Source={StaticResource LocalizedStrings}}" Margin="0,2,0,0" FontSize="9.5" Foreground="{DynamicResource TextSubtleBrush}" /></StackPanel>
+                                                </primitives:UniformGrid>
+                                                <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="0,22,0,0">
+                                                    <Button Content="{Binding [Plan.OptimizeNow], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="42" Padding="24,0" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
+                                                    <Button Content="{Binding [Plan.Review], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="42" Padding="18,0" Margin="9,0,0,0" Click="ReviewPlan_Click" />
+                                                    <Button Content="{Binding [Optimizer.ChangeMode], Source={StaticResource LocalizedStrings}}" Style="{StaticResource LinkButtonStyle}" Margin="12,0,0,0" Click="ChangeMode_Click" />
                                                 </StackPanel>
-                                                <TextBlock Grid.Column="2" Text="{Binding RemainingTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" HorizontalAlignment="Right" TextAlignment="Right" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                                             </Grid>
-                                            <TextBlock Margin="0,3,0,0" Text="{Binding PreviousProgressHeadline}" Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" Foreground="{DynamicResource TextSubtleBrush}" Opacity="0.55" FontSize="10.5" FontStyle="Italic" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
-                                        </StackPanel>
-                                        <Grid Grid.Row="2"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                            <Button Grid.Column="1" Content="{Binding [Optimizer.RunPlan], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Padding="24,0" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
-                                            <Button Grid.Column="2" Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" HorizontalAlignment="Right" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />
-                                        </Grid>
+                                        </ui:Card>
+
+                                        <ui:Card Grid.Column="2" Padding="20">
+                                            <StackPanel>
+                                                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="{Binding [Optimizer.Computer], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /><TextBlock Grid.Column="1" Text="&#xE770;" FontFamily="Segoe MDL2 Assets" FontSize="16" Foreground="{DynamicResource TextSubtleBrush}" /></Grid>
+                                                <StackPanel Margin="0,14,0,0">
+                                                    <TextBlock Text="{Binding CpuName}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding CpuName}" />
+                                                    <TextBlock Text="{Binding GpuDetail}" Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" />
+                                                    <TextBlock Text="{Binding RamLabel}" Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" />
+                                                    <TextBlock Text="{Binding DiskLabel}" Margin="0,6,0,0" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" />
+                                                    <TextBlock Text="{Binding WindowsLabel}" Margin="0,6,0,0" FontSize="10.5" Foreground="{DynamicResource TextSubtleBrush}" TextWrapping="Wrap" />
+                                                </StackPanel>
+                                                <Separator Margin="0,14" Background="{DynamicResource BorderSoftBrush}" />
+                                                <WrapPanel>
+                                                    <Border Margin="0,0,8,8">
+                                                        <Border.Style><Style TargetType="Border" BasedOn="{StaticResource DetectionBadgeStyle}"><Style.Triggers><DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True"><Setter Property="BorderBrush" Value="#2D5E4C" /><Setter Property="Background" Value="#15231C" /></DataTrigger></Style.Triggers></Style></Border.Style>
+                                                        <TextBlock Text="{Binding EditionLabel}"><TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource DetectionBadgeLabelStyle}"><Style.Triggers><DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True"><Setter Property="Foreground" Value="#5BCF98" /></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                                                    </Border>
+                                                    <Border Margin="0,0,0,8">
+                                                        <Border.Style><Style TargetType="Border" BasedOn="{StaticResource DetectionBadgeStyle}"><Style.Triggers><DataTrigger Binding="{Binding IsGtaVLegacyDetected}" Value="True"><Setter Property="BorderBrush" Value="#2D5E4C" /><Setter Property="Background" Value="#15231C" /></DataTrigger></Style.Triggers></Style></Border.Style>
+                                                        <TextBlock Text="{Binding GtaStatusLabel}"><TextBlock.Style><Style TargetType="TextBlock" BasedOn="{StaticResource DetectionBadgeLabelStyle}"><Style.Triggers><DataTrigger Binding="{Binding IsGtaVLegacyDetected}" Value="True"><Setter Property="Foreground" Value="#5BCF98" /></DataTrigger></Style.Triggers></Style></TextBlock.Style></TextBlock>
+                                                    </Border>
+                                                </WrapPanel>
+                                            </StackPanel>
+                                        </ui:Card>
                                     </Grid>
+
+                                    <StackPanel x:Name="ProfileSelectorSection" Margin="0,18,0,0">
+                                        <TextBlock Text="{Binding [Profiles.Choose], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionTitleStyle}" Margin="0,0,0,10" />
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                            <RadioButton Grid.Column="0" GroupName="OptimizerProfile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsLightSelected}" Checked="LightProfile_Checked"><StackPanel><TextBlock Text="{Binding [Profiles.Light.Name], Source={StaticResource LocalizedStrings}}" FontSize="16" FontWeight="SemiBold" /><TextBlock Text="{Binding [Profiles.Light.Description], Source={StaticResource LocalizedStrings}}" Margin="0,7,0,0" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" /><TextBlock Text="{Binding LightImpactLabel}" Margin="0,10,0,0" FontSize="9.5" Foreground="{DynamicResource GreenBrush}" TextWrapping="Wrap" /></StackPanel></RadioButton>
+                                            <RadioButton Grid.Column="2" GroupName="OptimizerProfile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsBalancedSelected}" Checked="BalancedProfile_Checked"><StackPanel><Grid><TextBlock Text="{Binding [Profiles.Balanced.Name], Source={StaticResource LocalizedStrings}}" FontSize="16" FontWeight="SemiBold" /><Border Padding="8,3" Background="#24FF7A18" CornerRadius="6" HorizontalAlignment="Right" Visibility="{Binding IsBalancedRecommended, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding [Profiles.RecommendedBadge], Source={StaticResource LocalizedStrings}}" FontSize="8" FontWeight="SemiBold" Foreground="{DynamicResource OrangeLightBrush}" /></Border></Grid><TextBlock Text="{Binding [Profiles.Balanced.Description], Source={StaticResource LocalizedStrings}}" Margin="0,7,0,0" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" /><TextBlock Text="{Binding BalancedImpactLabel}" Margin="0,10,0,0" FontSize="9.5" Foreground="{DynamicResource OrangeLightBrush}" TextWrapping="Wrap" /></StackPanel></RadioButton>
+                                            <RadioButton Grid.Column="4" GroupName="OptimizerProfile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsAggressiveSelected}" Checked="AggressiveProfile_Checked"><StackPanel><TextBlock Text="{Binding [Profiles.Aggressive.Name], Source={StaticResource LocalizedStrings}}" FontSize="16" FontWeight="SemiBold" /><TextBlock Text="{Binding [Profiles.Aggressive.Description], Source={StaticResource LocalizedStrings}}" Margin="0,7,0,0" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" /><TextBlock Text="{Binding AggressiveImpactLabel}" Margin="0,10,0,0" FontSize="9.5" Foreground="{DynamicResource RedBrush}" TextWrapping="Wrap" /></StackPanel></RadioButton>
+                                        </Grid>
+                                    </StackPanel>
+                                </StackPanel>
+
+                                <ui:Card Padding="26" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <StackPanel>
+                                        <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel><TextBlock Text="{Binding [Optimizer.RunningTitle], Source={StaticResource LocalizedStrings}}" FontSize="20" FontWeight="SemiBold" /><TextBlock Text="{Binding ProgressHeadline, Mode=OneWay}" Margin="0,7,0,0" FontSize="12.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" /></StackPanel><TextBlock Grid.Column="1" Text="{Binding ProgressPercent, Mode=OneWay, StringFormat={}{0:0}%}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" /></Grid>
+                                        <ProgressBar Value="{Binding ProgressPercent, Mode=OneWay}" Maximum="100" Margin="0,24,0,0" Foreground="{DynamicResource OrangeBrush}" />
+                                        <Grid Margin="0,10,0,0"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><TextBlock Text="{Binding ElapsedTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="11" /><TextBlock Grid.Column="1" Text="{Binding RemainingTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="11" HorizontalAlignment="Right" /></Grid>
+                                        <TextBlock Text="{Binding PreviousProgressHeadline}" Margin="0,12,0,0" Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" FontStyle="Italic" TextWrapping="Wrap" />
+                                        <StackPanel Orientation="Horizontal" Margin="0,22,0,0" HorizontalAlignment="Right"><Button Content="{Binding [Optimizer.ShowDetails], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Click="ReviewPlan_Click" /><Button Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="9,0,0,0" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" /></StackPanel>
+                                    </StackPanel>
                                 </ui:Card>
-                                <Border Margin="0,13,0,0" Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Visibility="{Binding IsReportAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding [Report.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
-                                            <TextBlock Text="{Binding ReportSummaryLabel}" Margin="0,6,0,0" FontSize="10.5" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" />
-                                            <TextBlock Text="{Binding ReportRestartLabel}" Margin="0,4,0,0" FontSize="10" TextWrapping="Wrap" Foreground="{DynamicResource TextSubtleBrush}" />
-                                            <ScrollViewer MaxHeight="140" Margin="0,10,0,0" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding ReportLines}" ItemTemplate="{StaticResource ReportLineTemplate}" /></ScrollViewer>
-                                            <Grid Margin="0,10,0,0">
-                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="9" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                                <Button Grid.Column="0" Content="{Binding [Report.CopyButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Click="CopyTechnicalReport_Click" />
-                                                <Button Grid.Column="2" Content="{Binding [Report.SaveButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Click="SaveTechnicalReport_Click" />
-                                            </Grid>
-                                        </StackPanel>
-                                </Border>
+
+                                <ui:Card Padding="24" Visibility="{Binding IsReportAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal"><Border Width="38" Height="38" CornerRadius="19" Background="#2037C889"><TextBlock Text="&#xE73E;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource GreenBrush}" FontSize="17" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border><StackPanel Margin="12,0,0,0"><TextBlock Text="{Binding [Optimizer.CompletedTitle], Source={StaticResource LocalizedStrings}}" FontSize="20" FontWeight="SemiBold" /><TextBlock Text="{Binding ReportSummaryLabel}" Margin="0,4,0,0" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" /></StackPanel></StackPanel>
+                                        <Border Margin="0,18,0,0" Padding="14" Background="{DynamicResource PanelBrush}" CornerRadius="10"><StackPanel><TextBlock Text="{Binding [Optimizer.NextStep], Source={StaticResource LocalizedStrings}}" FontSize="9.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding ReportRestartLabel}" Margin="0,5,0,0" FontSize="11.5" TextWrapping="Wrap" /></StackPanel></Border>
+                                        <ScrollViewer MaxHeight="240" Margin="0,16,0,0" VerticalScrollBarVisibility="Auto"><ItemsControl ItemsSource="{Binding ReportLines}" ItemTemplate="{StaticResource ReportLineTemplate}" /></ScrollViewer>
+                                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0" HorizontalAlignment="Right"><Button Content="{Binding [Report.CopyButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Click="CopyTechnicalReport_Click" /><Button Content="{Binding [Report.SaveButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="9,0,0,0" Click="SaveTechnicalReport_Click" /></StackPanel>
+                                    </StackPanel>
+                                </ui:Card>
+
+                                <Expander x:Name="PlanDetailsExpander" Margin="0,16,0,0">
+                                    <Expander.Header><Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><StackPanel><TextBlock Text="{Binding [Optimizer.PlanTitle], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" /><TextBlock Text="{Binding ProfilePresentationCategories}" Margin="0,4,20,0" FontSize="10.5" Foreground="{DynamicResource TextSubtleBrush}" TextWrapping="Wrap" /></StackPanel><TextBlock Grid.Column="1" Text="{Binding PlanHeader}" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" /></Grid></Expander.Header>
+                                    <StackPanel Margin="0,12,0,0"><Border Padding="13" Background="{DynamicResource PanelBrush}" CornerRadius="9"><StackPanel><TextBlock Text="{Binding PlanSummary}" FontSize="11" TextWrapping="Wrap" /><TextBlock Text="{Binding SafetySummary}" Margin="0,5,0,0" FontSize="10" Foreground="{DynamicResource TextSubtleBrush}" TextWrapping="Wrap" /></StackPanel></Border><ItemsControl ItemsSource="{Binding PlannedActions}" ItemTemplate="{StaticResource ActionTemplate}" Margin="0,12,0,0" /></StackPanel>
+                                </Expander>
+
                                 <Border Margin="0,13,0,0" Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10" Visibility="{Binding IsComparisonAvailable, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding [Comparison.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
-                                            <TextBlock Text="{Binding ComparisonSummaryLabel}" Margin="0,6,0,0" FontSize="10.5" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" />
-                                            <TextBlock Text="{Binding ComparisonHardwareProfileLabel}" Margin="0,4,0,0" FontSize="9.5" TextWrapping="Wrap" Foreground="{DynamicResource TextSubtleBrush}" />
-                                            <Button Content="{Binding [Comparison.RevertButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,10,0,0" HorizontalAlignment="Stretch" Click="RevertLastOptimization_Click" Visibility="{Binding ComparisonRegressionSuspected, Converter={StaticResource BooleanToVisibilityConverter}}" IsEnabled="{Binding CanRevertLastOptimization}" />
-                                        </StackPanel>
+                                    <StackPanel><TextBlock Text="{Binding [Comparison.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" /><TextBlock Text="{Binding ComparisonSummaryLabel}" Margin="0,6,0,0" FontSize="10.5" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" /><TextBlock Text="{Binding ComparisonHardwareProfileLabel}" Margin="0,4,0,0" FontSize="9.5" TextWrapping="Wrap" Foreground="{DynamicResource TextSubtleBrush}" /><Button Content="{Binding [Comparison.RevertButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,10,0,0" HorizontalAlignment="Stretch" Click="RevertLastOptimization_Click" Visibility="{Binding ComparisonRegressionSuspected, Converter={StaticResource BooleanToVisibilityConverter}}" IsEnabled="{Binding CanRevertLastOptimization}" /></StackPanel>
                                 </Border>
                             </StackPanel>
                         </ScrollViewer>

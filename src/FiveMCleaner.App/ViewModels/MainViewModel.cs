@@ -148,7 +148,17 @@ public sealed class MainViewModel : BindableBase
 
     public string ReportRestartLabel { get => reportRestartLabel; private set => SetProperty(ref reportRestartLabel, value); }
 
-    public bool IsReportAvailable { get => isReportAvailable; private set => SetProperty(ref isReportAvailable, value); }
+    public bool IsReportAvailable
+    {
+        get => isReportAvailable;
+        private set
+        {
+            if (SetProperty(ref isReportAvailable, value))
+            {
+                OnPropertyChanged(nameof(IsOptimizerIdle));
+            }
+        }
+    }
 
     public bool IsComparisonAvailable { get => isComparisonAvailable; private set => SetProperty(ref isComparisonAvailable, value); }
 
@@ -273,10 +283,13 @@ public sealed class MainViewModel : BindableBase
         {
             if (SetProperty(ref isBusy, value))
             {
+                OnPropertyChanged(nameof(IsOptimizerIdle));
                 RaiseCommandState();
             }
         }
     }
+
+    public bool IsOptimizerIdle => !IsBusy && !IsReportAvailable;
 
     public bool CanRefresh => !IsBusy && !isInitializing;
 
