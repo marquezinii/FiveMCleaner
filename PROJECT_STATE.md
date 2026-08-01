@@ -1,5 +1,17 @@
 # Estado do Projeto
 
+## Telemetria legada da v1.1.0: compatibilidade temporária no Worker — 01/08/2026
+
+- A v1.1.0 pública enviava eventos sem o campo obrigatório `environment` e o
+  Worker os recusava com HTTP 400; por isso otimizações dessa versão não
+  apareciam no dashboard. O Worker agora registra como `Production` qualquer
+  payload que omita esse campo, inclusive de clientes futuros. Clientes atuais
+  continuam enviando o ambiente explicitamente; `null` e valores desconhecidos
+  seguem rejeitados.
+- Cobertura adicionada no validador para esse fallback e para a rejeição de
+  ambiente nulo. Esta é uma correção apenas de backend:
+  nenhuma versão do aplicativo foi publicada.
+
 ## Varredura de dívida técnica: XML seguro compartilhado, using ausentes e duplicação no update check — 31/07/2026
 
 - `LegacyGraphicsPresetAction` e `DisplayPreferencesAction` (ambos em

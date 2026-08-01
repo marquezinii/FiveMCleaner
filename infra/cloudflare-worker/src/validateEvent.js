@@ -34,6 +34,10 @@ export const MAX_EXECUTION_TIME_MS = 86_400_000;
 
 export const MAX_BATCH_SIZE = 50;
 
+// Old and future clients must not silently lose telemetry if they omit this
+// classification field. The production Worker is the only public endpoint,
+// while development clients explicitly send "Development".
+
 const ACTION_ID_PATTERN = /^[A-Za-z0-9.-]+$/;
 const CONTROL_CHARACTER_PATTERN = /[\x00-\x1F\x7F]/;
 
@@ -64,7 +68,7 @@ export function validateEvent(event) {
     executionTimeMs,
     appVersion,
     errorCategory,
-    environment,
+    environment: submittedEnvironment,
     osVersion,
     systemArchitecture,
     cpuModel,
@@ -102,6 +106,8 @@ export function validateEvent(event) {
   ) {
     return null;
   }
+
+  const environment = submittedEnvironment === undefined ? 'Production' : submittedEnvironment;
 
   if (typeof environment !== 'string' || !ALLOWED_ENVIRONMENTS.has(environment)) {
     return null;

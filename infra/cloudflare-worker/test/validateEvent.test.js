@@ -60,6 +60,16 @@ test('validateEvent accepts a failed event with an allowlisted error category', 
   assert.equal(result.errorCategory, 'timeout');
 });
 
+test('validateEvent defaults a missing environment to Production for compatibility', () => {
+  const result = validateEvent({
+    eventName: 'optimization-completed',
+    executionTimeMs: 100,
+    appVersion: '1.1.1',
+  });
+
+  assert.equal(result.environment, 'Production');
+});
+
 test('validateEvent rejects an unknown event name', () => {
   assert.equal(validateEvent(validEvent({ eventName: 'something-else' })), null);
 });
@@ -91,6 +101,15 @@ test('validateEvent rejects an empty or overly long app version', () => {
 
 test('validateEvent rejects an unknown environment', () => {
   assert.equal(validateEvent(validEvent({ environment: 'Staging' })), null);
+});
+
+test('validateEvent still rejects a null environment', () => {
+  assert.equal(validateEvent({
+    eventName: 'optimization-completed',
+    executionTimeMs: 100,
+    appVersion: '1.1.1',
+    environment: null,
+  }), null);
 });
 
 test('validateEvent rejects a payload that is not an object', () => {
