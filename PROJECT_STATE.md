@@ -1,5 +1,12 @@
 # Estado do Projeto
 
+## Medidor circular de prontidão — 01/08/2026
+
+- A prontidão da Visão geral voltou a usar um medidor circular: anel externo
+  sóbrio, detalhe laranja e núcleo com pontuação, nível e a explicação local
+  já existente. A composição preserva o contraste e a informação explícita
+  do modelo anterior, sem duplicar uma barra de progresso.
+
 ## Monitor de desempenho ao vivo na Visão geral — 01/08/2026
 
 - A Visão geral ganhou um painel local de desempenho com leituras reais de

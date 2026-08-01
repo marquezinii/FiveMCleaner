@@ -314,23 +314,20 @@
                                         <TextBlock Text="{Binding RecommendationText}" Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12.5" TextWrapping="Wrap" MaxWidth="720" />
                                         <Button Content="{Binding [Dashboard.OpenOptimizer], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="40" Padding="20,0" Margin="0,18,0,0" HorizontalAlignment="Left" Click="OpenOptimizer_Click" />
                                     </StackPanel>
-                                    <Border Grid.Column="1" MinWidth="220" Margin="30,0,2,0" Padding="20,17" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="14" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
-                                        <StackPanel>
-                                            <Grid>
-                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" FontWeight="Bold" />
-                                                    <TextBlock Text="{Binding ReadinessLevelLabel}" Margin="0,5,0,0" FontSize="13" FontWeight="SemiBold" />
+                                    <Grid Grid.Column="1" Width="132" Height="132" Margin="30,0,2,0" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
+                                        <Ellipse Width="126" Height="126" Fill="{DynamicResource PanelBrush}" Stroke="{DynamicResource RingBrush}" StrokeThickness="5" />
+                                        <Ellipse Width="114" Height="114" Stroke="{DynamicResource OrangeBrush}" StrokeThickness="2" />
+                                        <Border Width="96" Height="96" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="48">
+                                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                                                    <TextBlock Text="{Binding ReadinessScore}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
+                                                    <TextBlock Text="/100" Margin="3,12,0,0" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" />
                                                 </StackPanel>
-                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <TextBlock Text="{Binding ReadinessScore}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
-                                                    <TextBlock Text="/100" Margin="3,11,0,0" FontSize="10" Foreground="{DynamicResource TextSubtleBrush}" />
-                                                </StackPanel>
-                                            </Grid>
-                                            <ProgressBar Value="{Binding ReadinessScore, Mode=OneWay}" Maximum="100" Height="5" Margin="0,14,0,0" />
-                                            <TextBlock Text="{Binding [Dashboard.Readiness.LocalAnalysis], Source={StaticResource LocalizedStrings}}" Margin="0,10,0,0" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" />
-                                        </StackPanel>
-                                    </Border>
+                                                <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Margin="0,2,0,0" FontSize="8" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" HorizontalAlignment="Center" />
+                                                <TextBlock Text="{Binding ReadinessLevelLabel}" Margin="0,4,0,0" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                            </StackPanel>
+                                        </Border>
+                                    </Grid>
                                 </Grid>
                             </ui:Card>
 

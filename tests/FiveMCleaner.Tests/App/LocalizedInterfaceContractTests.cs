@@ -188,7 +188,9 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("CpuUsagePoints", dashboard, StringComparison.Ordinal);
         Assert.Contains("GpuUsagePoints", dashboard, StringComparison.Ordinal);
         Assert.Contains("NetworkUsageLabel", dashboard, StringComparison.Ordinal);
-        Assert.Contains("Value=\"{Binding ReadinessScore, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Grid.Column=\"1\" Width=\"132\" Height=\"132\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Ellipse Width=\"126\" Height=\"126\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Stroke=\"{DynamicResource RingBrush}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding CpuUsagePercent, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.OpenOptimizer", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.SystemOverview", dashboard, StringComparison.Ordinal);
