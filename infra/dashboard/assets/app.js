@@ -7,6 +7,7 @@ import {
   computeSuccessRatePercent,
   formatDuration,
   formatPercent,
+  formatAppVersion,
   sumBy,
   toRecentFailureRow,
   toBugReportRow,
@@ -25,7 +26,7 @@ const API_BASE = new URLSearchParams(location.search).get('api') || DEFAULT_API_
 const CHART_DEFINITIONS = [
   { name: 'runs-per-day', title: 'Otimizações por dia', type: 'line', xKey: 'day', yKey: 'runs' },
   { name: 'os-versions', title: 'Versões do Windows', type: 'bar', labelKey: 'os_version', valueKey: 'runs' },
-  { name: 'app-versions', title: 'Versões do FiveMCleaner', type: 'bar', labelKey: 'app_version', valueKey: 'runs' },
+  { name: 'app-versions', title: 'Versões do FiveMCleaner', type: 'bar', labelKey: 'app_version', valueKey: 'runs', labelFormatter: formatAppVersion },
   { name: 'profiles', title: 'Perfis escolhidos', type: 'bar', labelKey: 'profile', valueKey: 'runs' },
   { name: 'top-actions', title: 'Funções mais usadas', type: 'bar', labelKey: 'action_id', valueKey: 'uses' },
   { name: 'top-cpu', title: 'CPUs mais comuns', type: 'bar', labelKey: 'cpu_model', valueKey: 'runs' },
@@ -53,6 +54,7 @@ async function main() {
   const recentFailuresCsvLink = document.getElementById('csv-recent-failures');
   const bugReportsBody = document.getElementById('bug-reports-body');
   const updaterEventsBody = document.getElementById('updater-events-body');
+  const refreshStatus = document.getElementById('refresh-status');
 
   function showLogin() {
     loginView.classList.remove('hidden');
@@ -176,6 +178,7 @@ async function main() {
 
   async function refreshAll() {
     const filters = currentFilters();
+    refreshStatus.textContent = 'Atualizando dados…';
 
     const [runsPerDay, successRate, averageTime, errorCategories, recentFailures, bugReports, updaterEvents, ...chartResults] =
       await Promise.all([
@@ -224,12 +227,14 @@ async function main() {
       } else if (definition.combinedKeys) {
         drawBarChart(
           canvas,
-          topN(toCombinedBarSeries(result.data, definition.combinedKeys, definition.valueKey), 10),
+          topN(toCombinedBarSeries(result.data.map((row) => ({ ...row, app_version: formatAppVersion(row.app_version) })), definition.combinedKeys, definition.valueKey), 10),
         );
       } else {
-        drawBarChart(canvas, topN(toBarSeries(result.data, definition.labelKey, definition.valueKey), 10));
+        const series = topN(toBarSeries(result.data, definition.labelKey, definition.valueKey), 10);
+        drawBarChart(canvas, definition.labelFormatter ? series.map((point) => ({ ...point, label: definition.labelFormatter(point.label) })) : series);
       }
     });
+    refreshStatus.textContent = 'Dados atualizados';
   }
 
   // Probe whether a session already exists (e.g. the page was reloaded)

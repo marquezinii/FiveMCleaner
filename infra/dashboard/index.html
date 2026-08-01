@@ -9,10 +9,11 @@
   <link rel="stylesheet" href="assets/styles.css" />
 </head>
 <body>
-  <section id="login-view" class="login-view">
+  <a class="skip-link" href="#dashboard-main">Pular para o conteúdo</a>
+  <section id="login-view" class="login-view" aria-labelledby="login-title">
     <form id="login-form" class="login-card">
       <img class="login-logo" src="assets/img/logo.png" alt="FiveMCleaner" />
-      <h1>FiveMCleaner Dashboard</h1>
+      <h1 id="login-title">Painel de telemetria</h1>
       <p class="login-subtitle">Acesso restrito a administradores.</p>
       <label for="password">Senha</label>
       <input type="password" id="password" name="password" autocomplete="current-password" required />
@@ -26,186 +27,60 @@
       <div class="brand">
         <img class="brand-logo" src="assets/img/logo.png" alt="" />
         <div>
-          <h1>FiveMCleaner Dashboard</h1>
-          <span class="brand-subtitle">Telemetria de uso e diagnóstico</span>
+          <h1>FiveMCleaner</h1>
+          <span class="brand-subtitle">Painel de telemetria</span>
         </div>
       </div>
       <button id="logout-button" type="button" class="link-button">Sair</button>
     </header>
 
-    <form id="filter-form" class="filters">
-      <label>De <input type="date" name="from" /></label>
-      <label>Até <input type="date" name="to" /></label>
-      <label>Versão <input type="text" name="version" placeholder="1.0.4" /></label>
-      <label>Ambiente
-        <select name="environment">
-          <option value="Production">Produção</option>
-          <option value="Development">Desenvolvimento</option>
-          <option value="All">Todos</option>
-        </select>
-      </label>
-      <button type="submit">Filtrar</button>
-    </form>
+    <main id="dashboard-main">
+      <form id="filter-form" class="filters" aria-label="Filtros do painel">
+        <label>De <input type="date" name="from" /></label>
+        <label>Até <input type="date" name="to" /></label>
+        <label>Versão <input type="text" name="version" placeholder="1.2.0" inputmode="numeric" /></label>
+        <label>Ambiente
+          <select name="environment">
+            <option value="Production">Produção</option>
+            <option value="Development">Desenvolvimento</option>
+            <option value="All">Todos</option>
+          </select>
+        </label>
+        <button type="submit">Atualizar dados</button>
+      </form>
 
-    <div class="tiles">
-      <div class="tile">
-        <span class="tile-label">Otimizações no período</span>
-        <span id="tile-total-runs" class="tile-value">—</span>
-      </div>
-      <div class="tile">
-        <span class="tile-label">Taxa de sucesso</span>
-        <span id="tile-success-rate" class="tile-value tile-value-success">—</span>
-      </div>
-      <div class="tile">
-        <span class="tile-label">Tempo médio de otimização</span>
-        <span id="tile-average-time" class="tile-value">—</span>
-      </div>
-      <div class="tile">
-        <span class="tile-label">Falhas no período</span>
-        <span id="tile-total-failures" class="tile-value tile-value-danger">—</span>
-      </div>
-    </div>
+      <section class="overview" aria-labelledby="overview-title">
+        <div class="section-heading">
+          <div><h2 id="overview-title">Visão geral</h2><p>Resumo do período filtrado.</p></div>
+          <p id="refresh-status" class="refresh-status" aria-live="polite">Dados prontos para consulta</p>
+        </div>
+        <div class="tiles">
+          <article class="tile"><span class="tile-label">Otimizações</span><strong id="tile-total-runs" class="tile-value">—</strong><span class="tile-detail">execuções no período</span></article>
+          <article class="tile"><span class="tile-label">Taxa de sucesso</span><strong id="tile-success-rate" class="tile-value tile-value-success">—</strong><span class="tile-detail">operações concluídas</span></article>
+          <article class="tile"><span class="tile-label">Tempo médio</span><strong id="tile-average-time" class="tile-value">—</strong><span class="tile-detail">por otimização</span></article>
+          <article class="tile"><span class="tile-label">Falhas</span><strong id="tile-total-failures" class="tile-value tile-value-danger">—</strong><span class="tile-detail">eventos no período</span></article>
+        </div>
+      </section>
 
-    <h2 class="section-title">Adoção</h2>
-    <div class="charts">
-      <article class="chart-card">
-        <h3>Otimizações por dia</h3>
-        <canvas id="chart-runs-per-day" width="360" height="160"></canvas>
-        <a id="csv-runs-per-day" class="csv-link" download>Exportar CSV</a>
-      </article>
-      <article class="chart-card">
-        <h3>Versões do Windows</h3>
-        <canvas id="chart-os-versions" width="360" height="160"></canvas>
-        <a id="csv-os-versions" class="csv-link" download>Exportar CSV</a>
-      </article>
-      <article class="chart-card">
-        <h3>Versões do FiveMCleaner</h3>
-        <canvas id="chart-app-versions" width="360" height="160"></canvas>
-        <a id="csv-app-versions" class="csv-link" download>Exportar CSV</a>
-      </article>
-      <article class="chart-card">
-        <h3>Perfis escolhidos</h3>
-        <canvas id="chart-profiles" width="360" height="160"></canvas>
-        <a id="csv-profiles" class="csv-link" download>Exportar CSV</a>
-      </article>
-      <article class="chart-card">
-        <h3>Funções mais usadas</h3>
-        <canvas id="chart-top-actions" width="360" height="160"></canvas>
-        <a id="csv-top-actions" class="csv-link" download>Exportar CSV</a>
-      </article>
-    </div>
+      <section class="dashboard-section" aria-labelledby="adoption-title">
+        <div class="section-heading"><div><h2 id="adoption-title">Adoção</h2><p>Uso do produto, versões e perfis escolhidos.</p></div></div>
+        <div class="charts charts-adoption">
+          <article class="chart-card chart-wide"><h3>Otimizações por dia</h3><canvas id="chart-runs-per-day" width="720" height="190" aria-label="Gráfico de otimizações por dia" role="img"></canvas><a id="csv-runs-per-day" class="csv-link" download>Exportar CSV</a></article>
+          <article class="chart-card"><h3>Versões do FiveMCleaner</h3><canvas id="chart-app-versions" width="360" height="190" aria-label="Gráfico de versões do FiveMCleaner" role="img"></canvas><a id="csv-app-versions" class="csv-link" download>Exportar CSV</a></article>
+          <article class="chart-card"><h3>Versões do Windows</h3><canvas id="chart-os-versions" width="360" height="190" aria-label="Gráfico de versões do Windows" role="img"></canvas><a id="csv-os-versions" class="csv-link" download>Exportar CSV</a></article>
+          <article class="chart-card"><h3>Perfis escolhidos</h3><canvas id="chart-profiles" width="360" height="190" aria-label="Gráfico de perfis escolhidos" role="img"></canvas><a id="csv-profiles" class="csv-link" download>Exportar CSV</a></article>
+          <article class="chart-card"><h3>Funções mais usadas</h3><canvas id="chart-top-actions" width="360" height="190" aria-label="Gráfico de funções mais usadas" role="img"></canvas><a id="csv-top-actions" class="csv-link" download>Exportar CSV</a></article>
+        </div>
+      </section>
 
-    <h2 class="section-title">Hardware</h2>
-    <div class="charts">
-      <article class="chart-card">
-        <h3>CPUs mais comuns</h3>
-        <canvas id="chart-top-cpu" width="360" height="160"></canvas>
-        <a id="csv-top-cpu" class="csv-link" download>Exportar CSV</a>
-      </article>
-      <article class="chart-card">
-        <h3>GPUs mais comuns</h3>
-        <canvas id="chart-top-gpu" width="360" height="160"></canvas>
-        <a id="csv-top-gpu" class="csv-link" download>Exportar CSV</a>
-      </article>
-      <article class="chart-card">
-        <h3>Memória RAM</h3>
-        <canvas id="chart-ram-buckets" width="360" height="160"></canvas>
-        <a id="csv-ram-buckets" class="csv-link" download>Exportar CSV</a>
-      </article>
-    </div>
+      <section class="dashboard-section" aria-labelledby="hardware-title"><div class="section-heading"><div><h2 id="hardware-title">Hardware</h2><p>Configurações mais frequentes nas execuções.</p></div></div><div class="charts"><article class="chart-card"><h3>CPUs mais comuns</h3><canvas id="chart-top-cpu" width="360" height="190" aria-label="Gráfico de CPUs mais comuns" role="img"></canvas><a id="csv-top-cpu" class="csv-link" download>Exportar CSV</a></article><article class="chart-card"><h3>GPUs mais comuns</h3><canvas id="chart-top-gpu" width="360" height="190" aria-label="Gráfico de GPUs mais comuns" role="img"></canvas><a id="csv-top-gpu" class="csv-link" download>Exportar CSV</a></article><article class="chart-card"><h3>Memória RAM</h3><canvas id="chart-ram-buckets" width="360" height="190" aria-label="Gráfico de memória RAM" role="img"></canvas><a id="csv-ram-buckets" class="csv-link" download>Exportar CSV</a></article></div></section>
 
-    <h2 class="section-title">Diagnóstico de bugs</h2>
-    <div class="charts">
-      <article class="chart-card">
-        <h3>Erros por categoria</h3>
-        <canvas id="chart-error-categories" width="360" height="160"></canvas>
-        <a id="csv-error-categories" class="csv-link" download>Exportar CSV</a>
-      </article>
-      <article class="chart-card">
-        <h3>Ações mais associadas a falhas</h3>
-        <canvas id="chart-top-actions-in-failures" width="360" height="160"></canvas>
-        <a id="csv-top-actions-in-failures" class="csv-link" download>Exportar CSV</a>
-      </article>
-      <article class="chart-card">
-        <h3>Erros por versão</h3>
-        <canvas id="chart-errors-by-version" width="360" height="160"></canvas>
-        <a id="csv-errors-by-version" class="csv-link" download>Exportar CSV</a>
-      </article>
-    </div>
+      <section class="dashboard-section" aria-labelledby="diagnostics-title"><div class="section-heading"><div><h2 id="diagnostics-title">Diagnóstico de bugs</h2><p>Ocorrências agregadas para identificar padrões.</p></div></div><div class="charts"><article class="chart-card"><h3>Erros por categoria</h3><canvas id="chart-error-categories" width="360" height="190" aria-label="Gráfico de erros por categoria" role="img"></canvas><a id="csv-error-categories" class="csv-link" download>Exportar CSV</a></article><article class="chart-card"><h3>Ações associadas a falhas</h3><canvas id="chart-top-actions-in-failures" width="360" height="190" aria-label="Gráfico de ações associadas a falhas" role="img"></canvas><a id="csv-top-actions-in-failures" class="csv-link" download>Exportar CSV</a></article><article class="chart-card"><h3>Erros por versão</h3><canvas id="chart-errors-by-version" width="360" height="190" aria-label="Gráfico de erros por versão" role="img"></canvas><a id="csv-errors-by-version" class="csv-link" download>Exportar CSV</a></article></div></section>
 
-    <article class="chart-card recent-failures-card">
-      <div class="recent-failures-header">
-        <h3>Últimos erros (não agregado)</h3>
-        <a id="csv-recent-failures" class="csv-link" download>Exportar CSV</a>
-      </div>
-      <div class="table-scroll">
-        <table id="recent-failures-table" class="recent-failures-table">
-          <thead>
-            <tr>
-              <th>Quando</th>
-              <th>Categoria</th>
-              <th>Versão</th>
-              <th>Ambiente</th>
-              <th>Windows</th>
-              <th>CPU</th>
-              <th>GPU</th>
-              <th>Perfil</th>
-            </tr>
-          </thead>
-          <tbody id="recent-failures-body">
-            <tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </article>
-
-    <h2 class="section-title">Bugs reportados</h2>
-    <article class="chart-card recent-failures-card">
-      <div class="recent-failures-header">
-        <h3>Últimos relatos enviados pelo formulário "Reportar um bug"</h3>
-      </div>
-      <div class="table-scroll">
-        <table id="bug-reports-table" class="recent-failures-table">
-          <thead>
-            <tr>
-              <th>Quando</th>
-              <th>Categoria</th>
-              <th>Resumo</th>
-              <th>Versão</th>
-              <th>Perfil</th>
-              <th>Ambiente</th>
-              <th>E-mail</th>
-              <th>Log</th>
-            </tr>
-          </thead>
-          <tbody id="bug-reports-body">
-            <tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </article>
-
-    <h2 class="section-title">Bugs do updater</h2>
-    <article class="chart-card recent-failures-card">
-      <div class="table-scroll">
-        <table class="recent-failures-table">
-          <thead><tr>
-            <th>Quando</th><th>Etapa</th><th>Resultado</th><th>Código</th>
-            <th>Versão anterior</th><th>Versão candidata</th><th>Ambiente</th>
-          </tr></thead>
-          <tbody id="updater-events-body">
-            <tr><td colspan="7" class="empty-row">Sem dados ainda</td></tr>
-          </tbody>
-        </table>
-      </div>
-    </article>
-
-    <p class="dashboard-footnote">
-      "Otimizações" contam eventos, não usuários únicos — a telemetria do FiveMCleaner nunca envia
-      um identificador de máquina, então não há como contar pessoas de forma confiável ou correta.
-    </p>
+      <section class="dashboard-section data-section" aria-labelledby="recent-title"><div class="section-heading"><div><h2 id="recent-title">Eventos recentes</h2><p>Registros não agregados para investigação rápida.</p></div></div><article class="chart-card recent-failures-card"><div class="recent-failures-header"><h3>Últimos erros</h3><a id="csv-recent-failures" class="csv-link" download>Exportar CSV</a></div><div class="table-scroll"><table class="recent-failures-table"><thead><tr><th>Quando</th><th>Categoria</th><th>Versão</th><th>Ambiente</th><th>Windows</th><th>CPU</th><th>GPU</th><th>Perfil</th></tr></thead><tbody id="recent-failures-body"><tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr></tbody></table></div></article><div class="data-grid"><article class="chart-card"><h3>Bugs reportados</h3><div class="table-scroll"><table class="recent-failures-table"><thead><tr><th>Quando</th><th>Categoria</th><th>Resumo</th><th>Versão</th><th>Perfil</th><th>Ambiente</th><th>E-mail</th><th>Log</th></tr></thead><tbody id="bug-reports-body"><tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr></tbody></table></div></article><article class="chart-card"><h3>Bugs do updater</h3><div class="table-scroll"><table class="recent-failures-table"><thead><tr><th>Quando</th><th>Etapa</th><th>Resultado</th><th>Código</th><th>Versão anterior</th><th>Versão candidata</th><th>Ambiente</th></tr></thead><tbody id="updater-events-body"><tr><td colspan="7" class="empty-row">Sem dados ainda</td></tr></tbody></table></div></article></div></section>
+      <p class="dashboard-footnote">“Otimizações” contam eventos, não usuários únicos. A telemetria não envia identificador de máquina.</p>
+    </main>
   </section>
-
   <script type="module" src="assets/app.js"></script>
 </body>
 </html>

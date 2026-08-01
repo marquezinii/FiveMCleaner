@@ -13,6 +13,7 @@ import {
   toRecentFailureRow,
   truncate,
   toBugReportRow,
+  formatAppVersion,
 } from '../assets/charts.js';
 
 test('toBarSeries maps arbitrary label/value keys into a uniform shape', () => {
@@ -30,6 +31,12 @@ test('toBarSeries coerces a missing or non-numeric value to zero instead of NaN'
 test('toBarSeries returns an empty array for null/undefined input', () => {
   assert.deepEqual(toBarSeries(null, 'a', 'b'), []);
   assert.deepEqual(toBarSeries(undefined, 'a', 'b'), []);
+});
+
+test('formatAppVersion shows only stable SemVer from raw telemetry labels', () => {
+  assert.equal(formatAppVersion('FiveMCleaner.exe 1.2.0+build.8'), '1.2.0');
+  assert.equal(formatAppVersion('v1.1.3'), '1.1.3');
+  assert.equal(formatAppVersion('unknown'), 'Versão desconhecida');
 });
 
 test('toLineSeries maps and sorts by x ascending', () => {

@@ -1,5 +1,22 @@
 # Estado do Projeto
 
+## Reformulação do dashboard privado de telemetria — 01/08/2026
+
+- O dashboard estático em `infra/dashboard` foi reorganizado em uma visão geral
+  prioritária, seguida por seções de adoção, hardware, diagnóstico e eventos
+  recentes. O visual preserva a marca escura do FiveMCleaner, reserva laranja
+  para a ação de atualizar e usa superfícies, espaçamento e hierarquia mais
+  consistentes.
+- Filtros, estados de foco, atalho para pular a navegação, região de status e
+  adaptação para telas menores foram revisados. Não foram adicionadas
+  dependências nem funcionalidades de telemetria.
+- A apresentação de `app_version` agora extrai somente SemVer estável no formato
+  `X.Y.Z` de rótulos legados, cobrindo os gráficos e as tabelas; valores sem uma
+  versão reconhecível aparecem como `Versão desconhecida` em vez de expor nome
+  de executável ou identificador técnico. Cobertura de regressão foi incluída.
+- Validação local: testes do dashboard (37) e `git diff --check` aprovados.
+  Não houve alteração de versão, release, instalador, deploy ou publicação.
+
 ## Medidor circular de prontidão — 01/08/2026
 
 - A prontidão da Visão geral voltou a usar um medidor circular: anel externo

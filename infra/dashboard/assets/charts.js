@@ -10,6 +10,12 @@ export function toBarSeries(rows, labelKey, valueKey) {
   }));
 }
 
+/** Extracts the stable SemVer from legacy labels without exposing executable names or hashes. */
+export function formatAppVersion(value) {
+  const match = String(value ?? '').match(/(?:^|[^\d])(\d+\.\d+\.\d+)(?:$|[^\d])/);
+  return match ? match[1] : 'Versão desconhecida';
+}
+
 /** Turns rows into an x/y line-chart series, sorted by x ascending. */
 export function toLineSeries(rows, xKey, yKey) {
   return (rows ?? [])
@@ -104,7 +110,7 @@ export function toRecentFailureRow(row) {
   return [
     formatTimestamp(row.received_at),
     fallback(row.error_category),
-    fallback(row.app_version),
+    formatAppVersion(row.app_version),
     fallback(row.environment),
     fallback(row.os_version),
     fallback(row.cpu_model),
@@ -136,7 +142,7 @@ export function toBugReportRow(row) {
     formatTimestamp(row.received_at),
     fallback(row.category),
     truncate(row.summary, 60),
-    fallback(row.app_version),
+    formatAppVersion(row.app_version),
     fallback(row.profile),
     fallback(row.environment),
     fallback(row.email),
@@ -151,8 +157,8 @@ export function toUpdaterEventRow(row) {
     fallback(row.stage),
     fallback(row.outcome),
     fallback(row.error_code),
-    fallback(row.previous_version),
-    fallback(row.candidate_version),
+    formatAppVersion(row.previous_version),
+    formatAppVersion(row.candidate_version),
     fallback(row.environment),
   ];
 }
