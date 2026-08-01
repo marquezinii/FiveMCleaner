@@ -1,4 +1,4 @@
-import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildUpdaterEventsUrl, requestJson } from './api.js';
+import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildUpdaterEventsUrl, requestJson, resolveApiBase } from './api.js';
 import {
   toBarSeries,
   toCombinedBarSeries,
@@ -8,32 +8,36 @@ import {
   formatDuration,
   formatPercent,
   formatAppVersion,
+  toDistributionRows,
   sumBy,
   toRecentFailureRow,
   toBugReportRow,
   toUpdaterEventRow,
 } from './charts.js';
-import { drawBarChart, drawLineChart } from './rendering.js';
+import { drawBarChart, drawDonutChart, drawLineChart } from './rendering.js';
 
 // The dashboard (Cloudflare Pages) and the Worker are deliberately two
 // separate origins -- no custom domain/routing was set up to make them
 // share one, so the deployed Worker's own workers.dev URL is the default.
 // Override via `?api=https://...` only for local testing against a
 // `wrangler dev` instance running on a different port.
+//
+// The override is the only piece of the URL an attacker can put in front of
+// a victim in production (e.g. `?api=https://evil.example`), and the login
+// form POSTs the admin password there. So it is honored only when the
+// dashboard itself is served from localhost -- a production host always
+// talks to the real Worker and ignores any `?api=`.
 const DEFAULT_API_BASE = 'https://fivemcleaner-telemetry.felipemarquesini10.workers.dev';
-const API_BASE = new URLSearchParams(location.search).get('api') || DEFAULT_API_BASE;
+const API_BASE = resolveApiBase(DEFAULT_API_BASE, location.hostname, new URLSearchParams(location.search));
 
 const CHART_DEFINITIONS = [
   { name: 'runs-per-day', title: 'Otimizações por dia', type: 'line', xKey: 'day', yKey: 'runs' },
-  { name: 'os-versions', title: 'Versões do Windows', type: 'bar', labelKey: 'os_version', valueKey: 'runs' },
-  { name: 'app-versions', title: 'Versões do FiveMCleaner', type: 'bar', labelKey: 'app_version', valueKey: 'runs', labelFormatter: formatAppVersion },
-  { name: 'profiles', title: 'Perfis escolhidos', type: 'bar', labelKey: 'profile', valueKey: 'runs' },
-  { name: 'top-actions', title: 'Funções mais usadas', type: 'bar', labelKey: 'action_id', valueKey: 'uses' },
-  { name: 'top-cpu', title: 'CPUs mais comuns', type: 'bar', labelKey: 'cpu_model', valueKey: 'runs' },
-  { name: 'top-gpu', title: 'GPUs mais comuns', type: 'bar', labelKey: 'gpu_model', valueKey: 'runs' },
-  { name: 'ram-buckets', title: 'Memória RAM', type: 'bar', labelKey: 'ram_bucket_gib', valueKey: 'runs' },
-  { name: 'error-categories', title: 'Erros por categoria', type: 'bar', labelKey: 'error_category', valueKey: 'occurrences' },
-  { name: 'top-actions-in-failures', title: 'Ações associadas a falhas', type: 'bar', labelKey: 'action_id', valueKey: 'failures' },
+  { name: 'os-versions', type: 'donut', labelKey: 'os_version', valueKey: 'runs', legendId: 'legend-os-versions' },
+  { name: 'app-versions', type: 'donut', labelKey: 'app_version', valueKey: 'runs', labelFormatter: formatAppVersion, legendId: 'legend-app-versions' },
+  { name: 'top-cpu', type: 'bar', labelKey: 'cpu_model', valueKey: 'runs', horizontal: true },
+  { name: 'top-gpu', type: 'bar', labelKey: 'gpu_model', valueKey: 'runs', horizontal: true },
+  { name: 'ram-buckets', type: 'bar', labelKey: 'ram_bucket_gib', valueKey: 'runs', horizontal: true },
+  { name: 'error-categories', type: 'donut', labelKey: 'error_category', valueKey: 'occurrences', legendId: 'legend-error-categories' },
   {
     name: 'errors-by-version',
     title: 'Erros por versão',
@@ -176,6 +180,27 @@ async function main() {
     }
   }
 
+  function renderLegend(id, series) {
+    const container = document.getElementById(id);
+    if (!container) return;
+    const colors = ['#ff7a18', '#88a8dc', '#78d497', '#a67bd6', '#f4be55'];
+    container.replaceChildren(...toDistributionRows(series).map((point, index) => {
+      const row = document.createElement('div');
+      row.className = 'legend-row';
+      const swatch = document.createElement('span');
+      swatch.className = 'legend-swatch';
+      swatch.style.backgroundColor = colors[index % colors.length];
+      const label = document.createElement('span');
+      label.className = 'legend-name';
+      label.textContent = point.label;
+      const value = document.createElement('span');
+      value.className = 'legend-value';
+      value.textContent = `${Math.round(point.percent * 10) / 10}%`;
+      row.append(swatch, label, value);
+      return row;
+    }));
+  }
+
   async function refreshAll() {
     const filters = currentFilters();
     refreshStatus.textContent = 'Atualizando dados…';
@@ -224,6 +249,11 @@ async function main() {
 
       if (definition.type === 'line') {
         drawLineChart(canvas, toLineSeries(result.data, definition.xKey, definition.yKey));
+      } else if (definition.type === 'donut') {
+        const series = topN(toBarSeries(result.data, definition.labelKey, definition.valueKey), 5);
+        const formatted = definition.labelFormatter ? series.map((point) => ({ ...point, label: definition.labelFormatter(point.label) })) : series;
+        drawDonutChart(canvas, formatted);
+        renderLegend(definition.legendId, formatted);
       } else if (definition.combinedKeys) {
         drawBarChart(
           canvas,
@@ -231,7 +261,7 @@ async function main() {
         );
       } else {
         const series = topN(toBarSeries(result.data, definition.labelKey, definition.valueKey), 10);
-        drawBarChart(canvas, definition.labelFormatter ? series.map((point) => ({ ...point, label: definition.labelFormatter(point.label) })) : series);
+        drawBarChart(canvas, definition.labelFormatter ? series.map((point) => ({ ...point, label: definition.labelFormatter(point.label) })) : series, { horizontal: definition.horizontal });
       }
     });
     refreshStatus.textContent = 'Dados atualizados';

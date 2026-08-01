@@ -45,6 +45,22 @@ const STATS_BUILDERS = {
   profiles: queries.profileBreakdown,
 };
 
+// D1's batch() rejects calls with more than 500 statements. A single
+// telemetry batch is capped at MAX_BATCH_SIZE=50 events, each carrying up to
+// MAX_ACTION_IDS=30 action ids, so the action-link statements alone can reach
+// 1500 -- well over the limit. Chunking keeps every batch call inside the
+// bound and avoids a 500 + partial write on oversized payloads.
+export const MAX_D1_BATCH_STATEMENTS = 500;
+
+export function chunkStatements(statements, maxStatements = MAX_D1_BATCH_STATEMENTS) {
+  const chunks = [];
+  for (let i = 0; i < statements.length; i += maxStatements) {
+    chunks.push(statements.slice(i, i + maxStatements));
+  }
+  return chunks;
+}
+
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -204,7 +220,10 @@ async function handleTelemetryIngest(request, env) {
     );
   }
 
-  const results = await env.TELEMETRY_DB.batch(statements);
+  const results = [];
+  for (const chunk of chunkStatements(statements)) {
+    results.push(...await env.TELEMETRY_DB.batch(chunk));
+  }
 
   const actionStatements = [];
   results.forEach((result, index) => {
@@ -222,8 +241,8 @@ async function handleTelemetryIngest(request, env) {
     }
   });
 
-  if (actionStatements.length > 0) {
-    await env.TELEMETRY_DB.batch(actionStatements);
+  for (const chunk of chunkStatements(actionStatements)) {
+    await env.TELEMETRY_DB.batch(chunk);
   }
 
   return new Response(null, { status: 202 });

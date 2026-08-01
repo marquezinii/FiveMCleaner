@@ -172,7 +172,15 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             ProductIdentity.Name);
         if (transaction is not null && nonce is not null)
-            new UpdateHealthReceiptStore(runtimeRoot).Confirm(transaction, version, nonce);
+        {
+            try { new UpdateHealthReceiptStore(runtimeRoot).Confirm(transaction, version, nonce); }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
+            {
+                // A falha preserva o app ativo; o launcher apenas não vê o
+                // recibo de saúde neste momento e re-verifica na próxima
+                // abertura antes de qualquer rollback.
+            }
+        }
         try { new VersionFloorStore(dataRoot).Advance(version); }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
         {
@@ -790,24 +798,37 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             return;
         }
 
-        var outputPath = Path.GetFullPath(argument["--capture=".Length..].Trim('"'));
-        await Task.Delay(450);
-        UpdateLayout();
-        var dpi = VisualTreeHelper.GetDpi(this);
-        var bitmap = new RenderTargetBitmap(
-            Math.Max(1, (int)Math.Round(ActualWidth * dpi.DpiScaleX)),
-            Math.Max(1, (int)Math.Round(ActualHeight * dpi.DpiScaleY)),
-            dpi.PixelsPerInchX,
-            dpi.PixelsPerInchY,
-            PixelFormats.Pbgra32);
-        bitmap.Render(this);
-        var encoder = new PngBitmapEncoder();
-        encoder.Frames.Add(BitmapFrame.Create(bitmap));
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        await using var stream = File.Create(outputPath);
-        encoder.Save(stream);
-        allowClose = true;
-        trayIcon.Hide();
-        Close();
+        try
+        {
+            var outputPath = Path.GetFullPath(argument["--capture=".Length..].Trim('"'));
+            await Task.Delay(450);
+            UpdateLayout();
+            var dpi = VisualTreeHelper.GetDpi(this);
+            var bitmap = new RenderTargetBitmap(
+                Math.Max(1, (int)Math.Round(ActualWidth * dpi.DpiScaleX)),
+                Math.Max(1, (int)Math.Round(ActualHeight * dpi.DpiScaleY)),
+                dpi.PixelsPerInchX,
+                dpi.PixelsPerInchY,
+                PixelFormats.Pbgra32);
+            bitmap.Render(this);
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            await using var stream = File.Create(outputPath);
+            encoder.Save(stream);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            // O modo --capture= é um smoke-test: um caminho inválido ou um
+            // disco cheio não pode transformar a captura em um crash da UI.
+            // Sem o arquivo de saída, o script que orquestra o smoke-test
+            // detecta a falha pelo resultado do processo.
+        }
+        finally
+        {
+            allowClose = true;
+            trayIcon.Hide();
+            Close();
+        }
     }
 }

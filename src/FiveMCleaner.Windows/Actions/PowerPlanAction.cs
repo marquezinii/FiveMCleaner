@@ -399,7 +399,14 @@ public sealed class PciExpressPowerManagementAction : WindowsOptimizationAction
         CancellationToken cancellationToken)
     {
         var snapshot = WindowsActionSnapshot.Deserialize<PciExpressAspmSnapshot>(snapshotJson);
-        await controller.TrySetPciExpressAspmPolicyAsync(snapshot.PreviousPolicy, cancellationToken)
-            .ConfigureAwait(false);
+        // Uma falha de restauração precisa ser visível ao engine (que registra
+        // o RollbackFailed no journal), não engolida: sem isso o histórico
+        // reporta um rollback concluído que na verdade não restaurou nada.
+        if (!await controller.TrySetPciExpressAspmPolicyAsync(snapshot.PreviousPolicy, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            throw new InvalidOperationException(
+                "Não foi possível restaurar o PCI Express Link State Power Management para o valor anterior.");
+        }
     }
 }

@@ -16,6 +16,13 @@ export function formatAppVersion(value) {
   return match ? match[1] : 'Versão desconhecida';
 }
 
+/** Produces percentage rows for a compact chart legend from displayed data. */
+export function toDistributionRows(series, limit = 5) {
+  const items = topN(series, limit);
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  return items.map((item) => ({ ...item, percent: total ? (item.value / total) * 100 : 0 }));
+}
+
 /** Turns rows into an x/y line-chart series, sorted by x ascending. */
 export function toLineSeries(rows, xKey, yKey) {
   return (rows ?? [])

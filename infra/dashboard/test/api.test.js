@@ -1,6 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildUpdaterEventsUrl, requestJson } from '../assets/api.js';
+import {
+  buildStatsUrl,
+  buildCsvUrl,
+  buildBugsUrl,
+  buildUpdaterEventsUrl,
+  requestJson,
+  resolveApiBase,
+} from '../assets/api.js';
 
 const BASE = 'https://telemetry.example.workers.dev';
 
@@ -92,4 +99,32 @@ test('buildUpdaterEventsUrl applies version and environment filters', () => {
   const url = new URL(buildUpdaterEventsUrl(BASE, { version: '1.2.0', environment: 'Production' }));
   assert.equal(url.pathname, '/api/updater-events');
   assert.equal(url.searchParams.get('version'), '1.2.0');
+});
+
+test('resolveApiBase honors ?api= only on localhost', () => {
+  const override = 'http://127.0.0.1:8787';
+  assert.equal(
+    resolveApiBase(BASE, 'localhost', new URLSearchParams({ api: override })),
+    override,
+  );
+  assert.equal(
+    resolveApiBase(BASE, '127.0.0.1', new URLSearchParams({ api: override })),
+    override,
+  );
+});
+
+test('resolveApiBase never honors ?api= on a production host', () => {
+  const override = 'https://evil.example';
+  for (const hostname of ['fivemcleaner.pages.dev', 'telemetry.example.workers.dev', 'dashboard.example.com']) {
+    assert.equal(
+      resolveApiBase(BASE, hostname, new URLSearchParams({ api: override })),
+      BASE,
+      `host ${hostname} must ignore the override`,
+    );
+  }
+});
+
+test('resolveApiBase falls back to the default without an override', () => {
+  assert.equal(resolveApiBase(BASE, 'localhost', new URLSearchParams()), BASE);
+  assert.equal(resolveApiBase(BASE, 'localhost', new URLSearchParams({ other: 'x' })), BASE);
 });

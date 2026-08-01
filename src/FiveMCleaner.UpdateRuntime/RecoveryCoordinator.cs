@@ -1,3 +1,5 @@
+using System.Text.Json;
+
 namespace FiveMCleaner.UpdateRuntime;
 
 public enum RecoveryDecision { Healthy, RolledBack, Pending }
@@ -30,7 +32,8 @@ public sealed class RecoveryCoordinator
         // A transient lock on active.json (concurrent Activate() elsewhere, an AV
         // scan) is not proof the pointer is broken; defer this reconciliation
         // instead of letting the exception surface as a launch failure.
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException
+            or JsonException or InvalidDataException)
         {
             return RecoveryDecision.Pending;
         }

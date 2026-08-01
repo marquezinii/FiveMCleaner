@@ -134,7 +134,12 @@ public sealed class UpdaterDiagnostics
             return root.TryGetProperty("shareAnonymousTelemetry", out var enabled) && enabled.GetBoolean()
                 && root.TryGetProperty("privacyConsentVersion", out var version) && version.GetInt32() >= 3;
         }
-        catch (Exception exception) when (exception is IOException or JsonException or InvalidOperationException) { return false; }
+        // UnauthorizedAccessException entra no filtro pelo mesmo motivo dos
+        // demais: o app grava settings.json concorrentemente e um lock
+        // transitório de escrita/AV não pode derrubar a abertura do launcher
+        // nem o caminho de catch (que re-registra telemetria dentro do bloco
+        // de recuperação).
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException) { return false; }
     }
 
     private void PrunePending()

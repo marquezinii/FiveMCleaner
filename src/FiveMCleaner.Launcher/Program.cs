@@ -74,7 +74,7 @@ internal static class Program
                 return true;
             }
 
-            while (!process.HasExited && DateTimeOffset.UtcNow < deadline)
+            while (DateTimeOffset.UtcNow < deadline && !HasExitedSafely(process))
             {
                 if (await TryConfirmHealthAsync()) return 0;
                 await Task.Delay(250);
@@ -154,6 +154,22 @@ internal static class Program
                 transaction.CandidateVersion, "Production"),
             detail,
             UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
+
+    // O processo pode sair entre o Process.Start e a leitura de HasExited, e
+    // o Windows nega a consulta (Win32Exception) ou a propriedade
+    // (InvalidOperationException) no processo já encerrado -- o mesmo caso
+    // "já se foi" que o health-check precisa tratar como exit, não como erro.
+    private static bool HasExitedSafely(Process process)
+    {
+        try
+        {
+            return process.HasExited;
+        }
+        catch (Exception exception) when (exception is Win32Exception or InvalidOperationException)
+        {
+            return true;
+        }
+    }
 
     private static string Classify(Exception exception) => exception switch
     {

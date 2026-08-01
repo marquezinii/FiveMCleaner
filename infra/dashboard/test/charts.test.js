@@ -14,6 +14,7 @@ import {
   truncate,
   toBugReportRow,
   formatAppVersion,
+  toDistributionRows,
 } from '../assets/charts.js';
 
 test('toBarSeries maps arbitrary label/value keys into a uniform shape', () => {
@@ -37,6 +38,13 @@ test('formatAppVersion shows only stable SemVer from raw telemetry labels', () =
   assert.equal(formatAppVersion('FiveMCleaner.exe 1.2.0+build.8'), '1.2.0');
   assert.equal(formatAppVersion('v1.1.3'), '1.1.3');
   assert.equal(formatAppVersion('unknown'), 'Versão desconhecida');
+});
+
+test('toDistributionRows calculates a compact percentage legend from displayed data', () => {
+  assert.deepEqual(toDistributionRows([{ label: '1.2.0', value: 75 }, { label: '1.1.3', value: 25 }]), [
+    { label: '1.2.0', value: 75, percent: 75 },
+    { label: '1.1.3', value: 25, percent: 25 },
+  ]);
 });
 
 test('toLineSeries maps and sorts by x ascending', () => {
