@@ -18,8 +18,10 @@
   <data name="BugReport.Link" xml:space="preserve"><value>Relatar um bug</value></data>
   <data name="BugReport.LinkTooltip" xml:space="preserve"><value>Abrir formulário de relato</value></data>
   <data name="Dashboard.Title" xml:space="preserve"><value>Visão geral</value></data>
-  <data name="Dashboard.Subtitle" xml:space="preserve"><value>Diagnóstico local e otimização transparente para o FiveM.</value></data>
+  <data name="Dashboard.Subtitle" xml:space="preserve"><value>Estado do PC, compatibilidade e o próximo passo recomendado.</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Reanalisar PC</value></data>
+  <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Abrir Otimizador</value></data>
+  <data name="Dashboard.SystemOverview" xml:space="preserve"><value>Seu computador</value></data>
   <data name="Dashboard.Readiness" xml:space="preserve"><value>PRONTIDÃO</value></data>
   <data name="Dashboard.Processor" xml:space="preserve"><value>PROCESSADOR</value></data>
   <data name="Dashboard.GraphicsCard" xml:space="preserve"><value>PLACA DE VÍDEO</value></data>

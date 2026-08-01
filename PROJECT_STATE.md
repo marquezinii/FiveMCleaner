@@ -1,5 +1,19 @@
 # Estado do Projeto
 
+## Visão geral orientada ao estado do PC — 01/08/2026
+
+- A Visão geral deixou de duplicar o fluxo completo do Otimizador: foram
+  removidos os três seletores de perfil, benefícios, impacto, riscos,
+  categorias e as ações de revisar/executar o plano.
+- A página agora resume detecção, recomendação e prontidão, oferece uma única
+  chamada para abrir o Otimizador e usa os dados locais já existentes para
+  mostrar contexto de streaming/jogo e um resumo compacto do computador.
+- O layout Fluent escuro foi preservado, com hierarquia mais simples, laranja
+  reservado à ação principal e controles nativos com foco visível. Validação:
+  inspeção visual e árvore de acessibilidade no build local maximizado,
+  navegação real para o Otimizador, build Release sem avisos, 604 testes .NET,
+  `Verify-Safety.ps1`, format e `git diff --check` aprovados.
+
 ## Selo de perfil recomendado no Otimizador — 01/08/2026
 
 - Os três cards do Otimizador agora usam as mesmas bindings de recomendação da

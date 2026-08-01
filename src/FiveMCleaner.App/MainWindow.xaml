@@ -181,7 +181,8 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Margin="0,0,18,0">
-                                    <TextBlock Text="{Binding [Dashboard.Title], Source={StaticResource LocalizedStrings}}" FontSize="25" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding [Dashboard.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="27" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding [Dashboard.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13.5" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <Button Grid.Column="1" Content="{Binding [Dashboard.Refresh], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right" Height="38" Padding="15,0" Click="RefreshDiagnostic_Click" IsEnabled="{Binding CanRefresh}" />
                             </Grid>
@@ -256,13 +257,13 @@
                                 </Grid>
                             </Border>
 
-                            <Border Style="{StaticResource CardStyle}" Background="{DynamicResource HeroGradientBrush}" Padding="23" Margin="0,0,0,16">
+                            <ui:Card Padding="24" Margin="0,0,0,16">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <StackPanel VerticalAlignment="Center" MaxWidth="600" HorizontalAlignment="Left">
+                                    <StackPanel VerticalAlignment="Center" MaxWidth="720" HorizontalAlignment="Left">
                                         <StackPanel Orientation="Horizontal">
                                             <Border VerticalAlignment="Center">
                                                 <Border.Style>
@@ -310,104 +311,55 @@
                                             </Border>
                                         </StackPanel>
                                         <TextBlock Text="{Binding RecommendationTitle}" Margin="0,14,0,0" FontSize="20" FontWeight="Bold" />
-                                         <TextBlock Text="{Binding RecommendationText}" Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12.5" TextWrapping="Wrap" MaxWidth="600" />
-                                         <TextBlock Text="{Binding ReadinessScoreExplanation}" Margin="0,11,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" TextWrapping="Wrap" MaxWidth="600" />
-                                     </StackPanel>
-                                     <Grid Grid.Column="1" Width="112" Height="112" Margin="30,0,4,0" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
-                                         <Ellipse Width="108" Height="108" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Uniform" Fill="{DynamicResource SurfaceBrush}" Stroke="{DynamicResource OrangeBrush}" StrokeThickness="7" />
-                                         <Ellipse Width="90" Height="90" HorizontalAlignment="Center" VerticalAlignment="Center" Stretch="Uniform" Stroke="{DynamicResource RingBrush}" StrokeThickness="1" />
-                                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                                             <TextBlock Text="{Binding ReadinessScore}" FontSize="26" FontWeight="Bold" HorizontalAlignment="Center" />
-                                             <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" FontSize="8" Foreground="{DynamicResource TextSubtleBrush}" FontWeight="Bold" HorizontalAlignment="Center" />
-                                         </StackPanel>
-                                     </Grid>
-                                </Grid>
-                            </Border>
-
-                            <primitives:UniformGrid Columns="2" Margin="0,0,0,16">
-                                <ui:Card Padding="15" Margin="0,0,8,8"><StackPanel><TextBlock Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuName}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding CpuName}" /></StackPanel></ui:Card>
-                                <ui:Card Padding="15" Margin="8,0,0,8"><StackPanel><TextBlock Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuDetail}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" /></StackPanel></ui:Card>
-                                <ui:Card Padding="15" Margin="0,8,8,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding RamLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel></ui:Card>
-                                <ui:Card Padding="15" Margin="8,8,0,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel></ui:Card>
-                                <ui:Card Padding="15" Margin="0,8,8,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Windows], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding WindowsLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding WindowsLabel}" /></StackPanel></ui:Card>
-                                <ui:Card Padding="15" Margin="8,8,0,0"><StackPanel><TextBlock Text="{Binding [Dashboard.Architecture], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding ArchitectureLabel}" Margin="0,8,0,0" FontSize="12" FontWeight="SemiBold" TextWrapping="Wrap" /></StackPanel></ui:Card>
-                            </primitives:UniformGrid>
-
-                            <Grid Margin="0,2,0,9">
-                                <TextBlock Text="{Binding [Profiles.Choose], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionTitleStyle}" />
-                            </Grid>
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="12" />
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="12" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <RadioButton Grid.Column="0" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsLightSelected}" Checked="LightProfile_Checked">
-                                    <StackPanel>
-                                        <Grid><Border Width="34" Height="34" CornerRadius="9" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left"><Canvas Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center"><Path Data="M 4,21 A 10,10 0 0 1 24,21" Stroke="{DynamicResource TextSubtleBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" /><Line X1="14" Y1="21" X2="7" Y2="17" Stroke="{DynamicResource GreenBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" /><Ellipse Canvas.Left="12" Canvas.Top="19" Width="4" Height="4" Fill="{DynamicResource GreenBrush}" /></Canvas></Border><Border MinHeight="25" Padding="9,0" Background="#24FF7A18" CornerRadius="7" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="{Binding IsLightRecommended, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding [Profiles.RecommendedBadge], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" /></Border></Grid>
-                                        <TextBlock Text="{Binding [Profiles.Light.Name], Source={StaticResource LocalizedStrings}}" Margin="0,13,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding [Profiles.Light.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding LightImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource BlueBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding RecommendationText}" Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12.5" TextWrapping="Wrap" MaxWidth="720" />
+                                        <Button Content="{Binding [Dashboard.OpenOptimizer], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="40" Padding="20,0" Margin="0,18,0,0" HorizontalAlignment="Left" Click="OpenOptimizer_Click" />
                                     </StackPanel>
-                                </RadioButton>
-                                <RadioButton Grid.Column="2" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsBalancedSelected}" Checked="BalancedProfile_Checked">
-                                    <StackPanel>
-                                        <Grid><Border Width="34" Height="34" CornerRadius="9" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left"><Canvas Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center"><Path Data="M 4,21 A 10,10 0 0 1 24,21" Stroke="{DynamicResource TextSubtleBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" /><Line X1="14" Y1="21" X2="14" Y2="10" Stroke="{DynamicResource OrangeLightBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" /><Ellipse Canvas.Left="12" Canvas.Top="19" Width="4" Height="4" Fill="{DynamicResource OrangeLightBrush}" /></Canvas></Border><Border MinHeight="25" Padding="9,0" Background="#24FF7A18" CornerRadius="7" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="{Binding IsBalancedRecommended, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding [Profiles.RecommendedBadge], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" /></Border></Grid>
-                                        <StackPanel Orientation="Horizontal" Margin="0,13,0,0">
-                                            <TextBlock Text="{Binding [Profiles.Balanced.Name], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                            <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TextSubtleBrush}" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="{Binding [Profiles.MayRequireElevation], Source={StaticResource LocalizedStrings}}" />
-                                        </StackPanel>
-                                        <TextBlock Text="{Binding [Profiles.Balanced.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding BalancedImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource OrangeLightBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </RadioButton>
-                                <RadioButton Grid.Column="4" GroupName="Profile" Style="{StaticResource ModeRadioStyle}" IsChecked="{Binding IsAggressiveSelected}" Checked="AggressiveProfile_Checked">
-                                    <StackPanel>
-                                        <Grid><Border Width="34" Height="34" CornerRadius="9" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left"><Canvas Width="28" Height="28" HorizontalAlignment="Center" VerticalAlignment="Center"><Path Data="M 4,21 A 10,10 0 0 1 24,21" Stroke="{DynamicResource TextSubtleBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" StrokeEndLineCap="Round" /><Line X1="14" Y1="21" X2="21" Y2="17" Stroke="{DynamicResource RedBrush}" StrokeThickness="2.2" StrokeStartLineCap="Round" /><Ellipse Canvas.Left="12" Canvas.Top="19" Width="4" Height="4" Fill="{DynamicResource RedBrush}" /></Canvas></Border><Border MinHeight="25" Padding="9,0" Background="#24FF7A18" CornerRadius="7" HorizontalAlignment="Right" VerticalAlignment="Center" Visibility="{Binding IsAggressiveRecommended, Converter={StaticResource BooleanToVisibilityConverter}}"><TextBlock Text="{Binding [Profiles.RecommendedBadge], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="SemiBold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" /></Border></Grid>
-                                        <StackPanel Orientation="Horizontal" Margin="0,13,0,0">
-                                            <TextBlock Text="{Binding [Profiles.Aggressive.Name], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center" />
-                                            <TextBlock Text="&#xE946;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource TextSubtleBrush}" Margin="6,0,0,0" VerticalAlignment="Center" ToolTip="{Binding [Profiles.MayRequireElevation], Source={StaticResource LocalizedStrings}}" />
-                                        </StackPanel>
-                                        <TextBlock Text="{Binding [Profiles.Aggressive.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                                        <TextBlock Text="{Binding AggressiveImpactLabel}" Margin="0,9,0,0" Foreground="{DynamicResource RedBrush}" FontSize="9.5" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                    </StackPanel>
-                                </RadioButton>
-                            </Grid>
-
-                            <ui:Card Margin="0,14,0,0" Padding="16">
-                                <StackPanel>
-                                    <TextBlock Text="{Binding [Profiles.Presentation.Benefits.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
-                                    <TextBlock Text="{Binding ProfilePresentationBenefits}" Margin="0,4,0,0" FontSize="11.5" TextWrapping="Wrap" />
-                                    <primitives:UniformGrid Columns="2" Margin="0,12,0,0">
-                                        <StackPanel Margin="0,0,10,10">
-                                            <TextBlock Text="{Binding [Profiles.Presentation.Impact.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
-                                            <TextBlock Text="{Binding ProfilePresentationImpact}" Margin="0,4,0,0" FontSize="11" TextWrapping="Wrap" />
-                                        </StackPanel>
-                                        <StackPanel Margin="0,0,0,10">
-                                            <TextBlock Text="{Binding [Profiles.Presentation.Reversibility.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
-                                            <TextBlock Text="{Binding ProfilePresentationReversibility}" Margin="0,4,0,0" FontSize="11" TextWrapping="Wrap" />
-                                        </StackPanel>
-                                        <StackPanel Margin="0,0,10,0">
-                                            <TextBlock Text="{Binding [Profiles.Presentation.Risks.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
-                                            <TextBlock Text="{Binding ProfilePresentationRisks}" Margin="0,4,0,0" FontSize="11" TextWrapping="Wrap" />
-                                        </StackPanel>
+                                    <Border Grid.Column="1" MinWidth="150" Margin="30,0,2,0" Padding="20,16" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="14" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
                                         <StackPanel>
-                                            <TextBlock Text="{Binding [Profiles.Presentation.Categories.Label], Source={StaticResource LocalizedStrings}}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" />
-                                            <TextBlock Text="{Binding ProfilePresentationCategories}" Margin="0,4,0,0" FontSize="11" TextWrapping="Wrap" />
+                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                <TextBlock Text="{Binding ReadinessScore}" FontSize="36" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
+                                                <TextBlock Text="/100" Margin="4,14,0,0" FontSize="11" Foreground="{DynamicResource TextSubtleBrush}" />
+                                            </StackPanel>
+                                            <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,0" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" FontWeight="Bold" HorizontalAlignment="Center" />
                                         </StackPanel>
-                                    </primitives:UniformGrid>
-                                    <TextBlock Text="{Binding ProfilePresentationVariability}" Margin="0,10,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" FontStyle="Italic" TextWrapping="Wrap" />
-                                </StackPanel>
+                                    </Border>
+                                </Grid>
                             </ui:Card>
 
-                            <ui:Card Margin="0,14,0,0" Padding="16">
-                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                    <Button Content="{Binding [Plan.Review], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="42" Padding="20,0" Margin="0,0,9,0" Click="ReviewPlan_Click" />
-                                    <Button Content="{Binding [Plan.OptimizeNow], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="42" Padding="24,0" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
-                                </StackPanel>
-                            </ui:Card>
+                            <Grid>
+                                <Grid.ColumnDefinitions><ColumnDefinition Width="5*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="3*" /></Grid.ColumnDefinitions>
+                                <ui:Card Grid.Column="0" Padding="20" VerticalAlignment="Stretch">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding StreamingReadinessTitle}" FontSize="16" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding StreamingReadinessDetail}" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
+                                        <ItemsControl ItemsSource="{Binding StreamingReadinessItems}" Margin="0,16,0,0">
+                                            <ItemsControl.ItemTemplate>
+                                                <DataTemplate>
+                                                    <Border Margin="0,0,0,8" Padding="12" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="9">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                            <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Top" />
+                                                            <StackPanel Grid.Column="1"><TextBlock Text="{Binding Title}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock Text="{Binding Detail}" Margin="0,3,0,0" FontSize="10.5" Foreground="{DynamicResource TextSubtleBrush}" TextWrapping="Wrap" /></StackPanel>
+                                                        </Grid>
+                                                    </Border>
+                                                </DataTemplate>
+                                            </ItemsControl.ItemTemplate>
+                                        </ItemsControl>
+                                    </StackPanel>
+                                </ui:Card>
+                                <ui:Card Grid.Column="2" Padding="20" VerticalAlignment="Stretch">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding [Dashboard.SystemOverview], Source={StaticResource LocalizedStrings}}" FontSize="16" FontWeight="SemiBold" />
+                                        <StackPanel Margin="0,16,0,0">
+                                            <TextBlock Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuName}" Margin="0,4,0,12" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding CpuName}" />
+                                            <TextBlock Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuDetail}" Margin="0,4,0,12" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" />
+                                            <TextBlock Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding RamLabel}" Margin="0,4,0,12" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskLabel}" Margin="0,4,0,0" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                </ui:Card>
+                            </Grid>
+
                         </StackPanel>
                     </ScrollViewer>
 

@@ -383,6 +383,12 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         PlanDetailsExpander.BringIntoView();
     }
 
+    private void OpenOptimizer_Click(object sender, RoutedEventArgs e)
+    {
+        ActivateNavItem(OptimizerNav);
+        Navigate(OptimizerPage);
+    }
+
     private void ChangeMode_Click(object sender, RoutedEventArgs e) => ProfileSelectorSection.BringIntoView();
 
     private void Navigate(UIElement page)

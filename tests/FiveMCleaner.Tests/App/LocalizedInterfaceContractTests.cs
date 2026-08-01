@@ -173,6 +173,25 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void Dashboard_FocusesOnStatusInsteadOfDuplicatingOptimizerControls()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml"));
+        var dashboard = source[source.IndexOf("<!-- Dashboard -->", StringComparison.Ordinal)..source.IndexOf("<!-- Optimizer -->", StringComparison.Ordinal)];
+
+        Assert.Contains("StreamingReadinessItems", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Dashboard.OpenOptimizer", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Dashboard.SystemOverview", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("GroupName=\"Profile\"", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("StartOptimization_Click", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProfilePresentationBenefits", dashboard, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void FluentInteractionStyles_KeepListsStableAndKeyboardFocusVisible()
     {
         var root = FindRepositoryRoot();
@@ -257,23 +276,6 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.DoesNotContain("{Binding IsCloseAppOnCloseSelected, Mode=OneWay}", radioBindings);
         Assert.DoesNotContain("{Binding IsMinimizeToTrayOnCloseSelected, Mode=OneWay}", radioBindings);
-    }
-
-    [Fact]
-    public void ReadinessRing_IsATrueCircle()
-    {
-        var root = FindRepositoryRoot();
-        var document = XDocument.Load(
-            Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"));
-        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
-        var ring = Assert.Single(
-            document.Descendants(presentation + "Ellipse"),
-            element => ((string?)element.Attribute("Stroke"))?.Contains(
-                "RingBrush",
-                StringComparison.Ordinal) == true);
-
-        Assert.Equal((string?)ring.Attribute("Width"), (string?)ring.Attribute("Height"));
-        Assert.Equal("Uniform", (string?)ring.Attribute("Stretch"));
     }
 
     [Fact]
