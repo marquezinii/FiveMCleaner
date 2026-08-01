@@ -19,4 +19,27 @@ public sealed class RuntimeActivationStoreTests : IDisposable
         Assert.Equal("1.1.0", store.ReadActiveVersion());
         Assert.True(Directory.Exists(Path.Combine(store.VersionsRoot, "1.0.0")));
     }
+
+    [Fact]
+    public async Task ReadActiveVersion_RetriesThroughATransientLockInsteadOfThrowing()
+    {
+        var store = new RuntimeActivationStore(root);
+        Directory.CreateDirectory(Path.Combine(store.VersionsRoot, "1.0.0"));
+        store.Activate("1.0.0");
+        var pointerPath = Path.Combine(root, "active.json");
+
+        // A escrita atômica concorrente de outro launcher, ou um antivírus
+        // segurando active.json por poucos milissegundos, não pode derrubar a
+        // abertura do app: ReadActiveVersion deve tentar de novo em vez de
+        // propagar o IOException do lock transitório.
+        var handle = new FileStream(pointerPath, FileMode.Open, FileAccess.Read, FileShare.None);
+        var releaseTask = Task.Run(async () =>
+        {
+            await Task.Delay(100);
+            handle.Dispose();
+        });
+
+        Assert.Equal("1.0.0", store.ReadActiveVersion());
+        await releaseTask;
+    }
 }

@@ -45,7 +45,13 @@ public static class Program
                 throw new TimeoutException("O FiveMCleaner não foi encerrado a tempo para instalar a atualização.");
             }
         }
+        // O processo pai pode sair entre GetProcessById e a leitura de HasExited/
+        // StartTime: nesse caso o Windows recusa o acesso ao processo já encerrado
+        // (Win32Exception) ou nega a propriedade (InvalidOperationException), o
+        // mesmo caso "já se foi" que ArgumentException já tratava como inofensivo.
         catch (ArgumentException) { }
+        catch (Win32Exception) { }
+        catch (InvalidOperationException) { }
     }
 
     private static FileStream VerifyInstaller(UpdateHandoff handoff)

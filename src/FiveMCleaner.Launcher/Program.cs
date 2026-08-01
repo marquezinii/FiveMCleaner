@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Cryptography;
 using System.Text.Json;
@@ -134,7 +135,13 @@ internal static class Program
                 && !parent.WaitForExit(30_000))
                 throw new TimeoutException("O FiveMCleaner anterior não encerrou a tempo.");
         }
+        // O processo anterior pode sair entre GetProcessById e a leitura de
+        // StartTime: o Windows recusa o acesso ao processo já encerrado
+        // (Win32Exception) ou nega a propriedade (InvalidOperationException),
+        // o mesmo caso "já se foi" que ArgumentException já tratava.
         catch (ArgumentException) { }
+        catch (Win32Exception) { }
+        catch (InvalidOperationException) { }
     }
 
     private static Task RecordAsync(

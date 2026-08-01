@@ -1,5 +1,43 @@
 # Estado do Projeto
 
+## Rodada de Hardening: race do processo-pai no Launcher/Updater e lock transitório do active.json — 31/07/2026
+
+- **Launcher e Updater (`WaitForParent`/`WaitForParentExit`)**: ambos chamavam
+  `Process.GetProcessById` e, logo em seguida, liam `HasExited`/`StartTime` só
+  com `catch (ArgumentException)`. Se o processo pai (o app sendo atualizado
+  ou relançado) saísse exatamente nessa janela — uma corrida real, já que essa
+  espera existe justamente para o caso do processo anterior estar fechando —
+  a leitura de `StartTime` lança `Win32Exception`/`InvalidOperationException`
+  para processo já encerrado, não capturado, derrubando o Launcher/Updater em
+  vez de tratar como o mesmo caso inofensivo "processo já se foi" que
+  `ArgumentException` já cobria. Corrigido nos dois projetos, capturando
+  também essas duas exceções.
+- **`RuntimeActivationStore.ReadActiveVersion`**: fazia `File.ReadAllText`
+  direto em `active.json`, sem a mesma tolerância a lock transitório que as
+  outras stores da rodada de hardening anterior já tinham
+  (`UpdateHealthReceiptStore`, `UpdateRecoveryJournal`). Esse arquivo é lido a
+  cada abertura do Launcher, exatamente enquanto outra instância pode estar no
+  meio de uma escrita atômica do mesmo arquivo, ou um antivírus pode segurar
+  um lock curto. Adicionada uma tentativa curta (até 5 vezes, 50ms entre
+  tentativas) só para `IOException`/`UnauthorizedAccessException`, antes de
+  propagar — um lock de poucos milissegundos não derruba mais a abertura do
+  app inteiro.
+- Dois candidatos adicionais foram avaliados e descartados nesta rodada:
+  acesso ao registro em `WindowsRegistryStore` (já coberto funcionalmente pelo
+  catch-all do motor de transação; mudar o comportamento ali é decisão de
+  produto sobre retry, fora do escopo puramente defensivo desta rodada) e
+  `EnsurePlainDirectory` em `ElevatedBrokerClient` (é uma checagem de
+  segurança contra reparse point/junction na pasta de solicitações do broker;
+  suavizar essa exceção enfraqueceria a proteção, não é um caso de
+  resiliência).
+- Cobertura nova: teste em `RuntimeActivationStoreTests` que segura
+  `active.json` com `FileShare.None`, libera o lock em outra thread após
+  100ms, e confirma que `ReadActiveVersion` espera e retorna o valor correto
+  em vez de lançar.
+- Validação: build Release sem avisos, 604 testes .NET (1 novo) e
+  `Verify-Safety.ps1` aprovados. App iniciado via
+  `scripts/Start-DevelopmentApp.ps1`, confirmado processo rodando sem crash.
+
 ## Linha do tempo do Otimizador: passo na mesma linha do tempo decorrido/restante — 31/07/2026
 
 - O bloco da bolinha + passo atual voltou a ficar na mesma linha do tempo
