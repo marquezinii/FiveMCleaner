@@ -43,7 +43,7 @@ public sealed class RuntimeActivationStore
     // esperar o processo concorrente terminar.
     private string ReadPointerTextWithTransientRetry()
     {
-        const int maxAttempts = 5;
+        const int maxAttempts = 15;
         for (var attempt = 1; ; attempt++)
         {
             try
@@ -53,7 +53,7 @@ public sealed class RuntimeActivationStore
             catch (Exception exception) when (attempt < maxAttempts
                 && exception is IOException or UnauthorizedAccessException)
             {
-                Thread.Sleep(50);
+                Thread.Sleep(100);
             }
         }
     }

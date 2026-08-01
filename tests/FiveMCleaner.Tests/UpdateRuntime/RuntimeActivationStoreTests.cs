@@ -31,15 +31,26 @@ public sealed class RuntimeActivationStoreTests : IDisposable
         // A escrita atômica concorrente de outro launcher, ou um antivírus
         // segurando active.json por poucos milissegundos, não pode derrubar a
         // abertura do app: ReadActiveVersion deve tentar de novo em vez de
-        // propagar o IOException do lock transitório.
+        // propagar o IOException do lock transitório. O lock fica mais tempo
+        // que a espera de um runner de CI mais lento agendar a thread de
+        // liberação, mas bem dentro do orçamento de retry de
+        // ReadActiveVersion (15 tentativas x 100ms = até 1.4s).
         var handle = new FileStream(pointerPath, FileMode.Open, FileAccess.Read, FileShare.None);
         var releaseTask = Task.Run(async () =>
         {
-            await Task.Delay(100);
+            await Task.Delay(300);
             handle.Dispose();
         });
 
-        Assert.Equal("1.0.0", store.ReadActiveVersion());
-        await releaseTask;
+        try
+        {
+            Assert.Equal("1.0.0", store.ReadActiveVersion());
+        }
+        finally
+        {
+            // Garante que o lock some antes do Dispose() da fixture apagar o
+            // diretório, mesmo se o Assert acima falhar.
+            await releaseTask;
+        }
     }
 }
