@@ -1,23 +1,42 @@
 # Estado do Projeto
 
-## Linha do tempo do Otimizador: bolinha de passo atual e dwell mínimo — 31/07/2026
+## Linha do tempo do Otimizador: passo por ação real, bolinha verde e visual minimalista — 31/07/2026
 
-- A linha do tempo compacta do Otimizador ganhou uma bolinha (`Ellipse` laranja)
-  à esquerda do passo atual, conforme pedido pelo usuário; o passo anterior
-  continua abaixo, menor e mais opaco/esmaecido, sem bolinha, e desaparece
-  assim que um terceiro passo chega (`HasPreviousProgressHeadline`).
-- Cada passo (`ProgressHeadline`) agora fica visível por no mínimo 4 segundos
-  antes de dar lugar ao próximo, em qualquer perfil (Leve, Médio, Agressivo):
-  `MainViewModel` enfileira os cabeçalhos recebidos via `EnqueueHeadline` e um
-  `DispatcherTimer` (`headlineDwellTimer`) libera o próximo da fila somente
-  após o dwell mínimo, mesmo que o serviço de otimização produza atualizações
-  mais rápido que isso. Estados terminais (concluído, cancelado, falhou,
+- Correção do problema real: a fase local de ações reportava sempre o mesmo
+  `Headline` genérico ("Otimizando com segurança") para toda ação em
+  progresso, então a linha do tempo nunca trocava de texto entre ações — só
+  entre as 3 fases largas (validando, otimizando, concluído). Agora
+  `AppOptimizationService.ExecutePlanCoreAsync` usa o nome localizado da ação
+  em execução (`GetLocalizedActionName`) como `Headline`, então cada ação real
+  do plano aparece individualmente ("Verificar estado do FiveM", "Verificar
+  estado do GTA V", "Diagnosticar gargalo provável" etc.), em todos os modos
+  (Leve, Médio, Agressivo). A fase administrativa elevada (broker) recebeu o
+  mesmo tratamento via um `IProgress<AppProgressUpdate>` intermediário que
+  reescreve o `Headline` genérico do broker pelo nome da ação em curso.
+- Cada passo (`ProgressHeadline`) fica visível por no mínimo 4 segundos antes
+  de dar lugar ao próximo: `MainViewModel` enfileira os cabeçalhos recebidos
+  via `EnqueueHeadline` e um `DispatcherTimer` (`headlineDwellTimer`) libera o
+  próximo da fila somente após o dwell mínimo, mesmo que o serviço produza
+  atualizações mais rápido. Estados terminais (concluído, cancelado, falhou,
   restauração) usam `FinalizeHeadline`, que esvazia a fila e mostra o
-  resultado final imediatamente, sem esperar o dwell de um passo intermediário
-  que não teve tempo de aparecer.
+  resultado final imediatamente.
+- Visual refinado a pedido do usuário: bolinha do passo atual agora é verde
+  (`GreenBrush`, era laranja); o texto do passo atual não tem mais o prefixo
+  "Otimizando: " — mostra só a ação em si, em itálico, peso normal, tamanho
+  menor (11.5) e cor `TextMutedBrush` (cinza suave, não branco puro); o passo
+  anterior fica logo abaixo, também itálico, só um pouco menor (10.5) e mais
+  opaco, não minúsculo; espaçamento vertical do bloco reduzido (de 28/24 para
+  10/8) para ficar mais colado à barra de tempo decorrido/restante, no mesmo
+  espírito minimalista pedido.
+- Teste de contrato `Optimizer_UsesACompactProgressTimelineInsteadOfThePlanAndLedgerLists`
+  atualizado: não exige mais `ProgressStateLabel` no XAML, já que o prefixo de
+  estado foi removido de propósito.
 - Validação: build Release sem avisos, 603 testes .NET aprovados e
   `Verify-Safety.ps1` aprovado. App iniciado via
   `scripts/Start-DevelopmentApp.ps1`, confirmado processo rodando sem crash.
+  **Limitação**: sem ferramenta de captura de tela para o executável de
+  desenvolvimento neste ambiente; a conferência visual pixel-a-pixel (cor
+  exata do cinza, itálico, espaçamento) depende de inspeção manual do usuário.
   **Limitação**: como já registrado em rodadas anteriores, não há ferramenta de
   captura de tela disponível para o executável de desenvolvimento neste
   ambiente; a conferência visual pixel-a-pixel do dwell e da bolinha depende de

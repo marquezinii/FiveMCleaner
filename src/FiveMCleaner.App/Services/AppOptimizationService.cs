@@ -523,15 +523,14 @@ public sealed class AppOptimizationService : IAppOptimizationService
             var percent = update.TotalWeight > 0
                 ? 5d + (65d * update.CompletedWeight / update.TotalWeight)
                 : 5d;
+            var actionName = GetLocalizedActionName(update.ActionId);
             progress.Report(new AppProgressUpdate
             {
                 Timestamp = DateTimeOffset.Now,
                 Kind = AppProgressKind.Applying,
                 Percent = Math.Clamp(percent, 5, 70),
-                Headline = localization.GetString("Runtime.OptimizingSafely"),
-                Detail = localization.Format(
-                    DetailKeyFor(update.Outcome),
-                    GetLocalizedActionName(update.ActionId)),
+                Headline = actionName,
+                Detail = localization.Format(DetailKeyFor(update.Outcome), actionName),
                 ActionId = update.ActionId,
                 CompletedSteps = update.CompletedSteps,
                 TotalSteps = update.TotalSteps,
@@ -581,10 +580,15 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 Detail = localization.GetString("Runtime.WindowsConfirmationDetail")
             });
 
+            var adminProgress = new InlineProgress<AppProgressUpdate>(update => progress.Report(
+                update.ActionId is null
+                    ? update
+                    : update with { Headline = GetLocalizedActionName(update.ActionId) }));
+
             ElevatedBrokerResult elevated;
             try
             {
-                elevated = await brokerClient.ExecuteAsync(plan, progress, cancellationToken)
+                elevated = await brokerClient.ExecuteAsync(plan, adminProgress, cancellationToken)
                     .ConfigureAwait(false);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

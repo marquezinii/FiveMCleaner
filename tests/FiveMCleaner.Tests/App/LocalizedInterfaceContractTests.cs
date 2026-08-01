@@ -158,7 +158,6 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("ActivityLog", optimizer, StringComparison.Ordinal);
         Assert.Contains("ProgressBar Value=\"{Binding ProgressPercent", optimizer, StringComparison.Ordinal);
         Assert.Contains("PreviousProgressHeadline", optimizer, StringComparison.Ordinal);
-        Assert.Contains("ProgressStateLabel, Mode=OneWay", optimizer, StringComparison.Ordinal);
         Assert.Contains("ProgressHeadline, Mode=OneWay", optimizer, StringComparison.Ordinal);
         Assert.Contains("ElapsedTimeLabel", optimizer, StringComparison.Ordinal);
         Assert.Contains("RemainingTimeLabel", optimizer, StringComparison.Ordinal);
