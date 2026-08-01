@@ -414,7 +414,7 @@
                             <StackPanel>
                                 <ui:Card Padding="26">
                                     <Grid>
-                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                             <TextBlock Text="{Binding [Progress.Title], Source={StaticResource LocalizedStrings}}" FontSize="16" FontWeight="SemiBold" />
@@ -450,20 +450,20 @@
                                                     </Style>
                                                 </ProgressBar.Style>
                                             </ProgressBar>
+                                            <StackPanel Margin="0,8,0,0" HorizontalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                    <Ellipse Width="6" Height="6" Fill="{DynamicResource GreenBrush}" VerticalAlignment="Center" />
+                                                    <TextBlock Margin="7,0,0,0" Text="{Binding ProgressHeadline, Mode=OneWay}" FontSize="11.5" FontStyle="Italic" FontWeight="Normal" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" />
+                                                </StackPanel>
+                                                <TextBlock Margin="0,3,0,0" Text="{Binding PreviousProgressHeadline}" Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" Foreground="{DynamicResource TextSubtleBrush}" Opacity="0.55" FontSize="10.5" FontStyle="Italic" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
+                                            </StackPanel>
                                             <Grid Margin="0,8,0,0">
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                                 <TextBlock Text="{Binding ElapsedTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextTrimming="CharacterEllipsis" />
                                                 <TextBlock Grid.Column="1" Text="{Binding RemainingTimeLabel}" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" HorizontalAlignment="Right" TextAlignment="Right" TextTrimming="CharacterEllipsis" />
                                             </Grid>
                                         </StackPanel>
-                                        <StackPanel Grid.Row="2" Margin="0,10,0,8" HorizontalAlignment="Center">
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <Ellipse Width="6" Height="6" Fill="{DynamicResource GreenBrush}" VerticalAlignment="Center" />
-                                                <TextBlock Margin="7,0,0,0" Text="{Binding ProgressHeadline, Mode=OneWay}" FontSize="11.5" FontStyle="Italic" FontWeight="Normal" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" TextAlignment="Center" VerticalAlignment="Center" />
-                                            </StackPanel>
-                                            <TextBlock Margin="0,3,0,0" Text="{Binding PreviousProgressHeadline}" Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" Foreground="{DynamicResource TextSubtleBrush}" Opacity="0.55" FontSize="10.5" FontStyle="Italic" TextWrapping="Wrap" TextAlignment="Center" HorizontalAlignment="Center" />
-                                        </StackPanel>
-                                        <Grid Grid.Row="3"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <Grid Grid.Row="2"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                             <Button Grid.Column="1" Content="{Binding [Optimizer.RunPlan], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Padding="24,0" Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
                                             <Button Grid.Column="2" Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="10,0,0,0" HorizontalAlignment="Right" Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />
                                         </Grid>

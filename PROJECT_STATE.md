@@ -1,5 +1,20 @@
 # Estado do Projeto
 
+## Linha do tempo do Otimizador: ritmo mais lento e bloco colado à barra — 31/07/2026
+
+- Dwell mínimo por passo aumentado de 4s para 6s (`MainViewModel.HeadlineMinimumDwell`)
+  a pedido do usuário, que achou o ritmo ainda rápido demais mesmo com o
+  dwell de 4s já em vigor.
+- O bloco da bolinha + passo atual/anterior saiu de uma seção própria abaixo
+  da linha de tempo decorrido/restante e passou para dentro do mesmo
+  `StackPanel` da barra de progresso, logo abaixo dela e imediatamente acima
+  da linha de tempo decorrido/restante — mesma margem `0,8,0,0` usada por
+  essa linha, para ficar visualmente colado à barra em vez de solto mais
+  abaixo no cartão.
+- Validação: build Release sem avisos, 603 testes .NET aprovados,
+  `Verify-Safety.ps1` aprovado, app iniciado via
+  `scripts/Start-DevelopmentApp.ps1` sem crash.
+
 ## Linha do tempo do Otimizador: passo por ação real, bolinha verde e visual minimalista — 31/07/2026
 
 - Correção do problema real: a fase local de ações reportava sempre o mesmo

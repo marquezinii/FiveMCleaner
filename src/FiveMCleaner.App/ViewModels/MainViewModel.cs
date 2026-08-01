@@ -22,7 +22,7 @@ public sealed class MainViewModel : BindableBase
     private readonly ProgressTimingEstimator progressTimingEstimator = new();
     private readonly SemaphoreSlim settingsSaveGate = new(1, 1);
     private readonly Queue<string> pendingHeadlines = new();
-    private static readonly TimeSpan HeadlineMinimumDwell = TimeSpan.FromSeconds(4);
+    private static readonly TimeSpan HeadlineMinimumDwell = TimeSpan.FromSeconds(6);
     private DispatcherTimer? headlineDwellTimer;
     private DateTime headlineShownAtUtc;
     private CancellationTokenSource? operationCancellation;
