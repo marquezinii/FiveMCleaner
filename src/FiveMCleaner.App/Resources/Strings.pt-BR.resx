@@ -676,9 +676,11 @@
   <data name="Category.Appearance" xml:space="preserve"><value>Aparência</value></data>
   <data name="Category.FiveMGraphics" xml:space="preserve"><value>Gráficos do FiveM/GTA V</value></data>
   <data name="Optimizer.StepLedger.Title" xml:space="preserve"><value>Resultado das etapas</value></data>
-  <data name="Dashboard.Readiness.Excellent" xml:space="preserve"><value>Excelente condição</value></data>
-  <data name="Dashboard.Readiness.Good" xml:space="preserve"><value>Boa condição</value></data>
-  <data name="Dashboard.Readiness.Attention" xml:space="preserve"><value>Requer atenção</value></data>
+  <data name="Dashboard.Readiness.Excellent" xml:space="preserve"><value>Excelente</value></data>
+  <data name="Dashboard.Readiness.Good" xml:space="preserve"><value>Bom</value></data>
+  <data name="Dashboard.Readiness.Average" xml:space="preserve"><value>Médio</value></data>
+  <data name="Dashboard.Readiness.Poor" xml:space="preserve"><value>Ruim</value></data>
+  <data name="Dashboard.Readiness.VeryPoor" xml:space="preserve"><value>Péssimo</value></data>
   <data name="Dashboard.Readiness.LocalAnalysis" xml:space="preserve"><value>Análise local de capacidade e compatibilidade</value></data>
   <data name="Dashboard.LivePerformance.Title" xml:space="preserve"><value>Desempenho ao vivo</value></data>
   <data name="Dashboard.LivePerformance.Description" xml:space="preserve"><value>Uso real dos recursos, atualizado enquanto esta página estiver aberta.</value></data>

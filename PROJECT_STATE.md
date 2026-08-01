@@ -6,6 +6,8 @@
   sóbrio, detalhe laranja e núcleo com pontuação, nível e a explicação local
   já existente. A composição preserva o contraste e a informação explícita
   do modelo anterior, sem duplicar uma barra de progresso.
+- O nível passou a ser uma classificação curta de cinco faixas: 0–5 Péssimo,
+  6–25 Ruim, 26–50 Médio, 51–75 Bom e 76–100 Excelente.
 
 ## Monitor de desempenho ao vivo na Visão geral — 01/08/2026
 

@@ -197,6 +197,13 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("GroupName=\"Profile\"", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("StartOptimization_Click", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("ProfilePresentationBenefits", dashboard, StringComparison.Ordinal);
+
+        var viewModel = File.ReadAllText(Path.Combine(root, "src", "FiveMCleaner.App", "ViewModels", "MainViewModel.cs"));
+        Assert.Contains("> 75 => localization.GetString(\"Dashboard.Readiness.Excellent\")", viewModel, StringComparison.Ordinal);
+        Assert.Contains("> 50 => localization.GetString(\"Dashboard.Readiness.Good\")", viewModel, StringComparison.Ordinal);
+        Assert.Contains("> 25 => localization.GetString(\"Dashboard.Readiness.Average\")", viewModel, StringComparison.Ordinal);
+        Assert.Contains("> 5 => localization.GetString(\"Dashboard.Readiness.Poor\")", viewModel, StringComparison.Ordinal);
+        Assert.Contains("_ => localization.GetString(\"Dashboard.Readiness.VeryPoor\")", viewModel, StringComparison.Ordinal);
     }
 
     [Fact]

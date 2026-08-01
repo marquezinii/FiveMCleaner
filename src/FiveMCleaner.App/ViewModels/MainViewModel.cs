@@ -1433,9 +1433,11 @@ public sealed class MainViewModel : BindableBase, IDisposable
         ReadinessScore = value.ReadinessScore;
         ReadinessLevelLabel = ReadinessScore switch
         {
-            >= 85 => localization.GetString("Dashboard.Readiness.Excellent"),
-            >= 65 => localization.GetString("Dashboard.Readiness.Good"),
-            _ => localization.GetString("Dashboard.Readiness.Attention")
+            > 75 => localization.GetString("Dashboard.Readiness.Excellent"),
+            > 50 => localization.GetString("Dashboard.Readiness.Good"),
+            > 25 => localization.GetString("Dashboard.Readiness.Average"),
+            > 5 => localization.GetString("Dashboard.Readiness.Poor"),
+            _ => localization.GetString("Dashboard.Readiness.VeryPoor")
         };
         IsFiveMLegacyDetected = value.Edition == FiveMEdition.Legacy;
         IsGtaVLegacyDetected = value.GtaVDetected || File.Exists(value.GtaVGraphicsSettingsPath);
