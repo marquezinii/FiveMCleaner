@@ -143,3 +143,16 @@ export function toBugReportRow(row) {
     row.log_text ? 'sim' : 'não',
   ];
 }
+
+export function toUpdaterEventRow(row) {
+  const fallback = (value) => value ?? '—';
+  return [
+    formatTimestamp(row.received_at),
+    fallback(row.stage),
+    fallback(row.outcome),
+    fallback(row.error_code),
+    fallback(row.previous_version),
+    fallback(row.candidate_version),
+    fallback(row.environment),
+  ];
+}

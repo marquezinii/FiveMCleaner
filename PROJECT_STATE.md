@@ -1,5 +1,630 @@
 # Estado do Projeto
 
+## Preparação da publicação v1.2.0 — 01/08/2026
+
+- O conjunto desde `v1.1.3` foi classificado como **minor**: entrega o
+  atualizador transacional assinado com recuperação automática, amplia a
+  visibilidade de atualização/diagnóstico e renova a experiência Fluent sem
+  quebrar a instalação existente. A próxima versão estável é `v1.2.0`.
+- `Directory.Build.props`, fallback do instalador, README, changelog e página
+  pública foram alinhados para `1.2.0`. O piso `minimum-update-version` ficou
+  em `1.1.3`, deliberadamente, para que a última instalação pública possa
+  receber a atualização; ele não representa a versão da nova release.
+- Validação local: progressão SemVer `v1.1.3` → `v1.2.0`, build Release sem
+  avisos, 604 testes .NET, `Verify-Safety.ps1`, format, instalador `1.2.0`
+  (contrato e smoke real de instalar/atualizar/desinstalar), Worker (109),
+  dashboard (36) e site (lint, typecheck, build e 3 testes) aprovados.
+
+## Validação real do atualizador transacional e instalador — 01/08/2026
+
+- O atualizador novo foi exercitado com o `FiveMCleaner.Launcher.exe` Release
+  real em uma árvore de runtime isolada e dois executáveis candidatos
+  sintéticos. No caminho saudável, a candidata `99.0.0` recebeu o ID e nonce
+  da transação, gravou o recibo de saúde correspondente, manteve o ponteiro
+  ativo e concluiu o journal. No cenário sem recibo e com timeout já vencido,
+  o Launcher restaurou `98.0.0` — exatamente a predecessora registrada — e
+  concluiu o journal. Nenhum dos dois cenários tocou a instalação real.
+- Também foram aprovados 26 testes focados do updater (assinatura, staging
+  integral do ZIP, piso anti-downgrade, contrato de handoff, locks transitórios,
+  health receipt, timeout, abandono e rollback), além de build Release,
+  604 testes .NET e `Verify-Safety.ps1` executados pelo empacotamento.
+- O instalador `1.1.3` recém-gerado passou no smoke real de instalação
+  silenciosa, atualização in-place e desinstalação com a autorização explícita
+  para coexistir com a instalação local. Não ficaram registro de desinstalação
+  nem processos órfãos. Dois diretórios temporários ignorados em `artifacts/`
+  permanecem apenas porque a automação do ambiente bloqueou a remoção recursiva.
+
+## Validação abrangente pré-release: formatação, segurança, contratos e componentes — 01/08/2026
+
+- Corrigida uma falha reproduzível de qualidade: `dotnet format --verify-no-changes`
+  falhava porque dois blocos de `try/catch` não seguiam a formatação configurada.
+  `AppOptimizationService` e `Launcher/Program` foram ajustados somente na
+  estrutura/indentação, sem alterar o fluxo de execução. A validação de formato
+  agora passa para toda a solução.
+- Validação executada no estado final: build Release sem avisos, 604 testes
+  .NET (duas execuções, uma com cobertura), `Verify-Safety.ps1`, contrato do
+  instalador, `git diff --check`, Worker (109 testes), dashboard (36 testes),
+  site (lint, build e 3 testes) e verificador de progressão SemVer para
+  `v1.1.3` → `1.1.4`.
+- Smokes não destrutivos: o launcher de desenvolvimento encontrou e compilou
+  o executável Release; o Worker público rejeitou um lote de telemetria vazio
+  com HTTP 400, sem gravar evento. O teste de instalação real não foi repetido
+  nesta rodada porque instala/desinstala o produto na máquina; o contrato do
+  instalador foi validado e o último smoke completo permanece registrado abaixo.
+
+## Telemetria legada da v1.1.0: compatibilidade temporária no Worker — 01/08/2026
+
+- A v1.1.0 pública enviava eventos sem o campo obrigatório `environment` e o
+  Worker os recusava com HTTP 400; por isso otimizações dessa versão não
+  apareciam no dashboard. O Worker agora registra como `Production` qualquer
+  payload que omita esse campo, inclusive de clientes futuros. Clientes atuais
+  continuam enviando o ambiente explicitamente; `null` e valores desconhecidos
+  seguem rejeitados.
+- Cobertura adicionada no validador para esse fallback e para a rejeição de
+  ambiente nulo. Esta é uma correção apenas de backend:
+  nenhuma versão do aplicativo foi publicada.
+
+## Varredura de dívida técnica: XML seguro compartilhado, using ausentes e duplicação no update check — 31/07/2026
+
+- `LegacyGraphicsPresetAction` e `DisplayPreferencesAction` (ambos em
+  `FiveMCleaner.Windows/Actions`) duplicavam byte a byte ~90 linhas: leitura
+  segura de XML com hash (`LoadSafeDocument`/`LoadSafeDocumentWithHash`,
+  DTD proibido, teto de 4 MB), gravação (`SaveDocument`), `ComputeSha256` e a
+  troca atômica com verificação (`ReplaceAndVerifyDisplacedOriginal`), com
+  só a mensagem de erro do teto de tamanho variando entre os dois. Extraído
+  para `SafeXmlDocumentStore` (novo, `FiveMCleaner.Windows/Infrastructure`),
+  parametrizando só a mensagem de erro que variava; as duas ações agora
+  chamam o helper compartilhado em vez de manter cópias próprias. O guard de
+  reparse point na pasta de backup foi deixado como estava em cada ação (não
+  é a mesma checagem de `SafePath.EnsureNoReparsePoints`, usada em outras
+  ações para toda a cadeia de ancestrais — trocar teria mudado
+  comportamento, fora do escopo de uma rodada sem mudança de comportamento).
+- `System.Globalization.CultureInfo`/`NumberStyles` totalmente qualificados
+  repetidamente em `SilentUpdateInstaller.cs` (3x), `PowerPlanAction.cs` (3x)
+  e uma vez em `ElevatedBrokerClient.cs`, sem `using System.Globalization;`
+  — trocado por `using` nos três arquivos. **Não** aplicado o mesmo em
+  `ThemeManager.cs`: apesar de ter `using System.Windows`/`System.Windows.Media`,
+  o projeto App também referencia `System.Windows.Forms`/`System.Drawing`
+  (WinForms), então `Application`, `Point`, `Color` e `ColorConverter` são
+  ambíguos ali sem qualificação total — as FQNs eram intencionais, não
+  dívida; tentativa de trocar quebrou o build com `CS0104` e foi revertida.
+- `MainViewModel.CheckForUpdatesAsync`/`CheckForUpdatesManuallyAsync`
+  duplicavam a leitura da versão do assembly e o bloco de 5 linhas aplicado
+  quando uma atualização é encontrada (`availableUpdate = update;` até
+  `UpdateAvailableDetected?.Invoke`). Extraídos `GetAssemblyVersion()` e
+  `ApplyDetectedUpdate(ReleaseUpdate)`, reaproveitados pelos dois métodos.
+- Validação: build Release sem avisos, 604 testes .NET aprovados,
+  `Verify-Safety.ps1` aprovado, app iniciado via
+  `scripts/Start-DevelopmentApp.ps1` sem crash. Nenhuma mudança de
+  comportamento pretendida nesta rodada.
+
+## Rodada de Hardening: race do processo-pai no Launcher/Updater e lock transitório do active.json — 31/07/2026
+
+- **Launcher e Updater (`WaitForParent`/`WaitForParentExit`)**: ambos chamavam
+  `Process.GetProcessById` e, logo em seguida, liam `HasExited`/`StartTime` só
+  com `catch (ArgumentException)`. Se o processo pai (o app sendo atualizado
+  ou relançado) saísse exatamente nessa janela — uma corrida real, já que essa
+  espera existe justamente para o caso do processo anterior estar fechando —
+  a leitura de `StartTime` lança `Win32Exception`/`InvalidOperationException`
+  para processo já encerrado, não capturado, derrubando o Launcher/Updater em
+  vez de tratar como o mesmo caso inofensivo "processo já se foi" que
+  `ArgumentException` já cobria. Corrigido nos dois projetos, capturando
+  também essas duas exceções.
+- **`RuntimeActivationStore.ReadActiveVersion`**: fazia `File.ReadAllText`
+  direto em `active.json`, sem a mesma tolerância a lock transitório que as
+  outras stores da rodada de hardening anterior já tinham
+  (`UpdateHealthReceiptStore`, `UpdateRecoveryJournal`). Esse arquivo é lido a
+  cada abertura do Launcher, exatamente enquanto outra instância pode estar no
+  meio de uma escrita atômica do mesmo arquivo, ou um antivírus pode segurar
+  um lock curto. Adicionada uma tentativa curta (até 5 vezes, 50ms entre
+  tentativas) só para `IOException`/`UnauthorizedAccessException`, antes de
+  propagar — um lock de poucos milissegundos não derruba mais a abertura do
+  app inteiro.
+- Dois candidatos adicionais foram avaliados e descartados nesta rodada:
+  acesso ao registro em `WindowsRegistryStore` (já coberto funcionalmente pelo
+  catch-all do motor de transação; mudar o comportamento ali é decisão de
+  produto sobre retry, fora do escopo puramente defensivo desta rodada) e
+  `EnsurePlainDirectory` em `ElevatedBrokerClient` (é uma checagem de
+  segurança contra reparse point/junction na pasta de solicitações do broker;
+  suavizar essa exceção enfraqueceria a proteção, não é um caso de
+  resiliência).
+- Cobertura nova: teste em `RuntimeActivationStoreTests` que segura
+  `active.json` com `FileShare.None`, libera o lock em outra thread após
+  100ms, e confirma que `ReadActiveVersion` espera e retorna o valor correto
+  em vez de lançar.
+- Validação: build Release sem avisos, 604 testes .NET (1 novo) e
+  `Verify-Safety.ps1` aprovados. App iniciado via
+  `scripts/Start-DevelopmentApp.ps1`, confirmado processo rodando sem crash.
+
+## Linha do tempo do Otimizador: passo na mesma linha do tempo decorrido/restante — 31/07/2026
+
+- O bloco da bolinha + passo atual voltou a ficar na mesma linha do tempo
+  decorrido e restante (uma única `Grid` com 3 colunas: decorrido à esquerda,
+  bolinha+passo atual centralizado, restante à direita), em vez de uma linha
+  própria acima dela — pedido explícito do usuário após a tentativa anterior
+  ter deixado o bloco visualmente colado, mas ainda numa linha separada acima.
+  O passo anterior (esmaecido) continua abaixo dessa linha única.
+- Validação: build Release sem avisos, 603 testes .NET aprovados,
+  `Verify-Safety.ps1` aprovado, app iniciado via
+  `scripts/Start-DevelopmentApp.ps1` sem crash.
+
+## Linha do tempo do Otimizador: ritmo mais lento e bloco colado à barra — 31/07/2026
+
+- Dwell mínimo por passo aumentado de 4s para 6s (`MainViewModel.HeadlineMinimumDwell`)
+  a pedido do usuário, que achou o ritmo ainda rápido demais mesmo com o
+  dwell de 4s já em vigor.
+- O bloco da bolinha + passo atual/anterior saiu de uma seção própria abaixo
+  da linha de tempo decorrido/restante e passou para dentro do mesmo
+  `StackPanel` da barra de progresso, logo abaixo dela e imediatamente acima
+  da linha de tempo decorrido/restante — mesma margem `0,8,0,0` usada por
+  essa linha, para ficar visualmente colado à barra em vez de solto mais
+  abaixo no cartão.
+- Validação: build Release sem avisos, 603 testes .NET aprovados,
+  `Verify-Safety.ps1` aprovado, app iniciado via
+  `scripts/Start-DevelopmentApp.ps1` sem crash.
+
+## Linha do tempo do Otimizador: passo por ação real, bolinha verde e visual minimalista — 31/07/2026
+
+- Correção do problema real: a fase local de ações reportava sempre o mesmo
+  `Headline` genérico ("Otimizando com segurança") para toda ação em
+  progresso, então a linha do tempo nunca trocava de texto entre ações — só
+  entre as 3 fases largas (validando, otimizando, concluído). Agora
+  `AppOptimizationService.ExecutePlanCoreAsync` usa o nome localizado da ação
+  em execução (`GetLocalizedActionName`) como `Headline`, então cada ação real
+  do plano aparece individualmente ("Verificar estado do FiveM", "Verificar
+  estado do GTA V", "Diagnosticar gargalo provável" etc.), em todos os modos
+  (Leve, Médio, Agressivo). A fase administrativa elevada (broker) recebeu o
+  mesmo tratamento via um `IProgress<AppProgressUpdate>` intermediário que
+  reescreve o `Headline` genérico do broker pelo nome da ação em curso.
+- Cada passo (`ProgressHeadline`) fica visível por no mínimo 4 segundos antes
+  de dar lugar ao próximo: `MainViewModel` enfileira os cabeçalhos recebidos
+  via `EnqueueHeadline` e um `DispatcherTimer` (`headlineDwellTimer`) libera o
+  próximo da fila somente após o dwell mínimo, mesmo que o serviço produza
+  atualizações mais rápido. Estados terminais (concluído, cancelado, falhou,
+  restauração) usam `FinalizeHeadline`, que esvazia a fila e mostra o
+  resultado final imediatamente.
+- Visual refinado a pedido do usuário: bolinha do passo atual agora é verde
+  (`GreenBrush`, era laranja); o texto do passo atual não tem mais o prefixo
+  "Otimizando: " — mostra só a ação em si, em itálico, peso normal, tamanho
+  menor (11.5) e cor `TextMutedBrush` (cinza suave, não branco puro); o passo
+  anterior fica logo abaixo, também itálico, só um pouco menor (10.5) e mais
+  opaco, não minúsculo; espaçamento vertical do bloco reduzido (de 28/24 para
+  10/8) para ficar mais colado à barra de tempo decorrido/restante, no mesmo
+  espírito minimalista pedido.
+- Teste de contrato `Optimizer_UsesACompactProgressTimelineInsteadOfThePlanAndLedgerLists`
+  atualizado: não exige mais `ProgressStateLabel` no XAML, já que o prefixo de
+  estado foi removido de propósito.
+- Validação: build Release sem avisos, 603 testes .NET aprovados e
+  `Verify-Safety.ps1` aprovado. App iniciado via
+  `scripts/Start-DevelopmentApp.ps1`, confirmado processo rodando sem crash.
+  **Limitação**: sem ferramenta de captura de tela para o executável de
+  desenvolvimento neste ambiente; a conferência visual pixel-a-pixel (cor
+  exata do cinza, itálico, espaçamento) depende de inspeção manual do usuário.
+  **Limitação**: como já registrado em rodadas anteriores, não há ferramenta de
+  captura de tela disponível para o executável de desenvolvimento neste
+  ambiente; a conferência visual pixel-a-pixel do dwell e da bolinha depende de
+  inspeção manual da pessoa usuária.
+
+## Rodada de Hardening (Resistência e Resiliência) — 31/07/2026
+
+- **Hardening de arquivo atômico (`AtomicFile`)**: adicionada a garantia `EnsureDirectory(path)` antes da escrita de arquivos temporários em `AtomicFile.WriteBytes`/`WriteText`, prevenindo falhas quando diretórios de destino ainda não existem. Em `ReplaceInto`, adicionado fallback atômico para `File.Move(overwrite: true)` caso `File.Replace` falhe por bloqueios transitórios de arquivo ou características de plataforma.
+- **Hardening do guardião de instância única (`SingleInstanceGuard`)**: adicionado suporte a construtor interno para nomes de Mutex customizados e tratamento para `UnauthorizedAccessException` na criação, aquisição e descarte do Mutex. Os testes em `SingleInstanceGuardTests` foram isolados com nomes de Mutex únicos por teste, eliminando falhas de execução quando o aplicativo em modo de desenvolvimento está aberto na máquina local.
+- **Hardening do sanitizador de privacidade (`ReportSanitizer`)**: aprimorada a substituição em `ReportSanitizer` para reconhecer e sanitizar variações de caminhos formatados com barras normais (`/`) além de barras invertidas (`\`) para pastas do usuário (`%LOCALAPPDATA%`, `%APPDATA%`, `%USERPROFILE%`) e o padrão regex `Users`, eliminando vazamento inadvertido de nome de conta em caminhos tipo URI/URL ou logs de exceção.
+- Validação: 603 testes .NET aprovados (0 falhas), 0 avisos/erros de compilação, e `scripts/Verify-Safety.ps1` aprovado com sucesso.
+
+## Instalador: tarefas padrão configuráveis — 31/07/2026
+
+- No instalador interativo, criar o atalho na área de trabalho e iniciar com
+  o Windows são tarefas marcadas por padrão, mas o usuário pode desmarcá-las
+  antes de concluir. O atualizador silencioso permanece sem páginas nem
+  alteração própria de tarefas.
+
+## Refinamento visual de cards, seletores, rolagem e sidebar — 31/07/2026
+
+- Os cards Fluent simples e os `CardControl` agora adotam cantos de 18 px por
+  meio dos recursos nativos de cada controle; os painéis customizados seguem o
+  mesmo raio visual. O escopo permanece exclusivamente de apresentação.
+- Os seletores de idioma e tema passaram a renderizar diretamente o valor
+  selecionado, sem reutilizar o `ComboBoxItem` como conteúdo interno. Isso
+  elimina o efeito de controle encaixado e dá aos dois campos altura, respiro e
+  popup compatíveis com o restante das configurações. Esses dois seletores e
+  suas listas usam cantos retos, conforme a direção visual definida para a área
+  Geral; o card Geral e os seletores receberam espaçamento vertical mais
+  compacto para reduzir áreas vazias sem prejudicar a leitura.
+- A rolagem vertical usa uma faixa transparente de 12 px na extremidade direita
+  da janela, enquanto o conteúdo preserva 26 px de respiro interno. O único
+  `Shield24` branco do
+  item de proteção permanece no modo compacto e, ao expandir, revela o estado
+  e a versão; o ícone verde duplicado foi removido.
+- O controle de rolagem foi simplificado para um thumb neutro de 4 px, sem
+  trilho visível, contorno, sombra ou grip. No hover e durante o arraste ele
+  cresce para 6 px e mantém cores cinza discretas.
+- Os badges de detecção do Dashboard usam superfícies planas, borda discreta,
+  ícone simples e a fonte `Segoe UI Variable Text` em tamanho ligeiramente
+  maior, preservando os estados verde e vermelho sem brilho, gradiente ou sombra.
+- Quando detectado, o ícone desses badges é um check vetorial único, compacto
+  e minimalista; quando não detectado, ele continua exibindo X.
+- A cor laranja permanece reservada para ações e estados selecionados; as
+  bordas das janelas Fluent (principal, relato de bug e consentimento) usam
+  o acento neutro do tema.
+
+## Ajustes de interação da interface Fluent — 31/07/2026
+
+- A revisão da migração para WPF-UI removeu a escala dos cartões ao passar o
+  mouse, que deslocava listas e adicionava movimento desnecessário. Botões
+  primário, secundário e de link agora têm foco de teclado claramente visível,
+  sem alterar os fluxos de otimização nem a identidade visual Fluent.
+
+## Redesign visual completo — Fluent Design via WPF-UI — 31/07/2026
+
+- Rodada de redesign visual pedida pelo usuário ("aplicativo quase novo"),
+  seguindo `docs/superpowers/specs/2026-07-31-redesign-visual-fluent-design.md`
+  e `docs/superpowers/plans/2026-07-31-redesign-visual-fluent-design.md`.
+  Escopo puramente visual/UX: nenhuma mudança em `ViewModels`, fluxo de
+  otimização, contratos ou textos localizados.
+- Adicionada a biblioteca `WPF-UI` (Lepo.co, versão 4.3.0) ao
+  `FiveMCleaner.App`, com `ui:ThemesDictionary`/`ui:ControlsDictionary`
+  mescladas em `App.xaml` antes dos dicionários próprios do app.
+- `ThemeManager` (que já fazia patch direto de brushes para claro/escuro)
+  ganhou uma chamada adicional: `ApplicationAccentColorManager.Apply` fixa o
+  accent do WPF-UI como o laranja FiveM (`#FF7A18` escuro / `#E85D04` claro,
+  nunca o accent do sistema Windows) e `ApplicationThemeManager.Apply`
+  sincroniza o tema nativo da lib com a escolha do usuário.
+- `MainWindow` migrou de `Window`/`WindowChrome` manual para
+  `Wpf.Ui.Controls.FluentWindow` com `WindowBackdropType="Mica"` e
+  `ui:TitleBar` no lugar da barra de título/botões desenhados à mão; todo o
+  código de maximizar/restaurar/arrastar manual (`ToggleMaximize`,
+  `MainWindow_StateChanged`, `TitleBar_MouseLeftButtonDown`) foi removido. O
+  hook nativo `WM_GETMINMAXINFO` (`WindowMessageHook`, corrige maximizar
+  cobrindo a barra de tarefas) foi mantido intacto, pois é independente do
+  chrome e continua necessário.
+- A sidebar de navegação (4 botões nomeados + `Navigate(page, nav)` alternando
+  `Visibility`) virou `ui:NavigationView`, mas **sem** migrar para navegação
+  por `Page`/`TargetPageType` — decisão documentada no plano: os 4
+  `NavigationViewItem` continuam mapeados às mesmas 4 seções nomeadas
+  existentes via `SelectionChanged`/`RootNavigationView.Navigate(string tag)`,
+  evitando quebrar o único `MainWindow.xaml` monolítico em vários arquivos
+  `Page`, o que estaria fora do escopo puramente visual pedido.
+- Cards migraram para `ui:CardControl` (ícone + cabeçalho + conteúdo:
+  `ActionTemplate`, `HistoryTemplate`) e `ui:Card` (container simples: tiles
+  de hardware do Dashboard, cartões de apresentação de perfil, cartões de
+  Configurações/Histórico). O card do hero (`HeroGradientBrush`) permanece
+  `Border` puro por ter fundo em gradiente customizado, fora do padrão simples
+  de card.
+- Motion adicionada: `PrimaryButtonStyle` ganhou glow laranja animado
+  (`DropShadowEffect` com `BlurRadius` animado no hover); `ui:CardControl`/
+  `ui:Card` ganharam leve elevação (`ScaleTransform` ~1.015–1.02 no hover); a
+  barra de progresso do Otimizador ganhou um brilho em gradiente que desliza
+  em loop enquanto `IsBusy` é verdadeiro (`LinearGradientBrush` com
+  `TranslateTransform` animado via `Storyboard.TargetProperty` composto,
+  sem `Storyboard.TargetName`, pois um `TranslateTransform` criado dentro de
+  um `Setter.Value` de `Style` não fica registrado em nenhum `NameScope`).
+- As três janelas secundárias (`OptimizationConfirmationWindow`,
+  `BugReportWindow`, `PrivacyConsentWindow`) migraram para `ui:FluentWindow`
+  com `WindowBackdropType="Mica"` e `ui:TitleBar` próprio (exceto
+  `PrivacyConsentWindow`, que continua **sem** `ui:TitleBar`/botão de fechar
+  visível, preservando `WindowStyle="None"` e o bloqueio de `Alt+F4` via
+  `Closing` já existente).
+- Estilos órfãos removidos de `Themes/Controls.xaml` após a migração
+  (`WindowButtonStyle`, `CloseWindowButtonStyle`, `NavButtonStyle` — sem
+  nenhum consumidor restante no app). Um teste de contrato
+  (`LocalizedInterfaceContractTests.
+  SettingsAndWindowChrome_UseTheRefinedSpacingAndHoverContracts`) que
+  verificava a existência de `CloseWindowButtonStyle` em `MainWindow.xaml`
+  foi atualizado para verificar a presença de `<ui:TitleBar` no lugar.
+- Validação: build Release sem avisos, 602 testes .NET (mesma contagem de
+  antes, 1 ajustado — nenhum novo/removido) e `Verify-Safety.ps1` aprovados.
+  O app foi iniciado várias vezes via `scripts/Start-DevelopmentApp.ps1`
+  durante a implementação, confirmando ausência de crash em cada tarefa.
+  **Limitação desta validação**: não foi possível tirar screenshot do
+  aplicativo nesta sessão (o executável de desenvolvimento não está
+  registrado como aplicativo instalado, então as ferramentas de captura de
+  tela disponíveis não conseguem selecioná-lo); a conferência visual
+  pixel-a-pixel (Mica renderizando, glow do botão, elevação dos cards,
+  gradiente animado da barra de progresso, seleção destacada no
+  `NavigationView`, e o comportamento em tema claro) ainda depende de uma
+  inspeção manual da pessoa usuária.
+
+## Hotfix do atalho de desenvolvimento — 31/07/2026
+
+- A linha do tempo compacta usava `Run.Text` com o modo padrão TwoWay. Como
+  `ProgressStateLabel` e `ProgressHeadline` são propriedades somente leitura,
+  a criação da janela falhava antes de abrir. Os dois bindings agora são
+  explicitamente `Mode=OneWay` e o atalho de desenvolvimento volta a iniciar.
+
+## Linha do tempo compacta do Otimizador — 31/07/2026
+
+- A aba Otimizador não mostra mais o plano técnico, avisos, lista de ações,
+  ledger ou log ao vivo. Ela foi substituída por uma única barra horizontal
+  com percentual, tempo decorrido, estimativa restante conservadora baseada no
+  progresso ponderado real e uma linha do tempo central: a etapa atual e,
+  apenas quando existe, a etapa anterior em menor opacidade.
+- O relatório e a comparação pós-execução continuam disponíveis após a rodada;
+  a prévia técnica permanece no fluxo próprio de revisão, antes da execução.
+
+## Consentimento de privacidade obrigatório — 31/07/2026
+
+- A tela de consentimento de telemetria e relatórios de falhas não possui mais
+  botão de fechar. Tentativas de encerrá-la (inclusive Alt+F4) são canceladas
+  até que a pessoa escolha os seletores desejados e clique em `Continuar`; só
+  então as preferências e a versão de consentimento são persistidas.
+
+## Teste real do fluxo de update — dois bugs críticos encontrados e corrigidos — 31/07/2026
+
+- Montado um harness de integração real (fora do repositório, em scratchpad):
+  um `FakeApp` que substitui `FiveMCleaner.exe` em várias versões de teste e
+  simula cenários (confirma saúde rápido, crasha, demora a confirmar, sai
+  sem confirmar, trava sem nunca confirmar), e um `Harness` que semeia
+  `active.json`/journal e inspeciona o estado depois. O `FiveMCleaner.Launcher.exe`
+  **real** (compilado, não simulado) foi executado de verdade contra um
+  `runtimeRoot` isolado, com um processo "pai" real (PID e horário de início
+  reais) para exercitar `WaitForParent`. O `%LOCALAPPDATA%\FiveMCleaner` real
+  desta máquina foi copiado para backup antes de rodar e restaurado ao final
+  (script com `try/finally`), para nunca arriscar o estado real.
+- **Bug crítico 1 (o sistema novo nunca rodava em produção)**: o cálculo de
+  `runtimeRoot` no construtor de `MainWindow` e em `ConfirmUpdateHealthIfRequested`
+  subia os níveis de diretório errados — comparava o nome de pasta errado em
+  cada nível (`versionsDirectory.Name == "versions"` quando `versionsDirectory`
+  já era a pasta "Runtime", não "versions"). Na prática, a condição nunca era
+  satisfeita, então `runtimeRoot` era **sempre `null`** em produção: o app
+  sempre caía no caminho legado (`GitHubReleaseUpdateService`/
+  `SilentUpdateInstaller`/`FiveMCleaner.Updater.exe` rodando o instalador Inno
+  Setup), e nunca usava o sistema transacional novo
+  (`SignedManifestUpdateService`/`AtomicUpdateInstaller`/`FiveMCleaner.Launcher`)
+  documentado e testado em unidade nas rodadas anteriores. Confirmado
+  matematicamente com um teste isolado de `Directory.GetParent` antes de
+  corrigir. Extraída a lógica para `FiveMCleaner.App.Services.RuntimeLayout`
+  (método único, usado pelos dois call sites, com teste de unidade cobrindo o
+  layout real do instalador e layouts inválidos/dev).
+- **Bug crítico 2 (rollback perdido quando o processo antigo não sai a
+  tempo)**: no `FiveMCleaner.Launcher`, `currentTransaction` (usado pelo
+  `catch` geral para decidir a recuperação) só era lido **depois** de
+  `WaitForParent(args)` — exatamente o passo que lança `TimeoutException`
+  quando o app anterior não fecha em 30s. Nesse cenário, o `catch` nunca via
+  a transação, nada era revertido, e `active.json` ficava apontando para a
+  versão candidata **que nunca chegou a rodar**; a próxima abertura tentaria
+  essa versão de novo sem qualquer prova de que funciona. Corrigido lendo o
+  journal antes de `WaitForParent`, e adicionado `RecoveryCoordinator.Abandon`
+  — reverte incondicionalmente um candidato que nunca foi lançado (diferente
+  de `Reconcile`, que só reverte um candidato já lançado após seu timeout de
+  saúde). O `catch` agora relê o journal do disco (não confia no snapshot) e
+  chama `Abandon` quando o candidato nunca foi marcado como lançado.
+- Validado via harness real (não simulado) que, com os dois fixes: caminho
+  feliz confirma saúde e fecha limpo; app que crasha ou sai sem confirmar
+  reverte a versão em menos de 1s; app que demora mas confirma dentro do
+  timeout de 45s é aceito; app que trava sem nunca confirmar reverte após os
+  45s; e o processo anterior nunca saindo agora reverte a ativação
+  imediatamente em vez de deixar `active.json` na versão nunca executada.
+- Validação: build Release sem avisos, 603 testes .NET (6 novos:
+  `RuntimeLayoutTests` cobrindo o layout real e inválidos, mais dois
+  `RecoveryCoordinatorTests` para `Abandon`), `Verify-Safety.ps1` aprovado.
+  O `%LOCALAPPDATA%\FiveMCleaner` real desta máquina foi confirmado intacto
+  após a restauração do backup.
+
+## Varredura de dívida técnica no Updater — 31/07/2026
+
+- `AtomicUpdateInstaller.StartAsync`: o caminho de rollback do `catch`
+  recriava `new RuntimeActivationStore(runtimeRoot)` e
+  `new UpdateRecoveryJournal(runtimeRoot)` do zero, em vez de reaproveitar
+  as instâncias já existentes no método (`activation`/`journal`). Sem bug
+  funcional (ambas as classes são wrappers sem estado sobre `runtimeRoot`),
+  mas instanciava objetos redundantes sem motivo; agora reaproveita as
+  mesmas instâncias.
+- URL do endpoint `/updater-events` do Worker Cloudflare estava com o
+  literal completo duplicado em três lugares (`AtomicUpdateInstaller`,
+  `SignedManifestUpdateService`, `FiveMCleaner.Launcher/Program.cs`), além
+  do host repetido de novo dentro da validação em `UpdaterDiagnostics`.
+  Consolidado em `UpdaterDiagnostics.TelemetryHost`/`UpdaterEventsEndpoint`
+  (constante e `Uri` estático, únicos), reaproveitado pelos três chamadores
+  e pela própria validação do construtor.
+- Qualificação de tipo totalmente por extenso em vez de `using`, em 4
+  arquivos: `CryptographicException` (`AtomicUpdateInstaller`),
+  `Win32Exception` (`FiveMCleaner.Updater/Program.cs`),
+  `X509RevocationMode` (`SignedManifestUpdateService`,
+  `UpdaterDiagnostics`) e `CultureInfo` (`SignedReleaseManifest`).
+- Revisados sem achado de dívida adicional: `RuntimePackageStager`,
+  `RecoveryCoordinator`, `GitHubReleaseUpdateService` (caminho legado do
+  instalador Inno, mantido de propósito para PCs ainda no layout antigo —
+  ver "Arquitetura de próxima geração do updater" abaixo), `UpdateModels`,
+  `UpdateHandoff`.
+- Nenhuma mudança de comportamento observável. Validação: build Release
+  sem avisos e os mesmos 597 testes .NET, mais `Verify-Safety.ps1`,
+  aprovados.
+
+## Refactoring pass do Updater (novo sistema) — 31/07/2026
+
+- `FiveMCleaner.UpdateRuntime`: `VersionFloorStore.Advance`,
+  `RuntimeActivationStore.Activate`, `UpdateRecoveryJournal.Write` e
+  `UpdateHealthReceiptStore.Confirm` repetiam byte a byte o mesmo padrão de
+  escrita atômica (arquivo temporário + `File.Replace`/`Move` + limpeza do
+  temporário no `finally`). Extraído para `AtomicFile`
+  (`AtomicFile.WriteBytes`/`WriteText`, `internal`, só para este assembly).
+  Os quatro stores caíram para uma linha cada nesse trecho; `VersionFloorStore`
+  mantém seu `CryptographicOperations.ZeroMemory` do buffer sensível em torno
+  da chamada.
+- `FiveMCleaner.Updater`: o record `UpdateHandoff` (parsing/validação dos
+  argumentos do handoff) morava no mesmo arquivo que `Program`; movido para
+  `UpdateHandoff.cs` próprio (um tipo por arquivo). `Program.cs` também
+  trocou `System.ComponentModel.Win32Exception` totalmente qualificado por
+  `using System.ComponentModel`.
+- `FiveMCleaner.Launcher/Program.cs`: o bloco
+  `receipt.Confirms(transaction) → Reconcile → RecordAsync → return 0`
+  aparecia duas vezes idêntico (dentro do loop de espera de saúde e de novo
+  logo depois, para cobrir o caso do processo já ter saído ou o timeout ter
+  batido antes do loop rodar). Extraído para a função local
+  `TryConfirmHealthAsync()`, chamada nos dois pontos. O `catch` final também
+  tinha dois `if (currentTransaction is not null)` consecutivos; unificados
+  em um só bloco.
+- Nenhuma mudança de comportamento: mesmos argumentos do Inno Setup, mesmo
+  fluxo de reconciliação/rollback, mesmos contratos de arquivo. Validação:
+  build Release sem avisos e 597 testes .NET (mesmos de antes, sem novos
+  nem removidos) e `Verify-Safety.ps1` aprovados.
+
+## Refactoring pass do instalador — 31/07/2026
+
+- `Assert-UnderArtifacts` estava duplicada, byte a byte, em
+  `scripts/Build-Installer.ps1` e `scripts/Test-Installer.ps1`. Extraída para
+  `scripts/Installer.Common.ps1` (nova função `Assert-PathUnderRoot`,
+  parametrizada por `-Root` em vez de depender de uma variável de escopo),
+  dot-sourced pelos dois scripts. Cada script mantém um wrapper local
+  `Assert-UnderArtifacts` de uma linha para não precisar tocar nas chamadas
+  existentes.
+- Em `Test-Installer.ps1`, as três listas de argumentos do Inno Setup
+  (instalação, upgrade, desinstalação) repetiam
+  `/VERYSILENT /SUPPRESSMSGBOXES /NORESTART`; agora vêm de
+  `$commonSilentArguments`, reaproveitado também pela desinstalação de
+  limpeza no bloco `finally`.
+- `scripts/Build-Portable.ps1` tem a mesma função duplicada, mas foi
+  deixado de fora por não ser exclusivo do instalador (também serve o
+  pacote portátil standalone) — fora do escopo pedido nesta rodada.
+- Nenhuma mudança de comportamento: mesmos parâmetros, mesmas mensagens de
+  erro, mesmos argumentos passados ao Inno Setup. Validação: build Release
+  sem avisos, 597 testes .NET, `Verify-Safety.ps1`,
+  `Verify-Installer.ps1 -ScriptOnly`, `Build-Installer.ps1` completo (gerou
+  o instalador `1.1.3` de novo) e `Test-Installer.ps1` real (instalação,
+  upgrade in-place e desinstalação silenciosas) todos aprovados.
+
+## Rodada de audit and remediation — 31/07/2026
+
+- Auditoria manual (sem ferramenta automatizada) cobrindo instalador/updater
+  .NET, broker elevado, e o Worker Cloudflare (auth, CORS, queries D1,
+  dashboard). A maior parte do código já é defensiva (allowlist de paths,
+  SQL sempre parametrizado, cookies HttpOnly/Secure, PBKDF2 com comparação
+  em tempo constante); nenhum problema crítico novo encontrado nessas
+  camadas.
+- Bug real corrigido: `UpdateHealthReceiptStore.Confirms`,
+  `UpdateRecoveryJournal.TryRead` e `RecoveryCoordinator.Reconcile` liam
+  `health.json`/`recovery.json`/`active.json` sem tratar `IOException`/
+  `UnauthorizedAccessException` transitórias (por exemplo, um antivírus
+  segurando o arquivo por alguns milissegundos durante o `File.Replace`
+  concorrente de outro processo). Isso propagava para
+  `FiveMCleaner.Launcher`, que exibia um erro ao usuário e recusava abrir o
+  app por causa de um lock passageiro, não de um problema real de
+  recuperação. As três leituras agora tratam essa falha transitória como
+  "ainda não confirmado"/"pendente" em vez de propagar, sem alterar o
+  comportamento de corrupção real (JSON malformado continua sendo
+  quarentenado como antes).
+- Cobertura nova: um teste por store, cada um segurando o arquivo com
+  `FileShare.None` para reproduzir o lock de forma determinística e
+  confirmar que a leitura seguinte, já sem o lock, volta a funcionar
+  normalmente.
+- Validação: build Release sem avisos, 597 testes .NET (3 novos) e
+  `Verify-Safety.ps1` aprovados. Nenhuma mudança no Worker Cloudflare, no
+  broker ou no instalador Inno Setup nesta rodada — a auditoria os revisou,
+  mas não encontrou correção necessária ali.
+
+## Hardening agressivo da cadeia do instalador — 31/07/2026
+
+- `SilentUpdateInstaller.CopyUpdaterOutsideInstallDirectory` agora recalcula
+  SHA-256 duas vezes: logo após a cópia para o arquivo temporário (antes do
+  rename) e de novo no caminho final, imediatamente antes de retornar para o
+  `Process.Start`. Isso fecha a janela TOCTOU entre copiar/renomear o
+  atualizador independente para `%LOCALAPPDATA%` e executá-lo, contra troca
+  do arquivo por outro processo do mesmo usuário nesse intervalo.
+- `FiveMCleaner.Updater` (processo que roda o setup silencioso) agora limita
+  `WaitForExit` a 10 minutos; se o Inno Setup travar (por exemplo, uma caixa
+  de diálogo do Restart Manager que escapou de `/SUPPRESSMSGBOXES`), o
+  atualizador mata a árvore de processos e reporta timeout em vez de
+  bloquear indefinidamente sem feedback ao usuário.
+- `Verify-Installer.ps1` passou a travar também `RestartIfNeededByRun=no` no
+  contrato do `.iss`, impedindo que uma edição futura do script reintroduza
+  reinício automático de máquina após a instalação silenciosa.
+- Escopo desta rodada foi deliberadamente restrito ao instalador e a tudo que
+  o cerca (Inno Setup, `FiveMCleaner.Updater`, cópia/handoff do atualizador,
+  contrato de verificação); nenhuma mudança em diagnóstico, perfis ou
+  telemetria. Validação: build Release sem avisos, 594 testes .NET,
+  `Verify-Safety.ps1` e `Verify-Installer.ps1 -ScriptOnly` aprovados.
+
+## SemVer de patch com múltiplas casas — 31/07/2026
+
+- A regra de publicação explicita que `X.Y.Z` continua sendo SemVer: `Z` é
+  um inteiro decimal sem largura fixa, portanto `1.1.10`, `1.1.99` e
+  `1.1.100` são patches válidos; `X.X.XX` é somente uma forma visual de
+  indicar duas ou mais casas no último componente, não uma versão fracionária
+  nem um quarto componente.
+- O selo da versão na barra lateral ganhou largura mínima para acomodar o
+  patch de duas casas. O parser já usava componentes numéricos arbitrários;
+  testes de contrato agora cobrem aceitação e ordenação numérica de
+  `1.1.9`, `1.1.10` e `1.1.99`.
+- O smoke do instalador mantém a proteção padrão contra instalação existente.
+  Para este ambiente de desenvolvimento, a chave explícita
+  `-AllowExistingInstallation` permite executar a prova isolada quando o
+  operador autorizar conscientemente a alteração temporária do registro.
+- Validação desta rodada: build Release sem avisos, 594 testes .NET, safety
+  check, contrato do instalador e smoke real de instalação silenciosa,
+  upgrade in-place e desinstalação aprovados com o payload atual. O smoke usou
+  a exceção explicitamente autorizada para a instalação existente e removeu a
+  árvore temporária ao final; um Windows limpo continua sendo o gate externo
+  de uma futura publicação oficial.
+
+## Arquitetura de próxima geração do updater — 31/07/2026
+
+- O fluxo foi conectado de ponta a ponta no código: o app consulta o manifesto
+  estável assinado no Worker, valida ECDSA P-256/SHA-256 com chave pública
+  incorporada, TLS/revogação, host, tamanho, hash, SemVer e piso
+  anti-downgrade antes de baixar o ZIP de runtime.
+- `FiveMCleaner.Launcher.exe` é o único alvo de atalhos e inicialização. O app
+  fica em `Runtime/versions/<versão>`; staging valida `SHA256SUMS.txt` fechado
+  (arquivos ausentes, extras, duplicados ou alterados são rejeitados) e
+  `active.json` é trocado atomicamente.
+- A primeira inicialização da candidata usa journal, nonce e health receipt.
+  Falha, saída precoce ou timeout de 45 segundos restaura apenas o predecessor
+  registrado. A maior versão saudável é persistida com DPAPI e o launcher
+  recusa um ponteiro abaixo desse piso.
+- O instalador Inno permanece somente como entrada inicial/transição para PCs
+  que ainda usam o layout legado; ele instala o launcher e a primeira árvore
+  imutável. Atualizações seguintes não executam nem substituem o instalador.
+- Reavaliado o requisito de custo zero: MSIX/App Installer foi descartado para
+  distribuição pública, pois exige certificado confiável ou etapa manual de
+  confiança no PC. A solução usa somente .NET/Windows, GitHub Releases e a
+  infraestrutura Cloudflare já existente.
+- O pipeline de release gera o runtime ZIP separado, assina offline, verifica
+  a chave pública incorporada, publica os artefatos e só então migra D1,
+  implanta o Worker e troca o feed. A chave privada fica fora do repositório;
+  a cópia local está criptografada fora do workspace e CI exige secrets.
+- Eventos de manifesto, download, staging, ativação, saúde e rollback geram
+  log JSONL local rotacionado. Com consentimento v3, somente o evento
+  estruturado/sanitizado entra numa fila local limitada e idempotente, que
+  reenvia após falha/rede offline para `POST /updater-events`; D1 e a área
+  administrativa possuem a seção **Bugs do updater**.
+- Validação local desta rodada: build Release sem avisos, 592 testes .NET,
+  107 testes Worker, 36 testes dashboard, safety check, pacote self-contained,
+  ZIP atômico e compilação/contrato do instalador. O smoke de instalação
+  isolada não foi executado porque existe uma instalação real registrada e o
+  script corretamente se recusou a sobrescrevê-la; Windows limpo continua
+  sendo gate obrigatório da publicação oficial.
+
+## Hardening do atualizador independente — 31/07/2026
+
+- O handoff identifica o processo principal por PID e instante de criacao:
+  se o Windows reutilizar o PID depois do fechamento, o updater não aguarda um
+  processo alheio. O campo é obrigatório e coberto pelo parser testado.
+- Durante hash e execucao, o updater retém um handle somente-leitura do setup,
+  negando escrita/troca concorrente no mesmo caminho até o processo do Inno
+  Setup iniciar e terminar. Build/testes Release e validação do pacote seguem
+  obrigatórios antes de uma futura publicação.
+
+## Atualizador independente e durável — 31/07/2026
+
+- O fluxo de instalação da atualização foi separado do WPF: o novo projeto
+  self-contained `FiveMCleaner.Updater` é incluído no payload, copiado para
+  `%LOCALAPPDATA%\FiveMCleaner\Updater` antes do uso e executado fora da pasta
+  que o Inno Setup substitui.
+- O contrato entre app e atualizador é fechado: somente instalador sob
+  `Updates`, tamanho, SHA-256, PID do app e log sob `Logs`. O atualizador
+  revalida todos esses dados, espera o app sair sem encerramento forçado,
+  executa o setup e exibe erro nativo com log em caso de falha. Testes cobrem o
+  contrato e a cópia externa; a publicação permanece pendente de autorização
+  explícita de release.
+
+## Banner pós-atualização dispensável — 30/07/2026
+
+- O aviso exibido após o instalador relançar o app com `--updated=X.Y.Z` agora
+  inclui um botão X minimalista no canto superior direito do banner, permitindo
+  fechar a confirmação sem ação adicional.
+- `MainViewModel.DismissCompletedUpdateBanner()` limpa o estado
+  `JustUpdatedToVersion` e oculta o banner; coberto por testes unitários.
+
 ## Hotfix do atualizador — 30/07/2026
 
 - Identificado um impasse no fluxo de atualização silenciosa: o aplicativo

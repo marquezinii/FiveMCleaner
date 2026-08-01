@@ -14,6 +14,8 @@ $stagingRoot = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot ".staging
 $finalRoot = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot "FiveMCleaner-$Runtime"))
 $archivePath = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot "FiveMCleaner-$Runtime.zip"))
 $archiveHashPath = "$archivePath.sha256"
+$runtimeArchivePath = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot "FiveMCleaner-Runtime-$Runtime.zip"))
+$runtimeArchiveHashPath = "$runtimeArchivePath.sha256"
 
 function Assert-UnderArtifacts {
     param([string]$Path)
@@ -29,6 +31,8 @@ Assert-UnderArtifacts $stagingRoot
 Assert-UnderArtifacts $finalRoot
 Assert-UnderArtifacts $archivePath
 Assert-UnderArtifacts $archiveHashPath
+Assert-UnderArtifacts $runtimeArchivePath
+Assert-UnderArtifacts $runtimeArchiveHashPath
 New-Item -ItemType Directory -Force -Path $artifactsRoot, $stagingRoot | Out-Null
 
 Push-Location $workspace
@@ -36,8 +40,12 @@ try {
     & (Join-Path $PSScriptRoot 'Verify-Safety.ps1')
 
     $brokerOutput = Join-Path $stagingRoot 'broker'
+    $launcherOutput = Join-Path $stagingRoot 'launcher'
     $appOutput = Join-Path $stagingRoot 'app'
     $pathMap = "$workspace=/_/FiveMCleaner"
+    [xml]$props = Get-Content -LiteralPath (Join-Path $workspace 'Directory.Build.props') -Raw
+    $version = [string](@($props.Project.PropertyGroup.Version) | Where-Object { $_ } | Select-Object -First 1)
+    if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Invalid stable version: $version" }
 
     $brokerPublishArguments = @(
         'publish',
@@ -56,6 +64,24 @@ try {
     )
     & dotnet @brokerPublishArguments
     if ($LASTEXITCODE -ne 0) { throw 'Broker publish failed.' }
+
+    $launcherPublishArguments = @(
+        'publish',
+        '.\src\FiveMCleaner.Launcher\FiveMCleaner.Launcher.csproj',
+        '--configuration', $Configuration,
+        '--runtime', $Runtime,
+        '--self-contained', 'true',
+        '-p:PublishSingleFile=true',
+        '-p:PublishTrimmed=false',
+        '-p:PublishReadyToRun=false',
+        '-p:ContinuousIntegrationBuild=true',
+        '-p:DebugType=None',
+        '-p:DebugSymbols=false',
+        "-p:PathMap=$pathMap",
+        '--output', $launcherOutput
+    )
+    & dotnet @launcherPublishArguments
+    if ($LASTEXITCODE -ne 0) { throw 'Launcher publish failed.' }
 
     $appPublishArguments = @(
         'publish',
@@ -109,11 +135,27 @@ try {
         }
     Set-Content -LiteralPath (Join-Path $appOutput 'SHA256SUMS.txt') -Value $checksums -Encoding utf8
 
+    foreach ($path in @($runtimeArchivePath, $runtimeArchiveHashPath)) {
+        if (Test-Path -LiteralPath $path) {
+            Assert-UnderArtifacts $path
+            Remove-Item -LiteralPath $path -Force
+        }
+    }
+    Compress-Archive -Path (Join-Path $appOutput '*') -DestinationPath $runtimeArchivePath -CompressionLevel Optimal
+    $runtimeArchiveHash = (Get-FileHash -LiteralPath $runtimeArchivePath -Algorithm SHA256).Hash.ToLowerInvariant()
+    Set-Content -LiteralPath $runtimeArchiveHashPath -Value "$runtimeArchiveHash  $([System.IO.Path]::GetFileName($runtimeArchivePath))" -Encoding ascii
+
     if (Test-Path -LiteralPath $finalRoot) {
         Assert-UnderArtifacts $finalRoot
         Remove-Item -LiteralPath $finalRoot -Recurse -Force
     }
-    Move-Item -LiteralPath $appOutput -Destination $finalRoot
+    New-Item -ItemType Directory -Path $finalRoot | Out-Null
+    Copy-Item -LiteralPath (Join-Path $launcherOutput 'FiveMCleaner.Launcher.exe') -Destination $finalRoot
+    $versionRoot = Join-Path $finalRoot "Runtime\versions\$version"
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $versionRoot) | Out-Null
+    Move-Item -LiteralPath $appOutput -Destination $versionRoot
+    [ordered]@{ Version = $version } | ConvertTo-Json -Compress |
+        Set-Content -LiteralPath (Join-Path $finalRoot 'Runtime\active.json') -Encoding utf8
     Remove-Item -LiteralPath $stagingRoot -Recurse -Force
 
     foreach ($path in @($archivePath, $archiveHashPath)) {
@@ -128,6 +170,7 @@ try {
 
     Write-Host "Portable build ready: $finalRoot" -ForegroundColor Green
     Write-Host "Portable archive ready: $archivePath" -ForegroundColor Green
+    Write-Host "Atomic runtime archive ready: $runtimeArchivePath" -ForegroundColor Green
 }
 catch {
     if (Test-Path -LiteralPath $stagingRoot) {

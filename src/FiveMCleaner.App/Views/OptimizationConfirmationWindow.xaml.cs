@@ -6,7 +6,7 @@ namespace FiveMCleaner.App.Views;
 /// Confirma interrupções de uma otimização sem recorrer ao MessageBox do
 /// Windows, preservando o tema e a linguagem do aplicativo.
 /// </summary>
-public partial class OptimizationConfirmationWindow : Window
+public partial class OptimizationConfirmationWindow : Wpf.Ui.Controls.FluentWindow
 {
     public OptimizationConfirmationWindow(
         string title,

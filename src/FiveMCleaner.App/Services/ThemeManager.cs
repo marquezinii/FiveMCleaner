@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using Microsoft.Win32;
+using Wpf.Ui.Appearance;
 
 namespace FiveMCleaner.App.Services;
 
@@ -169,6 +170,13 @@ public sealed class ThemeManager : IDisposable
             },
             new System.Windows.Point(0, 0),
             new System.Windows.Point(1, 1));
+
+        // WPF UI uses the application accent for FluentWindow chrome as well.
+        // Keep window borders neutral; orange remains reserved for selected actions.
+        var accent = useLightTheme ? ParseColor("#C9CED6") : ParseColor("#2A2D33");
+        var wpfUiTheme = useLightTheme ? ApplicationTheme.Light : ApplicationTheme.Dark;
+        ApplicationAccentColorManager.Apply(accent, wpfUiTheme, systemGlassColor: false, systemAccentColor: false);
+        ApplicationThemeManager.Apply(wpfUiTheme, updateAccent: false);
 
         IsLightTheme = useLightTheme;
     }

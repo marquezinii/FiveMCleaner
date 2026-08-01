@@ -185,6 +185,7 @@ public sealed record DownloadedUpdate(
     StableSemanticVersion Version,
     string InstallerPath,
     long SizeBytes,
+    string Sha256Hex,
     bool WasAlreadyDownloaded);
 
 public readonly record struct UpdateDownloadProgress(long BytesReceived, long TotalBytes)

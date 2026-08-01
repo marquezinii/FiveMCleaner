@@ -44,6 +44,10 @@ relatos manuais usam `/bugs`. Uma resposta 2xx, incluindo 202, remove o lote
 da fila. Falhas de rede, 429 e 5xx ficam na fila para nova tentativa; rejeições
 4xx permanentes são descartadas para não criar retry infinito.
 
+Como compatibilidade de migração, o Worker classifica qualquer payload sem
+`environment` como `Production`. Clientes atuais devem continuar enviando o
+campo explicitamente; `null` ou valores desconhecidos continuam rejeitados.
+
 ## Comandos remotos (exigem autenticação Cloudflare)
 
 ```powershell

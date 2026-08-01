@@ -11,17 +11,18 @@ using FiveMCleaner.App.Services;
 using FiveMCleaner.App.ViewModels;
 using FiveMCleaner.App.Views;
 using FiveMCleaner.Contracts;
+using FiveMCleaner.UpdateRuntime;
 
 namespace FiveMCleaner.App;
 
-public partial class MainWindow : Window
+public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 {
     private const uint MonitorDefaultToNearest = 2;
     private const int WmGetMinMaxInfo = 0x0024;
     private readonly MainViewModel viewModel;
     private readonly ThemeManager themeManager;
     private readonly TrayIconService trayIcon;
-    private readonly GitHubReleaseUpdateService? releaseUpdateService;
+    private readonly IReleaseUpdateService? releaseUpdateService;
     private readonly bool startupLaunch;
     private readonly bool demoMode;
     private readonly RemoteServicesOptions remoteServicesOptions;
@@ -47,13 +48,22 @@ public partial class MainWindow : Window
         var justUpdatedVersion = commandLine
             .FirstOrDefault(value => value.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase))
             ?["--updated=".Length..];
+        var runtimeLayout = RuntimeLayout.Resolve(AppContext.BaseDirectory);
+        var installRoot = runtimeLayout.InstallRoot;
+        var runtimeRoot = runtimeLayout.RuntimeRoot;
         IStartupRegistrationService startupRegistration = demoMode
             ? new SessionStartupRegistrationService()
-            : new WindowsStartupRegistrationService();
-        releaseUpdateService = demoMode ? null : new GitHubReleaseUpdateService();
-        ISilentUpdateInstaller? silentUpdateInstaller = demoMode
+            : runtimeRoot is null
+                ? new WindowsStartupRegistrationService()
+                : new WindowsStartupRegistrationService(
+                    Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"));
+        releaseUpdateService = demoMode
             ? null
-            : new SilentUpdateInstaller(
+            : runtimeRoot is null ? new GitHubReleaseUpdateService() : new SignedManifestUpdateService();
+        ISilentUpdateInstaller? silentUpdateInstaller = demoMode ? null
+            : runtimeRoot is not null
+                ? new AtomicUpdateInstaller(runtimeRoot, Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"))
+                : new SilentUpdateInstaller(
                 Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     ProductIdentity.Name,
@@ -61,7 +71,12 @@ public partial class MainWindow : Window
                 Path.Combine(
                     Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
                     ProductIdentity.Name,
-                    "Logs"));
+                    "Logs"),
+                Path.Combine(AppContext.BaseDirectory, "updater", "FiveMCleaner.Updater.exe"),
+                Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    ProductIdentity.Name,
+                    "Updater"));
         var runtimeEnvironment = AppEnvironment.Resolve();
         remoteServicesOptions = RemoteServicesOptionsLoader.Load(runtimeEnvironment, AppContext.BaseDirectory);
         // Cloudflare is the sole telemetry transport (FormSubmit was
@@ -113,12 +128,12 @@ public partial class MainWindow : Window
         SourceInitialized += MainWindow_SourceInitialized;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
-        StateChanged += MainWindow_StateChanged;
         System.Windows.Application.Current.SessionEnding += Application_SessionEnding;
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        ActivateNavItem(DashboardNav);
         await viewModel.InitializeAsync();
         themeManager.Apply(viewModel.ThemePreference);
         LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected
@@ -132,6 +147,7 @@ public partial class MainWindow : Window
         };
         if (!demoMode)
         {
+            ConfirmUpdateHealthIfRequested();
             await ShowPrivacyConsentIfNeededAsync();
             InitializeCrashReportingIfAuthorized();
             await FlushPendingTelemetryIfAnyAsync();
@@ -141,6 +157,27 @@ public partial class MainWindow : Window
             HideToTray();
         }
         await CaptureIfRequestedAsync();
+    }
+
+    private static void ConfirmUpdateHealthIfRequested()
+    {
+        var arguments = Environment.GetCommandLineArgs();
+        var transaction = arguments.FirstOrDefault(value => value.StartsWith("--update-transaction=", StringComparison.OrdinalIgnoreCase))?["--update-transaction=".Length..];
+        var nonce = arguments.FirstOrDefault(value => value.StartsWith("--update-nonce=", StringComparison.OrdinalIgnoreCase))?["--update-nonce=".Length..];
+        var runtimeRoot = RuntimeLayout.Resolve(AppContext.BaseDirectory).RuntimeRoot;
+        var version = typeof(MainWindow).Assembly.GetName().Version?.ToString(3);
+        if (version is null || runtimeRoot is null) return;
+        var dataRoot = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            ProductIdentity.Name);
+        if (transaction is not null && nonce is not null)
+            new UpdateHealthReceiptStore(runtimeRoot).Confirm(transaction, version, nonce);
+        try { new VersionFloorStore(dataRoot).Advance(version); }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
+        {
+            // A falha preserva o app ativo; a próxima consulta de update falha
+            // fechada ao não conseguir validar o piso DPAPI.
+        }
     }
 
     /// <summary>
@@ -222,39 +259,6 @@ public partial class MainWindow : Window
 
         endpoint = null!;
         return false;
-    }
-
-    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.ClickCount == 2)
-        {
-            ToggleMaximize();
-            return;
-        }
-
-        if (e.LeftButton == MouseButtonState.Pressed)
-        {
-            DragMove();
-        }
-    }
-
-    private void Minimize_Click(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;
-
-    private void Maximize_Click(object sender, RoutedEventArgs e) => ToggleMaximize();
-
-    private void Close_Click(object sender, RoutedEventArgs e) => Close();
-
-    private void ToggleMaximize()
-    {
-        WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
-    }
-
-    private void MainWindow_StateChanged(object? sender, EventArgs e)
-    {
-        var maximized = WindowState == WindowState.Maximized;
-        MaximizeGlyph.Text = maximized ? "\uE923" : "\uE922";
-        MaximizeButton.ToolTip = LocalizationService.Current.GetString(
-            maximized ? "Window.Restore" : "Window.Maximize");
     }
 
     private void MainWindow_SourceInitialized(object? sender, EventArgs e)
@@ -346,28 +350,44 @@ public partial class MainWindow : Window
         public uint Flags;
     }
 
-    private void DashboardNav_Click(object sender, RoutedEventArgs e) => Navigate(DashboardPage, DashboardNav);
+    private void NavItem_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Wpf.Ui.Controls.NavigationViewItem { Tag: string tag } item)
+        {
+            return;
+        }
 
-    private void OptimizerNav_Click(object sender, RoutedEventArgs e) => Navigate(OptimizerPage, OptimizerNav);
+        ActivateNavItem(item);
+        Navigate(tag switch
+        {
+            "Optimizer" => OptimizerPage,
+            "History" => HistoryPage,
+            "Settings" => SettingsPage,
+            _ => DashboardPage
+        });
+    }
 
-    private void HistoryNav_Click(object sender, RoutedEventArgs e) => Navigate(HistoryPage, HistoryNav);
+    private void ActivateNavItem(Wpf.Ui.Controls.NavigationViewItem selected)
+    {
+        DashboardNav.IsActive = ReferenceEquals(selected, DashboardNav);
+        OptimizerNav.IsActive = ReferenceEquals(selected, OptimizerNav);
+        HistoryNav.IsActive = ReferenceEquals(selected, HistoryNav);
+        SettingsNav.IsActive = ReferenceEquals(selected, SettingsNav);
+    }
 
-    private void SettingsNav_Click(object sender, RoutedEventArgs e) => Navigate(SettingsPage, SettingsNav);
+    private void ReviewPlan_Click(object sender, RoutedEventArgs e)
+    {
+        ActivateNavItem(OptimizerNav);
+        Navigate(OptimizerPage);
+    }
 
-    private void ReviewPlan_Click(object sender, RoutedEventArgs e) => Navigate(OptimizerPage, OptimizerNav);
-
-    private void Navigate(UIElement page, FrameworkElement navigation)
+    private void Navigate(UIElement page)
     {
         DashboardPage.Visibility = Visibility.Collapsed;
         OptimizerPage.Visibility = Visibility.Collapsed;
         HistoryPage.Visibility = Visibility.Collapsed;
         SettingsPage.Visibility = Visibility.Collapsed;
-        DashboardNav.Tag = null;
-        OptimizerNav.Tag = null;
-        HistoryNav.Tag = null;
-        SettingsNav.Tag = null;
         page.Visibility = Visibility.Visible;
-        navigation.Tag = "Selected";
     }
 
     private void LightProfile_Checked(object sender, RoutedEventArgs e) => viewModel.SelectProfile(OptimizationProfile.Light);
@@ -448,7 +468,6 @@ public partial class MainWindow : Window
         if (IsLoaded)
         {
             viewModel.SelectLanguage(language);
-            MainWindow_StateChanged(this, EventArgs.Empty);
         }
     }
 
@@ -456,7 +475,8 @@ public partial class MainWindow : Window
 
     private async void StartOptimization_Click(object sender, RoutedEventArgs e)
     {
-        Navigate(OptimizerPage, OptimizerNav);
+        ActivateNavItem(OptimizerNav);
+        Navigate(OptimizerPage);
         await viewModel.StartOptimizationAsync();
         if (closeAfterOptimizationStops)
         {
@@ -518,6 +538,9 @@ public partial class MainWindow : Window
             UseShellExecute = true
         }));
     }
+
+    private void DismissCompletedUpdate_Click(object sender, RoutedEventArgs e) =>
+        viewModel.DismissCompletedUpdateBanner();
 
     /// <summary>
     /// Shell launches fail for reasons outside the app's control (no default
@@ -698,7 +721,7 @@ public partial class MainWindow : Window
         viewModel.UpdateAvailableDetected -= ViewModel_UpdateAvailableDetected;
         themeManager.Dispose();
         trayIcon.Dispose();
-        releaseUpdateService?.Dispose();
+        (releaseUpdateService as IDisposable)?.Dispose();
     }
 
     private void Application_SessionEnding(object? sender, SessionEndingCancelEventArgs e)
@@ -768,6 +791,8 @@ public partial class MainWindow : Window
         Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
         await using var stream = File.Create(outputPath);
         encoder.Save(stream);
+        allowClose = true;
+        trayIcon.Hide();
         Close();
     }
 }

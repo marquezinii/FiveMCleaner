@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using FiveMCleaner.Contracts;
@@ -197,8 +198,8 @@ public sealed partial class PowerCfgController : IPowerPlanController
         return match.Success
             && int.TryParse(
                 match.Groups["value"].Value,
-                System.Globalization.NumberStyles.HexNumber,
-                System.Globalization.CultureInfo.InvariantCulture,
+                NumberStyles.HexNumber,
+                CultureInfo.InvariantCulture,
                 out var value)
             ? value
             : null;
@@ -211,7 +212,7 @@ public sealed partial class PowerCfgController : IPowerPlanController
             throw new ArgumentOutOfRangeException(nameof(policyValue));
         }
 
-        var indexText = policyValue.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        var indexText = policyValue.ToString(CultureInfo.InvariantCulture);
         var ac = await commandRunner.RunAsync(
             powerCfgPath,
             ["/setacvalueindex", "SCHEME_CURRENT", PciExpressSubgroupGuid, AspmPolicySettingGuid, indexText],

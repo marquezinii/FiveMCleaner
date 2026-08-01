@@ -11,7 +11,7 @@ using Microsoft.Win32;
 
 namespace FiveMCleaner.App.Views;
 
-public partial class BugReportWindow : Window
+public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
 {
     private readonly IBugReportService service;
     private readonly string appVersion;
@@ -37,14 +37,6 @@ public partial class BugReportWindow : Window
         InitializeComponent();
         ConstrainToWorkArea();
         Closing += BugReportWindow_Closing;
-    }
-
-    private void TitleBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
-    {
-        if (e.LeftButton == MouseButtonState.Pressed)
-        {
-            DragMove();
-        }
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();

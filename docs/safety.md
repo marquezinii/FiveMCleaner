@@ -304,7 +304,10 @@ Não é possível garantir ausência de falsos positivos em todos os produtos. O
 - binários e instalador assinados;
 - builds determinísticos e hashes de release publicados;
 - código-fonte correspondente a cada release;
-- sem packers, ofuscação, self-update executável ou payload embutido inesperado;
+- sem packers, ofuscação ou payload embutido inesperado; a única exceção de
+  atualização é o `FiveMCleaner.Updater.exe` autocontido, empacotado pelo
+  instalador, copiado para `%LOCALAPPDATA%\FiveMCleaner\Updater` e limitado a
+  executar o instalador GitHub já validado por nome, caminho, tamanho e SHA-256;
 - sem persistência, driver, injeção ou manipulação de processo;
 - manifesto do broker com escopo mínimo;
 - comunicação clara de cada alteração administrativa.

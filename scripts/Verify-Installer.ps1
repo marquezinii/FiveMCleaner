@@ -31,9 +31,10 @@ $requiredPatterns = [ordered]@{
     'payload timestamps normalized' = 'Flags: .*notimestamp'
     'safe close through RM'         = 'CloseApplications=yes'
     'no automatic app restart'      = 'RestartApplications=no'
+    'no automatic reboot after run' = 'RestartIfNeededByRun=no'
     'concurrent setup guard'        = 'SetupMutex=FiveMCleaner\.Setup\.'
-    'optional desktop shortcut'     = 'Name: "desktopicon";.*Flags: unchecked'
-    'optional startup'              = 'Name: "startup";.*Flags: unchecked'
+    'desktop shortcut enabled by default' = 'Name: "desktopicon"; Description: "\{cm:DesktopIcon\}"; GroupDescription:'
+    'startup enabled by default'    = 'Name: "startup"; Description: "\{cm:StartWithWindows\}"; GroupDescription:'
     'startup ownership cleanup'     = 'ValueName: "FiveMCleaner"; Flags: deletevalue uninsdeletevalue; Tasks: not startup'
     'no launch in silent installs'  = 'Flags: nowait postinstall skipifsilent'
     'auto-update relaunch gated'    = 'Check: IsAutomaticUpdateRelaunch'
@@ -60,6 +61,8 @@ $forbiddenPatterns = [ordered]@{
     'forced reboot'           = '(?im)^\s*AlwaysRestart\s*=\s*yes'
     'shell execution helper'  = '(?im)\b(ShellExec|Exec|CreateProcess)\s*\('
     'broad install deletion'  = '(?im)^\s*Type\s*:\s*filesandordirs\b'
+    'unchecked desktop shortcut' = 'Name: "desktopicon";.*Flags: unchecked'
+    'unchecked startup task'  = 'Name: "startup";.*Flags: unchecked'
 }
 
 foreach ($entry in $forbiddenPatterns.GetEnumerator()) {
@@ -121,13 +124,19 @@ if ($signature.Status -notin @('NotSigned', 'Valid')) {
 
 if (-not [string]::IsNullOrWhiteSpace($PublishDirectory)) {
     $resolvedPublish = [System.IO.Path]::GetFullPath($PublishDirectory)
+    if ([string]::IsNullOrWhiteSpace($ExpectedVersion)) {
+        throw 'ExpectedVersion is required for the versioned runtime payload.'
+    }
+    $versionRoot = "Runtime\versions\$ExpectedVersion"
     foreach ($requiredFile in @(
-        'FiveMCleaner.exe',
-        'FiveMCleaner.runtimeconfig.json',
-        'coreclr.dll',
-        'hostfxr.dll',
-        'broker\FiveMCleaner.Broker.exe',
-        'broker\FiveMCleaner.Broker.runtimeconfig.json'
+        'FiveMCleaner.Launcher.exe',
+        'Runtime\active.json',
+        "$versionRoot\FiveMCleaner.exe",
+        "$versionRoot\FiveMCleaner.runtimeconfig.json",
+        "$versionRoot\coreclr.dll",
+        "$versionRoot\hostfxr.dll",
+        "$versionRoot\broker\FiveMCleaner.Broker.exe",
+        "$versionRoot\broker\FiveMCleaner.Broker.runtimeconfig.json"
     )) {
         $candidate = Join-Path $resolvedPublish $requiredFile
         if (-not (Test-Path -LiteralPath $candidate -PathType Leaf)) {
@@ -135,7 +144,7 @@ if (-not [string]::IsNullOrWhiteSpace($PublishDirectory)) {
         }
     }
 
-    $runtimeConfig = Get-Content -LiteralPath (Join-Path $resolvedPublish 'FiveMCleaner.runtimeconfig.json') -Raw | ConvertFrom-Json
+    $runtimeConfig = Get-Content -LiteralPath (Join-Path $resolvedPublish "$versionRoot\FiveMCleaner.runtimeconfig.json") -Raw | ConvertFrom-Json
     if (-not $runtimeConfig.runtimeOptions.includedFrameworks -or
         @($runtimeConfig.runtimeOptions.includedFrameworks).Count -lt 2) {
         throw 'Runtime config does not prove a self-contained Windows Desktop publish.'

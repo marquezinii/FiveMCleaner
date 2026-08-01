@@ -12,6 +12,7 @@ public sealed class GitHubReleaseUpdateServiceTests
 {
     [Theory]
     [InlineData("1.2.3", true)]
+    [InlineData("1.2.99", true)]
     [InlineData("v1.2.3", true)]
     [InlineData("1.2.3+build.7", true)]
     [InlineData("1.2.3-beta.1", false)]
@@ -33,6 +34,17 @@ public sealed class GitHubReleaseUpdateServiceTests
 
         Assert.Equal(0, older.CompareTo(same));
         Assert.True(newer.CompareTo(older) > 0);
+    }
+
+    [Fact]
+    public void StableSemanticVersion_OrdersMultiDigitPatchNumerically()
+    {
+        var patchNine = StableSemanticVersion.Parse("1.1.9");
+        var patchTen = StableSemanticVersion.Parse("1.1.10");
+        var patchNinetyNine = StableSemanticVersion.Parse("1.1.99");
+
+        Assert.True(patchTen.CompareTo(patchNine) > 0);
+        Assert.True(patchNinetyNine.CompareTo(patchTen) > 0);
     }
 
     [Fact]

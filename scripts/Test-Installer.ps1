@@ -6,7 +6,9 @@ param(
     [Parameter(Mandatory)]
     [string]$PublishDirectory,
 
-    [string]$ExpectedVersion
+    [string]$ExpectedVersion,
+
+    [switch]$AllowExistingInstallation
 )
 
 Set-StrictMode -Version Latest
@@ -26,15 +28,14 @@ $uninstallRegistryPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninst
 $runRegistryPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $runValueName = 'FiveMCleaner'
 $installed = $false
+$commonSilentArguments = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART')
+
+. (Join-Path $PSScriptRoot 'Installer.Common.ps1')
 
 function Assert-UnderArtifacts {
     param([Parameter(Mandatory)][string]$Path)
 
-    $resolved = [System.IO.Path]::GetFullPath($Path)
-    $prefix = $artifactsRoot.TrimEnd('\') + '\'
-    if (-not $resolved.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Refusing to modify a path outside artifacts: $resolved"
-    }
+    Assert-PathUnderRoot -Path $Path -Root $artifactsRoot
 }
 
 function Get-RegistryValueOrNull {
@@ -56,13 +57,17 @@ function Get-RegistryValueOrNull {
 
 Assert-UnderArtifacts $smokeRoot
 
-if (Test-Path -LiteralPath $uninstallRegistryPath) {
+if (-not $AllowExistingInstallation -and (Test-Path -LiteralPath $uninstallRegistryPath)) {
     throw 'A real FiveMCleaner installation already exists; refusing to replace it during a smoke test.'
 }
 
 $existingRunValue = Get-RegistryValueOrNull -Path $runRegistryPath -Name $runValueName
-if ($null -ne $existingRunValue) {
+if (-not $AllowExistingInstallation -and $null -ne $existingRunValue) {
     throw 'A FiveMCleaner startup entry already exists; refusing to overwrite it during a smoke test.'
+}
+
+if ($AllowExistingInstallation) {
+    Write-Warning 'Existing FiveMCleaner registration is allowed for this smoke test by explicit operator request.'
 }
 
 & (Join-Path $PSScriptRoot 'Verify-Installer.ps1') `
@@ -74,9 +79,7 @@ New-Item -ItemType Directory -Force -Path $smokeRoot | Out-Null
 
 try {
     $installArguments = @(
-        '/VERYSILENT',
-        '/SUPPRESSMSGBOXES',
-        '/NORESTART',
+        $commonSilentArguments
         '/CLOSEAPPLICATIONS',
         '/NORESTARTAPPLICATIONS',
         '/NOICONS',
@@ -92,7 +95,7 @@ try {
     }
     $installed = $true
 
-    $installedExecutable = Join-Path $installDirectory 'FiveMCleaner.exe'
+    $installedExecutable = Join-Path $installDirectory 'FiveMCleaner.Launcher.exe'
     $uninstaller = Join-Path $installDirectory 'unins000.exe'
     foreach ($required in @($installedExecutable, $uninstaller)) {
         if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
@@ -139,9 +142,7 @@ try {
     }
 
     $upgradeArguments = @(
-        '/VERYSILENT',
-        '/SUPPRESSMSGBOXES',
-        '/NORESTART',
+        $commonSilentArguments
         '/CLOSEAPPLICATIONS',
         '/NORESTARTAPPLICATIONS',
         '/NOICONS',
@@ -162,7 +163,7 @@ try {
     }
 
     $upgradedExecutableHash = (Get-FileHash -LiteralPath $installedExecutable -Algorithm SHA256).Hash
-    $sourceExecutableHash = (Get-FileHash -LiteralPath (Join-Path $resolvedPublish 'FiveMCleaner.exe') -Algorithm SHA256).Hash
+    $sourceExecutableHash = (Get-FileHash -LiteralPath (Join-Path $resolvedPublish 'FiveMCleaner.Launcher.exe') -Algorithm SHA256).Hash
     if ($upgradedExecutableHash -ne $sourceExecutableHash) {
         throw 'Main executable hash mismatch after in-place upgrade.'
     }
@@ -172,9 +173,7 @@ try {
     Set-ItemProperty -LiteralPath $runRegistryPath -Name $runValueName -Value $expectedStartupValue -Type String
 
     $uninstallArguments = @(
-        '/VERYSILENT',
-        '/SUPPRESSMSGBOXES',
-        '/NORESTART',
+        $commonSilentArguments
         "/LOG=$uninstallLog"
     )
     $uninstallProcess = Start-Process -FilePath $uninstaller -ArgumentList $uninstallArguments -WindowStyle Hidden -Wait -PassThru
@@ -214,7 +213,7 @@ finally {
         $uninstaller = Join-Path $installDirectory 'unins000.exe'
         if (Test-Path -LiteralPath $uninstaller -PathType Leaf) {
             $cleanup = Start-Process -FilePath $uninstaller `
-                -ArgumentList @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART') `
+                -ArgumentList $commonSilentArguments `
                 -WindowStyle Hidden -Wait -PassThru
             if ($cleanup.ExitCode -ne 0) {
                 Write-Warning "Cleanup uninstaller exited with $($cleanup.ExitCode)."

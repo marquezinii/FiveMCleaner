@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.IO.Pipes;
 using System.Text;
@@ -115,7 +116,7 @@ internal sealed class ElevatedBrokerClient
             {
                 FileName = brokerPath,
                 Arguments = string.Format(
-                    System.Globalization.CultureInfo.InvariantCulture,
+                    CultureInfo.InvariantCulture,
                     argumentTemplate,
                     pipeId.ToString("N")),
                 WorkingDirectory = Path.GetDirectoryName(brokerPath)!,

@@ -121,6 +121,78 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void PrivacyConsentWindow_CanOnlyCloseAfterContinue()
+    {
+        var root = FindRepositoryRoot();
+        var xaml = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Views",
+            "PrivacyConsentWindow.xaml"));
+        var codeBehind = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Views",
+            "PrivacyConsentWindow.xaml.cs"));
+
+        Assert.DoesNotContain("Click=\"Close_Click\"", xaml, StringComparison.Ordinal);
+        Assert.Contains("e.Cancel = !confirmedByUser;", codeBehind, StringComparison.Ordinal);
+        Assert.Contains("confirmedByUser = true;", codeBehind, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Optimizer_UsesACompactProgressTimelineInsteadOfThePlanAndLedgerLists()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml"));
+        var optimizer = source[source.IndexOf("<!-- Optimizer -->", StringComparison.Ordinal)..source.IndexOf("<!-- History -->", StringComparison.Ordinal)];
+
+        Assert.DoesNotContain("PlannedActions", optimizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("StepLedger", optimizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ActivityLog", optimizer, StringComparison.Ordinal);
+        Assert.Contains("ProgressBar Value=\"{Binding ProgressPercent", optimizer, StringComparison.Ordinal);
+        Assert.Contains("PreviousProgressHeadline", optimizer, StringComparison.Ordinal);
+        Assert.Contains("ProgressHeadline, Mode=OneWay", optimizer, StringComparison.Ordinal);
+        Assert.Contains("ElapsedTimeLabel", optimizer, StringComparison.Ordinal);
+        Assert.Contains("RemainingTimeLabel", optimizer, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void FluentInteractionStyles_KeepListsStableAndKeyboardFocusVisible()
+    {
+        var root = FindRepositoryRoot();
+        var styles = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Themes",
+            "Controls.xaml"));
+        var mainWindow = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml"));
+
+        Assert.DoesNotContain("ScaleTransform", styles, StringComparison.Ordinal);
+        Assert.True(Regex.Matches(styles, "Property=\"IsKeyboardFocused\"").Count >= 3);
+        Assert.Contains("<Style TargetType=\"ScrollBar\">", styles, StringComparison.Ordinal);
+        Assert.Contains("HorizontalAlignment=\"Right\"", styles, StringComparison.Ordinal);
+        Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"5\"", styles, StringComparison.Ordinal);
+        Assert.DoesNotContain("Width=\"3\" Height=\"3\"", styles, StringComparison.Ordinal);
+        Assert.Contains("x:Key=\"DetectionBadgeStyle\"", styles, StringComparison.Ordinal);
+        Assert.Contains("x:Key=\"DetectionBadgeLabelStyle\"", styles, StringComparison.Ordinal);
+        Assert.Contains("Segoe UI Variable Text, Segoe UI", styles, StringComparison.Ordinal);
+        Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"10\"", styles, StringComparison.Ordinal);
+        Assert.Equal(2, Regex.Matches(mainWindow, "M 2.5,7 L 5.5,10 L 11.5,4.5").Count);
+    }
+
+    [Fact]
     public void ResxCatalogs_HaveNoDuplicateKeys()
     {
         var root = FindRepositoryRoot();
@@ -217,6 +289,10 @@ public sealed partial class LocalizedInterfaceContractTests
             (string?)style.Attribute("TargetType") == "ComboBoxItem");
         Assert.Contains(selectorStyle.Descendants(presentation + "Popup"), popup =>
             (string?)popup.Attribute(xaml + "Name") == "PART_Popup");
+        Assert.All(
+            selectorStyle.Descendants(presentation + "Border")
+                .Where(border => border.Attribute("CornerRadius") is not null),
+            border => Assert.Equal("0", (string?)border.Attribute("CornerRadius")));
     }
 
     [Fact]
@@ -316,10 +392,12 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("ToolTip=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Text=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Text=\"{Binding [Settings.Subtitle]", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Style=\"{StaticResource CloseWindowButtonStyle}\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("<Style x:Key=\"CloseWindowButtonStyle\"", controls, StringComparison.Ordinal);
-        Assert.Contains("BorderBrush\" Value=\"{DynamicResource RedBrush}\"", controls, StringComparison.Ordinal);
-        Assert.Contains("Padding\" Value=\"17,0,11,0\"", controls, StringComparison.Ordinal);
+        Assert.Contains("<ui:TitleBar", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Padding\" Value=\"12,0,32,0\"", controls, StringComparison.Ordinal);
+        Assert.Contains("Content=\"{Binding SelectedValue, RelativeSource={RelativeSource AncestorType=ComboBox}}\"", controls, StringComparison.Ordinal);
+        Assert.Contains("SelectedValuePath=\"Content\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("&#xEA18;", mainWindow, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -339,6 +417,7 @@ public sealed partial class LocalizedInterfaceContractTests
             "Controls.xaml"));
 
         Assert.Contains("VerticalAlignment=\"Center\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding AppVersion, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Foreground=\"{DynamicResource TextBrush}\"", mainWindow, StringComparison.Ordinal);

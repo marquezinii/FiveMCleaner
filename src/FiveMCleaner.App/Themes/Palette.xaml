@@ -45,8 +45,8 @@
     <SolidColorBrush x:Key="ToggleTrackBrush" Color="#34373E" />
     <SolidColorBrush x:Key="ToggleTrackBorderBrush" Color="#484B53" />
     <SolidColorBrush x:Key="ToggleThumbBrush" Color="#D9DBDF" />
-    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#50545D" />
-    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#737985" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#454A53" />
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#747B86" />
 
     <LinearGradientBrush x:Key="OrangeGradientBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#FF9A44" Offset="0" />

@@ -97,3 +97,18 @@ CREATE INDEX IF NOT EXISTS idx_bug_reports_received_at
 
 CREATE INDEX IF NOT EXISTS idx_bug_reports_environment
     ON bug_reports (environment);
+
+CREATE TABLE IF NOT EXISTS updater_events (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    event_id TEXT NOT NULL UNIQUE,
+    stage TEXT NOT NULL,
+    outcome TEXT NOT NULL,
+    error_code TEXT NOT NULL,
+    previous_version TEXT,
+    candidate_version TEXT NOT NULL,
+    environment TEXT NOT NULL,
+    received_at TEXT NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_updater_events_received_at ON updater_events (received_at);
+CREATE INDEX IF NOT EXISTS idx_updater_events_candidate_version ON updater_events (candidate_version);

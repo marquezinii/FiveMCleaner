@@ -21,8 +21,22 @@ public sealed class SingleInstanceGuard : IDisposable
     private bool disposed;
 
     public SingleInstanceGuard(AppRuntimeEnvironment environment)
+        : this(BuildMutexName(environment))
     {
-        mutex = new Mutex(initiallyOwned: false, name: BuildMutexName(environment));
+    }
+
+    internal SingleInstanceGuard(string mutexName)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(mutexName);
+        try
+        {
+            mutex = new Mutex(initiallyOwned: false, name: mutexName);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            mutex = null!;
+            ownsMutex = false;
+        }
     }
 
     /// <summary>
@@ -42,6 +56,11 @@ public sealed class SingleInstanceGuard : IDisposable
     /// </summary>
     public bool TryAcquire()
     {
+        if (mutex is null)
+        {
+            return false;
+        }
+
         try
         {
             // A short timeout (rather than TryEnterMutex's default of an
@@ -55,6 +74,10 @@ public sealed class SingleInstanceGuard : IDisposable
             // still valid and this process now legitimately owns it.
             ownsMutex = true;
         }
+        catch (UnauthorizedAccessException)
+        {
+            ownsMutex = false;
+        }
 
         return ownsMutex;
     }
@@ -67,13 +90,18 @@ public sealed class SingleInstanceGuard : IDisposable
         }
 
         disposed = true;
+        if (mutex is null)
+        {
+            return;
+        }
+
         if (ownsMutex)
         {
             try
             {
                 mutex.ReleaseMutex();
             }
-            catch (ObjectDisposedException)
+            catch (Exception exception) when (exception is ObjectDisposedException or ApplicationException or UnauthorizedAccessException)
             {
             }
         }

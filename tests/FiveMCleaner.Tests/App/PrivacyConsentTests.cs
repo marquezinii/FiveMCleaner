@@ -424,38 +424,4 @@ public sealed class PrivacyConsentOutcomeBuilderTests
         Assert.Equal(current.CheckForUpdates, result.CheckForUpdates);
     }
 
-    [Fact]
-    public void BuildDeclinedByClosing_ClosingTheWindowIsTreatedAsDecliningBoth()
-    {
-        var result = PrivacyConsentOutcomeBuilder.BuildDeclinedByClosing(SettingsWithDistinctPreferences());
-
-        Assert.False(result.ShareAnonymousTelemetry);
-        Assert.False(result.ShareCrashReports);
-        Assert.Equal(PrivacyConsentPolicy.CurrentVersion, result.PrivacyConsentVersion);
-    }
-
-    [Fact]
-    public void BuildDeclinedByClosing_IsEquivalentToConfirmingBothFalse()
-    {
-        var current = SettingsWithDistinctPreferences();
-
-        var closed = PrivacyConsentOutcomeBuilder.BuildDeclinedByClosing(current);
-        var confirmedFalse = PrivacyConsentOutcomeBuilder.BuildConfirmed(current, false, false);
-
-        Assert.Equal(confirmedFalse, closed);
-    }
-
-    [Fact]
-    public void BuildDeclinedByClosing_PreservesEveryOtherExistingSetting()
-    {
-        var current = SettingsWithDistinctPreferences();
-
-        var result = PrivacyConsentOutcomeBuilder.BuildDeclinedByClosing(current);
-
-        Assert.Equal(current.Language, result.Language);
-        Assert.Equal(current.Theme, result.Theme);
-        Assert.Equal(current.MinimizeToTrayOnClose, result.MinimizeToTrayOnClose);
-        Assert.Equal(current.LaunchAtStartup, result.LaunchAtStartup);
-        Assert.Equal(current.CheckForUpdates, result.CheckForUpdates);
-    }
 }

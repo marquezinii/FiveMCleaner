@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ApplicationIcon>../FiveMCleaner.App/Assets/FiveMCleaner.ico</ApplicationIcon>
+    <AssemblyName>FiveMCleaner.Updater</AssemblyName>
+    <RootNamespace>FiveMCleaner.Updater</RootNamespace>
+  </PropertyGroup>
+</Project>
