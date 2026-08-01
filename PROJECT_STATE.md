@@ -1,5 +1,24 @@
 # Estado do Projeto
 
+## Validação real do atualizador transacional e instalador — 01/08/2026
+
+- O atualizador novo foi exercitado com o `FiveMCleaner.Launcher.exe` Release
+  real em uma árvore de runtime isolada e dois executáveis candidatos
+  sintéticos. No caminho saudável, a candidata `99.0.0` recebeu o ID e nonce
+  da transação, gravou o recibo de saúde correspondente, manteve o ponteiro
+  ativo e concluiu o journal. No cenário sem recibo e com timeout já vencido,
+  o Launcher restaurou `98.0.0` — exatamente a predecessora registrada — e
+  concluiu o journal. Nenhum dos dois cenários tocou a instalação real.
+- Também foram aprovados 26 testes focados do updater (assinatura, staging
+  integral do ZIP, piso anti-downgrade, contrato de handoff, locks transitórios,
+  health receipt, timeout, abandono e rollback), além de build Release,
+  604 testes .NET e `Verify-Safety.ps1` executados pelo empacotamento.
+- O instalador `1.1.3` recém-gerado passou no smoke real de instalação
+  silenciosa, atualização in-place e desinstalação com a autorização explícita
+  para coexistir com a instalação local. Não ficaram registro de desinstalação
+  nem processos órfãos. Dois diretórios temporários ignorados em `artifacts/`
+  permanecem apenas porque a automação do ambiente bloqueou a remoção recursiva.
+
 ## Validação abrangente pré-release: formatação, segurança, contratos e componentes — 01/08/2026
 
 - Corrigida uma falha reproduzível de qualidade: `dotnet format --verify-no-changes`
