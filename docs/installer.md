@@ -24,8 +24,8 @@ Windows realmente for executada.
 - tema moderno que acompanha o modo claro/escuro do sistema;
 - ícone e imagem oficiais do FiveMCleaner;
 - atalhos do menu Iniciar e desinstalação completa;
-- atalhos de Área de Trabalho e inicialização com o Windows opcionais e
-  desmarcados por padrão;
+- atalhos de Área de Trabalho e inicialização com o Windows habilitados por
+  padrão, mas desmarcáveis durante a instalação;
 - upgrade no mesmo diretório por meio de um `AppId` estável;
 - Windows Restart Manager para solicitar o fechamento seguro do app durante um
   upgrade, sem encerramento forçado nem reinicialização automática;

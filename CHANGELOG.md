@@ -5,6 +5,34 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.2.0] - 2026-08-01
+
+### Adicionado
+
+- Atualizador transacional assinado: o runtime passa a ser baixado como pacote
+  fechado e verificado, ativado por ponteiro atômico e iniciado pelo Launcher.
+  A nova versão confirma a própria saúde com nonce; sem confirmação, o
+  Launcher restaura automaticamente a última versão saudável.
+- Telemetria sanitizada específica do atualizador e suporte no painel para
+  acompanhar etapas de download, ativação, saúde e recuperação, sempre sujeito
+  ao consentimento de telemetria.
+
+### Corrigido
+
+- Corrigidas corridas de encerramento do processo anterior e de locks
+  transitórios nos arquivos de ativação, evitando que uma atualização válida
+  fique presa ou que uma candidata nunca iniciada permaneça ativa.
+- Corrigida a compatibilidade da telemetria legada sem campo de ambiente no
+  Worker, preservando a rejeição de valores inválidos.
+
+### Melhorado
+
+- Renovada a interface Fluent, com navegação, telas secundárias, progresso do
+  otimizador e estados de detecção mais claros, preservando o fluxo seguro de
+  prévia e rollback.
+- Reforçados contratos, testes e validações do instalador, do runtime e dos
+  documentos de segurança para o fluxo de atualização pública.
+
 ## [1.1.3] - 2026-07-30
 
 ### Corrigido

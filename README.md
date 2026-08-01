@@ -37,16 +37,16 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 > Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
 
 > [!NOTE]
-> A `v1.1.3` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
+> A `v1.2.0` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
 
 ## Últimas atualizações
 
-**Versão 1.1.3**
+**Versão 1.2.0**
 
-- Corrigido: o app agora fecha imediatamente após iniciar o setup verificado, eliminando o bloqueio circular de arquivos durante a atualização.
-- Melhorado: o fluxo continua preservando validação de origem, tamanho e SHA-256 antes de executar o instalador.
+- Adicionado: atualizador transacional com pacote assinado, ativação atômica e recuperação automática se a nova versão não confirmar saúde.
+- Melhorado: interface Fluent, progresso e estados de detecção mais claros, mantendo prévia e rollback das alterações suportadas.
 
-## Estado da v1.1.3
+## Estado da v1.2.0
 
 - preferências gerais enxutas: idioma pt-BR/inglês, tema do sistema/claro/escuro,
   comportamento do X e inicialização com Windows;
@@ -60,8 +60,9 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 - journal por ação, rollback por privilégio e restauração que preserva mudanças posteriores do usuário;
 - instalador moderno e pacote portátil autossuficientes para `win-x64`, com
   checksums SHA-256, manifesto e atestação de proveniência na release;
-- atualização estável de um clique pelo GitHub Releases, com verificação de
-  origem, tamanho e SHA-256 antes da instalação silenciosa e reabertura;
+- atualização estável de um clique pelo feed assinado, com validação de
+  assinatura, origem, versão, tamanho e SHA-256, ativação atômica e rollback
+  automático quando a nova versão não confirma saúde;
 - consentimento versionado, telemetria técnica opcional e relato de bug em
   texto via Worker Cloudflare, com e-mail e trecho de log opcional;
 - GTAV Enhanced bloqueado até uma integração separada ser documentada e testada.

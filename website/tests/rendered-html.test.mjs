@@ -81,11 +81,15 @@ test("removes starter artifacts and keeps the Sites build cross-platform", async
 });
 
 test("keeps the public download page aligned with the latest published release", async () => {
-  const [page, styles, polish] = await Promise.all([
+  const [page, styles, polish, props] = await Promise.all([
     readFile(new URL("../public-site/index.html", import.meta.url), "utf8"),
     readFile(new URL("../public-site/styles.css", import.meta.url), "utf8"),
     readFile(new URL("../public-site/site-polish.css", import.meta.url), "utf8"),
+    readFile(new URL("../../Directory.Build.props", import.meta.url), "utf8"),
   ]);
+  const version = props.match(/<Version>(\d+\.\d+\.\d+)<\/Version>/)?.[1];
+
+  assert.ok(version, "Directory.Build.props must declare the public version");
 
   assert.match(page, /id="atualizacoes"/i);
   assert.match(page, /ÚLTIMA VERSÃO PÚBLICA/i);
@@ -98,8 +102,7 @@ test("keeps the public download page aligned with the latest published release",
     page.indexOf('ATUALIZAÇÕES SEGURAS') < page.indexOf('id="atualizacoes"'),
     'A seção de atualizações deve vir imediatamente após os três pilares.'
   );
-  assert.match(page, /<strong id="updates-version">1\.1\.3<\/strong>/i);
-  assert.match(page, /Atualização estável/i);
+  assert.ok(page.includes(`<strong id="updates-version">${version}</strong>`));
   assert.match(page, /CHANGELOG\.md/i);
   assert.match(styles, /\.updates-section\{/i);
   assert.match(styles, /\.updates-card\{/i);

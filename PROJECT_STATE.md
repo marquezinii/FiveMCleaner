@@ -1,5 +1,20 @@
 # Estado do Projeto
 
+## Preparação da publicação v1.2.0 — 01/08/2026
+
+- O conjunto desde `v1.1.3` foi classificado como **minor**: entrega o
+  atualizador transacional assinado com recuperação automática, amplia a
+  visibilidade de atualização/diagnóstico e renova a experiência Fluent sem
+  quebrar a instalação existente. A próxima versão estável é `v1.2.0`.
+- `Directory.Build.props`, fallback do instalador, README, changelog e página
+  pública foram alinhados para `1.2.0`. O piso `minimum-update-version` ficou
+  em `1.1.3`, deliberadamente, para que a última instalação pública possa
+  receber a atualização; ele não representa a versão da nova release.
+- Validação local: progressão SemVer `v1.1.3` → `v1.2.0`, build Release sem
+  avisos, 604 testes .NET, `Verify-Safety.ps1`, format, instalador `1.2.0`
+  (contrato e smoke real de instalar/atualizar/desinstalar), Worker (109),
+  dashboard (36) e site (lint, typecheck, build e 3 testes) aprovados.
+
 ## Validação real do atualizador transacional e instalador — 01/08/2026
 
 - O atualizador novo foi exercitado com o `FiveMCleaner.Launcher.exe` Release
