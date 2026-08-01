@@ -71,10 +71,20 @@ function applyFilters(url, filters) {
 /**
  * A minimal fetch wrapper the dashboard uses for every Worker call: always
  * sends cookies (`credentials: 'include'`), and treats a 401 uniformly as
- * "not logged in" regardless of which endpoint returned it.
+ * "not logged in" regardless of which endpoint returned it. Never throws:
+ * a network failure or a non-JSON body is reported as an `{ error }` result,
+ * so callers like `refreshAll` can render gracefully instead of leaving the
+ * page stuck on "Atualizando dados…" (which is what a thrown fetch rejection
+ * did -- `Promise.all` rejected and the refresh status was never cleared).
  */
 export async function requestJson(url, options = {}, fetchImpl = fetch) {
-  const response = await fetchImpl(url, { ...options, credentials: 'include' });
+  let response;
+  try {
+    response = await fetchImpl(url, { ...options, credentials: 'include' });
+  } catch {
+    return { error: 'network-error' };
+  }
+
   if (response.status === 401) {
     return { unauthorized: true };
   }
@@ -83,5 +93,9 @@ export async function requestJson(url, options = {}, fetchImpl = fetch) {
     return { error: `request-failed-${response.status}` };
   }
 
-  return { data: await response.json() };
+  try {
+    return { data: await response.json() };
+  } catch {
+    return { error: 'invalid-response' };
+  }
 }

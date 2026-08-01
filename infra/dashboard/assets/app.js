@@ -75,12 +75,18 @@ async function main() {
     loginError.textContent = '';
     const password = new FormData(loginForm).get('password');
 
-    const response = await fetch(`${API_BASE}/admin/login`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password }),
-    });
+    let response;
+    try {
+      response = await fetch(`${API_BASE}/admin/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+    } catch {
+      loginError.textContent = 'Não foi possível conectar à telemetria. Verifique se o Worker está no ar.';
+      return;
+    }
 
     if (response.status === 429) {
       loginError.textContent = 'Muitas tentativas. Tente novamente mais tarde.';
@@ -272,6 +278,11 @@ async function main() {
   const probe = await fetchStat('success-rate', {});
   if (probe.unauthorized) {
     showLogin();
+  } else if (probe.error) {
+    // The Worker is unreachable -- show the login view with a message instead
+    // of rendering an empty dashboard that only says "Sem dados ainda".
+    showLogin();
+    loginError.textContent = 'Não foi possível conectar à telemetria. Verifique se o Worker está no ar.';
   } else {
     showDashboard();
     await refreshAll();

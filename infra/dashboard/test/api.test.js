@@ -84,6 +84,24 @@ test('requestJson always sends credentials so the session cookie is included', a
   assert.equal(capturedOptions.credentials, 'include');
 });
 
+test('requestJson returns a network-error marker when fetch rejects instead of throwing', async () => {
+  const fakeFetch = async () => {
+    throw new TypeError('Failed to fetch');
+  };
+
+  const result = await requestJson('https://example.com', {}, fakeFetch);
+
+  assert.equal(result.error, 'network-error');
+});
+
+test('requestJson returns an invalid-response marker when the body is not JSON', async () => {
+  const fakeFetch = async () => new Response('<html>oops</html>', { status: 200 });
+
+  const result = await requestJson('https://example.com', {}, fakeFetch);
+
+  assert.equal(result.error, 'invalid-response');
+});
+
 test('buildBugsUrl builds the plain endpoint with no filters', () => {
   assert.equal(buildBugsUrl(BASE), `${BASE}/api/bugs`);
 });
