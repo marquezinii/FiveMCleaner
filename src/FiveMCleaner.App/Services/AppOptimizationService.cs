@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Management;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Catalog;
 using FiveMCleaner.Windows;
@@ -46,6 +47,35 @@ public sealed class AppOptimizationService : IAppOptimizationService
     }
 
     public string LogsDirectory => logsDirectory;
+
+    /// <summary>
+    /// Read settings leniently. Writing stays strict
+    /// (<see cref="indentedJson"/>), but a settings.json that drifted from the
+    /// current schema must never wipe the user's stored preferences: a file
+    /// written by a newer build (unknown members), hand-edited (comments,
+    /// differently-cased keys) or edited by another tool used to throw a
+    /// <see cref="JsonException"/> under the strict options, the catch in
+    /// <see cref="LoadSettingsAsync"/> then returned a fresh
+    /// <see cref="AppSettings"/>, silently re-arming the privacy consent
+    /// screen and flipping the declined telemetry toggles back to their
+    /// defaults. Unknown members are skipped, keys match case-insensitively
+    /// and comments are tolerated; only genuinely unparseable content still
+    /// falls through to the defaults.
+    /// </summary>
+    private static readonly JsonSerializerOptions SettingsReadOptions = new(FiveMCleanerJson.Options)
+    {
+        PropertyNameCaseInsensitive = true,
+        ReadCommentHandling = JsonCommentHandling.Skip,
+        UnmappedMemberHandling = JsonUnmappedMemberHandling.Skip
+    };
+
+    /// <summary>
+    /// Pure settings deserialization, exposed for tests so the "schema drift
+    /// must not reset stored preferences" contract can be locked down without
+    /// touching the real LocalApplicationData path.
+    /// </summary>
+    internal static AppSettings DeserializeSettings(string json) =>
+        JsonSerializer.Deserialize<AppSettings>(json, SettingsReadOptions) ?? new AppSettings();
 
     public async Task<AppDiagnostic> DiagnoseAsync(CancellationToken cancellationToken = default)
     {
@@ -153,20 +183,17 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
         try
         {
-            await using var stream = new FileStream(
-                settingsPath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.Read,
-                16 * 1024,
-                FileOptions.Asynchronous | FileOptions.SequentialScan);
-            return await JsonSerializer.DeserializeAsync<AppSettings>(stream, indentedJson, cancellationToken)
-                .ConfigureAwait(false) ?? new AppSettings();
+            var json = await File.ReadAllTextAsync(settingsPath, cancellationToken)
+                .ConfigureAwait(false);
+            return DeserializeSettings(json);
         }
         catch (Exception exception) when (exception is JsonException
             or NotSupportedException
             or IOException)
         {
+            // A leitura tolerante cobre arquivos fora do schema atual; este
+            // caminho só é atingido por conteúdo genuinamente ilegível
+            // (JSON truncado/corrompido), em que não há valores a preservar.
             return new AppSettings();
         }
     }

@@ -198,9 +198,24 @@ internal static class Program
             item => item.TransactionId = transactionId);
 
         var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault();
-        var result = await runtime.RollbackAsync(
-            transactionId,
-            CancellationToken.None).ConfigureAwait(false);
+        using var timeout = new CancellationTokenSource(ExecutionTimeout);
+        WindowsTransactionResult result;
+        try
+        {
+            result = await runtime.RollbackAsync(
+                transactionId,
+                timeout.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+        {
+            BrokerDiagnosticsLog.Record("rollback-timeout", transactionId);
+            return PublishFailure(
+                events,
+                BrokerEventKind.Failed,
+                "A reversão excedeu o tempo seguro e foi interrompida. O journal preserva o estado para diagnóstico.",
+                "broker-rollback-timeout",
+                BrokerExitCode.RollbackFailed);
+        }
 
         if (result.State != WindowsTransactionState.RolledBack)
         {

@@ -135,6 +135,18 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         ActivateNavItem(DashboardNav);
         Navigate(DashboardPage);
+        if (!demoMode)
+        {
+            // O recibo de saúde precisa ser gravado antes do InitializeAsync:
+            // a janela de saúde do launcher (45s) começa no spawn do processo,
+            // e a inicialização (varredura WMI/registro, flush de telemetria,
+            // checagem de update) pode passar disso em máquinas lentas. Um
+            // candidato saudável, apenas lento, não deve ser revertido -- o
+            // recibo confirma "o processo iniciou e a interface respondeu",
+            // não "todo o trabalho em segundo plano terminou".
+            ConfirmUpdateHealthIfRequested();
+        }
+
         await viewModel.InitializeAsync();
         themeManager.Apply(viewModel.ThemePreference);
         LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected
@@ -148,7 +160,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         };
         if (!demoMode)
         {
-            ConfirmUpdateHealthIfRequested();
             await ShowPrivacyConsentIfNeededAsync();
             InitializeCrashReportingIfAuthorized();
             await FlushPendingTelemetryIfAnyAsync();
