@@ -134,6 +134,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         ActivateNavItem(DashboardNav);
+        Navigate(DashboardPage);
         await viewModel.InitializeAsync();
         themeManager.Apply(viewModel.ThemePreference);
         LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected
@@ -398,6 +399,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         HistoryPage.Visibility = Visibility.Collapsed;
         SettingsPage.Visibility = Visibility.Collapsed;
         page.Visibility = Visibility.Visible;
+        viewModel.SetLiveMetricsEnabled(ReferenceEquals(page, DashboardPage));
     }
 
     private void LightProfile_Checked(object sender, RoutedEventArgs e) => viewModel.SelectProfile(OptimizationProfile.Light);
@@ -726,6 +728,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
+        viewModel.Dispose();
         windowSource?.RemoveHook(WindowMessageHook);
         System.Windows.Application.Current.SessionEnding -= Application_SessionEnding;
         viewModel.UpdateAvailableDetected -= ViewModel_UpdateAvailableDetected;
@@ -744,6 +747,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void HideToTray()
     {
+        viewModel.SetLiveMetricsEnabled(false);
         Hide();
         trayIcon.Show(announce: !trayAnnouncementShown);
         trayAnnouncementShown = true;
@@ -767,6 +771,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
 
         Activate();
+        viewModel.SetLiveMetricsEnabled(DashboardPage.Visibility == Visibility.Visible);
     }
 
     private void TrayIcon_ExitRequested(object? sender, EventArgs e)

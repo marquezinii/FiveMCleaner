@@ -2,6 +2,8 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Windows;
+using System.Windows.Media;
 using System.Windows.Threading;
 using FiveMCleaner.App.Services;
 using FiveMCleaner.Contracts;
@@ -10,7 +12,7 @@ using FiveMCleaner.Core.Planning;
 
 namespace FiveMCleaner.App.ViewModels;
 
-public sealed class MainViewModel : BindableBase
+public sealed class MainViewModel : BindableBase, IDisposable
 {
     private readonly IAppOptimizationService service;
     private readonly IPlanBuilder planBuilder;
@@ -19,10 +21,15 @@ public sealed class MainViewModel : BindableBase
     private readonly IReleaseUpdateService? releaseUpdateService;
     private readonly ISilentUpdateInstaller? silentUpdateInstaller;
     private readonly IAnonymousTelemetryService telemetry;
+    private readonly ILiveSystemMetricsProvider liveSystemMetricsProvider;
     private readonly ProgressTimingEstimator progressTimingEstimator = new();
     private readonly SemaphoreSlim settingsSaveGate = new(1, 1);
     private readonly Queue<string> pendingHeadlines = new();
     private static readonly TimeSpan HeadlineMinimumDwell = TimeSpan.FromSeconds(6);
+    private static readonly TimeSpan LiveMetricsInterval = TimeSpan.FromSeconds(2);
+    private const int LiveMetricsHistoryCapacity = 30;
+    private const double LiveMetricsGraphWidth = 640;
+    private const double LiveMetricsGraphHeight = 110;
     private DispatcherTimer? headlineDwellTimer;
     private DateTime headlineShownAtUtc;
     private CancellationTokenSource? operationCancellation;
@@ -58,6 +65,25 @@ public sealed class MainViewModel : BindableBase
     private string streamingProtectionDetail = string.Empty;
     private string streamingReadinessTitle = string.Empty;
     private string streamingReadinessDetail = string.Empty;
+    private string readinessLevelLabel = string.Empty;
+    private double cpuUsagePercent;
+    private double gpuUsagePercent;
+    private double memoryUsagePercent;
+    private double diskUsagePercent;
+    private string cpuUsageLabel = string.Empty;
+    private string gpuUsageLabel = string.Empty;
+    private string memoryUsageLabel = string.Empty;
+    private string diskUsageLabel = string.Empty;
+    private string networkUsageLabel = string.Empty;
+    private string liveMetricsUpdatedLabel = string.Empty;
+    private PointCollection cpuUsagePoints = [];
+    private PointCollection gpuUsagePoints = [];
+    private readonly Queue<double> cpuUsageHistory = new();
+    private readonly Queue<double> gpuUsageHistory = new();
+    private DispatcherTimer? liveMetricsTimer;
+    private bool liveMetricsEnabled;
+    private bool liveMetricsCaptureInProgress;
+    private LiveSystemMetricsSnapshot? lastLiveMetrics;
     private string lightImpactLabel = string.Empty;
     private string balancedImpactLabel = string.Empty;
     private string aggressiveImpactLabel = string.Empty;
@@ -111,7 +137,8 @@ public sealed class MainViewModel : BindableBase
         IStartupRegistrationService? startupRegistration = null,
         IReleaseUpdateService? releaseUpdateService = null,
         IAnonymousTelemetryService? telemetry = null,
-        ISilentUpdateInstaller? silentUpdateInstaller = null)
+        ISilentUpdateInstaller? silentUpdateInstaller = null,
+        ILiveSystemMetricsProvider? liveSystemMetricsProvider = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
         this.planBuilder = planBuilder ?? new PlanBuilder();
@@ -120,6 +147,7 @@ public sealed class MainViewModel : BindableBase
         this.releaseUpdateService = releaseUpdateService;
         this.silentUpdateInstaller = silentUpdateInstaller;
         this.telemetry = telemetry ?? DisabledAnonymousTelemetryService.Instance;
+        this.liveSystemMetricsProvider = liveSystemMetricsProvider ?? new WindowsLiveSystemMetricsProvider();
         StepLedger.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasStepLedgerItems));
         ResetLocalizedPlaceholders();
         RefreshProfilePresentation();
@@ -228,6 +256,32 @@ public sealed class MainViewModel : BindableBase
     public string StreamingReadinessTitle { get => streamingReadinessTitle; private set => SetProperty(ref streamingReadinessTitle, value); }
 
     public string StreamingReadinessDetail { get => streamingReadinessDetail; private set => SetProperty(ref streamingReadinessDetail, value); }
+
+    public string ReadinessLevelLabel { get => readinessLevelLabel; private set => SetProperty(ref readinessLevelLabel, value); }
+
+    public double CpuUsagePercent { get => cpuUsagePercent; private set => SetProperty(ref cpuUsagePercent, value); }
+
+    public double GpuUsagePercent { get => gpuUsagePercent; private set => SetProperty(ref gpuUsagePercent, value); }
+
+    public double MemoryUsagePercent { get => memoryUsagePercent; private set => SetProperty(ref memoryUsagePercent, value); }
+
+    public double DiskUsagePercent { get => diskUsagePercent; private set => SetProperty(ref diskUsagePercent, value); }
+
+    public string CpuUsageLabel { get => cpuUsageLabel; private set => SetProperty(ref cpuUsageLabel, value); }
+
+    public string GpuUsageLabel { get => gpuUsageLabel; private set => SetProperty(ref gpuUsageLabel, value); }
+
+    public string MemoryUsageLabel { get => memoryUsageLabel; private set => SetProperty(ref memoryUsageLabel, value); }
+
+    public string DiskUsageLabel { get => diskUsageLabel; private set => SetProperty(ref diskUsageLabel, value); }
+
+    public string NetworkUsageLabel { get => networkUsageLabel; private set => SetProperty(ref networkUsageLabel, value); }
+
+    public string LiveMetricsUpdatedLabel { get => liveMetricsUpdatedLabel; private set => SetProperty(ref liveMetricsUpdatedLabel, value); }
+
+    public PointCollection CpuUsagePoints { get => cpuUsagePoints; private set => SetProperty(ref cpuUsagePoints, value); }
+
+    public PointCollection GpuUsagePoints { get => gpuUsagePoints; private set => SetProperty(ref gpuUsagePoints, value); }
 
     public string LightImpactLabel { get => lightImpactLabel; private set => SetProperty(ref lightImpactLabel, value); }
 
@@ -695,6 +749,120 @@ public sealed class MainViewModel : BindableBase
             RefreshPlan();
             RaiseCommandState();
         }
+    }
+
+    public void SetLiveMetricsEnabled(bool enabled)
+    {
+        liveMetricsEnabled = enabled;
+        if (!enabled)
+        {
+            liveMetricsTimer?.Stop();
+            return;
+        }
+
+        liveMetricsTimer ??= new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = LiveMetricsInterval
+        };
+        liveMetricsTimer.Tick -= LiveMetricsTimer_Tick;
+        liveMetricsTimer.Tick += LiveMetricsTimer_Tick;
+        liveMetricsTimer.Start();
+        _ = CaptureLiveMetricsAsync();
+    }
+
+    private void LiveMetricsTimer_Tick(object? sender, EventArgs e) => _ = CaptureLiveMetricsAsync();
+
+    private async Task CaptureLiveMetricsAsync()
+    {
+        if (!liveMetricsEnabled || liveMetricsCaptureInProgress)
+        {
+            return;
+        }
+
+        liveMetricsCaptureInProgress = true;
+        try
+        {
+            var snapshot = await liveSystemMetricsProvider.CaptureAsync();
+            if (!liveMetricsEnabled)
+            {
+                return;
+            }
+
+            lastLiveMetrics = snapshot;
+            ApplyLiveMetrics(snapshot);
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            if (liveMetricsEnabled)
+            {
+                LiveMetricsUpdatedLabel = localization.GetString("Dashboard.LivePerformance.Unavailable");
+            }
+        }
+        finally
+        {
+            liveMetricsCaptureInProgress = false;
+        }
+    }
+
+    private void ApplyLiveMetrics(LiveSystemMetricsSnapshot snapshot, bool addHistory = true)
+    {
+        CpuUsagePercent = snapshot.CpuPercent ?? 0;
+        GpuUsagePercent = snapshot.GpuPercent ?? 0;
+        MemoryUsagePercent = snapshot.MemoryPercent ?? 0;
+        DiskUsagePercent = snapshot.DiskPercent ?? 0;
+        CpuUsageLabel = FormatLivePercent(snapshot.CpuPercent);
+        GpuUsageLabel = FormatLivePercent(snapshot.GpuPercent);
+        MemoryUsageLabel = FormatLivePercent(snapshot.MemoryPercent);
+        DiskUsageLabel = FormatLivePercent(snapshot.DiskPercent);
+        NetworkUsageLabel = localization.Format(
+            "Dashboard.LivePerformance.NetworkValue",
+            snapshot.NetworkThroughputMBps);
+        LiveMetricsUpdatedLabel = localization.Format(
+            "Dashboard.LivePerformance.Updated",
+            snapshot.CapturedAt.ToLocalTime().ToString("HH:mm:ss"));
+
+        if (addHistory)
+        {
+            AddMetricSample(cpuUsageHistory, snapshot.CpuPercent);
+            AddMetricSample(gpuUsageHistory, snapshot.GpuPercent);
+            CpuUsagePoints = BuildMetricPoints(cpuUsageHistory);
+            GpuUsagePoints = BuildMetricPoints(gpuUsageHistory);
+        }
+    }
+
+    private string FormatLivePercent(double? value) => value is { } available
+        ? localization.Format("Dashboard.LivePerformance.PercentValue", available)
+        : localization.GetString("Dashboard.LivePerformance.NotAvailable");
+
+    private static void AddMetricSample(Queue<double> history, double? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        history.Enqueue(Math.Clamp(value.Value, 0, 100));
+        while (history.Count > LiveMetricsHistoryCapacity)
+        {
+            history.Dequeue();
+        }
+    }
+
+    private static PointCollection BuildMetricPoints(IReadOnlyCollection<double> history)
+    {
+        var values = history.ToArray();
+        var points = new PointCollection(values.Length);
+        for (var index = 0; index < values.Length; index++)
+        {
+            var x = values.Length == 1
+                ? LiveMetricsGraphWidth
+                : index * LiveMetricsGraphWidth / (values.Length - 1);
+            var y = LiveMetricsGraphHeight * (1 - (values[index] / 100));
+            points.Add(new System.Windows.Point(x, y));
+        }
+
+        return points;
     }
 
     /// <summary>
@@ -1263,6 +1431,12 @@ public sealed class MainViewModel : BindableBase
         ArchitectureLabel = value.SystemArchitecture;
         ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
         ReadinessScore = value.ReadinessScore;
+        ReadinessLevelLabel = ReadinessScore switch
+        {
+            >= 85 => localization.GetString("Dashboard.Readiness.Excellent"),
+            >= 65 => localization.GetString("Dashboard.Readiness.Good"),
+            _ => localization.GetString("Dashboard.Readiness.Attention")
+        };
         IsFiveMLegacyDetected = value.Edition == FiveMEdition.Legacy;
         IsGtaVLegacyDetected = value.GtaVDetected || File.Exists(value.GtaVGraphicsSettingsPath);
         EditionLabel = IsFiveMLegacyDetected
@@ -2058,6 +2232,7 @@ public sealed class MainViewModel : BindableBase
             WindowsLabel = analyzing;
             ArchitectureLabel = analyzing;
             ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
+            ReadinessLevelLabel = analyzing;
             EditionLabel = localization.GetString("Status.SearchingFiveM");
             GtaStatusLabel = localization.GetString("Status.SearchingGtaV");
             IsFiveMLegacyDetected = false;
@@ -2070,6 +2245,20 @@ public sealed class MainViewModel : BindableBase
             LightImpactLabel = pendingImpact;
             BalancedImpactLabel = pendingImpact;
             AggressiveImpactLabel = pendingImpact;
+        }
+
+        if (lastLiveMetrics is null)
+        {
+            CpuUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            GpuUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            MemoryUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            DiskUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            NetworkUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            LiveMetricsUpdatedLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+        }
+        else
+        {
+            ApplyLiveMetrics(lastLiveMetrics, addHistory: false);
         }
     }
 
@@ -2118,6 +2307,14 @@ public sealed class MainViewModel : BindableBase
         OnPropertyChanged(nameof(CanRunGtaVBenchmark));
         // Updating restarts the app, so the button has to follow IsBusy.
         OnPropertyChanged(nameof(CanDownloadUpdate));
+    }
+
+    public void Dispose()
+    {
+        liveMetricsEnabled = false;
+        liveMetricsTimer?.Stop();
+        liveMetricsTimer = null;
+        (liveSystemMetricsProvider as IDisposable)?.Dispose();
     }
 
     private void RefreshUpdatePresentation()

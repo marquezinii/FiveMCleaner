@@ -314,28 +314,110 @@
                                         <TextBlock Text="{Binding RecommendationText}" Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12.5" TextWrapping="Wrap" MaxWidth="720" />
                                         <Button Content="{Binding [Dashboard.OpenOptimizer], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="40" Padding="20,0" Margin="0,18,0,0" HorizontalAlignment="Left" Click="OpenOptimizer_Click" />
                                     </StackPanel>
-                                    <Border Grid.Column="1" MinWidth="150" Margin="30,0,2,0" Padding="20,16" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="14" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
+                                    <Border Grid.Column="1" MinWidth="220" Margin="30,0,2,0" Padding="20,17" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="14" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
                                         <StackPanel>
-                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                                                <TextBlock Text="{Binding ReadinessScore}" FontSize="36" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
-                                                <TextBlock Text="/100" Margin="4,14,0,0" FontSize="11" Foreground="{DynamicResource TextSubtleBrush}" />
-                                            </StackPanel>
-                                            <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,0" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" FontWeight="Bold" HorizontalAlignment="Center" />
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" FontWeight="Bold" />
+                                                    <TextBlock Text="{Binding ReadinessLevelLabel}" Margin="0,5,0,0" FontSize="13" FontWeight="SemiBold" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                                                    <TextBlock Text="{Binding ReadinessScore}" FontSize="32" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
+                                                    <TextBlock Text="/100" Margin="3,11,0,0" FontSize="10" Foreground="{DynamicResource TextSubtleBrush}" />
+                                                </StackPanel>
+                                            </Grid>
+                                            <ProgressBar Value="{Binding ReadinessScore, Mode=OneWay}" Maximum="100" Height="5" Margin="0,14,0,0" />
+                                            <TextBlock Text="{Binding [Dashboard.Readiness.LocalAnalysis], Source={StaticResource LocalizedStrings}}" Margin="0,10,0,0" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" />
                                         </StackPanel>
                                     </Border>
                                 </Grid>
                             </ui:Card>
 
                             <Grid>
-                                <Grid.ColumnDefinitions><ColumnDefinition Width="5*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="3*" /></Grid.ColumnDefinitions>
-                                <ui:Card Grid.Column="0" Padding="20" VerticalAlignment="Stretch">
+                                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="14" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="5*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="3*" /></Grid.ColumnDefinitions>
+                                    <ui:Card Grid.Column="0" Padding="20" VerticalAlignment="Stretch">
+                                        <StackPanel>
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Title], Source={StaticResource LocalizedStrings}}" FontSize="17" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Description], Source={StaticResource LocalizedStrings}}" Margin="0,5,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
+                                                </StackPanel>
+                                                <StackPanel Grid.Column="1" Margin="16,0,0,0" HorizontalAlignment="Right">
+                                                    <Border Padding="8,4" Background="#1537C889" BorderBrush="#3A37C889" BorderThickness="1" CornerRadius="7" HorizontalAlignment="Right">
+                                                        <StackPanel Orientation="Horizontal"><Ellipse Width="6" Height="6" Fill="{DynamicResource GreenBrush}" VerticalAlignment="Center" /><TextBlock Text="{Binding [Dashboard.LivePerformance.Live], Source={StaticResource LocalizedStrings}}" Margin="6,0,0,0" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource GreenBrush}" /></StackPanel>
+                                                    </Border>
+                                                    <TextBlock Text="{Binding LiveMetricsUpdatedLabel}" Margin="0,5,0,0" FontSize="8.5" Foreground="{DynamicResource TextSubtleBrush}" HorizontalAlignment="Right" />
+                                                </StackPanel>
+                                            </Grid>
+
+                                            <Grid Margin="0,17,0,0">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Padding="12,10" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
+                                                    <StackPanel><TextBlock Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuUsageLabel}" Margin="0,5,0,8" FontSize="18" FontWeight="SemiBold" /><ProgressBar Value="{Binding CpuUsagePercent, Mode=OneWay}" Height="4" /></StackPanel>
+                                                </Border>
+                                                <Border Grid.Column="2" Padding="12,10" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
+                                                    <StackPanel><TextBlock Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuUsageLabel}" Margin="0,5,0,8" FontSize="18" FontWeight="SemiBold" /><ProgressBar Value="{Binding GpuUsagePercent, Mode=OneWay}" Height="4" Foreground="{DynamicResource BlueBrush}" /></StackPanel>
+                                                </Border>
+                                                <Border Grid.Column="4" Padding="12,10" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
+                                                    <StackPanel><TextBlock Text="{Binding [Dashboard.LivePerformance.Memory], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding MemoryUsageLabel}" Margin="0,5,0,8" FontSize="18" FontWeight="SemiBold" /><ProgressBar Value="{Binding MemoryUsagePercent, Mode=OneWay}" Height="4" Foreground="{DynamicResource GreenBrush}" /></StackPanel>
+                                                </Border>
+                                                <Border Grid.Column="6" Padding="12,10" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
+                                                    <StackPanel><TextBlock Text="{Binding [Dashboard.LivePerformance.Disk], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskUsageLabel}" Margin="0,5,0,8" FontSize="18" FontWeight="SemiBold" /><ProgressBar Value="{Binding DiskUsagePercent, Mode=OneWay}" Height="4" Foreground="{DynamicResource YellowBrush}" /></StackPanel>
+                                                </Border>
+                                            </Grid>
+
+                                            <Border Margin="0,14,0,0" Padding="14,12" Background="{DynamicResource InsetBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="11">
+                                                <StackPanel>
+                                                    <Grid Margin="0,0,0,10">
+                                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                        <StackPanel Orientation="Horizontal"><Ellipse Width="6" Height="6" Fill="{DynamicResource OrangeBrush}" VerticalAlignment="Center" /><TextBlock Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}" Margin="6,0,14,0" FontSize="9" Foreground="{DynamicResource TextMutedBrush}" /><Ellipse Width="6" Height="6" Fill="{DynamicResource BlueBrush}" VerticalAlignment="Center" /><TextBlock Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}" Margin="6,0,0,0" FontSize="9" Foreground="{DynamicResource TextMutedBrush}" /></StackPanel>
+                                                        <StackPanel Grid.Column="1" Orientation="Horizontal"><TextBlock Text="{Binding [Dashboard.LivePerformance.Network], Source={StaticResource LocalizedStrings}}" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding NetworkUsageLabel}" Margin="6,0,0,0" FontSize="9" FontWeight="SemiBold" /></StackPanel>
+                                                    </Grid>
+                                                    <Viewbox Height="138" Stretch="Fill" AutomationProperties.Name="{Binding [Dashboard.LivePerformance.ChartDescription], Source={StaticResource LocalizedStrings}}">
+                                                        <Canvas Width="640" Height="110" ClipToBounds="True" IsHitTestVisible="False">
+                                                            <Line X1="0" X2="640" Y1="0" Y2="0" Stroke="{DynamicResource BorderSoftBrush}" StrokeThickness="1" />
+                                                            <Line X1="0" X2="640" Y1="36.5" Y2="36.5" Stroke="{DynamicResource BorderSoftBrush}" StrokeThickness="1" />
+                                                            <Line X1="0" X2="640" Y1="73" Y2="73" Stroke="{DynamicResource BorderSoftBrush}" StrokeThickness="1" />
+                                                            <Line X1="0" X2="640" Y1="109" Y2="109" Stroke="{DynamicResource BorderSoftBrush}" StrokeThickness="1" />
+                                                            <Polyline Points="{Binding CpuUsagePoints}" Stroke="{DynamicResource OrangeBrush}" StrokeThickness="2.5" StrokeLineJoin="Round" />
+                                                            <Polyline Points="{Binding GpuUsagePoints}" Stroke="{DynamicResource BlueBrush}" StrokeThickness="2.5" StrokeLineJoin="Round" />
+                                                        </Canvas>
+                                                    </Viewbox>
+                                                </StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </ui:Card>
+
+                                    <ui:Card Grid.Column="2" Padding="20" VerticalAlignment="Stretch">
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding [Dashboard.SystemOverview], Source={StaticResource LocalizedStrings}}" FontSize="16" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding [Dashboard.SystemOverview.Description], Source={StaticResource LocalizedStrings}}" Margin="0,5,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
+                                            <StackPanel Margin="0,18,0,0">
+                                                <TextBlock Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuName}" Margin="0,4,0,14" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding CpuName}" />
+                                                <TextBlock Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuDetail}" Margin="0,4,0,14" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" />
+                                                <TextBlock Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding RamLabel}" Margin="0,4,0,14" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskLabel}" Margin="0,4,0,0" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <Border Margin="0,22,0,0" Padding="12" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
+                                                <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8EF;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource GreenBrush}" VerticalAlignment="Center" /><TextBlock Text="{Binding [Dashboard.LivePerformance.LocalOnly], Source={StaticResource LocalizedStrings}}" Margin="9,0,0,0" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" /></StackPanel>
+                                            </Border>
+                                        </StackPanel>
+                                    </ui:Card>
+                                </Grid>
+
+                                <ui:Card Grid.Row="2" Padding="20">
                                     <StackPanel>
                                         <TextBlock Text="{Binding StreamingReadinessTitle}" FontSize="16" FontWeight="SemiBold" />
                                         <TextBlock Text="{Binding StreamingReadinessDetail}" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
                                         <ItemsControl ItemsSource="{Binding StreamingReadinessItems}" Margin="0,16,0,0">
+                                            <ItemsControl.ItemsPanel><ItemsPanelTemplate><primitives:UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Margin="0,0,0,8" Padding="12" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="9">
+                                                    <Border Margin="0,0,8,0" Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="9">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
                                                             <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Top" />
@@ -345,17 +427,6 @@
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
-                                    </StackPanel>
-                                </ui:Card>
-                                <ui:Card Grid.Column="2" Padding="20" VerticalAlignment="Stretch">
-                                    <StackPanel>
-                                        <TextBlock Text="{Binding [Dashboard.SystemOverview], Source={StaticResource LocalizedStrings}}" FontSize="16" FontWeight="SemiBold" />
-                                        <StackPanel Margin="0,16,0,0">
-                                            <TextBlock Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuName}" Margin="0,4,0,12" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding CpuName}" />
-                                            <TextBlock Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuDetail}" Margin="0,4,0,12" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" />
-                                            <TextBlock Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding RamLabel}" Margin="0,4,0,12" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                            <TextBlock Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskLabel}" Margin="0,4,0,0" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                        </StackPanel>
                                     </StackPanel>
                                 </ui:Card>
                             </Grid>

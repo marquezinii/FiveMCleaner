@@ -184,6 +184,12 @@ public sealed partial class LocalizedInterfaceContractTests
         var dashboard = source[source.IndexOf("<!-- Dashboard -->", StringComparison.Ordinal)..source.IndexOf("<!-- Optimizer -->", StringComparison.Ordinal)];
 
         Assert.Contains("StreamingReadinessItems", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Dashboard.LivePerformance.Title", dashboard, StringComparison.Ordinal);
+        Assert.Contains("CpuUsagePoints", dashboard, StringComparison.Ordinal);
+        Assert.Contains("GpuUsagePoints", dashboard, StringComparison.Ordinal);
+        Assert.Contains("NetworkUsageLabel", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Value=\"{Binding ReadinessScore, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Value=\"{Binding CpuUsagePercent, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.OpenOptimizer", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.SystemOverview", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("GroupName=\"Profile\"", dashboard, StringComparison.Ordinal);

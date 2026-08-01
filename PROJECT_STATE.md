@@ -1,5 +1,27 @@
 # Estado do Projeto
 
+## Monitor de desempenho ao vivo na Visão geral — 01/08/2026
+
+- A Visão geral ganhou um painel local de desempenho com leituras reais de
+  CPU, GPU, memória, disco e rede, quatro indicadores e histórico gráfico de
+  CPU/GPU do último minuto. A coleta começa somente quando a página está
+  visível, pausa ao navegar ou minimizar para a bandeja e retoma ao voltar.
+- O bloco de prontidão agora apresenta nível legível, pontuação, barra e a
+  origem local da análise; o resumo do computador e a proteção para criadores
+  foram reorganizados em uma composição mais preenchida, moderna e responsiva.
+- O coletor ao vivo usa contadores persistentes nativos do Windows. CPU,
+  memória, disco e rede são atualizados a cada 2 segundos; a leitura de GPU,
+  mais custosa, é renovada a cada terceira amostra. Nesta máquina isso reduziu
+  o custo médio observado do painel de aproximadamente 6,3% para 0,6% de CPU
+  total, sem crescimento de memória na janela medida.
+- Limitação conhecida: quando o Windows/driver não expõe um contador, a
+  métrica correspondente aparece como indisponível; nenhum valor é inventado.
+  Não há funcionalidade em andamento, pendência ou bug conhecido desta rodada.
+  Validação: inspeção visual e árvore de acessibilidade em tela maximizada e
+  janela 1160×680, atualização sucessiva e navegação de pausa/retomada, build
+  Release sem avisos, 605 testes .NET, `Verify-Safety.ps1`, format e
+  `git diff --check` aprovados.
+
 ## Visão geral orientada ao estado do PC — 01/08/2026
 
 - A Visão geral deixou de duplicar o fluxo completo do Otimizador: foram

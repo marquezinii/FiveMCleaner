@@ -676,4 +676,25 @@
   <data name="Category.Appearance" xml:space="preserve"><value>Appearance</value></data>
   <data name="Category.FiveMGraphics" xml:space="preserve"><value>FiveM/GTA V graphics</value></data>
   <data name="Optimizer.StepLedger.Title" xml:space="preserve"><value>Step results</value></data>
+  <data name="Dashboard.Readiness.Excellent" xml:space="preserve"><value>Excellent condition</value></data>
+  <data name="Dashboard.Readiness.Good" xml:space="preserve"><value>Good condition</value></data>
+  <data name="Dashboard.Readiness.Attention" xml:space="preserve"><value>Needs attention</value></data>
+  <data name="Dashboard.Readiness.LocalAnalysis" xml:space="preserve"><value>Local capacity and compatibility analysis</value></data>
+  <data name="Dashboard.LivePerformance.Title" xml:space="preserve"><value>Live performance</value></data>
+  <data name="Dashboard.LivePerformance.Description" xml:space="preserve"><value>Real resource usage, updated while this page is open.</value></data>
+  <data name="Dashboard.LivePerformance.Live" xml:space="preserve"><value>LIVE</value></data>
+  <data name="Dashboard.LivePerformance.Updated" xml:space="preserve"><value>Updated at {0}</value></data>
+  <data name="Dashboard.LivePerformance.Unavailable" xml:space="preserve"><value>Reading unavailable</value></data>
+  <data name="Dashboard.LivePerformance.Waiting" xml:space="preserve"><value>Reading…</value></data>
+  <data name="Dashboard.LivePerformance.NotAvailable" xml:space="preserve"><value>Not available</value></data>
+  <data name="Dashboard.LivePerformance.PercentValue" xml:space="preserve"><value>{0:0}%</value></data>
+  <data name="Dashboard.LivePerformance.NetworkValue" xml:space="preserve"><value>{0:0.0} MB/s</value></data>
+  <data name="Dashboard.LivePerformance.Cpu" xml:space="preserve"><value>CPU</value></data>
+  <data name="Dashboard.LivePerformance.Gpu" xml:space="preserve"><value>GPU</value></data>
+  <data name="Dashboard.LivePerformance.Memory" xml:space="preserve"><value>MEMORY</value></data>
+  <data name="Dashboard.LivePerformance.Disk" xml:space="preserve"><value>DISK</value></data>
+  <data name="Dashboard.LivePerformance.Network" xml:space="preserve"><value>NETWORK</value></data>
+  <data name="Dashboard.LivePerformance.ChartDescription" xml:space="preserve"><value>CPU and GPU usage history for the last minute.</value></data>
+  <data name="Dashboard.LivePerformance.LocalOnly" xml:space="preserve"><value>Read locally. Nothing is sent over the internet.</value></data>
+  <data name="Dashboard.SystemOverview.Description" xml:space="preserve"><value>Detected hardware available to FiveM and GTA V.</value></data>
 </root>
