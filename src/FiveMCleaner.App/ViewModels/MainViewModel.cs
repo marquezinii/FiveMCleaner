@@ -702,20 +702,14 @@ public sealed class MainViewModel : BindableBase
 
         try
         {
-            var assemblyVersion = Assembly.GetEntryAssembly()?.GetName().Version
-                ?? new Version(0, 0, 0);
             var update = await releaseUpdateService.CheckForUpdateAsync(
-                StableSemanticVersion.FromVersion(assemblyVersion));
+                StableSemanticVersion.FromVersion(GetAssemblyVersion()));
             if (update is null)
             {
                 return;
             }
 
-            availableUpdate = update;
-            updatePresentationState = UpdatePresentationState.Available;
-            RefreshUpdatePresentation();
-            AddLog(localization.Format("Log.UpdateAvailable", update.Version.CoreVersion));
-            UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
+            ApplyDetectedUpdate(update);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
@@ -744,10 +738,8 @@ public sealed class MainViewModel : BindableBase
 
         try
         {
-            var assemblyVersion = Assembly.GetEntryAssembly()?.GetName().Version
-                ?? new Version(0, 0, 0);
             var update = await releaseUpdateService.CheckForUpdateAsync(
-                StableSemanticVersion.FromVersion(assemblyVersion));
+                StableSemanticVersion.FromVersion(GetAssemblyVersion()));
 
             if (update is null)
             {
@@ -755,11 +747,7 @@ public sealed class MainViewModel : BindableBase
                 return;
             }
 
-            availableUpdate = update;
-            updatePresentationState = UpdatePresentationState.Available;
-            RefreshUpdatePresentation();
-            AddLog(localization.Format("Log.UpdateAvailable", update.Version.CoreVersion));
-            UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
+            ApplyDetectedUpdate(update);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
@@ -771,6 +759,18 @@ public sealed class MainViewModel : BindableBase
         {
             IsCheckingForUpdatesManually = false;
         }
+    }
+
+    private static Version GetAssemblyVersion() =>
+        Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(0, 0, 0);
+
+    private void ApplyDetectedUpdate(ReleaseUpdate update)
+    {
+        availableUpdate = update;
+        updatePresentationState = UpdatePresentationState.Available;
+        RefreshUpdatePresentation();
+        AddLog(localization.Format("Log.UpdateAvailable", update.Version.CoreVersion));
+        UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
     }
 
     public async Task<DownloadedUpdate?> DownloadAvailableUpdateAsync()

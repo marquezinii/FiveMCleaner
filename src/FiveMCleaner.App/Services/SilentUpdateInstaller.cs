@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
 
@@ -59,10 +60,10 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
         var arguments = new List<string>
         {
             "--installer", update.InstallerPath,
-            "--installer-size", update.SizeBytes.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            "--installer-size", update.SizeBytes.ToString(CultureInfo.InvariantCulture),
             "--installer-sha256", update.Sha256Hex,
-            "--parent-pid", parentProcessId.ToString(System.Globalization.CultureInfo.InvariantCulture),
-            "--parent-start-time", parentStartTimeUtcFileTime.ToString(System.Globalization.CultureInfo.InvariantCulture),
+            "--parent-pid", parentProcessId.ToString(CultureInfo.InvariantCulture),
+            "--parent-start-time", parentStartTimeUtcFileTime.ToString(CultureInfo.InvariantCulture),
         };
         var preparedLogDirectory = TryPrepareLogDirectory();
         if (preparedLogDirectory is not null)

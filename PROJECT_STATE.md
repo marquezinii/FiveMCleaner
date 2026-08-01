@@ -1,5 +1,39 @@
 # Estado do Projeto
 
+## Varredura de dívida técnica: XML seguro compartilhado, using ausentes e duplicação no update check — 31/07/2026
+
+- `LegacyGraphicsPresetAction` e `DisplayPreferencesAction` (ambos em
+  `FiveMCleaner.Windows/Actions`) duplicavam byte a byte ~90 linhas: leitura
+  segura de XML com hash (`LoadSafeDocument`/`LoadSafeDocumentWithHash`,
+  DTD proibido, teto de 4 MB), gravação (`SaveDocument`), `ComputeSha256` e a
+  troca atômica com verificação (`ReplaceAndVerifyDisplacedOriginal`), com
+  só a mensagem de erro do teto de tamanho variando entre os dois. Extraído
+  para `SafeXmlDocumentStore` (novo, `FiveMCleaner.Windows/Infrastructure`),
+  parametrizando só a mensagem de erro que variava; as duas ações agora
+  chamam o helper compartilhado em vez de manter cópias próprias. O guard de
+  reparse point na pasta de backup foi deixado como estava em cada ação (não
+  é a mesma checagem de `SafePath.EnsureNoReparsePoints`, usada em outras
+  ações para toda a cadeia de ancestrais — trocar teria mudado
+  comportamento, fora do escopo de uma rodada sem mudança de comportamento).
+- `System.Globalization.CultureInfo`/`NumberStyles` totalmente qualificados
+  repetidamente em `SilentUpdateInstaller.cs` (3x), `PowerPlanAction.cs` (3x)
+  e uma vez em `ElevatedBrokerClient.cs`, sem `using System.Globalization;`
+  — trocado por `using` nos três arquivos. **Não** aplicado o mesmo em
+  `ThemeManager.cs`: apesar de ter `using System.Windows`/`System.Windows.Media`,
+  o projeto App também referencia `System.Windows.Forms`/`System.Drawing`
+  (WinForms), então `Application`, `Point`, `Color` e `ColorConverter` são
+  ambíguos ali sem qualificação total — as FQNs eram intencionais, não
+  dívida; tentativa de trocar quebrou o build com `CS0104` e foi revertida.
+- `MainViewModel.CheckForUpdatesAsync`/`CheckForUpdatesManuallyAsync`
+  duplicavam a leitura da versão do assembly e o bloco de 5 linhas aplicado
+  quando uma atualização é encontrada (`availableUpdate = update;` até
+  `UpdateAvailableDetected?.Invoke`). Extraídos `GetAssemblyVersion()` e
+  `ApplyDetectedUpdate(ReleaseUpdate)`, reaproveitados pelos dois métodos.
+- Validação: build Release sem avisos, 604 testes .NET aprovados,
+  `Verify-Safety.ps1` aprovado, app iniciado via
+  `scripts/Start-DevelopmentApp.ps1` sem crash. Nenhuma mudança de
+  comportamento pretendida nesta rodada.
+
 ## Rodada de Hardening: race do processo-pai no Launcher/Updater e lock transitório do active.json — 31/07/2026
 
 - **Launcher e Updater (`WaitForParent`/`WaitForParentExit`)**: ambos chamavam

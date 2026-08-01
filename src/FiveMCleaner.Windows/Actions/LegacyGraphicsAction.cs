@@ -1,7 +1,4 @@
 using System.Globalization;
-using System.Security.Cryptography;
-using System.Text;
-using System.Xml;
 using System.Xml.Linq;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Catalog;
@@ -319,7 +316,9 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
                     : "GTA V precisa estar fechado para editar os gráficos.");
         }
 
-        var (document, originalHash) = LoadSafeDocumentWithHash(settingsPath);
+        var (document, originalHash) = SafeXmlDocumentStore.LoadSafeDocumentWithHash(
+            settingsPath,
+            "O arquivo gráfico excede o limite seguro de 4 MB.");
         var root = document.Root;
         if (root is null || !root.Name.LocalName.Equals("Settings", StringComparison.Ordinal))
         {
@@ -410,21 +409,23 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
 
         try
         {
-            SaveDocument(document, temporaryPath);
-            _ = LoadSafeDocument(temporaryPath);
-            var appliedHash = ComputeSha256(temporaryPath);
+            SafeXmlDocumentStore.SaveDocument(document, temporaryPath);
+            _ = SafeXmlDocumentStore.LoadSafeDocument(
+                temporaryPath,
+                "O arquivo gráfico excede o limite seguro de 4 MB.");
+            var appliedHash = SafeXmlDocumentStore.ComputeSha256(temporaryPath);
             if (IsTargetRunning())
             {
                 throw new IOException("O jogo foi iniciado durante a preparação; nenhuma configuração foi substituída.");
             }
 
-            if (!ComputeSha256(settingsPath).Equals(originalHash, StringComparison.OrdinalIgnoreCase))
+            if (!SafeXmlDocumentStore.ComputeSha256(settingsPath).Equals(originalHash, StringComparison.OrdinalIgnoreCase))
             {
                 throw new IOException(
                     "As configurações gráficas mudaram durante a preparação; a gravação foi cancelada.");
             }
 
-            ReplaceAndVerifyDisplacedOriginal(
+            SafeXmlDocumentStore.ReplaceAndVerifyDisplacedOriginal(
                 temporaryPath,
                 settingsPath,
                 backupPath,
@@ -479,8 +480,10 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
             throw new FileNotFoundException("Graphics backup is unavailable.", expectedBackupPath);
         }
 
-        _ = LoadSafeDocument(expectedBackupPath);
-        if (!ComputeSha256(expectedBackupPath).Equals(
+        _ = SafeXmlDocumentStore.LoadSafeDocument(
+            expectedBackupPath,
+            "O arquivo gráfico excede o limite seguro de 4 MB.");
+        if (!SafeXmlDocumentStore.ComputeSha256(expectedBackupPath).Equals(
                 snapshot.OriginalSha256,
                 StringComparison.OrdinalIgnoreCase))
         {
@@ -498,7 +501,7 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
             return Task.CompletedTask;
         }
 
-        var currentHash = ComputeSha256(settingsPath);
+        var currentHash = SafeXmlDocumentStore.ComputeSha256(settingsPath);
         if (!currentHash.Equals(snapshot.AppliedSha256, StringComparison.OrdinalIgnoreCase))
         {
             throw new IOException(
@@ -519,19 +522,21 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
         File.Copy(expectedBackupPath, temporaryPath, overwrite: false);
         try
         {
-            _ = LoadSafeDocument(temporaryPath);
+            _ = SafeXmlDocumentStore.LoadSafeDocument(
+                temporaryPath,
+                "O arquivo gráfico excede o limite seguro de 4 MB.");
             if (IsTargetRunning())
             {
                 throw new IOException("O jogo foi iniciado durante o rollback; nenhuma configuração foi substituída.");
             }
 
-            if (!ComputeSha256(settingsPath).Equals(currentHash, StringComparison.OrdinalIgnoreCase))
+            if (!SafeXmlDocumentStore.ComputeSha256(settingsPath).Equals(currentHash, StringComparison.OrdinalIgnoreCase))
             {
                 throw new IOException(
                     "As configurações gráficas mudaram durante o rollback; a restauração foi cancelada.");
             }
 
-            ReplaceAndVerifyDisplacedOriginal(
+            SafeXmlDocumentStore.ReplaceAndVerifyDisplacedOriginal(
                 temporaryPath,
                 settingsPath,
                 displacedPath,
@@ -549,100 +554,6 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
         }
 
         return Task.CompletedTask;
-    }
-
-    private static XDocument LoadSafeDocument(string path)
-    {
-        return LoadSafeDocumentWithHash(path).Document;
-    }
-
-    private static (XDocument Document, string Sha256) LoadSafeDocumentWithHash(string path)
-    {
-        var settings = new XmlReaderSettings
-        {
-            DtdProcessing = DtdProcessing.Prohibit,
-            XmlResolver = null,
-            IgnoreWhitespace = false,
-            MaxCharactersInDocument = 4 * 1024 * 1024
-        };
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        if (stream.Length > 4 * 1024 * 1024)
-        {
-            throw new InvalidDataException("O arquivo gráfico excede o limite seguro de 4 MB.");
-        }
-
-        using var buffer = new MemoryStream((int)stream.Length);
-        stream.CopyTo(buffer);
-        var bytes = buffer.ToArray();
-        var hash = Convert.ToHexString(SHA256.HashData(bytes));
-        buffer.Position = 0;
-        using var reader = XmlReader.Create(buffer, settings);
-        var document = XDocument.Load(reader, LoadOptions.PreserveWhitespace | LoadOptions.SetLineInfo);
-        return (document, hash);
-    }
-
-    private static void SaveDocument(XDocument document, string path)
-    {
-        var settings = new XmlWriterSettings
-        {
-            Encoding = new UTF8Encoding(encoderShouldEmitUTF8Identifier: false),
-            Indent = false,
-            NewLineHandling = NewLineHandling.None,
-            CloseOutput = true
-        };
-        using var stream = new FileStream(path, FileMode.CreateNew, FileAccess.Write, FileShare.None);
-        using var writer = XmlWriter.Create(stream, settings);
-        document.Save(writer);
-    }
-
-    private static string ComputeSha256(string path)
-    {
-        using var stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
-        return Convert.ToHexString(SHA256.HashData(stream));
-    }
-
-    private static void ReplaceAndVerifyDisplacedOriginal(
-        string replacementPath,
-        string destinationPath,
-        string displacedPath,
-        string expectedDisplacedSha256,
-        string conflictMessage)
-    {
-        File.Replace(replacementPath, destinationPath, displacedPath, ignoreMetadataErrors: true);
-        Exception? validationError = null;
-        var matches = false;
-        try
-        {
-            matches = ComputeSha256(displacedPath).Equals(
-                expectedDisplacedSha256,
-                StringComparison.OrdinalIgnoreCase);
-        }
-        catch (Exception exception) when (exception is IOException
-            or UnauthorizedAccessException)
-        {
-            validationError = exception;
-        }
-
-        if (matches)
-        {
-            return;
-        }
-
-        try
-        {
-            File.Replace(displacedPath, destinationPath, null, ignoreMetadataErrors: true);
-        }
-        catch (Exception restoreException) when (restoreException is IOException
-            or UnauthorizedAccessException)
-        {
-            throw new IOException(
-                $"Não foi possível confirmar a troca; a versão deslocada ficou preservada em '{displacedPath}'.",
-                new AggregateException(
-                    validationError ?? new IOException("Hash deslocado divergente."),
-                    restoreException));
-        }
-
-        throw new IOException(conflictMessage, validationError);
     }
 
     private static string GetActionId(
