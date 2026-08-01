@@ -1,5 +1,69 @@
 # Estado do Projeto
 
+## Bug sweep: eventos do updater, CSV, telemetria, broker e settings — 01/08/2026
+
+- **Worker `updaterEvents/queries.js`**: o filtro `environment = 'All'` (default
+  do `<select>` do dashboard) era tratado como valor literal e gerava
+  `WHERE environment = 'All'`, que nunca casa linhas — a tabela "Bugs do
+  updater" ficava sempre vazia até o usuário escolher um ambiente específico.
+  Agora `'All'` significa "sem filtro", como no `buildFilters` do stats.
+  Regressão: `test/updaterEvents/queries.test.js`.
+- **Worker `updaterEvents/validateSubmission.js`**: `errorCode` ausente (ou
+  não-string) passava o `SAFE_CODE.test` (regex aplicado a `undefined` vira
+  string vazia) e o banco recebia um código nulo violando a constraint.
+  Exigido `typeof errorCode === 'string'` antes do regex. Regressão:
+  `test/updaterEvents/validateSubmission.test.js`.
+- **Worker `stats/csv.js`**: a exportação CSV permitia injeção de fórmula
+  (`=`, `+`, `-`, `@`, tab e CR iniciais) em campos controlados por
+  usuário/dispositivo (modelo de CPU/GPU, categoria de erro) — abrir o CSV no
+  Excel executaria `=HYPERLINK(...)`/`=cmd(...)` na máquina do admin. Células
+  com prefixo perigoso são aspadas e prefixadas com `'` (convenção de
+  planilhas "trate como texto"). Regressão: `test/stats/csv.test.js`.
+- **Worker `index.js`**: ingest de `bug_reports` virou `INSERT OR IGNORE`
+  (idempotente por `report_id`) — reenvio não estoura mais a PK.
+- **Dashboard `api.js`**: `requestJson` nunca lança. Fetch rejeitado (Worker
+  fora do ar) vira `{ error: 'network-error' }` e corpo não-JSON vira
+  `{ error: 'invalid-response' }`; antes a rejeição do `Promise.all` do
+  `refreshAll` deixava a página presa em "Atualizando dados…". Regressão:
+  `test/api.test.js`.
+- **Dashboard `app.js`**: probe inicial sem rede mostra a tela de login com
+  "Não foi possível conectar à telemetria…" em vez de um dashboard vazio; o
+  submit do login também trata fetch rejeitado.
+- **`AppOptimizationService.LoadSettingsAsync`** resetava silenciosamente as
+  preferências do usuário: um `settings.json` fora do schema atual (unknown
+  members de build novo, edição manual com comentários/casing diferente)
+  lançava `JsonException` sob options estritos, o catch devolvia
+  `new AppSettings()` e rearmava o consentimento de privacidade/telemetria.
+  A leitura agora é tolerante (`PropertyNameCaseInsensitive`,
+  `JsonCommentHandling.Skip`, `UnmappedMemberHandling.Skip` derivado de
+  `FiveMCleanerJson.Options`); a escrita continua estrita. Novo
+  `DeserializeSettings` interno, exposto para teste. Regressão:
+  `tests/FiveMCleaner.Tests/App/AppOptimizationServiceSettingsTests.cs`
+  (5 testes).
+- **`ElevatedBrokerClient`**: o loop de leitura consumia todas as linhas até o
+  cap de 128 eventos sem parar no evento terminal; um plano com progresso
+  suficiente empurrava o terminal para fora da janela, terminava com
+  `terminal == null` e uma fase elevada bem-sucedida era reportada como
+  falha. Extraído `ReadUntilTerminalAsync` (helper puro, testável) que para no
+  primeiro evento terminal (`Completed`/`RollbackCompleted`/`Rejected`/`Failed`);
+  estourar o cap agora é erro honesto (`InvalidDataException`). Os tipos wire
+  viraram `internal`. Regressão:
+  `tests/FiveMCleaner.Tests/App/ElevatedBrokerClientTests.cs` (6 testes).
+- **`Broker/Program.cs`**: rollback sem timeout segurava o processo elevado
+  indefinidamente. Agora `CancellationTokenSource(ExecutionTimeout)` de 90s;
+  estouro grava `rollback-timeout` no diagnóstico e devolve
+  `broker-rollback-timeout` + `BrokerExitCode.RollbackFailed`, preservando o
+  journal para diagnóstico.
+- **`MainWindow.xaml.cs`**: `ConfirmUpdateHealthIfRequested()` rodava depois
+  de `viewModel.InitializeAsync()`; em máquinas lentas a inicialização
+  (varredura WMI/registro, flush de telemetria, checagem de update) podia
+  estourar a janela de saúde de 45s do launcher e um candidato saudável (só
+  lento) era revertido. O recibo agora é gravado antes do `InitializeAsync`.
+- Validação: build Release sem avisos, 616 testes .NET, `Verify-Safety.ps1`
+  aprovado, 118 testes do worker e 43 testes do dashboard aprovados,
+  `git diff --check` limpo. Sem alteração de versão pública, release,
+  instalador ou deploy.
+
 ## Rodada de Hardening: telemetria, health-check pós-update e limites do backend — 01/08/2026
 
 - **`UpdaterDiagnostics.IsTelemetryAuthorized`** não capturava
