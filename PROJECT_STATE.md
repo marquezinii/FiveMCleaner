@@ -1,5 +1,62 @@
 # Estado do Projeto
 
+## Rodada de Hardening: telemetria, health-check pós-update e limites do backend — 01/08/2026
+
+- **`UpdaterDiagnostics.IsTelemetryAuthorized`** não capturava
+  `UnauthorizedAccessException` na leitura de `settings.json`. O pior chamador
+  é o `Launcher/Program.cs` dentro do próprio bloco `catch` do `Main`
+  (re-registro de telemetria durante a recuperação): um lock transitório de
+  escrita/AV no arquivo de configurações vazava e derrubava o processo no meio
+  do recovery. Adicionada a exceção ao filtro, cobrindo a abertura do launch e
+  o caminho de erro.
+- **`UpdateHealthReceiptStore.Confirm`** no `MainWindow_Loaded` rodava sem
+  proteção, enquanto a chamada irmã `VersionFloorStore.Advance` já tinha
+  filtro. Um lock transitório em `health.json` no momento crítico pós-update
+  vazava para `DispatcherUnhandledException`. Aplicado o mesmo padrão
+  (`IOException`/`UnauthorizedAccessException`/`CryptographicException`): a
+  falha preserva o app ativo, e o Launcher re-verifica o recibo na próxima
+  abertura.
+- **`CaptureIfRequestedAsync`** (smoke-test `--capture=`) sem tratamento de
+  falhas: caminho inválido, disco cheio ou falha de render subiam como crash
+  da UI. O modo agora captura dentro de try/catch e sempre fecha o app ao
+  final (o orquestrador detecta a falha pela ausência do arquivo de saída).
+- **`PciExpressPowerManagementAction.RollbackAsync`** descartava o retorno
+  `false` de `TrySetPciExpressAspmPolicyAsync`, registrando `RolledBack` sem
+  ter restaurado nada. Agora lança `InvalidOperationException` na falha, e o
+  engine marca o rollback como `RollbackFailed` no journal (mesmo contrato do
+  path de aplicação).
+- **`RecoveryCoordinator.Reconcile`** só convertia `IOException` ao ler
+  `active.json`; um ponteiro corrompido (JSON inválido ou versão indisponível)
+  propagava `JsonException`/`InvalidDataException` como falha de
+  inicialização. O catch agora adia (`RecoveryDecision.Pending`) também para
+  esses casos, com a mesma semântica de "não provado quebrado".
+- **`Launcher/Program.cs`**: o loop de health-check lia `process.HasExited`
+  sem proteção; a leitura no processo já encerrado lança
+  `Win32Exception`/`InvalidOperationException` (mesma janela de corrida que
+  `WaitForParent` já tratava). Adicionado `HasExitedSafely`, tratando o caso
+  como exit em vez de erro.
+- **`VersionFloorStore.Read`** ganhou o mesmo retry curto de
+  `RuntimeActivationStore` para `IOException`/`UnauthorizedAccessException`,
+  para que um AV segurando `version-floor.dpapi` por milissegundos não vire
+  falha fechada de abertura.
+- **Worker (`infra/cloudflare-worker`)**: o `batch()` do D1 aceita no máximo
+  500 statements, mas um lote de telemetria pode gerar até 1500 statements de
+  ações (50 eventos × 30 actionIds). O ingest agora particiona as escritas em
+  chunks de 500 (`chunkStatements`), evitando 500 + escrita parcial em lotes
+  grandes.
+- **Dashboard (`infra/dashboard`)**: o override `?api=` aceitava qualquer
+  origem — em produção um link `?api=https://evil.example` exfiltraria a
+  senha de admin enviada no login. O override agora só é honrado quando o
+  painel é servido de `localhost`/`127.0.0.1`/`[::1]` (uso de dev);
+  qualquer outro host sempre usa o endpoint real do Worker.
+- Cobertura nova: `UpdaterDiagnosticsTests` (consentimento revogado),
+  `RuntimeActivationStoreTests` (retry de lock transitório), worker
+  `test/batchChunking.test.js`, dashboard `test/api.test.js` para
+  `resolveApiBase`.
+- Validação: build Release sem avisos, 605 testes .NET, `Verify-Safety.ps1`,
+  113 testes do worker e 41 testes do dashboard aprovados, `git diff --check`
+  limpo. Sem alteração de versão pública, release, instalador ou deploy.
+
 ## Reformulação do dashboard privado de telemetria — 01/08/2026
 
 - O dashboard estático em `infra/dashboard` foi reorganizado em uma visão geral
