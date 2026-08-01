@@ -22,5 +22,14 @@ function escapeCsvValue(value) {
   }
 
   const text = String(value);
-  return /[",\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+  // Leading '=', '+', '-', '@' (plus tab and CR, which Excel also treats as
+  // a formula start) would be interpreted by spreadsheet software as a
+  // formula when the exported CSV is opened -- telemetry fields like CPU/GPU
+  // model or error category are device/user-controlled, so a malicious value
+  // could run `=HYPERLINK(...)` or `=cmd(...)` on the admin's machine.
+  // Neutralizing means quoting the cell AND prefixing a single quote, the
+  // spreadsheet convention for "treat as text".
+  const dangerousLeading = /^[=+\-@\t\r]/.test(text);
+  const needsQuotes = /[",\n]/.test(text) || dangerousLeading;
+  return needsQuotes ? `"${dangerousLeading ? "'" : ''}${text.replaceAll('"', '""')}"` : text;
 }

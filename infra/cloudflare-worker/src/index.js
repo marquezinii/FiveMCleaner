@@ -305,7 +305,7 @@ async function handleBugReportIngest(request, env) {
 
   await env.TELEMETRY_DB
     .prepare(
-      `INSERT INTO bug_reports
+      `INSERT OR IGNORE INTO bug_reports
          (report_id, category, summary, description, app_version, profile,
           technical_summary, email, log_text, environment, received_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
