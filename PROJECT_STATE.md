@@ -1,5 +1,17 @@
 # Estado do Projeto
 
+## Linha do tempo do Otimizador: passo na mesma linha do tempo decorrido/restante — 31/07/2026
+
+- O bloco da bolinha + passo atual voltou a ficar na mesma linha do tempo
+  decorrido e restante (uma única `Grid` com 3 colunas: decorrido à esquerda,
+  bolinha+passo atual centralizado, restante à direita), em vez de uma linha
+  própria acima dela — pedido explícito do usuário após a tentativa anterior
+  ter deixado o bloco visualmente colado, mas ainda numa linha separada acima.
+  O passo anterior (esmaecido) continua abaixo dessa linha única.
+- Validação: build Release sem avisos, 603 testes .NET aprovados,
+  `Verify-Safety.ps1` aprovado, app iniciado via
+  `scripts/Start-DevelopmentApp.ps1` sem crash.
+
 ## Linha do tempo do Otimizador: ritmo mais lento e bloco colado à barra — 31/07/2026
 
 - Dwell mínimo por passo aumentado de 4s para 6s (`MainViewModel.HeadlineMinimumDwell`)
