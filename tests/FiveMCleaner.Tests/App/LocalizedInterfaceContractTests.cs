@@ -338,17 +338,24 @@ public sealed partial class LocalizedInterfaceContractTests
     public void MainWindow_MaximizesToTheCurrentMonitorWorkArea()
     {
         var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml"));
         var source = File.ReadAllText(Path.Combine(
             root,
             "src",
             "FiveMCleaner.App",
             "MainWindow.xaml.cs"));
 
+        Assert.Contains("WindowState=\"Maximized\"", markup, StringComparison.Ordinal);
         Assert.Contains("WmGetMinMaxInfo", source, StringComparison.Ordinal);
         Assert.Contains("WindowMessageHook", source, StringComparison.Ordinal);
         Assert.Contains("MonitorFromWindow", source, StringComparison.Ordinal);
         Assert.Contains("GetMonitorInfo", source, StringComparison.Ordinal);
         Assert.Contains("minMaxInfo.MaxSize", source, StringComparison.Ordinal);
+        Assert.Contains("WindowState = WindowState.Maximized", source, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -1,5 +1,15 @@
 # Estado do Projeto
 
+## Janela principal maximizada ao abrir — 01/08/2026
+
+- `MainWindow` agora inicia sempre maximizada e, ao ser restaurada pela bandeja,
+  volta maximizada em vez de retornar a uma janela normal. O hook existente de
+  área útil do monitor continua garantindo que a janela maximizada não cubra a
+  barra de tarefas.
+- Cobertura de contrato confirma o estado inicial e a restauração maximizada.
+  Validação: build/testes Release (604 aprovados), `dotnet format --verify-no-changes`
+  e `git diff --check` aprovados.
+
 ## Preparação da publicação v1.2.0 — 01/08/2026
 
 - O conjunto desde `v1.1.3` foi classificado como **minor**: entrega o

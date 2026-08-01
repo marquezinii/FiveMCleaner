@@ -13,6 +13,7 @@
         MinWidth="960"
         MinHeight="580"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         ExtendsContentIntoTitleBar="True"
         WindowBackdropType="Mica"
         ResizeMode="CanResize"

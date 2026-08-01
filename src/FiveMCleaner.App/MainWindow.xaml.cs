@@ -753,7 +753,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         Show();
         if (WindowState == WindowState.Minimized)
         {
-            WindowState = WindowState.Normal;
+            WindowState = WindowState.Maximized;
         }
 
         Activate();
