@@ -113,7 +113,9 @@ internal static class Program
                         recovery.Reconcile(DateTimeOffset.UtcNow, TimeSpan.Zero);
                 }
                 catch (Exception recoveryException) when (recoveryException is not (
-                    OutOfMemoryException or StackOverflowException or AccessViolationException)) { }
+                    OutOfMemoryException or StackOverflowException or AccessViolationException))
+                {
+                }
                 await RecordAsync(diagnostics, currentTransaction, "activation", "failed", Classify(exception), exception.ToString(), dataRoot);
             }
             MessageBox.Show(exception.Message, "FiveMCleaner", MessageBoxButtons.OK, MessageBoxIcon.Error);

@@ -1,5 +1,23 @@
 # Estado do Projeto
 
+## Validação abrangente pré-release: formatação, segurança, contratos e componentes — 01/08/2026
+
+- Corrigida uma falha reproduzível de qualidade: `dotnet format --verify-no-changes`
+  falhava porque dois blocos de `try/catch` não seguiam a formatação configurada.
+  `AppOptimizationService` e `Launcher/Program` foram ajustados somente na
+  estrutura/indentação, sem alterar o fluxo de execução. A validação de formato
+  agora passa para toda a solução.
+- Validação executada no estado final: build Release sem avisos, 604 testes
+  .NET (duas execuções, uma com cobertura), `Verify-Safety.ps1`, contrato do
+  instalador, `git diff --check`, Worker (109 testes), dashboard (36 testes),
+  site (lint, build e 3 testes) e verificador de progressão SemVer para
+  `v1.1.3` → `1.1.4`.
+- Smokes não destrutivos: o launcher de desenvolvimento encontrou e compilou
+  o executável Release; o Worker público rejeitou um lote de telemetria vazio
+  com HTTP 400, sem gravar evento. O teste de instalação real não foi repetido
+  nesta rodada porque instala/desinstala o produto na máquina; o contrato do
+  instalador foi validado e o último smoke completo permanece registrado abaixo.
+
 ## Telemetria legada da v1.1.0: compatibilidade temporária no Worker — 01/08/2026
 
 - A v1.1.0 pública enviava eventos sem o campo obrigatório `environment` e o

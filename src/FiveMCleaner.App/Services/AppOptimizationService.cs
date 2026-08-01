@@ -1156,17 +1156,19 @@ public sealed class AppOptimizationService : IAppOptimizationService
         foreach (var process in processes)
         {
             using (process)
-            try
             {
-                if (WindowsFiveMProcessInspector.LooksLikeFiveMProcessName(process.ProcessName))
+                try
                 {
-                    return true;
+                    if (WindowsFiveMProcessInspector.LooksLikeFiveMProcessName(process.ProcessName))
+                    {
+                        return true;
+                    }
                 }
-            }
-            catch (Exception exception) when (exception is InvalidOperationException
-                or System.ComponentModel.Win32Exception
-                or NotSupportedException)
-            {
+                catch (Exception exception) when (exception is InvalidOperationException
+                    or System.ComponentModel.Win32Exception
+                    or NotSupportedException)
+                {
+                }
             }
         }
 
