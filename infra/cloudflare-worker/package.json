@@ -8,7 +8,8 @@
     "test": "node --test",
     "hash-admin-password": "node scripts/hash-admin-password.mjs",
     "dev": "wrangler dev",
-    "db:migrate:local": "wrangler d1 execute fivemcleaner-telemetry --local --file=./schema.sql",
+    "db:bootstrap:local": "wrangler d1 execute fivemcleaner-telemetry --local --file=./schema.sql",
+    "db:migrate:local": "wrangler d1 migrations apply fivemcleaner-telemetry --local",
     "deploy": "wrangler deploy"
   },
   "devDependencies": {

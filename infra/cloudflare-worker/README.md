@@ -33,6 +33,10 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
   `telemetry_event_actions` (one row per applied action ID, for "most used
   function"), `login_attempts` and `admin_sessions` (custom dashboard auth).
   Applied to the real database already.
+- `migrations/` — incremental changes for the already deployed D1 database.
+  The account migration adds a unique username plus the accepted terms version
+  and timestamp. `schema.sql` remains the complete snapshot for a new local
+  database.
 - `src/validateEvent.js` — pure, dependency-free validation of one event or a
   batch. The Worker never trusts client-side validation alone; every field is
   re-checked against the same allowlist server-side.
@@ -112,6 +116,21 @@ real bugs (the PBKDF2 iteration cap and the `SameSite` cookie policy) were
 only caught that way, not by the unit tests, which is exactly why this gap
 is called out rather than assumed harmless.
 
+## Product accounts
+
+The desktop account flow uses separate `/account/register`, `/account/login`,
+`/account/session`, and `/account/logout` routes backed by `user_accounts` and
+revocable `user_sessions` in D1. Registration requires first name, last name,
+a unique normalized username, a unique normalized e-mail, a password of at
+least 10 characters, and explicit acceptance of the current Terms of Use.
+The database stores only the PBKDF2 password hash and a versioned acceptance
+record (`terms_version` + `terms_accepted_at`), never the plaintext password.
+Bearer session tokens have 256 bits of entropy and are stored in D1 only as
+SHA-256 digests, so a database read does not expose active desktop sessions.
+Responses are marked `no-store`; login attempts retain the existing HMAC'd-IP
+lockout and registration is limited to five accounts per hour per HMAC'd IP.
+The source IP is never stored in clear text.
+
 ## Verified end-to-end
 
 Confirmed against the real, deployed Worker + dashboard: sent a test
@@ -124,13 +143,14 @@ no test data was left behind).
 
 ```bash
 npm install
-npm run db:migrate:local          # local-only, safe to run anytime
+npm run db:bootstrap:local        # creates a fresh local database from schema.sql
+npm run db:migrate:local          # applies pending migrations to an existing local database
 
 npm run hash-admin-password       # prints the ADMIN_PASSWORD_HASH value
 wrangler secret put ADMIN_PASSWORD_HASH
 wrangler secret put IP_HASH_SECRET   # any long random string
 
-wrangler d1 execute fivemcleaner-telemetry --remote --file=./schema.sql   # touches the real database — ask first
+wrangler d1 migrations apply fivemcleaner-telemetry --remote   # touches the real database — ask first
 wrangler deploy   # touches Cloudflare — ask first
 ```
 

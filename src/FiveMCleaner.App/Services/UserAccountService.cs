@@ -9,7 +9,12 @@ using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.App.Services;
 
-public sealed record UserProfile(string FirstName, string LastName, string Email)
+public static class AccountTerms
+{
+    public const string CurrentVersion = "2026-08-02";
+}
+
+public sealed record UserProfile(string FirstName, string LastName, string Username, string Email)
 {
     public string DisplayName => $"{FirstName} {LastName}";
 
@@ -25,7 +30,7 @@ public interface IUserAccountService
 {
     UserProfile? CurrentProfile { get; }
     Task<UserAccountResult> RestoreSessionAsync(CancellationToken cancellationToken = default);
-    Task<UserAccountResult> RegisterAsync(string firstName, string lastName, string email, string password, CancellationToken cancellationToken = default);
+    Task<UserAccountResult> RegisterAsync(string firstName, string lastName, string username, string email, string password, CancellationToken cancellationToken = default);
     Task<UserAccountResult> LoginAsync(string email, string password, CancellationToken cancellationToken = default);
     Task LogoutAsync(CancellationToken cancellationToken = default);
 }
@@ -37,9 +42,19 @@ public sealed class CloudflareUserAccountService : IUserAccountService, IDisposa
     private string? token;
 
     public CloudflareUserAccountService(Uri endpoint)
+        : this(
+            new HttpClient { BaseAddress = endpoint },
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                ProductIdentity.Name,
+                "account.session"))
     {
-        client = new HttpClient { BaseAddress = endpoint };
-        sessionPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ProductIdentity.Name, "account.session");
+    }
+
+    internal CloudflareUserAccountService(HttpClient client, string sessionPath)
+    {
+        this.client = client;
+        this.sessionPath = sessionPath;
     }
 
     public UserProfile? CurrentProfile { get; private set; }
@@ -53,8 +68,17 @@ public sealed class CloudflareUserAccountService : IUserAccountService, IDisposa
         return result;
     }
 
-    public Task<UserAccountResult> RegisterAsync(string firstName, string lastName, string email, string password, CancellationToken cancellationToken = default) =>
-        SendAsync(HttpMethod.Post, "register", new { firstName, lastName, email, password }, cancellationToken);
+    public Task<UserAccountResult> RegisterAsync(string firstName, string lastName, string username, string email, string password, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, "register", new
+        {
+            firstName,
+            lastName,
+            username,
+            email,
+            password,
+            termsAccepted = true,
+            termsVersion = AccountTerms.CurrentVersion
+        }, cancellationToken);
 
     public Task<UserAccountResult> LoginAsync(string email, string password, CancellationToken cancellationToken = default) =>
         SendAsync(HttpMethod.Post, "login", new { email, password }, cancellationToken);
@@ -77,7 +101,7 @@ public sealed class CloudflareUserAccountService : IUserAccountService, IDisposa
             var payload = await response.Content.ReadFromJsonAsync<AccountResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode || payload?.Profile is null)
                 return new UserAccountResult(null, ErrorFor(response.StatusCode, payload?.Error));
-            CurrentProfile = new UserProfile(payload.Profile.FirstName, payload.Profile.LastName, payload.Profile.Email);
+            CurrentProfile = new UserProfile(payload.Profile.FirstName, payload.Profile.LastName, payload.Profile.Username, payload.Profile.Email);
             if (!string.IsNullOrWhiteSpace(payload.Token))
             {
                 token = payload.Token;
@@ -94,6 +118,7 @@ public sealed class CloudflareUserAccountService : IUserAccountService, IDisposa
     private static string ErrorFor(HttpStatusCode status, string? error) => error switch
     {
         "email-in-use" => "Este e-mail já possui uma conta. Faça login para continuar.",
+        "username-in-use" => "Este nome de usuário já está em uso. Escolha outro.",
         "invalid-credentials" => "E-mail ou senha incorretos.",
         "too-many-attempts" => "Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.",
         "invalid-request" => "Confira os dados informados e tente novamente.",
@@ -121,7 +146,8 @@ public sealed class CloudflareUserAccountService : IUserAccountService, IDisposa
 
     private Task ClearTokenAsync()
     {
-        try { if (File.Exists(sessionPath)) File.Delete(sessionPath); } catch (IOException) { }
+        try { if (File.Exists(sessionPath)) File.Delete(sessionPath); }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
         token = null;
         return Task.CompletedTask;
     }
@@ -129,5 +155,5 @@ public sealed class CloudflareUserAccountService : IUserAccountService, IDisposa
     public void Dispose() => client.Dispose();
 
     private sealed record AccountResponse(string? Token, AccountProfile? Profile, string? Error);
-    private sealed record AccountProfile(string FirstName, string LastName, string Email);
+    private sealed record AccountProfile(string FirstName, string LastName, string Username, string Email);
 }

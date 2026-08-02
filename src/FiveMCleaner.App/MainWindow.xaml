@@ -131,7 +131,7 @@
                     </StackPanel>
                 </ui:TitleBar.Header>
             </ui:TitleBar>
-            <Button x:Name="AccountButton" Grid.Row="0" HorizontalAlignment="Right" Margin="0,0,164,0" Padding="6,0" Height="36" VerticalAlignment="Center" Click="Account_Click" ToolTip="Entrar ou criar conta" Background="Transparent" BorderThickness="0">
+            <Button x:Name="AccountButton" Grid.Row="0" HorizontalAlignment="Right" Margin="0,0,164,0" Padding="6,0" Height="36" VerticalAlignment="Center" Click="Account_Click" ToolTip="Entrar ou criar conta" AutomationProperties.Name="Entrar ou cadastrar-se" Background="Transparent" BorderThickness="0">
                 <Button.Style>
                     <Style TargetType="Button">
                         <Setter Property="Background" Value="Transparent" />

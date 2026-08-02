@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { hashPassword, verifyPassword, generateSessionId, hashIp } from '../../src/auth/crypto.js';
+import { hashPassword, verifyPassword, generateSessionId, hashIp, hashSessionId } from '../../src/auth/crypto.js';
 
 test('hashPassword produces a self-contained pbkdf2 string with the requested iterations', async () => {
   const hash = await hashPassword('correct horse battery staple', 1000);
@@ -49,6 +49,15 @@ test('generateSessionId returns a sufficiently long, URL-safe, unique value', ()
   assert.notEqual(first, second);
   assert.ok(first.length >= 32);
   assert.match(first, /^[A-Za-z0-9_-]+$/);
+});
+
+test('hashSessionId is deterministic and does not retain the bearer token', async () => {
+  const token = generateSessionId();
+  const first = await hashSessionId(token);
+
+  assert.equal(first, await hashSessionId(token));
+  assert.notEqual(first, token);
+  assert.match(first, /^[A-Za-z0-9_-]{43}$/);
 });
 
 test('hashIp is deterministic for the same IP and secret', async () => {
