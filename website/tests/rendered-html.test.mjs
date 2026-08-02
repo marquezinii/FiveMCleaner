@@ -81,10 +81,10 @@ test("removes starter artifacts and keeps the Sites build cross-platform", async
 });
 
 test("keeps the public download page aligned with the latest published release", async () => {
-  const [page, styles, polish, props] = await Promise.all([
+  const [page, styles, script, props] = await Promise.all([
     readFile(new URL("../public-site/index.html", import.meta.url), "utf8"),
     readFile(new URL("../public-site/styles.css", import.meta.url), "utf8"),
-    readFile(new URL("../public-site/site-polish.css", import.meta.url), "utf8"),
+    readFile(new URL("../public-site/site.js", import.meta.url), "utf8"),
     readFile(new URL("../../Directory.Build.props", import.meta.url), "utf8"),
   ]);
   const version = props.match(/<Version>(\d+\.\d+\.\d+)<\/Version>/)?.[1];
@@ -94,18 +94,22 @@ test("keeps the public download page aligned with the latest published release",
   assert.match(page, /id="atualizacoes"/i);
   assert.match(page, /ÚLTIMA VERSÃO PÚBLICA/i);
   assert.match(page, /class="windows-icon"/i);
-  assert.match(page, /class="github-icon"/i);
   assert.match(page, /class="windows-icon" viewBox="0 0 88 88"/i);
-  assert.match(page, /class="github-icon" viewBox="0 0 24 24"/i);
-  assert.match(page, /href="site-polish\.css"/i);
+  assert.match(page, /src="site\.js" defer/i);
+  assert.match(page, /class="hero-stage reveal" data-tilt/i);
+  assert.match(page, /class="bento-grid"/i);
+  assert.match(page, /property="og:image"/i);
   assert.ok(
     page.indexOf('ATUALIZAÇÕES SEGURAS') < page.indexOf('id="atualizacoes"'),
     'A seção de atualizações deve vir imediatamente após os três pilares.'
   );
   assert.ok(page.includes(`<strong id="updates-version">${version}</strong>`));
   assert.match(page, /CHANGELOG\.md/i);
-  assert.match(styles, /\.updates-section\{/i);
-  assert.match(styles, /\.updates-card\{/i);
-  assert.match(polish, /\.windows-icon\s*\{[\s\S]*width:\s*22px/i);
-  assert.match(polish, /\.github-icon\s*\{[\s\S]*overflow:\s*visible/i);
+  assert.match(styles, /\.release-section\s*\{/i);
+  assert.match(styles, /\.release-card\s*\{/i);
+  assert.match(styles, /\.hero-stage\s*\{[\s\S]*perspective:\s*1200px/i);
+  assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/i);
+  assert.match(script, /IntersectionObserver/i);
+  assert.match(script, /pointermove/i);
+  assert.doesNotMatch(page, /site-polish\.css/i);
 });
