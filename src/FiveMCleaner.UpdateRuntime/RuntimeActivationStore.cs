@@ -28,34 +28,12 @@ public sealed class RuntimeActivationStore
 
     public string ReadActiveVersion()
     {
-        var active = JsonSerializer.Deserialize<ActiveRuntime>(ReadPointerTextWithTransientRetry())
+        var active = JsonSerializer.Deserialize<ActiveRuntime>(
+            TransientRetry.Read(() => File.ReadAllText(PointerPath)))
             ?? throw new InvalidDataException("Ponteiro de runtime inválido.");
         if (!Version.TryParse(active.Version, out _) || !Directory.Exists(Path.Combine(VersionsRoot, active.Version)))
             throw new InvalidDataException("Ponteiro aponta para versão indisponível.");
         return active.Version;
-    }
-
-    // active.json é lido a cada inicialização do launcher enquanto outro
-    // processo (uma instância em execução, ou este mesmo AtomicFile.ReplaceInto)
-    // pode estar no meio de uma escrita atômica; um antivírus também pode
-    // segurar o arquivo por poucos milissegundos. Sem essa tentativa curta, esse
-    // lock transitório derrubaria a abertura do app inteiro em vez de só
-    // esperar o processo concorrente terminar.
-    private string ReadPointerTextWithTransientRetry()
-    {
-        const int maxAttempts = 15;
-        for (var attempt = 1; ; attempt++)
-        {
-            try
-            {
-                return File.ReadAllText(PointerPath);
-            }
-            catch (Exception exception) when (attempt < maxAttempts
-                && exception is IOException or UnauthorizedAccessException)
-            {
-                Thread.Sleep(100);
-            }
-        }
     }
 
     private sealed record ActiveRuntime(string Version);

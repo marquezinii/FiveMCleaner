@@ -19,33 +19,12 @@ public sealed class VersionFloorStore
         try
         {
             var value = Encoding.UTF8.GetString(ProtectedData.Unprotect(
-                ReadBytesWithTransientRetry(), Entropy, DataProtectionScope.CurrentUser));
+                TransientRetry.Read(() => File.ReadAllBytes(path)), Entropy, DataProtectionScope.CurrentUser));
             return Version.TryParse(value, out _) ? value : throw new CryptographicException("Piso de versão inválido.");
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException)
         {
             throw new CryptographicException("O estado anti-downgrade não pôde ser validado.", exception);
-        }
-    }
-
-    // Mesmo retry curto do RuntimeActivationStore.ReadPointerTextWithTransientRetry:
-    // a escrita concorrente de Advance() ou um AV segurando o arquivo por
-    // poucos milissegundos não pode derrubar a abertura do app com um
-    // CryptographicException de lock transitório.
-    private byte[] ReadBytesWithTransientRetry()
-    {
-        const int maxAttempts = 15;
-        for (var attempt = 1; ; attempt++)
-        {
-            try
-            {
-                return File.ReadAllBytes(path);
-            }
-            catch (Exception exception) when (attempt < maxAttempts
-                && exception is IOException or UnauthorizedAccessException)
-            {
-                Thread.Sleep(100);
-            }
         }
     }
 
