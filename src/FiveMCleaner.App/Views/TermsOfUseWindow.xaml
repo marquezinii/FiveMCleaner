@@ -1,0 +1,77 @@
+<ui:FluentWindow x:Class="FiveMCleaner.App.Views.TermsOfUseWindow"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+    Title="Termos de Uso do FiveMCleaner"
+    Icon="/FiveMCleaner;component/Assets/FiveMCleaner.png"
+    Width="720"
+    Height="720"
+    MinWidth="600"
+    MinHeight="520"
+    WindowStartupLocation="CenterOwner"
+    ShowInTaskbar="False"
+    FontFamily="Segoe UI Variable Text, Segoe UI"
+    TextOptions.TextFormattingMode="Display"
+    TextOptions.TextRenderingMode="ClearType"
+    UseLayoutRounding="True"
+    SnapsToDevicePixels="True"
+    Background="{DynamicResource BackgroundBrush}">
+
+    <Grid Margin="30,24,30,22">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <StackPanel Margin="0,0,0,18">
+            <TextBlock Text="Termos de Uso" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="27" FontWeight="Bold" />
+            <TextBlock Text="{Binding VersionLabel}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5" />
+        </StackPanel>
+
+        <Border Grid.Row="1" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="12" Padding="4">
+            <FlowDocumentScrollViewer VerticalScrollBarVisibility="Auto" IsToolBarVisible="False" Zoom="100">
+                <FlowDocument PagePadding="24,20" FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="12" Foreground="{DynamicResource TextBrush}" LineHeight="18">
+                    <Paragraph Margin="0,0,0,14">Estes Termos de Uso regulam o acesso à conta e o uso do aplicativo FiveMCleaner. Ao criar uma conta, você confirma que leu, compreendeu e concordou com este documento.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">1. Serviço e responsável</Paragraph>
+                    <Paragraph Margin="0,0,0,14">O FiveMCleaner é um aplicativo independente para diagnóstico, manutenção e otimizações controladas relacionadas ao FiveM, GTA V e Windows. O projeto é mantido por Felipe Marquezini, titular indicado na licença do software. FiveM, Cfx.re, Rockstar Games e Microsoft são marcas de seus respectivos titulares e não patrocinam este projeto.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">2. Elegibilidade e informações corretas</Paragraph>
+                    <Paragraph Margin="0,0,0,14">Você deve possuir capacidade legal para aceitar estes termos ou autorização de seu responsável. Nome, sobrenome, nome de usuário e e-mail devem ser verdadeiros, atuais e não podem se passar por terceiros, violar direitos, conter conteúdo ilegal ou induzir outros usuários a erro.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">3. Conta, senha e segurança</Paragraph>
+                    <Paragraph Margin="0,0,0,14">Você é responsável por manter sua senha confidencial e por atividades realizadas em sua conta. Não compartilhe credenciais nem tente acessar contas de terceiros. Informe pelos canais oficiais do repositório qualquer suspeita de acesso indevido. Podemos encerrar sessões ou restringir contas para proteger o serviço, investigar abuso ou cumprir obrigação legal.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">4. Dados da conta e privacidade</Paragraph>
+                    <Paragraph Margin="0,0,0,8">Para criar e manter sua conta, tratamos nome, sobrenome, nome de usuário, e-mail, hash criptográfico da senha, identificadores de sessão e a data/versão do aceite destes termos. A senha em texto puro não é armazenada. Esses dados são usados para autenticação, segurança, prevenção de abuso, suporte à conta e comprovação do consentimento.</Paragraph>
+                    <Paragraph Margin="0,0,0,8">A infraestrutura de conta utiliza Cloudflare Worker e banco D1. O processamento pode ocorrer em infraestrutura distribuída, inclusive fora do Brasil, com as proteções aplicáveis do fornecedor e da legislação. Dados de conta não são vendidos.</Paragraph>
+                    <Paragraph Margin="0,0,0,14">Telemetria opcional, diagnósticos e relatos de bug seguem controles separados no aplicativo e não são autorizados apenas pela criação da conta. Para solicitar acesso, correção ou exclusão dos dados da conta, use os canais oficiais do repositório FiveMCleaner.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">5. Uso permitido</Paragraph>
+                    <Paragraph Margin="0,0,0,14">Use o serviço apenas para fins lícitos e de acordo com a licença do FiveMCleaner. É proibido explorar vulnerabilidades, automatizar cadastros abusivos, interferir no serviço, contornar limites de segurança, distribuir malware, violar direitos de terceiros ou usar a conta para fraude. A conta não concede direitos sobre a marca, o código ou os serviços de terceiros.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">6. Operações no computador</Paragraph>
+                    <Paragraph Margin="0,0,0,14">O aplicativo explica e apresenta as ações antes da execução, aplica limites de segurança e oferece reversão quando tecnicamente possível. Ainda assim, alterações de sistema podem depender do estado do Windows, permissões, antivírus, drivers e softwares de terceiros. Revise o plano apresentado, mantenha backups adequados e não interrompa operações em andamento.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">7. Disponibilidade e atualizações</Paragraph>
+                    <Paragraph Margin="0,0,0,14">O serviço pode ser atualizado, suspenso ou alterado para manutenção, segurança, compatibilidade ou evolução do produto. Não garantimos disponibilidade ininterrupta nem compatibilidade com toda configuração de hardware, versão do Windows, FiveM, GTA V ou software de terceiros.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">8. Garantias e responsabilidade</Paragraph>
+                    <Paragraph Margin="0,0,0,14">O FiveMCleaner é fornecido no estado em que se encontra, nos limites permitidos pela legislação aplicável e pela licença do projeto. Nada nestes termos exclui direitos que não possam ser afastados por lei. O usuário continua responsável por decisões tomadas após revisar as informações apresentadas pelo aplicativo.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">9. Suspensão e encerramento</Paragraph>
+                    <Paragraph Margin="0,0,0,14">Podemos suspender ou encerrar contas envolvidas em abuso, fraude, risco à segurança ou violação destes termos, respeitando a legislação aplicável. Você pode deixar de usar o serviço e solicitar a exclusão de sua conta pelos canais oficiais. Obrigações que, por sua natureza, devam sobreviver continuarão aplicáveis.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">10. Alterações destes termos</Paragraph>
+                    <Paragraph Margin="0,0,0,14">Mudanças materiais serão identificadas por uma nova versão. Quando necessário, solicitaremos novo aceite antes de continuar usando recursos de conta. A versão aceita e a data do aceite ficam registradas para manter esse processo verificável.</Paragraph>
+
+                    <Paragraph FontSize="16" FontWeight="SemiBold" Margin="0,8,0,6">11. Lei aplicável e contato</Paragraph>
+                    <Paragraph Margin="0,0,0,0">Aplicam-se as leis da República Federativa do Brasil, inclusive as normas de proteção de dados e do consumidor quando cabíveis. Dúvidas, solicitações sobre a conta ou comunicações legais devem ser encaminhadas pelos canais oficiais do repositório FiveMCleaner.</Paragraph>
+                </FlowDocument>
+            </FlowDocumentScrollViewer>
+        </Border>
+
+        <Button Grid.Row="2" Content="Fechar" Style="{StaticResource PrimaryButtonStyle}" Height="42" Padding="28,0" Margin="0,18,0,0" HorizontalAlignment="Right" IsDefault="True" IsCancel="True" />
+    </Grid>
+</ui:FluentWindow>
