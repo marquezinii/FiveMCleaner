@@ -5,7 +5,7 @@
         Title="{Binding [PrivacyConsent.WindowTitle], Source={StaticResource LocalizedStrings}}"
         Icon="/FiveMCleaner;component/Assets/FiveMCleaner.png"
         Width="540"
-        Height="680"
+        Height="650"
         MinWidth="460"
         MinHeight="480"
         WindowStartupLocation="CenterOwner"
@@ -55,23 +55,19 @@
                                TextWrapping="Wrap" />
 
                     <ui:Card Padding="14" Margin="0,0,0,11">
+                        <StackPanel>
+                            <TextBlock Text="{Binding [PrivacyConsent.Essential.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
+                            <TextBlock Text="{Binding [PrivacyConsent.Essential.Description], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                        </StackPanel>
+                    </ui:Card>
+
+                    <ui:Card Padding="14" Margin="0,0,0,18">
                         <CheckBox x:Name="TelemetryCheckBox"
                                   Style="{StaticResource ToggleSwitchStyle}"
                                   AutomationProperties.Name="{Binding [PrivacyConsent.Telemetry.Title], Source={StaticResource LocalizedStrings}}">
                             <StackPanel>
                                 <TextBlock Text="{Binding [PrivacyConsent.Telemetry.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
                                 <TextBlock Text="{Binding [PrivacyConsent.Telemetry.Description], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                            </StackPanel>
-                        </CheckBox>
-                    </ui:Card>
-
-                    <ui:Card Padding="14" Margin="0,0,0,18">
-                        <CheckBox x:Name="CrashReportsCheckBox"
-                                  Style="{StaticResource ToggleSwitchStyle}"
-                                  AutomationProperties.Name="{Binding [PrivacyConsent.CrashReports.Title], Source={StaticResource LocalizedStrings}}">
-                            <StackPanel>
-                                <TextBlock Text="{Binding [PrivacyConsent.CrashReports.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
-                                <TextBlock Text="{Binding [PrivacyConsent.CrashReports.Description], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
                             </StackPanel>
                         </CheckBox>
                     </ui:Card>

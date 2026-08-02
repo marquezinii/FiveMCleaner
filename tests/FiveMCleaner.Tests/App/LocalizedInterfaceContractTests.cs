@@ -278,8 +278,7 @@ public sealed partial class LocalizedInterfaceContractTests
             {
                 "{Binding MinimizeToTrayOnClose}",
                 "{Binding LaunchAtStartup}",
-                "{Binding ShareAnonymousTelemetry}",
-                "{Binding ShareCrashReports}"
+                "{Binding ShareAnonymousTelemetry}"
             },
             checkBoxBindings);
 

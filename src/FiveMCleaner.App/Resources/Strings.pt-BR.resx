@@ -274,8 +274,10 @@
   <data name="PrivacyConsent.Intro.FirstInstallation" xml:space="preserve"><value>Esses dados ajudam a identificar bugs e melhorar o FiveMCleaner. Você pode ajustar cada opção abaixo antes de continuar.</value></data>
   <data name="PrivacyConsent.Intro.Upgrade" xml:space="preserve"><value>Sua instalação já enviava telemetria de uso. Agora você também pode escolher enviar relatórios automáticos de falhas. Revise as duas opções antes de continuar.</value></data>
   <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>Mudamos o que é coletado ou para onde os dados vão. Revise as opções abaixo e confirme novamente antes de continuar.</value></data>
-  <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Enviar dados técnicos de uso</value></data>
-  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Duração e resultado das otimizações, versão do aplicativo e categorias de erro fechadas.</value></data>
+  <data name="PrivacyConsent.Essential.Title" xml:space="preserve"><value>Diagnósticos essenciais</value></data>
+  <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>Coletamos o mínimo necessário para atualizações, segurança, estabilidade e diagnóstico: versão do app e Windows, arquitetura, falhas/crashes, eventos do atualizador e resultado técnico das otimizações. Não pode ser desativado.</value></data>
+  <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Ajudar a melhorar o FiveMCleaner</value></data>
+  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Compartilha dados anônimos opcionais sobre hardware, perfil e recursos usados para melhorar o aplicativo. Você pode desativar quando quiser.</value></data>
   <data name="PrivacyConsent.CrashReports.Title" xml:space="preserve"><value>Enviar relatórios automáticos de erros e falhas</value></data>
   <data name="PrivacyConsent.CrashReports.Description" xml:space="preserve"><value>Stack traces sanitizados e versão do aplicativo quando o FiveMCleaner travar ou encontrar um erro inesperado.</value></data>
   <data name="PrivacyConsent.Continue" xml:space="preserve"><value>Continuar</value></data>

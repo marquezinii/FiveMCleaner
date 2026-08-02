@@ -1,19 +1,24 @@
-# Telemetria opcional e privacidade
+# Diagnósticos essenciais, dados opcionais e privacidade
 
 Para contrato, troubleshooting e checklist de release da infraestrutura, veja
 [Operação da telemetria em produção](telemetry-operations.md).
 
 ## Consentimento
 
-A opção **Ajude a melhorar o FiveMCleaner** fica em **Configurações** e vem
-habilitada por padrão em instalações novas. O usuário pode desligá-la a
-qualquer momento; eventos futuros deixam de ser enviados imediatamente assim
-que o toggle é desativado. Configurações existentes, salvas por uma versão
-anterior do app com o toggle explicitamente desligado, são preservadas
-normalmente — a mudança de padrão vale apenas quando o arquivo de
-configuração ainda não define esse valor (instalação nova).
+Quando uma versão altera a política, a tela de transparência volta a aparecer
+e só pode ser fechada por **Continuar**. Sem mudança na política, a escolha
+salva não é perguntada de novo.
 
-## Dados enviados quando autorizados
+**Diagnósticos essenciais** permanecem ativos: versão do app e do Windows,
+arquitetura, crashes, eventos do atualizador e resultado técnico das
+otimizações. Não incluem HWID, MAC, serial, nome do PC, usuário do Windows ou
+caminhos locais.
+
+A opção **Ajudar a melhorar o FiveMCleaner** fica em **Configurações**, vem
+habilitada por padrão em instalações novas e pode ser desligada a qualquer
+momento. Ela controla apenas hardware, perfil e recursos usados.
+
+## Dados opcionais enviados quando autorizados
 
 Ao término, falha ou cancelamento de uma otimização, o aplicativo monta um
 evento técnico com estes campos (versão 2 do consentimento de privacidade —
@@ -74,15 +79,8 @@ separado e opt-in; suas regras estão em [Relatos de bug e privacidade](bug-repo
 
 ## Relatório de falhas (Sentry)
 
-Consentimento separado do da telemetria de uso acima:
-**Ajuda-nos com relatórios automáticos de falhas** também vem habilitado por
-padrão em instalações novas (mesmo raciocínio: o produto está em fase
-inicial e falhas reais são difíceis de reproduzir sem esses dados), mas
-**nada é enviado antes da tela de consentimento** ser confirmada
-explicitamente pelo usuário, mesmo com o padrão ativado — ver a seção
-"Consentimento" acima e `PrivacyConsentEvaluator`. Instalações antigas que já
-tinham telemetria configurada, mas nunca viram essa tela, também não têm
-nada enviado até confirmarem.
+Relatórios de crash fazem parte dos diagnósticos essenciais e seguem a mesma
+sanitização e minimização descritas nesta página.
 
 ### Dados enviados quando autorizado
 

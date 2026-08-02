@@ -83,7 +83,7 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
                 Guid.NewGuid().ToString("N"), stage, "failed", code,
                 previous, update.Version.CoreVersion, "Production"),
             exception.ToString(),
-            UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
+            telemetryAuthorized: true);
 
     private static string Classify(Exception exception) => exception switch
     {

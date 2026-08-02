@@ -274,8 +274,10 @@
   <data name="PrivacyConsent.Intro.FirstInstallation" xml:space="preserve"><value>This data helps us find bugs and improve FiveMCleaner. You can adjust each option below before continuing.</value></data>
   <data name="PrivacyConsent.Intro.Upgrade" xml:space="preserve"><value>Your installation was already sending usage telemetry. You can now also choose to send automatic crash reports. Review both options before continuing.</value></data>
   <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>We changed what is collected or where the data goes. Review the options below and confirm again before continuing.</value></data>
-  <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Send technical usage data</value></data>
-  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Optimization duration and outcome, app version, and closed error categories.</value></data>
+  <data name="PrivacyConsent.Essential.Title" xml:space="preserve"><value>Essential diagnostics</value></data>
+  <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>We collect the minimum needed for updates, security, stability and troubleshooting: app and Windows version, architecture, crashes, updater events and technical optimization outcomes. This cannot be turned off.</value></data>
+  <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Help improve FiveMCleaner</value></data>
+  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Shares optional anonymous hardware, profile and feature-use data to improve the app. You can turn this off at any time.</value></data>
   <data name="PrivacyConsent.CrashReports.Title" xml:space="preserve"><value>Send automatic error and crash reports</value></data>
   <data name="PrivacyConsent.CrashReports.Description" xml:space="preserve"><value>Sanitized stack traces and app version when FiveMCleaner crashes or hits an unexpected error.</value></data>
   <data name="PrivacyConsent.Continue" xml:space="preserve"><value>Continue</value></data>

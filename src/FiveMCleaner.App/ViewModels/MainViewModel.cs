@@ -482,7 +482,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             if (SetProperty(ref shareAnonymousTelemetry, value))
             {
-                telemetry.SetEnabled(value);
+                telemetry.SetEnabled(true);
                 SettingsChanged(refreshPlan: false);
             }
         }
@@ -1603,8 +1603,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         minimizeToTrayOnClose = settings.MinimizeToTrayOnClose;
         checkForUpdates = settings.CheckForUpdates;
         shareAnonymousTelemetry = settings.ShareAnonymousTelemetry;
-        telemetry.SetEnabled(shareAnonymousTelemetry);
-        shareCrashReports = settings.ShareCrashReports;
+        telemetry.SetEnabled(true);
+        shareCrashReports = true;
         privacyConsentVersion = settings.PrivacyConsentVersion;
         try
         {
@@ -1764,7 +1764,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
     /// (<see cref="IAppOptimizationService.SaveSettingsAsync"/>) — no second
     /// storage mechanism is introduced.
     /// </summary>
-    public async Task ConfirmPrivacyConsentAsync(bool acceptAnonymousTelemetry, bool acceptCrashReports)
+    public async Task ConfirmPrivacyConsentAsync(bool acceptAnonymousTelemetry, bool acceptCrashReports = true)
     {
         var snapshot = PrivacyConsentOutcomeBuilder.BuildConfirmed(
             BuildSettingsSnapshot(),
@@ -1772,8 +1772,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
             acceptCrashReports);
 
         shareAnonymousTelemetry = snapshot.ShareAnonymousTelemetry;
-        telemetry.SetEnabled(shareAnonymousTelemetry);
-        shareCrashReports = snapshot.ShareCrashReports;
+        telemetry.SetEnabled(true);
+        shareCrashReports = true;
         privacyConsentVersion = snapshot.PrivacyConsentVersion;
         OnPropertyChanged(nameof(ShareAnonymousTelemetry));
         OnPropertyChanged(nameof(ShareCrashReports));
@@ -1800,11 +1800,11 @@ public sealed class MainViewModel : BindableBase, IDisposable
             errorCategory,
             OsVersion: diagnostic?.OsLabel,
             SystemArchitecture: diagnostic?.SystemArchitecture,
-            CpuModel: diagnostic?.CpuName,
-            GpuModel: diagnostic?.GpuName,
-            RamBucketGiB: diagnostic is null ? null : RamBucketCalculator.ComputeBucketGiB(diagnostic.TotalMemoryGiB),
-            Profile: selectedProfile.ToString(),
-            ActionIds: currentPlan?.Actions.Select(action => action.Metadata.Id).ToArray());
+            CpuModel: ShareAnonymousTelemetry ? diagnostic?.CpuName : null,
+            GpuModel: ShareAnonymousTelemetry ? diagnostic?.GpuName : null,
+            RamBucketGiB: ShareAnonymousTelemetry && diagnostic is not null ? RamBucketCalculator.ComputeBucketGiB(diagnostic.TotalMemoryGiB) : null,
+            Profile: ShareAnonymousTelemetry ? selectedProfile.ToString() : null,
+            ActionIds: ShareAnonymousTelemetry ? currentPlan?.Actions.Select(action => action.Metadata.Id).ToArray() : null);
         _ = TrackOptimizationTelemetryAsync(telemetryEvent);
     }
 
