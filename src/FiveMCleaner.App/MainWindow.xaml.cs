@@ -27,6 +27,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly bool demoMode;
     private readonly RemoteServicesOptions remoteServicesOptions;
     private readonly QueuedCloudflareTelemetryService? queuedCloudflareTelemetry;
+    private readonly IUserAccountService? accountService;
     private HwndSource? windowSource;
     private bool allowClose;
     private bool closeAfterOptimizationStops;
@@ -80,6 +81,10 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                     "Updater"));
         var runtimeEnvironment = AppEnvironment.Resolve();
         remoteServicesOptions = RemoteServicesOptionsLoader.Load(runtimeEnvironment, AppContext.BaseDirectory);
+        if (!demoMode && AccountEndpointPolicy.TryCreate(remoteServicesOptions.AccountEndpoint, runtimeEnvironment, out var accountEndpoint))
+        {
+            accountService = new CloudflareUserAccountService(accountEndpoint);
+        }
         // Cloudflare is the sole telemetry transport (FormSubmit was
         // removed entirely). If the configured endpoint is ever missing or
         // malformed, telemetry safely does nothing rather than crash or
@@ -149,6 +154,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
 
         await viewModel.InitializeAsync();
+        if (accountService is not null)
+        {
+            await accountService.RestoreSessionAsync();
+            UpdateAccountButton();
+        }
         themeManager.Apply(viewModel.ThemePreference);
         // A sincronização programática do seletor não pode acionar o
         // SelectionChanged: ele converteria uma preferência "Automatic" em
@@ -181,6 +191,31 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             HideToTray();
         }
         await CaptureIfRequestedAsync();
+    }
+
+    private async void Account_Click(object sender, RoutedEventArgs e)
+    {
+        if (accountService is null)
+        {
+            System.Windows.MessageBox.Show("O acesso à conta não está disponível nesta instalação.", "Conta", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+        if (accountService.CurrentProfile is not null)
+        {
+            await accountService.LogoutAsync();
+            UpdateAccountButton();
+            return;
+        }
+        var dialog = new AccountWindow(accountService) { Owner = this };
+        if (dialog.ShowDialog() == true) UpdateAccountButton();
+    }
+
+    private void UpdateAccountButton()
+    {
+        var profile = accountService?.CurrentProfile;
+        AccountInitials.Text = profile?.Initials ?? "?";
+        AccountLabel.Text = profile?.DisplayName ?? "Entrar";
+        AccountButton.ToolTip = profile is null ? "Entrar ou criar conta" : "Clique para sair da conta";
     }
 
     private static void ConfirmUpdateHealthIfRequested()
@@ -762,6 +797,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         viewModel.Dispose();
         windowSource?.RemoveHook(WindowMessageHook);
         System.Windows.Application.Current.SessionEnding -= Application_SessionEnding;
+        (accountService as IDisposable)?.Dispose();
         viewModel.UpdateAvailableDetected -= ViewModel_UpdateAvailableDetected;
         themeManager.Dispose();
         trayIcon.Dispose();

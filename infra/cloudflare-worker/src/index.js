@@ -8,6 +8,7 @@ import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
 import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from './cors.js';
 import { readBoundedJson } from './requestSecurity.js';
+import { createUserAccountProvider } from './auth/userAccountProvider.js';
 import { parseReleaseManifest } from './releaseManifest.js';
 
 const MAX_TELEMETRY_BODY_BYTES = 512 * 1024;
@@ -79,6 +80,11 @@ export default {
 };
 
 async function route(request, env, url) {
+  const accounts = createUserAccountProvider(env);
+  if (request.method === 'POST' && url.pathname === '/account/register') return accounts.register(request);
+  if (request.method === 'POST' && url.pathname === '/account/login') return accounts.login(request);
+  if (request.method === 'GET' && url.pathname === '/account/session') return accounts.session(request);
+  if (request.method === 'POST' && url.pathname === '/account/logout') return accounts.logout(request);
   if (request.method === 'POST' && url.pathname === '/telemetry') {
     return handleTelemetryIngest(request, env);
   }

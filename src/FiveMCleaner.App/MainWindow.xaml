@@ -131,6 +131,12 @@
                     </StackPanel>
                 </ui:TitleBar.Header>
             </ui:TitleBar>
+            <Button x:Name="AccountButton" Grid.Row="0" HorizontalAlignment="Right" Margin="0,0,164,0" Padding="12,0" Height="36" VerticalAlignment="Center" Click="Account_Click" ToolTip="Entrar ou criar conta">
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="25" Height="25" CornerRadius="13" Background="{DynamicResource OrangeBrush}" Margin="0,0,7,0"><TextBlock x:Name="AccountInitials" Text="?" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="White" /></Border>
+                    <TextBlock x:Name="AccountLabel" Text="Entrar" VerticalAlignment="Center" />
+                </StackPanel>
+            </Button>
 
             <ui:NavigationView x:Name="RootNavigationView"
                                 Grid.Row="1"
