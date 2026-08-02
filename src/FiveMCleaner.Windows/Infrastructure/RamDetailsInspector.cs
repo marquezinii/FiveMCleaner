@@ -1,4 +1,5 @@
 using System.Management;
+using System.Threading;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
@@ -21,10 +22,41 @@ public interface IRamDetailsInspector
 /// slot locator text. Used to build honest heuristics for single-channel and
 /// XMP/EXPO status — neither is directly exposed by Windows without vendor
 /// tooling, so both are presented as inferences, not facts.
+/// 
+/// Caches results for 30 seconds to avoid repeated WMI queries during a single session.
 /// </summary>
 public sealed class WindowsRamDetailsInspector : IRamDetailsInspector
 {
+    private static readonly object CacheLock = new();
+    private static RamDetailsSnapshot? cachedSnapshot;
+    private static DateTimeOffset? cachedAt;
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(30);
+
     public RamDetailsSnapshot GetSnapshot()
+    {
+        // Check cache first
+        lock (CacheLock)
+        {
+            if (cachedSnapshot is not null && cachedAt is not null &&
+                DateTimeOffset.UtcNow - cachedAt.Value < CacheTtl)
+            {
+                return cachedSnapshot;
+            }
+        }
+
+        var snapshot = GetSnapshotInternal();
+
+        // Update cache
+        lock (CacheLock)
+        {
+            cachedSnapshot = snapshot;
+            cachedAt = DateTimeOffset.UtcNow;
+        }
+
+        return snapshot;
+    }
+
+    private static RamDetailsSnapshot GetSnapshotInternal()
     {
         var modules = new List<RamModuleInfo>();
         try

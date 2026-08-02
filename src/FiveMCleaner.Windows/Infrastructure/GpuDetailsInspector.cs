@@ -1,4 +1,5 @@
 using Microsoft.Win32;
+using System.Threading;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
@@ -26,6 +27,8 @@ public interface IGpuDetailsInspector
 /// HardwareInformation.qwMemorySize value most drivers publish; the
 /// integrated/discrete split is a name-based heuristic, not a hardware
 /// query, and is presented as a guess rather than a fact.
+/// 
+/// Caches results for 30 seconds to avoid repeated registry queries during a single session.
 /// </summary>
 public sealed class WindowsGpuDetailsInspector : IGpuDetailsInspector
 {
@@ -39,7 +42,36 @@ public sealed class WindowsGpuDetailsInspector : IGpuDetailsInspector
         "Radeon(TM) Vega"
     ];
 
+    private static readonly object CacheLock = new();
+    private static IReadOnlyList<GpuAdapterDetails>? cachedSnapshot;
+    private static DateTimeOffset? cachedAt;
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(30);
+
     public IReadOnlyList<GpuAdapterDetails> GetSnapshot()
+    {
+        // Check cache first
+        lock (CacheLock)
+        {
+            if (cachedSnapshot is not null && cachedAt is not null &&
+                DateTimeOffset.UtcNow - cachedAt.Value < CacheTtl)
+            {
+                return cachedSnapshot;
+            }
+        }
+
+        var snapshot = GetSnapshotInternal();
+
+        // Update cache
+        lock (CacheLock)
+        {
+            cachedSnapshot = snapshot;
+            cachedAt = DateTimeOffset.UtcNow;
+        }
+
+        return snapshot;
+    }
+
+    private static IReadOnlyList<GpuAdapterDetails> GetSnapshotInternal()
     {
         var results = new List<GpuAdapterDetails>();
         try

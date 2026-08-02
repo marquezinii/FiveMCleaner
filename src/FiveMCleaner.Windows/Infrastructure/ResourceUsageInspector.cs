@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
@@ -15,35 +16,37 @@ public interface IResourceUsageInspector
 }
 
 /// <summary>
-/// Takes a short (roughly 300ms) two-sample reading of CPU and physical disk
-/// utilization via the standard PerformanceCounter API, plus a best-effort
-/// GPU utilization read from the "GPU Engine" counter category Windows has
-/// exposed natively since 10 1803 (no vendor SDK, no driver). Network is
-/// reported as raw throughput rather than a percentage, since adapter link
-/// speed is not reliably available to compute a meaningful utilization
-/// percentage on every adapter. A single snapshot is an instantaneous
-/// sample, not an average — presented that way, not as a trend.
+/// Takes a short (roughly 300ms) two-sample reading of CPU, physical disk,
+/// GPU utilization, and network throughput via the standard PerformanceCounter API.
+/// All readings are performed concurrently to minimize total sampling time (~300ms total
+/// instead of ~900ms sequential). Network is reported as raw throughput rather than
+/// a percentage, since adapter link speed is not reliably available to compute a
+/// meaningful utilization percentage on every adapter.
 /// </summary>
 public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
 {
     private static readonly TimeSpan SampleInterval = TimeSpan.FromMilliseconds(300);
 
     public ResourceUsageSnapshot GetSnapshot()
-    {
-        var cpu = TryReadCounter("Processor", "% Processor Time", "_Total");
-        var disk = TryReadCounter("PhysicalDisk", "% Disk Time", "_Total");
-        var gpu = TryReadGpuUsage();
-        var network = TryReadNetworkThroughputMBps();
-        return new ResourceUsageSnapshot(cpu, disk, gpu, network);
-    }
+        {
+            // Run all measurements concurrently to reduce total sampling time from ~900ms to ~300ms
+            var cpuTask = Task.Run(() => TryReadCounterAsync());
+            var diskTask = Task.Run(() => TryReadCounterAsync("PhysicalDisk", "% Disk Time", "_Total"));
+            var gpuTask = Task.Run(() => TryReadGpuUsageAsync());
+            var networkTask = Task.Run(() => TryReadNetworkThroughputMBpsAsync());
 
-    private static double? TryReadCounter(string category, string counter, string instance)
+            Task.WaitAll(cpuTask, diskTask, gpuTask, networkTask);
+
+            return new ResourceUsageSnapshot(cpuTask.Result, diskTask.Result, gpuTask.Result, networkTask.Result);
+        }
+
+    private static async Task<double?> TryReadCounterAsync(string category = "Processor", string counter = "% Processor Time", string instance = "_Total")
     {
         try
         {
             using var performanceCounter = new PerformanceCounter(category, counter, instance, true);
-            performanceCounter.NextValue();
-            Thread.Sleep(SampleInterval);
+            performanceCounter.NextValue(); // Prime the counter
+            await Task.Delay(SampleInterval).ConfigureAwait(false);
             return Math.Clamp(performanceCounter.NextValue(), 0, 100);
         }
         catch (Exception exception) when (exception is InvalidOperationException
@@ -54,7 +57,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
         }
     }
 
-    private static double? TryReadGpuUsage()
+    private static async Task<double?> TryReadGpuUsageAsync()
     {
         try
         {
@@ -80,10 +83,10 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
             {
                 foreach (var counter in counters)
                 {
-                    counter.NextValue();
+                    counter.NextValue(); // Prime
                 }
 
-                Thread.Sleep(SampleInterval);
+                await Task.Delay(SampleInterval).ConfigureAwait(false);
                 var total = counters.Sum(counter => counter.NextValue());
                 return Math.Clamp(total, 0, 100);
             }
@@ -103,7 +106,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
         }
     }
 
-    private static double TryReadNetworkThroughputMBps()
+    private static async Task<double> TryReadNetworkThroughputMBpsAsync()
     {
         try
         {
@@ -119,7 +122,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
             });
 
             var before = Sample();
-            Thread.Sleep(SampleInterval);
+            await Task.Delay(SampleInterval).ConfigureAwait(false);
             var after = Sample();
             var bytesPerSecond = (after - before) / SampleInterval.TotalSeconds;
             return Math.Max(0, bytesPerSecond / (1024d * 1024d));
