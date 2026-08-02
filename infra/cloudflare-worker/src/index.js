@@ -34,17 +34,14 @@ const STATS_BUILDERS = {
   'runs-per-day': queries.optimizationRunsPerDay,
   'os-versions': queries.osVersionBreakdown,
   'app-versions': queries.appVersionBreakdown,
-  'top-actions': queries.topActions,
   'average-time': queries.averageOptimizationTimeMs,
   'success-rate': queries.successRate,
   'errors-by-version': queries.errorsByVersion,
   'error-categories': queries.errorCategoryBreakdown,
-  'top-actions-in-failures': queries.topActionsInFailures,
   'recent-failures': queries.recentFailures,
   'top-cpu': queries.topCpuModels,
   'top-gpu': queries.topGpuModels,
   'ram-buckets': queries.ramBucketBreakdown,
-  profiles: queries.profileBreakdown,
 };
 
 // D1's batch() rejects calls with more than 500 statements. A single

@@ -75,21 +75,6 @@ export function appVersionBreakdown(filters) {
   };
 }
 
-/** Most-applied action IDs ("most used functions"), top N by count. */
-export function topActions(filters, topN = DEFAULT_TOP_N) {
-  const { whereSql, params } = buildFilters(filters);
-  return {
-    sql: `SELECT a.action_id, COUNT(*) AS uses
-          FROM telemetry_event_actions a
-          JOIN telemetry_events e ON e.id = a.telemetry_event_id
-          WHERE ${whereSql}
-          GROUP BY a.action_id
-          ORDER BY uses DESC
-          LIMIT ?`,
-    params: [...params, topN],
-  };
-}
-
 /** Average and count of completed-optimization execution time, in ms. */
 export function averageOptimizationTimeMs(filters) {
   const { whereSql, params } = buildFilters(filters);
@@ -186,26 +171,6 @@ export function errorCategoryBreakdown(filters) {
 }
 
 /**
- * Which applied action IDs show up most often specifically in *failed*
- * runs -- distinct from {@link topActions} (which counts every outcome) and
- * meant to point straight at "this action correlates with failures" without
- * having to cross-reference two charts by hand.
- */
-export function topActionsInFailures(filters, topN = DEFAULT_TOP_N) {
-  const { whereSql, params } = buildFilters(filters);
-  return {
-    sql: `SELECT a.action_id, COUNT(*) AS failures
-          FROM telemetry_event_actions a
-          JOIN telemetry_events e ON e.id = a.telemetry_event_id
-          WHERE ${whereSql} AND e.event_name = 'optimization-failed'
-          GROUP BY a.action_id
-          ORDER BY failures DESC
-          LIMIT ?`,
-    params: [...params, topN],
-  };
-}
-
-/**
  * A raw feed of the most recent failed runs (not aggregated) -- the
  * fastest way to see exactly what environment a fresh bug is showing up in
  * without waiting for it to accumulate enough volume to appear in the
@@ -221,18 +186,5 @@ export function recentFailures(filters, limit = 20) {
           ORDER BY received_at DESC
           LIMIT ?`,
     params: [...params, limit],
-  };
-}
-
-/** Distribution of chosen optimization profiles (Light/Balanced/Aggressive). */
-export function profileBreakdown(filters) {
-  const { whereSql, params } = buildFilters(filters);
-  return {
-    sql: `SELECT profile, COUNT(*) AS runs
-          FROM telemetry_events
-          WHERE ${whereSql} AND profile IS NOT NULL
-          GROUP BY profile
-          ORDER BY runs DESC`,
-    params,
   };
 }
