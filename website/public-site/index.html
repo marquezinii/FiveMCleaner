@@ -3,133 +3,200 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#111214" />
-    <meta
-      name="description"
-      content="FiveMCleaner: otimizacao transparente e reversivel para FiveM Legacy no Windows."
-    />
+    <meta name="theme-color" content="#0a0a0c" />
+    <meta name="color-scheme" content="dark" />
+    <meta name="description" content="Baixe o FiveMCleaner: otimização transparente e reversível para FiveM Legacy no Windows." />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="pt_BR" />
     <meta property="og:title" content="FiveMCleaner — Download oficial" />
-    <meta
-      property="og:description"
-      content="Prepare o Windows, FiveM e GTA V Legacy com um instalador completo e seguro."
-    />
+    <meta property="og:description" content="Prepare o Windows, FiveM e GTA V Legacy com diagnóstico local, mudanças claras e rollback." />
+    <meta property="og:image" content="https://marquezinii.github.io/FiveMCleaner/og.png" />
+    <meta property="og:image:alt" content="FiveMCleaner, download oficial para Windows" />
+    <meta name="twitter:card" content="summary_large_image" />
     <link rel="icon" href="icon.png" />
+    <link rel="preload" href="icon.png" as="image" />
+    <script>document.documentElement.classList.add("js")</script>
     <link rel="stylesheet" href="styles.css" />
-    <link rel="stylesheet" href="site-polish.css" />
+    <script src="site.js" defer></script>
     <title>FiveMCleaner — Download oficial</title>
   </head>
   <body>
     <a class="skip" href="#conteudo">Pular para o conteúdo</a>
+    <div class="scroll-progress" aria-hidden="true"><span></span></div>
+    <div class="ambient" aria-hidden="true">
+      <span class="ambient-glow ambient-glow-a"></span>
+      <span class="ambient-glow ambient-glow-b"></span>
+      <span class="ambient-grid"></span>
+    </div>
 
     <header class="topbar">
       <a class="brand" href="#inicio" aria-label="FiveMCleaner, início">
-        <img src="icon.png" alt="" width="42" height="42" />
-        <span>FiveM<span>Cleaner</span></span>
+        <span class="brand-icon"><img src="icon.png" alt="" width="42" height="42" /></span>
+        <span>FiveM<strong>Cleaner</strong></span>
       </a>
       <nav aria-label="Navegação principal">
-        <a href="#como-funciona">Como funciona</a>
-        <a href="#atualizacoes">Atualizações</a>
+        <a href="#como-funciona">Experiência</a>
+        <a href="#atualizacoes">Versão</a>
         <a href="#seguranca">Segurança</a>
         <a href="#requisitos">Requisitos</a>
       </nav>
-      <a class="top-download" href="https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe">Baixar</a>
+      <a class="top-download" href="https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe">
+        <span>Baixar agora</span><b aria-hidden="true">↓</b>
+      </a>
     </header>
 
     <main id="conteudo">
       <section id="inicio" class="hero section-shell">
-        <div class="hero-copy">
-          <p class="eyebrow"><i></i> CENTRAL OFICIAL DE DOWNLOAD</p>
-          <h1>Seu PC mais preparado.<br /><em>Seu FiveM mais fluido.</em></h1>
-          <p class="lede">
-            Diagnóstico local, decisões claras e otimizações reversíveis para
-            Windows, FiveM Legacy e GTA V Legacy.
-          </p>
+        <div class="hero-copy reveal">
+          <p class="eyebrow"><span></span> CENTRAL OFICIAL DE DOWNLOAD</p>
+          <h1>Menos ruído.<br /><em>Mais jogo.</em></h1>
+          <p class="lede">O FiveMCleaner entende seu computador, prepara Windows, FiveM Legacy e GTA V Legacy e mostra cada decisão — sem promessas falsas, scripts obscuros ou mudanças irreversíveis.</p>
           <div class="hero-actions">
-            <a class="download-button" href="https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe">
-              <svg class="windows-icon" viewBox="0 0 88 88" aria-hidden="true" focusable="false">
-                <path d="M0 12.4 35.7 7.6v34.4H0zM40.3 7 88 0v42H40.3zM0 46.8h35.7v34.5L0 76.4zM40.3 46.8H88V88l-47.7-6.7z"/>
-              </svg>
-              Baixar para Windows
+            <a class="download-button magnetic" href="https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe">
+              <svg class="windows-icon" viewBox="0 0 88 88" aria-hidden="true" focusable="false"><path d="M0 12.4 35.7 7.6v34.4H0zM40.3 7 88 0v42H40.3zM0 46.8h35.7v34.5L0 76.4zM40.3 46.8H88V88l-47.7-6.7z" /></svg>
+              <span><small>VERSÃO 1.2.0</small>Baixar para Windows</span>
+              <b aria-hidden="true">↓</b>
             </a>
-            <a class="code-button" href="https://github.com/marquezinii/FiveMCleaner" target="_blank" rel="noreferrer">
-              <svg class="github-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.87 10.91.58.11.79-.25.79-.56l-.02-2.22c-3.2.7-3.88-1.54-3.88-1.54-.52-1.33-1.28-1.69-1.28-1.69-1.04-.71.08-.7.08-.7 1.16.08 1.76 1.18 1.76 1.18 1.02 1.76 2.69 1.25 3.35.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.29 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.17 1.18.92-.26 1.91-.39 2.9-.39s1.98.13 2.9.39c2.2-1.49 3.17-1.18 3.17-1.18.62 1.59.23 2.76.11 3.05.73.8 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.08.78 2.18l-.02 3.23c0 .31.21.67.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
-              Ver no GitHub <span>↗</span>
-            </a>
+            <a class="code-button" href="https://github.com/marquezinii/FiveMCleaner" target="_blank" rel="noreferrer">Explorar código <span aria-hidden="true">↗</span></a>
           </div>
-          <p class="download-note">Download direto do instalador oficial · sem cadastro</p>
-          <ul class="trust-list" aria-label="Destaques do instalador">
-            <li>Runtime incluído</li><li>Windows 10 e 11</li><li>Rollback disponível</li>
-          </ul>
+          <div class="hero-trust" aria-label="Destaques do instalador">
+            <span><b>✓</b> Runtime incluído</span>
+            <span><b>✓</b> Windows 10 e 11</span>
+            <span><b>✓</b> Código aberto</span>
+          </div>
         </div>
 
-        <div class="product-preview" aria-label="Prévia ilustrativa do FiveMCleaner">
-          <div class="preview-top"><span class="preview-brand"><img src="icon.png" alt="" /> FiveM<span>Cleaner</span></span><b>● SISTEMA PRONTO</b></div>
-          <div class="preview-content">
-            <div>
-              <p class="preview-label">PRÉVIA DA INTERFACE</p>
-              <h2>Seu PC, o plano certo.</h2>
-              <p>Diagnóstico local concluído</p>
-              <div class="mini-cards"><span>CPU e GPU identificadas</span><span>FiveM Legacy detectado</span></div>
+        <div class="hero-stage reveal" data-tilt role="img" aria-label="Prévia ilustrativa tridimensional do FiveMCleaner">
+          <div class="orbit orbit-a" aria-hidden="true"></div>
+          <div class="orbit orbit-b" aria-hidden="true"></div>
+          <div class="float-chip chip-performance" aria-hidden="true"><i></i><span>Desempenho</span><strong>PRONTO</strong></div>
+          <div class="float-chip chip-local" aria-hidden="true"><b>◇</b><span>Diagnóstico</span><strong>LOCAL</strong></div>
+
+          <div class="app-window">
+            <div class="window-bar">
+              <span class="window-brand"><img src="icon.png" alt="" width="28" height="28" /> FiveM<strong>Cleaner</strong></span>
+              <span class="window-controls" aria-hidden="true"><i></i><i></i><i></i></span>
             </div>
-            <div class="readiness"><strong>82</strong><small>PRONTO PARA OTIMIZAR</small></div>
+            <div class="window-layout">
+              <aside aria-hidden="true">
+                <span class="sidebar-logo"></span>
+                <i class="active"></i><i></i><i></i><i></i>
+              </aside>
+              <div class="dashboard-preview">
+                <div class="preview-heading">
+                  <div><span>VISÃO GERAL</span><h2>Seu PC, o plano certo.</h2><p>Diagnóstico local concluído</p></div>
+                  <span class="status-pill"><i></i> SISTEMA PRONTO</span>
+                </div>
+                <div class="preview-grid">
+                  <article class="score-card">
+                    <div class="score-ring"><span><strong>82</strong><small>EXCELENTE</small></span></div>
+                    <div><small>PRONTIDÃO DO PC</small><h3>Preparado para otimizar</h3><p>Hardware e instalações identificados.</p></div>
+                  </article>
+                  <article class="profile-card"><small>PERFIL RECOMENDADO</small><strong>Médio</strong><span>Equilíbrio entre resposta e visual</span><b>RECOMENDADO</b></article>
+                </div>
+                <div class="preview-metrics">
+                  <span><i>CPU</i><b>Detectada</b></span><span><i>GPU</i><b>Identificada</b></span><span><i>FiveM</i><b>Pronto</b></span>
+                </div>
+                <div class="preview-progress"><span><i></i></span><small>Validando configurações atuais…</small><b>74%</b></div>
+              </div>
+            </div>
           </div>
-          <div class="profile-row"><span>Perfil selecionado</span><b>Médio</b><mark>RECOMENDADO</mark></div>
-          <div class="progress"><span></span></div>
-          <div class="preview-footer"><span>Validando configurações atuais…</span><span>Processamento local</span></div>
+          <div class="stage-floor" aria-hidden="true"></div>
         </div>
       </section>
 
-      <section class="signal-bar">
-        <div><strong>01</strong><span>INSTALADOR COMPLETO</span><small>Sem dependências manuais</small></div>
-        <div><strong>02</strong><span>CONTROLE DE VERDADE</span><small>Você revisa cada resultado</small></div>
-        <div><strong>03</strong><span>ATUALIZAÇÕES SEGURAS</span><small>Validação antes de instalar</small></div>
+      <section class="proof-strip section-shell reveal" aria-label="Resumo do produto">
+        <div><span>01</span><strong>Diagnóstico inteligente</strong><small>Entende antes de alterar</small></div>
+        <div><span>02</span><strong>Decisões transparentes</strong><small>Você acompanha cada etapa</small></div>
+        <div><span>03</span><strong>Rollback de verdade</strong><small>Snapshots antes das mudanças</small></div>
       </section>
 
-      <section id="atualizacoes" class="section-shell updates-section">
-        <div class="updates-heading">
-          <p class="eyebrow"><i></i> ÚLTIMA VERSÃO PÚBLICA</p>
-          <h2>Atualizações claras.<br /><em>Sem letras miúdas.</em></h2>
-          <p>Veja o que mudou na versão mais recente disponível para download.</p>
+      <section id="como-funciona" class="experience section-shell">
+        <div class="section-intro reveal">
+          <p class="eyebrow"><span></span> SIMPLES POR FORA. CUIDADOSO POR DENTRO.</p>
+          <h2>Uma experiência que<br /><em>explica a si mesma.</em></h2>
+          <p>Três perfis claros substituem dezenas de ajustes soltos. O app monta o plano, protege o estado atual e mostra o progresso ao vivo.</p>
         </div>
-        <article class="updates-card" aria-labelledby="updates-version">
-          <div class="updates-release">
-            <span>VERSÃO</span>
-            <strong id="updates-version">1.2.0</strong>
-            <time datetime="2026-08-01">01 AGO 2026</time>
-          </div>
-          <ul class="updates-list">
-            <li>Adicionado atualizador transacional com pacote assinado, ativação atômica e rollback automático se a nova versão não confirmar saúde.</li>
-            <li>Melhorada a interface Fluent, com navegação, progresso e estados de detecção mais claros.</li>
-            <li>Reforçados os contratos de telemetria, o instalador e a recuperação de falhas durante a atualização.</li>
+        <div class="bento-grid">
+          <article class="bento-card bento-large reveal">
+            <span class="card-index">01 / DIAGNÓSTICO</span>
+            <div class="radar" aria-hidden="true"><i></i><i></i><i></i><i></i><b></b></div>
+            <div><h3>Primeiro, ele entende a máquina.</h3><p>CPU, GPU, memória, armazenamento, Windows e instalações de jogo são analisados localmente para evitar ajustes genéricos.</p></div>
+          </article>
+          <article class="bento-card bento-profiles reveal">
+            <span class="card-index">02 / PERFIS</span>
+            <h3>Leve. Médio. Agressivo.</h3>
+            <p>Uma escolha compreensível, com impacto e proteção claros.</p>
+            <div class="profile-stack" aria-hidden="true"><span>Leve</span><span class="selected">Médio <b>RECOMENDADO</b></span><span>Agressivo</span></div>
+          </article>
+          <article class="bento-card bento-progress reveal">
+            <span class="card-index">03 / PROGRESSO</span>
+            <div class="progress-visual" aria-hidden="true"><span><i></i></span><b>74%</b></div>
+            <h3>Nenhuma caixa-preta.</h3><p>A ação atual, o tempo e o resultado aparecem em linguagem direta.</p>
+          </article>
+          <article class="bento-card bento-report reveal">
+            <span class="card-index">04 / RESULTADO</span>
+            <div class="report-lines" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+            <h3>Histórico e rollback.</h3><p>O resumo final separa o que mudou, o que já estava correto e o que pode ser restaurado.</p>
+          </article>
+        </div>
+      </section>
+
+      <section id="atualizacoes" class="release-section section-shell">
+        <div class="release-copy reveal">
+          <p class="eyebrow"><span></span> ÚLTIMA VERSÃO PÚBLICA</p>
+          <h2>Atualizado por dentro.<br /><em>Claro por fora.</em></h2>
+          <p>O instalador oficial abre a versão estável mais recente e já inclui tudo que o aplicativo precisa para funcionar.</p>
+          <a href="https://github.com/marquezinii/FiveMCleaner/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">Ver histórico completo <span aria-hidden="true">↗</span></a>
+        </div>
+        <article class="release-card reveal" aria-labelledby="updates-version">
+          <div class="release-top"><span>RELEASE ESTÁVEL</span><time datetime="2026-08-01">01 AGO 2026</time></div>
+          <div class="release-version"><small>VERSÃO</small><strong id="updates-version">1.2.0</strong><b>ATUAL</b></div>
+          <ul>
+            <li><span>01</span>Atualizador transacional com pacote assinado e rollback automático.</li>
+            <li><span>02</span>Interface Fluent mais clara, responsiva e orientada ao estado do PC.</li>
+            <li><span>03</span>Contratos de telemetria, instalador e recuperação reforçados.</li>
           </ul>
-          <a class="updates-link" href="https://github.com/marquezinii/FiveMCleaner/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer">Ver histórico completo <span>↗</span></a>
         </article>
       </section>
 
-      <section id="como-funciona" class="section-shell feature-section">
-        <div class="section-heading"><p class="eyebrow"><i></i> FEITO PARA SER CLARO</p><h2>Uma experiência direta,<br /><em>sem atalhos arriscados.</em></h2></div>
-        <div class="feature-grid">
-          <article><span class="feature-number">01</span><h3>Entende seu computador</h3><p>CPU, GPUs, memória, armazenamento, edição do Windows e instalação do FiveM são analisados localmente.</p></article>
-          <article><span class="feature-number">02</span><h3>Escolhe o equilíbrio</h3><p>Selecione Leve, Médio ou Agressivo. O perfil define um plano coerente, sem uma lista confusa de tweaks.</p></article>
-          <article><span class="feature-number">03</span><h3>Mostra o que mudou</h3><p>O progresso é explicado em tempo real. Ao final, você tem um relatório e rollback das alterações suportadas.</p></article>
+      <section id="seguranca" class="safety-section section-shell">
+        <div class="safety-card reveal">
+          <div class="shield" aria-hidden="true"><span>✓</span></div>
+          <p class="eyebrow"><span></span> SEGURANÇA POR PADRÃO</p>
+          <h2>Otimizar não é<br /><em>desproteger.</em></h2>
+          <p>O FiveMCleaner não baixa scripts arbitrários, não injeta código e não pede para desativar Defender, firewall, UAC, Windows Update ou SmartScreen.</p>
+          <a href="https://github.com/marquezinii/FiveMCleaner/blob/main/docs/safety.md" target="_blank" rel="noreferrer">Ler práticas de segurança <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="safety-points">
+          <article class="reveal"><span>01</span><div><h3>Alterações verificáveis</h3><p>Prévia, progresso e relatório técnico permanecem acessíveis.</p></div><b>✓</b></article>
+          <article class="reveal"><span>02</span><div><h3>Atualização validada</h3><p>Origem, versão e integridade são verificadas antes da ativação.</p></div><b>✓</b></article>
+          <article class="reveal"><span>03</span><div><h3>Privacidade sob escolha</h3><p>Diagnóstico local; telemetria e relatos dependem do seu consentimento.</p></div><b>✓</b></article>
+          <article class="reveal"><span>04</span><div><h3>Código aberto</h3><p>A implementação pode ser auditada diretamente no GitHub.</p></div><b>↗</b></article>
         </div>
       </section>
 
-      <section id="seguranca" class="section-shell safety-section">
-        <div class="safety-copy"><p class="eyebrow"><i></i> SEGURANÇA POR PADRÃO</p><h2>Otimizar não é<br /><em>desproteger.</em></h2><p>O FiveMCleaner trabalha com ações permitidas, verificáveis e limitadas. Ele não baixa scripts arbitrários, injeta código nem desativa as proteções do Windows.</p><a href="https://github.com/marquezinii/FiveMCleaner/blob/main/docs/safety.md" target="_blank" rel="noreferrer">Conhecer as práticas de segurança <span>→</span></a></div>
-        <div class="safety-list"><div><b>✓</b><span><strong>Alterações transparentes</strong><small>Prévia, progresso e relatório técnico local.</small></span></div><div><b>✓</b><span><strong>Atualização com validação</strong><small>O app verifica origem, versão e SHA-256 antes de abrir o setup.</small></span></div><div><b>✓</b><span><strong>Respeito ao seu sistema</strong><small>Sem exclusões de antivírus, UAC, firewall ou SmartScreen.</small></span></div></div>
+      <section id="requisitos" class="download-section">
+        <div class="download-orb" aria-hidden="true"><span></span></div>
+        <div class="section-shell reveal">
+          <p class="eyebrow"><span></span> PRONTO PARA COMEÇAR</p>
+          <h2>Seu próximo jogo<br /><em>começa aqui.</em></h2>
+          <p>Windows 10 22H2 ou Windows 11 · sistema x64 · runtime incluído</p>
+          <a class="download-button magnetic" href="https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe">
+            <svg class="windows-icon" viewBox="0 0 88 88" aria-hidden="true" focusable="false"><path d="M0 12.4 35.7 7.6v34.4H0zM40.3 7 88 0v42H40.3zM0 46.8h35.7v34.5L0 76.4zM40.3 46.8H88V88l-47.7-6.7z" /></svg>
+            <span><small>INSTALADOR OFICIAL</small>Baixar FiveMCleaner</span>
+            <b aria-hidden="true">↓</b>
+          </a>
+          <small>Download direto do GitHub Releases · sem cadastro · código aberto</small>
+        </div>
       </section>
-
-      <section id="requisitos" class="section-shell requirements">
-        <p class="eyebrow"><i></i> PRONTO PARA COMEÇAR</p>
-        <h2>Baixe, instale e jogue.</h2>
-        <p>Compatível com Windows 10 e Windows 11 de 64 bits. O instalador inclui o runtime necessário.</p>
-        <a class="download-button" href="https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe"><span class="arrow">↓</span> Baixar FiveMCleaner</a>
-        <small>Ao baixar, você será direcionado diretamente ao arquivo oficial hospedado no GitHub Releases.</small>
-      </section>
-
     </main>
 
-    <footer><a class="brand" href="#inicio"><img src="icon.png" alt="" width="34" height="34" /><span>FiveM<span>Cleaner</span></span></a><p>Desenvolvido por Felipe Marquezini · © 2026 Todos os direitos reservados.</p><a href="https://github.com/marquezinii/FiveMCleaner" target="_blank" rel="noreferrer">GitHub ↗</a></footer>
+    <footer>
+      <a class="brand" href="#inicio"><span class="brand-icon"><img src="icon.png" alt="" width="34" height="34" /></span><span>FiveM<strong>Cleaner</strong></span></a>
+      <p>Otimização transparente para FiveM no Windows.</p>
+      <span>Desenvolvido por Felipe Marquezini · © 2026</span>
+      <a href="https://github.com/marquezinii/FiveMCleaner" target="_blank" rel="noreferrer">GitHub ↗</a>
+    </footer>
   </body>
 </html>
