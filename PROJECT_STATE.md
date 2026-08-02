@@ -1,5 +1,12 @@
 # Estado do Projeto
 
+## Acesso de conta minimalista - 02/08/2026
+
+- Integrado o acesso de visitante no topo: ícone neutro em vez do avatar laranja e ação textual `Entrar / cadastrar-se`, sem caixa visual de botão.
+- O fluxo existente de login, cadastro, restauração de sessão e saída foi preservado.
+- Validação integrada: testes .NET Release, formatação, `Verify-Safety.ps1` e `git diff --check` aprovados.
+- O atalho `FiveMCleaner - Desenvolvimento` foi reconstruído com build Release e confirmado apontando para o checkout atual de `dev/proxima-versao`.
+
 ## Simulação local de desenvolvimento - 02/08/2026
 
 - O atalho `FiveMCleaner - Desenvolvimento` foi reconstruído e confirmado na
