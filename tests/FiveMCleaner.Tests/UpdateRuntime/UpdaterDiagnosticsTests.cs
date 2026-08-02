@@ -14,9 +14,7 @@ public sealed class UpdaterDiagnosticsTests : IDisposable
         var pending = Path.Combine(root, "UpdaterTelemetry", "pending");
         Directory.CreateDirectory(pending);
         File.WriteAllText(Path.Combine(pending, "queued.json"), "{}");
-        var diagnostics = new UpdaterDiagnostics(
-            root,
-            new Uri("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/updater-events"));
+        var diagnostics = new UpdaterDiagnostics(root);
 
         await diagnostics.RecordAsync(
             new UpdaterEvent("a".PadLeft(32, 'a'), "rollback", "rolled-back", "health-timeout",

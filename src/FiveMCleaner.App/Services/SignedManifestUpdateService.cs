@@ -43,7 +43,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
             "FiveMCleaner");
         updatesRoot = Path.Combine(dataRoot, "Updates");
         versionFloor = new VersionFloorStore(dataRoot);
-        diagnostics = new UpdaterDiagnostics(dataRoot, UpdaterDiagnostics.UpdaterEventsEndpoint);
+        diagnostics = new UpdaterDiagnostics(dataRoot);
         using var keyStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(
             "FiveMCleaner.App.Assets.release-public-key.pem")
             ?? throw new InvalidOperationException("A chave pública de releases não foi incorporada.");

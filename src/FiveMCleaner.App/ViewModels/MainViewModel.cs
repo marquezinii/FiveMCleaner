@@ -47,11 +47,9 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private string elapsedTimeLabel = string.Empty;
     private string remainingTimeLabel = string.Empty;
     private string cpuName = string.Empty;
-    private string gpuName = string.Empty;
     private string ramLabel = string.Empty;
     private string diskLabel = string.Empty;
     private string windowsLabel = string.Empty;
-    private string architectureLabel = string.Empty;
     private string gpuDetail = string.Empty;
     private string readinessScoreExplanation = string.Empty;
     private string editionLabel = string.Empty;
@@ -61,8 +59,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private bool isGtaVLegacyDetected;
     private string recommendationTitle = string.Empty;
     private string recommendationText = string.Empty;
-    private string streamingProtectionTitle = string.Empty;
-    private string streamingProtectionDetail = string.Empty;
     private string streamingReadinessTitle = string.Empty;
     private string streamingReadinessDetail = string.Empty;
     private string readinessLevelLabel = string.Empty;
@@ -117,10 +113,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private bool isReportAvailable;
     private string profilePresentationBenefits = string.Empty;
     private string profilePresentationImpact = string.Empty;
-    private string profilePresentationRisks = string.Empty;
-    private string profilePresentationReversibility = string.Empty;
     private string profilePresentationCategories = string.Empty;
-    private string profilePresentationVariability = string.Empty;
     private OptimizationComparisonResult? lastComparison;
     private Guid? lastTransactionId;
     private bool isComparisonAvailable;
@@ -211,25 +204,15 @@ public sealed class MainViewModel : BindableBase, IDisposable
 
     public string ProfilePresentationImpact { get => profilePresentationImpact; private set => SetProperty(ref profilePresentationImpact, value); }
 
-    public string ProfilePresentationRisks { get => profilePresentationRisks; private set => SetProperty(ref profilePresentationRisks, value); }
-
-    public string ProfilePresentationReversibility { get => profilePresentationReversibility; private set => SetProperty(ref profilePresentationReversibility, value); }
-
     public string ProfilePresentationCategories { get => profilePresentationCategories; private set => SetProperty(ref profilePresentationCategories, value); }
 
-    public string ProfilePresentationVariability { get => profilePresentationVariability; private set => SetProperty(ref profilePresentationVariability, value); }
-
     public string CpuName { get => cpuName; private set => SetProperty(ref cpuName, value); }
-
-    public string GpuName { get => gpuName; private set => SetProperty(ref gpuName, value); }
 
     public string RamLabel { get => ramLabel; private set => SetProperty(ref ramLabel, value); }
 
     public string DiskLabel { get => diskLabel; private set => SetProperty(ref diskLabel, value); }
 
     public string WindowsLabel { get => windowsLabel; private set => SetProperty(ref windowsLabel, value); }
-
-    public string ArchitectureLabel { get => architectureLabel; private set => SetProperty(ref architectureLabel, value); }
 
     public string GpuDetail { get => gpuDetail; private set => SetProperty(ref gpuDetail, value); }
 
@@ -248,10 +231,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     public string RecommendationTitle { get => recommendationTitle; private set => SetProperty(ref recommendationTitle, value); }
 
     public string RecommendationText { get => recommendationText; private set => SetProperty(ref recommendationText, value); }
-
-    public string StreamingProtectionTitle { get => streamingProtectionTitle; private set => SetProperty(ref streamingProtectionTitle, value); }
-
-    public string StreamingProtectionDetail { get => streamingProtectionDetail; private set => SetProperty(ref streamingProtectionDetail, value); }
 
     public string StreamingReadinessTitle { get => streamingReadinessTitle; private set => SetProperty(ref streamingReadinessTitle, value); }
 
@@ -1419,7 +1398,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         }
 
         CpuName = value.CpuName;
-        GpuName = value.GpuName;
         GpuDetail = value.GpuNames.Count > 1
             ? string.Join(Environment.NewLine, value.GpuNames)
             : value.GpuName;
@@ -1428,7 +1406,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             : localization.Format("Diagnosis.MemoryModules", value.TotalMemoryGiB, value.MemoryModuleLayout);
         DiskLabel = localization.Format("Diagnosis.DiskCapacity", value.FreeDiskGiB);
         WindowsLabel = value.OsLabel;
-        ArchitectureLabel = value.SystemArchitecture;
         ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
         ReadinessScore = value.ReadinessScore;
         ReadinessLevelLabel = ReadinessScore switch
@@ -1464,7 +1441,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             FiveMEdition.Enhanced => localization.GetString("Diagnosis.EnhancedUnsupported"),
             _ => localization.GetString("Diagnosis.InstallLegacy")
         };
-        ApplyStreamingProtection(value.StreamingSoftware);
         ApplyStreamingReadiness(value);
         ApplyProfileImpact(value.PerformancePressure);
     }
@@ -1481,45 +1457,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         LightImpactLabel = localization.GetString($"Profiles.Impact.Light.{suffix}");
         BalancedImpactLabel = localization.GetString($"Profiles.Impact.Balanced.{suffix}");
         AggressiveImpactLabel = localization.GetString($"Profiles.Impact.Aggressive.{suffix}");
-    }
-
-    private void ApplyStreamingProtection(StreamingSoftwareSnapshot snapshot)
-    {
-        var running = snapshot.Applications
-            .Where(item => item.IsProcessRunning)
-            .Select(item => item.DisplayName)
-            .ToArray();
-        if (running.Length > 0)
-        {
-            StreamingProtectionTitle = localization.Format(
-                "Streaming.RunningTitle",
-                string.Join(", ", running));
-            StreamingProtectionDetail = localization.GetString("Streaming.RunningDetail");
-            return;
-        }
-
-        var installed = snapshot.Applications
-            .Where(item => item.IsInstalled)
-            .Select(item => item.DisplayName)
-            .ToArray();
-        if (installed.Length > 0)
-        {
-            StreamingProtectionTitle = localization.Format(
-                "Streaming.InstalledTitle",
-                string.Join(", ", installed));
-            StreamingProtectionDetail = localization.GetString("Streaming.InstalledDetail");
-            return;
-        }
-
-        if (snapshot.IsPartial)
-        {
-            StreamingProtectionTitle = localization.GetString("Streaming.PartialTitle");
-            StreamingProtectionDetail = localization.GetString("Streaming.PartialDetail");
-            return;
-        }
-
-        StreamingProtectionTitle = localization.GetString("Streaming.SafeTitle");
-        StreamingProtectionDetail = localization.GetString("Streaming.SafeDetail");
     }
 
     private void ApplyStreamingReadiness(AppDiagnostic value)
@@ -1718,16 +1655,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
         var presentation = ProfilePresentationProvider.For(selectedProfile);
         ProfilePresentationBenefits = localization.GetString($"Profiles.Presentation.{selectedProfile}.Benefits");
         ProfilePresentationImpact = localization.GetString($"Profiles.Presentation.Impact.{presentation.ImpactLevel}");
-        ProfilePresentationRisks = localization.GetString($"Profiles.Presentation.{selectedProfile}.Risks");
-        ProfilePresentationReversibility = localization.GetString(
-            presentation.ContainsNonReversible
-                ? "Profiles.Presentation.Reversibility.Mixed"
-                : "Profiles.Presentation.Reversibility.FullyReversible");
         ProfilePresentationCategories = string.Join(
             "  •  ",
             presentation.AnalyzedCategories.Select(category =>
                 localization.GetString($"Category.{category}")));
-        ProfilePresentationVariability = localization.GetString("Profiles.Presentation.VariabilityNote");
     }
 
     private AppSettings BuildSettingsSnapshot() => new()
@@ -2227,12 +2158,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             var analyzing = localization.GetString("Status.Analyzing");
             CpuName = analyzing;
-            GpuName = analyzing;
             GpuDetail = analyzing;
             RamLabel = analyzing;
             DiskLabel = analyzing;
             WindowsLabel = analyzing;
-            ArchitectureLabel = analyzing;
             ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
             ReadinessLevelLabel = analyzing;
             EditionLabel = localization.GetString("Status.SearchingFiveM");
@@ -2241,8 +2170,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             IsGtaVLegacyDetected = false;
             RecommendationTitle = localization.GetString("Status.AnalyzingComputer");
             RecommendationText = localization.GetString("Status.LocalOnly");
-            StreamingProtectionTitle = localization.GetString("Streaming.SafeTitle");
-            StreamingProtectionDetail = localization.GetString("Streaming.SafeDetail");
             var pendingImpact = localization.GetString("Profiles.Impact.Pending");
             LightImpactLabel = pendingImpact;
             BalancedImpactLabel = pendingImpact;

@@ -178,12 +178,6 @@ public sealed class LocalTelemetryQueue
     public void Remove(string filePath) => TryDelete(filePath);
 
     /// <summary>
-    /// Drops queued events older than <paramref name="maxAge"/> so an
-    /// extended offline period does not grow the queue forever.
-    /// </summary>
-    public void PurgeOlderThan(TimeSpan maxAge) => Prune(maxAge, maxFiles: int.MaxValue);
-
-    /// <summary>
     /// Bounds the queue by age *and* by count. Age alone is not a real bound:
     /// each run enqueues events but a flush only drains one batch, so while
     /// sending keeps failing the queue grows for the whole retention window

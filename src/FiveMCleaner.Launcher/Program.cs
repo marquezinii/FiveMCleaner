@@ -19,7 +19,7 @@ internal static class Program
             .ToArray();
         var runtimeRoot = Path.Combine(AppContext.BaseDirectory, "Runtime");
         var dataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FiveMCleaner");
-        var diagnostics = new UpdaterDiagnostics(dataRoot, UpdaterDiagnostics.UpdaterEventsEndpoint);
+        var diagnostics = new UpdaterDiagnostics(dataRoot);
         UpdateTransaction? currentTransaction = null;
         try
         {

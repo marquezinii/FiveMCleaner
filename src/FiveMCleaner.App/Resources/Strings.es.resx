@@ -324,14 +324,6 @@
   <data name="BugReport.Send.NotConfirmed" xml:space="preserve"><value>El servicio de entrega no confirmó la recepción. Copia el reporte e intenta de nuevo más tarde.</value></data>
   <data name="BugReport.Send.UnexpectedResponse" xml:space="preserve"><value>El servicio devolvió una respuesta inesperada. Copia el reporte e intenta de nuevo más tarde.</value></data>
   <data name="BugReport.Send.Accepted" xml:space="preserve"><value>El servicio de entrega recibió el reporte.</value></data>
-  <data name="Streaming.RunningTitle" xml:space="preserve"><value>{0} está en ejecución</value></data>
-  <data name="Streaming.RunningDetail" xml:space="preserve"><value>FiveMCleaner preservará la app y nunca asumirá que estás en vivo.</value></data>
-  <data name="Streaming.InstalledTitle" xml:space="preserve"><value>{0} detectado</value></data>
-  <data name="Streaming.InstalledDetail" xml:space="preserve"><value>El plan no altera escenas, cuentas ni archivos de grabación.</value></data>
-  <data name="Streaming.SafeTitle" xml:space="preserve"><value>Optimización segura para streaming</value></data>
-  <data name="Streaming.SafeDetail" xml:space="preserve"><value>Los perfiles no cierran OBS, Streamlabs ni TikTok LIVE Studio.</value></data>
-  <data name="Streaming.PartialTitle" xml:space="preserve"><value>La verificación de streaming fue parcial</value></data>
-  <data name="Streaming.PartialDetail" xml:space="preserve"><value>Algunas ubicaciones no se pudieron leer; las reglas conservadoras siguen activas.</value></data>
   <data name="Streaming.Readiness.Protected.Title" xml:space="preserve"><value>La protección de streaming está activa</value></data>
   <data name="Streaming.Readiness.Protected.Detail" xml:space="preserve"><value>Hay una app de streaming abierta. FiveMCleaner la preserva; confirma tu estado de transmisión antes de optimizar.</value></data>
   <data name="Streaming.Readiness.Attention.Title" xml:space="preserve"><value>Haz una prueba antes de salir en vivo</value></data>
@@ -655,20 +647,9 @@
   <data name="Profiles.Presentation.Light.Benefits" xml:space="preserve"><value>Libera espacio y aplica ajustes ligeros con impacto mínimo, manteniendo la calidad visual casi intacta.</value></data>
   <data name="Profiles.Presentation.Balanced.Benefits" xml:space="preserve"><value>Equilibra la calidad visual, el uso de GPU y la estabilidad de fotogramas con ajustes moderados y totalmente reversibles.</value></data>
   <data name="Profiles.Presentation.Aggressive.Benefits" xml:space="preserve"><value>Prioriza el FPS y la capacidad de respuesta sobre la calidad visual, aplicando todos los ajustes seguros disponibles.</value></data>
-  <data name="Profiles.Presentation.Light.Risks" xml:space="preserve"><value>Riesgo muy bajo: solo ajustes bien conocidos, totalmente reversibles, con impacto visual mínimo.</value></data>
-  <data name="Profiles.Presentation.Balanced.Risks" xml:space="preserve"><value>Riesgo moderado: puede solicitar una confirmación de administrador para el plan de energía de rendimiento.</value></data>
-  <data name="Profiles.Presentation.Aggressive.Risks" xml:space="preserve"><value>Riesgo mayor: la calidad visual baja notablemente y se reducen los efectos visuales de Windows.</value></data>
   <data name="Profiles.Presentation.Impact.Low" xml:space="preserve"><value>Impacto bajo</value></data>
   <data name="Profiles.Presentation.Impact.Moderate" xml:space="preserve"><value>Impacto moderado</value></data>
   <data name="Profiles.Presentation.Impact.High" xml:space="preserve"><value>Impacto alto</value></data>
-  <data name="Profiles.Presentation.Reversibility.Mixed" xml:space="preserve"><value>Mayormente reversible; algunas limpiezas liberan espacio en disco de forma permanente.</value></data>
-  <data name="Profiles.Presentation.Reversibility.FullyReversible" xml:space="preserve"><value>Totalmente reversible desde el historial.</value></data>
-  <data name="Profiles.Presentation.VariabilityNote" xml:space="preserve"><value>Los resultados varían según la computadora, los controladores y el servidor; no se garantiza ninguna ganancia específica de FPS.</value></data>
-  <data name="Profiles.Presentation.Benefits.Label" xml:space="preserve"><value>Beneficios esperados</value></data>
-  <data name="Profiles.Presentation.Impact.Label" xml:space="preserve"><value>Nivel de impacto</value></data>
-  <data name="Profiles.Presentation.Risks.Label" xml:space="preserve"><value>Riesgos posibles</value></data>
-  <data name="Profiles.Presentation.Reversibility.Label" xml:space="preserve"><value>Reversibilidad</value></data>
-  <data name="Profiles.Presentation.Categories.Label" xml:space="preserve"><value>Categorías analizadas</value></data>
   <data name="Category.Safety" xml:space="preserve"><value>Seguridad</value></data>
   <data name="Category.Storage" xml:space="preserve"><value>Almacenamiento</value></data>
   <data name="Category.WindowsGaming" xml:space="preserve"><value>Juegos en Windows</value></data>

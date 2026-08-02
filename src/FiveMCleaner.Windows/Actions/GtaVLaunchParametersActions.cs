@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.Cryptography;
 using System.Text;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Catalog;
@@ -69,12 +68,6 @@ internal static class GtaVCommandLineFile
             .ToArray();
 
         return (kept.Concat(desiredManagedLines).ToArray(), changedFlags);
-    }
-
-    public static string ComputeSha256(IReadOnlyList<string> lines)
-    {
-        var text = string.Join('\n', lines);
-        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(text)));
     }
 
     public static void WriteAtomically(string path, IReadOnlyList<string> lines)
