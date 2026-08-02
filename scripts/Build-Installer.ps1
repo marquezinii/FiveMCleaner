@@ -30,24 +30,6 @@ $innoCompilerSha256 = '0a8757031b33777e4c9cbffee40f11a5062b36d25cbe144c1db73b610
 
 . (Join-Path $PSScriptRoot 'Installer.Common.ps1')
 
-function Assert-UnderArtifacts {
-    param([Parameter(Mandatory)][string]$Path)
-
-    Assert-PathUnderRoot -Path $Path -Root $artifactsRoot
-}
-
-function Get-ProjectVersion {
-    [xml]$props = Get-Content -LiteralPath (Join-Path $workspace 'Directory.Build.props') -Raw
-    $candidate = @($props.Project.PropertyGroup.Version) |
-        Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) } |
-        Select-Object -First 1
-    if (-not $candidate) {
-        throw 'Directory.Build.props does not define Version.'
-    }
-
-    return [string]$candidate
-}
-
 function Test-InnoCompilerTrust {
     param([Parameter(Mandatory)][string]$Path)
 
@@ -164,7 +146,7 @@ function Resolve-InnoCompiler {
 }
 
 if ([string]::IsNullOrWhiteSpace($Version)) {
-    $Version = Get-ProjectVersion
+    $Version = Get-ProjectVersion -Workspace $workspace
 }
 
 $versionMatch = [regex]::Match($Version, '^(?<core>\d+\.\d+\.\d+)(?<suffix>-[0-9A-Za-z][0-9A-Za-z.-]*)?$')
