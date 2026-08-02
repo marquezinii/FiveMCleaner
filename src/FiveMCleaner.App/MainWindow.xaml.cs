@@ -592,7 +592,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             System.Windows.MessageBox.Show(
                 LocalizationService.Current.Format(
                     "Dialog.OpenExternal.Message",
-                    exception.Message),
+                    LocalizationService.Current.DescribeException(exception)),
                 LocalizationService.Current.GetString("Dialog.OpenExternal.Title"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);

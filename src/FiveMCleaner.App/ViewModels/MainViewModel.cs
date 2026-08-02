@@ -457,7 +457,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
             }
             catch (Exception exception)
             {
-                AddLog(localization.Format("Log.StartupSettingFailed", exception.Message));
+                AddLog(localization.Format("Log.StartupSettingFailed", localization.DescribeException(exception)));
                 OnPropertyChanged();
             }
         }
@@ -712,8 +712,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         catch (Exception exception)
         {
             RecommendationTitle = localization.GetString("Diagnosis.Partial");
-            RecommendationText = exception.Message;
-            AddLog(localization.Format("Log.Warning", exception.Message));
+            RecommendationText = localization.DescribeException(exception);
+            AddLog(localization.Format("Log.Warning", RecommendationText));
         }
         finally
         {
@@ -740,8 +740,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         catch (Exception exception)
         {
             RecommendationTitle = localization.GetString("Diagnosis.CouldNotScanAgain");
-            RecommendationText = exception.Message;
-            AddLog(localization.Format("Log.RescanFailed", exception.Message));
+            RecommendationText = localization.DescribeException(exception);
+            AddLog(localization.Format("Log.RescanFailed", RecommendationText));
         }
         finally
         {
@@ -896,7 +896,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             // Falha de rede na inicialização não interrompe diagnóstico nem otimização.
-            AddLog(localization.Format("Log.UpdateCheckFailed", exception.Message));
+            AddLog(localization.Format("Log.UpdateCheckFailed", localization.DescribeException(exception)));
         }
     }
 
@@ -933,8 +933,9 @@ public sealed class MainViewModel : BindableBase, IDisposable
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            AddLog(localization.Format("Log.UpdateCheckFailed", exception.Message));
-            ManualUpdateCheckMessage = localization.Format("Update.ManualCheck.Failed", exception.Message);
+            var message = localization.DescribeException(exception);
+            AddLog(localization.Format("Log.UpdateCheckFailed", message));
+            ManualUpdateCheckMessage = localization.Format("Update.ManualCheck.Failed", message);
         }
         finally
         {
@@ -985,10 +986,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            updateFailureMessage = exception.Message;
+            updateFailureMessage = localization.DescribeException(exception);
             updatePresentationState = UpdatePresentationState.Failed;
             RefreshUpdatePresentation();
-            AddLog(localization.Format("Log.UpdateDownloadFailed", exception.Message));
+            AddLog(localization.Format("Log.UpdateDownloadFailed", updateFailureMessage));
             return null;
         }
         finally
@@ -1051,8 +1052,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
                 return true;
             }
 
-            updateFailureMessage = launch.FailureReason
-                ?? localization.GetString("Common.Unknown");
+            updateFailureMessage = localization.GetString("Error.Unexpected");
             updatePresentationState = UpdatePresentationState.Failed;
             RefreshUpdatePresentation();
             AddLog(localization.Format("Log.UpdateInstallFailed", updateFailureMessage));
@@ -1061,10 +1061,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            updateFailureMessage = exception.Message;
+            updateFailureMessage = localization.DescribeException(exception);
             updatePresentationState = UpdatePresentationState.Failed;
             RefreshUpdatePresentation();
-            AddLog(localization.Format("Log.UpdateInstallFailed", exception.Message));
+            AddLog(localization.Format("Log.UpdateInstallFailed", updateFailureMessage));
             return false;
         }
         finally
@@ -1260,8 +1260,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
             telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
             ProgressStateLabel = localization.GetString("Status.SafeFailure");
             FinalizeHeadline(localization.GetString("Status.CouldNotComplete"));
-            ProgressDetail = exception.Message;
-            AddLog(localization.Format("Log.Error", exception.Message));
+            ProgressDetail = localization.DescribeException(exception);
+            AddLog(localization.Format("Log.Error", ProgressDetail));
         }
         finally
         {
@@ -1306,7 +1306,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            GtaVBenchmarkStatusLabel = localization.Format("GtaVBenchmark.Error", exception.Message);
+            GtaVBenchmarkStatusLabel = localization.Format("GtaVBenchmark.Error", localization.DescribeException(exception));
             AddLog(GtaVBenchmarkStatusLabel);
         }
         finally
@@ -1387,8 +1387,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             ProgressStateLabel = localization.GetString("Status.SafeFailure");
             FinalizeHeadline(localization.GetString("Status.CouldNotRestore"));
-            ProgressDetail = exception.Message;
-            AddLog(localization.Format("Log.RollbackFailed", exception.Message));
+            ProgressDetail = localization.DescribeException(exception);
+            AddLog(localization.Format("Log.RollbackFailed", ProgressDetail));
             return false;
         }
         finally
@@ -1613,7 +1613,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         catch (Exception exception)
         {
             launchAtStartup = settings.LaunchAtStartup;
-            AddLog(localization.Format("Log.StartupReadFailed", exception.Message));
+            AddLog(localization.Format("Log.StartupReadFailed", localization.DescribeException(exception)));
         }
 
         OnPropertyChanged(nameof(LanguagePreference));
@@ -2099,7 +2099,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            AddLog(localization.Format("Log.ReportCopyFailed", exception.Message));
+            AddLog(localization.Format("Log.ReportCopyFailed", localization.DescribeException(exception)));
         }
     }
 
@@ -2126,7 +2126,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
             or UnauthorizedAccessException
             or System.Security.SecurityException)
         {
-            AddLog(localization.Format("Log.ReportSaveFailed", exception.Message));
+            AddLog(localization.Format("Log.ReportSaveFailed", localization.DescribeException(exception)));
         }
     }
 

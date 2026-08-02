@@ -699,4 +699,11 @@
   <data name="Dashboard.LivePerformance.ChartDescription" xml:space="preserve"><value>Histórico de uso da CPU e GPU no último minuto.</value></data>
   <data name="Dashboard.LivePerformance.LocalOnly" xml:space="preserve"><value>Leitura local. Nada é enviado pela internet.</value></data>
   <data name="Dashboard.SystemOverview.Description" xml:space="preserve"><value>Hardware detectado e disponível para FiveM e GTA V.</value></data>
+  <data name="Error.Network" xml:space="preserve"><value>Não foi possível conectar agora. Verifique a internet e tente novamente.</value></data>
+  <data name="Error.Timeout" xml:space="preserve"><value>Esta ação demorou mais que o esperado. Tente novamente em instantes.</value></data>
+  <data name="Error.AccessDenied" xml:space="preserve"><value>O Windows não permitiu esta ação. Verifique a permissão necessária e tente novamente.</value></data>
+  <data name="Error.FileUnavailable" xml:space="preserve"><value>Um arquivo necessário está indisponível ou em uso. Feche os aplicativos relacionados e tente novamente.</value></data>
+  <data name="Error.SecurityCheck" xml:space="preserve"><value>A verificação de segurança não foi aprovada. Nada foi alterado.</value></data>
+  <data name="Error.InvalidData" xml:space="preserve"><value>Não foi possível verificar as informações recebidas com segurança. Nada foi alterado.</value></data>
+  <data name="Error.Unexpected" xml:space="preserve"><value>Ocorreu um problema inesperado. Tente novamente; se continuar, envie um relato de bug.</value></data>
 </root>

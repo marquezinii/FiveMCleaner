@@ -28,7 +28,7 @@ public static class Program
         }
         catch (Exception exception) when (exception is not (OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            ShowFailure(exception.Message);
+            ShowFailure(DescribeFailure(exception));
             return 1;
         }
     }
@@ -112,4 +112,13 @@ public static class Program
     private static void ShowFailure(string? detail) => MessageBox.Show(
         $"Não foi possível concluir a atualização do FiveMCleaner.\n\n{detail}\n\nAbra o aplicativo novamente e tente outra vez.",
         "Atualização do FiveMCleaner", MessageBoxButtons.OK, MessageBoxIcon.Error);
+
+    private static string DescribeFailure(Exception exception) => exception switch
+    {
+        TimeoutException => "A atualização demorou mais que o esperado e foi interrompida. Abra o FiveMCleaner novamente para tentar outra vez.",
+        UnauthorizedAccessException => "O Windows não permitiu concluir a atualização. Verifique a permissão e tente novamente.",
+        CryptographicException or InvalidDataException => "A verificação de segurança do instalador falhou. Nada foi alterado.",
+        FileNotFoundException => "O instalador verificado não está mais disponível. Abra o FiveMCleaner e baixe a atualização novamente.",
+        _ => "O atualizador encontrou um problema inesperado. Abra o FiveMCleaner novamente e tente outra vez."
+    };
 }

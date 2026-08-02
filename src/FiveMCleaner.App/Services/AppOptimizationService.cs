@@ -643,7 +643,9 @@ public sealed class AppOptimizationService : IAppOptimizationService
                     succeeded: false,
                     wasCancelled: false,
                     DescribeInterruptedBroker(
-                        localization.Format("Runtime.BrokerResultUnconfirmed", exception.Message),
+                        localization.Format(
+                            "Runtime.BrokerResultUnconfirmed",
+                            localization.DescribeException(exception)),
                         rollback),
                     CancellationToken.None).ConfigureAwait(false);
             }
