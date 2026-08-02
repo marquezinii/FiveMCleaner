@@ -70,6 +70,34 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
 CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires_at
     ON admin_sessions (expires_at);
 
+-- Product accounts are intentionally separate from dashboard administration.
+-- Passwords are PBKDF2 hashes; desktop sessions are opaque and revocable.
+CREATE TABLE IF NOT EXISTS user_accounts (
+    id TEXT PRIMARY KEY,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    email_normalized TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL REFERENCES user_accounts (id),
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_sessions_expires_at ON user_sessions (expires_at);
+
+CREATE TABLE IF NOT EXISTS user_login_attempts (
+    ip_hash TEXT PRIMARY KEY,
+    failed_count INTEGER NOT NULL DEFAULT 0,
+    first_failed_at TEXT NOT NULL,
+    locked_until TEXT
+);
+
 -- Bug reports, replacing the previous FormSubmit-based flow. `attachment_key`
 -- is the R2 object key for the optional sanitized screenshot (never the
 -- image bytes themselves, which never touch D1) -- null when no screenshot

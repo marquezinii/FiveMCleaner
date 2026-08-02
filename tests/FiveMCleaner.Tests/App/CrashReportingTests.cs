@@ -184,6 +184,23 @@ public sealed class TelemetryEndpointPolicyTests
     }
 }
 
+public sealed class AccountEndpointPolicyTests
+{
+    [Fact]
+    public void TryCreate_OnlyAcceptsTheConfiguredProductionAccountRoot()
+    {
+        var accepted = AccountEndpointPolicy.TryCreate(
+            "https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/account/",
+            AppRuntimeEnvironment.Production,
+            out var endpoint);
+
+        Assert.True(accepted);
+        Assert.Equal("/account/", endpoint.AbsolutePath);
+        Assert.False(AccountEndpointPolicy.TryCreate("https://example.test/account/", AppRuntimeEnvironment.Production, out _));
+        Assert.False(AccountEndpointPolicy.TryCreate("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/account/login", AppRuntimeEnvironment.Production, out _));
+    }
+}
+
 public sealed class CrashReportingHolderTests
 {
     [Fact]

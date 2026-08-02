@@ -31,6 +31,8 @@ public sealed record RemoteServicesOptions
     /// </summary>
     public string? BugReportEndpoint { get; init; }
 
+    public string? AccountEndpoint { get; init; }
+
     public required string Environment { get; init; }
 }
 
@@ -127,6 +129,22 @@ public static class TelemetryEndpointPolicy
             return false;
         }
 
+        endpoint = candidate;
+        return true;
+    }
+}
+
+public static class AccountEndpointPolicy
+{
+    public static bool TryCreate(string? configuredValue, AppRuntimeEnvironment environment, out Uri endpoint)
+    {
+        endpoint = null!;
+        if (!Uri.TryCreate(configuredValue, UriKind.Absolute, out var candidate)
+            || candidate.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(candidate.UserInfo)
+            || !string.IsNullOrEmpty(candidate.Query) || !string.IsNullOrEmpty(candidate.Fragment)
+            || candidate.AbsolutePath != "/account/") return false;
+        if (environment == AppRuntimeEnvironment.Production
+            && !string.Equals(candidate.Host, TelemetryEndpointPolicy.ProductionHost, StringComparison.OrdinalIgnoreCase)) return false;
         endpoint = candidate;
         return true;
     }
