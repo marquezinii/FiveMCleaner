@@ -1,4 +1,8 @@
 // Dependency-free canvas charts for the static dashboard.
+
+/** Shared 5-color palette for donut slices and the matching legend swatches. */
+export const DONUT_COLORS = ['#ff7a18', '#88a8dc', '#78d497', '#a67bd6', '#f4be55'];
+
 export function drawBarChart(canvas, series, options = {}) {
   const ctx = canvas.getContext('2d');
   const { width, height } = canvas;
@@ -31,7 +35,7 @@ export function drawDonutChart(canvas, series, options = {}) {
   const ctx = canvas.getContext('2d'); const { width, height } = canvas;
   ctx.clearRect(0, 0, width, height);
   if (!series?.length) return drawEmptyState(ctx, width, height);
-  const colors = options.colors || ['#ff7a18', '#88a8dc', '#78d497', '#a67bd6', '#f4be55'];
+  const colors = options.colors || DONUT_COLORS;
   const total = series.reduce((sum, point) => sum + point.value, 0) || 1; const x = width / 2; const y = height / 2; const radius = Math.min(width, height) * .34; let start = -Math.PI / 2;
   series.forEach((point, index) => { const end = start + (point.value / total) * Math.PI * 2; ctx.beginPath(); ctx.strokeStyle = colors[index % colors.length]; ctx.lineWidth = radius * .36; ctx.arc(x, y, radius, start, end); ctx.stroke(); start = end; });
   ctx.fillStyle = '#f1f5f9'; ctx.font = '700 20px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillText(new Intl.NumberFormat('pt-BR').format(total), x, y + 4);

@@ -2,6 +2,9 @@
 // canvas/DOM rendering (rendering.js) so this logic is unit testable
 // without a browser -- see chart-data-shaping tests under test/.
 
+/** Substitutes a placeholder for any missing optional field instead of a blank cell. */
+const fallback = (value) => value ?? '—';
+
 /** Turns `{label, value}`-shaped rows (any two keys) into a bar-chart series. */
 export function toBarSeries(rows, labelKey, valueKey) {
   return (rows ?? []).map((row) => ({
@@ -113,7 +116,6 @@ export function formatTimestamp(isoString) {
  * instead of showing a blank cell.
  */
 export function toRecentFailureRow(row) {
-  const fallback = (value) => value ?? '—';
   return [
     formatTimestamp(row.received_at),
     fallback(row.error_category),
@@ -144,7 +146,6 @@ export function truncate(text, maxLength) {
  * column, since that feature (and its R2 dependency) was dropped.
  */
 export function toBugReportRow(row) {
-  const fallback = (value) => value ?? '—';
   return [
     formatTimestamp(row.received_at),
     fallback(row.category),
@@ -158,7 +159,6 @@ export function toBugReportRow(row) {
 }
 
 export function toUpdaterEventRow(row) {
-  const fallback = (value) => value ?? '—';
   return [
     formatTimestamp(row.received_at),
     fallback(row.stage),

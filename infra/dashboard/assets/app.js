@@ -14,7 +14,7 @@ import {
   toBugReportRow,
   toUpdaterEventRow,
 } from './charts.js';
-import { drawBarChart, drawDonutChart, drawLineChart } from './rendering.js';
+import { drawBarChart, drawDonutChart, drawLineChart, DONUT_COLORS } from './rendering.js';
 
 // The dashboard (Cloudflare Pages) and the Worker are deliberately two
 // separate origins -- no custom domain/routing was set up to make them
@@ -189,7 +189,7 @@ async function main() {
   function renderLegend(id, series) {
     const container = document.getElementById(id);
     if (!container) return;
-    const colors = ['#ff7a18', '#88a8dc', '#78d497', '#a67bd6', '#f4be55'];
+    const colors = DONUT_COLORS;
     container.replaceChildren(...toDistributionRows(series).map((point, index) => {
       const row = document.createElement('div');
       row.className = 'legend-row';
@@ -236,11 +236,11 @@ async function main() {
       computeSuccessRatePercent(successRate.data?.[0]),
     );
     document.getElementById('tile-average-time').textContent = formatDuration(averageTime.data?.[0]?.average_ms);
-    document.getElementById('tile-total-failures').textContent = errorCategories.unauthorized
+    document.getElementById('tile-total-failures').textContent = errorCategories.unauthorized || errorCategories.error
       ? '—'
       : sumBy(errorCategories.data, 'occurrences');
 
-    renderRecentFailures(recentFailures.unauthorized ? [] : recentFailures.data);
+    renderRecentFailures(recentFailures.unauthorized || recentFailures.error ? [] : recentFailures.data);
     recentFailuresCsvLink.href = buildCsvUrl(API_BASE, 'recent-failures', filters);
 
     CHART_DEFINITIONS.forEach((definition, index) => {
