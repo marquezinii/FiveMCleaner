@@ -1,5 +1,14 @@
 # Estado do Projeto
 
+## Cadastro, login e Termos de Uso completos - 02/08/2026
+
+- O acesso `Entrar / cadastrar-se` agora abre sem crash e oferece cadastro com nome, sobrenome, usuário, e-mail, senha, confirmação e aceite obrigatório dos Termos de Uso versionados.
+- Criada janela local profissional de Termos de Uso; o link azul abre o documento sem sair do aplicativo.
+- Cliente, Worker e D1 compartilham o novo contrato. Usuário e e-mail são únicos, senha é derivada com PBKDF2, tokens de sessão são persistidos somente como SHA-256 e cadastros são limitados por HMAC do IP.
+- Migração `0001_account_username_terms.sql` aplicada no D1 real e Worker implantado na versão `cf21d454-79b4-4ee2-9b44-2fa119863167`.
+- Smoke remoto de cadastro, login, consulta, logout e sessão revogada aprovado; todos os dados descartáveis do teste foram removidos e confirmados em zero.
+- Validação integrada: testes .NET Release, smoke WPF das duas janelas, 124 testes do Worker, `npm audit`, dry-run do deploy, `Verify-Safety.ps1` e `git diff --check` aprovados.
+
 ## Acesso de conta minimalista - 02/08/2026
 
 - Integrado o acesso de visitante no topo: ícone neutro em vez do avatar laranja e ação textual `Entrar / cadastrar-se`, sem caixa visual de botão.
