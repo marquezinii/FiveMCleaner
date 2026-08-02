@@ -7,6 +7,8 @@ import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
 import { buildCorsHeaders, withCorsHeaders } from './cors.js';
+import { readJsonBody, JSON_PARSE_FAILED } from './readJsonBody.js';
+import { parseReleaseManifest } from './releaseManifest.js';
 
 // FiveMCleaner anonymous telemetry + bug reports + admin dashboard API
 // Worker. See wrangler.toml and README.md for deployment status of each
@@ -120,28 +122,7 @@ function handleSignedReleaseManifest(env) {
       headers: { 'Cache-Control': 'no-store' },
     });
   }
-  if (manifest.length > 65_536) {
-    return new Response('Release manifest invalid', { status: 500 });
-  }
-  let parsed;
-  try { parsed = JSON.parse(manifest); } catch {
-    return new Response('Release manifest invalid', { status: 500 });
-  }
-  const keys = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-    ? Object.keys(parsed)
-    : [];
-  const allowed = ['channel', 'version', 'minimumAllowedVersion', 'packageUrl',
-    'packageSha256', 'packageSizeBytes', 'signatureBase64'];
-  if (keys.length !== allowed.length || keys.some((key) => !allowed.includes(key))
-      || parsed.channel !== 'stable'
-      || !/^\d+\.\d+\.\d+$/.test(parsed.version)
-      || !/^\d+\.\d+\.\d+$/.test(parsed.minimumAllowedVersion)
-      || typeof parsed.packageUrl !== 'string'
-      || !/^https:\/\/github\.com\/marquezinii\/FiveMCleaner\/releases\/download\//.test(parsed.packageUrl)
-      || !/^[a-f0-9]{64}$/i.test(parsed.packageSha256)
-      || !Number.isSafeInteger(parsed.packageSizeBytes) || parsed.packageSizeBytes <= 0
-      || typeof parsed.signatureBase64 !== 'string'
-      || parsed.signatureBase64.length < 80 || parsed.signatureBase64.length > 256) {
+  if (parseReleaseManifest(manifest) === null) {
     return new Response('Release manifest invalid', { status: 500 });
   }
   return new Response(manifest, {
@@ -154,8 +135,8 @@ function handleSignedReleaseManifest(env) {
 }
 
 async function handleUpdaterEventIngest(request, env) {
-  let payload;
-  try { payload = await request.json(); } catch { return new Response('Invalid JSON', { status: 400 }); }
+  const payload = await readJsonBody(request);
+  if (payload === JSON_PARSE_FAILED) return new Response('Invalid JSON', { status: 400 });
   const event = validateUpdaterEvent(payload);
   if (event === null) return new Response('Updater event failed validation', { status: 400 });
   await env.TELEMETRY_DB.prepare(
@@ -179,10 +160,8 @@ async function handleUpdaterEventsList(request, env, url) {
 }
 
 async function handleTelemetryIngest(request, env) {
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
+  const payload = await readJsonBody(request);
+  if (payload === JSON_PARSE_FAILED) {
     return new Response('Invalid JSON', { status: 400 });
   }
 
@@ -291,10 +270,8 @@ async function handleStatsRequest(request, env, url) {
 }
 
 async function handleBugReportIngest(request, env) {
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
+  const payload = await readJsonBody(request);
+  if (payload === JSON_PARSE_FAILED) {
     return new Response('Invalid JSON', { status: 400 });
   }
 

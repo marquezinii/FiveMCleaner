@@ -12,6 +12,8 @@
 // people; the dashboard must label it that way instead of implying a user
 // count it cannot actually produce.
 
+import { appendEnvironmentClause, appendDateRangeClauses } from '../filters.js';
+
 const DEFAULT_TOP_N = 10;
 
 function buildFilters({ from, to, appVersion, environment = 'Production' } = {}) {
@@ -22,23 +24,9 @@ function buildFilters({ from, to, appVersion, environment = 'Production' } = {})
   // environments at once (e.g. while debugging the pipeline itself) --
   // every other value, including an unrecognized one, still defaults to
   // filtering by it so a typo never silently becomes "show everything".
-  if (environment !== 'All') {
-    clauses.push('environment = ?');
-    params.push(environment);
-  }
+  appendEnvironmentClause(clauses, params, environment);
 
-  if (from) {
-    clauses.push('received_at >= ?');
-    params.push(from);
-  }
-
-  if (to) {
-    // The dashboard sends a calendar date, while received_at is UTC with a
-    // time component. An inclusive string comparison would exclude every
-    // event later on the selected final day.
-    clauses.push("received_at < date(?, '+1 day')");
-    params.push(to);
-  }
+  appendDateRangeClauses(clauses, params, { from, to });
 
   if (appVersion) {
     clauses.push('app_version = ?');

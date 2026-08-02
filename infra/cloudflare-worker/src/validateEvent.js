@@ -3,6 +3,8 @@
 // without a D1 binding. Mirrors FiveMCleaner.App.Services.TelemetryEventValidator
 // on the .NET side -- the Worker never trusts client-side validation alone.
 
+import { ALLOWED_ENVIRONMENTS } from './environments.js';
+
 export const ALLOWED_EVENT_NAMES = new Set([
   'optimization-completed',
   'optimization-failed',
@@ -17,8 +19,6 @@ export const ALLOWED_ERROR_CATEGORIES = new Set([
   'invalid-data',
   'unexpected',
 ]);
-
-export const ALLOWED_ENVIRONMENTS = new Set(['Development', 'Production']);
 
 export const ALLOWED_PROFILES = new Set(['Light', 'Balanced', 'Aggressive']);
 
