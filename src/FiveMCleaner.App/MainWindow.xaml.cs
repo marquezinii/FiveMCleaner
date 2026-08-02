@@ -213,8 +213,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private void UpdateAccountButton()
     {
         var profile = accountService?.CurrentProfile;
-        AccountInitials.Text = profile?.Initials ?? "?";
-        AccountLabel.Text = profile?.DisplayName ?? "Entrar";
+        AccountInitials.Text = profile?.Initials ?? "\uE77B";
+        AccountLabel.Text = profile?.DisplayName ?? "Entrar / cadastrar-se";
         AccountButton.ToolTip = profile is null ? "Entrar ou criar conta" : "Clique para sair da conta";
     }
 
