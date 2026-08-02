@@ -109,6 +109,12 @@ ativam o modo **agente integrador**. Nesse modo, o agente deve:
    suíte completa aplicável ao final;
 6. atualizar `PROJECT_STATE.md` com o estado oficial já integrado, criar o
    commit de integração quando necessário e marcar os relatórios integrados.
+7. atualizar a simulação local da próxima versão com
+   `scripts\Install-DevelopmentShortcut.ps1 -Build` e confirmar que o atalho
+   `FiveMCleaner - Desenvolvimento` aponta para
+   `scripts\Start-DevelopmentApp.ps1`. Esse atalho recompila o Release atual
+   antes de abrir o app; portanto ele deve ser usado para validar toda mudança
+   integrada, enquanto `FiveMCleaner.lnk` continua sendo a instalação pública.
 
 Se duas tarefas conflitarem conceitualmente, analise os dois objetivos e
 preserve ambos sempre que isso for seguro e coerente. Não descarte uma solução
