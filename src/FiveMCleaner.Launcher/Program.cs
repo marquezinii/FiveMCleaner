@@ -118,7 +118,7 @@ internal static class Program
                 }
                 await RecordAsync(diagnostics, currentTransaction, "activation", "failed", Classify(exception), exception.ToString(), dataRoot);
             }
-            MessageBox.Show(exception.Message, "FiveMCleaner", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(DescribeFailure(exception), "FiveMCleaner", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 2;
         }
     }
@@ -178,5 +178,14 @@ internal static class Program
         UnauthorizedAccessException => "access-denied",
         IOException => "io",
         _ => "unexpected",
+    };
+
+    private static string DescribeFailure(Exception exception) => exception switch
+    {
+        TimeoutException => "O FiveMCleaner anterior não encerrou a tempo. Aguarde alguns instantes e tente abrir novamente.",
+        UnauthorizedAccessException => "O Windows não permitiu abrir esta versão. Verifique a permissão e tente novamente.",
+        CryptographicException or InvalidDataException => "Não foi possível verificar esta atualização com segurança. Nada foi alterado.",
+        FileNotFoundException => "Os arquivos necessários para abrir o FiveMCleaner não foram encontrados. Tente reparar ou reinstalar o aplicativo.",
+        _ => "Não foi possível abrir o FiveMCleaner agora. Tente novamente; se continuar, reinstale o aplicativo."
     };
 }

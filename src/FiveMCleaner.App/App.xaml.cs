@@ -144,7 +144,9 @@ public partial class App : System.Windows.Application
         try
         {
             System.Windows.MessageBox.Show(
-                Services.LocalizationService.Current.Format("Dialog.FatalError.Message", exception.Message),
+                Services.LocalizationService.Current.Format(
+                    "Dialog.FatalError.Message",
+                    Services.LocalizationService.Current.DescribeException(exception)),
                 ProductIdentity.Name,
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);

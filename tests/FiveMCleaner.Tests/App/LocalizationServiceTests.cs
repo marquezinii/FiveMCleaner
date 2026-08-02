@@ -102,6 +102,21 @@ public sealed class LocalizationServiceTests
     }
 
     [Fact]
+    public void DescribeException_UsesLocalizedActionableMessagesWithoutLeakingTechnicalDetails()
+    {
+        var service = new LocalizationService(CultureInfo.GetCultureInfo("pt-BR"));
+
+        var network = service.DescribeException(new HttpRequestException("socket 10.0.0.1 failed"));
+        var security = service.DescribeException(new InvalidDataException("SHA mismatch"));
+        var unexpected = service.DescribeException(new InvalidOperationException("internal detail"));
+
+        Assert.Equal("Não foi possível conectar agora. Verifique a internet e tente novamente.", network);
+        Assert.Equal("Não foi possível verificar as informações recebidas com segurança. Nada foi alterado.", security);
+        Assert.DoesNotContain("internal detail", unexpected, StringComparison.Ordinal);
+        Assert.Contains("envie um relato de bug", unexpected, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void EnglishAndPortugueseCatalogs_HaveExactlyTheSameKeys()
     {
         var manager = new ResourceManager(

@@ -70,7 +70,8 @@ public sealed class MainViewModelUpdateCheckTests
         await viewModel.CheckForUpdatesManuallyAsync();
 
         Assert.False(viewModel.IsUpdateBannerVisible);
-        Assert.Contains("boom", viewModel.ManualUpdateCheckMessage);
+        Assert.DoesNotContain("boom", viewModel.ManualUpdateCheckMessage, StringComparison.Ordinal);
+        Assert.Contains("Verifique a internet", viewModel.ManualUpdateCheckMessage, StringComparison.Ordinal);
         Assert.False(viewModel.IsCheckingForUpdatesManually);
     }
 

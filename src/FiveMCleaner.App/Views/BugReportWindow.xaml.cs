@@ -61,7 +61,7 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         catch (Exception exception) when (exception is System.Runtime.InteropServices.COMException
             or InvalidOperationException)
         {
-            ShowStatus(F("BugReport.Copy.Failed", exception.Message), success: false);
+            ShowStatus(F("BugReport.Copy.Failed", localization.DescribeException(exception)), success: false);
         }
     }
 
@@ -97,7 +97,7 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
             or IOException
             or ArgumentException)
         {
-            ShowStatus(F("BugReport.Send.Unconfirmed", exception.Message), success: false);
+            ShowStatus(F("BugReport.Send.Unconfirmed", localization.DescribeException(exception)), success: false);
         }
         finally
         {
