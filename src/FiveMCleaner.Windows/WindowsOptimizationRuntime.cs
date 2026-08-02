@@ -775,11 +775,6 @@ public sealed class WindowsOptimizationRuntime
         return Create(environment, WindowsOptimizationDependencies.CreateDefault(environment));
     }
 
-    public static WindowsOptimizationRuntime CreateDefaultForCurrentUser()
-    {
-        return CreateDefault();
-    }
-
     public static WindowsOptimizationRuntime Create(
         WindowsOptimizationEnvironment environment,
         WindowsOptimizationDependencies dependencies)

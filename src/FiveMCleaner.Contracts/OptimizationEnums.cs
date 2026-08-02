@@ -111,9 +111,6 @@ public enum ActionExecutionOutcome
     /// <summary>The action could not revert and needs attention.</summary>
     RollbackFailed,
 
-    /// <summary>The edition or safety context does not support the action.</summary>
-    Blocked,
-
     /// <summary>The action did not run because an earlier critical failure aborted the run.</summary>
     NotRun
 }

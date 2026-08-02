@@ -96,7 +96,6 @@ Um plano é uma lista ordenada e imutável de ações resolvidas para aquele dia
 - `Failed` — erro genuíno; a própria ação foi revertida;
 - `RolledBack` — revertida com sucesso após falha;
 - `RollbackFailed` — requer atenção e fica destacado no relatório;
-- `Blocked` — edição/segurança não suportada;
 - `NotRun` — não executada porque uma falha crítica anterior abortou o restante da run.
 
 Esse enum é independente do estado transacional interno do journal
@@ -139,7 +138,7 @@ O parser XML altera apenas chaves presentes. Um arquivo inválido gera ação de
 O Enhanced tem launcher, ciclo de processo e cache diferentes. Até o adaptador próprio existir:
 
 1. a descoberta identifica sinais inequívocos da edição;
-2. o Core retorna `Blocked` com explicação;
+2. o planejamento retorna um bloqueio de plano (`PlanBlockCode.EnhancedNotSupported`) com explicação;
 3. nenhum fallback Legacy é tentado;
 4. o usuário recebe links para o estado de suporte do projeto;
 5. testes garantem que nenhum executor seja chamado.
