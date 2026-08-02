@@ -1,4 +1,5 @@
 using System.Management;
+using System.Threading;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
@@ -24,10 +25,41 @@ public interface IStorageHealthInspector
 /// installation, since mapping a drive letter to a physical disk reliably
 /// would require a fragile multi-class WMI join across storage pools,
 /// dynamic disks and virtual disks.
+/// 
+/// Caches results for 30 seconds to avoid repeated WMI queries during a single session.
 /// </summary>
 public sealed class WindowsStorageHealthInspector : IStorageHealthInspector
 {
+    private static readonly object CacheLock = new();
+    private static StorageHealthSnapshot? cachedSnapshot;
+    private static DateTimeOffset? cachedAt;
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(30);
+
     public StorageHealthSnapshot GetSnapshot()
+    {
+        // Check cache first
+        lock (CacheLock)
+        {
+            if (cachedSnapshot is not null && cachedAt is not null &&
+                DateTimeOffset.UtcNow - cachedAt.Value < CacheTtl)
+            {
+                return cachedSnapshot;
+            }
+        }
+
+        var snapshot = GetSnapshotInternal();
+
+        // Update cache
+        lock (CacheLock)
+        {
+            cachedSnapshot = snapshot;
+            cachedAt = DateTimeOffset.UtcNow;
+        }
+
+        return snapshot;
+    }
+
+    private static StorageHealthSnapshot GetSnapshotInternal()
     {
         var disks = new List<PhysicalDiskInfo>();
         try

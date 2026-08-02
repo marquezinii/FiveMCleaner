@@ -78,93 +78,113 @@ public sealed class AppOptimizationService : IAppOptimizationService
         JsonSerializer.Deserialize<AppSettings>(json, SettingsReadOptions) ?? new AppSettings();
 
     public async Task<AppDiagnostic> DiagnoseAsync(CancellationToken cancellationToken = default)
-    {
-        if (demoMode && useSyntheticDiagnostic)
         {
-            cancellationToken.ThrowIfCancellationRequested();
-            return CreateDemoDiagnostic();
+            if (demoMode && useSyntheticDiagnostic)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                return CreateDemoDiagnostic();
+            }
+
+            return await Task.Run(async () =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Run independent I/O-bound operations concurrently to reduce total diagnosis time
+                var installationTask = Task.Run(() => DetectFiveMInstallation(), cancellationToken);
+                var memoryStatusTask = Task.Run(GetMemoryStatus, cancellationToken);
+                var gpuNamesTask = Task.Run(GetGpuNames, cancellationToken);
+                var cpuNameTask = Task.Run(GetCpuName, cancellationToken);
+                var memoryLayoutTask = Task.Run(GetMemoryModuleLayout, cancellationToken);
+                var osLabelTask = Task.Run(GetOperatingSystemLabel, cancellationToken);
+                var archLabelTask = Task.Run(GetArchitectureLabel, cancellationToken);
+
+                var installation = await installationTask.ConfigureAwait(false);
+                var gtaV = GtaVLocator.Detect(installation.Root);
+                var gtaVIsRunning = new WindowsGtaVProcessInspector()
+                    .IsRunningFrom(gtaV.InstallationRoot);
+                detectedLegacyRoot = installation.Edition == FiveMEdition.Legacy
+                    ? installation.Root
+                    : null;
+
+                var memoryStatus = await memoryStatusTask.ConfigureAwait(false);
+                var systemDrive = new DriveInfo(Path.GetPathRoot(Environment.SystemDirectory)!);
+                var cacheBytes = installation.Edition == FiveMEdition.Legacy && installation.Root is not null
+                    ? GetLegacyServerCacheBytes(installation.Root, cancellationToken)
+                    : 0L;
+
+                var gpuNames = await gpuNamesTask.ConfigureAwait(false);
+                var gpuWasIdentified = gpuNames.Count > 0;
+                var gpuName = gpuWasIdentified
+                    ? string.Join(" / ", gpuNames)
+                    : localization.GetString("Diagnosis.GpuFallback");
+
+                var streamingSoftware = DetectStreamingSoftware(cancellationToken);
+                var memoryGiB = memoryStatus.TotalPhysical / 1024d / 1024d / 1024d;
+                var availableMemoryGiB = memoryStatus.AvailablePhysical / 1024d / 1024d / 1024d;
+                var logicalProcessorCount = Math.Max(1, Environment.ProcessorCount);
+                var freeDiskGiB = systemDrive.AvailableFreeSpace / 1024d / 1024d / 1024d;
+                var running = IsFiveMRunning();
+
+                var assessment = HardwareProfileAdvisor.Assess(
+                    memoryGiB,
+                    availableMemoryGiB,
+                    logicalProcessorCount,
+                    freeDiskGiB,
+                    installation.Edition,
+                    cacheBytes,
+                    gpuWasIdentified);
+
+                var notices = new List<string>();
+                notices.Add(gtaV.IsInstalled
+                    ? "GTA V Legacy detectado; executável e settings.xml entrarão nas ações compatíveis."
+                    : "O executável do GTA V Legacy não foi confirmado automaticamente.");
+                if (cacheBytes >= 8L * 1024 * 1024 * 1024)
+                {
+                    notices.Add("O cache regenerável de servidores está acima de 8 GB; o reparo inteligente pode liberar espaço.");
+                }
+                else if (freeDiskGiB < 15)
+                {
+                    notices.Add("Há pouco espaço livre na unidade do Windows; limpezas seguras podem melhorar a responsividade geral.");
+                }
+                else
+                {
+                    notices.Add("O PC está estável; o perfil sugerido prioriza consistência sem tweaks de risco.");
+                }
+
+                // Await remaining parallel tasks
+                var cpuName = await cpuNameTask.ConfigureAwait(false);
+                var memoryModuleLayout = await memoryLayoutTask.ConfigureAwait(false);
+                var osLabel = await osLabelTask.ConfigureAwait(false);
+                var archLabel = await archLabelTask.ConfigureAwait(false);
+
+                return new AppDiagnostic
+                {
+                    Edition = installation.Edition,
+                    IsFiveMRunning = running,
+                    FiveMRoot = installation.Root,
+                    GtaVDetected = gtaV.IsInstalled,
+                    GtaVIsRunning = gtaVIsRunning,
+                    GtaVExecutablePath = gtaV.ExecutablePath,
+                    GtaVGraphicsSettingsPath = gtaV.GraphicsSettingsPath,
+                    CpuName = cpuName,
+                    GpuName = gpuName,
+                    GpuNames = gpuNames,
+                    TotalMemoryGiB = memoryGiB,
+                    AvailableMemoryGiB = availableMemoryGiB,
+                    MemoryModuleLayout = memoryModuleLayout,
+                    LogicalProcessorCount = logicalProcessorCount,
+                    FreeDiskGiB = freeDiskGiB,
+                    LegacyCacheBytes = cacheBytes,
+                    OsLabel = osLabel,
+                    SystemArchitecture = archLabel,
+                    ReadinessScore = assessment.ReadinessScore,
+                    RecommendedProfile = assessment.RecommendedProfile,
+                    PerformancePressure = assessment.PerformancePressure,
+                    StreamingSoftware = streamingSoftware,
+                    Notices = notices
+                };
+            }, cancellationToken).ConfigureAwait(false);
         }
-
-        return await Task.Run(() =>
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var installation = DetectFiveMInstallation();
-            var gtaV = GtaVLocator.Detect(installation.Root);
-            var gtaVIsRunning = new WindowsGtaVProcessInspector()
-                .IsRunningFrom(gtaV.InstallationRoot);
-            detectedLegacyRoot = installation.Edition == FiveMEdition.Legacy
-                ? installation.Root
-                : null;
-            var memoryStatus = GetMemoryStatus();
-            var systemDrive = new DriveInfo(Path.GetPathRoot(Environment.SystemDirectory)!);
-            var cacheBytes = installation.Edition == FiveMEdition.Legacy && installation.Root is not null
-                ? GetLegacyServerCacheBytes(installation.Root, cancellationToken)
-                : 0L;
-            var gpuNames = GetGpuNames();
-            var gpuWasIdentified = gpuNames.Count > 0;
-            var gpuName = gpuWasIdentified
-                ? string.Join(" / ", gpuNames)
-                : localization.GetString("Diagnosis.GpuFallback");
-            var streamingSoftware = DetectStreamingSoftware(cancellationToken);
-            var memoryGiB = memoryStatus.TotalPhysical / 1024d / 1024d / 1024d;
-            var availableMemoryGiB = memoryStatus.AvailablePhysical / 1024d / 1024d / 1024d;
-            var logicalProcessorCount = Math.Max(1, Environment.ProcessorCount);
-            var freeDiskGiB = systemDrive.AvailableFreeSpace / 1024d / 1024d / 1024d;
-            var running = IsFiveMRunning();
-
-            var assessment = HardwareProfileAdvisor.Assess(
-                memoryGiB,
-                availableMemoryGiB,
-                logicalProcessorCount,
-                freeDiskGiB,
-                installation.Edition,
-                cacheBytes,
-                gpuWasIdentified);
-            var notices = new List<string>();
-            notices.Add(gtaV.IsInstalled
-                ? "GTA V Legacy detectado; executável e settings.xml entrarão nas ações compatíveis."
-                : "O executável do GTA V Legacy não foi confirmado automaticamente.");
-            if (cacheBytes >= 8L * 1024 * 1024 * 1024)
-            {
-                notices.Add("O cache regenerável de servidores está acima de 8 GB; o reparo inteligente pode liberar espaço.");
-            }
-            else if (freeDiskGiB < 15)
-            {
-                notices.Add("Há pouco espaço livre na unidade do Windows; limpezas seguras podem melhorar a responsividade geral.");
-            }
-            else
-            {
-                notices.Add("O PC está estável; o perfil sugerido prioriza consistência sem tweaks de risco.");
-            }
-
-            return new AppDiagnostic
-            {
-                Edition = installation.Edition,
-                IsFiveMRunning = running,
-                FiveMRoot = installation.Root,
-                GtaVDetected = gtaV.IsInstalled,
-                GtaVIsRunning = gtaVIsRunning,
-                GtaVExecutablePath = gtaV.ExecutablePath,
-                GtaVGraphicsSettingsPath = gtaV.GraphicsSettingsPath,
-                CpuName = GetCpuName(),
-                GpuName = gpuName,
-                GpuNames = gpuNames,
-                TotalMemoryGiB = memoryGiB,
-                AvailableMemoryGiB = availableMemoryGiB,
-                MemoryModuleLayout = GetMemoryModuleLayout(),
-                LogicalProcessorCount = logicalProcessorCount,
-                FreeDiskGiB = freeDiskGiB,
-                LegacyCacheBytes = cacheBytes,
-                OsLabel = GetOperatingSystemLabel(),
-                SystemArchitecture = GetArchitectureLabel(),
-                ReadinessScore = assessment.ReadinessScore,
-                RecommendedProfile = assessment.RecommendedProfile,
-                PerformancePressure = assessment.PerformancePressure,
-                StreamingSoftware = streamingSoftware,
-                Notices = notices
-            };
-        }, cancellationToken).ConfigureAwait(false);
-    }
 
     public bool SettingsFileExists() => !demoMode && File.Exists(settingsPath);
 
