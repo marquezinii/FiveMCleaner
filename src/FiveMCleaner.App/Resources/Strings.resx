@@ -324,14 +324,6 @@
   <data name="BugReport.Send.NotConfirmed" xml:space="preserve"><value>The delivery service did not confirm receipt. Copy the report and try again later.</value></data>
   <data name="BugReport.Send.UnexpectedResponse" xml:space="preserve"><value>The service returned an unexpected response. Copy the report and try again later.</value></data>
   <data name="BugReport.Send.Accepted" xml:space="preserve"><value>The delivery service received the report.</value></data>
-  <data name="Streaming.RunningTitle" xml:space="preserve"><value>{0} is running</value></data>
-  <data name="Streaming.RunningDetail" xml:space="preserve"><value>FiveMCleaner will preserve the app and never infer that you are live.</value></data>
-  <data name="Streaming.InstalledTitle" xml:space="preserve"><value>{0} detected</value></data>
-  <data name="Streaming.InstalledDetail" xml:space="preserve"><value>The plan does not alter scenes, accounts or recording files.</value></data>
-  <data name="Streaming.SafeTitle" xml:space="preserve"><value>Streaming-safe optimization</value></data>
-  <data name="Streaming.SafeDetail" xml:space="preserve"><value>Profiles do not close OBS, Streamlabs or TikTok LIVE Studio.</value></data>
-  <data name="Streaming.PartialTitle" xml:space="preserve"><value>Streaming check was partial</value></data>
-  <data name="Streaming.PartialDetail" xml:space="preserve"><value>Some locations could not be read; conservative rules remain active.</value></data>
   <data name="Streaming.Readiness.Protected.Title" xml:space="preserve"><value>Streaming protection is active</value></data>
   <data name="Streaming.Readiness.Protected.Detail" xml:space="preserve"><value>A streaming app is open. FiveMCleaner preserves it; confirm your broadcast state before optimizing.</value></data>
   <data name="Streaming.Readiness.Attention.Title" xml:space="preserve"><value>Run a test before going live</value></data>
@@ -655,20 +647,9 @@
   <data name="Profiles.Presentation.Light.Benefits" xml:space="preserve"><value>Frees space and applies light adjustments with minimal footprint, keeping visual quality nearly untouched.</value></data>
   <data name="Profiles.Presentation.Balanced.Benefits" xml:space="preserve"><value>Balances visual quality, GPU usage and frame stability with moderate, fully reversible adjustments.</value></data>
   <data name="Profiles.Presentation.Aggressive.Benefits" xml:space="preserve"><value>Prioritizes FPS and responsiveness over visual quality, applying every safe adjustment available.</value></data>
-  <data name="Profiles.Presentation.Light.Risks" xml:space="preserve"><value>Very low risk: only well-known, fully reversible adjustments with minimal visual impact.</value></data>
-  <data name="Profiles.Presentation.Balanced.Risks" xml:space="preserve"><value>Moderate risk: may request one administrator confirmation for the performance power plan.</value></data>
-  <data name="Profiles.Presentation.Aggressive.Risks" xml:space="preserve"><value>Higher risk: visual quality drops noticeably and Windows visual effects are reduced.</value></data>
   <data name="Profiles.Presentation.Impact.Low" xml:space="preserve"><value>Low impact</value></data>
   <data name="Profiles.Presentation.Impact.Moderate" xml:space="preserve"><value>Moderate impact</value></data>
   <data name="Profiles.Presentation.Impact.High" xml:space="preserve"><value>High impact</value></data>
-  <data name="Profiles.Presentation.Reversibility.Mixed" xml:space="preserve"><value>Mostly reversible; some cleanups free disk space permanently.</value></data>
-  <data name="Profiles.Presentation.Reversibility.FullyReversible" xml:space="preserve"><value>Fully reversible from history.</value></data>
-  <data name="Profiles.Presentation.VariabilityNote" xml:space="preserve"><value>Results vary by computer, drivers and server; no specific FPS gain is guaranteed.</value></data>
-  <data name="Profiles.Presentation.Benefits.Label" xml:space="preserve"><value>Expected benefits</value></data>
-  <data name="Profiles.Presentation.Impact.Label" xml:space="preserve"><value>Impact level</value></data>
-  <data name="Profiles.Presentation.Risks.Label" xml:space="preserve"><value>Possible risks</value></data>
-  <data name="Profiles.Presentation.Reversibility.Label" xml:space="preserve"><value>Reversibility</value></data>
-  <data name="Profiles.Presentation.Categories.Label" xml:space="preserve"><value>Categories analyzed</value></data>
   <data name="Category.Safety" xml:space="preserve"><value>Safety</value></data>
   <data name="Category.Storage" xml:space="preserve"><value>Storage</value></data>
   <data name="Category.WindowsGaming" xml:space="preserve"><value>Windows gaming</value></data>

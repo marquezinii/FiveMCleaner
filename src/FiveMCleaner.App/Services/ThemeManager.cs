@@ -89,8 +89,6 @@ public sealed class ThemeManager : IDisposable
 
     public AppThemePreference Preference => preference;
 
-    public bool IsLightTheme { get; private set; }
-
     public void Apply(AppThemePreference value)
     {
         if (!Enum.IsDefined(value))
@@ -177,8 +175,6 @@ public sealed class ThemeManager : IDisposable
         var wpfUiTheme = useLightTheme ? ApplicationTheme.Light : ApplicationTheme.Dark;
         ApplicationAccentColorManager.Apply(accent, wpfUiTheme, systemGlassColor: false, systemAccentColor: false);
         ApplicationThemeManager.Apply(wpfUiTheme, updateAccent: false);
-
-        IsLightTheme = useLightTheme;
     }
 
     private static void SetBrushColor(string resourceKey, string value)

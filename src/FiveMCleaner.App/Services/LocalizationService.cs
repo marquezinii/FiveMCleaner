@@ -18,8 +18,6 @@ public interface ILocalizationService
 
     CultureInfo CurrentCulture { get; }
 
-    IReadOnlyList<AppLanguageOption> SupportedLanguages { get; }
-
     string this[string key] { get; }
 
     string GetString(string key);
@@ -47,12 +45,6 @@ public sealed class LocalizationService : ILocalizationService
     private static readonly ResourceManager Resources = new(
         ResourceBaseName,
         typeof(LocalizationService).Assembly);
-    private static readonly IReadOnlyList<AppLanguageOption> LanguageOptions = Array.AsReadOnly(
-    [
-        new AppLanguageOption(AppLanguage.English, EnglishCulture.Name, "English"),
-        new AppLanguageOption(AppLanguage.PortugueseBrazil, PortugueseBrazilCulture.Name, "Português (Brasil)"),
-        new AppLanguageOption(AppLanguage.Spanish, SpanishCulture.Name, "Español")
-    ]);
 
     private readonly object sync = new();
     private AppLanguage currentLanguage;
@@ -91,8 +83,6 @@ public sealed class LocalizationService : ILocalizationService
     }
 
     public CultureInfo CurrentCulture => CultureFor(CurrentLanguage);
-
-    public IReadOnlyList<AppLanguageOption> SupportedLanguages => LanguageOptions;
 
     public string this[string key] => GetString(key);
 

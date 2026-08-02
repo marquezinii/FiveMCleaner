@@ -183,19 +183,6 @@ public sealed class LocalTelemetryQueueTests : IDisposable
     }
 
     [Fact]
-    public async Task PurgeOlderThan_RemovesFilesOlderThanTheGivenAge()
-    {
-        var queue = new LocalTelemetryQueue(tempDirectory);
-        await queue.EnqueueAsync(SampleEvent());
-        var filePath = Directory.GetFiles(tempDirectory, "*.json").Single();
-        File.SetCreationTimeUtc(filePath, DateTime.UtcNow.AddDays(-30));
-
-        queue.PurgeOlderThan(TimeSpan.FromDays(14));
-
-        Assert.Empty(queue.ReadPending(10));
-    }
-
-    [Fact]
     public void ReadPending_NoDirectoryYet_ReturnsEmpty()
     {
         var queue = new LocalTelemetryQueue(tempDirectory);

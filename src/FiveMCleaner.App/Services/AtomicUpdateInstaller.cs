@@ -18,7 +18,7 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
         this.launcherPath = Path.GetFullPath(launcherPath);
         dataRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FiveMCleaner");
-        diagnostics = new UpdaterDiagnostics(dataRoot, UpdaterDiagnostics.UpdaterEventsEndpoint);
+        diagnostics = new UpdaterDiagnostics(dataRoot);
     }
 
     public async Task<SilentUpdateLaunch> StartAsync(DownloadedUpdate update, CancellationToken cancellationToken = default)
