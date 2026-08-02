@@ -23,6 +23,10 @@ import {
   isSessionValid,
   readSessionCookie,
 } from './sessionStore.js';
+import { readBoundedJson } from '../requestSecurity.js';
+
+const MAX_LOGIN_BODY_BYTES = 4 * 1024;
+const MAX_PASSWORD_CHARACTERS = 1024;
 
 function clientIp(request) {
   // Cloudflare always sets this header at the edge; it cannot be spoofed by
@@ -94,18 +98,18 @@ export function createPasswordAuthProvider(env, now = () => new Date()) {
         );
       }
 
-      let password;
-      try {
-        const body = await request.json();
-        password = body?.password;
-      } catch {
+      const body = await readBoundedJson(request, MAX_LOGIN_BODY_BYTES);
+      const password = body?.password;
+      if (body === null) {
         return new Response(
           JSON.stringify({ error: 'invalid-request' }),
           { status: 400, headers: { 'Content-Type': 'application/json' } },
         );
       }
 
-      const isValid = typeof password === 'string' && (await verifyPassword(password, env.ADMIN_PASSWORD_HASH));
+      const isValid = typeof password === 'string'
+        && password.length <= MAX_PASSWORD_CHARACTERS
+        && (await verifyPassword(password, env.ADMIN_PASSWORD_HASH));
       if (!isValid) {
         await saveLoginAttempt(db, ipHash, nextStateAfterFailure(attemptRow, nowValue));
         return new Response(

@@ -89,6 +89,11 @@ URL), authentication is a small, self-contained system:
   domains — a stricter policy silently never sends the cookie back on a
   cross-site `fetch`, which is exactly what made the first deployment's
   login appear to succeed but leave the dashboard stuck on the login screen.
+- **CSRF e limites de entrada**: login e logout exigem o `Origin` exato de
+  `DASHBOARD_ORIGIN`; todos os corpos JSON públicos são lidos com limite de
+  bytes por rota antes do parse. Isso mantém o cookie cross-site necessário
+  sem aceitar mutações administrativas de outras páginas e impede buffering
+  irrestrito de payloads anônimos.
 - **Swappable by design**: `src/auth/passwordAuthProvider.js` exposes exactly
   three functions — `login`, `logout`, `requireSession` — and `index.js` only
   ever calls those three. A future OAuth-based provider (Google/GitHub, or
@@ -98,10 +103,11 @@ URL), authentication is a small, self-contained system:
 **Known test gap**: the pure decision logic behind each of these
 (`crypto.js`, `bruteForceGuard.js`, `sessionStore.js`, `stats/queries.js`,
 `stats/csv.js`, `cors.js`) is unit tested. The D1-touching glue in
-`passwordAuthProvider.js` and the routing in `index.js` are not covered by an
-automated test — that would require Miniflare (a simulated Workers/D1
-runtime), which was not set up in this environment. Both were validated
-manually against the real deployment (see "Verified end-to-end" below); two
+`passwordAuthProvider.js` and the D1-backed routing in `index.js` are not
+covered end-to-end by an automated test — that would require Miniflare (a
+simulated Workers/D1 runtime), which was not set up in this environment. The
+origin gate and bounded request reader are covered without D1. The rest was
+validated manually against the real deployment (see "Verified end-to-end" below); two
 real bugs (the PBKDF2 iteration cap and the `SameSite` cookie policy) were
 only caught that way, not by the unit tests, which is exactly why this gap
 is called out rather than assumed harmless.

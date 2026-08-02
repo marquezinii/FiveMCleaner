@@ -11,8 +11,12 @@
 // purpose of allow-listing when credentials are involved.
 
 /** Builds the CORS response headers for `origin`, or `{}` if it does not match. */
+export function isAllowedDashboardOrigin(origin, allowedOrigin) {
+  return Boolean(allowedOrigin && origin && origin === allowedOrigin);
+}
+
 export function buildCorsHeaders(origin, allowedOrigin) {
-  if (!allowedOrigin || !origin || origin !== allowedOrigin) {
+  if (!isAllowedDashboardOrigin(origin, allowedOrigin)) {
     return {};
   }
 
@@ -31,6 +35,9 @@ export function withCorsHeaders(response, corsHeaders) {
   for (const [name, value] of Object.entries(corsHeaders)) {
     headers.set(name, value);
   }
+  if (!headers.has('Cache-Control')) headers.set('Cache-Control', 'no-store');
+  headers.set('Referrer-Policy', 'no-referrer');
+  headers.set('X-Content-Type-Options', 'nosniff');
 
   return new Response(response.body, {
     status: response.status,

@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { buildCorsHeaders, withCorsHeaders } from '../src/cors.js';
+import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from '../src/cors.js';
+
+test('isAllowedDashboardOrigin requires the exact configured origin', () => {
+  assert.equal(isAllowedDashboardOrigin('https://dashboard.example', 'https://dashboard.example'), true);
+  assert.equal(isAllowedDashboardOrigin('https://evil.example', 'https://dashboard.example'), false);
+  assert.equal(isAllowedDashboardOrigin(null, 'https://dashboard.example'), false);
+});
 
 test('buildCorsHeaders returns matching headers when origin equals the allowed origin', () => {
   const headers = buildCorsHeaders('http://localhost:8788', 'http://localhost:8788');
@@ -47,4 +53,7 @@ test('withCorsHeaders preserves existing headers already on the response', () =>
   const result = withCorsHeaders(original, { 'Access-Control-Allow-Origin': 'http://localhost:8788' });
 
   assert.equal(result.headers.get('Content-Type'), 'application/json');
+  assert.equal(result.headers.get('Cache-Control'), 'no-store');
+  assert.equal(result.headers.get('Referrer-Policy'), 'no-referrer');
+  assert.equal(result.headers.get('X-Content-Type-Options'), 'nosniff');
 });

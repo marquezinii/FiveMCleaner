@@ -6,9 +6,13 @@ import { recentUpdaterEvents } from './updaterEvents/queries.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
-import { buildCorsHeaders, withCorsHeaders } from './cors.js';
-import { readJsonBody, JSON_PARSE_FAILED } from './readJsonBody.js';
-import { parseReleaseManifest } from './releaseManifest.js';
+<<<<<<< HEAD
+import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from './cors.js';
+import { readBoundedJson } from './requestSecurity.js';
+
+const MAX_TELEMETRY_BODY_BYTES = 512 * 1024;
+const MAX_BUG_REPORT_BODY_BYTES = 128 * 1024;
+const MAX_UPDATER_EVENT_BODY_BYTES = 4 * 1024;
 
 // FiveMCleaner anonymous telemetry + bug reports + admin dashboard API
 // Worker. See wrangler.toml and README.md for deployment status of each
@@ -90,10 +94,16 @@ async function route(request, env, url) {
   }
 
   if (request.method === 'POST' && url.pathname === '/admin/login') {
+    if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
+      return new Response('Forbidden', { status: 403 });
+    }
     return createPasswordAuthProvider(env).login(request);
   }
 
   if (request.method === 'POST' && url.pathname === '/admin/logout') {
+    if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
+      return new Response('Forbidden', { status: 403 });
+    }
     return createPasswordAuthProvider(env).logout(request);
   }
 
@@ -132,8 +142,8 @@ function handleSignedReleaseManifest(env) {
 }
 
 async function handleUpdaterEventIngest(request, env) {
-  const payload = await readJsonBody(request);
-  if (payload === JSON_PARSE_FAILED) return new Response('Invalid JSON', { status: 400 });
+  const payload = await readBoundedJson(request, MAX_UPDATER_EVENT_BODY_BYTES);
+  if (payload === null) return new Response('Invalid JSON', { status: 400 });
   const event = validateUpdaterEvent(payload);
   if (event === null) return new Response('Updater event failed validation', { status: 400 });
   await env.TELEMETRY_DB.prepare(
@@ -157,10 +167,8 @@ async function handleUpdaterEventsList(request, env, url) {
 }
 
 async function handleTelemetryIngest(request, env) {
-  const payload = await readJsonBody(request);
-  if (payload === JSON_PARSE_FAILED) {
-    return new Response('Invalid JSON', { status: 400 });
-  }
+  const payload = await readBoundedJson(request, MAX_TELEMETRY_BODY_BYTES);
+  if (payload === null) return new Response('Invalid JSON', { status: 400 });
 
   const events = validateBatch(payload);
   if (events === null) {
@@ -267,10 +275,8 @@ async function handleStatsRequest(request, env, url) {
 }
 
 async function handleBugReportIngest(request, env) {
-  const payload = await readJsonBody(request);
-  if (payload === JSON_PARSE_FAILED) {
-    return new Response('Invalid JSON', { status: 400 });
-  }
+  const payload = await readBoundedJson(request, MAX_BUG_REPORT_BODY_BYTES);
+  if (payload === null) return new Response('Invalid JSON', { status: 400 });
 
   const report = validateBugReport(payload);
   if (report === null) {
