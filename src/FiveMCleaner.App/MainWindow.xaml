@@ -613,13 +613,6 @@
                                         </StackPanel>
                                     </CheckBox>
                                     <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
-                                    <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding ShareCrashReports}">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding [Settings.CrashReports.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" />
-                                            <TextBlock Text="{Binding [Settings.CrashReports.Description], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                                        </StackPanel>
-                                    </CheckBox>
-                                    <Separator Margin="0,13" Background="{DynamicResource BorderSoftBrush}" />
                                     <TextBlock Text="{Binding [Privacy.Collects.Title], Source={StaticResource LocalizedStrings}}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource GreenBrush}" />
                                     <TextBlock Text="{Binding [Privacy.Collects.Items], Source={StaticResource LocalizedStrings}}" Margin="0,4,0,11" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding [Privacy.DoesNotCollect.Title], Source={StaticResource LocalizedStrings}}" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource RedBrush}" />

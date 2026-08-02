@@ -45,7 +45,7 @@ public sealed class PrivacyConsentEvaluatorTests
         Assert.True(decision.RequiresConsentScreen);
         Assert.Equal(PrivacyConsentScreenVariant.FirstInstallation, decision.Variant);
         Assert.False(decision.IsAnonymousTelemetryAuthorized);
-        Assert.False(decision.IsCrashReportingAuthorized);
+        Assert.True(decision.IsCrashReportingAuthorized);
     }
 
     [Fact]
@@ -63,7 +63,7 @@ public sealed class PrivacyConsentEvaluatorTests
         Assert.True(decision.RequiresConsentScreen);
         Assert.Equal(PrivacyConsentScreenVariant.UpgradeFromOlderInstallation, decision.Variant);
         Assert.False(decision.IsAnonymousTelemetryAuthorized);
-        Assert.False(decision.IsCrashReportingAuthorized);
+        Assert.True(decision.IsCrashReportingAuthorized);
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public sealed class PrivacyConsentEvaluatorTests
         Assert.True(decision.RequiresConsentScreen);
         Assert.Equal(PrivacyConsentScreenVariant.UpgradeFromOlderInstallation, decision.Variant);
         Assert.False(decision.IsAnonymousTelemetryAuthorized);
-        Assert.False(decision.IsCrashReportingAuthorized);
+        Assert.True(decision.IsCrashReportingAuthorized);
     }
 
     [Fact]
@@ -117,7 +117,7 @@ public sealed class PrivacyConsentEvaluatorTests
         Assert.False(decision.RequiresConsentScreen);
         Assert.Equal(PrivacyConsentScreenVariant.AlreadyValid, decision.Variant);
         Assert.False(decision.IsAnonymousTelemetryAuthorized);
-        Assert.False(decision.IsCrashReportingAuthorized);
+        Assert.True(decision.IsCrashReportingAuthorized);
     }
 
     [Fact]
@@ -134,7 +134,7 @@ public sealed class PrivacyConsentEvaluatorTests
 
         Assert.False(decision.RequiresConsentScreen);
         Assert.True(decision.IsAnonymousTelemetryAuthorized);
-        Assert.False(decision.IsCrashReportingAuthorized);
+        Assert.True(decision.IsCrashReportingAuthorized);
     }
 
     [Fact]
@@ -169,7 +169,7 @@ public sealed class PrivacyConsentEvaluatorTests
         Assert.True(decision.RequiresConsentScreen);
         Assert.Equal(PrivacyConsentScreenVariant.ConsentRenewalRequired, decision.Variant);
         Assert.False(decision.IsAnonymousTelemetryAuthorized);
-        Assert.False(decision.IsCrashReportingAuthorized);
+        Assert.True(decision.IsCrashReportingAuthorized);
     }
 
     [Fact]
@@ -196,7 +196,7 @@ public sealed class PrivacyConsentEvaluatorTests
         var decision = PrivacyConsentEvaluator.Evaluate(settings, settingsFileExistedBeforeLoad: false);
 
         Assert.False(decision.IsAnonymousTelemetryAuthorized);
-        Assert.False(decision.IsCrashReportingAuthorized);
+        Assert.True(decision.IsCrashReportingAuthorized);
     }
 
     [Fact]
@@ -212,7 +212,7 @@ public sealed class PrivacyConsentEvaluatorTests
         var decision = PrivacyConsentEvaluator.Evaluate(settings, settingsFileExistedBeforeLoad: true);
 
         Assert.False(decision.IsAnonymousTelemetryAuthorized);
-        Assert.False(decision.IsCrashReportingAuthorized);
+        Assert.True(decision.IsCrashReportingAuthorized);
     }
 }
 
@@ -382,7 +382,7 @@ public sealed class PrivacyConsentOutcomeBuilderTests
             acceptCrashReports: false);
 
         Assert.False(result.ShareAnonymousTelemetry);
-        Assert.False(result.ShareCrashReports);
+        Assert.True(result.ShareCrashReports);
         Assert.Equal(PrivacyConsentPolicy.CurrentVersion, result.PrivacyConsentVersion);
     }
 
@@ -395,7 +395,7 @@ public sealed class PrivacyConsentOutcomeBuilderTests
             acceptCrashReports: false);
 
         Assert.True(result.ShareAnonymousTelemetry);
-        Assert.False(result.ShareCrashReports);
+        Assert.True(result.ShareCrashReports);
     }
 
     [Fact]

@@ -23,7 +23,7 @@ public static class PrivacyConsentPolicy
     /// FormSubmit to another destination) — every user, including those who
     /// already accepted an older version, will be asked to confirm again.
     /// </summary>
-    public const int CurrentVersion = 3;
+    public const int CurrentVersion = 4;
 
     /// <summary>
     /// Full history of consent versions, oldest first, each with a short
@@ -50,7 +50,11 @@ public static class PrivacyConsentPolicy
         new PrivacyConsentVersionEntry(
             3,
             "Adiciona eventos estruturados de falha e recuperação do atualizador (etapa, resultado, código e versões), " +
-            "sem caminhos, logs completos, texto livre ou identificador de máquina.")
+            "sem caminhos, logs completos, texto livre ou identificador de máquina."),
+        new PrivacyConsentVersionEntry(
+            4,
+            "Separa diagnósticos essenciais de dados opcionais: estabilidade, atualizações e o resultado técnico das " +
+            "operações permanecem ativos; hardware, perfil e ações usadas só são compartilhados com a opção ativada.")
     ];
 
     /// <summary>

@@ -204,7 +204,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
                 Guid.NewGuid().ToString("N"), stage, "failed", Classify(exception),
                 previous, candidate, "Production"),
             exception.ToString(),
-            UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
+            telemetryAuthorized: true);
 
     private static string Classify(Exception exception) => exception switch
     {

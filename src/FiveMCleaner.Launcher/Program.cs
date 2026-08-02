@@ -23,7 +23,7 @@ internal static class Program
         UpdateTransaction? currentTransaction = null;
         try
         {
-            await diagnostics.FlushPendingAsync(UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
+            await diagnostics.FlushPendingAsync(telemetryAuthorized: true);
             // Read the journal before WaitForParent (not after): WaitForParent
             // is exactly the step that can fail (the previous process not
             // exiting in time), and the catch block below needs
@@ -153,7 +153,7 @@ internal static class Program
             new UpdaterEvent(transaction.Id, stage, outcome, code, transaction.PreviousVersion,
                 transaction.CandidateVersion, "Production"),
             detail,
-            UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
+            telemetryAuthorized: true);
 
     // O processo pode sair entre o Process.Start e a leitura de HasExited, e
     // o Windows nega a consulta (Win32Exception) ou a propriedade

@@ -268,15 +268,12 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
         var consentWindow = new PrivacyConsentWindow(
             decision.Variant,
-            viewModel.ShareAnonymousTelemetry,
-            viewModel.ShareCrashReports)
+            viewModel.ShareAnonymousTelemetry)
         {
             Owner = this
         };
         consentWindow.ShowDialog();
-        await viewModel.ConfirmPrivacyConsentAsync(
-            consentWindow.AcceptedAnonymousTelemetry,
-            consentWindow.AcceptedCrashReports);
+        await viewModel.ConfirmPrivacyConsentAsync(consentWindow.AcceptedAnonymousTelemetry);
     }
 
     /// <summary>
@@ -295,11 +292,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     /// </summary>
     private void InitializeCrashReportingIfAuthorized()
     {
-        if (!viewModel.ShareCrashReports)
-        {
-            return;
-        }
-
         CrashReporting.Current = new SentryCrashReportingService();
         CrashReporting.Current.Initialize(remoteServicesOptions, viewModel.AppVersion);
     }
