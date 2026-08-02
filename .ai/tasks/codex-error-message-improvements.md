@@ -2,7 +2,7 @@
 
 - Agent: Codex
 - Branch: `ai/codex/error-message-improvements`
-- Status: ready for integration
+- Status: integrated into `dev/proxima-versao` on 02/08/2026
 - Objective: make user-facing failures actionable, localized, and free of raw technical exception details.
 
 ## Changes

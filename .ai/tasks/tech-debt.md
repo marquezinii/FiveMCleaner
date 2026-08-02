@@ -1,5 +1,7 @@
 # Tech-debt pass — decisions log
 
+- Integration status: integrated into `dev/proxima-versao` on 02/08/2026.
+
 Working branch/worktree: `ai/opencode/tech-debt`. Rule applied throughout:
 refactors are behavior-preserving unless explicitly recorded below as a
 deliberate behavior change.

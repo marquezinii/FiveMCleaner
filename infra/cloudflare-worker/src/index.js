@@ -6,9 +6,9 @@ import { recentUpdaterEvents } from './updaterEvents/queries.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
-<<<<<<< HEAD
 import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from './cors.js';
 import { readBoundedJson } from './requestSecurity.js';
+import { parseReleaseManifest } from './releaseManifest.js';
 
 const MAX_TELEMETRY_BODY_BYTES = 512 * 1024;
 const MAX_BUG_REPORT_BODY_BYTES = 128 * 1024;

@@ -1,5 +1,14 @@
 # Estado do Projeto
 
+## Integracao local das tarefas pendentes - 02/08/2026
+
+- Integradas em `dev/proxima-versao`: limpeza de divida tecnica, hardening do
+  Worker/dependencias web e mensagens de erro localizadas. O unico conflito,
+  no roteador do Worker, foi resolvido preservando as rotas refatoradas e os
+  limites de corpo, protecao de origem e cabecalhos de seguranca.
+- `readJsonBody.js`, que ficou sem consumidor apos a adocao da leitura limitada,
+  foi removido. Validacao final registrada no commit de integracao.
+
 ## Bug sweep: eventos do updater, CSV, telemetria, broker e settings — 01/08/2026
 
 - **Worker `updaterEvents/queries.js`**: o filtro `environment = 'All'` (default

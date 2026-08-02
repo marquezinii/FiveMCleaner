@@ -3,7 +3,7 @@
 - Agente: Codex
 - Branch: `ai/codex/security-hardening`
 - Objetivo: reduzir superfícies de DoS/CSRF no Worker público e remover dependências web com vulnerabilidades conhecidas.
-- Status: concluído, pronto para integração.
+- Status: integrado em `dev/proxima-versao` em 02/08/2026.
 
 ## Mudanças
 
