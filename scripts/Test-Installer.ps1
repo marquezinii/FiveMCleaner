@@ -32,12 +32,6 @@ $commonSilentArguments = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART')
 
 . (Join-Path $PSScriptRoot 'Installer.Common.ps1')
 
-function Assert-UnderArtifacts {
-    param([Parameter(Mandatory)][string]$Path)
-
-    Assert-PathUnderRoot -Path $Path -Root $artifactsRoot
-}
-
 function Get-RegistryValueOrNull {
     param(
         [Parameter(Mandatory)][string]$Path,

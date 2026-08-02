@@ -2,6 +2,8 @@
 // reportados" tab. Kept separate from stats/queries.js since bug reports are
 // a different domain (individual records, not aggregates).
 
+import { appendEnvironmentClause, appendDateRangeClauses } from '../filters.js';
+
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
 
@@ -13,25 +15,14 @@ export function recentBugReports({ environment, category, from, to } = {}, limit
   const clauses = [];
   const params = [];
 
-  if (environment && environment !== 'All') {
-    clauses.push('environment = ?');
-    params.push(environment);
-  }
+  appendEnvironmentClause(clauses, params, environment);
 
   if (category) {
     clauses.push('category = ?');
     params.push(category);
   }
 
-  if (from) {
-    clauses.push('received_at >= ?');
-    params.push(from);
-  }
-
-  if (to) {
-    clauses.push("received_at < date(?, '+1 day')");
-    params.push(to);
-  }
+  appendDateRangeClauses(clauses, params, { from, to });
 
   const whereSql = clauses.length > 0 ? `WHERE ${clauses.join(' AND ')}` : '';
   const boundedLimit = Math.min(Math.max(1, Math.trunc(limit) || DEFAULT_LIMIT), MAX_LIMIT);

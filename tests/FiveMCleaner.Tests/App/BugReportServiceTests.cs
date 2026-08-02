@@ -1,7 +1,6 @@
 using System.Globalization;
 using System.Net;
 using System.Net.Http;
-using System.Text;
 using System.Text.Json;
 using FiveMCleaner.App.Services;
 using Xunit;
@@ -15,7 +14,7 @@ public sealed class CloudflareBugReportServiceTests
     [Fact]
     public async Task SendAsync_PostsJsonWithTheAllowlistedFieldsAndTagsTheEnvironment()
     {
-        var handler = new RecordingHttpMessageHandler { StatusCode = HttpStatusCode.Accepted };
+        var handler = new RecordingHandler(HttpStatusCode.Accepted);
         using var httpClient = new HttpClient(handler);
         var service = CreateService(httpClient);
         var submission = ValidSubmission() with
@@ -33,7 +32,7 @@ public sealed class CloudflareBugReportServiceTests
         Assert.Equal(TestEndpoint, handler.RequestUri);
         Assert.Contains("application/json", handler.ContentType, StringComparison.OrdinalIgnoreCase);
 
-        using var body = JsonDocument.Parse(handler.RequestBody);
+        using var body = JsonDocument.Parse(handler.Body);
         var root = body.RootElement;
         Assert.Equal(submission.ReportId.ToString("D"), root.GetProperty("reportId").GetString());
         Assert.Equal(submission.Category, root.GetProperty("category").GetString());
@@ -49,7 +48,7 @@ public sealed class CloudflareBugReportServiceTests
     [Fact]
     public async Task SendAsync_RejectsAnInvalidEmailBeforeTransport()
     {
-        var handler = new RecordingHttpMessageHandler();
+        var handler = new RecordingHandler();
         using var httpClient = new HttpClient(handler);
         var service = CreateService(httpClient);
         var invalid = ValidSubmission() with { Email = "not-an-email" };
@@ -62,7 +61,7 @@ public sealed class CloudflareBugReportServiceTests
     [Fact]
     public async Task SendAsync_RejectsALogTextOverTheHundredKilobyteLimit()
     {
-        var handler = new RecordingHttpMessageHandler();
+        var handler = new RecordingHandler();
         using var httpClient = new HttpClient(handler);
         var service = CreateService(httpClient);
         var invalid = ValidSubmission() with { LogText = new string('a', 101 * 1024) };
@@ -75,7 +74,7 @@ public sealed class CloudflareBugReportServiceTests
     [Fact]
     public async Task SendAsync_MapsRateLimitWithoutRetry()
     {
-        var handler = new RecordingHttpMessageHandler { StatusCode = (HttpStatusCode)429 };
+        var handler = new RecordingHandler((HttpStatusCode)429);
         using var httpClient = new HttpClient(handler);
         var service = CreateService(httpClient);
 
@@ -88,7 +87,7 @@ public sealed class CloudflareBugReportServiceTests
     [Fact]
     public async Task SendAsync_MapsAnyOtherNonSuccessStatusToAGenericHttpError()
     {
-        var handler = new RecordingHttpMessageHandler { StatusCode = HttpStatusCode.InternalServerError };
+        var handler = new RecordingHandler(HttpStatusCode.InternalServerError);
         using var httpClient = new HttpClient(handler);
         var service = CreateService(httpClient);
 
@@ -112,7 +111,7 @@ public sealed class CloudflareBugReportServiceTests
     [Fact]
     public async Task SendAsync_RejectsMissingDescriptionBeforeTransport()
     {
-        var handler = new RecordingHttpMessageHandler();
+        var handler = new RecordingHandler();
         using var httpClient = new HttpClient(handler);
         var service = CreateService(httpClient);
         var invalid = ValidSubmission() with { Description = "   " };
@@ -125,7 +124,7 @@ public sealed class CloudflareBugReportServiceTests
     [Fact]
     public void Constructor_RejectsANonHttpsEndpoint()
     {
-        using var httpClient = new HttpClient(new RecordingHttpMessageHandler());
+        using var httpClient = new HttpClient(new RecordingHandler());
 
         Assert.Throws<ArgumentException>(() =>
             new CloudflareBugReportService(httpClient, new Uri("http://insecure.example.com"), "Production"));
@@ -143,40 +142,6 @@ public sealed class CloudflareBugReportServiceTests
         AppVersion = "1.0.0",
         Profile = "Médio"
     };
-
-    private sealed class RecordingHttpMessageHandler : HttpMessageHandler
-    {
-        public HttpStatusCode StatusCode { get; init; } = HttpStatusCode.Accepted;
-        public int CallCount { get; private set; }
-        public HttpMethod? Method { get; private set; }
-        public Uri? RequestUri { get; private set; }
-        public string ContentType { get; private set; } = string.Empty;
-        public string RequestBody { get; private set; } = string.Empty;
-
-        protected override async Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken)
-        {
-            CallCount++;
-            Method = request.Method;
-            RequestUri = request.RequestUri;
-            ContentType = request.Content?.Headers.ContentType?.ToString() ?? string.Empty;
-            if (request.Content is not null)
-            {
-                RequestBody = Encoding.UTF8.GetString(await request.Content.ReadAsByteArrayAsync(cancellationToken));
-            }
-
-            return new HttpResponseMessage(StatusCode) { Content = new StringContent("{}", Encoding.UTF8, "application/json") };
-        }
-    }
-
-    private sealed class ThrowingHandler : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken) =>
-            throw new HttpRequestException("simulated network failure");
-    }
 }
 
 public sealed class DisabledBugReportServiceTests

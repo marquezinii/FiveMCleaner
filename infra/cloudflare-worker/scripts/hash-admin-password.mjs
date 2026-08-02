@@ -10,13 +10,11 @@
 //
 // Then, when ready to deploy (requires your own explicit authorization,
 // never done automatically by this scaffold):
-//   wrangler secret put ADMIN_PASSWORD_HASH --env development
-//   wrangler secret put ADMIN_PASSWORD_HASH --env production
+//   wrangler secret put ADMIN_PASSWORD_HASH
 //
 // Also set a random, unrelated IP_HASH_SECRET the same way, e.g.:
 //   node -e "console.log(crypto.randomUUID() + crypto.randomUUID())"
-//   wrangler secret put IP_HASH_SECRET --env development
-//   wrangler secret put IP_HASH_SECRET --env production
+//   wrangler secret put IP_HASH_SECRET
 
 import { createInterface } from 'node:readline/promises';
 import { stdin, stdout } from 'node:process';

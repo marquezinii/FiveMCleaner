@@ -35,9 +35,9 @@ jobs:
       - name: Show SDK information
         run: dotnet --info
 
-      - name: Safety verification, build and unit tests
+      - name: Safety verification and build
         shell: pwsh
-        run: ./scripts/Verify-Safety.ps1
+        run: ./scripts/Verify-Safety.ps1 -SkipTests
 
       - name: Test
         run: >-

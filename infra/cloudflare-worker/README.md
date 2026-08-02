@@ -25,9 +25,9 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
   top-level, unnamed environment — `wrangler deploy` with no `--env`)
   handles both Development- and Production-tagged telemetry; the
   `environment` column on each row is what separates them for the
-  dashboard's filters, not a second deployment. `env.development`/
-  `env.production` sections exist but are unused today — kept in case a
-  genuine need for physically separate deployments comes up later.
+  dashboard's filters, not a second deployment. (An earlier
+  `env.development`/`env.production` named-environment design was removed:
+  it added no benefit since D1 already distinguishes rows by that column.)
 - `schema.sql` — the D1 tables: `telemetry_events` (one row per optimization
   run, including the version-2-consent hardware profile), 
   `telemetry_event_actions` (one row per applied action ID, for "most used
@@ -44,9 +44,8 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
 - `src/stats/` — `queries.js` (pure SQL+params builders, one per dashboard
   chart) and `csv.js` (pure CSV serialization for the export feature).
   Available `:name` values: `runs-per-day`, `os-versions`, `app-versions`,
-  `profiles`, `top-actions`, `top-cpu`, `top-gpu`, `ram-buckets`,
-  `average-time`, `success-rate`, `error-categories`,
-  `top-actions-in-failures`, `errors-by-version`, `recent-failures`. Every
+  `top-cpu`, `top-gpu`, `ram-buckets`, `average-time`, `success-rate`,
+  `error-categories`, `errors-by-version`, `recent-failures`. Every
   one accepts `?from=&to=&version=&environment=` query filters (`environment`
   defaults to `Production`; pass `All` to look across both).
 - `test/` — unit tests for everything pure-logic above, run with Node's
@@ -129,7 +128,6 @@ wrangler d1 execute fivemcleaner-telemetry --remote --file=./schema.sql   # touc
 wrangler deploy   # touches Cloudflare — ask first
 ```
 
-The `env.development`/`env.production` deploy scripts in `package.json`
-(`deploy:development`/`deploy:production`) target the currently-unused
-named-environment sections mentioned above; the real deployment uses plain
-`wrangler deploy`/`npm run deploy` with no `--env`.
+The real deployment uses plain `wrangler deploy`/`npm run deploy` with no
+`--env` — the old `deploy:development`/`deploy:production` scripts targeted
+named-environment sections that have been removed.

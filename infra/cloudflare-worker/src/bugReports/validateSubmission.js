@@ -4,6 +4,8 @@
 //
 // No attachment/screenshot support: reports are text-only (D1 only, no R2).
 
+import { ALLOWED_ENVIRONMENTS } from '../environments.js';
+
 export const MAX_CATEGORY_LENGTH = 60;
 export const MAX_SUMMARY_LENGTH = 120;
 export const MIN_SUMMARY_LENGTH = 5;
@@ -14,8 +16,6 @@ export const MAX_PROFILE_LENGTH = 32;
 export const MAX_TECHNICAL_SUMMARY_LENGTH = 512;
 export const MAX_EMAIL_LENGTH = 254;
 export const MAX_LOG_TEXT_BYTES = 100 * 1024;
-
-export const ALLOWED_ENVIRONMENTS = new Set(['Development', 'Production']);
 
 const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 
