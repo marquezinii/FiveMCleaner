@@ -43,7 +43,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
         logsDirectory = Path.Combine(appDataDirectory, "Logs");
         settingsPath = Path.Combine(appDataDirectory, "settings.json");
         indentedJson = new JsonSerializerOptions(FiveMCleanerJson.Options) { WriteIndented = true };
-        brokerClient = new ElevatedBrokerClient(appDataDirectory);
+        brokerClient = new ElevatedBrokerClient(appDataDirectory, localization);
     }
 
     public string LogsDirectory => logsDirectory;

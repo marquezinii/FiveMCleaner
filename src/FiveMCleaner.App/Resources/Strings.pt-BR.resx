@@ -490,6 +490,8 @@
   <data name="Runtime.ConfirmRestoreDetail" xml:space="preserve"><value>O plano de energia anterior requer o broker elevado para ser restaurado.</value></data>
   <data name="Runtime.AdminRestorePending" xml:space="preserve"><value>Restauração administrativa pendente</value></data>
   <data name="Runtime.AdminRestorePendingDetail" xml:space="preserve"><value>Confirme o UAC pelo Histórico quando quiser concluir o rollback.</value></data>
+  <data name="Runtime.BrokerApplying" xml:space="preserve"><value>Aplicando ajustes administrativos</value></data>
+  <data name="Runtime.BrokerRestoring" xml:space="preserve"><value>Restaurando configurações administrativas</value></data>
   <data name="Plan.Notice.NoLegacy" xml:space="preserve"><value>Nenhuma instalação compatível do FiveM Legacy foi detectada.</value></data>
   <data name="Plan.Notice.EnhancedUnsupported" xml:space="preserve"><value>FiveM Enhanced ainda não é suportado. Nenhuma ação do Legacy será executada nessa edição.</value></data>
   <data name="Plan.Notice.DiagnosticsRetention" xml:space="preserve"><value>Diagnósticos com mais de {0} dias serão removidos permanentemente.</value></data>

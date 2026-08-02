@@ -18,7 +18,7 @@ public static class TelemetryEventValidator
 {
     private static readonly HashSet<int> AllowedRamBucketsGiB = [2, 4, 8, 16, 32, 64, 128, 256];
     private static readonly HashSet<string> AllowedProfiles = new(StringComparer.Ordinal) { "Light", "Balanced", "Aggressive" };
-    private const int MaxActionIds = 30;
+    public const int MaxActionIds = 30;
     private const int MaxShortFieldLength = 128;
 
     public static void Validate(AnonymousTelemetryEvent telemetryEvent)

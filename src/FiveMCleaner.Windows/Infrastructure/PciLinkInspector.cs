@@ -24,8 +24,14 @@ public interface IPciLinkInspector
 /// </summary>
 public sealed class WindowsPciLinkInspector : IPciLinkInspector
 {
-    // {3ab22e31-8264-4b4e-9af5-a8d2d8e33e62}, pid 4..7 — DEVPKEY_PciDevice_*Link*.
+    // {3ab22e31-8264-4b4e-9af5-a8d2d8e33e62}, pid 9..12 — the
+    // DEVPKEY_PciDevice_*Link* speed/width properties. (Pids 4..7 are
+    // SubClass/ProgIf/payload sizes, not link data.)
     private static readonly Guid PciDeviceFmtId = new("3ab22e31-8264-4b4e-9af5-a8d2d8e33e62");
+    private const uint CurrentLinkSpeedPid = 9;
+    private const uint CurrentLinkWidthPid = 10;
+    private const uint MaxLinkSpeedPid = 11;
+    private const uint MaxLinkWidthPid = 12;
     private const int DevpropTypeUint32 = 0x00000007;
     private const uint CrSuccess = 0;
     private const uint CmLocateDevnodeNormal = 0;
@@ -93,11 +99,11 @@ public sealed class WindowsPciLinkInspector : IPciLinkInspector
                 return null;
             }
 
-            var current = ReadUInt32Property(devInst, PciDeviceFmtId, 6);
-            var currentWidth = ReadUInt32Property(devInst, PciDeviceFmtId, 7);
-            var max = ReadUInt32Property(devInst, PciDeviceFmtId, 4);
-            var maxWidth = ReadUInt32Property(devInst, PciDeviceFmtId, 5);
-            if (current is null && currentWidth is null && max is null && maxWidth is null)
+            var currentSpeed = ReadUInt32Property(devInst, PciDeviceFmtId, CurrentLinkSpeedPid);
+            var currentWidth = ReadUInt32Property(devInst, PciDeviceFmtId, CurrentLinkWidthPid);
+            var maxSpeed = ReadUInt32Property(devInst, PciDeviceFmtId, MaxLinkSpeedPid);
+            var maxWidth = ReadUInt32Property(devInst, PciDeviceFmtId, MaxLinkWidthPid);
+            if (currentSpeed is null && currentWidth is null && maxSpeed is null && maxWidth is null)
             {
                 return null;
             }
@@ -105,9 +111,9 @@ public sealed class WindowsPciLinkInspector : IPciLinkInspector
             return new PciLinkSnapshot(
                 adapterName,
                 (int?)currentWidth,
-                (int?)current,
+                MapLinkSpeedToGtPerSecondTimesTen(currentSpeed),
                 (int?)maxWidth,
-                (int?)max);
+                MapLinkSpeedToGtPerSecondTimesTen(maxSpeed));
         }
         catch (Exception exception) when (exception is EntryPointNotFoundException or DllNotFoundException)
         {
@@ -115,8 +121,26 @@ public sealed class WindowsPciLinkInspector : IPciLinkInspector
         }
     }
 
-    private static uint? ReadUInt32Property(uint devInst, Guid fmtId, uint pid)
+    /// <summary>
+    /// Converts the PCIe link speed <em>generation index</em> reported by
+    /// DEVPKEY_PciDevice_*LinkSpeed (1 = 2.5 GT/s, 2 = 5 GT/s, 3 = 8 GT/s,
+    /// 4 = 16 GT/s, 5 = 32 GT/s, 6 = 64 GT/s) into the GT/s × 10 encoding used by
+    /// <see cref="PciLinkSnapshot"/>, so consumers can divide by 10 and get
+    /// a human-readable GT/s value. Returns <see langword="null"/> for
+    /// unknown/out-of-range indexes rather than inventing a plausible number.
+    /// </summary>
+    internal static int? MapLinkSpeedToGtPerSecondTimesTen(uint? linkSpeedIndex) => linkSpeedIndex switch
     {
+        1 => 25,
+        2 => 50,
+        3 => 80,
+        4 => 160,
+        5 => 320,
+        6 => 640,
+        _ => null
+    };
+
+    private static uint? ReadUInt32Property(uint devInst, Guid fmtId, uint pid)    {
         var propertyKey = new DevPropKey { fmtid = fmtId, pid = pid };
         uint bufferSize = 4;
         var buffer = Marshal.AllocHGlobal((int)bufferSize);

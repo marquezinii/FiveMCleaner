@@ -34,8 +34,9 @@ internal sealed class ElevatedBrokerClient
     private static readonly TimeSpan OperationTimeout = TimeSpan.FromMinutes(2);
     private readonly string requestDirectory;
     private readonly string brokerPath;
+    private readonly ILocalizationService localization;
 
-    public ElevatedBrokerClient(string appDataDirectory)
+    public ElevatedBrokerClient(string appDataDirectory, ILocalizationService? localization = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(appDataDirectory);
         requestDirectory = Path.Combine(Path.GetFullPath(appDataDirectory), "Requests");
@@ -43,6 +44,7 @@ internal sealed class ElevatedBrokerClient
             AppContext.BaseDirectory,
             "broker",
             "FiveMCleaner.Broker.exe"));
+        this.localization = localization ?? LocalizationService.Current;
     }
 
     public async Task<ElevatedBrokerResult> ExecuteAsync(
@@ -182,6 +184,7 @@ internal sealed class ElevatedBrokerClient
                 reader,
                 expectedTransactionId,
                 progress,
+                localization,
                 timeout.Token).ConfigureAwait(false);
 
             await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
@@ -293,6 +296,7 @@ internal sealed class ElevatedBrokerClient
         TextReader reader,
         Guid expectedTransactionId,
         IProgress<AppProgressUpdate> progress,
+        ILocalizationService localization,
         CancellationToken cancellationToken)
     {
         BrokerEventWire? terminal = null;
@@ -336,7 +340,7 @@ internal sealed class ElevatedBrokerClient
             }
 
             previousSequence = brokerEvent.Sequence;
-            ReportBrokerProgress(brokerEvent, progress);
+            ReportBrokerProgress(brokerEvent, progress, localization);
             if (IsTerminalEvent(brokerEvent.Kind))
             {
                 terminal = brokerEvent;
@@ -361,7 +365,8 @@ internal sealed class ElevatedBrokerClient
 
     private static void ReportBrokerProgress(
         BrokerEventWire brokerEvent,
-        IProgress<AppProgressUpdate> progress)
+        IProgress<AppProgressUpdate> progress,
+        ILocalizationService localization)
     {
         var localPercent = brokerEvent.TotalWeight is > 0
             ? 72d + (23d * brokerEvent.CompletedWeight.GetValueOrDefault() / brokerEvent.TotalWeight.Value)
@@ -381,8 +386,8 @@ internal sealed class ElevatedBrokerClient
             Percent = Math.Clamp(localPercent, 72, 98),
             Headline = brokerEvent.Kind is BrokerEventKindWire.RollbackStarted
                 or BrokerEventKindWire.RollbackCompleted
-                ? "Restaurando configurações administrativas"
-                : "Aplicando ajustes administrativos",
+                ? localization.GetString("Runtime.BrokerRestoring")
+                : localization.GetString("Runtime.BrokerApplying"),
             Detail = brokerEvent.Message,
             ActionId = brokerEvent.ActionId,
             Outcome = brokerEvent.ActionId is null ? null : brokerEvent.Kind switch

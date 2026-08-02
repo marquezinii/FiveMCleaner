@@ -490,6 +490,8 @@
   <data name="Runtime.ConfirmRestoreDetail" xml:space="preserve"><value>The previous power plan requires the elevated broker to be restored.</value></data>
   <data name="Runtime.AdminRestorePending" xml:space="preserve"><value>Administrative restoration pending</value></data>
   <data name="Runtime.AdminRestorePendingDetail" xml:space="preserve"><value>Confirm UAC from History when you want to complete the rollback.</value></data>
+  <data name="Runtime.BrokerApplying" xml:space="preserve"><value>Applying administrative adjustments</value></data>
+  <data name="Runtime.BrokerRestoring" xml:space="preserve"><value>Restoring administrative settings</value></data>
   <data name="Plan.Notice.NoLegacy" xml:space="preserve"><value>No compatible FiveM Legacy installation was detected.</value></data>
   <data name="Plan.Notice.EnhancedUnsupported" xml:space="preserve"><value>FiveM Enhanced is not supported yet. No Legacy action will run on that edition.</value></data>
   <data name="Plan.Notice.DiagnosticsRetention" xml:space="preserve"><value>Diagnostics older than {0} days will be permanently removed.</value></data>

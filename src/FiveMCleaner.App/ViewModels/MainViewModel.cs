@@ -1804,7 +1804,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
             GpuModel: diagnostic?.GpuName,
             RamBucketGiB: diagnostic is null ? null : RamBucketCalculator.ComputeBucketGiB(diagnostic.TotalMemoryGiB),
             Profile: selectedProfile.ToString(),
-            ActionIds: currentPlan?.Actions.Select(action => action.Metadata.Id).ToArray());
+            ActionIds: currentPlan?.Actions
+                .Select(action => action.Metadata.Id)
+                .Take(TelemetryEventValidator.MaxActionIds)
+                .ToArray());
         _ = TrackOptimizationTelemetryAsync(telemetryEvent);
     }
 

@@ -490,6 +490,8 @@
   <data name="Runtime.ConfirmRestoreDetail" xml:space="preserve"><value>El plan de energía anterior requiere que el intermediario elevado sea restaurado.</value></data>
   <data name="Runtime.AdminRestorePending" xml:space="preserve"><value>Restauración administrativa pendiente</value></data>
   <data name="Runtime.AdminRestorePendingDetail" xml:space="preserve"><value>Confirma UAC desde Historial cuando quieras completar la reversión.</value></data>
+  <data name="Runtime.BrokerApplying" xml:space="preserve"><value>Aplicando ajustes administrativos</value></data>
+  <data name="Runtime.BrokerRestoring" xml:space="preserve"><value>Restaurando configuración administrativa</value></data>
   <data name="Plan.Notice.NoLegacy" xml:space="preserve"><value>No se detectó ninguna instalación compatible de FiveM Legacy.</value></data>
   <data name="Plan.Notice.EnhancedUnsupported" xml:space="preserve"><value>FiveM Enhanced aún no es compatible. Ninguna acción de Legacy se ejecutará en esa edición.</value></data>
   <data name="Plan.Notice.DiagnosticsRetention" xml:space="preserve"><value>Los diagnósticos con más de {0} días serán eliminados permanentemente.</value></data>
