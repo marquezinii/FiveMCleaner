@@ -27,7 +27,7 @@ public interface IGpuDetailsInspector
 /// HardwareInformation.qwMemorySize value most drivers publish; the
 /// integrated/discrete split is a name-based heuristic, not a hardware
 /// query, and is presented as a guess rather than a fact.
-/// 
+///
 /// Caches results for 30 seconds to avoid repeated registry queries during a single session.
 /// </summary>
 public sealed class WindowsGpuDetailsInspector : IGpuDetailsInspector

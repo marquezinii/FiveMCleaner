@@ -328,22 +328,17 @@ O diagnóstico permanece local por padrão. Relatórios exportados devem:
 
 O formulário de bug é uma exceção explícita ao processamento apenas local: depois do clique em **Enviar**, os campos autorizados (somente texto — categoria, resumo, descrição, versão, perfil, e-mail e log opcionais) são encaminhados ao Worker Cloudflare do projeto (rota `/bugs`), não mais ao FormSubmit. Não há mais anexo/captura de tela nesse formulário. O app não envia esse conteúdo em segundo plano, não repete automaticamente uma falha e oferece cópia local do texto. Consulte [Relatos de bug e privacidade](bug-reports.md) antes de usar o canal.
 
-A telemetria técnica é uma exceção separada e opcional: ela vem habilitada por
-padrão em instalações novas, mas o usuário pode desativá-la a qualquer momento
-nas configurações, e (desde a versão 2 do consentimento de privacidade) só
-transmite categorias allowlisted de erro, duração e resultado de uma
-otimização, versão do aplicativo, um perfil de hardware em faixas (modelo de
-CPU/GPU e faixa de RAM — as mesmas categorias já mostradas no diagnóstico
-local, nunca um identificador único) e os IDs das ações aplicadas. Ela não lê
-nem envia logs, arquivos, documentos, histórico, caminhos, identificador de
-máquina ou outros dados pessoais. A especificação, o provedor e o limite de
-metadados de transporte estão documentados em
-[Telemetria opcional](telemetry.md).
+Os diagnósticos técnicos essenciais incluem apenas categorias allowlisted de
+erro, duração e resultado de uma otimização, versão do aplicativo, Windows e
+arquitetura. Hardware detalhado, perfil e IDs das ações são dados opcionais,
+controlados em Configurações. Eles não leem nem enviam logs, arquivos,
+documentos, histórico, caminhos, identificador de máquina ou outros dados
+pessoais. A especificação, o provedor e o limite de metadados de transporte
+estão documentados em [Diagnósticos essenciais, dados opcionais e privacidade](telemetry.md).
 
-O relatório automático de falhas (Sentry) é uma terceira exceção, separada e
-com consentimento próprio, sujeita às mesmas regras de nunca inicializar
-antes da confirmação explícita do usuário e nunca rodar no broker elevado
-(`ICrashReportingService` só existe na camada App). O DSN vem de um arquivo
+O relatório automático de falhas (Sentry) também é um diagnóstico essencial e
+nunca roda no broker elevado (`ICrashReportingService` só existe na camada
+App). O DSN vem de um arquivo
 de configuração por ambiente, nunca de um literal no código-fonte; todo
 evento é sanitizado (`CrashReportSanitizer`, reaproveitando `ReportSanitizer`)
 antes de sair do processo, removendo nome de máquina, IP, identificador de

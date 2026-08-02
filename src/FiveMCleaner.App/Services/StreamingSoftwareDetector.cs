@@ -217,66 +217,66 @@ public sealed class StreamingSoftwareDetector
     private static bool CollectInstalledProductNames(
             ICollection<string> destination,
             CancellationToken cancellationToken)
+    {
+        // Use cached registry results if available and fresh
+        var cached = GetCachedRegistryResults();
+        if (cached is not null)
         {
-            // Use cached registry results if available and fresh
-            var cached = GetCachedRegistryResults();
-            if (cached is not null)
+            foreach (var name in cached)
             {
-                foreach (var name in cached)
-                {
-                    destination.Add(name);
-                }
-                return true;
+                destination.Add(name);
             }
+            return true;
+        }
 
-            var complete = true;
-            var probes = new[]
-            {
+        var complete = true;
+        var probes = new[]
+        {
                 (Hive: RegistryHive.CurrentUser, View: RegistryView.Registry64),
                 (Hive: RegistryHive.CurrentUser, View: RegistryView.Registry32),
                 (Hive: RegistryHive.LocalMachine, View: RegistryView.Registry64),
                 (Hive: RegistryHive.LocalMachine, View: RegistryView.Registry32)
             };
 
-            // Run registry scans in parallel
-            var tasks = probes.Select(probe => Task.Run(() =>
+        // Run registry scans in parallel
+        var tasks = probes.Select(probe => Task.Run(() =>
+        {
+            if (!CollectUninstallDisplayNames(
+                    probe.Hive,
+                    probe.View,
+                    destination,
+                    cancellationToken))
             {
-                if (!CollectUninstallDisplayNames(
-                        probe.Hive,
-                        probe.View,
-                        destination,
-                        cancellationToken))
-                {
-                    return false;
-                }
-                return true;
-            }, cancellationToken)).ToArray();
-
-            try
-            {
-                Task.WaitAll(tasks);
-                complete = tasks.All(t => t.Result);
+                return false;
             }
-            catch (AggregateException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception) when (IsExpectedProbeException(new Exception()))
-            {
-                complete = false;
-            }
+            return true;
+        }, cancellationToken)).ToArray();
 
-            // Cache results
-            CacheRegistryResults(destination);
-
-            return complete;
+        try
+        {
+            Task.WaitAll(tasks);
+            complete = tasks.All(t => t.Result);
+        }
+        catch (AggregateException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception) when (IsExpectedProbeException(new Exception()))
+        {
+            complete = false;
         }
 
-        private static bool CollectUninstallDisplayNames(
-        RegistryHive hive,
-        RegistryView view,
-        ICollection<string> destination,
-        CancellationToken cancellationToken)
+        // Cache results
+        CacheRegistryResults(destination);
+
+        return complete;
+    }
+
+    private static bool CollectUninstallDisplayNames(
+    RegistryHive hive,
+    RegistryView view,
+    ICollection<string> destination,
+    CancellationToken cancellationToken)
     {
         try
         {

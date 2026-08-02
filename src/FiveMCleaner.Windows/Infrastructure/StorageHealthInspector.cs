@@ -25,7 +25,7 @@ public interface IStorageHealthInspector
 /// installation, since mapping a drive letter to a physical disk reliably
 /// would require a fragile multi-class WMI join across storage pools,
 /// dynamic disks and virtual disks.
-/// 
+///
 /// Caches results for 30 seconds to avoid repeated WMI queries during a single session.
 /// </summary>
 public sealed class WindowsStorageHealthInspector : IStorageHealthInspector

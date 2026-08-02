@@ -149,13 +149,12 @@ Quando o suporte for implementado, ele deve ser um adaptador separado e passar p
 
 Progresso é calculado por passos concluídos e pesos declarados. Mensagens devem descrever ações reais, por exemplo “Validando snapshot gráfico”, não frases genéricas. O progresso também expõe etapa atual / total de etapas (`CompletedSteps`/`TotalSteps` em `WindowsActionProgress` e `AppProgressUpdate`) e o outcome de cada etapa. A interface do Otimizador mostra apenas a etapa atual e a imediatamente anterior, mais escura, para manter o acompanhamento claro sem expor uma lista técnica de ações.
 
-## Telemetria opcional
+## Diagnósticos essenciais e dados opcionais
 
 `IAnonymousTelemetryService` é uma fronteira da camada App, separada do
 serviço de otimização. A preferência persistida `AppSettings.ShareAnonymousTelemetry`
-nasce como `true` em instalações novas, mas nada é enviado antes do
-consentimento versionado ser confirmado (`PrivacyConsentEvaluator`); o
-`MainViewModel` só gera um evento ao término de uma otimização após isso. O
+nasce como `true` em instalações novas e controla hardware, perfil e ações;
+os diagnósticos essenciais continuam ativos. O
 contrato `AnonymousTelemetryEvent` não aceita payload livre: contém o nome
 allowlisted do evento, duração, versão, categoria de erro allowlisted em
 falha e, desde a versão 2 do consentimento, um perfil de hardware (CPU/GPU/
@@ -173,10 +172,8 @@ privacidade: [telemetry.md](telemetry.md) e [bug-reports.md](bug-reports.md).
 ### Relatório de falhas e configuração centralizada
 
 `ICrashReportingService` (implementação `SentryCrashReportingService`) é
-outra fronteira da camada App, análoga à de telemetria: nunca inicializada
-antes do consentimento (`AppSettings.ShareCrashReports` combinado com
-`PrivacyConsentVersion` em dia, via o mesmo `PrivacyConsentEvaluator`), e
-nunca referenciada por `Core`/`Windows`/`Broker`. `MainWindow` a inicializa
+outra fronteira da camada App, análoga à de telemetria e parte dos diagnósticos
+essenciais; nunca é referenciada por `Core`/`Windows`/`Broker`. `MainWindow` a inicializa
 uma única vez, logo depois que o fluxo de consentimento resolve, usando
 `RemoteServicesOptionsLoader` para ler o DSN de um arquivo de configuração
 por ambiente (`Config/appsettings.{Development,Production}.json`, com

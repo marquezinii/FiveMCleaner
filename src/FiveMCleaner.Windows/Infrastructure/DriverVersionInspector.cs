@@ -22,7 +22,7 @@ public interface IDriverVersionInspector
 /// class, so they are approximated by matching "chipset" in the device name
 /// among System-class entries; when nothing matches, the chipset group is
 /// simply empty rather than guessing a device.
-/// 
+///
 /// Caches results for 30 seconds to avoid repeated WMI queries during a single session.
 /// </summary>
 public sealed class WindowsDriverVersionInspector : IDriverVersionInspector

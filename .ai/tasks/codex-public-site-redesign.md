@@ -3,7 +3,7 @@
 - Agente: Codex
 - Branch: `ai/codex/public-site-redesign`
 - Objetivo: retrabalhar integralmente a página pública de download com direção visual premium, profundidade 3D e animações acessíveis.
-- Status: concluído e pronto para integração.
+- Status: integrado e validado em 02/08/2026.
 
 ## Mudanças
 

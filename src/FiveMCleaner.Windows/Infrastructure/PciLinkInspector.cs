@@ -140,7 +140,8 @@ public sealed class WindowsPciLinkInspector : IPciLinkInspector
         _ => null
     };
 
-    private static uint? ReadUInt32Property(uint devInst, Guid fmtId, uint pid)    {
+    private static uint? ReadUInt32Property(uint devInst, Guid fmtId, uint pid)
+    {
         var propertyKey = new DevPropKey { fmtid = fmtId, pid = pid };
         uint bufferSize = 4;
         var buffer = Marshal.AllocHGlobal((int)bufferSize);

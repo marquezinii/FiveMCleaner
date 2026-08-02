@@ -2,7 +2,7 @@
 
 - Agente: Codex
 - Branch: `ai/codex/telemetry-consent`
-- Status: pronta para integração
+- Status: integrado e validado em 02/08/2026
 
 ## Alterações
 

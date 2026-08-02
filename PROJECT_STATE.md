@@ -1,5 +1,18 @@
 # Estado do Projeto
 
+## Integracao e auditoria de todas as tarefas de IA - 02/08/2026
+
+- Integradas e auditadas: redesign da pagina publica, contas de usuario,
+  diagnosticos essenciais com dados opcionais, otimizacao de coleta de
+  metricas, bug hunt e remocao de codigo morto.
+- O conflito em `MainViewModel` preservou o limite validado de IDs de acao e
+  o controle novo de hardware/perfil/acoes opcionais. A documentacao de
+  seguranca, arquitetura e telemetria foi atualizada para o novo contrato de
+  diagnosticos essenciais; nenhuma mudanca funcional das tarefas foi revertida.
+- Validacao integrada: .NET Release, formatacao, `Verify-Safety.ps1`, 119
+  testes do Worker, 43 do dashboard, lint/build/3 testes do site, `npm audit`
+  sem vulnerabilidades e `git diff --check` aprovados.
+
 ## Correcao de CI apos integracao - 02/08/2026
 
 - O teste de falha de transporte da checagem manual de atualizacao esperava

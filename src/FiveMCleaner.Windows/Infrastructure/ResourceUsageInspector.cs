@@ -28,17 +28,17 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
     private static readonly TimeSpan SampleInterval = TimeSpan.FromMilliseconds(300);
 
     public ResourceUsageSnapshot GetSnapshot()
-        {
-            // Run all measurements concurrently to reduce total sampling time from ~900ms to ~300ms
-            var cpuTask = Task.Run(() => TryReadCounterAsync());
-            var diskTask = Task.Run(() => TryReadCounterAsync("PhysicalDisk", "% Disk Time", "_Total"));
-            var gpuTask = Task.Run(() => TryReadGpuUsageAsync());
-            var networkTask = Task.Run(() => TryReadNetworkThroughputMBpsAsync());
+    {
+        // Run all measurements concurrently to reduce total sampling time from ~900ms to ~300ms
+        var cpuTask = Task.Run(() => TryReadCounterAsync());
+        var diskTask = Task.Run(() => TryReadCounterAsync("PhysicalDisk", "% Disk Time", "_Total"));
+        var gpuTask = Task.Run(() => TryReadGpuUsageAsync());
+        var networkTask = Task.Run(() => TryReadNetworkThroughputMBpsAsync());
 
-            Task.WaitAll(cpuTask, diskTask, gpuTask, networkTask);
+        Task.WaitAll(cpuTask, diskTask, gpuTask, networkTask);
 
-            return new ResourceUsageSnapshot(cpuTask.Result, diskTask.Result, gpuTask.Result, networkTask.Result);
-        }
+        return new ResourceUsageSnapshot(cpuTask.Result, diskTask.Result, gpuTask.Result, networkTask.Result);
+    }
 
     private static async Task<double?> TryReadCounterAsync(string category = "Processor", string counter = "% Processor Time", string instance = "_Total")
     {

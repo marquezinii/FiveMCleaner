@@ -20,7 +20,7 @@ public interface ICpuInspector
 /// when the read fails; callers must report that honestly instead of
 /// guessing. Follows the same try/graceful-null WMI pattern already used for
 /// RAM module layout in <c>AppOptimizationService</c>.
-/// 
+///
 /// Caches results for 30 seconds to avoid repeated WMI queries during a single session.
 /// </summary>
 public sealed class WindowsCpuInspector : ICpuInspector

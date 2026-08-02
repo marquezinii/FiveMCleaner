@@ -22,7 +22,7 @@ public interface IRamDetailsInspector
 /// slot locator text. Used to build honest heuristics for single-channel and
 /// XMP/EXPO status — neither is directly exposed by Windows without vendor
 /// tooling, so both are presented as inferences, not facts.
-/// 
+///
 /// Caches results for 30 seconds to avoid repeated WMI queries during a single session.
 /// </summary>
 public sealed class WindowsRamDetailsInspector : IRamDetailsInspector

@@ -3,7 +3,7 @@
 - Agent: opencode
 - Branch/worktree: `ai/opencode/overengineering-reduction`
 - Objective: careful dead-code / over-engineering reduction without behavior change
-- Status: **pronto para integração**
+- Status: **integrado e validado em 02/08/2026**
 
 ## Summary
 

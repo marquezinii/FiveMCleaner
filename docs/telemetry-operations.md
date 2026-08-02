@@ -38,9 +38,9 @@ rota autorizados.
 
 ## Diagnóstico seguro
 
-Não envie telemetria ao Sentry e não use FormSubmit como fallback. Telemetria
-anônima usa apenas Worker + D1; crashes usam Sentry após consentimento próprio;
-relatos manuais usam `/bugs`. Uma resposta 2xx, incluindo 202, remove o lote
+Não envie telemetria ao Sentry e não use FormSubmit como fallback. Diagnósticos
+de otimização usam apenas Worker + D1; crashes usam Sentry como diagnóstico
+essencial; relatos manuais usam `/bugs`. Uma resposta 2xx, incluindo 202, remove o lote
 da fila. Falhas de rede, 429 e 5xx ficam na fila para nova tentativa; rejeições
 4xx permanentes são descartadas para não criar retry infinito.
 

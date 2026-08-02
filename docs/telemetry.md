@@ -18,7 +18,7 @@ A opção **Ajudar a melhorar o FiveMCleaner** fica em **Configurações**, vem
 habilitada por padrão em instalações novas e pode ser desligada a qualquer
 momento. Ela controla apenas hardware, perfil e recursos usados.
 
-## Dados opcionais enviados quando autorizados
+## Dados opcionais enviados com a opção ativada
 
 Ao término, falha ou cancelamento de uma otimização, o aplicativo monta um
 evento técnico com estes campos (versão 2 do consentimento de privacidade —
@@ -82,10 +82,9 @@ separado e opt-in; suas regras estão em [Relatos de bug e privacidade](bug-repo
 Relatórios de crash fazem parte dos diagnósticos essenciais e seguem a mesma
 sanitização e minimização descritas nesta página.
 
-### Dados enviados quando autorizado
+### Dados enviados como diagnóstico essencial
 
-Quando o aplicativo trava ou encontra uma exceção não tratada, e somente se
-autorizado, envia ao Sentry:
+Quando o aplicativo trava ou encontra uma exceção não tratada, envia ao Sentry:
 
 | Campo | Exemplo | Finalidade |
 | --- | --- | --- |
@@ -94,7 +93,7 @@ autorizado, envia ao Sentry:
 | Versão do aplicativo | `1.1.0` | correlacionar com uma versão específica |
 | Ambiente | `Development` ou `Production` | nunca mistura erros de desenvolvimento com erros de usuários finais |
 
-O SDK do Sentry é inicializado apenas quando autorizado, com
+O SDK do Sentry é inicializado como diagnóstico essencial, com
 `SendDefaultPii=false`, `AutoSessionTracking`/`CaptureFailedRequests`/
 `TracesSampleRate` desligados (nenhum dado além do evento de erro em si é
 enviado) e um `BeforeSend` obrigatório (`CrashReportSanitizer`) que reaplica

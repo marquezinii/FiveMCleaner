@@ -2,7 +2,7 @@
 
 - Agente: Codex
 - Branch: `ai/codex/user-accounts`
-- Status: pronto para integração
+- Status: integrado e validado em 02/08/2026
 
 ## Alterações
 
@@ -23,4 +23,4 @@
 
 ## Observação de integração
 
-- Backend e schema já estão ativos; a branch do aplicativo ainda precisa ser integrada para disponibilizar a interface na próxima versão.
+- Backend, schema e interface foram integrados e validados para a próxima versão.
