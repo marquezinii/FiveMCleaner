@@ -264,6 +264,14 @@ public sealed class AppSettingsSerializationTests
     }
 
     [Fact]
+    public void Deserialize_JsonWithoutShareAnonymousTelemetry_DefaultsToTrue()
+    {
+        var settings = JsonSerializer.Deserialize<AppSettings>("{}", Options)!;
+
+        Assert.True(settings.ShareAnonymousTelemetry);
+    }
+
+    [Fact]
     public void Deserialize_JsonWithoutShareCrashReports_DefaultsToTrue()
     {
         const string json = "{}";
