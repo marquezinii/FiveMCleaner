@@ -1,5 +1,12 @@
 # Estado do Projeto
 
+## Correcao de CI apos integracao - 02/08/2026
+
+- O teste de falha de transporte da checagem manual de atualizacao esperava
+  texto em portugues sem fixar a cultura; no GitHub Actions, a cultura padrao
+  e inglesa. O teste agora injeta `LocalizationService("pt-BR")`, eliminando
+  a dependencia do ambiente. `dotnet test` Release e formatacao aprovados.
+
 ## Integracao local das tarefas pendentes - 02/08/2026
 
 - Integradas em `dev/proxima-versao`: limpeza de divida tecnica, hardening do

@@ -1,5 +1,6 @@
 using FiveMCleaner.App.Services;
 using FiveMCleaner.App.ViewModels;
+using System.Globalization;
 using Xunit;
 
 namespace FiveMCleaner.Tests.App;
@@ -65,6 +66,7 @@ public sealed class MainViewModelUpdateCheckTests
         var releaseUpdateService = new FakeReleaseUpdateService(exceptionToThrow: new HttpRequestException("boom"));
         var viewModel = new MainViewModel(
             new FakeAppOptimizationService(new AppSettings(), settingsFileExists: false),
+            localization: new LocalizationService(CultureInfo.GetCultureInfo("pt-BR")),
             releaseUpdateService: releaseUpdateService);
 
         await viewModel.CheckForUpdatesManuallyAsync();
