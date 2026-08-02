@@ -528,6 +528,27 @@ public sealed class HardwareInspectorSmokeTests
         Assert.NotNull(new WindowsPciLinkInspector().GetSnapshot());
     }
 
+    [Theory]
+    [InlineData(1u, 25)]
+    [InlineData(2u, 50)]
+    [InlineData(3u, 80)]
+    [InlineData(4u, 160)]
+    [InlineData(5u, 320)]
+    [InlineData(6u, 640)]
+    public void PciLinkSpeed_MapsTheGenerationIndexToGtPerSecondTimesTen(uint index, int expected)
+    {
+        Assert.Equal(expected, WindowsPciLinkInspector.MapLinkSpeedToGtPerSecondTimesTen(index));
+    }
+
+    [Theory]
+    [InlineData(0u)]
+    [InlineData(7u)]
+    [InlineData(255u)]
+    public void PciLinkSpeed_UnknownGenerationIndex_ReportsNullInsteadOfGuessing(uint index)
+    {
+        Assert.Null(WindowsPciLinkInspector.MapLinkSpeedToGtPerSecondTimesTen(index));
+    }
+
     [Fact]
     public void WindowsHardwareStabilityInspector_NeverThrows()
     {

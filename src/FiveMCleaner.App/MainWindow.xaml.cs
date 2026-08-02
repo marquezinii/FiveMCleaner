@@ -32,6 +32,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private bool closeAfterOptimizationStops;
     private bool trayAnnouncementShown;
     private bool systemSessionEnding;
+    private bool syncingLanguageSelector;
 
     public MainWindow()
     {
@@ -149,9 +150,20 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
         await viewModel.InitializeAsync();
         themeManager.Apply(viewModel.ThemePreference);
-        LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected
-            ? 0
-            : viewModel.IsSpanishSelected ? 2 : 1;
+        // A sincronização programática do seletor não pode acionar o
+        // SelectionChanged: ele converteria uma preferência "Automatic" em
+        // um idioma fixo (o detectado), gravando o pin no primeiro launch.
+        syncingLanguageSelector = true;
+        try
+        {
+            LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected
+                ? 0
+                : viewModel.IsSpanishSelected ? 2 : 1;
+        }
+        finally
+        {
+            syncingLanguageSelector = false;
+        }
         ThemeSelector.SelectedIndex = viewModel.ThemePreference switch
         {
             AppThemePreference.Dark => 1,
@@ -439,7 +451,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void LanguageSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
-        if (!IsLoaded || LanguageSelector.SelectedItem is not System.Windows.Controls.ComboBoxItem item)
+        if (syncingLanguageSelector || !IsLoaded || LanguageSelector.SelectedItem is not System.Windows.Controls.ComboBoxItem item)
         {
             return;
         }

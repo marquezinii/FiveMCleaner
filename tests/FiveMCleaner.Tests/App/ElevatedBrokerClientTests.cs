@@ -12,6 +12,8 @@ public sealed class ElevatedBrokerClientTerminalReadTests
 {
     private static readonly Guid TransactionId = Guid.Parse("11111111-2222-3333-4444-555555555555");
     private static readonly IProgress<AppProgressUpdate> NoProgress = new Progress<AppProgressUpdate>();
+    private static readonly ILocalizationService Localization = new LocalizationService(
+        System.Globalization.CultureInfo.GetCultureInfo("en-US"));
 
     private static BrokerEventWire Event(long sequence, BrokerEventKindWire kind, string message, Guid? transactionId = null, bool? success = null) =>
         new()
@@ -55,7 +57,7 @@ public sealed class ElevatedBrokerClientTerminalReadTests
         };
 
         var terminal = await ElevatedBrokerClient.ReadUntilTerminalAsync(
-            Reader(events), TransactionId, NoProgress, CancellationToken.None);
+            Reader(events), TransactionId, NoProgress, Localization, CancellationToken.None);
 
         Assert.NotNull(terminal);
         Assert.Equal(BrokerEventKindWire.Completed, terminal.Kind);
@@ -71,6 +73,7 @@ public sealed class ElevatedBrokerClientTerminalReadTests
                 Reader(Event(1, kind, "stopped", success: false)),
                 TransactionId,
                 NoProgress,
+                Localization,
                 CancellationToken.None);
 
             Assert.Equal(kind, terminal!.Kind);
@@ -87,7 +90,7 @@ public sealed class ElevatedBrokerClientTerminalReadTests
 
         await Assert.ThrowsAsync<InvalidDataException>(() =>
             ElevatedBrokerClient.ReadUntilTerminalAsync(
-                Reader(events), TransactionId, NoProgress, CancellationToken.None));
+                Reader(events), TransactionId, NoProgress, Localization, CancellationToken.None));
     }
 
     [Fact]
@@ -100,7 +103,7 @@ public sealed class ElevatedBrokerClientTerminalReadTests
         };
 
         var terminal = await ElevatedBrokerClient.ReadUntilTerminalAsync(
-            Reader(events), TransactionId, NoProgress, CancellationToken.None);
+            Reader(events), TransactionId, NoProgress, Localization, CancellationToken.None);
 
         Assert.Null(terminal);
     }
@@ -116,7 +119,7 @@ public sealed class ElevatedBrokerClientTerminalReadTests
 
         await Assert.ThrowsAsync<InvalidDataException>(() =>
             ElevatedBrokerClient.ReadUntilTerminalAsync(
-                Reader(events), TransactionId, NoProgress, CancellationToken.None));
+                Reader(events), TransactionId, NoProgress, Localization, CancellationToken.None));
     }
 
     [Fact]
@@ -129,6 +132,27 @@ public sealed class ElevatedBrokerClientTerminalReadTests
 
         await Assert.ThrowsAsync<InvalidDataException>(() =>
             ElevatedBrokerClient.ReadUntilTerminalAsync(
-                Reader(events), TransactionId, NoProgress, CancellationToken.None));
+                Reader(events), TransactionId, NoProgress, Localization, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ReadUntilTerminalAsync_ReportsLocalizedBrokerPhaseHeadlines()
+    {
+        var captured = new List<AppProgressUpdate>();
+        var progress = new Progress<AppProgressUpdate>(captured.Add);
+        var events = new[]
+        {
+            Event(1, BrokerEventKindWire.Progress, "applying something"),
+            Event(2, BrokerEventKindWire.RollbackStarted, "restoring something"),
+            Event(3, BrokerEventKindWire.Completed, "done", success: true)
+        };
+
+        await ElevatedBrokerClient.ReadUntilTerminalAsync(
+            Reader(events), TransactionId, progress, Localization, CancellationToken.None);
+
+        var progressUpdate = captured[0];
+        var rollbackUpdate = captured[1];
+        Assert.Equal("Applying administrative adjustments", progressUpdate.Headline);
+        Assert.Equal("Restoring administrative settings", rollbackUpdate.Headline);
     }
 }
