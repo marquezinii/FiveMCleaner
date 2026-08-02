@@ -131,10 +131,28 @@
                     </StackPanel>
                 </ui:TitleBar.Header>
             </ui:TitleBar>
-            <Button x:Name="AccountButton" Grid.Row="0" HorizontalAlignment="Right" Margin="0,0,164,0" Padding="12,0" Height="36" VerticalAlignment="Center" Click="Account_Click" ToolTip="Entrar ou criar conta">
+            <Button x:Name="AccountButton" Grid.Row="0" HorizontalAlignment="Right" Margin="0,0,164,0" Padding="6,0" Height="36" VerticalAlignment="Center" Click="Account_Click" ToolTip="Entrar ou criar conta" Background="Transparent" BorderThickness="0">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Background" Value="Transparent" />
+                        <Setter Property="BorderThickness" Value="0" />
+                        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                        <Setter Property="Cursor" Value="Hand" />
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource OrangeLightBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter Property="Foreground" Value="{DynamicResource OrangeLightBrush}" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
                 <StackPanel Orientation="Horizontal">
-                    <Border Width="25" Height="25" CornerRadius="13" Background="{DynamicResource OrangeBrush}" Margin="0,0,7,0"><TextBlock x:Name="AccountInitials" Text="?" HorizontalAlignment="Center" VerticalAlignment="Center" FontWeight="Bold" Foreground="White" /></Border>
-                    <TextBlock x:Name="AccountLabel" Text="Entrar" VerticalAlignment="Center" />
+                    <Border Width="25" Height="25" CornerRadius="13" Background="{DynamicResource ChipBrush}" Margin="0,0,7,0">
+                        <TextBlock x:Name="AccountInitials" Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" />
+                    </Border>
+                    <TextBlock x:Name="AccountLabel" Text="Entrar / cadastrar-se" VerticalAlignment="Center" FontWeight="SemiBold" />
                 </StackPanel>
             </Button>
 
