@@ -1,5 +1,15 @@
 # Estado do Projeto
 
+## Simulação local de desenvolvimento - 02/08/2026
+
+- O atalho `FiveMCleaner - Desenvolvimento` foi reconstruído e confirmado na
+  Área de Trabalho do Windows. Ele aponta para
+  `scripts\Start-DevelopmentApp.ps1`, que recompila o Release atual do
+  checkout `dev/proxima-versao` antes de iniciar o executável.
+- `AI_RULES.md` agora exige essa atualização e verificação depois de cada
+  integração. O atalho público `FiveMCleaner.lnk` permanece separado e não é
+  uma simulação da próxima versão.
+
 ## Integracao e auditoria de todas as tarefas de IA - 02/08/2026
 
 - Integradas e auditadas: redesign da pagina publica, contas de usuario,
