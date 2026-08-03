@@ -11,6 +11,13 @@ const USERNAME = /^[a-z0-9](?:[a-z0-9._]{1,28}[a-z0-9])$/;
 const PERSON_NAME = /^[\p{L}\p{M}][\p{L}\p{M}' -]*$/u;
 export const CURRENT_TERMS_VERSION = '2026-08-02';
 
+export function hasStrongPassword(password) {
+  return typeof password === 'string'
+    && password.length >= 12 && password.length <= 1024
+    && /[A-Z]/.test(password) && /[a-z]/.test(password)
+    && /\d/.test(password) && /[^\p{L}\p{N}\s]/u.test(password);
+}
+
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
     status,
@@ -29,10 +36,9 @@ export function normalizeRegistration(body) {
   const email = typeof body?.email === 'string' ? body.email.trim().toLowerCase() : '';
   const password = body?.password;
   if (!firstName || firstName.length > 80 || !PERSON_NAME.test(firstName)
-    || !lastName || lastName.length > 80 || !PERSON_NAME.test(lastName)
+    || lastName.length > 80 || (lastName && !PERSON_NAME.test(lastName))
     || !USERNAME.test(username)
-    || !EMAIL.test(email) || email.length > 254 || typeof password !== 'string'
-    || password.length < 10 || password.length > 1024
+    || !EMAIL.test(email) || email.length > 254 || !hasStrongPassword(password)
     || body?.termsAccepted !== true || body?.termsVersion !== CURRENT_TERMS_VERSION) return null;
   return { firstName, lastName, username, email, password };
 }

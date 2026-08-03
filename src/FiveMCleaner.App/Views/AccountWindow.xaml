@@ -2,167 +2,75 @@
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-    Title="Sua conta"
-    Icon="/FiveMCleaner;component/Assets/FiveMCleaner.png"
-    Width="620"
-    Height="570"
-    WindowStartupLocation="CenterOwner"
-    ResizeMode="NoResize"
-    ShowInTaskbar="False"
-    FontFamily="Segoe UI Variable Text, Segoe UI"
-    TextOptions.TextFormattingMode="Display"
-    TextOptions.TextRenderingMode="ClearType"
-    UseLayoutRounding="True"
-    SnapsToDevicePixels="True"
-    KeyboardNavigation.TabNavigation="Cycle"
-    Background="{DynamicResource BackgroundBrush}">
+    Title="Sua conta" Icon="/FiveMCleaner;component/Assets/FiveMCleaner.png"
+    Width="660" Height="570" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
+    FontFamily="Segoe UI Variable Text, Segoe UI" TextOptions.TextFormattingMode="Display" TextOptions.TextRenderingMode="ClearType"
+    UseLayoutRounding="True" SnapsToDevicePixels="True" KeyboardNavigation.TabNavigation="Cycle" Background="{DynamicResource BackgroundBrush}">
 
     <ui:FluentWindow.Resources>
         <Style x:Key="DialogCloseButtonStyle" TargetType="Button">
-            <Setter Property="Width" Value="34" />
-            <Setter Property="Height" Value="34" />
-            <Setter Property="Padding" Value="0" />
-            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="Button">
-                        <Border x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="8">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsPressed" Value="True">
-                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource ChipBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource OrangeLightBrush}" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Width" Value="30" /><Setter Property="Height" Value="30" /><Setter Property="Padding" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" /><Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" /><Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="Button">
+                <Border x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="7"><ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" /></Trigger>
+                    <Trigger Property="IsPressed" Value="True"><Setter TargetName="Root" Property="Background" Value="{DynamicResource ChipBrush}" /></Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource OrangeLightBrush}" /></Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate></Setter.Value></Setter>
         </Style>
-
         <Style x:Key="TermsCheckBoxStyle" TargetType="CheckBox">
-            <Setter Property="Width" Value="18" />
-            <Setter Property="Height" Value="18" />
-            <Setter Property="Cursor" Value="Hand" />
-            <Setter Property="Template">
-                <Setter.Value>
-                    <ControlTemplate TargetType="CheckBox">
-                        <Grid>
-                            <Border x:Name="Box" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{DynamicResource SurfaceRaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" />
-                            <Path x:Name="Mark" Data="M 3.5,8 L 6.8,11.2 L 12.8,4.8" Stroke="White" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Grid>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsChecked" Value="True">
-                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource BlueBrush}" />
-                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource BlueBrush}" />
-                                <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource OrangeLightBrush}" />
-                                <Setter TargetName="Box" Property="BorderThickness" Value="2" />
-                            </Trigger>
-                            <Trigger Property="IsEnabled" Value="False">
-                                <Setter TargetName="Box" Property="Opacity" Value="0.45" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Setter.Value>
-            </Setter>
+            <Setter Property="Width" Value="18" /><Setter Property="Height" Value="18" /><Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template"><Setter.Value><ControlTemplate TargetType="CheckBox">
+                <Grid>
+                    <Border x:Name="Box" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{DynamicResource SurfaceRaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" />
+                    <Path x:Name="Mark" Data="M 3.5,8 L 6.8,11.2 L 12.8,4.8" Stroke="White" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Grid>
+                <ControlTemplate.Triggers>
+                    <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Box" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" /></Trigger>
+                    <Trigger Property="IsChecked" Value="True"><Setter TargetName="Box" Property="Background" Value="{DynamicResource BlueBrush}" /><Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource BlueBrush}" /><Setter TargetName="Mark" Property="Visibility" Value="Visible" /></Trigger>
+                    <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource OrangeLightBrush}" /><Setter TargetName="Box" Property="BorderThickness" Value="2" /></Trigger>
+                    <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Box" Property="Opacity" Value="0.45" /></Trigger>
+                </ControlTemplate.Triggers>
+            </ControlTemplate></Setter.Value></Setter>
         </Style>
     </ui:FluentWindow.Resources>
 
     <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-
-        <Grid Margin="32,24,24,18">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+        <Grid Margin="32,18,12,18"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
             <StackPanel>
-                <Border Width="42" Height="42" CornerRadius="21" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left">
-                    <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                </Border>
-                <TextBlock x:Name="TitleText" Text="Entre na sua conta" Margin="0,14,0,0" FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="23" FontWeight="SemiBold" />
+                <Border Width="42" Height="42" CornerRadius="21" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left"><TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
+                <TextBlock x:Name="TitleText" Text="Entre na sua conta" Margin="0,14,0,0" FontSize="23" FontWeight="SemiBold" />
                 <TextBlock x:Name="SubtitleText" Text="Acesse sua experiência FiveMCleaner com segurança." Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap" />
             </StackPanel>
-            <Button x:Name="CloseButton" Grid.Column="1" Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="12" Style="{StaticResource DialogCloseButtonStyle}" ToolTip="Fechar" AutomationProperties.Name="Fechar janela de conta" IsCancel="True" Click="Close_Click" />
+            <Button x:Name="CloseButton" Grid.Column="1" Style="{StaticResource DialogCloseButtonStyle}" Margin="0,-8,0,0" ToolTip="Fechar" AutomationProperties.Name="Fechar janela de conta" IsCancel="True" Click="Close_Click"><Viewbox Width="12" Height="12"><Path Data="M 2,2 L 10,10 M 10,2 L 2,10" Stroke="{DynamicResource TextMutedBrush}" StrokeThickness="1.6" StrokeStartLineCap="Round" StrokeEndLineCap="Round" /></Viewbox></Button>
         </Grid>
 
-        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-            <StackPanel Margin="32,0,32,22">
-                <StackPanel x:Name="RegisterPanel" Visibility="Collapsed">
-                    <Grid Margin="0,0,0,13">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="12" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel>
-                            <TextBlock FontWeight="SemiBold"><Run Text="Nome" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
-                            <TextBox x:Name="FirstNameBox" Height="38" Margin="0,6,0,0" MaxLength="80" AutomationProperties.Name="Nome obrigatório" />
-                        </StackPanel>
-                        <StackPanel Grid.Column="2">
-                            <TextBlock FontWeight="SemiBold"><Run Text="Sobrenome" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
-                            <TextBox x:Name="LastNameBox" Height="38" Margin="0,6,0,0" MaxLength="80" AutomationProperties.Name="Sobrenome obrigatório" />
-                        </StackPanel>
-                    </Grid>
-
-                    <TextBlock FontWeight="SemiBold"><Run Text="Nome de usuário" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
-                    <TextBox x:Name="UsernameBox" Height="38" Margin="0,6,0,0" MaxLength="30" CharacterCasing="Lower" AutomationProperties.Name="Nome de usuário obrigatório" />
-                    <TextBlock Text="Use de 3 a 30 letras, números, ponto ou sublinhado." Margin="0,4,0,13" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
-                </StackPanel>
-
-                <TextBlock FontWeight="SemiBold"><Run Text="E-mail" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
-                <TextBox x:Name="EmailBox" Height="38" Margin="0,6,0,13" MaxLength="254" AutomationProperties.Name="E-mail obrigatório" />
-
-                <TextBlock FontWeight="SemiBold"><Run Text="Senha" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
-                <PasswordBox x:Name="PasswordBox" Height="38" Margin="0,6,0,0" MaxLength="1024" AutomationProperties.Name="Senha obrigatória" />
-                <TextBlock x:Name="PasswordHelpText" Text="Use sua senha cadastrada." Margin="0,4,0,13" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" />
-
-                <StackPanel x:Name="ConfirmPanel" Visibility="Collapsed">
-                    <TextBlock FontWeight="SemiBold"><Run Text="Repetir senha" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
-                    <PasswordBox x:Name="ConfirmPasswordBox" Height="38" Margin="0,6,0,15" MaxLength="1024" AutomationProperties.Name="Confirmação de senha obrigatória" />
-                </StackPanel>
-
-                <Grid x:Name="TermsPanel" Visibility="Collapsed" Margin="0,0,0,15">
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <CheckBox x:Name="TermsCheckBox" Style="{StaticResource TermsCheckBoxStyle}" VerticalAlignment="Top" Margin="0,2,0,0" AutomationProperties.Name="Concordo com os Termos de Uso obrigatórios" />
-                    <TextBlock Grid.Column="1" Margin="10,0,0,0" TextWrapping="Wrap" LineHeight="17" FontSize="11.5">
-                        <Run Text="Li e concordo com os " />
-                        <Hyperlink Click="Terms_Click" Foreground="{DynamicResource BlueBrush}" TextDecorations="Underline">Termos de Uso</Hyperlink>
-                        <Run Text=" e com o tratamento dos dados da conta descrito neles." />
-                        <Run Text=" *" Foreground="{DynamicResource RedBrush}" FontWeight="Bold" />
-                    </TextBlock>
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"><StackPanel Margin="32,0,32,22">
+            <StackPanel x:Name="RegisterPanel" Visibility="Collapsed">
+                <Grid Margin="0,0,0,13"><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="12" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                    <StackPanel><TextBlock FontWeight="SemiBold"><Run Text="Nome" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock><TextBox x:Name="FirstNameBox" Height="38" Margin="0,6,0,0" MaxLength="80" AutomationProperties.Name="Nome obrigatório" /></StackPanel>
+                    <StackPanel Grid.Column="2"><TextBlock FontWeight="SemiBold">Sobrenome <Run Text="(opcional)" Foreground="{DynamicResource TextSubtleBrush}" FontWeight="Normal" /></TextBlock><TextBox x:Name="LastNameBox" Height="38" Margin="0,6,0,0" MaxLength="80" AutomationProperties.Name="Sobrenome opcional" /></StackPanel>
                 </Grid>
-
-                <TextBlock x:Name="ErrorText" Foreground="{DynamicResource RedBrush}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" Visibility="Collapsed" AutomationProperties.LiveSetting="Assertive" />
+                <TextBlock FontWeight="SemiBold"><Run Text="Nome de usuário" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock><TextBox x:Name="UsernameBox" Height="38" Margin="0,6,0,0" MaxLength="30" CharacterCasing="Lower" AutomationProperties.Name="Nome de usuário obrigatório" />
+                <TextBlock Text="Use de 3 a 30 letras, números, ponto ou sublinhado." Margin="0,4,0,13" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
             </StackPanel>
-        </ScrollViewer>
-
-        <Border Grid.Row="2" Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="0,1,0,0" Padding="32,18">
-            <StackPanel>
-                <Button x:Name="SubmitButton" Content="Entrar" Style="{StaticResource PrimaryButtonStyle}" Height="42" IsDefault="True" Click="Submit_Click" />
-                <Button x:Name="SwitchButton" Content="Ainda não tem conta? Criar conta" Margin="0,10,0,0" Height="36" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource BlueBrush}" FontWeight="SemiBold" Cursor="Hand" Click="Switch_Click" />
+            <TextBlock FontWeight="SemiBold"><Run Text="E-mail" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock><TextBox x:Name="EmailBox" Height="38" Margin="0,6,0,13" MaxLength="254" AutomationProperties.Name="E-mail obrigatório" />
+            <TextBlock FontWeight="SemiBold"><Run Text="Senha" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
+            <Grid Height="38" Margin="0,6,0,0"><PasswordBox x:Name="PasswordBox" Padding="0,0,40,0" MaxLength="1024" AutomationProperties.Name="Senha obrigatória" PasswordChanged="PasswordChanged" /><TextBox x:Name="PasswordVisibleBox" Padding="8,0,40,0" Visibility="Collapsed" TextChanged="PasswordVisibleBox_TextChanged" /><Button x:Name="PasswordVisibilityButton" Width="34" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" ToolTip="Mostrar senha" AutomationProperties.Name="Mostrar senha" Click="PasswordVisibilityButton_Click"><TextBlock Text="&#xE890;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource TextMutedBrush}" /></Button></Grid>
+            <StackPanel x:Name="PasswordStrengthPanel" Visibility="Collapsed" Margin="0,7,0,13">
+                <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions><TextBlock Text="Força da senha" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" /><TextBlock x:Name="PasswordStrengthText" Grid.Column="1" Text="Aguardando" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" FontWeight="SemiBold" /></Grid>
+                <Border Height="5" Margin="0,5,0,7" Background="{DynamicResource SurfaceRaisedBrush}" CornerRadius="3"><Border x:Name="PasswordStrengthFill" Width="0" HorizontalAlignment="Left" Background="{DynamicResource RedBrush}" CornerRadius="3" /></Border>
+                <TextBlock x:Name="LengthRequirementText" FontSize="10.5" Foreground="{DynamicResource RedBrush}" /><TextBlock x:Name="CaseRequirementText" FontSize="10.5" Margin="0,2,0,0" Foreground="{DynamicResource RedBrush}" /><TextBlock x:Name="NumberRequirementText" FontSize="10.5" Margin="0,2,0,0" Foreground="{DynamicResource RedBrush}" /><TextBlock x:Name="SpecialRequirementText" FontSize="10.5" Margin="0,2,0,0" Foreground="{DynamicResource RedBrush}" />
             </StackPanel>
-        </Border>
+            <TextBlock x:Name="PasswordHelpText" Text="Use sua senha cadastrada." Margin="0,4,0,13" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" />
+            <StackPanel x:Name="ConfirmPanel" Visibility="Collapsed"><TextBlock FontWeight="SemiBold"><Run Text="Repetir senha" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock><Grid Height="38" Margin="0,6,0,15"><PasswordBox x:Name="ConfirmPasswordBox" Padding="0,0,40,0" MaxLength="1024" AutomationProperties.Name="Confirmação de senha obrigatória" PasswordChanged="ConfirmPasswordChanged" /><TextBox x:Name="ConfirmPasswordVisibleBox" Padding="8,0,40,0" Visibility="Collapsed" TextChanged="ConfirmPasswordVisibleBox_TextChanged" /><Button x:Name="ConfirmPasswordVisibilityButton" Width="34" HorizontalAlignment="Right" Background="Transparent" BorderThickness="0" ToolTip="Mostrar confirmação de senha" AutomationProperties.Name="Mostrar confirmação de senha" Click="ConfirmPasswordVisibilityButton_Click"><TextBlock Text="&#xE890;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource TextMutedBrush}" /></Button></Grid></StackPanel>
+            <Grid x:Name="TermsPanel" Visibility="Collapsed" Margin="0,0,0,15"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions><CheckBox x:Name="TermsCheckBox" Style="{StaticResource TermsCheckBoxStyle}" VerticalAlignment="Top" Margin="0,2,0,0" AutomationProperties.Name="Concordo com os Termos de Uso obrigatórios" /><TextBlock Grid.Column="1" Margin="10,0,0,0" TextWrapping="Wrap" LineHeight="17" FontSize="11.5"><Run Text="Li e concordo com os " /><Hyperlink Click="Terms_Click" Foreground="{DynamicResource BlueBrush}" TextDecorations="Underline">Termos de Uso</Hyperlink><Run Text=" e com o tratamento dos dados da conta descrito neles." /><Run Text=" *" Foreground="{DynamicResource RedBrush}" FontWeight="Bold" /></TextBlock></Grid>
+            <TextBlock x:Name="ErrorText" Foreground="{DynamicResource RedBrush}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" Visibility="Collapsed" AutomationProperties.LiveSetting="Assertive" />
+        </StackPanel></ScrollViewer>
+        <Border Grid.Row="2" Background="{DynamicResource ChromeBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="0,1,0,0" Padding="32,18"><StackPanel><Button x:Name="SubmitButton" Content="Entrar" Style="{StaticResource PrimaryButtonStyle}" Height="42" IsDefault="True" Click="Submit_Click" /><Button x:Name="SwitchButton" Content="Ainda não tem conta? Criar conta" Margin="0,10,0,0" Height="36" Background="Transparent" BorderThickness="0" Foreground="{DynamicResource BlueBrush}" FontWeight="SemiBold" Cursor="Hand" Click="Switch_Click" /></StackPanel></Border>
     </Grid>
 </ui:FluentWindow>

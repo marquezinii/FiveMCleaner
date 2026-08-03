@@ -15,6 +15,16 @@ namespace FiveMCleaner.Tests.App;
 public sealed class UserAccountServiceTests
 {
     [Fact]
+    public void AccountPasswordPolicy_RequiresEachVisibleRequirement()
+    {
+        Assert.False(AccountPasswordPolicy.IsValid("SenhaSegura123"));
+        Assert.False(AccountPasswordPolicy.IsValid("senhasegura!123"));
+        Assert.False(AccountPasswordPolicy.IsValid("SENHASEGURA!123"));
+        Assert.False(AccountPasswordPolicy.IsValid("SenhaSegura!"));
+        Assert.True(AccountPasswordPolicy.IsValid("SenhaSegura!123"));
+    }
+
+    [Fact]
     public async Task RegisterAsync_SendsUsernameAndVersionedTermsAcceptance()
     {
         string? requestJson = null;
@@ -74,8 +84,10 @@ public sealed class UserAccountServiceTests
                 Assert.True(accountWindowOpened);
                 main.Close();
                 var account = new AccountWindow(new StubAccountService());
-                Assert.Equal(620, account.Width);
+                Assert.Equal(660, account.Width);
                 Assert.True(Assert.IsType<Button>(account.FindName("CloseButton")).IsCancel);
+                Assert.NotNull(account.FindName("PasswordVisibilityButton"));
+                Assert.NotNull(account.FindName("ConfirmPasswordVisibilityButton"));
                 var termsCheckBox = Assert.IsType<CheckBox>(account.FindName("TermsCheckBox"));
                 Assert.Equal(18, termsCheckBox.Width);
                 Assert.Equal(18, termsCheckBox.Height);
