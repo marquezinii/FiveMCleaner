@@ -1,6 +1,11 @@
 using System.Net;
+using System.Reflection;
 using System.Text.Json;
 using System.Windows;
+using System.Windows.Automation;
+using System.Windows.Controls;
+using System.Windows.Threading;
+using FiveMCleaner.App;
 using FiveMCleaner.App.Views;
 using FiveMCleaner.App.Services;
 using Xunit;
@@ -22,7 +27,8 @@ public sealed class UserAccountServiceTests
                     {"profile":{"firstName":"João","lastName":"Silva","username":"joao.silva","email":"joao@example.com"}}
                     """, System.Text.Encoding.UTF8, "application/json")
             };
-        })) { BaseAddress = new Uri("https://example.test/account/") };
+        }))
+        { BaseAddress = new Uri("https://example.test/account/") };
         using var service = new CloudflareUserAccountService(client, Path.Combine(Path.GetTempPath(), $"account-{Guid.NewGuid():N}.session"));
 
         var result = await service.RegisterAsync("João", "Silva", "joao.silva", "joao@example.com", "uma senha segura");
@@ -46,6 +52,27 @@ public sealed class UserAccountServiceTests
             {
                 var application = new FiveMCleaner.App.App();
                 application.InitializeComponent();
+                var main = new MainWindow();
+                var accountButton = Assert.IsType<Button>(main.FindName("AccountButton"));
+                Assert.Equal("Entrar ou cadastrar-se", accountButton.GetValue(AutomationProperties.NameProperty));
+                Assert.True(accountButton.IsTabStop);
+                typeof(MainWindow).GetField("accountService", BindingFlags.Instance | BindingFlags.NonPublic)!
+                    .SetValue(main, new StubAccountService());
+                var accountWindowOpened = false;
+                var closeDialogTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(50) };
+                closeDialogTimer.Tick += (_, _) =>
+                {
+                    var dialog = application.Windows.OfType<AccountWindow>().FirstOrDefault();
+                    if (dialog is null) return;
+                    accountWindowOpened = true;
+                    closeDialogTimer.Stop();
+                    dialog.Close();
+                };
+                main.Show();
+                closeDialogTimer.Start();
+                accountButton.RaiseEvent(new RoutedEventArgs(Button.ClickEvent));
+                Assert.True(accountWindowOpened);
+                main.Close();
                 var account = new AccountWindow(new StubAccountService());
                 account.Show();
                 var terms = new TermsOfUseWindow { Owner = account };
