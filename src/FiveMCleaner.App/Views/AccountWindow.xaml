@@ -4,7 +4,7 @@
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="Sua conta"
     Icon="/FiveMCleaner;component/Assets/FiveMCleaner.png"
-    Width="500"
+    Width="620"
     Height="570"
     WindowStartupLocation="CenterOwner"
     ResizeMode="NoResize"
@@ -17,6 +17,71 @@
     KeyboardNavigation.TabNavigation="Cycle"
     Background="{DynamicResource BackgroundBrush}">
 
+    <ui:FluentWindow.Resources>
+        <Style x:Key="DialogCloseButtonStyle" TargetType="Button">
+            <Setter Property="Width" Value="34" />
+            <Setter Property="Height" Value="34" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="Transparent" BorderThickness="1" CornerRadius="8">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource ChipBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource OrangeLightBrush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="TermsCheckBoxStyle" TargetType="CheckBox">
+            <Setter Property="Width" Value="18" />
+            <Setter Property="Height" Value="18" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="CheckBox">
+                        <Grid>
+                            <Border x:Name="Box" Width="16" Height="16" HorizontalAlignment="Center" VerticalAlignment="Center" Background="{DynamicResource SurfaceRaisedBrush}" BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="4" />
+                            <Path x:Name="Mark" Data="M 3.5,8 L 6.8,11.2 L 12.8,4.8" Stroke="White" StrokeThickness="1.8" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" Visibility="Collapsed" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource SurfaceHoverBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Box" Property="Background" Value="{DynamicResource BlueBrush}" />
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource BlueBrush}" />
+                                <Setter TargetName="Mark" Property="Visibility" Value="Visible" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource OrangeLightBrush}" />
+                                <Setter TargetName="Box" Property="BorderThickness" Value="2" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Box" Property="Opacity" Value="0.45" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </ui:FluentWindow.Resources>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -24,22 +89,39 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <StackPanel Margin="32,28,32,18">
-            <Border Width="42" Height="42" CornerRadius="21" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left">
-                <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-            </Border>
-            <TextBlock x:Name="TitleText" Text="Entre na sua conta" Margin="0,16,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="25" FontWeight="Bold" />
-            <TextBlock x:Name="SubtitleText" Text="Acesse sua experiência FiveMCleaner com segurança." Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap" />
-        </StackPanel>
+        <Grid Margin="32,24,24,18">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel>
+                <Border Width="42" Height="42" CornerRadius="21" Background="{DynamicResource ChipBrush}" HorizontalAlignment="Left">
+                    <TextBlock Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <TextBlock x:Name="TitleText" Text="Entre na sua conta" Margin="0,14,0,0" FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="23" FontWeight="SemiBold" />
+                <TextBlock x:Name="SubtitleText" Text="Acesse sua experiência FiveMCleaner com segurança." Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12" TextWrapping="Wrap" />
+            </StackPanel>
+            <Button x:Name="CloseButton" Grid.Column="1" Content="&#xE8BB;" FontFamily="Segoe MDL2 Assets" FontSize="12" Style="{StaticResource DialogCloseButtonStyle}" ToolTip="Fechar" AutomationProperties.Name="Fechar janela de conta" IsCancel="True" Click="Close_Click" />
+        </Grid>
 
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
             <StackPanel Margin="32,0,32,22">
                 <StackPanel x:Name="RegisterPanel" Visibility="Collapsed">
-                    <TextBlock FontWeight="SemiBold"><Run Text="Nome" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
-                    <TextBox x:Name="FirstNameBox" Height="38" Margin="0,6,0,13" MaxLength="80" AutomationProperties.Name="Nome obrigatório" />
-
-                    <TextBlock FontWeight="SemiBold"><Run Text="Sobrenome" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
-                    <TextBox x:Name="LastNameBox" Height="38" Margin="0,6,0,13" MaxLength="80" AutomationProperties.Name="Sobrenome obrigatório" />
+                    <Grid Margin="0,0,0,13">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock FontWeight="SemiBold"><Run Text="Nome" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
+                            <TextBox x:Name="FirstNameBox" Height="38" Margin="0,6,0,0" MaxLength="80" AutomationProperties.Name="Nome obrigatório" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock FontWeight="SemiBold"><Run Text="Sobrenome" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
+                            <TextBox x:Name="LastNameBox" Height="38" Margin="0,6,0,0" MaxLength="80" AutomationProperties.Name="Sobrenome obrigatório" />
+                        </StackPanel>
+                    </Grid>
 
                     <TextBlock FontWeight="SemiBold"><Run Text="Nome de usuário" /><Run Text=" *" Foreground="{DynamicResource RedBrush}" /></TextBlock>
                     <TextBox x:Name="UsernameBox" Height="38" Margin="0,6,0,0" MaxLength="30" CharacterCasing="Lower" AutomationProperties.Name="Nome de usuário obrigatório" />
@@ -63,8 +145,8 @@
                         <ColumnDefinition Width="Auto" />
                         <ColumnDefinition Width="*" />
                     </Grid.ColumnDefinitions>
-                    <CheckBox x:Name="TermsCheckBox" Width="24" Height="24" VerticalAlignment="Top" AutomationProperties.Name="Concordo com os Termos de Uso obrigatórios" />
-                    <TextBlock Grid.Column="1" Margin="8,1,0,0" TextWrapping="Wrap" LineHeight="18">
+                    <CheckBox x:Name="TermsCheckBox" Style="{StaticResource TermsCheckBoxStyle}" VerticalAlignment="Top" Margin="0,2,0,0" AutomationProperties.Name="Concordo com os Termos de Uso obrigatórios" />
+                    <TextBlock Grid.Column="1" Margin="10,0,0,0" TextWrapping="Wrap" LineHeight="17" FontSize="11.5">
                         <Run Text="Li e concordo com os " />
                         <Hyperlink Click="Terms_Click" Foreground="{DynamicResource BlueBrush}" TextDecorations="Underline">Termos de Uso</Hyperlink>
                         <Run Text=" e com o tratamento dos dados da conta descrito neles." />

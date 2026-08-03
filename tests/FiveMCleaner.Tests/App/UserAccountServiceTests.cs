@@ -74,6 +74,11 @@ public sealed class UserAccountServiceTests
                 Assert.True(accountWindowOpened);
                 main.Close();
                 var account = new AccountWindow(new StubAccountService());
+                Assert.Equal(620, account.Width);
+                Assert.True(Assert.IsType<Button>(account.FindName("CloseButton")).IsCancel);
+                var termsCheckBox = Assert.IsType<CheckBox>(account.FindName("TermsCheckBox"));
+                Assert.Equal(18, termsCheckBox.Width);
+                Assert.Equal(18, termsCheckBox.Height);
                 account.Show();
                 var terms = new TermsOfUseWindow { Owner = account };
                 terms.Show();
