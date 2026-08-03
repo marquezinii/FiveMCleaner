@@ -116,6 +116,16 @@ ativam o modo **agente integrador**. Nesse modo, o agente deve:
    antes de abrir o app; portanto ele deve ser usado para validar toda mudança
    integrada, enquanto `FiveMCleaner.lnk` continua sendo a instalação pública.
 
+Quando o usuário pedir que o agente integrador examine branches e worktrees
+além de `main` e `dev/proxima-versao`, valide os relatórios e integre todas as
+tarefas concluídas aplicáveis. Se o pedido disser para integrar em
+`origin/dev/proxima-versao` (ou usar expressão equivalente), ele também é uma
+autorização explícita para enviar somente `dev/proxima-versao` ao remoto, após
+os testes e a reconstrução obrigatória do atalho. Assim, o atalho
+`FiveMCleaner - Desenvolvimento` deve sempre ser reconstruído para refletir o
+estado final integrado de `dev/proxima-versao` antes desse push; nunca deve
+apontar para `main`, uma branch `ai/*` ou a instalação pública.
+
 Se duas tarefas conflitarem conceitualmente, analise os dois objetivos e
 preserve ambos sempre que isso for seguro e coerente. Não descarte uma solução
 válida sem análise explícita.
