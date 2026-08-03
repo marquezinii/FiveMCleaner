@@ -1,5 +1,12 @@
 # Estado do Projeto
 
+## Correção do clique do acesso de conta - 02/08/2026
+
+- O botão `Entrar / cadastrar-se` foi movido para `TitleBar.TrailingContent`, a região interativa oficial do Wpf.Ui; o clique agora chega ao fluxo de conta mesmo com a barra de título estendida.
+- Em repouso permanece minimalista; no hover/pressionado mostra uma superfície arredondada translúcida e mantém foco de teclado visível.
+- Validação integrada: .NET Release, teste WPF do evento de abertura da conta, formatação, `Verify-Safety.ps1`, 124 testes do Worker, `npm audit` e `git diff --check` aprovados.
+- O atalho de desenvolvimento foi reconstruído após esta integração e confirmado apontando para `scripts\\Start-DevelopmentApp.ps1`.
+
 ## Cadastro, login e Termos de Uso completos - 02/08/2026
 
 - O acesso `Entrar / cadastrar-se` agora abre sem crash e oferece cadastro com nome, sobrenome, usuário, e-mail, senha, confirmação e aceite obrigatório dos Termos de Uso versionados.
