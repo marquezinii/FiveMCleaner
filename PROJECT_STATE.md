@@ -3732,3 +3732,17 @@ prematura para o que o Inno Setup já resolve em modo silencioso.
   Release sem avisos; 570 testes .NET aprovados; `Verify-Safety.ps1` e contrato
   do instalador aprovados; lint, typecheck, build e 3 testes do site aprovados;
   104 testes do Worker e 35 do painel administrativo aprovados.
+
+## Cadastro: validação de credenciais (03/08/2026)
+
+- A janela de conta usa um X vetorial no canto superior direito e o cadastro
+  agora deixa claro que sobrenome é opcional. Nome, usuário, e-mail, senha,
+  confirmação e aceite dos Termos de Uso continuam obrigatórios, com mensagem e
+  foco no campo exato quando algo falta.
+- A senha tem checklist, indicador horizontal de força e controles para
+  mostrar/ocultar senha e confirmação. Cliente e Worker exigem 12+ caracteres,
+  maiúscula, minúscula, número e caractere especial; o Worker mantém os limites
+  de corpo e senha e também aplica a regra, evitando uma validação apenas visual.
+- Os testes .NET e Worker foram executados com sucesso. A confirmação de que a
+  caixa de e-mail existe permanece pendente de configurar um remetente/provedor
+  e o fluxo de confirmação; o projeto não possuía esse serviço e ele não foi simulado.

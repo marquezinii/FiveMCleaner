@@ -2,7 +2,7 @@
 
 - Agente: Codex
 - Branch: `ai/codex/account-credentials-validation`
-- Status: concluída e pronta para integração
+- Status: integrada em `dev/proxima-versao`
 - Objetivo: corrigir o fechar da janela de conta e reforçar o cadastro com validações claras, senha forte e visibilidade de senha.
 
 ## Alterações
@@ -23,3 +23,7 @@
 ## Limitação conhecida
 
 Não há remetente/provedor de e-mail configurado no repositório. A sintaxe é validada, mas confirmação de que uma caixa postal existe exige envio de link/código por e-mail e não foi simulada.
+
+## Integração
+
+- Integrada em `dev/proxima-versao` pelo merge `e41a7e3`.
