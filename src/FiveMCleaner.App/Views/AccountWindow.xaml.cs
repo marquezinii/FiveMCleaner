@@ -32,7 +32,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         PasswordHelpText.Text = registering ? "Use pelo menos 10 caracteres." : "Use sua senha cadastrada.";
         SubmitButton.Content = registering ? "Criar conta" : "Entrar";
         SwitchButton.Content = registering ? "Já possui conta? Entrar" : "Ainda não tem conta? Criar conta";
-        Height = registering ? 720 : 570;
+        Height = registering ? 690 : 570;
         HideError();
         (registering ? FirstNameBox : EmailBox).Focus();
     }
@@ -98,6 +98,8 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
 
     private void Terms_Click(object sender, RoutedEventArgs e) =>
         new TermsOfUseWindow { Owner = this }.ShowDialog();
+
+    private void Close_Click(object sender, RoutedEventArgs e) => Close();
 
     private void HideError() => ErrorText.Visibility = Visibility.Collapsed;
 

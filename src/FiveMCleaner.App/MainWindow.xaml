@@ -170,7 +170,7 @@
                             <Border Width="25" Height="25" CornerRadius="13" Background="{DynamicResource ChipBrush}" Margin="0,0,7,0">
                                 <TextBlock x:Name="AccountInitials" Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" />
                             </Border>
-                            <TextBlock x:Name="AccountLabel" Text="Entrar / cadastrar-se" VerticalAlignment="Center" FontWeight="SemiBold" />
+                            <TextBlock x:Name="AccountLabel" Text="Entrar / Cadastre-se" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="12.5" FontWeight="SemiBold" />
                         </StackPanel>
                     </Button>
                 </ui:TitleBar.TrailingContent>

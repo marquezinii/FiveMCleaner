@@ -214,7 +214,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         var profile = accountService?.CurrentProfile;
         AccountInitials.Text = profile?.Initials ?? "\uE77B";
-        AccountLabel.Text = profile?.DisplayName ?? "Entrar / cadastrar-se";
+        AccountLabel.Text = profile?.DisplayName ?? "Entrar / Cadastre-se";
         AccountButton.ToolTip = profile is null ? "Entrar ou criar conta" : "Clique para sair da conta";
     }
 
