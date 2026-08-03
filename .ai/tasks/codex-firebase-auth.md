@@ -2,7 +2,7 @@
 
 - Agente: Codex
 - Branch: `ai/codex/firebase-auth`
-- Status: concluída, pronta para integração
+- Status: integrada em `dev/proxima-versao`
 
 ## Mudanças
 
@@ -26,3 +26,5 @@
 - Pendência registrada no `PROJECT_STATE.md`: validar ID Tokens Firebase no
   Worker antes da primeira rota autenticada e decidir a migração/recriação de
   contas antigas antes da primeira release pública que promova o novo fluxo.
+- Integração concluída localmente em `dev/proxima-versao`; validação completa e
+  atalho de desenvolvimento refeitos antes do push autorizado.

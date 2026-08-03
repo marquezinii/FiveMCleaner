@@ -15,6 +15,23 @@
   um fluxo explícito de recriação/redefinição antes da primeira release pública
   que promova a autenticação Firebase.
 
+## Integração do Firebase Authentication REST — 03/08/2026
+
+- O aplicativo agora usa exclusivamente a Firebase Authentication REST API para
+  cadastro, login, verificação de e-mail, recuperação, reautenticação,
+  alteração de senha/e-mail e exclusão de conta; não há SDK Web, npm ou credencial
+  administrativa no cliente.
+- A sessão persiste somente o refresh token opcional, protegido por DPAPI do
+  usuário Windows. O ID Token permanece em memória, é renovado automaticamente
+  e o Firebase UID substitui o e-mail como identificador interno.
+- O fluxo antigo de contas do Worker, suas rotas e schema fonte foram removidos.
+  As rotas já implantadas só deixarão de existir após um deploy futuro autorizado.
+- Validação integrada: .NET Release, formatação, `Verify-Safety.ps1`, Worker
+  (testes + audit), dashboard (43 testes; audit não aplicável sem lockfile),
+  site (lint, typecheck, build, 3 testes + audit) e `git diff --check` aprovados.
+- O atalho `FiveMCleaner - Desenvolvimento` foi reconstruído e confirmado
+  apontando para `scripts\Start-DevelopmentApp.ps1`.
+
 ## Refinamento da janela de conta - 02/08/2026
 
 - A janela de login/cadastro agora possui um botão X minimalista e acessível para fechar, além de preservar `Esc` como cancelamento.

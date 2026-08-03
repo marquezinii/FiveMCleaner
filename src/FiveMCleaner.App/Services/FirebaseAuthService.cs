@@ -20,7 +20,8 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
 
     public FirebaseAuthService(string apiKey)
         : this(new HttpClient { Timeout = TimeSpan.FromSeconds(20) }, apiKey,
-            new SecureFirebaseSessionStore(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ProductIdentity.Name, "firebase.session"))) { }
+            new SecureFirebaseSessionStore(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ProductIdentity.Name, "firebase.session")))
+    { }
 
     internal FirebaseAuthService(HttpClient client, string apiKey, SecureFirebaseSessionStore sessionStore)
     {
