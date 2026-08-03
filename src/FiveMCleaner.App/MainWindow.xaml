@@ -130,31 +130,51 @@
                         </Border>
                     </StackPanel>
                 </ui:TitleBar.Header>
+                <ui:TitleBar.TrailingContent>
+                    <Button x:Name="AccountButton" Padding="10,0" MinHeight="40" VerticalAlignment="Center" Click="Account_Click" ToolTip="Entrar ou criar conta" AutomationProperties.Name="Entrar ou cadastrar-se" Background="Transparent" BorderThickness="0">
+                        <Button.Style>
+                            <Style TargetType="Button">
+                                <Setter Property="Background" Value="Transparent" />
+                                <Setter Property="BorderThickness" Value="0" />
+                                <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                                <Setter Property="Cursor" Value="Hand" />
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="Button">
+                                            <Grid>
+                                                <Border x:Name="HoverSurface" Background="Transparent" CornerRadius="8" />
+                                                <ContentPresenter Margin="{TemplateBinding Padding}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                            </Grid>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsMouseOver" Value="True">
+                                                    <Setter TargetName="HoverSurface" Property="Background" Value="{DynamicResource ChipBrush}" />
+                                                    <Setter TargetName="HoverSurface" Property="Opacity" Value="0.82" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource OrangeLightBrush}" />
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter TargetName="HoverSurface" Property="Background" Value="{DynamicResource ChipBrush}" />
+                                                    <Setter TargetName="HoverSurface" Property="Opacity" Value="1" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource OrangeLightBrush}" />
+                                                </Trigger>
+                                                <Trigger Property="IsKeyboardFocused" Value="True">
+                                                    <Setter TargetName="HoverSurface" Property="BorderBrush" Value="{DynamicResource OrangeLightBrush}" />
+                                                    <Setter TargetName="HoverSurface" Property="BorderThickness" Value="1" />
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                        </Button.Style>
+                        <StackPanel Orientation="Horizontal">
+                            <Border Width="25" Height="25" CornerRadius="13" Background="{DynamicResource ChipBrush}" Margin="0,0,7,0">
+                                <TextBlock x:Name="AccountInitials" Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" />
+                            </Border>
+                            <TextBlock x:Name="AccountLabel" Text="Entrar / cadastrar-se" VerticalAlignment="Center" FontWeight="SemiBold" />
+                        </StackPanel>
+                    </Button>
+                </ui:TitleBar.TrailingContent>
             </ui:TitleBar>
-            <Button x:Name="AccountButton" Grid.Row="0" HorizontalAlignment="Right" Margin="0,0,164,0" Padding="6,0" Height="36" VerticalAlignment="Center" Click="Account_Click" ToolTip="Entrar ou criar conta" AutomationProperties.Name="Entrar ou cadastrar-se" Background="Transparent" BorderThickness="0">
-                <Button.Style>
-                    <Style TargetType="Button">
-                        <Setter Property="Background" Value="Transparent" />
-                        <Setter Property="BorderThickness" Value="0" />
-                        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-                        <Setter Property="Cursor" Value="Hand" />
-                        <Style.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Foreground" Value="{DynamicResource OrangeLightBrush}" />
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter Property="Foreground" Value="{DynamicResource OrangeLightBrush}" />
-                            </Trigger>
-                        </Style.Triggers>
-                    </Style>
-                </Button.Style>
-                <StackPanel Orientation="Horizontal">
-                    <Border Width="25" Height="25" CornerRadius="13" Background="{DynamicResource ChipBrush}" Margin="0,0,7,0">
-                        <TextBlock x:Name="AccountInitials" Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" />
-                    </Border>
-                    <TextBlock x:Name="AccountLabel" Text="Entrar / cadastrar-se" VerticalAlignment="Center" FontWeight="SemiBold" />
-                </StackPanel>
-            </Button>
 
             <ui:NavigationView x:Name="RootNavigationView"
                                 Grid.Row="1"
