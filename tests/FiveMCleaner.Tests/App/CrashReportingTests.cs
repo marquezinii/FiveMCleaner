@@ -184,20 +184,17 @@ public sealed class TelemetryEndpointPolicyTests
     }
 }
 
-public sealed class AccountEndpointPolicyTests
+public sealed class FirebaseAuthConfigurationTests
 {
     [Fact]
-    public void TryCreate_OnlyAcceptsTheConfiguredProductionAccountRoot()
+    public void TryGetApiKey_AcceptsOnlyPublicApiKeySyntax()
     {
-        var accepted = AccountEndpointPolicy.TryCreate(
-            "https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/account/",
-            AppRuntimeEnvironment.Production,
-            out var endpoint);
+        var accepted = FirebaseAuthConfiguration.TryGetApiKey(
+            "AIzaSyBrYcZtzioKnCc1-LmgCC2YI1R66SW4vdM", out var apiKey);
 
         Assert.True(accepted);
-        Assert.Equal("/account/", endpoint.AbsolutePath);
-        Assert.False(AccountEndpointPolicy.TryCreate("https://example.test/account/", AppRuntimeEnvironment.Production, out _));
-        Assert.False(AccountEndpointPolicy.TryCreate("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/account/login", AppRuntimeEnvironment.Production, out _));
+        Assert.Equal("AIzaSyBrYcZtzioKnCc1-LmgCC2YI1R66SW4vdM", apiKey);
+        Assert.False(FirebaseAuthConfiguration.TryGetApiKey("https://example.test", out _));
     }
 }
 

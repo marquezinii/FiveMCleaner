@@ -15,6 +15,17 @@ Este documento descreve a arquitetura-alvo e os limites entre componentes. Uma c
 
 ## Componentes
 
+## Autenticação Firebase
+
+A conta usa diretamente a Firebase Authentication REST API. `FirebaseAuthService`
+é a única camada de rede; DTOs, armazenamento DPAPI, estado de autenticação e
+mapeamento de erros permanecem separados. Apenas o refresh token opcional é
+persistido e protegido para o usuário Windows; senha e ID token nunca vão para
+disco ou logs. O ID token fica em memória, é renovado antes de vencer e deve
+seguir como `Authorization: Bearer` apenas para um backend HTTPS que o valide e
+use o Firebase UID como identificador interno. Com `emailVerified=false`, o
+estado é `EmailVerificationRequired` e recursos autenticados ficam bloqueados.
+
 | Projeto                  | Responsabilidade                                                    | Não deve conhecer                                        |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- |
 | `FiveMCleaner.App`       | WPF, navegação, prévia, progresso e confirmação                     | APIs administrativas ou detalhes de registro             |

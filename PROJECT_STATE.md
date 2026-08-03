@@ -1,5 +1,20 @@
 # Estado do Projeto
 
+## PENDENTE IMPORTANTE — verificação de ID Token Firebase no backend
+
+- A autenticação do aplicativo usa Firebase Authentication REST e já obtém o
+  ID Token em memória, mas ainda não há rota de produto no Worker que o receba.
+- Antes de criar a primeira rota de backend autenticada, implementar e testar
+  no Worker a validação do JWT Firebase por HTTPS: assinatura RS256 usando as
+  chaves públicas do Google, `aud = fivemcleaner-app`,
+  `iss = https://securetoken.google.com/fivemcleaner-app`, expiração e `sub`.
+- A rota deve usar exclusivamente o Firebase UID (`sub`) como identificador
+  interno permanente; nunca e-mail. Não aceitar token sem validação completa.
+- A troca do fluxo antigo para Firebase não migra contas existentes do Worker.
+  Se houver dados/usuários a preservar, decidir e implementar uma migração ou
+  um fluxo explícito de recriação/redefinição antes da primeira release pública
+  que promova a autenticação Firebase.
+
 ## Refinamento da janela de conta - 02/08/2026
 
 - A janela de login/cadastro agora possui um botão X minimalista e acessível para fechar, além de preservar `Esc` como cancelamento.
