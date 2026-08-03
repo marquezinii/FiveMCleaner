@@ -2,7 +2,7 @@
 
 - Agente: Codex
 - Branch: `ai/codex/shortcut-rule`
-- Status: concluída e pronta para integração
+- Status: integrada em `dev/proxima-versao`
 - Objetivo: tornar explícita a reconstrução do atalho de desenvolvimento antes de todo push integrador para `origin/dev/proxima-versao`.
 
 ## Alteração
@@ -13,3 +13,7 @@
 ## Validação
 
 - Revisão do trecho de integração e `git diff --check`.
+
+## Integração
+
+- Integrada em `dev/proxima-versao` pelo merge `eef347b`.

@@ -3746,3 +3746,10 @@ prematura para o que o Inno Setup já resolve em modo silencioso.
 - Os testes .NET e Worker foram executados com sucesso. A confirmação de que a
   caixa de e-mail existe permanece pendente de configurar um remetente/provedor
   e o fluxo de confirmação; o projeto não possuía esse serviço e ele não foi simulado.
+
+## Regra do atalho de desenvolvimento (03/08/2026)
+
+- `AI_RULES.md` agora exige que o agente integrador reconstrua e confira o
+  atalho `FiveMCleaner - Desenvolvimento` antes de enviar uma integração para
+  `origin/dev/proxima-versao`. O atalho deve refletir o estado final de
+  `dev/proxima-versao`, nunca `main`, uma branch `ai/*` ou a instalação pública.
