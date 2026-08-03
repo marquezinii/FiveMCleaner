@@ -1,38 +1,42 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { CURRENT_TERMS_VERSION, createUserAccountProvider, normalizeRegistration } from '../../src/auth/userAccountProvider.js';
+import { CURRENT_TERMS_VERSION, createUserAccountProvider, hasStrongPassword, normalizeRegistration } from '../../src/auth/userAccountProvider.js';
 
 const validRegistration = {
   firstName: ' João ',
   lastName: ' da Silva ',
   username: ' Joao.Silva ',
   email: ' JOAO@EXAMPLE.COM ',
-  password: 'uma senha segura',
+  password: 'SenhaSegura!123',
   termsAccepted: true,
   termsVersion: CURRENT_TERMS_VERSION,
 };
 
-test('normalizeRegistration requires and normalizes every registration field', () => {
+test('normalizeRegistration requires mandatory fields and permits an empty optional last name', () => {
   assert.deepEqual(normalizeRegistration(validRegistration), {
     firstName: 'João',
     lastName: 'da Silva',
     username: 'joao.silva',
     email: 'joao@example.com',
-    password: 'uma senha segura',
+    password: 'SenhaSegura!123',
   });
 
-  for (const field of ['firstName', 'lastName', 'username', 'email', 'password']) {
+  for (const field of ['firstName', 'username', 'email', 'password']) {
     assert.equal(normalizeRegistration({ ...validRegistration, [field]: '' }), null, field);
   }
+  assert.deepEqual(normalizeRegistration({ ...validRegistration, lastName: '' }), { ...normalizeRegistration(validRegistration), lastName: '' });
   assert.equal(normalizeRegistration({ ...validRegistration, termsAccepted: false }), null);
   assert.equal(normalizeRegistration({ ...validRegistration, termsVersion: 'outdated' }), null);
 });
 
-test('normalizeRegistration rejects unsafe names, usernames and short passwords', () => {
+test('normalizeRegistration rejects unsafe names, usernames and incomplete password requirements', () => {
   assert.equal(normalizeRegistration({ ...validRegistration, firstName: 'João123' }), null);
   assert.equal(normalizeRegistration({ ...validRegistration, username: '.invalid' }), null);
   assert.equal(normalizeRegistration({ ...validRegistration, username: 'ab' }), null);
-  assert.equal(normalizeRegistration({ ...validRegistration, password: 'short123' }), null);
+  assert.equal(normalizeRegistration({ ...validRegistration, password: 'SenhaSegura123' }), null);
+  assert.equal(normalizeRegistration({ ...validRegistration, password: 'senhasegura!123' }), null);
+  assert.equal(normalizeRegistration({ ...validRegistration, password: 'SENHASEGURA!123' }), null);
+  assert.equal(hasStrongPassword('SenhaSegura!123'), true);
 });
 
 test('register stores username and versioned terms acceptance before creating a session', async () => {
