@@ -1,5 +1,13 @@
 # Estado do Projeto
 
+## Refinamento da janela de conta - 02/08/2026
+
+- A janela de login/cadastro agora possui um botão X minimalista e acessível para fechar, além de preservar `Esc` como cancelamento.
+- A largura passou para 620 px, com Nome e Sobrenome lado a lado no cadastro; isso reduziu a altura necessária do formulário.
+- O checkbox de Termos foi substituído por uma marca de seleção compacta e estável, com foco de teclado e estados de hover.
+- O rótulo superior agora é `Entrar / Cadastre-se`, em tipografia variável nativa do Windows e tamanho menor.
+- Validação integrada: .NET Release, smoke WPF, formatação, `Verify-Safety.ps1`, 124 testes do Worker, `npm audit` e `git diff --check` aprovados. Atalho de desenvolvimento reconstruído e verificado.
+
 ## Correção do clique do acesso de conta - 02/08/2026
 
 - O botão `Entrar / cadastrar-se` foi movido para `TitleBar.TrailingContent`, a região interativa oficial do Wpf.Ui; o clique agora chega ao fluxo de conta mesmo com a barra de título estendida.
