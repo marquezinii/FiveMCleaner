@@ -31,7 +31,8 @@ public sealed record RemoteServicesOptions
     /// </summary>
     public string? BugReportEndpoint { get; init; }
 
-    public string? AccountEndpoint { get; init; }
+    /// <summary>Public Firebase Web API key. It identifies the project but is not an administrative credential.</summary>
+    public string? FirebaseApiKey { get; init; }
 
     public required string Environment { get; init; }
 }
@@ -134,18 +135,11 @@ public static class TelemetryEndpointPolicy
     }
 }
 
-public static class AccountEndpointPolicy
+public static class FirebaseAuthConfiguration
 {
-    public static bool TryCreate(string? configuredValue, AppRuntimeEnvironment environment, out Uri endpoint)
+    public static bool TryGetApiKey(string? configuredValue, out string apiKey)
     {
-        endpoint = null!;
-        if (!Uri.TryCreate(configuredValue, UriKind.Absolute, out var candidate)
-            || candidate.Scheme != Uri.UriSchemeHttps || !string.IsNullOrEmpty(candidate.UserInfo)
-            || !string.IsNullOrEmpty(candidate.Query) || !string.IsNullOrEmpty(candidate.Fragment)
-            || candidate.AbsolutePath != "/account/") return false;
-        if (environment == AppRuntimeEnvironment.Production
-            && !string.Equals(candidate.Host, TelemetryEndpointPolicy.ProductionHost, StringComparison.OrdinalIgnoreCase)) return false;
-        endpoint = candidate;
-        return true;
+        apiKey = configuredValue?.Trim() ?? string.Empty;
+        return apiKey.Length >= 20 && apiKey.All(character => char.IsLetterOrDigit(character) || character is '-' or '_');
     }
 }

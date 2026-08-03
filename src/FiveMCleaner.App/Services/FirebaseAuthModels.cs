@@ -1,0 +1,54 @@
+namespace FiveMCleaner.App.Services;
+
+public static class AccountTerms
+{
+    public const string CurrentVersion = "2026-08-02";
+}
+
+public enum AuthenticationState
+{
+    SignedOut,
+    SigningIn,
+    EmailVerificationRequired,
+    SignedIn,
+    RefreshingSession,
+    ReauthenticationRequired
+}
+
+public sealed record FirebaseUser(string Uid, string Email, bool EmailVerified)
+{
+    public string DisplayName => Email;
+    public string Initials => Email[..1].ToUpperInvariant();
+}
+
+public sealed record AuthenticationSnapshot(AuthenticationState State, FirebaseUser? User);
+
+public sealed record FirebaseAuthResult(AuthenticationState State, FirebaseUser? User, string? Error = null)
+{
+    public bool Succeeded => Error is null && User is not null;
+}
+
+public interface IFirebaseAuthService : IDisposable
+{
+    AuthenticationSnapshot Current { get; }
+    event EventHandler<AuthenticationSnapshot>? StateChanged;
+    Task<FirebaseAuthResult> RestoreSessionAsync(CancellationToken cancellationToken = default);
+    Task<FirebaseAuthResult> RegisterAsync(string email, string password, bool keepSignedIn, CancellationToken cancellationToken = default);
+    Task<FirebaseAuthResult> SignInAsync(string email, string password, bool keepSignedIn, CancellationToken cancellationToken = default);
+    Task<FirebaseAuthResult> RefreshEmailVerificationAsync(CancellationToken cancellationToken = default);
+    Task<FirebaseAuthResult> ResendVerificationEmailAsync(CancellationToken cancellationToken = default);
+    Task<FirebaseAuthResult> SendPasswordResetEmailAsync(string email, CancellationToken cancellationToken = default);
+    Task<FirebaseAuthResult> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken cancellationToken = default);
+    Task<FirebaseAuthResult> ChangeEmailAsync(string currentPassword, string newEmail, CancellationToken cancellationToken = default);
+    Task<FirebaseAuthResult> DeleteAccountAsync(string currentPassword, CancellationToken cancellationToken = default);
+    Task<string?> GetIdTokenAsync(CancellationToken cancellationToken = default);
+    Task LogoutAsync(CancellationToken cancellationToken = default);
+}
+
+internal sealed record FirebaseTokenResponse(string? localId, string? email, string? idToken, string? refreshToken, string? expiresIn);
+internal sealed record FirebaseLookupResponse(FirebaseLookupUser[]? users);
+internal sealed record FirebaseLookupUser(string? localId, string? email, bool emailVerified);
+internal sealed record FirebaseErrorEnvelope(FirebaseError? error);
+internal sealed record FirebaseError(string? message);
+internal sealed record FirebaseRefreshResponse(string? user_id, string? id_token, string? refresh_token, string? expires_in);
+internal sealed record PersistedFirebaseSession(string RefreshToken);

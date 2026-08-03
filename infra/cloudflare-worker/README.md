@@ -118,18 +118,11 @@ is called out rather than assumed harmless.
 
 ## Product accounts
 
-The desktop account flow uses separate `/account/register`, `/account/login`,
-`/account/session`, and `/account/logout` routes backed by `user_accounts` and
-revocable `user_sessions` in D1. Registration requires first name, last name,
-a unique normalized username, a unique normalized e-mail, a password of at
-least 10 characters, and explicit acceptance of the current Terms of Use.
-The database stores only the PBKDF2 password hash and a versioned acceptance
-record (`terms_version` + `terms_accepted_at`), never the plaintext password.
-Bearer session tokens have 256 bits of entropy and are stored in D1 only as
-SHA-256 digests, so a database read does not expose active desktop sessions.
-Responses are marked `no-store`; login attempts retain the existing HMAC'd-IP
-lockout and registration is limited to five accounts per hour per HMAC'd IP.
-The source IP is never stored in clear text.
+The desktop application uses Firebase Authentication directly through its
+official REST API. This Worker does not receive account passwords, refresh
+tokens, or Firebase ID tokens. Future account-specific routes must accept a
+Firebase ID token over HTTPS, verify it server-side, and use the Firebase UID
+as the permanent identifier.
 
 ## Verified end-to-end
 

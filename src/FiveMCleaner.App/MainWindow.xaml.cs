@@ -27,7 +27,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly bool demoMode;
     private readonly RemoteServicesOptions remoteServicesOptions;
     private readonly QueuedCloudflareTelemetryService? queuedCloudflareTelemetry;
-    private readonly IUserAccountService? accountService;
+    private readonly IFirebaseAuthService? accountService;
     private HwndSource? windowSource;
     private bool allowClose;
     private bool closeAfterOptimizationStops;
@@ -81,9 +81,10 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                     "Updater"));
         var runtimeEnvironment = AppEnvironment.Resolve();
         remoteServicesOptions = RemoteServicesOptionsLoader.Load(runtimeEnvironment, AppContext.BaseDirectory);
-        if (!demoMode && AccountEndpointPolicy.TryCreate(remoteServicesOptions.AccountEndpoint, runtimeEnvironment, out var accountEndpoint))
+        if (!demoMode && FirebaseAuthConfiguration.TryGetApiKey(remoteServicesOptions.FirebaseApiKey, out var firebaseApiKey))
         {
-            accountService = new CloudflareUserAccountService(accountEndpoint);
+            accountService = new FirebaseAuthService(firebaseApiKey);
+            accountService.StateChanged += (_, _) => Dispatcher.Invoke(UpdateAccountButton);
         }
         // Cloudflare is the sole telemetry transport (FormSubmit was
         // removed entirely). If the configured endpoint is ever missing or
@@ -200,19 +201,13 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             System.Windows.MessageBox.Show("O acesso à conta não está disponível nesta instalação.", "Conta", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
-        if (accountService.CurrentProfile is not null)
-        {
-            await accountService.LogoutAsync();
-            UpdateAccountButton();
-            return;
-        }
         var dialog = new AccountWindow(accountService) { Owner = this };
         if (dialog.ShowDialog() == true) UpdateAccountButton();
     }
 
     private void UpdateAccountButton()
     {
-        var profile = accountService?.CurrentProfile;
+        var profile = accountService?.Current.User;
         AccountInitials.Text = profile?.Initials ?? "\uE77B";
         AccountLabel.Text = profile?.DisplayName ?? "Entrar / Cadastre-se";
         AccountButton.ToolTip = profile is null ? "Entrar ou criar conta" : "Clique para sair da conta";
@@ -793,6 +788,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         viewModel.UpdateAvailableDetected -= ViewModel_UpdateAvailableDetected;
         themeManager.Dispose();
         trayIcon.Dispose();
+        accountService?.Dispose();
         (releaseUpdateService as IDisposable)?.Dispose();
     }
 
