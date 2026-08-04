@@ -816,7 +816,16 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         trayIcon.ShowUpdateAvailable(version);
     }
 
-    private void TrayIcon_ShowRequested(object? sender, EventArgs e)
+    private void TrayIcon_ShowRequested(object? sender, EventArgs e) => RequestActivation();
+
+    /// <summary>
+    /// Brings the main window back to the foreground: reveals it if it was
+    /// hidden to the tray, restores it maximized if it was minimized, and
+    /// activates it. Reused by the tray (open/double-click/notification) and
+    /// by the single-instance activation request raised when the user opens
+    /// the app while it is already running.
+    /// </summary>
+    public void RequestActivation()
     {
         trayIcon.Hide();
         Show();

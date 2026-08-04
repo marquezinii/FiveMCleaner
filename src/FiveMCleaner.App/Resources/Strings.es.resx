@@ -303,7 +303,6 @@
 • Lista completa de procesos o programas
 • Rutas personales sin depurar</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>FiveMCleaner encontró un error inesperado. No se aplicará ningún cambio nuevo.\n\n{0}</value></data>
-  <data name="Dialog.AlreadyRunning.Message" xml:space="preserve"><value>FiveMCleaner ya está en ejecución. Revisa la bandeja del sistema o tus ventanas abiertas.</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>acciones verificadas</value></data>
   <data name="Progress.ElapsedFormat" xml:space="preserve"><value>Transcurrido {0}</value></data>
