@@ -26,6 +26,7 @@ public interface IResourceUsageInspector
 public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
 {
     private static readonly TimeSpan SampleInterval = TimeSpan.FromMilliseconds(300);
+    private static bool? gpuEngineCategoryExists;
 
     public ResourceUsageSnapshot GetSnapshot()
     {
@@ -109,7 +110,8 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
     {
         try
         {
-            if (!System.Diagnostics.PerformanceCounterCategory.Exists("GPU Engine"))
+            gpuEngineCategoryExists ??= System.Diagnostics.PerformanceCounterCategory.Exists("GPU Engine");
+            if (!gpuEngineCategoryExists.Value)
             {
                 return null;
             }

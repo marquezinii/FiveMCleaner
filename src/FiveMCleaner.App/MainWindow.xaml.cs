@@ -157,8 +157,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         await viewModel.InitializeAsync();
         if (accountService is not null)
         {
-            await accountService.RestoreSessionAsync();
-            UpdateAccountButton();
+            _ = RestoreAccountSessionQuietlyAsync();
         }
         themeManager.Apply(viewModel.ThemePreference);
         // A sincronização programática do seletor não pode acionar o
@@ -192,6 +191,18 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             HideToTray();
         }
         await CaptureIfRequestedAsync();
+    }
+
+    private async Task RestoreAccountSessionQuietlyAsync()
+    {
+        try
+        {
+            await accountService!.RestoreSessionAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+        }
     }
 
     private async void Account_Click(object sender, RoutedEventArgs e)
@@ -784,7 +795,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         viewModel.Dispose();
         windowSource?.RemoveHook(WindowMessageHook);
         System.Windows.Application.Current.SessionEnding -= Application_SessionEnding;
-        (accountService as IDisposable)?.Dispose();
         viewModel.UpdateAvailableDetected -= ViewModel_UpdateAvailableDetected;
         themeManager.Dispose();
         trayIcon.Dispose();

@@ -238,13 +238,18 @@ public sealed class StreamingSoftwareDetector
                 (Hive: RegistryHive.LocalMachine, View: RegistryView.Registry32)
             };
 
-        // Run registry scans in parallel
-        var tasks = probes.Select(probe => Task.Run(() =>
+        var perProbeResults = new List<string>[probes.Length];
+        for (var i = 0; i < probes.Length; i++)
+        {
+            perProbeResults[i] = [];
+        }
+
+        var tasks = probes.Select((probe, index) => Task.Run(() =>
         {
             if (!CollectUninstallDisplayNames(
                     probe.Hive,
                     probe.View,
-                    destination,
+                    perProbeResults[index],
                     cancellationToken))
             {
                 return false;
@@ -266,7 +271,14 @@ public sealed class StreamingSoftwareDetector
             complete = false;
         }
 
-        // Cache results
+        foreach (var probeList in perProbeResults)
+        {
+            foreach (var name in probeList)
+            {
+                destination.Add(name);
+            }
+        }
+
         CacheRegistryResults(destination);
 
         return complete;

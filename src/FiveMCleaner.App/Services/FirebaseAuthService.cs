@@ -200,7 +200,14 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
     private FirebaseAuthResult Result() => new(Current.State, Current.User);
     private FirebaseAuthResult Fail(string? error, bool sensitiveFlow = false)
     {
-        if (error is "INVALID_ID_TOKEN" or "TOKEN_EXPIRED" or "INVALID_REFRESH_TOKEN" or "USER_DISABLED") _ = LogoutAsync();
+        if (error is "INVALID_ID_TOKEN" or "TOKEN_EXPIRED" or "INVALID_REFRESH_TOKEN" or "USER_DISABLED")
+        {
+            _ = LogoutAsync().ContinueWith(
+                static t => { _ = t.Exception; },
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+        }
         return new FirebaseAuthResult(Current.State, Current.User, FirebaseAuthErrorMapper.Map(error, sensitiveFlow));
     }
     private void SetState(AuthenticationState state, FirebaseUser? user = null)
