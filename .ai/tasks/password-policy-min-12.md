@@ -32,6 +32,36 @@ mantinha campos mortos de classes de caracteres (`HasUppercase`, `HasLowercase`,
   (só minúsculas, só dígitos, só maiúsculas, só símbolos) são válidas e que vazia/
   nula/<12/>128 são inválidas.
 
+## Testes agressivos do fluxo de cadastro (segunda rodada)
+
+Probe de `MailAddress` e revisão do fluxo revelaram e corrigiram problemas fora da
+política de senha mas no caminho do cadastro:
+
+- `src/FiveMCleaner.App/Services/AccountValidation.cs` (novo): validação de e-mail
+  extraída para o serviço (`IsValidEmail`), reutilizada no cadastro, login,
+  redefinição de senha e troca de e-mail; `AccountWindow.xaml.cs` não usa mais
+  `System.Net.Mail` nem o helper privado `ValidEmail`.
+  - Comportamento confirmado por probe: aceita `a@b`, `x@y`, `user@example` (sem
+    TLD), `user@example.com.` e `user@-example.com`; rejeita espaços internos,
+    `@` duplicado, começo/vazio e `user name@example.com`.
+- `src/FiveMCleaner.App/Services/FirebaseAuthService.cs`: timeout do HTTP (20s)
+  virava `TaskCanceledException`, era repassado e derrubava o app. Agora
+  `PostAsync` e `SignInAsync` capturam `OperationCanceledException` quando o token
+  de cancelamento **não** foi pedido pelo chamador e mapeiam para
+  `NETWORK_REQUEST_FAILED` (mensagem amigável na UI).
+- `src/FiveMCleaner.App/Services/SecureFirebaseSessionStore.cs`: `WriteAsync` agora
+  é best-effort; `IOException`/`UnauthorizedAccessException`/`CryptographicException`
+  (ex.: lock transitivo do arquivo, conta sem permissão) não derrubam o fluxo de
+  cadastro/login — perdem o "manter conectado", nunca crasham.
+- `src/FiveMCleaner.App/Services/FirebaseAuthErrorMapper.cs`: `EMAIL_EXISTS` agora
+  orienta a recuperação ("Esqueci minha senha"); novo `INVALID_EMAIL`.
+- `tests/FiveMCleaner.Tests/App/AccountSignUpFlowTests.cs` (novo, 18 casos):
+  happy path do `RegisterAsync` (signUp → lookup → sendOobCode), não persistência
+  de sessão quando `keepSignedIn=false`, mapeamento de erros Firebase, falha de
+  rede, timeout, falha do e-mail de verificação (conta fica pendente), armadilha de
+  conta (lookup falha após signUp e o retry orienta recuperação), cancelamento do
+  chamador propagado e `WriteAsync` best-effort.
+
 ## Backend
 
 Nenhuma mudança no Worker foi necessária: não há mais rota de cadastro de usuário
@@ -47,13 +77,16 @@ minúscula, número ou símbolo. Sem isso, o Firebase pode continuar rejeitando 
 
 ## Validação
 
-- `dotnet test` (636 aprovados, 0 falhas) incluindo o teste atualizado.
+- `dotnet test` (665 aprovados, 0 falhas) incluindo o teste da política atualizado
+  e os 18 casos agressivos do fluxo de cadastro.
 - Build Release de `FiveMCleaner.App` sem avisos.
 - `dotnet format FiveMCleaner.slnx --verify-no-changes --no-restore` aprovado.
-- `scripts/Verify-Safety.ps1` aprovado (636 testes, 0 avisos/erros).
+- `scripts/Verify-Safety.ps1` aprovado (665 testes, 0 avisos/erros).
 - `git diff --check` limpo.
 
 ## Observações para integração
 
 - Mudança pequena e isolada; sem alteração de versão, release, instalador ou deploy.
 - O atalho de desenvolvimento deve ser reconstruído na integração conforme `AI_RULES`.
+- **Pré-integração:** rodar `scripts/Verify-Safety.ps1` como etapa obrigatória antes
+  do merge, além de `dotnet test` completo.
