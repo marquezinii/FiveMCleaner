@@ -1,0 +1,80 @@
+// Firebase Authentication REST only manages email/password/uid -- it has no
+// concept of a username, first name, or last name. This module is the
+// server-side half of the profile completion step that fills that gap:
+// uniqueness of `username` can only be enforced centrally, never trusted
+// from the client, so it lives here behind requireFirebaseUser (see
+// firebaseIdToken.js) rather than in the App itself.
+
+const NAME_PATTERN = /^\p{L}[\p{L} '-]{0,59}$/u;
+const USERNAME_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]{2,23}$/;
+
+/**
+ * Validates and normalizes the profile-completion payload. Returns null on
+ * any violation -- the caller responds 400 without leaking which field
+ * failed, matching the other ingest validators in this Worker.
+ *
+ * @param {unknown} payload
+ * @returns {{ username: string, usernameNormalized: string, firstName: string, lastName: string } | null}
+ */
+export function validateAccountProfile(payload) {
+  if (payload === null || typeof payload !== 'object') {
+    return null;
+  }
+
+  const { username, firstName, lastName } = payload;
+  if (typeof username !== 'string' || typeof firstName !== 'string' || typeof lastName !== 'string') {
+    return null;
+  }
+
+  const trimmedUsername = username.trim();
+  const trimmedFirstName = firstName.trim();
+  const trimmedLastName = lastName.trim();
+
+  if (!USERNAME_PATTERN.test(trimmedUsername)) {
+    return null;
+  }
+
+  if (!NAME_PATTERN.test(trimmedFirstName) || !NAME_PATTERN.test(trimmedLastName)) {
+    return null;
+  }
+
+  return {
+    username: trimmedUsername,
+    usernameNormalized: trimmedUsername.toLowerCase(),
+    firstName: trimmedFirstName,
+    lastName: trimmedLastName,
+  };
+}
+
+/**
+ * Inserts the profile row for `uid`, the Firebase UID from the verified ID
+ * token -- never anything client-supplied. Returns a discriminated result
+ * instead of throwing so the route handler can map it to the right HTTP
+ * status without inspecting D1's error message shape.
+ *
+ * @param {D1Database} db
+ * @param {string} uid
+ * @param {ReturnType<typeof validateAccountProfile>} profile
+ * @returns {Promise<{ ok: true } | { ok: false, code: 'username-taken' | 'uid-taken' | 'unknown' }>}
+ */
+export async function createAccountProfile(db, uid, profile) {
+  try {
+    await db
+      .prepare(
+        `INSERT INTO account_profiles (uid, username, username_normalized, first_name, last_name, created_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+      )
+      .bind(uid, profile.username, profile.usernameNormalized, profile.firstName, profile.lastName, new Date().toISOString())
+      .run();
+    return { ok: true };
+  } catch (err) {
+    const message = String(err?.message || '');
+    if (message.includes('idx_account_profiles_username_normalized')) {
+      return { ok: false, code: 'username-taken' };
+    }
+    if (message.includes('account_profiles.uid') || message.includes('PRIMARY KEY')) {
+      return { ok: false, code: 'uid-taken' };
+    }
+    return { ok: false, code: 'unknown' };
+  }
+}

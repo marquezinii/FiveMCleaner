@@ -1,5 +1,26 @@
 # Estado do Projeto
 
+## Cadastro com Nome, Sobrenome e Usuário único — 04/08/2026
+
+- Repostos Nome e Sobrenome (lado a lado) e um Usuário único no cadastro,
+  removidos pela migração para Firebase Authentication REST (que só
+  administra e-mail/senha/uid). Ordem final dos campos, como pedido: Nome +
+  Sobrenome, Usuário, E-mail, Senha, Repetir senha.
+- Arquitetura: como Firebase não tem username nem garante unicidade entre
+  instalações, a unicidade só pode ser arbitrada centralmente. Nova rota
+  `POST /account/profile` no Worker, atrás do verificador de ID Token
+  Firebase já integrado (`requireFirebaseUser`), grava username/nome/
+  sobrenome em `account_profiles` (D1), indexado pelo UID do token — nunca
+  por um valor do corpo da requisição. Username duplicado responde
+  `409 username-taken`.
+- Se o cadastro no Firebase for concluído mas o perfil falhar ao salvar
+  (username já em uso, rede), a conta Firebase criada é preservada — a
+  janela pede outro nome de usuário em vez de descartar o cadastro.
+- Detalhes completos em `.ai/tasks/account-registration-profile-fields.md`.
+- Validação: build Release sem avisos, 719 testes .NET (29 novos),
+  `dotnet format --verify-no-changes`, `Verify-Safety.ps1`, 148 testes do
+  Worker (16 novos), `git diff --check` aprovados.
+
 ## Integração de 9 tarefas de IA em `dev/proxima-versao` — 04/08/2026
 
 - Integradas em ordem (evitando conflito nos arquivos compartilhados
@@ -34,19 +55,19 @@
   `ai/hermes/timezone-fix`, integrado. Branch local/remota preservada até o
   usuário confirmar que pode ser removida.
 
-## PENDENTE IMPORTANTE — verificação de ID Token Firebase no backend
+## Verificação de ID Token Firebase no backend — resolvida
 
-- A autenticação do aplicativo usa Firebase Authentication REST e já obtém o
-  ID Token em memória. O Worker agora sabe validar o JWT Firebase (RS256,
-  chaves públicas do Google, `aud = fivemcleaner-app`,
-  `iss = https://securetoken.google.com/fivemcleaner-app`, expiração e `sub`),
-  mas ainda não há rota de produto que use esse verificador.
-- A rota deve usar exclusivamente o Firebase UID (`sub`) como identificador
-  interno permanente; nunca e-mail. Não aceitar token sem validação completa.
-- A troca do fluxo antigo para Firebase não migra contas existentes do Worker.
-  Se houver dados/usuários a preservar, decidir e implementar uma migração ou
-  um fluxo explícito de recriação/redefinição antes da primeira release pública
-  que promova a autenticação Firebase.
+- O Worker valida o JWT Firebase (RS256, chaves públicas do Google,
+  `aud = fivemcleaner-app`, `iss = https://securetoken.google.com/fivemcleaner-app`,
+  expiração e `sub`) e agora tem uma rota de produto sobre ele:
+  `POST /account/profile` (ver seção acima). Toda rota autenticada usa
+  exclusivamente o Firebase UID (`sub`) como identificador interno
+  permanente; nunca e-mail.
+- Pendente ainda: a troca do fluxo antigo para Firebase não migrou contas
+  existentes do Worker. Se houver dados/usuários reais a preservar do
+  sistema legado, decidir e implementar uma migração ou um fluxo explícito
+  de recriação/redefinição antes de qualquer release pública que dependa
+  disso.
 
 ## Integração do Firebase Authentication REST — 03/08/2026
 

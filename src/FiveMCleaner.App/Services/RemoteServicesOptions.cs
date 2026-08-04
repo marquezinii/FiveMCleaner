@@ -31,6 +31,15 @@ public sealed record RemoteServicesOptions
     /// </summary>
     public string? BugReportEndpoint { get; init; }
 
+    /// <summary>
+    /// HTTPS endpoint of the account profile-completion Cloudflare Worker
+    /// route (username, first name, last name — the fields Firebase
+    /// Authentication REST does not manage). Same fail-safe rule as
+    /// <see cref="TelemetryEndpoint"/>: absent or malformed means profile
+    /// completion reports a clear failure instead of silently doing nothing.
+    /// </summary>
+    public string? AccountProfileEndpoint { get; init; }
+
     /// <summary>Public Firebase Web API key. It identifies the project but is not an administrative credential.</summary>
     public string? FirebaseApiKey { get; init; }
 

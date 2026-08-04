@@ -3,18 +3,29 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     Title="Sua conta" Icon="/FiveMCleaner;component/Assets/FiveMCleaner.png"
-    Width="540" Height="620" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
+    Width="540" Height="700" WindowStartupLocation="CenterOwner" ResizeMode="NoResize" ShowInTaskbar="False"
     FontFamily="Segoe UI Variable Text, Segoe UI" Background="{DynamicResource BackgroundBrush}">
     <Grid Margin="32"><Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
         <StackPanel><TextBlock x:Name="TitleText" Text="Entre na sua conta" FontSize="23" FontWeight="SemiBold"/><TextBlock x:Name="SubtitleText" Text="Acesse o FiveMCleaner com segurança." Margin="0,6,0,18" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap"/></StackPanel>
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto"><StackPanel>
             <StackPanel x:Name="AuthenticationPanel">
-                <StackPanel x:Name="RegistrationOnlyPanel" Visibility="Collapsed"><TextBlock Text="Crie sua conta com e-mail e senha. A verificação do e-mail é obrigatória." TextWrapping="Wrap" Margin="0,0,0,12" Foreground="{DynamicResource TextMutedBrush}"/></StackPanel>
-                <TextBlock FontWeight="SemiBold">E-mail</TextBlock><TextBox x:Name="EmailBox" Height="38" Margin="0,6,0,13" MaxLength="254" AutomationProperties.Name="E-mail"/>
-                <TextBlock FontWeight="SemiBold">Senha</TextBlock><PasswordBox x:Name="PasswordBox" Height="38" Margin="0,6,0,4" MaxLength="128" AutomationProperties.Name="Senha" PasswordChanged="PasswordChanged"/>
-                <TextBlock x:Name="PasswordPolicyText" Visibility="Collapsed" Text="A senha deve possuir pelo menos 12 caracteres." Margin="0,0,0,13" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/>
-                <StackPanel x:Name="ConfirmPanel" Visibility="Collapsed"><TextBlock FontWeight="SemiBold">Repetir senha</TextBlock><PasswordBox x:Name="ConfirmPasswordBox" Height="38" Margin="0,6,0,13" MaxLength="128" AutomationProperties.Name="Confirmação de senha"/></StackPanel>
-                <CheckBox x:Name="KeepSignedInBox" Content="Manter conectado neste computador" IsChecked="True" Margin="0,0,0,12"/>
+                <StackPanel x:Name="RegistrationOnlyPanel" Visibility="Collapsed"><TextBlock Text="Crie sua conta com nome, nome de usuário, e-mail e senha. A verificação do e-mail é obrigatória." TextWrapping="Wrap" Margin="0,0,0,12" Foreground="{DynamicResource TextMutedBrush}"/></StackPanel>
+                <StackPanel x:Name="ProfileFieldsPanel" Visibility="Collapsed">
+                    <Grid><Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="14"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0"><TextBlock FontWeight="SemiBold">Nome</TextBlock><TextBox x:Name="FirstNameBox" Height="38" Margin="0,6,0,13" MaxLength="60" AutomationProperties.Name="Nome"/></StackPanel>
+                        <StackPanel Grid.Column="2"><TextBlock FontWeight="SemiBold">Sobrenome</TextBlock><TextBox x:Name="LastNameBox" Height="38" Margin="0,6,0,13" MaxLength="60" AutomationProperties.Name="Sobrenome"/></StackPanel>
+                    </Grid>
+                    <TextBlock FontWeight="SemiBold">Nome de usuário</TextBlock>
+                    <TextBox x:Name="UsernameBox" Height="38" Margin="0,6,0,4" MaxLength="24" AutomationProperties.Name="Nome de usuário"/>
+                    <TextBlock Text="3 a 24 caracteres: comece com uma letra; use apenas letras, números e &quot;_&quot;." Margin="0,0,0,13" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/>
+                </StackPanel>
+                <StackPanel x:Name="CredentialFieldsPanel">
+                    <TextBlock FontWeight="SemiBold">E-mail</TextBlock><TextBox x:Name="EmailBox" Height="38" Margin="0,6,0,13" MaxLength="254" AutomationProperties.Name="E-mail"/>
+                    <TextBlock FontWeight="SemiBold">Senha</TextBlock><PasswordBox x:Name="PasswordBox" Height="38" Margin="0,6,0,4" MaxLength="128" AutomationProperties.Name="Senha" PasswordChanged="PasswordChanged"/>
+                    <TextBlock x:Name="PasswordPolicyText" Visibility="Collapsed" Text="A senha deve possuir pelo menos 12 caracteres." Margin="0,0,0,13" Foreground="{DynamicResource TextMutedBrush}" FontSize="11"/>
+                    <StackPanel x:Name="ConfirmPanel" Visibility="Collapsed"><TextBlock FontWeight="SemiBold">Repetir senha</TextBlock><PasswordBox x:Name="ConfirmPasswordBox" Height="38" Margin="0,6,0,13" MaxLength="128" AutomationProperties.Name="Confirmação de senha"/></StackPanel>
+                    <CheckBox x:Name="KeepSignedInBox" Content="Manter conectado neste computador" IsChecked="True" Margin="0,0,0,12"/>
+                </StackPanel>
                 <StackPanel x:Name="TermsPanel" Visibility="Collapsed" Margin="0,0,0,12"><CheckBox x:Name="TermsCheckBox" Content="Li e concordo com os Termos de Uso"/><TextBlock Margin="24,4,0,0" FontSize="11" Foreground="{DynamicResource TextMutedBrush}"><Hyperlink Click="Terms_Click">Ler os Termos de Uso</Hyperlink></TextBlock></StackPanel>
                 <Button x:Name="ResetPasswordButton" Content="Esqueci minha senha" Background="Transparent" BorderThickness="0" HorizontalAlignment="Left" Foreground="{DynamicResource BlueBrush}" Click="ResetPassword_Click"/>
             </StackPanel>

@@ -1,0 +1,101 @@
+using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Net.Http.Json;
+
+namespace FiveMCleaner.App.Services;
+
+/// <summary>
+/// Sends the profile-completion request to the Cloudflare Worker's
+/// <c>POST /account/profile</c> route, authenticated with the caller's
+/// fresh Firebase ID token. Validation mirrors the server (see
+/// <c>infra/cloudflare-worker/src/auth/accountProfile.js</c>), which
+/// re-validates and is the only source of truth for username uniqueness.
+/// </summary>
+public sealed class CloudflareAccountProfileService : IAccountProfileService
+{
+    private static readonly HttpClient SharedClient = CreateClient();
+    private readonly HttpClient httpClient;
+    private readonly Uri endpoint;
+
+    public CloudflareAccountProfileService(Uri endpoint)
+        : this(SharedClient, endpoint)
+    {
+    }
+
+    internal CloudflareAccountProfileService(HttpClient httpClient, Uri endpoint)
+    {
+        this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        ArgumentNullException.ThrowIfNull(endpoint);
+        if (endpoint.Scheme != Uri.UriSchemeHttps)
+        {
+            throw new ArgumentException("Endpoint de perfil de conta inválido.", nameof(endpoint));
+        }
+
+        this.endpoint = endpoint;
+    }
+
+    public async Task<AccountProfileResult> CreateAsync(
+        string idToken,
+        AccountProfileSubmission submission,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idToken);
+        ArgumentNullException.ThrowIfNull(submission);
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
+        {
+            Content = JsonContent.Create(new
+            {
+                username = submission.Username,
+                firstName = submission.FirstName,
+                lastName = submission.LastName,
+            }),
+        };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", idToken);
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        {
+            return new AccountProfileResult(
+                AccountProfileOutcome.Failed,
+                "Não foi possível conectar para salvar seu perfil. Verifique sua conexão.");
+        }
+
+        using (response)
+        {
+            if (response.StatusCode == HttpStatusCode.Conflict)
+            {
+                return new AccountProfileResult(
+                    AccountProfileOutcome.UsernameTaken,
+                    "Este nome de usuário já está em uso. Escolha outro.");
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new AccountProfileResult(
+                    AccountProfileOutcome.Failed,
+                    $"Não foi possível salvar seu perfil agora (erro {(int)response.StatusCode}). Tente novamente.");
+            }
+
+            return new AccountProfileResult(AccountProfileOutcome.Created, null);
+        }
+    }
+
+    private static HttpClient CreateClient()
+    {
+        var handler = new SocketsHttpHandler
+        {
+            AllowAutoRedirect = false,
+            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+        };
+        return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(20) };
+    }
+}

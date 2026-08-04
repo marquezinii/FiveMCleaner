@@ -4,6 +4,8 @@ import { recentBugReports } from './bugReports/queries.js';
 import { validateUpdaterEvent } from './updaterEvents/validateSubmission.js';
 import { recentUpdaterEvents } from './updaterEvents/queries.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
+import { requireFirebaseUser } from './auth/firebaseIdToken.js';
+import { validateAccountProfile, createAccountProfile } from './auth/accountProfile.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
 import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from './cors.js';
@@ -13,6 +15,7 @@ import { parseReleaseManifest } from './releaseManifest.js';
 const MAX_TELEMETRY_BODY_BYTES = 512 * 1024;
 const MAX_BUG_REPORT_BODY_BYTES = 128 * 1024;
 const MAX_UPDATER_EVENT_BODY_BYTES = 4 * 1024;
+const MAX_ACCOUNT_PROFILE_BODY_BYTES = 4 * 1024;
 
 // FiveMCleaner anonymous telemetry + bug reports + admin dashboard API
 // Worker. See wrangler.toml and README.md for deployment status of each
@@ -22,6 +25,7 @@ const MAX_UPDATER_EVENT_BODY_BYTES = 4 * 1024;
 // Routes:
 //   POST    /telemetry             -- ingest a batch of telemetry events (no auth; validated server-side)
 //   POST    /bugs                  -- ingest one bug report, text-only (no auth; validated server-side)
+//   POST    /account/profile       -- create the username/first/last-name profile for a Firebase account (requires a valid Firebase ID token)
 //   POST    /admin/login           -- { password } -> session cookie
 //   POST    /admin/logout          -- clears the session cookie
 //   GET     /api/stats/:name       -- one chart's data (requires a valid session)
@@ -92,6 +96,9 @@ async function route(request, env, url) {
   if (request.method === 'GET' && url.pathname === '/update/manifest') {
     return handleSignedReleaseManifest(env);
   }
+  if (request.method === 'POST' && url.pathname === '/account/profile') {
+    return handleAccountProfileCreate(request, env);
+  }
 
   if (request.method === 'POST' && url.pathname === '/admin/login') {
     if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
@@ -153,6 +160,41 @@ async function handleUpdaterEventIngest(request, env) {
   ).bind(event.eventId, event.stage, event.outcome, event.errorCode, event.previousVersion,
     event.candidateVersion, event.environment, new Date().toISOString()).run();
   return new Response(null, { status: 202 });
+}
+
+// Completes the profile of a Firebase-authenticated account with the
+// fields Firebase Authentication REST doesn't manage: a unique username,
+// first name, last name. Requires a valid Firebase ID token (verified
+// server-side, see auth/firebaseIdToken.js) -- the uid is always taken from
+// the verified token, never from the request body.
+async function handleAccountProfileCreate(request, env) {
+  const auth = await requireFirebaseUser(request);
+  if (!auth.authorized) return auth.response;
+
+  const payload = await readBoundedJson(request, MAX_ACCOUNT_PROFILE_BODY_BYTES);
+  if (payload === null) return new Response('Invalid JSON', { status: 400 });
+
+  const profile = validateAccountProfile(payload);
+  if (profile === null) {
+    return new Response(JSON.stringify({ error: 'invalid-profile' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const result = await createAccountProfile(env.TELEMETRY_DB, auth.uid, profile);
+  if (!result.ok) {
+    const status = result.code === 'username-taken' || result.code === 'uid-taken' ? 409 : 500;
+    return new Response(JSON.stringify({ error: result.code }), {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return new Response(JSON.stringify({ success: true }), {
+    status: 201,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }
 
 async function handleUpdaterEventsList(request, env, url) {

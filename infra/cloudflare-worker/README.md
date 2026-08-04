@@ -132,7 +132,15 @@ Verification is fail-closed: RS256 only, Google JWKS
 `iss = https://securetoken.google.com/fivemcleaner-app`, unexpired `exp`, and
 non-empty `sub`. Invalid tokens produce a generic HTTP 401
 `{ "error": "unauthorized" }` with no claim detail. The pure verifier is unit
-tested; no product route wires it yet.
+tested.
+
+`POST /account/profile` is the first route built on it: Firebase manages
+email/password/uid only, so this route stores the fields it doesn't —
+username (globally unique, case-insensitive), first name, last name — in
+`account_profiles`, keyed by the verified Firebase UID. A username conflict
+returns `409 { "error": "username-taken" }`; the client is expected to let
+the user pick another one without discarding the Firebase account already
+created. See `src/auth/accountProfile.js`.
 
 Legacy Worker product tables (`user_accounts` / sessions), if still present on
 remote D1 from the pre-Firebase system, are not migrated. There are no real

@@ -25,9 +25,18 @@ disco ou logs. O ID token fica em memória, é renovado antes de vencer e deve
 seguir como `Authorization: Bearer` apenas para um backend HTTPS que o valide e
 use o Firebase UID como identificador interno. No Worker, a verificação fica em
 `infra/cloudflare-worker/src/auth/firebaseIdToken.js` (RS256 + JWKS Google,
-`aud`/`iss`/`exp`/`sub`); ainda não há rota de produto ligada a ela. Com
-`emailVerified=false`, o estado é `EmailVerificationRequired` e recursos
-autenticados ficam bloqueados.
+`aud`/`iss`/`exp`/`sub`). Com `emailVerified=false`, o estado é
+`EmailVerificationRequired` e recursos autenticados ficam bloqueados.
+
+`POST /account/profile` é a primeira rota de produto sobre esse verificador:
+como o Firebase só administra e-mail/senha/uid, essa rota guarda o que ele
+não guarda — nome, sobrenome e um nome de usuário único (case-insensitive) —
+em `account_profiles`, sempre indexado pelo UID já validado do token, nunca
+por um valor enviado pelo cliente. `AccountProfileService`
+(`FiveMCleaner.App/Services`) chama essa rota depois que o cadastro no
+Firebase é concluído; se o usuário escolhido já existir, a resposta é
+`409 username-taken` e a conta Firebase já criada é preservada — a janela de
+conta pede outro nome de usuário em vez de descartar o cadastro.
 
 | Projeto                  | Responsabilidade                                                    | Não deve conhecer                                        |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- |

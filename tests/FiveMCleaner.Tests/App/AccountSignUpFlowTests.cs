@@ -30,6 +30,42 @@ public sealed class AccountSignUpFlowTests
     [InlineData("a b@c.d")]
     public void IsValidEmail_RejectsMalformedAddresses(string? email) => Assert.False(AccountValidation.IsValidEmail(email));
 
+    [Theory]
+    [InlineData("joao")]
+    [InlineData("joao_silva")]
+    [InlineData("j2o")]
+    [InlineData("Joao123")]
+    [InlineData("a11111111111111111111111")] // exactly 24 characters, upper bound
+    public void IsValidUsername_AcceptsWellFormedUsernames(string username) => Assert.True(AccountValidation.IsValidUsername(username));
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    [InlineData("ab")] // shorter than 3
+    [InlineData("1joao")] // starts with a digit
+    [InlineData("_joao")] // starts with an underscore
+    [InlineData("joao silva")] // space
+    [InlineData("joao-silva")] // hyphen not allowed in usernames
+    [InlineData("joao@silva")]
+    [InlineData("a111111111111111111111111")] // 25 characters, over the limit
+    public void IsValidUsername_RejectsMalformedUsernames(string? username) => Assert.False(AccountValidation.IsValidUsername(username));
+
+    [Theory]
+    [InlineData("João")]
+    [InlineData("D'Ávila-Souza")]
+    [InlineData("Mary Jane")]
+    [InlineData("Al")]
+    public void IsValidPersonName_AcceptsReasonableNames(string name) => Assert.True(AccountValidation.IsValidPersonName(name));
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData(null)]
+    [InlineData("Jo4o")]
+    [InlineData("João!")]
+    public void IsValidPersonName_RejectsMalformedNames(string? name) => Assert.False(AccountValidation.IsValidPersonName(name));
+
     [Fact]
     public async Task RegisterAsync_HappyPath_CreatesAccountAndSendsVerificationEmail()
     {

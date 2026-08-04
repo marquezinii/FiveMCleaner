@@ -201,7 +201,10 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             System.Windows.MessageBox.Show("O acesso à conta não está disponível nesta instalação.", "Conta", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
-        var dialog = new AccountWindow(accountService) { Owner = this };
+        IAccountProfileService profileService = TryCreateHttpsEndpoint(remoteServicesOptions.AccountProfileEndpoint, out var profileEndpoint)
+            ? new CloudflareAccountProfileService(profileEndpoint)
+            : new DisabledAccountProfileService();
+        var dialog = new AccountWindow(accountService, profileService) { Owner = this };
         if (dialog.ShowDialog() == true) UpdateAccountButton();
     }
 
