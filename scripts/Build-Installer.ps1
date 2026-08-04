@@ -9,7 +9,9 @@ param(
 
     [switch]$SkipPortableBuild,
 
-    [switch]$NoCompilerBootstrap
+    [switch]$NoCompilerBootstrap,
+
+    [switch]$AllowDirtySource
 )
 
 Set-StrictMode -Version Latest
@@ -20,7 +22,8 @@ $workspace = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $artifactsRoot = [System.IO.Path]::GetFullPath((Join-Path $workspace 'artifacts'))
 $publishDirectory = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'FiveMCleaner-win-x64'))
 $installerOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer'))
-$installerArtwork = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-artwork\FiveMCleaner-wizard-side.png'))
+$installerArtworkLight = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-artwork\FiveMCleaner-wizard-side-light.png'))
+$installerArtworkDark = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-artwork\FiveMCleaner-wizard-side-dark.png'))
 $stagingOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot ".installer-staging-$([Guid]::NewGuid().ToString('N'))"))
 $innoVersion = '6.7.3'
 $innoAssetName = "innosetup-$innoVersion.exe"
@@ -157,12 +160,25 @@ $numericVersion = "$($versionMatch.Groups['core'].Value).0"
 
 Assert-UnderArtifacts $publishDirectory
 Assert-UnderArtifacts $installerOutput
-Assert-UnderArtifacts $installerArtwork
+Assert-UnderArtifacts $installerArtworkLight
+Assert-UnderArtifacts $installerArtworkDark
 Assert-UnderArtifacts $stagingOutput
 New-Item -ItemType Directory -Force -Path $artifactsRoot, $installerOutput, $stagingOutput | Out-Null
 
 try {
     & (Join-Path $PSScriptRoot 'Verify-Installer.ps1') -ScriptOnly
+
+    $gitStatusProbe = @(& git -C $workspace status --porcelain=v1 --untracked-files=all)
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Could not inspect the source worktree before building the installer.'
+    }
+    $requireCleanSource = -not $AllowDirtySource -and (
+        -not [string]::IsNullOrWhiteSpace($env:GITHUB_ACTIONS) -or
+        -not [string]::IsNullOrWhiteSpace($env:CI)
+    )
+    if ($requireCleanSource -and $gitStatusProbe.Count -ne 0) {
+        throw 'Refusing to build a release installer from a dirty worktree. Commit or stash local changes first.'
+    }
 
     if (-not $SkipPortableBuild) {
         & (Join-Path $PSScriptRoot 'Build-Portable.ps1') -Runtime win-x64 -Configuration $Configuration
@@ -190,9 +206,12 @@ try {
 
     & (Join-Path $PSScriptRoot 'New-InstallerArtwork.ps1') `
         -SourceIconPath (Join-Path $workspace 'src\FiveMCleaner.App\Assets\FiveMCleaner.png') `
-        -OutputPath $installerArtwork
-    if (-not (Test-Path -LiteralPath $installerArtwork -PathType Leaf)) {
-        throw 'Installer artwork generation did not produce the expected file.'
+        -OutputPath $installerArtworkLight `
+        -OutputPathDark $installerArtworkDark
+    foreach ($artwork in @($installerArtworkLight, $installerArtworkDark)) {
+        if (-not (Test-Path -LiteralPath $artwork -PathType Leaf)) {
+            throw "Installer artwork generation did not produce the expected file: $artwork"
+        }
     }
 
     $installerScript = Join-Path $workspace 'installer\FiveMCleaner.iss'
@@ -203,7 +222,8 @@ try {
         "/DSourceDir=$publishDirectory",
         "/DOutputDir=$stagingOutput",
         "/DRepositoryRoot=$workspace",
-        "/DInstallerArtworkPath=$installerArtwork",
+        "/DInstallerArtworkPath=$installerArtworkLight",
+        "/DInstallerArtworkPathDark=$installerArtworkDark",
         $installerScript
     )
     & $compiler @arguments
@@ -243,10 +263,7 @@ try {
     if ($LASTEXITCODE -ne 0 -or $gitCommit -notmatch '^[0-9a-f]{40}$') {
         throw 'Could not resolve the source commit for the release manifest.'
     }
-    $gitStatus = @(& git -C $workspace status --porcelain=v1 --untracked-files=all)
-    if ($LASTEXITCODE -ne 0) {
-        throw 'Could not inspect the source worktree for the release manifest.'
-    }
+    $gitStatus = $gitStatusProbe
 
     $portableArchive = Join-Path $artifactsRoot 'FiveMCleaner-win-x64.zip'
     $runtimeArchive = Join-Path $artifactsRoot 'FiveMCleaner-Runtime-win-x64.zip'

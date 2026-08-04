@@ -7,8 +7,21 @@ O instalador é executado por usuário e não pede acesso administrativo. O
 FiveMCleaner solicita elevação somente quando uma otimização escolhida realmente
 precisa alterar uma configuração protegida do Windows.
 
-Atalhos opcionais e a inicialização com o Windows podem ser escolhidos na
-próxima etapa. Ambos podem ser alterados depois e são removidos ao desinstalar.
+Configurações, logs, backups e atualizações baixadas ficam em
+%LOCALAPPDATA%\FiveMCleaner, fora da pasta de instalação. Na desinstalação você
+escolhe se deseja preservar esses dados; o padrão é preservar.
+
+O atalho na Área de Trabalho vem marcado por padrão. A inicialização com o
+Windows fica desmarcada e pode ser ativada se você quiser. Ambos podem ser
+alterados depois e são removidos ao desinstalar.
+
+Atualizações futuras são oferecidas dentro do aplicativo, com a sua confirmação.
+Em geral não é necessário baixar este instalador de novo.
 
 Baixe o instalador somente em:
+https://marquezinii.github.io/FiveMCleaner/
+ou na release oficial:
 https://github.com/marquezinii/FiveMCleaner/releases
+
+Antes de executar, confira o arquivo .sha256 publicado junto do instalador:
+  (Get-FileHash .\FiveMCleaner-Setup-*-win-x64.exe -Algorithm SHA256).Hash

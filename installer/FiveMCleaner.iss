@@ -1,6 +1,7 @@
 #define AppName "FiveMCleaner"
 #define AppPublisher "Felipe Marquezini"
 #define AppUrl "https://github.com/marquezinii/FiveMCleaner"
+#define AppWebsite "https://marquezinii.github.io/FiveMCleaner/"
 #define AppExeName "FiveMCleaner.Launcher.exe"
 #define StableAppId "{{49338651-127F-4FD3-BEAD-88D8C9377672}"
 
@@ -25,7 +26,11 @@
 #endif
 
 #ifndef InstallerArtworkPath
-  #define InstallerArtworkPath "..\artifacts\installer-artwork\FiveMCleaner-wizard-side.png"
+  #define InstallerArtworkPath "..\artifacts\installer-artwork\FiveMCleaner-wizard-side-light.png"
+#endif
+
+#ifndef InstallerArtworkPathDark
+  #define InstallerArtworkPathDark "..\artifacts\installer-artwork\FiveMCleaner-wizard-side-dark.png"
 #endif
 
 #define InstallerBaseName "FiveMCleaner-Setup-" + AppVersion + "-win-x64"
@@ -37,10 +42,10 @@ AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
 AppPublisherURL={#AppUrl}
-AppSupportURL={#AppUrl}/issues
+AppSupportURL={#AppWebsite}
 AppUpdatesURL={#AppUrl}/releases/latest
 AppCopyright=Copyright (c) 2026 Felipe Marquezini. All rights reserved.
-AppComments=Otimização transparente e reversível para FiveM e Windows.
+AppComments=Transparent and reversible optimization for FiveM and Windows.
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
 AllowNoIcons=yes
@@ -69,7 +74,7 @@ RestartIfNeededByRun=no
 RedirectionGuard=yes
 ASLRCompatible=yes
 DEPCompatible=yes
-Compression=lzma2/normal
+Compression=lzma2/ultra
 SolidCompression=yes
 MergeDuplicateFiles=yes
 TimeStampsInUTC=yes
@@ -86,14 +91,14 @@ WizardStyle=modern dynamic windows11 includetitlebar
 WizardResizable=yes
 WizardKeepAspectRatio=yes
 WizardImageFile={#InstallerArtworkPath}
-WizardImageFileDynamicDark={#InstallerArtworkPath}
+WizardImageFileDynamicDark={#InstallerArtworkPathDark}
 WizardImageBackColor=$F3F4F6
 WizardImageBackColorDynamicDark=$151515
 WizardSmallImageFile={#RepositoryRoot}\src\FiveMCleaner.App\Assets\FiveMCleaner.png
 WizardSmallImageFileDynamicDark={#RepositoryRoot}\src\FiveMCleaner.App\Assets\FiveMCleaner.png
 VersionInfoVersion={#AppNumericVersion}
 VersionInfoCompany={#AppPublisher}
-VersionInfoDescription=Instalador do {#AppName}
+VersionInfoDescription={#AppName} Setup
 VersionInfoProductName={#AppName}
 VersionInfoProductTextVersion={#AppVersion}
 VersionInfoTextVersion={#AppVersion}
@@ -104,28 +109,34 @@ VersionInfoOriginalFileName={#InstallerBaseName}.exe
 Name: "en"; MessagesFile: "compiler:Default.isl"; InfoBeforeFile: "{#RepositoryRoot}\installer\install-info.en.txt"
 Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"; InfoBeforeFile: "{#RepositoryRoot}\installer\install-info.pt-BR.txt"
 
+[Messages]
+en.FinishedLabel=Setup has finished installing [name] on your computer.%n%nLater updates are delivered inside the app after you confirm them. You usually do not need to download this installer again.%n%nSetup logs are written under your temporary folder when logging is enabled.
+ptbr.FinishedLabel=A instalação do [name] foi concluída.%n%nAtualizações futuras chegam pelo próprio aplicativo, após a sua confirmação. Em geral não é necessário baixar este instalador de novo.%n%nQuando o log estiver ativo, os arquivos ficam na pasta temporária do Windows.
+
 [CustomMessages]
 en.AdditionalShortcuts=Shortcuts
 en.DesktopIcon=Create a desktop shortcut
 en.StartWithWindows=Start FiveMCleaner when I sign in to Windows
 en.LaunchProgram=Open FiveMCleaner
+en.UninstallShortcut=Uninstall FiveMCleaner
 en.RemoveUserDataQuestion=Remove local FiveMCleaner settings, logs, backups and downloaded updates too? Choosing No preserves this data for a future installation.
 ptbr.AdditionalShortcuts=Atalhos
 ptbr.DesktopIcon=Criar um atalho na Área de Trabalho
 ptbr.StartWithWindows=Iniciar o FiveMCleaner ao entrar no Windows
 ptbr.LaunchProgram=Abrir o FiveMCleaner
+ptbr.UninstallShortcut=Desinstalar o FiveMCleaner
 ptbr.RemoveUserDataQuestion=Também remover configurações, logs, backups e atualizações baixadas do FiveMCleaner? Escolher Não preserva esses dados para uma instalação futura.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:AdditionalShortcuts}:"
-Name: "startup"; Description: "{cm:StartWithWindows}"; GroupDescription: "{cm:AdditionalShortcuts}:"
+Name: "startup"; Description: "{cm:StartWithWindows}"; GroupDescription: "{cm:AdditionalShortcuts}:"; Flags: unchecked
 
 [Files]
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs notimestamp
 
 [Icons]
 Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#AppExeName}"; Comment: "{#AppName}"
-Name: "{group}\Uninstall {#AppName}"; Filename: "{uninstallexe}"; Comment: "Uninstall {#AppName}"
+Name: "{group}\{cm:UninstallShortcut}"; Filename: "{uninstallexe}"; Comment: "{cm:UninstallShortcut}"
 Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#AppExeName}"; Comment: "{#AppName}"; Tasks: desktopicon
 
 [Registry]

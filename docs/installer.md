@@ -21,15 +21,18 @@ Windows realmente for executada.
 ## Experiência do instalador
 
 - português do Brasil e inglês, escolhidos pela interface do Windows;
-- tema moderno que acompanha o modo claro/escuro do sistema;
+- tema moderno que acompanha o modo claro/escuro do sistema, com arte lateral
+  clara e escura gerada a partir do ícone oficial;
 - ícone e imagem oficiais do FiveMCleaner;
-- atalhos do menu Iniciar e desinstalação completa;
-- atalhos de Área de Trabalho e inicialização com o Windows habilitados por
-  padrão, mas desmarcáveis durante a instalação;
+- atalhos do menu Iniciar e desinstalação completa, com rótulos localizados;
+- atalho de Área de Trabalho habilitado por padrão; inicialização com o Windows
+  desmarcada por padrão (ambas alteráveis na instalação e depois);
+- página final lembra que atualizações futuras vêm pelo app, com confirmação;
+- compressão `lzma2/ultra` no pacote offline self-contained;
 - upgrade no mesmo diretório por meio de um `AppId` estável;
 - Windows Restart Manager para solicitar o fechamento seguro do app durante um
   upgrade, sem encerramento forçado nem reinicialização automática;
-- logs padrões do Inno Setup para diagnóstico.
+- logs padrões do Inno Setup para diagnóstico (pasta temporária quando ativos).
 
 Configurações, journals, logs, backups e downloads de atualização ficam fora da
 pasta de instalação, em `%LOCALAPPDATA%\FiveMCleaner`. Na desinstalação
@@ -56,12 +59,18 @@ um cache dentro de `artifacts/.tools`, exige o SHA-256 fixado no script e valida
 a assinatura Authenticode de `Pyrsys B.V.` antes de executar o compilador.
 
 O teste instala silenciosamente em uma pasta temporária sob `artifacts`, confere
-byte a byte todo o payload, valida a entrada opcional de inicialização, executa a
+byte a byte todo o payload, valida o padrão desktop-on/startup-off, a task de
+inicialização quando pedida, o handoff `/AUTOUPDATE=yes`, a preservação de
+dados em `%LOCALAPPDATA%\FiveMCleaner` no uninstall silencioso, executa a
 desinstalação e confirma a remoção. Ele se recusa a rodar se encontrar uma
 instalação real ou uma entrada de inicialização existente. Somente para uma
 validação local explicitamente autorizada, `-AllowExistingInstallation` libera
 essa trava; como o AppId é o mesmo, esse modo pode alterar o registro da
 instalação local e não deve ser usado como gate de release.
+
+Em CI (`GITHUB_ACTIONS`/`CI`), `Build-Installer.ps1` recusa worktree suja para
+não publicar manifesto com `sourceDirty=true`. Localmente o build continua
+permitido; use `-AllowDirtySource` só se precisar forçar o mesmo em CI.
 
 ## Contrato de atualização
 

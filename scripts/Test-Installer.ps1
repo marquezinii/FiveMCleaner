@@ -22,11 +22,15 @@ $smokeId = [Guid]::NewGuid().ToString('N')
 $smokeRoot = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot ".installer-smoke-$smokeId"))
 $installDirectory = Join-Path $smokeRoot 'app'
 $installLog = Join-Path $smokeRoot 'install.log'
+$defaultTasksLog = Join-Path $smokeRoot 'default-tasks.log'
 $upgradeLog = Join-Path $smokeRoot 'upgrade.log'
+$autoUpdateLog = Join-Path $smokeRoot 'auto-update.log'
 $uninstallLog = Join-Path $smokeRoot 'uninstall.log'
 $uninstallRegistryPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\{49338651-127F-4FD3-BEAD-88D8C9377672}_is1'
 $runRegistryPath = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $runValueName = 'FiveMCleaner'
+$userDataMarkerRoot = Join-Path $env:LOCALAPPDATA "FiveMCleaner\.installer-smoke-$smokeId"
+$userDataMarker = Join-Path $userDataMarkerRoot 'preserve-me.txt'
 $installed = $false
 $commonSilentArguments = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART')
 
@@ -47,6 +51,21 @@ function Get-RegistryValueOrNull {
     catch [System.Management.Automation.ItemNotFoundException] {
         return $null
     }
+}
+
+function Stop-SmokeAppProcesses {
+    param([Parameter(Mandatory)][string]$InstallDirectory)
+
+    $prefix = $InstallDirectory.TrimEnd('\') + '\'
+    Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
+        Where-Object {
+            $_.Name -match 'FiveMCleaner' -and
+            -not [string]::IsNullOrWhiteSpace($_.ExecutablePath) -and
+            $_.ExecutablePath.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)
+        } |
+        ForEach-Object {
+            Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+        }
 }
 
 Assert-UnderArtifacts $smokeRoot
@@ -72,13 +91,36 @@ if ($AllowExistingInstallation) {
 New-Item -ItemType Directory -Force -Path $smokeRoot | Out-Null
 
 try {
+    # Defaults: desktop on, startup off. Explicit empty TASKS list would clear both;
+    # omit /TASKS so the script defaults apply.
+    $defaultTasksArguments = @(
+        $commonSilentArguments
+        '/CLOSEAPPLICATIONS',
+        '/NORESTARTAPPLICATIONS',
+        '/NOICONS',
+        '/LANG=en',
+        "/DIR=$installDirectory",
+        "/GROUP=FiveMCleaner Smoke $smokeId",
+        "/LOG=$defaultTasksLog"
+    )
+    $defaultTasksProcess = Start-Process -FilePath $resolvedInstaller -ArgumentList $defaultTasksArguments -WindowStyle Hidden -Wait -PassThru
+    if ($defaultTasksProcess.ExitCode -ne 0) {
+        throw "Silent install with default tasks failed with exit code $($defaultTasksProcess.ExitCode). See $defaultTasksLog"
+    }
+    $installed = $true
+
+    $startupAfterDefaults = Get-RegistryValueOrNull -Path $runRegistryPath -Name $runValueName
+    if ($null -ne $startupAfterDefaults) {
+        throw 'Startup registry value was created even though the startup task is unchecked by default.'
+    }
+
     $installArguments = @(
         $commonSilentArguments
         '/CLOSEAPPLICATIONS',
         '/NORESTARTAPPLICATIONS',
         '/NOICONS',
         '/LANG=ptbr',
-        '/TASKS=startup',
+        '/TASKS=desktopicon,startup',
         "/DIR=$installDirectory",
         "/GROUP=FiveMCleaner Smoke $smokeId",
         "/LOG=$installLog"
@@ -87,7 +129,6 @@ try {
     if ($installProcess.ExitCode -ne 0) {
         throw "Silent install failed with exit code $($installProcess.ExitCode). See $installLog"
     }
-    $installed = $true
 
     $installedExecutable = Join-Path $installDirectory 'FiveMCleaner.Launcher.exe'
     $uninstaller = Join-Path $installDirectory 'unins000.exe'
@@ -162,9 +203,33 @@ try {
         throw 'Main executable hash mismatch after in-place upgrade.'
     }
 
+    # Migration/update handoff: exact flags used by UpdateHandoff. The relaunch is
+    # nowait, so setup should exit while we stop any app started from the smoke dir.
+    $autoUpdateArguments = @(
+        $commonSilentArguments
+        '/CLOSEAPPLICATIONS',
+        '/NORESTARTAPPLICATIONS',
+        '/NOCANCEL',
+        '/AUTOUPDATE=yes',
+        '/NOICONS',
+        '/TASKS=',
+        "/DIR=$installDirectory",
+        "/GROUP=FiveMCleaner Smoke $smokeId",
+        "/LOG=$autoUpdateLog"
+    )
+    $autoUpdateProcess = Start-Process -FilePath $resolvedInstaller -ArgumentList $autoUpdateArguments -WindowStyle Hidden -Wait -PassThru
+    if ($autoUpdateProcess.ExitCode -ne 0) {
+        throw "Silent AUTOUPDATE install failed with exit code $($autoUpdateProcess.ExitCode). See $autoUpdateLog"
+    }
+    Start-Sleep -Milliseconds 500
+    Stop-SmokeAppProcesses -InstallDirectory $installDirectory
+
     # Simulate the installed app enabling this preference after setup. The
     # uninstaller must still own and remove the product-specific value.
     Set-ItemProperty -LiteralPath $runRegistryPath -Name $runValueName -Value $expectedStartupValue -Type String
+
+    New-Item -ItemType Directory -Force -Path $userDataMarkerRoot | Out-Null
+    Set-Content -LiteralPath $userDataMarker -Value "smoke-$smokeId" -Encoding utf8
 
     $uninstallArguments = @(
         $commonSilentArguments
@@ -192,9 +257,11 @@ try {
         throw 'Application executable remains after uninstall.'
     }
 
-    # Silent uninstalls intentionally preserve user data. The interactive
-    # removal choice is guarded by Verify-Installer.ps1 and is left to manual
-    # validation so this smoke test never deletes a developer's real settings.
+    if (-not (Test-Path -LiteralPath $userDataMarker -PathType Leaf)) {
+        throw 'Silent uninstall removed local user data; it must preserve %LOCALAPPDATA%\FiveMCleaner by default.'
+    }
+
+    # Interactive removal choice is still guarded by Verify-Installer.ps1.
     if ((Get-Content -LiteralPath (Join-Path $workspace 'installer\FiveMCleaner.iss') -Raw) -notmatch
         "DelTree\(ExpandConstant\('\{localappdata\}\\FiveMCleaner'\), True, True, True\)") {
         throw 'The explicit interactive removal path for user data is missing.'
@@ -203,6 +270,8 @@ try {
     Write-Host 'Installer install/upgrade/uninstall smoke test: OK' -ForegroundColor Green
 }
 finally {
+    Stop-SmokeAppProcesses -InstallDirectory $installDirectory
+
     if ($installed) {
         $uninstaller = Join-Path $installDirectory 'unins000.exe'
         if (Test-Path -LiteralPath $uninstaller -PathType Leaf) {
@@ -218,6 +287,10 @@ finally {
     $currentRunValue = Get-RegistryValueOrNull -Path $runRegistryPath -Name $runValueName
     if ($null -ne $currentRunValue -and $currentRunValue -like "*$installDirectory*") {
         Remove-ItemProperty -LiteralPath $runRegistryPath -Name $runValueName -Force
+    }
+
+    if (Test-Path -LiteralPath $userDataMarkerRoot) {
+        Remove-Item -LiteralPath $userDataMarkerRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
 
     if (Test-Path -LiteralPath $smokeRoot) {
