@@ -303,7 +303,6 @@
 • Lista completa de processos ou programas
 • Caminhos pessoais sem sanitização</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>O FiveMCleaner encontrou um erro inesperado. Nenhuma nova alteração será aplicada.\n\n{0}</value></data>
-  <data name="Dialog.AlreadyRunning.Message" xml:space="preserve"><value>O FiveMCleaner já está em execução. Verifique a bandeja do sistema ou suas janelas abertas.</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>ações verificadas</value></data>
   <data name="Progress.ElapsedFormat" xml:space="preserve"><value>Decorrido {0}</value></data>

@@ -24,6 +24,83 @@ public sealed class SingleInstanceGuardTests
         Assert.NotEqual(developmentName, productionName);
     }
 
+    [Theory]
+    [InlineData(AppRuntimeEnvironment.Development)]
+    [InlineData(AppRuntimeEnvironment.Production)]
+    public void BuildActivationEventName_IncludesTheEnvironment(AppRuntimeEnvironment environment)
+    {
+        var name = SingleInstanceGuard.BuildActivationEventName(environment);
+
+        Assert.Contains(environment.ToString(), name, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void BuildActivationEventName_DevelopmentAndProductionProduceDifferentNames()
+    {
+        var developmentName = SingleInstanceGuard.BuildActivationEventName(AppRuntimeEnvironment.Development);
+        var productionName = SingleInstanceGuard.BuildActivationEventName(AppRuntimeEnvironment.Production);
+
+        Assert.NotEqual(developmentName, productionName);
+    }
+
+    [Fact]
+    public void RequestActivation_IsObservedByARunningListener()
+    {
+        // RequestActivation is deliberately called without acquiring the
+        // mutex here: within one test process the mutex is thread-reentrant,
+        // so a second TryAcquire from this same thread would trivially
+        // succeed. Activation signaling is independent of mutex ownership,
+        // which is what this test exercises.
+        var mutexName = NewTestMutexName();
+        using var runningGuard = new SingleInstanceGuard(mutexName);
+        Assert.True(runningGuard.TryAcquire());
+
+        using var activationObserved = new ManualResetEventSlim();
+        runningGuard.ListenForActivation(activationObserved.Set);
+
+        var second = new SingleInstanceGuard(mutexName);
+        try
+        {
+            second.RequestActivation();
+        }
+        finally
+        {
+            second.Dispose();
+        }
+
+        Assert.True(
+            activationObserved.Wait(TimeSpan.FromSeconds(5)),
+            "The running instance should have observed the activation request.");
+    }
+
+    [Fact]
+    public void RequestActivation_IssuedBeforeListeningIsNotLost()
+    {
+        // The activation event is auto-reset and created as soon as the
+        // guard wins the mutex, so a request that lands before the listener
+        // thread is up stays signaled until a waiter consumes it.
+        var mutexName = NewTestMutexName();
+        using var runningGuard = new SingleInstanceGuard(mutexName);
+        Assert.True(runningGuard.TryAcquire());
+
+        var second = new SingleInstanceGuard(mutexName);
+        try
+        {
+            second.RequestActivation();
+        }
+        finally
+        {
+            second.Dispose();
+        }
+
+        using var activationObserved = new ManualResetEventSlim();
+        runningGuard.ListenForActivation(activationObserved.Set);
+
+        Assert.True(
+            activationObserved.Wait(TimeSpan.FromSeconds(5)),
+            "A request made before listening should still be observed.");
+    }
+
     [Fact]
     public void TryAcquire_FirstCaller_Succeeds()
     {
