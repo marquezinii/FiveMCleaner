@@ -461,7 +461,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             if (SetProperty(ref shareAnonymousTelemetry, value))
             {
-                telemetry.SetEnabled(true);
+                telemetry.SetEnabled(value);
                 SettingsChanged(refreshPlan: false);
             }
         }
@@ -1544,8 +1544,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         minimizeToTrayOnClose = settings.MinimizeToTrayOnClose;
         checkForUpdates = settings.CheckForUpdates;
         shareAnonymousTelemetry = settings.ShareAnonymousTelemetry;
-        telemetry.SetEnabled(true);
-        shareCrashReports = true;
+        telemetry.SetEnabled(shareAnonymousTelemetry);
+        shareCrashReports = settings.ShareCrashReports;
         privacyConsentVersion = settings.PrivacyConsentVersion;
         try
         {
@@ -1707,8 +1707,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
             acceptCrashReports);
 
         shareAnonymousTelemetry = snapshot.ShareAnonymousTelemetry;
-        telemetry.SetEnabled(true);
-        shareCrashReports = true;
+        telemetry.SetEnabled(snapshot.ShareAnonymousTelemetry);
+        shareCrashReports = snapshot.ShareCrashReports;
         privacyConsentVersion = snapshot.PrivacyConsentVersion;
         OnPropertyChanged(nameof(ShareAnonymousTelemetry));
         OnPropertyChanged(nameof(ShareCrashReports));

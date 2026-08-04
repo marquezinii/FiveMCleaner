@@ -126,11 +126,11 @@ public sealed class MainViewModelPrivacyConsentTests
         await viewModel.ConfirmPrivacyConsentAsync(acceptAnonymousTelemetry: false, acceptCrashReports: false);
 
         Assert.False(service.SavedSettings!.ShareAnonymousTelemetry);
-        Assert.True(service.SavedSettings.ShareCrashReports);
+        Assert.False(service.SavedSettings.ShareCrashReports);
         Assert.Equal(PrivacyConsentPolicy.CurrentVersion, service.SavedSettings.PrivacyConsentVersion);
         Assert.False(viewModel.ShareAnonymousTelemetry);
-        Assert.True(viewModel.ShareCrashReports);
-        Assert.True(telemetry.IsEnabled);
+        Assert.False(viewModel.ShareCrashReports);
+        Assert.False(telemetry.IsEnabled);
     }
 
     [Fact]
@@ -143,7 +143,7 @@ public sealed class MainViewModelPrivacyConsentTests
         await viewModel.ConfirmPrivacyConsentAsync(acceptAnonymousTelemetry: true, acceptCrashReports: false);
 
         Assert.True(service.SavedSettings!.ShareAnonymousTelemetry);
-        Assert.True(service.SavedSettings.ShareCrashReports);
+        Assert.False(service.SavedSettings.ShareCrashReports);
     }
 
     [Fact]

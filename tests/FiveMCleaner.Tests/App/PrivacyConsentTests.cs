@@ -390,7 +390,7 @@ public sealed class PrivacyConsentOutcomeBuilderTests
             acceptCrashReports: false);
 
         Assert.False(result.ShareAnonymousTelemetry);
-        Assert.True(result.ShareCrashReports);
+        Assert.False(result.ShareCrashReports);
         Assert.Equal(PrivacyConsentPolicy.CurrentVersion, result.PrivacyConsentVersion);
     }
 
@@ -403,7 +403,7 @@ public sealed class PrivacyConsentOutcomeBuilderTests
             acceptCrashReports: false);
 
         Assert.True(result.ShareAnonymousTelemetry);
-        Assert.True(result.ShareCrashReports);
+        Assert.False(result.ShareCrashReports);
     }
 
     [Fact]
