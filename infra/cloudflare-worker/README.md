@@ -119,10 +119,24 @@ is called out rather than assumed harmless.
 ## Product accounts
 
 The desktop application uses Firebase Authentication directly through its
-official REST API. This Worker does not receive account passwords, refresh
-tokens, or Firebase ID tokens. Future account-specific routes must accept a
-Firebase ID token over HTTPS, verify it server-side, and use the Firebase UID
-as the permanent identifier.
+official REST API. This Worker does not receive account passwords or refresh
+tokens. Future account-specific routes must accept a Firebase ID token over
+HTTPS as `Authorization: Bearer <idToken>`, verify it with
+`src/auth/firebaseIdToken.js` (`requireFirebaseUser` /
+`verifyFirebaseIdToken`), and use only the Firebase UID (`sub`) as the
+permanent internal identifier — never email.
+
+Verification is fail-closed: RS256 only, Google JWKS
+(`securetoken@system.gserviceaccount.com`), required claims
+`aud = fivemcleaner-app`,
+`iss = https://securetoken.google.com/fivemcleaner-app`, unexpired `exp`, and
+non-empty `sub`. Invalid tokens produce a generic HTTP 401
+`{ "error": "unauthorized" }` with no claim detail. The pure verifier is unit
+tested; no product route wires it yet.
+
+Legacy Worker product tables (`user_accounts` / sessions), if still present on
+remote D1 from the pre-Firebase system, are not migrated. There are no real
+users to preserve; cleanup is a separate authorized deploy/migration task.
 
 ## Verified end-to-end
 
