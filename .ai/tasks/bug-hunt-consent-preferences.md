@@ -100,3 +100,5 @@ Foram encontrados 6 bugs onde `telemetry.SetEnabled(true)` e `shareCrashReports 
 - **`TryDeletePending()` escopo**: so opera em `*.json` dentro do diretorio `%LOCALAPPDATA%/FiveMCleaner/UpdaterTelemetry/pending/`. Nao deleta logs, arquivos de outras extensoes, ou dados fora do subdiretorio `pending/`. Confirmado com 2 testes.
 - **ZIP symlink**: .NET `ZipFile.ExtractToFile()` nao cria reparse points — sempre extrai como arquivo regular. `Path.GetFullPath` + `StartsWith` ja bloqueiam path traversal. Nenhum codigo alterado.
 - **Anti-downgrade**: `VersionFloorStore` usa DPAPI e persiste a versao mais alta confirmada. `ReleaseTrustPolicy.Verify` aplica downgrade via SemVer. `RecoveryCoordinator` so restaura predecessor. Cadeia completa testada.
+
+**Integrado em `dev/proxima-versao` — 04/08/2026.**

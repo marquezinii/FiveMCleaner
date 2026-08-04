@@ -124,3 +124,5 @@ degradam sem crash, mas afetam o mercado principal (Windows pt-BR).
 
 - Todas as correções são localizadas e de baixo risco de regressão.
 - Os testes foram atualizados para refletir as novas implementações.
+
+**Integrado em `dev/proxima-versao` — 04/08/2026.**

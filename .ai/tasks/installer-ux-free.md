@@ -33,3 +33,5 @@
 ## Commits
 
 (ver log da branch após commit)
+
+**Integrado em `dev/proxima-versao` — 04/08/2026.**

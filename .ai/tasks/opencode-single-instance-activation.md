@@ -50,3 +50,5 @@ Substituiu o comportamento do segundo processo (que antes mostrava um MessageBox
 ## Commits
 
 - Único commit local nesta branch (ver git log).
+
+**Integrado em `dev/proxima-versao` — 04/08/2026.**

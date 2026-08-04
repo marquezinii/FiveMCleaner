@@ -38,3 +38,5 @@ produto e sem mudança no cliente desktop), conforme escopo aprovado.
 ## Commits
 
 Ver histórico da branch após o commit desta tarefa.
+
+**Integrado em `dev/proxima-versao` — 04/08/2026.**

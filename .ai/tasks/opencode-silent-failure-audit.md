@@ -406,3 +406,5 @@ Fail-closed correto para seguranca. Retorna false (credenciais invalidas) em vez
 ## Commits
 
 Commit unico com este relatorio. Nenhuma alteracao de codigo nesta auditoria.
+
+**Integrado em `dev/proxima-versao` — 04/08/2026.**

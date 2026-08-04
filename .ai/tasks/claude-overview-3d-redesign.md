@@ -82,3 +82,5 @@ Nenhuma string localizada foi adicionada ou alterada; o escopo é apresentação
   tema claro; os elementos 3D não trocam de cor com o tema.
 - A conferência foi feita em tela maximizada. A janela restaurada de 1160×680
   não foi capturada nesta rodada porque o aplicativo abre sempre maximizado.
+
+**Integrado em `dev/proxima-versao` — 04/08/2026.**

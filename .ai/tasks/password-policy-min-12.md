@@ -98,3 +98,5 @@ Outras descobertas do probe:
 - O atalho de desenvolvimento deve ser reconstruído na integração conforme `AI_RULES`.
 - **Pré-integração:** rodar `scripts/Verify-Safety.ps1` como etapa obrigatória antes
   do merge, além de `dotnet test` completo.
+
+**Integrado em `dev/proxima-versao` — 04/08/2026.**

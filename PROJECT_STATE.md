@@ -1,13 +1,43 @@
 # Estado do Projeto
 
+## Integração de 9 tarefas de IA em `dev/proxima-versao` — 04/08/2026
+
+- Integradas em ordem (evitando conflito nos arquivos compartilhados
+  `MainViewModel.cs`, `StreamingSoftwareDetector.cs`,
+  `ResourceUsageInspector.cs`): `ai/opencode/firebase-id-token-verify`,
+  `ai/opencode/installer-ux`, `ai/opencode/password-policy-min-12`,
+  `ai/opencode/single-instance-activation`, `ai/opencode/cross-platform-audit`,
+  `ai/opencode/silent-failure-audit`, `ai/hermes/timezone-fix`,
+  `ai/opencode/bug-hunt-fix`, `ai/claude/overview-3d-redesign`.
+- Verificação de ID Token Firebase (RS256, JWKS Google, aud/iss/exp/sub) agora
+  implementada no Worker — resolve o pendente abaixo, sem rota de produto
+  ainda ligada a ela.
+- Todos os 9 merges (`--no-ff`) fecharam sem conflito manual; dois só
+  precisaram de auto-merge (`StreamingSoftwareDetector.cs`,
+  `ResourceUsageInspector.cs`, `MainViewModel.cs`, `FirebaseAuthService.cs`),
+  sem perda de mudança de nenhum lado.
+- Validação integrada: build Release sem avisos, 690 testes .NET,
+  `Verify-Safety.ps1`, 132 testes do Worker, 43 do dashboard, site (lint,
+  build, 3 testes) e `git diff --check` aprovados. `npm audit` do Worker
+  reporta 3 vulnerabilidades pré-existentes em `wrangler`/`undici`
+  (devDependency, correção só via `--force` com breaking change), não
+  introduzidas por esta integração.
+- **Não integrada**: `ai/opencode/project-state-gta-mods-debt`. Único commit
+  real é uma mudança de política em `AI_RULES.md` (push automático de
+  branches `ai/*` ao concluir tarefa) — decisão de governança que exige
+  aprovação explícita do usuário, não decisão mecânica de integração. Também
+  editou `PROJECT_STATE.md` diretamente a partir de uma tarefa paralela, o que
+  as próprias regras proíbem. O único conteúdo técnico (auditoria de fusos
+  horários) já está coberto pelas correções reais de `ai/hermes/timezone-fix`,
+  que foi integrado. Branch e worktree preservados sem alteração.
+
 ## PENDENTE IMPORTANTE — verificação de ID Token Firebase no backend
 
 - A autenticação do aplicativo usa Firebase Authentication REST e já obtém o
-  ID Token em memória, mas ainda não há rota de produto no Worker que o receba.
-- Antes de criar a primeira rota de backend autenticada, implementar e testar
-  no Worker a validação do JWT Firebase por HTTPS: assinatura RS256 usando as
+  ID Token em memória. O Worker agora sabe validar o JWT Firebase (RS256,
   chaves públicas do Google, `aud = fivemcleaner-app`,
-  `iss = https://securetoken.google.com/fivemcleaner-app`, expiração e `sub`.
+  `iss = https://securetoken.google.com/fivemcleaner-app`, expiração e `sub`),
+  mas ainda não há rota de produto que use esse verificador.
 - A rota deve usar exclusivamente o Firebase UID (`sub`) como identificador
   interno permanente; nunca e-mail. Não aceitar token sem validação completa.
 - A troca do fluxo antigo para Firebase não migra contas existentes do Worker.
