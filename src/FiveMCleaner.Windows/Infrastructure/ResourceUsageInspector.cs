@@ -88,6 +88,13 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
                 return null;
             }
 
+            // Só PDH_CSTATUS_VALID_DATA e PDH_CSTATUS_NEW_DATA trazem um valor
+            // real; qualquer outro status deixa a união com lixo.
+            if (value.CStatus is not (PDH_CSTATUS_VALID_DATA or PDH_CSTATUS_NEW_DATA))
+            {
+                return null;
+            }
+
             return Math.Clamp(value.DoubleValue, 0, 100);
         }
         catch (Exception exception) when (exception is InvalidOperationException
@@ -182,19 +189,29 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
     }
 
     private const int PDH_FMT_DOUBLE = 0x00000200;
+    private const int PDH_CSTATUS_VALID_DATA = 0x00000000;
+    private const int PDH_CSTATUS_NEW_DATA = 0x00000001;
 
+    /// <summary>
+    /// Espelha <c>PDH_FMT_COUNTERVALUE</c>: um <c>DWORD CStatus</c> seguido da
+    /// união do valor, que o compilador alinha em 8 bytes por causa de
+    /// <c>double</c>/<c>LONGLONG</c>. Sem o <c>CStatus</c>, a união caía sobre
+    /// ele e toda leitura de CPU e disco voltava exatamente 0.
+    /// </summary>
     [StructLayout(LayoutKind.Explicit)]
     private struct PdhCounterValue
     {
         [FieldOffset(0)]
+        public int CStatus;
+        [FieldOffset(8)]
         public int LongValue;
-        [FieldOffset(0)]
+        [FieldOffset(8)]
         public double DoubleValue;
-        [FieldOffset(0)]
+        [FieldOffset(8)]
         public long LargeValue;
-        [FieldOffset(0)]
+        [FieldOffset(8)]
         public IntPtr AnsiStringValue;
-        [FieldOffset(0)]
+        [FieldOffset(8)]
         public IntPtr WideStringValue;
     }
 

@@ -25,8 +25,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private readonly SemaphoreSlim settingsSaveGate = new(1, 1);
     private readonly Queue<string> pendingHeadlines = new();
     private static readonly TimeSpan HeadlineMinimumDwell = TimeSpan.FromSeconds(6);
-    private static readonly TimeSpan LiveMetricsInterval = TimeSpan.FromSeconds(2);
-    private const int LiveMetricsHistoryCapacity = 30;
+    // Uma amostra por segundo: a leitura em si já leva ~300ms de janela PDH,
+    // então cadências menores só se sobrepõem sem acrescentar informação.
+    private static readonly TimeSpan LiveMetricsInterval = TimeSpan.FromSeconds(1);
+    private const int LiveMetricsHistoryCapacity = 60;
     private DispatcherTimer? headlineDwellTimer;
     private DateTime headlineShownAtUtc;
     private CancellationTokenSource? operationCancellation;

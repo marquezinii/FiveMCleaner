@@ -77,10 +77,6 @@
         <GradientStop Color="#25282F" Offset="0.4" />
         <GradientStop Color="#1B1E24" Offset="1" />
     </LinearGradientBrush>
-    <LinearGradientBrush x:Key="SceneFadeBrush" StartPoint="0,1" EndPoint="0,0">
-        <GradientStop Color="#CC0C0E11" Offset="0" />
-        <GradientStop Color="#000C0E11" Offset="1" />
-    </LinearGradientBrush>
 
     <LinearGradientBrush x:Key="HeroGradientBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#1B1715" Offset="0" />

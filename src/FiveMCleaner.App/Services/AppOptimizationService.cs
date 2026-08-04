@@ -285,13 +285,13 @@ public sealed class AppOptimizationService : IAppOptimizationService
         CancellationToken cancellationToken)
     {
         progress.Report(new AppProgressUpdate
-                {
-                    Timestamp = DateTimeOffset.UtcNow,
-                    Kind = AppProgressKind.Preparing,
-                    Percent = 2,
-                    Headline = localization.GetString("Runtime.PreparingSimulation"),
-                    Detail = localization.GetString("Runtime.SimulationSafe")
-                });
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Kind = AppProgressKind.Preparing,
+            Percent = 2,
+            Headline = localization.GetString("Runtime.PreparingSimulation"),
+            Detail = localization.GetString("Runtime.SimulationSafe")
+        });
 
         await Task.Delay(180, cancellationToken).ConfigureAwait(false);
         var actions = plan.Actions.OrderBy(action => action.Sequence).ToArray();
@@ -300,36 +300,36 @@ public sealed class AppOptimizationService : IAppOptimizationService
             cancellationToken.ThrowIfCancellationRequested();
             var action = actions[index];
             progress.Report(new AppProgressUpdate
-                        {
-                            Timestamp = DateTimeOffset.UtcNow,
-                            Kind = AppProgressKind.Applying,
-                            Percent = 5d + (85d * (index + 1) / Math.Max(1, actions.Length)),
-                            Headline = localization.GetString("Runtime.SimulatingPlan"),
-                            Detail = localization.Format(
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                Kind = AppProgressKind.Applying,
+                Percent = 5d + (85d * (index + 1) / Math.Max(1, actions.Length)),
+                Headline = localization.GetString("Runtime.SimulatingPlan"),
+                Detail = localization.Format(
                                 "Runtime.SimulationAction",
                                 GetLocalizedActionName(action.Metadata)),
-                            ActionId = action.Metadata.Id
-                        });
+                ActionId = action.Metadata.Id
+            });
             await Task.Delay(180, cancellationToken).ConfigureAwait(false);
         }
 
         progress.Report(new AppProgressUpdate
-                {
-                    Timestamp = DateTimeOffset.UtcNow,
-                    Kind = AppProgressKind.Verifying,
-                    Percent = 96,
-                    Headline = localization.GetString("Runtime.ValidatingSimulation"),
-                    Detail = localization.GetString("Runtime.SimulationNoWrites")
-                });
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Kind = AppProgressKind.Verifying,
+            Percent = 96,
+            Headline = localization.GetString("Runtime.ValidatingSimulation"),
+            Detail = localization.GetString("Runtime.SimulationNoWrites")
+        });
         await Task.Delay(220, cancellationToken).ConfigureAwait(false);
         progress.Report(new AppProgressUpdate
-                {
-                    Timestamp = DateTimeOffset.UtcNow,
-                    Kind = AppProgressKind.Completed,
-                    Percent = 100,
-                    Headline = localization.GetString("Runtime.SimulationCompleted"),
-                    Detail = localization.GetString("Runtime.NoChangesApplied")
-                });
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Kind = AppProgressKind.Completed,
+            Percent = 100,
+            Headline = localization.GetString("Runtime.SimulationCompleted"),
+            Detail = localization.GetString("Runtime.NoChangesApplied")
+        });
 
         return new AppOptimizationResult
         {
@@ -555,13 +555,13 @@ public sealed class AppOptimizationService : IAppOptimizationService
     {
         cancellationToken.ThrowIfCancellationRequested();
         progress.Report(new AppProgressUpdate
-                {
-                    Timestamp = DateTimeOffset.UtcNow,
-                    Kind = AppProgressKind.Preparing,
-                    Percent = 2,
-                    Headline = localization.GetString("Runtime.ValidatingPlan"),
-                    Detail = localization.GetString("Runtime.ValidatingPlanDetail")
-                });
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Kind = AppProgressKind.Preparing,
+            Percent = 2,
+            Headline = localization.GetString("Runtime.ValidatingPlan"),
+            Detail = localization.GetString("Runtime.ValidatingPlanDetail")
+        });
 
         var beforeSnapshot = TryCaptureResourceComparisonSnapshot();
         var runtime = CreateRuntimeForDetectedInstallation();
@@ -572,17 +572,17 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 : 5d;
             var actionName = GetLocalizedActionName(update.ActionId);
             progress.Report(new AppProgressUpdate
-                        {
-                            Timestamp = DateTimeOffset.UtcNow,
-                            Kind = AppProgressKind.Applying,
-                            Percent = Math.Clamp(percent, 5, 70),
-                            Headline = actionName,
-                            Detail = localization.Format(DetailKeyFor(update.Outcome), actionName),
-                            ActionId = update.ActionId,
-                            CompletedSteps = update.CompletedSteps,
-                            TotalSteps = update.TotalSteps,
-                            Outcome = update.Outcome
-                        });
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                Kind = AppProgressKind.Applying,
+                Percent = Math.Clamp(percent, 5, 70),
+                Headline = actionName,
+                Detail = localization.Format(DetailKeyFor(update.Outcome), actionName),
+                ActionId = update.ActionId,
+                CompletedSteps = update.CompletedSteps,
+                TotalSteps = update.TotalSteps,
+                Outcome = update.Outcome
+            });
         });
         var context = new WindowsActionContext
         {
@@ -619,13 +619,13 @@ public sealed class AppOptimizationService : IAppOptimizationService
         if (localResult.DeferredAdministratorActionIds.Count > 0)
         {
             progress.Report(new AppProgressUpdate
-                        {
-                            Timestamp = DateTimeOffset.UtcNow,
-                            Kind = AppProgressKind.Preparing,
-                            Percent = 71,
-                            Headline = localization.GetString("Runtime.WindowsConfirmation"),
-                            Detail = localization.GetString("Runtime.WindowsConfirmationDetail")
-                        });
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                Kind = AppProgressKind.Preparing,
+                Percent = 71,
+                Headline = localization.GetString("Runtime.WindowsConfirmation"),
+                Detail = localization.GetString("Runtime.WindowsConfirmationDetail")
+            });
 
             var adminProgress = new InlineProgress<AppProgressUpdate>(update => progress.Report(
                 update.ActionId is null
@@ -705,15 +705,15 @@ public sealed class AppOptimizationService : IAppOptimizationService
         var runSucceeded = finalReport?.Succeeded ?? true;
 
         progress.Report(new AppProgressUpdate
-                {
-                    Timestamp = DateTimeOffset.UtcNow,
-                    Kind = runSucceeded ? AppProgressKind.Completed : AppProgressKind.Warning,
-                    Percent = 100,
-                    Headline = localization.GetString(
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Kind = runSucceeded ? AppProgressKind.Completed : AppProgressKind.Warning,
+            Percent = 100,
+            Headline = localization.GetString(
                         runSucceeded ? "Runtime.PlanCompleted" : "Runtime.PlanCompletedWithErrors"),
-                    Detail = localization.GetString(
+            Detail = localization.GetString(
                         runSucceeded ? "Runtime.PlanCompletedDetail" : "Runtime.PlanCompletedWithErrorsDetail")
-                });
+        });
 
         OptimizationComparisonResult? comparison = null;
         if (beforeSnapshot is not null)
@@ -845,13 +845,13 @@ public sealed class AppOptimizationService : IAppOptimizationService
     {
         cancellationToken.ThrowIfCancellationRequested();
         progress.Report(new AppProgressUpdate
-                {
-                    Timestamp = DateTimeOffset.UtcNow,
-                    Kind = AppProgressKind.RollingBack,
-                    Percent = 5,
-                    Headline = localization.GetString("Runtime.PreparingRestore"),
-                    Detail = localization.Format("Runtime.ValidatingTransaction", transactionId.ToString("N"))
-                });
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Kind = AppProgressKind.RollingBack,
+            Percent = 5,
+            Headline = localization.GetString("Runtime.PreparingRestore"),
+            Detail = localization.Format("Runtime.ValidatingTransaction", transactionId.ToString("N"))
+        });
 
         var runtime = CreateRuntimeForDetectedInstallation();
         var localResult = await runtime.Engine.RollbackAsync(
@@ -871,13 +871,13 @@ public sealed class AppOptimizationService : IAppOptimizationService
         if (localResult.State == WindowsTransactionState.AwaitingElevationRollback)
         {
             progress.Report(new AppProgressUpdate
-                        {
-                            Timestamp = DateTimeOffset.UtcNow,
-                            Kind = AppProgressKind.RollingBack,
-                            Percent = 70,
-                            Headline = localization.GetString("Runtime.ConfirmRestore"),
-                            Detail = localization.GetString("Runtime.ConfirmRestoreDetail")
-                        });
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                Kind = AppProgressKind.RollingBack,
+                Percent = 70,
+                Headline = localization.GetString("Runtime.ConfirmRestore"),
+                Detail = localization.GetString("Runtime.ConfirmRestoreDetail")
+            });
             var elevated = await brokerClient.RollbackAsync(
                 transactionId,
                 progress,
@@ -887,13 +887,13 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 if (elevated.WasCancelled)
                 {
                     progress.Report(new AppProgressUpdate
-                                {
-                                    Timestamp = DateTimeOffset.UtcNow,
-                                    Kind = AppProgressKind.Warning,
-                                    Percent = 72,
-                                    Headline = localization.GetString("Runtime.AdminRestorePending"),
-                                    Detail = localization.GetString("Runtime.AdminRestorePendingDetail")
-                                });
+                    {
+                        Timestamp = DateTimeOffset.UtcNow,
+                        Kind = AppProgressKind.Warning,
+                        Percent = 72,
+                        Headline = localization.GetString("Runtime.AdminRestorePending"),
+                        Detail = localization.GetString("Runtime.AdminRestorePendingDetail")
+                    });
                     return false;
                 }
 
@@ -902,13 +902,13 @@ public sealed class AppOptimizationService : IAppOptimizationService
         }
 
         progress.Report(new AppProgressUpdate
-                {
-                    Timestamp = DateTimeOffset.UtcNow,
-                    Kind = AppProgressKind.Completed,
-                    Percent = 100,
-                    Headline = localization.GetString("Runtime.RestoreCompleted"),
-                    Detail = localization.GetString("Runtime.RestoreCompletedDetail")
-                });
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Kind = AppProgressKind.Completed,
+            Percent = 100,
+            Headline = localization.GetString("Runtime.RestoreCompleted"),
+            Detail = localization.GetString("Runtime.RestoreCompletedDetail")
+        });
         return true;
     }
 
