@@ -59,7 +59,44 @@ Foram encontrados 6 bugs onde `telemetry.SetEnabled(true)` e `shareCrashReports 
 
 ### Validacao
 
-- **636 testes .NET**: aprovados (0 falhas)
+- **656 testes .NET**: aprovados (0 falhas)
 - **104 testes updater**: aprovados
 - **Verify-Safety.ps1**: aprovado
 - **Build Release**: sem avisos, sem erros
+
+## Rodada 3: Testes explicitos de fail-closed, seguranca de delecao e anti-downgrade
+
+### 20 novos testes em 3 arquivos
+
+**`UpdaterDiagnosticsAuthTests.cs`** (13 testes):
+- `MissingSettingsFile_ReturnsFalse` — arquivo ausente
+- `EmptyFile_ReturnsFalse` — arquivo vazio (0 bytes)
+- `CorruptJson_ReturnsFalse` — JSON truncado (`{share`)
+- `NotJsonAtAll_ReturnsFalse` — texto qualquer, nao JSON
+- `ValidJsonMissingTelemetryProperty_ReturnsFalse` — `{}`
+- `TelemetryDisabled_ReturnsFalse` — `shareAnonymousTelemetry: false`
+- `ConsentVersionTooLow_ReturnsFalse` — `privacyConsentVersion: 2`
+- `NoConsentVersion_ReturnsFalse` — campo ausente
+- `ConsentVersionNull_ReturnsFalse` — `privacyConsentVersion: null`
+- `FullyAuthorized_ReturnsTrue` — consentimento completo
+- `ConsentVersionHigherThanMinimum_ReturnsTrue` — versao 99
+- `LockedFile_ReturnsFalse` — `FileShare.None` lock no arquivo
+- `TelemetryBooleanIsStringNotBool_ReturnsFalse` — `"true"` string em vez de bool
+- `ConsentVersionIsString_ReturnsFalse` — `"3"` string em vez de int
+
+**`UpdaterDiagnosticsDeletionSafetyTests.cs`** (2 testes):
+- `TryDeletePending_OnlyRemovesFilesInsideTheExactPendingDirectory` — confirma que so deleta `*.json` dentro de `UpdaterTelemetry/pending/`, preserva arquivos em `Logs/` e `UpdaterTelemetry/` (fora de `pending/`)
+- `TryDeletePending_OnlyRemovesJsonFiles_LeavesOtherFiles` — preserva `.txt`, `.hidden` e outros formatos
+
+**`AntiDowngradeChainTests.cs`** (4 testes):
+- `FloorStore_AdvancePersistsAndNeverGoesDown` — 2.0.0 → tenta 1.5.0 (rejeitado), leitura mantem 2.0.0
+- `FloorStore_CorruptDpapiThrows` — blob DPAPI corrompido lanca `CryptographicException`
+- `FloorStore_PersistsEvenWhenFallbackVersionDiffers` — floor independe do fallback
+- `RecoveryRestoresPredecessor_AndFloorRemainsHighestConfirmed` — cadeia completa: update → ativacao → health timeout → rollback → floor mantido → active < floor
+
+### Confirmacoes de auditoria
+
+- **`IsTelemetryAuthorized()` fail-closed**: todo erro no filter (`IOException | UnauthorizedAccessException | JsonException | InvalidOperationException`) retorna `false`, inclusive `FileNotFoundException` (que deriva de `IOException`). Arquivo ausente, corrompido, vazio, com tipos errados — tudo `false`. Confirmado com 13 testes.
+- **`TryDeletePending()` escopo**: so opera em `*.json` dentro do diretorio `%LOCALAPPDATA%/FiveMCleaner/UpdaterTelemetry/pending/`. Nao deleta logs, arquivos de outras extensoes, ou dados fora do subdiretorio `pending/`. Confirmado com 2 testes.
+- **ZIP symlink**: .NET `ZipFile.ExtractToFile()` nao cria reparse points — sempre extrai como arquivo regular. `Path.GetFullPath` + `StartsWith` ja bloqueiam path traversal. Nenhum codigo alterado.
+- **Anti-downgrade**: `VersionFloorStore` usa DPAPI e persiste a versao mais alta confirmada. `ReleaseTrustPolicy.Verify` aplica downgrade via SemVer. `RecoveryCoordinator` so restaura predecessor. Cadeia completa testada.
