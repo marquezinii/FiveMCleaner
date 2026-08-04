@@ -55,12 +55,13 @@ política de senha mas no caminho do cadastro:
   cadastro/login — perdem o "manter conectado", nunca crasham.
 - `src/FiveMCleaner.App/Services/FirebaseAuthErrorMapper.cs`: `EMAIL_EXISTS` agora
   orienta a recuperação ("Esqueci minha senha"); novo `INVALID_EMAIL`.
-- `tests/FiveMCleaner.Tests/App/AccountSignUpFlowTests.cs` (novo, 18 casos):
+- `tests/FiveMCleaner.Tests/App/AccountSignUpFlowTests.cs` (novo, 30 casos):
   happy path do `RegisterAsync` (signUp → lookup → sendOobCode), não persistência
-  de sessão quando `keepSignedIn=false`, mapeamento de erros Firebase, falha de
-  rede, timeout, falha do e-mail de verificação (conta fica pendente), armadilha de
-  conta (lookup falha após signUp e o retry orienta recuperação), cancelamento do
-  chamador propagado e `WriteAsync` best-effort.
+  de sessão quando `keepSignedIn=false`, mapeamento de erros Firebase (incl.
+  `PASSWORD_DOES_NOT_MEET_REQUIREMENTS`), falha de rede, timeout, falha do e-mail
+  de verificação (conta fica pendente), armadilha de conta (lookup falha após
+  signUp e o retry orienta recuperação), cancelamento do chamador propagado e
+  `WriteAsync` best-effort.
 
 ## Backend
 
@@ -68,20 +69,27 @@ Nenhuma mudança no Worker foi necessária: não há mais rota de cadastro de us
 nele (removida na integração do Firebase); `passwordAuthProvider.js` trata somente
 o login de admin do dashboard e não aplica política de cadastro.
 
-**Pendência fora do repositório (não executável por este agente):** a política de
-senha do servidor é configurada no console do Firebase (Authentication / Identity
-Platform) para o projeto `fivemcleaner-app`. Para refletir a mesma regra no
-servidor, ajustar lá para: comprimento mínimo 12 e **sem** exigir maiúscula,
-minúscula, número ou símbolo. Sem isso, o Firebase pode continuar rejeitando com
-`WEAK_PASSWORD` senhas que o cliente aceite.
+**Confirmado por probe de rede real (Firebase Auth REST, projeto `fivemcleaner-app`):**
+a política do servidor já está alinhada ao cliente — senha `abcdefghijkl` (12, só
+minúsculas) em `accounts:signUp` retorna `idToken` (cria a conta); senha `short`
+retorna `PASSWORD_DOES_NOT_MEET_REQUIREMENTS: [Password must contain at least 12
+characters]` (cobra só o mínimo, sem classes de caracteres). **Nenhuma alteração no
+console do Firebase é necessária.**
+
+Outras descobertas do probe:
+- `accounts:createAuthUri` aceita `abcdef@bogus-example.invalid` e `abcdef@example`
+  (sem TLD) — o servidor não rejeita e-mails com domínio inválido.
+- O código de erro de política retornado pelo servidor é
+  `PASSWORD_DOES_NOT_MEET_REQUIREMENTS` (não `WEAK_PASSWORD`); o mapper agora
+  trata ambos (defensivo — o cliente já bloqueia <12 antes de enviar).
 
 ## Validação
 
-- `dotnet test` (665 aprovados, 0 falhas) incluindo o teste da política atualizado
-  e os 18 casos agressivos do fluxo de cadastro.
+- `dotnet test` (666 aprovados, 0 falhas) incluindo o teste da política atualizado
+  e os 30 casos agressivos do fluxo de cadastro.
 - Build Release de `FiveMCleaner.App` sem avisos.
 - `dotnet format FiveMCleaner.slnx --verify-no-changes --no-restore` aprovado.
-- `scripts/Verify-Safety.ps1` aprovado (665 testes, 0 avisos/erros).
+- `scripts/Verify-Safety.ps1` aprovado (666 testes, 0 avisos/erros).
 - `git diff --check` limpo.
 
 ## Observações para integração

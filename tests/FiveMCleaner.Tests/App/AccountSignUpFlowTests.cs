@@ -73,6 +73,7 @@ public sealed class AccountSignUpFlowTests
     [Theory]
     [InlineData("EMAIL_EXISTS", "Este e-mail já está em uso")]
     [InlineData("WEAK_PASSWORD", "A senha não atende à política de segurança")]
+    [InlineData("PASSWORD_DOES_NOT_MEET_REQUIREMENTS", "A senha não atende à política de segurança")]
     [InlineData("INVALID_EMAIL", "Informe um endereço de e-mail válido")]
     [InlineData("TOO_MANY_ATTEMPTS_TRY_LATER", "Muitas tentativas")]
     public async Task RegisterAsync_SignUpRejected_ShowsMappedMessage(string firebaseCode, string expectedFragment)

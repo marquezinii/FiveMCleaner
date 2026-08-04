@@ -9,7 +9,7 @@ internal static class FirebaseAuthErrorMapper
         "INVALID_ID_TOKEN" or "TOKEN_EXPIRED" or "USER_NOT_FOUND" or "INVALID_REFRESH_TOKEN" or "USER_DISABLED" => "Sua sessão não é mais válida. Entre novamente.",
         "CREDENTIAL_TOO_OLD_LOGIN_AGAIN" or "REQUIRES_RECENT_LOGIN" => "Confirme sua senha para concluir esta alteração.",
         "EMAIL_EXISTS" => "Este e-mail já está em uso. Se a conta for sua, use 'Esqueci minha senha' para recuperar o acesso.",
-        "WEAK_PASSWORD" => "A senha não atende à política de segurança.",
+        "WEAK_PASSWORD" or "PASSWORD_DOES_NOT_MEET_REQUIREMENTS" => "A senha não atende à política de segurança.",
         "INVALID_EMAIL" => "Informe um endereço de e-mail válido.",
         _ when sensitiveFlow => "Se os dados estiverem corretos, você receberá as instruções necessárias.",
         _ => "Não foi possível concluir agora. Confira os dados e tente novamente."
