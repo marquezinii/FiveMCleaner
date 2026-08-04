@@ -23,8 +23,11 @@ mapeamento de erros permanecem separados. Apenas o refresh token opcional é
 persistido e protegido para o usuário Windows; senha e ID token nunca vão para
 disco ou logs. O ID token fica em memória, é renovado antes de vencer e deve
 seguir como `Authorization: Bearer` apenas para um backend HTTPS que o valide e
-use o Firebase UID como identificador interno. Com `emailVerified=false`, o
-estado é `EmailVerificationRequired` e recursos autenticados ficam bloqueados.
+use o Firebase UID como identificador interno. No Worker, a verificação fica em
+`infra/cloudflare-worker/src/auth/firebaseIdToken.js` (RS256 + JWKS Google,
+`aud`/`iss`/`exp`/`sub`); ainda não há rota de produto ligada a ela. Com
+`emailVerified=false`, o estado é `EmailVerificationRequired` e recursos
+autenticados ficam bloqueados.
 
 | Projeto                  | Responsabilidade                                                    | Não deve conhecer                                        |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- |
