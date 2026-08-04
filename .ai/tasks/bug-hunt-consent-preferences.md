@@ -1,52 +1,65 @@
-# Bug Hunt: Preferencias de consentimento ignoradas
+# Bug Hunt & Audit: Consentimento + Updater
 
 - **Agente**: opencode
 - **Branch**: `ai/opencode/bug-hunt-fix`
-- **Objetivo**: Corrigir bugs onde preferencias de telemetria e crash reports eram ignoradas (hardcoded `true`)
+- **Objetivo**: Corrigir bugs de consentimento e auditoria do updater
 - **Status**: pronto para integracao
 
-## Resumo
+## Rodada 1: Preferencias de consentimento ignoradas
 
 Foram encontrados 6 bugs onde `telemetry.SetEnabled(true)` e `shareCrashReports = true` estavam hardcoded em vez de usar o valor real da preferencia do usuario:
 
 ### Bugs corrigidos
 
 1. **`MainViewModel.ShareAnonymousTelemetry` setter** (`MainViewModel.cs:464`): `telemetry.SetEnabled(true)` → `telemetry.SetEnabled(value)`
-   - Ao alternar o toggle de telemetria, o servico interno SEMPRE era habilitado, ignorando a escolha do usuario.
-
 2. **`MainViewModel.ApplySettings`** (`MainViewModel.cs:1543`): `telemetry.SetEnabled(true)` → `telemetry.SetEnabled(shareAnonymousTelemetry)`
-   - Na inicializacao, a telemetria era SEMPRE reabilitada, mesmo que o usuario a tivesse desativado na sessao anterior.
-
 3. **`MainViewModel.ApplySettings`** (`MainViewModel.cs:1544`): `shareCrashReports = true` → `shareCrashReports = settings.ShareCrashReports`
-   - O toggle de crash reports era SEMPRE resetado para `true` ao carregar configuracoes.
-
 4. **`PrivacyConsentOutcomeBuilder.BuildConfirmed`** (`PrivacyConsentOutcomeBuilder.cs:26`): `ShareCrashReports = true` → `ShareCrashReports = acceptCrashReports`
-   - O parametro `acceptCrashReports` era recebido mas descartado; sempre persistia `true`.
-
 5. **`MainViewModel.ConfirmPrivacyConsentAsync`** (`MainViewModel.cs:1706`): `telemetry.SetEnabled(true)` → `telemetry.SetEnabled(snapshot.ShareAnonymousTelemetry)`
-   - Apos a tela de consentimento, telemetria era SEMPRE habilitada.
-
 6. **`MainViewModel.ConfirmPrivacyConsentAsync`** (`MainViewModel.cs:1707`): `shareCrashReports = true` → `shareCrashReports = snapshot.ShareCrashReports`
-   - Apos a tela de consentimento, crash reports eram SEMPRE habilitados.
 
-### Testes afetados e corrigidos
+## Rodada 2: Auditoria do updater (Launcher, Updater, Manifest, Staging, Recovery)
 
-- `PrivacyConsentTests.BuildConfirmed_BothDeclined_SetsBothFalseAndStampsCurrentVersion`: `Assert.True` → `Assert.False`
-- `PrivacyConsentTests.BuildConfirmed_OnlyTelemetryAccepted_KeepsCrashReportsFalse`: `Assert.True` → `Assert.False`
-- `MainViewModelPrivacyConsentTests.ConfirmPrivacyConsentAsync_ClosingIsPassedAsBothFalse`: 3 asserts corrigidos
-- `MainViewModelPrivacyConsentTests.ConfirmPrivacyConsentAsync_OnlyTelemetryAccepted`: 1 assert corrigido
+### Auditoria completa dos arquivos
+
+- **Launcher/Program.cs**: fluxo transacional, WaitForParent, health-check, recovery, rollback
+- **Updater/Program.cs**: legacy Inno Setup path, VerifyInstaller, RunInstaller
+- **UpdateHandoff.cs**: parsing, validacao de caminhos
+- **SignedManifestUpdateService.cs**: validacao de manifesto, download com hash, redirect handling
+- **AtomicUpdateInstaller.cs**: staging, ativacao, rollback imediato
+- **SilentUpdateInstaller.cs**: legacy installer, copia e verificacao do updater
+- **RecoveryCoordinator.cs**: Reconcile, Abandon
+- **RuntimePackageStager.cs**: extracao ZIP, verificacao SHA256SUMS.txt, anti-path-traversal
+- **RuntimeActivationStore.cs**: active.json atomico com retry
+- **UpdateRecoveryJournal.cs**: recovery.json, MarkCandidateLaunched, Complete
+- **UpdateHealthReceiptStore.cs**: health.json, confirmacao de nonce
+- **VersionFloorStore.cs**: piso anti-downgrade com DPAPI
+- **AtomicFile.cs**: escrita atomica com fallback File.Move
+- **TransientRetry.cs**: retry curto para locks transitórios
+- **UpdaterDiagnostics.cs**: log JSONL, fila de telemetria, IsTelemetryAuthorized
+- **Worker updaterEvents/validateSubmission.js**: validacao server-side
+- **Worker updaterEvents/queries.js**: queries parametrizadas
+
+### Bug encontrado e corrigido
+
+**`Launcher/Program.cs`**: `telemetryAuthorized: true` hardcoded em todos os `RecordAsync` e `FlushPendingAsync`. O método `UpdaterDiagnostics.IsTelemetryAuthorized()` (que le settings.json) existia mas nunca era chamado pelo Launcher.
+
+- Agora o Launcher le `IsTelemetryAuthorized(dataRoot)` no inicio e passa o valor real para todas as chamadas de telemetria.
+- Quando o usuario desativa telemetria, eventos de updater pendentes sao deletados em vez de enviados.
+
+### Areas verificadas sem bugs
+
+- Validacao de manifesto assinado (ECDSA P-256/SHA-256, anti-downgrade, URL allowlist) — solida
+- Download com hash (streaming SHA-256, limite de tamanho, redirect seguro) — solido
+- Staging ZIP (SHA256SUMS.txt fechado, anti-path-traversal, anti-zip-bomb) — solido
+- Recovery (health receipt com nonce, timeout, Abandon vs Reconcile) — solido
+- Journal/activation atomicos (AtomicFile + TransientRetry) — solido
+- Legacy Updater (PID+start-time anti-reuse, file handle lock, TOCTOU hash duplo) — solido
+- Worker validation (closed schema, environment allowlist, version regex) — solido
 
 ### Validacao
 
 - **636 testes .NET**: aprovados (0 falhas)
-- **120 testes Worker**: aprovados (0 falhas)
-- **43 testes Dashboard**: aprovados (0 falhas)
+- **104 testes updater**: aprovados
 - **Verify-Safety.ps1**: aprovado
 - **Build Release**: sem avisos, sem erros
-
-### Areas revisadas sem bugs encontrados
-
-- Worker Cloudflare: routing, validacao, SQL queries, auth, CORS, batch chunking, CSV
-- Dashboard: API layer, renderizacao, login/logout
-- Website: landing page
-- C# Broker: ElevatedBrokerClient, ReadUntilTerminalAsync
