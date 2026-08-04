@@ -685,7 +685,11 @@ public sealed class MainViewModel : BindableBase, IDisposable
             AddLog(localization.GetString("Log.DiagnosisCompleted"));
             if (checkForUpdates && releaseUpdateService is not null)
             {
-                _ = CheckForUpdatesAsync();
+                _ = CheckForUpdatesAsync().ContinueWith(
+                    static t => { _ = t.Exception; },
+                    CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
             }
         }
         catch (Exception exception)
@@ -1748,7 +1752,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             await telemetry.TrackAsync(telemetryEvent).ConfigureAwait(false);
         }
-        catch
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             // Telemetria é opcional e não pode afetar a experiência nem gerar logs locais adicionais.
         }
@@ -1773,7 +1778,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
                 settingsSaveGate.Release();
             }
         }
-        catch
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             AddLog(localization.GetString("Log.SettingsSaveFailed"));
         }

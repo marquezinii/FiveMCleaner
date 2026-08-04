@@ -162,8 +162,15 @@ async function handleUpdaterEventsList(request, env, url) {
     environment: url.searchParams.get('environment') || undefined,
     version: url.searchParams.get('version') || undefined,
   }, url.searchParams.get('limit'));
-  const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-  return new Response(JSON.stringify(results), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  try {
+    const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
+    return new Response(JSON.stringify(results), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Database query failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
 
 async function handleTelemetryIngest(request, env) {
@@ -206,7 +213,14 @@ async function handleTelemetryIngest(request, env) {
 
   const results = [];
   for (const chunk of chunkStatements(statements)) {
-    results.push(...await env.TELEMETRY_DB.batch(chunk));
+    try {
+      results.push(...await env.TELEMETRY_DB.batch(chunk));
+    } catch (err) {
+      return new Response(JSON.stringify({ error: 'Database write failed' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
   }
 
   const actionStatements = [];
@@ -226,7 +240,14 @@ async function handleTelemetryIngest(request, env) {
   });
 
   for (const chunk of chunkStatements(actionStatements)) {
-    await env.TELEMETRY_DB.batch(chunk);
+    try {
+      await env.TELEMETRY_DB.batch(chunk);
+    } catch (err) {
+      return new Response(JSON.stringify({ error: 'Database write failed for action links' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
   }
 
   return new Response(null, { status: 202 });
@@ -256,22 +277,27 @@ async function handleStatsRequest(request, env, url) {
   };
 
   const { sql, params } = builder(filters);
-  const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-
-  if (asCsv) {
-    return new Response(toCsv(results), {
+  try {
+    const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
+    if (asCsv) {
+      return new Response(toCsv(results), {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${name}.csv"`,
+        },
+      });
+    }
+    return new Response(JSON.stringify(results), {
       status: 200,
-      headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="${name}.csv"`,
-      },
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Database query failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
-
-  return new Response(JSON.stringify(results), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
 }
 
 async function handleBugReportIngest(request, env) {
@@ -326,10 +352,16 @@ async function handleBugReportsList(request, env, url) {
   const limit = Number(url.searchParams.get('limit')) || undefined;
 
   const { sql, params } = recentBugReports(filters, limit);
-  const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-
-  return new Response(JSON.stringify(results), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  try {
+    const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
+    return new Response(JSON.stringify(results), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Database query failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }

@@ -2,8 +2,41 @@
 
 **Agente:** opencode
 **Branch:** `ai/opencode/silent-failure-audit`
-**Objetivo:** Auditoria de falhas silenciosas em todo o codebase
-**Status:** concluido
+**Objetivo:** Auditoria de falhas silenciosas em todo o codebase + remediacao de todos os achados
+**Status:** concluido — pronto para integracao
+
+---
+
+## Resumo da remediacao
+
+Todos os achados HIGH e MEDIUM foram corrigidos. Alteracoes em 8 arquivos (+104 / -35 linhas).
+
+### Correcoes aplicadas:
+
+| # | Arquivo | Correcao |
+|---|---------|----------|
+| H1 | `FirebaseAuthService.cs` | `LogoutAsync` agora protege `ClearAsync` com try-catch, garantindo que `SetState` sempre execute |
+| H2 | `StreamingSoftwareDetector.cs` | Corrigido `catch` dead: filtro agora usa `AggregateException.InnerExceptions` em vez de `new Exception()` |
+| M4 | `MainViewModel.cs` | Bare `catch` em `TrackOptimizationTelemetryAsync` substituido por filtro (exclui OOM/StackOverflow/AV) |
+| M5 | `MainViewModel.cs` | `_ = CheckForUpdatesAsync()` agora usa `ContinueWith(OnlyOnFaulted)` para evitar unobserved exception |
+| M6 | `MainViewModel.cs` | Bare `catch` em `SaveSettingsRevisionAsync` substituido por filtro |
+| M7 | `ResourceUsageInspector.cs` | `Task.WaitAll` protegido com try-catch; `.Result` acessos usam `IsCompletedSuccessfully` |
+| M8 | `CloudflareTelemetryService.cs` | `_ = FlushPendingAsync()` agora usa `ContinueWith(OnlyOnFaulted)` |
+| M9 | Worker `index.js` | Telemetry batches e action links agora em try-catch explicito, retornando JSON error 500 |
+| M10 | Dashboard `app.js` | Logout com try-catch; falha de rede nao impede `showLogin()` |
+| M11 | Dashboard `app.js` | Filtro submit com `.catch()` mostrando "Erro ao atualizar dados" |
+| M12 | Dashboard `app.js` | `main()` com `.catch()` mostrando mensagem de erro na UI |
+| M13 | Worker `requestSecurity.js` | Catch em `readBoundedJson` agora loga `console.error` com a mensagem da excecao |
+| M14 | Worker `index.js` | Queries D1 em `handleStatsRequest`, `handleUpdaterEventsList` e `handleBugReportsList` protegidas com try-catch |
+
+### Validacao final:
+
+- `dotnet build` Release: 0 errors, 0 warnings
+- `dotnet test` Release: **636** aprovados, 0 falhas
+- Worker `npm test`: **120** aprovados, 0 falhas
+- `dotnet format --verify-no-changes`: aprovado
+- `.\scripts\Verify-Safety.ps1`: aprovado
+- `git diff --check`: limpo
 
 ---
 

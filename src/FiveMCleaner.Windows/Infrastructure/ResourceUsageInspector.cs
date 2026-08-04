@@ -35,9 +35,19 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
         var gpuTask = Task.Run(() => TryReadGpuUsageAsync());
         var networkTask = Task.Run(() => TryReadNetworkThroughputMBpsAsync());
 
-        Task.WaitAll(cpuTask, diskTask, gpuTask, networkTask);
+        try
+        {
+            Task.WaitAll(cpuTask, diskTask, gpuTask, networkTask);
+        }
+        catch (AggregateException)
+        {
+        }
 
-        return new ResourceUsageSnapshot(cpuTask.Result, diskTask.Result, gpuTask.Result, networkTask.Result);
+        return new ResourceUsageSnapshot(
+            cpuTask.IsCompletedSuccessfully ? cpuTask.Result : null,
+            diskTask.IsCompletedSuccessfully ? diskTask.Result : null,
+            gpuTask.IsCompletedSuccessfully ? gpuTask.Result : null,
+            networkTask.IsCompletedSuccessfully ? networkTask.Result : 0);
     }
 
     private static async Task<double?> TryReadCounterAsync(string category = "Processor", string counter = "% Processor Time", string instance = "_Total")

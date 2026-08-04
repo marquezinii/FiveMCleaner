@@ -119,7 +119,13 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
     {
         idToken = refreshToken = null;
         tokenExpiresAt = default;
-        await sessionStore.ClearAsync().ConfigureAwait(false);
+        try
+        {
+            await sessionStore.ClearAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+        }
         SetState(AuthenticationState.SignedOut);
     }
 

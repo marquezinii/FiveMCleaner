@@ -405,7 +405,11 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
         // queued for the next opportunity (the next TrackAsync call or the
         // next app startup) without delaying or affecting the optimization
         // that just completed.
-        _ = FlushPendingAsync(cancellationToken);
+        _ = FlushPendingAsync(cancellationToken).ContinueWith(
+            static t => { _ = t.Exception; },
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
     }
 
     /// <summary>
