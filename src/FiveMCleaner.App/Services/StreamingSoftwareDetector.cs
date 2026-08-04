@@ -92,10 +92,10 @@ public static class StreamingSoftwareClassifier
             .ToArray();
 
         return new StreamingSoftwareSnapshot(
-            applications,
-            observedAtUtc.ToUniversalTime(),
-            processScanComplete,
-            installationScanComplete);
+                    applications,
+                    observedAtUtc,
+                    processScanComplete,
+                    installationScanComplete);
     }
 
     private static string? NormalizeProcessName(string? processName)

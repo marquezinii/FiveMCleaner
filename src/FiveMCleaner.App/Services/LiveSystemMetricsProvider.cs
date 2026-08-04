@@ -38,7 +38,7 @@ public sealed class WindowsLiveSystemMetricsProvider : ILiveSystemMetricsProvide
 
             // Use the unified resource inspector which now runs all measurements concurrently
             var usage = resourceInspector.GetSnapshot();
-            return CreateSnapshot(usage, systemInspector.GetSnapshot(), DateTimeOffset.Now);
+                        return CreateSnapshot(usage, systemInspector.GetSnapshot(), DateTimeOffset.UtcNow);
         }
     }
 

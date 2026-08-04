@@ -94,7 +94,7 @@ export function sumBy(rows, valueKey) {
 
 /**
  * Formats an ISO timestamp (as stored in `received_at`) as a compact,
- * locale-independent "YYYY-MM-DD HH:mm" for the recent-failures table --
+ * locale-dependent local time for the recent-failures table --
  * never throws on a missing/malformed value.
  */
 export function formatTimestamp(isoString) {
@@ -107,7 +107,11 @@ export function formatTimestamp(isoString) {
     return '—';
   }
 
-  return isoString.slice(0, 16).replace('T', ' ');
+  // Convert UTC to local timezone for display
+  return date.toLocaleString(undefined, {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  }).replace(',', '');
 }
 
 /**
