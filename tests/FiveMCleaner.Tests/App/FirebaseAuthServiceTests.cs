@@ -9,10 +9,15 @@ namespace FiveMCleaner.Tests.App;
 public sealed class FirebaseAuthServiceTests
 {
     [Fact]
-    public void PasswordPolicy_UsesFirebaseConfiguredBoundsOnly()
+    public void PasswordPolicy_RequiresOnlyMinimumLength_NoCharacterClasses()
     {
+        Assert.False(AccountPasswordPolicy.IsValid(string.Empty));
+        Assert.False(AccountPasswordPolicy.IsValid(null));
         Assert.False(AccountPasswordPolicy.IsValid(new string('a', 11)));
         Assert.True(AccountPasswordPolicy.IsValid(new string('a', 12)));
+        Assert.True(AccountPasswordPolicy.IsValid(new string('1', 12)));
+        Assert.True(AccountPasswordPolicy.IsValid(new string('A', 12)));
+        Assert.True(AccountPasswordPolicy.IsValid(new string('*', 12)));
         Assert.True(AccountPasswordPolicy.IsValid(new string('a', 128)));
         Assert.False(AccountPasswordPolicy.IsValid(new string('a', 129)));
     }

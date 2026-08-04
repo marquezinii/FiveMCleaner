@@ -30,11 +30,20 @@ public sealed class SecureFirebaseSessionStore
 
     internal async Task WriteAsync(string refreshToken, CancellationToken cancellationToken)
     {
-        Directory.CreateDirectory(Path.GetDirectoryName(path)!);
-        var json = JsonSerializer.Serialize(new PersistedFirebaseSession(refreshToken), FiveMCleanerJson.Options);
-        var encrypted = ProtectedData.Protect(Encoding.UTF8.GetBytes(json), null, DataProtectionScope.CurrentUser);
-        try { await File.WriteAllBytesAsync(path, encrypted, cancellationToken).ConfigureAwait(false); }
-        finally { CryptographicOperations.ZeroMemory(encrypted); }
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            var json = JsonSerializer.Serialize(new PersistedFirebaseSession(refreshToken), FiveMCleanerJson.Options);
+            var encrypted = ProtectedData.Protect(Encoding.UTF8.GetBytes(json), null, DataProtectionScope.CurrentUser);
+            try { await File.WriteAllBytesAsync(path, encrypted, cancellationToken).ConfigureAwait(false); }
+            finally { CryptographicOperations.ZeroMemory(encrypted); }
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException)
+        {
+            // Best-effort: losing the persistent "keep me signed in" token
+            // degrades to a manual login next launch, never a crash during
+            // the signup/sign-in flow that created it.
+        }
     }
 
     internal Task ClearAsync()

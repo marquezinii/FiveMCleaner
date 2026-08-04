@@ -137,6 +137,7 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
             await sessionStore.WriteAsync(refreshToken, cancellationToken).ConfigureAwait(false);
             return await LoadUserAsync(idToken, cancellationToken).ConfigureAwait(false);
         }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { return Fail("NETWORK_REQUEST_FAILED"); }
         catch (OperationCanceledException) { throw; }
         catch (Exception exception) when (exception is HttpRequestException or JsonException or IOException) { return Fail("NETWORK_REQUEST_FAILED"); }
     }
@@ -185,6 +186,7 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
             var error = await response.Content.ReadFromJsonAsync<FirebaseErrorEnvelope>(cancellationToken: cancellationToken).ConfigureAwait(false);
             return (default, error?.error?.message ?? "UNKNOWN");
         }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { return (default, "NETWORK_REQUEST_FAILED"); }
         catch (OperationCanceledException) { throw; }
         catch (Exception exception) when (exception is HttpRequestException or JsonException or IOException) { return (default, "NETWORK_REQUEST_FAILED"); }
     }
