@@ -261,7 +261,7 @@ public sealed class StreamingSoftwareDetector
         {
             throw;
         }
-        catch (Exception) when (IsExpectedProbeException(new Exception()))
+        catch (Exception ex) when (ex is AggregateException agg && agg.InnerExceptions.All(e => IsExpectedProbeException(e)))
         {
             complete = false;
         }

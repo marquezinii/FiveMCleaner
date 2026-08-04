@@ -103,13 +103,19 @@ async function main() {
   });
 
   logoutButton.addEventListener('click', async () => {
-    await fetch(`${API_BASE}/admin/logout`, { method: 'POST', credentials: 'include' });
+    try {
+      await fetch(`${API_BASE}/admin/logout`, { method: 'POST', credentials: 'include' });
+    } catch {
+      // Best-effort: session will expire server-side if revoke fails
+    }
     showLogin();
   });
 
   filterForm.addEventListener('submit', (event) => {
     event.preventDefault();
-    refreshAll();
+    refreshAll().catch(() => {
+      refreshStatus.textContent = 'Erro ao atualizar dados';
+    });
   });
 
   function currentFilters() {
@@ -289,4 +295,8 @@ async function main() {
   }
 }
 
-main();
+main().catch((error) => {
+  console.error('Dashboard initialization failed:', error);
+  const loginError = document.getElementById('login-error');
+  if (loginError) loginError.textContent = 'Erro ao iniciar o dashboard. Recarregue a pagina.';
+});

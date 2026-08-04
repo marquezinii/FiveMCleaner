@@ -22,7 +22,8 @@ export async function readBoundedJson(request, maximumBytes) {
     }
     json += decoder.decode();
     return JSON.parse(json);
-  } catch {
+  } catch (err) {
+    console.error('readBoundedJson failed:', err?.message || 'unknown');
     return null;
   }
 }
