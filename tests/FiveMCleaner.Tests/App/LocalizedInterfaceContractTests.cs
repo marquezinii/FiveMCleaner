@@ -185,13 +185,18 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("StreamingReadinessItems", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.LivePerformance.Title", dashboard, StringComparison.Ordinal);
-        Assert.Contains("CpuUsagePoints", dashboard, StringComparison.Ordinal);
-        Assert.Contains("GpuUsagePoints", dashboard, StringComparison.Ordinal);
+        // O histórico ao vivo é desenhado pela cena 3D, que recebe as amostras
+        // cruas; o medidor de prontidão é um anel animado sobre o núcleo 3D.
+        Assert.Contains("controls:PerformanceScene3D", dashboard, StringComparison.Ordinal);
+        Assert.Contains("CpuValues=\"{Binding CpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("GpuValues=\"{Binding GpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("NetworkUsageLabel", dashboard, StringComparison.Ordinal);
-        Assert.Contains("Grid.Column=\"1\" Width=\"132\" Height=\"132\"", dashboard, StringComparison.Ordinal);
-        Assert.Contains("Ellipse Width=\"126\" Height=\"126\"", dashboard, StringComparison.Ordinal);
-        Assert.Contains("Stroke=\"{DynamicResource RingBrush}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("controls:HoloCore3D", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Value=\"{Binding ReadinessScore, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("TrackBrush=\"{DynamicResource RingBrush}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding CpuUsagePercent, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
+        // A coleta pausada precisa pausar também a animação da cena.
+        Assert.Contains("IsLive=\"{Binding IsLiveMetricsActive}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.OpenOptimizer", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.SystemOverview", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("GroupName=\"Profile\"", dashboard, StringComparison.Ordinal);

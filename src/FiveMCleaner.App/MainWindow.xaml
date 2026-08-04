@@ -5,6 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
+        xmlns:controls="clr-namespace:FiveMCleaner.App.Controls"
         mc:Ignorable="d"
         Title="FiveMCleaner"
         Icon="Assets/FiveMCleaner.png"
@@ -219,16 +220,20 @@
                     <!-- Dashboard -->
                     <ScrollViewer x:Name="DashboardPage" Padding="0,0,26,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <StackPanel>
-                            <Grid Margin="0,0,0,18">
+                            <Grid Margin="0,0,0,20">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Margin="0,0,18,0">
-                                    <TextBlock Text="{Binding [Dashboard.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="27" FontWeight="Bold" />
-                                    <TextBlock Text="{Binding [Dashboard.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13.5" TextWrapping="Wrap" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,9">
+                                        <Rectangle Width="3" Height="15" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource OrangeGradientBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding [Dashboard.LivePerformance.Live], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" Margin="9,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource OrangeLightBrush}" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding [Dashboard.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="31" FontWeight="Bold" />
+                                    <TextBlock Text="{Binding [Dashboard.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,8,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13.5" TextWrapping="Wrap" MaxWidth="760" HorizontalAlignment="Left" />
                                 </StackPanel>
-                                <Button Grid.Column="1" Content="{Binding [Dashboard.Refresh], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right" Height="38" Padding="15,0" Click="RefreshDiagnostic_Click" IsEnabled="{Binding CanRefresh}" />
+                                <Button Grid.Column="1" Content="{Binding [Dashboard.Refresh], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right" VerticalAlignment="Center" Height="38" Padding="15,0" Click="RefreshDiagnostic_Click" IsEnabled="{Binding CanRefresh}" />
                             </Grid>
 
                             <Border Margin="0,0,0,16"
@@ -301,7 +306,11 @@
                                 </Grid>
                             </Border>
 
-                            <ui:Card Padding="24" Margin="0,0,0,16">
+                            <!-- Bloco principal: diagnóstico à esquerda, medidor tridimensional de prontidão à direita. -->
+                            <Border Style="{StaticResource HeroCardStyle}" Margin="0,0,0,16">
+                                <Border.RenderTransform>
+                                    <TranslateTransform Y="22" />
+                                </Border.RenderTransform>
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -354,122 +363,240 @@
                                                 </Grid>
                                             </Border>
                                         </StackPanel>
-                                        <TextBlock Text="{Binding RecommendationTitle}" Margin="0,14,0,0" FontSize="20" FontWeight="Bold" />
-                                        <TextBlock Text="{Binding RecommendationText}" Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12.5" TextWrapping="Wrap" MaxWidth="720" />
-                                        <Button Content="{Binding [Dashboard.OpenOptimizer], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="40" Padding="20,0" Margin="0,18,0,0" HorizontalAlignment="Left" Click="OpenOptimizer_Click" />
+                                        <TextBlock Text="{Binding RecommendationTitle}" Margin="0,16,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="23" FontWeight="Bold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding RecommendationText}" Margin="0,9,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12.5" TextWrapping="Wrap" MaxWidth="720" HorizontalAlignment="Left" LineHeight="19" />
+                                        <Button Content="{Binding [Dashboard.OpenOptimizer], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="42" Padding="24,0" Margin="0,20,0,0" HorizontalAlignment="Left" Click="OpenOptimizer_Click" />
                                     </StackPanel>
-                                    <Grid Grid.Column="1" Width="132" Height="132" Margin="30,0,2,0" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
-                                        <Ellipse Width="126" Height="126" Fill="{DynamicResource PanelBrush}" Stroke="{DynamicResource RingBrush}" StrokeThickness="5" />
-                                        <Ellipse Width="114" Height="114" Stroke="{DynamicResource OrangeBrush}" StrokeThickness="2" />
-                                        <Border Width="96" Height="96" Background="{DynamicResource SurfaceBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="48">
+
+                                    <Grid Grid.Column="1" Width="186" Height="186" Margin="30,0,4,0" HorizontalAlignment="Center" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
+                                        <controls:HoloCore3D Width="186" Height="186" IsLive="{Binding IsLiveMetricsActive}" />
+                                        <Ellipse Width="182" Height="182" Style="{StaticResource OrbitRingStyle}">
+                                            <Ellipse.RenderTransform>
+                                                <RotateTransform Angle="0" />
+                                            </Ellipse.RenderTransform>
+                                        </Ellipse>
+                                        <controls:ArcProgress Width="158"
+                                                              Height="158"
+                                                              Value="{Binding ReadinessScore, Mode=OneWay}"
+                                                              Maximum="100"
+                                                              StrokeThickness="7"
+                                                              StartAngle="0"
+                                                              SweepAngle="360"
+                                                              TrackBrush="{DynamicResource RingBrush}"
+                                                              ProgressBrush="{DynamicResource OrangeGradientBrush}" />
+                                        <Border Width="112" Height="112" CornerRadius="56" Background="#E60E1014" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1">
                                             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                                                 <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                                                    <TextBlock Text="{Binding ReadinessScore}" FontSize="28" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
-                                                    <TextBlock Text="/100" Margin="3,12,0,0" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" />
+                                                    <TextBlock Text="{Binding ReadinessScore}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="34" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
+                                                    <TextBlock Text="/100" Margin="3,15,0,0" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" />
                                                 </StackPanel>
-                                                <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Margin="0,2,0,0" FontSize="8" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" HorizontalAlignment="Center" />
-                                                <TextBlock Text="{Binding ReadinessLevelLabel}" Margin="0,4,0,0" FontSize="10" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                                <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" Margin="0,1,0,0" HorizontalAlignment="Center" />
+                                                <TextBlock Text="{Binding ReadinessLevelLabel}" Margin="0,5,0,0" FontSize="10.5" FontWeight="SemiBold" HorizontalAlignment="Center" />
                                             </StackPanel>
                                         </Border>
                                     </Grid>
                                 </Grid>
-                            </ui:Card>
+                            </Border>
 
                             <Grid>
                                 <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="14" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
                                 <Grid>
                                     <Grid.ColumnDefinitions><ColumnDefinition Width="5*" /><ColumnDefinition Width="14" /><ColumnDefinition Width="3*" /></Grid.ColumnDefinitions>
-                                    <ui:Card Grid.Column="0" Padding="20" VerticalAlignment="Stretch">
+
+                                    <!-- Desempenho ao vivo: quatro anéis animados e a cena 3D do último minuto. -->
+                                    <Border Grid.Column="0" Style="{StaticResource GlassCardStyle}" VerticalAlignment="Stretch">
+                                        <Border.RenderTransform>
+                                            <TranslateTransform Y="22" />
+                                        </Border.RenderTransform>
                                         <StackPanel>
                                             <Grid>
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Title], Source={StaticResource LocalizedStrings}}" FontSize="17" FontWeight="SemiBold" />
-                                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Description], Source={StaticResource LocalizedStrings}}" Margin="0,5,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
+                                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="18" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1" Margin="16,0,0,0" HorizontalAlignment="Right">
-                                                    <Border Padding="8,4" Background="#1537C889" BorderBrush="#3A37C889" BorderThickness="1" CornerRadius="7" HorizontalAlignment="Right">
-                                                        <StackPanel Orientation="Horizontal"><Ellipse Width="6" Height="6" Fill="{DynamicResource GreenBrush}" VerticalAlignment="Center" /><TextBlock Text="{Binding [Dashboard.LivePerformance.Live], Source={StaticResource LocalizedStrings}}" Margin="6,0,0,0" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource GreenBrush}" /></StackPanel>
+                                                    <Border Padding="9,5" Background="#1537C889" BorderBrush="#3A37C889" BorderThickness="1" CornerRadius="8" HorizontalAlignment="Right">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <Ellipse Style="{StaticResource LivePulseStyle}" />
+                                                            <TextBlock Text="{Binding [Dashboard.LivePerformance.Live], Source={StaticResource LocalizedStrings}}" Margin="7,0,0,0" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource GreenBrush}" VerticalAlignment="Center" />
+                                                        </StackPanel>
                                                     </Border>
-                                                    <TextBlock Text="{Binding LiveMetricsUpdatedLabel}" Margin="0,5,0,0" FontSize="8.5" Foreground="{DynamicResource TextSubtleBrush}" HorizontalAlignment="Right" />
+                                                    <TextBlock Text="{Binding LiveMetricsUpdatedLabel}" Margin="0,6,0,0" FontSize="8.5" Foreground="{DynamicResource TextSubtleBrush}" HorizontalAlignment="Right" />
                                                 </StackPanel>
                                             </Grid>
 
-                                            <Grid Margin="0,17,0,0">
-                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /><ColumnDefinition Width="8" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                                <Border Grid.Column="0" Padding="12,10" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
-                                                    <StackPanel><TextBlock Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuUsageLabel}" Margin="0,5,0,8" FontSize="18" FontWeight="SemiBold" /><ProgressBar Value="{Binding CpuUsagePercent, Mode=OneWay}" Height="4" /></StackPanel>
+                                            <Grid Margin="0,18,0,0">
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="9" /><ColumnDefinition Width="*" /><ColumnDefinition Width="9" /><ColumnDefinition Width="*" /><ColumnDefinition Width="9" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                <Border Grid.Column="0" Style="{StaticResource MetricTileStyle}">
+                                                    <StackPanel>
+                                                        <Grid Width="82" Height="82" HorizontalAlignment="Center">
+                                                            <controls:ArcProgress Value="{Binding CpuUsagePercent, Mode=OneWay}" StartAngle="140" SweepAngle="280" StrokeThickness="5" TrackBrush="{DynamicResource StrongBorderBrush}" ProgressBrush="{DynamicResource OrangeBrush}" />
+                                                            <TextBlock Text="{Binding CpuUsageLabel}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" HorizontalAlignment="Center" Margin="0,7,0,0" />
+                                                    </StackPanel>
                                                 </Border>
-                                                <Border Grid.Column="2" Padding="12,10" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
-                                                    <StackPanel><TextBlock Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuUsageLabel}" Margin="0,5,0,8" FontSize="18" FontWeight="SemiBold" /><ProgressBar Value="{Binding GpuUsagePercent, Mode=OneWay}" Height="4" Foreground="{DynamicResource BlueBrush}" /></StackPanel>
+                                                <Border Grid.Column="2" Style="{StaticResource MetricTileStyle}">
+                                                    <StackPanel>
+                                                        <Grid Width="82" Height="82" HorizontalAlignment="Center">
+                                                            <controls:ArcProgress Value="{Binding GpuUsagePercent, Mode=OneWay}" StartAngle="140" SweepAngle="280" StrokeThickness="5" TrackBrush="{DynamicResource StrongBorderBrush}" ProgressBrush="{DynamicResource BlueBrush}" />
+                                                            <TextBlock Text="{Binding GpuUsageLabel}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" HorizontalAlignment="Center" Margin="0,7,0,0" />
+                                                    </StackPanel>
                                                 </Border>
-                                                <Border Grid.Column="4" Padding="12,10" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
-                                                    <StackPanel><TextBlock Text="{Binding [Dashboard.LivePerformance.Memory], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding MemoryUsageLabel}" Margin="0,5,0,8" FontSize="18" FontWeight="SemiBold" /><ProgressBar Value="{Binding MemoryUsagePercent, Mode=OneWay}" Height="4" Foreground="{DynamicResource GreenBrush}" /></StackPanel>
+                                                <Border Grid.Column="4" Style="{StaticResource MetricTileStyle}">
+                                                    <StackPanel>
+                                                        <Grid Width="82" Height="82" HorizontalAlignment="Center">
+                                                            <controls:ArcProgress Value="{Binding MemoryUsagePercent, Mode=OneWay}" StartAngle="140" SweepAngle="280" StrokeThickness="5" TrackBrush="{DynamicResource StrongBorderBrush}" ProgressBrush="{DynamicResource GreenBrush}" />
+                                                            <TextBlock Text="{Binding MemoryUsageLabel}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding [Dashboard.LivePerformance.Memory], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" HorizontalAlignment="Center" Margin="0,7,0,0" />
+                                                    </StackPanel>
                                                 </Border>
-                                                <Border Grid.Column="6" Padding="12,10" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
-                                                    <StackPanel><TextBlock Text="{Binding [Dashboard.LivePerformance.Disk], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskUsageLabel}" Margin="0,5,0,8" FontSize="18" FontWeight="SemiBold" /><ProgressBar Value="{Binding DiskUsagePercent, Mode=OneWay}" Height="4" Foreground="{DynamicResource YellowBrush}" /></StackPanel>
+                                                <Border Grid.Column="6" Style="{StaticResource MetricTileStyle}">
+                                                    <StackPanel>
+                                                        <Grid Width="82" Height="82" HorizontalAlignment="Center">
+                                                            <controls:ArcProgress Value="{Binding DiskUsagePercent, Mode=OneWay}" StartAngle="140" SweepAngle="280" StrokeThickness="5" TrackBrush="{DynamicResource StrongBorderBrush}" ProgressBrush="{DynamicResource YellowBrush}" />
+                                                            <TextBlock Text="{Binding DiskUsageLabel}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                                        </Grid>
+                                                        <TextBlock Text="{Binding [Dashboard.LivePerformance.Disk], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" HorizontalAlignment="Center" Margin="0,7,0,0" />
+                                                    </StackPanel>
                                                 </Border>
                                             </Grid>
 
-                                            <Border Margin="0,14,0,0" Padding="14,12" Background="{DynamicResource InsetBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="11">
-                                                <StackPanel>
-                                                    <Grid Margin="0,0,0,10">
+                                            <Border Margin="0,15,0,0" Style="{StaticResource SceneFrameStyle}">
+                                                <Grid>
+                                                    <controls:PerformanceScene3D Height="242"
+                                                                                 IsLive="{Binding IsLiveMetricsActive}"
+                                                                                 CpuValues="{Binding CpuUsageSeries}"
+                                                                                 GpuValues="{Binding GpuUsageSeries}"
+                                                                                 CpuColor="{StaticResource ColorOrange}"
+                                                                                 GpuColor="{StaticResource ColorBlue}"
+                                                                                 AutomationProperties.Name="{Binding [Dashboard.LivePerformance.ChartDescription], Source={StaticResource LocalizedStrings}}" />
+                                                    <Border Background="{DynamicResource SceneFadeBrush}" Height="52" VerticalAlignment="Bottom" IsHitTestVisible="False" />
+                                                    <Grid Margin="15,13" VerticalAlignment="Top" IsHitTestVisible="False">
                                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                                        <StackPanel Orientation="Horizontal"><Ellipse Width="6" Height="6" Fill="{DynamicResource OrangeBrush}" VerticalAlignment="Center" /><TextBlock Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}" Margin="6,0,14,0" FontSize="9" Foreground="{DynamicResource TextMutedBrush}" /><Ellipse Width="6" Height="6" Fill="{DynamicResource BlueBrush}" VerticalAlignment="Center" /><TextBlock Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}" Margin="6,0,0,0" FontSize="9" Foreground="{DynamicResource TextMutedBrush}" /></StackPanel>
-                                                        <StackPanel Grid.Column="1" Orientation="Horizontal"><TextBlock Text="{Binding [Dashboard.LivePerformance.Network], Source={StaticResource LocalizedStrings}}" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding NetworkUsageLabel}" Margin="6,0,0,0" FontSize="9" FontWeight="SemiBold" /></StackPanel>
+                                                        <Border Background="#B00A0B0E" CornerRadius="8" Padding="10,6" HorizontalAlignment="Left">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <Rectangle Width="16" Height="3" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource OrangeBrush}" VerticalAlignment="Center" />
+                                                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}" Margin="7,0,16,0" FontSize="9" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
+                                                                <Rectangle Width="16" Height="3" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource BlueBrush}" VerticalAlignment="Center" />
+                                                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}" Margin="7,0,0,0" FontSize="9" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
+                                                            </StackPanel>
+                                                        </Border>
+                                                        <Border Grid.Column="1" Background="#B00A0B0E" CornerRadius="8" Padding="10,6">
+                                                            <StackPanel Orientation="Horizontal">
+                                                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Network], Source={StaticResource LocalizedStrings}}" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" VerticalAlignment="Center" />
+                                                                <TextBlock Text="{Binding NetworkUsageLabel}" Margin="7,0,0,0" FontSize="9.5" FontWeight="SemiBold" VerticalAlignment="Center" />
+                                                            </StackPanel>
+                                                        </Border>
                                                     </Grid>
-                                                    <Viewbox Height="138" Stretch="Fill" AutomationProperties.Name="{Binding [Dashboard.LivePerformance.ChartDescription], Source={StaticResource LocalizedStrings}}">
-                                                        <Canvas Width="640" Height="110" ClipToBounds="True" IsHitTestVisible="False">
-                                                            <Line X1="0" X2="640" Y1="0" Y2="0" Stroke="{DynamicResource BorderSoftBrush}" StrokeThickness="1" />
-                                                            <Line X1="0" X2="640" Y1="36.5" Y2="36.5" Stroke="{DynamicResource BorderSoftBrush}" StrokeThickness="1" />
-                                                            <Line X1="0" X2="640" Y1="73" Y2="73" Stroke="{DynamicResource BorderSoftBrush}" StrokeThickness="1" />
-                                                            <Line X1="0" X2="640" Y1="109" Y2="109" Stroke="{DynamicResource BorderSoftBrush}" StrokeThickness="1" />
-                                                            <Polyline Points="{Binding CpuUsagePoints}" Stroke="{DynamicResource OrangeBrush}" StrokeThickness="2.5" StrokeLineJoin="Round" />
-                                                            <Polyline Points="{Binding GpuUsagePoints}" Stroke="{DynamicResource BlueBrush}" StrokeThickness="2.5" StrokeLineJoin="Round" />
-                                                        </Canvas>
-                                                    </Viewbox>
-                                                </StackPanel>
+                                                </Grid>
                                             </Border>
                                         </StackPanel>
-                                    </ui:Card>
+                                    </Border>
 
-                                    <ui:Card Grid.Column="2" Padding="20" VerticalAlignment="Stretch">
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding [Dashboard.SystemOverview], Source={StaticResource LocalizedStrings}}" FontSize="16" FontWeight="SemiBold" />
-                                            <TextBlock Text="{Binding [Dashboard.SystemOverview.Description], Source={StaticResource LocalizedStrings}}" Margin="0,5,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
-                                            <StackPanel Margin="0,18,0,0">
-                                                <TextBlock Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding CpuName}" Margin="0,4,0,14" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding CpuName}" />
-                                                <TextBlock Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding GpuDetail}" Margin="0,4,0,14" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" />
-                                                <TextBlock Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding RamLabel}" Margin="0,4,0,14" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" />
-                                                <TextBlock Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" FontSize="8.5" FontWeight="Bold" Foreground="{DynamicResource TextSubtleBrush}" /><TextBlock Text="{Binding DiskLabel}" Margin="0,4,0,0" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                    <!-- Resumo do computador. -->
+                                    <Border Grid.Column="2" Style="{StaticResource GlassCardStyle}" VerticalAlignment="Stretch">
+                                        <Border.RenderTransform>
+                                            <TranslateTransform Y="22" />
+                                        </Border.RenderTransform>
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="Auto" />
+                                                <RowDefinition Height="*" />
+                                            </Grid.RowDefinitions>
+                                            <TextBlock Text="{Binding [Dashboard.SystemOverview], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="17" FontWeight="SemiBold" />
+                                            <TextBlock Grid.Row="1" Text="{Binding [Dashboard.SystemOverview.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
+                                            <StackPanel Grid.Row="2" Margin="0,18,0,0">
+                                                <Grid Margin="0,0,0,12">
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="34" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                    <Border Width="26" Height="26" CornerRadius="8" Background="#1AFF7A18" VerticalAlignment="Top">
+                                                        <TextBlock Text="&#xE950;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" />
+                                                        <TextBlock Text="{Binding CpuName}" Margin="0,3,0,0" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding CpuName}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                                <Grid Margin="0,0,0,12">
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="34" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                    <Border Width="26" Height="26" CornerRadius="8" Background="#1A62A8FF" VerticalAlignment="Top">
+                                                        <TextBlock Text="&#xE7F4;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource BlueBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" />
+                                                        <TextBlock Text="{Binding GpuDetail}" Margin="0,3,0,0" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" />
+                                                    </StackPanel>
+                                                </Grid>
+                                                <Grid Margin="0,0,0,12">
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="34" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                    <Border Width="26" Height="26" CornerRadius="8" Background="#1A37C889" VerticalAlignment="Top">
+                                                        <TextBlock Text="&#xEEA0;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource GreenBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" />
+                                                        <TextBlock Text="{Binding RamLabel}" Margin="0,3,0,0" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                </Grid>
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions><ColumnDefinition Width="34" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                    <Border Width="26" Height="26" CornerRadius="8" Background="#1AEAB64D" VerticalAlignment="Top">
+                                                        <TextBlock Text="&#xEDA2;" FontFamily="Segoe MDL2 Assets" FontSize="12" Foreground="{DynamicResource YellowBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    </Border>
+                                                    <StackPanel Grid.Column="1">
+                                                        <TextBlock Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" />
+                                                        <TextBlock Text="{Binding DiskLabel}" Margin="0,3,0,0" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                                    </StackPanel>
+                                                </Grid>
                                             </StackPanel>
-                                            <Border Margin="0,22,0,0" Padding="12" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="10">
-                                                <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8EF;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource GreenBrush}" VerticalAlignment="Center" /><TextBlock Text="{Binding [Dashboard.LivePerformance.LocalOnly], Source={StaticResource LocalizedStrings}}" Margin="9,0,0,0" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" /></StackPanel>
-                                            </Border>
-                                        </StackPanel>
-                                    </ui:Card>
+                                            <StackPanel Grid.Row="3" VerticalAlignment="Bottom">
+                                                <Border Margin="0,20,0,0" Padding="14" Background="{DynamicResource TileSurfaceBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="11">
+                                                    <StackPanel>
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" VerticalAlignment="Center" />
+                                                            <TextBlock Text="{Binding ReadinessLevelLabel}" Margin="8,0,0,0" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                        <TextBlock Text="{Binding ReadinessScoreExplanation}" Margin="0,7,0,0" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" LineHeight="16" />
+                                                    </StackPanel>
+                                                </Border>
+                                                <Border Margin="0,10,0,0" Padding="12" Background="{DynamicResource TileSurfaceBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="11">
+                                                    <StackPanel Orientation="Horizontal"><TextBlock Text="&#xE8EF;" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource GreenBrush}" VerticalAlignment="Center" /><TextBlock Text="{Binding [Dashboard.LivePerformance.LocalOnly], Source={StaticResource LocalizedStrings}}" Margin="9,0,0,0" FontSize="9.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" /></StackPanel>
+                                                </Border>
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
                                 </Grid>
 
-                                <ui:Card Grid.Row="2" Padding="20">
+                                <Border Grid.Row="2" Style="{StaticResource GlassCardStyle}">
+                                    <Border.RenderTransform>
+                                        <TranslateTransform Y="22" />
+                                    </Border.RenderTransform>
                                     <StackPanel>
-                                        <TextBlock Text="{Binding StreamingReadinessTitle}" FontSize="16" FontWeight="SemiBold" />
-                                        <TextBlock Text="{Binding StreamingReadinessDetail}" Margin="0,6,0,0" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding StreamingReadinessTitle}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="17" FontWeight="SemiBold" />
+                                        <TextBlock Text="{Binding StreamingReadinessDetail}" Margin="0,7,0,0" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
                                         <ItemsControl ItemsSource="{Binding StreamingReadinessItems}" Margin="0,16,0,0">
                                             <ItemsControl.ItemsPanel><ItemsPanelTemplate><primitives:UniformGrid Rows="1" /></ItemsPanelTemplate></ItemsControl.ItemsPanel>
                                             <ItemsControl.ItemTemplate>
                                                 <DataTemplate>
-                                                    <Border Margin="0,0,8,0" Padding="13" Background="{DynamicResource PanelBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="9">
+                                                    <Border Margin="0,0,9,0" Padding="14" Style="{StaticResource MetricTileStyle}">
                                                         <Grid>
-                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="32" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                                                            <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="15" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Top" />
-                                                            <StackPanel Grid.Column="1"><TextBlock Text="{Binding Title}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock Text="{Binding Detail}" Margin="0,3,0,0" FontSize="10.5" Foreground="{DynamicResource TextSubtleBrush}" TextWrapping="Wrap" /></StackPanel>
+                                                            <Grid.ColumnDefinitions><ColumnDefinition Width="36" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                                            <Border Width="28" Height="28" CornerRadius="9" Background="#1AFF7A18" VerticalAlignment="Top">
+                                                                <TextBlock Text="{Binding IconGlyph}" FontFamily="Segoe MDL2 Assets" FontSize="13" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                            </Border>
+                                                            <StackPanel Grid.Column="1" Margin="2,0,0,0"><TextBlock Text="{Binding Title}" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" /><TextBlock Text="{Binding Detail}" Margin="0,4,0,0" FontSize="10.5" Foreground="{DynamicResource TextSubtleBrush}" TextWrapping="Wrap" /></StackPanel>
                                                         </Grid>
                                                     </Border>
                                                 </DataTemplate>
                                             </ItemsControl.ItemTemplate>
                                         </ItemsControl>
                                     </StackPanel>
-                                </ui:Card>
+                                </Border>
                             </Grid>
 
                         </StackPanel>
