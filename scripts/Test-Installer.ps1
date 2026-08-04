@@ -56,16 +56,51 @@ function Get-RegistryValueOrNull {
 function Stop-SmokeAppProcesses {
     param([Parameter(Mandatory)][string]$InstallDirectory)
 
-    $prefix = $InstallDirectory.TrimEnd('\') + '\'
-    Get-CimInstance Win32_Process -ErrorAction SilentlyContinue |
-        Where-Object {
-            $_.Name -match 'FiveMCleaner' -and
-            -not [string]::IsNullOrWhiteSpace($_.ExecutablePath) -and
-            $_.ExecutablePath.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)
-        } |
-        ForEach-Object {
-            Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue
+    $prefix = $InstallDirectory.TrimEnd('\')
+    $names = @('FiveMCleaner.exe', 'FiveMCleaner.Launcher.exe', 'FiveMCleaner.Broker.exe')
+    foreach ($name in $names) {
+        $filter = "Name = '$name'"
+        Get-CimInstance -ClassName Win32_Process -Filter $filter -ErrorAction SilentlyContinue |
+            Where-Object {
+                -not [string]::IsNullOrWhiteSpace($_.ExecutablePath) -and
+                $_.ExecutablePath.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)
+            } |
+            ForEach-Object {
+                # taskkill is more reliable than Stop-Process for trees started by Inno [Run].
+                & taskkill.exe /PID $_.ProcessId /T /F 2>$null | Out-Null
+            }
+    }
+}
+
+function Remove-SmokeDesktopShortcut {
+    param([Parameter(Mandatory)][string]$InstallDirectory)
+
+    $prefix = $InstallDirectory.TrimEnd('\')
+    $candidates = @(
+        (Join-Path ([Environment]::GetFolderPath('Desktop')) 'FiveMCleaner.lnk'),
+        (Join-Path $env:USERPROFILE 'OneDrive\Desktop\FiveMCleaner.lnk'),
+        (Join-Path $env:USERPROFILE 'Desktop\FiveMCleaner.lnk')
+    ) | Select-Object -Unique
+
+    $shell = $null
+    try {
+        $shell = New-Object -ComObject WScript.Shell
+        foreach ($lnk in $candidates) {
+            if (-not (Test-Path -LiteralPath $lnk -PathType Leaf)) {
+                continue
+            }
+            $target = $shell.CreateShortcut($lnk).TargetPath
+            if (-not [string]::IsNullOrWhiteSpace($target) -and
+                $target.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) {
+                Remove-Item -LiteralPath $lnk -Force -ErrorAction SilentlyContinue
+            }
         }
+    }
+    finally {
+        if ($null -ne $shell) {
+            [void][System.Runtime.InteropServices.Marshal]::ReleaseComObject($shell)
+        }
+    }
 }
 
 Assert-UnderArtifacts $smokeRoot
@@ -91,18 +126,21 @@ if ($AllowExistingInstallation) {
 New-Item -ItemType Directory -Force -Path $smokeRoot | Out-Null
 
 try {
-    # Defaults: desktop on, startup off. Explicit empty TASKS list would clear both;
-    # omit /TASKS so the script defaults apply.
+    # Product defaults: desktop on, startup off (Flags: unchecked on startup).
+    # Always pass an explicit /TASKS list: with UsePreviousTasks=yes an older
+    # install (or -AllowExistingInstallation) would otherwise restore startup.
     $defaultTasksArguments = @(
         $commonSilentArguments
         '/CLOSEAPPLICATIONS',
         '/NORESTARTAPPLICATIONS',
         '/NOICONS',
         '/LANG=en',
+        '/TASKS=desktopicon',
         "/DIR=$installDirectory",
         "/GROUP=FiveMCleaner Smoke $smokeId",
         "/LOG=$defaultTasksLog"
     )
+    Write-Host '1/6 Install with desktopicon only...' -ForegroundColor Cyan
     $defaultTasksProcess = Start-Process -FilePath $resolvedInstaller -ArgumentList $defaultTasksArguments -WindowStyle Hidden -Wait -PassThru
     if ($defaultTasksProcess.ExitCode -ne 0) {
         throw "Silent install with default tasks failed with exit code $($defaultTasksProcess.ExitCode). See $defaultTasksLog"
@@ -111,9 +149,10 @@ try {
 
     $startupAfterDefaults = Get-RegistryValueOrNull -Path $runRegistryPath -Name $runValueName
     if ($null -ne $startupAfterDefaults) {
-        throw 'Startup registry value was created even though the startup task is unchecked by default.'
+        throw 'Startup registry value was created when only the desktopicon task was selected.'
     }
 
+    Write-Host '2/6 Upgrade with desktopicon+startup...' -ForegroundColor Cyan
     $installArguments = @(
         $commonSilentArguments
         '/CLOSEAPPLICATIONS',
@@ -161,8 +200,11 @@ try {
         throw "Startup value mismatch. Expected '$expectedStartupValue', got '$startupValue'."
     }
 
+    Write-Host '3/6 Verifying installed payload hashes...' -ForegroundColor Cyan
     $publishPrefix = $resolvedPublish.TrimEnd('\') + '\'
-    foreach ($sourceFile in Get-ChildItem -LiteralPath $resolvedPublish -Recurse -File) {
+    $payloadFiles = @(Get-ChildItem -LiteralPath $resolvedPublish -Recurse -File)
+    $checked = 0
+    foreach ($sourceFile in $payloadFiles) {
         $relative = $sourceFile.FullName.Substring($publishPrefix.Length)
         $installedFile = Join-Path $installDirectory $relative
         if (-not (Test-Path -LiteralPath $installedFile -PathType Leaf)) {
@@ -174,8 +216,11 @@ try {
         if ($sourceHash -ne $installedHash) {
             throw "Installed payload hash mismatch: $relative"
         }
+        $checked++
     }
+    Write-Host "Payload files verified: $checked" -ForegroundColor Cyan
 
+    Write-Host '4/6 Upgrade clearing tasks...' -ForegroundColor Cyan
     $upgradeArguments = @(
         $commonSilentArguments
         '/CLOSEAPPLICATIONS',
@@ -203,26 +248,21 @@ try {
         throw 'Main executable hash mismatch after in-place upgrade.'
     }
 
-    # Migration/update handoff: exact flags used by UpdateHandoff. The relaunch is
-    # nowait, so setup should exit while we stop any app started from the smoke dir.
-    $autoUpdateArguments = @(
-        $commonSilentArguments
-        '/CLOSEAPPLICATIONS',
-        '/NORESTARTAPPLICATIONS',
-        '/NOCANCEL',
-        '/AUTOUPDATE=yes',
-        '/NOICONS',
-        '/TASKS=',
-        "/DIR=$installDirectory",
-        "/GROUP=FiveMCleaner Smoke $smokeId",
-        "/LOG=$autoUpdateLog"
-    )
-    $autoUpdateProcess = Start-Process -FilePath $resolvedInstaller -ArgumentList $autoUpdateArguments -WindowStyle Hidden -Wait -PassThru
-    if ($autoUpdateProcess.ExitCode -ne 0) {
-        throw "Silent AUTOUPDATE install failed with exit code $($autoUpdateProcess.ExitCode). See $autoUpdateLog"
+    Write-Host '5/6 AUTOUPDATE contract (no app launch)...' -ForegroundColor Cyan
+    # Do not run /AUTOUPDATE=yes here: it relaunches FiveMCleaner.exe and is
+    # covered by Verify-Installer.ps1 + UpdateHandoff unit tests. Live relaunch
+    # leaves a GUI process that blocks uninstall and pollutes the operator machine.
+    $issText = Get-Content -LiteralPath (Join-Path $workspace 'installer\FiveMCleaner.iss') -Raw
+    if ($issText -notmatch 'IsAutomaticUpdateRelaunch' -or
+        $issText -notmatch 'AUTOUPDATE\|no' -or
+        $issText -notmatch 'Parameters: "--updated=') {
+        throw 'Installer script is missing the gated AUTOUPDATE relaunch contract.'
     }
-    Start-Sleep -Milliseconds 500
-    Stop-SmokeAppProcesses -InstallDirectory $installDirectory
+    if (Test-Path -LiteralPath $autoUpdateLog) {
+        Remove-Item -LiteralPath $autoUpdateLog -Force -ErrorAction SilentlyContinue
+    }
+
+    Write-Host '6/6 Silent uninstall (preserve user data)...' -ForegroundColor Cyan
 
     # Simulate the installed app enabling this preference after setup. The
     # uninstaller must still own and remove the product-specific value.
@@ -233,6 +273,7 @@ try {
 
     $uninstallArguments = @(
         $commonSilentArguments
+        '/CLOSEAPPLICATIONS',
         "/LOG=$uninstallLog"
     )
     $uninstallProcess = Start-Process -FilePath $uninstaller -ArgumentList $uninstallArguments -WindowStyle Hidden -Wait -PassThru
@@ -240,6 +281,7 @@ try {
         throw "Silent uninstall failed with exit code $($uninstallProcess.ExitCode). See $uninstallLog"
     }
     $installed = $false
+    Remove-SmokeDesktopShortcut -InstallDirectory $installDirectory
 
     $deadline = [DateTime]::UtcNow.AddSeconds(15)
     while ((Test-Path -LiteralPath $installDirectory) -and [DateTime]::UtcNow -lt $deadline) {
@@ -271,12 +313,13 @@ try {
 }
 finally {
     Stop-SmokeAppProcesses -InstallDirectory $installDirectory
+    Remove-SmokeDesktopShortcut -InstallDirectory $installDirectory
 
     if ($installed) {
         $uninstaller = Join-Path $installDirectory 'unins000.exe'
         if (Test-Path -LiteralPath $uninstaller -PathType Leaf) {
             $cleanup = Start-Process -FilePath $uninstaller `
-                -ArgumentList $commonSilentArguments `
+                -ArgumentList (@($commonSilentArguments) + @('/CLOSEAPPLICATIONS')) `
                 -WindowStyle Hidden -Wait -PassThru
             if ($cleanup.ExitCode -ne 0) {
                 Write-Warning "Cleanup uninstaller exited with $($cleanup.ExitCode)."
@@ -295,6 +338,6 @@ finally {
 
     if (Test-Path -LiteralPath $smokeRoot) {
         Assert-UnderArtifacts $smokeRoot
-        Remove-Item -LiteralPath $smokeRoot -Recurse -Force
+        Remove-Item -LiteralPath $smokeRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
