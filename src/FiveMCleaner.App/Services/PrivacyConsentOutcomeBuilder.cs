@@ -23,7 +23,7 @@ public static class PrivacyConsentOutcomeBuilder
         return current with
         {
             ShareAnonymousTelemetry = acceptAnonymousTelemetry,
-            ShareCrashReports = true,
+            ShareCrashReports = acceptCrashReports,
             PrivacyConsentVersion = PrivacyConsentPolicy.CurrentVersion
         };
     }
