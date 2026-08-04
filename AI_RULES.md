@@ -64,7 +64,13 @@ Assuma sempre que outros agentes podem estar trabalhando simultaneamente.
 ## Relatório e conclusão da tarefa
 
 `PROJECT_STATE.md` é o estado **oficial** do projeto e não deve ser alterado
-por tarefas paralelas. Durante uma tarefa isolada, crie ou atualize somente o
+por tarefas paralelas — nem mesmo para registrar o próprio progresso, uma
+descoberta ou um achado de auditoria. Um agente em tarefa isolada que editar
+`PROJECT_STATE.md` diretamente cometeu um erro de processo e deve ser
+corrigido antes da integração; o agente integrador não deve levar essa edição
+adiante, mesmo que o conteúdo em si seja válido — o conteúdo técnico deve ser
+reincorporado via `.ai/tasks/` e só chega a `PROJECT_STATE.md` pela mão do
+integrador. Durante uma tarefa isolada, crie ou atualize somente o
 relatório exclusivo `.ai/tasks/<identificador-da-tarefa>.md`, usando um
 identificador único derivado da tarefa. Ele deve registrar, de forma curta:
 
@@ -139,11 +145,32 @@ autorização explícita.
 
 Um commit local nunca autoriza por si só push, release, publicação de site ou
 deploy. Toda operação remota exige autorização explícita do usuário nesta
-tarefa.
+tarefa, exceto o push automático da branch exclusiva descrito abaixo.
+
+### Push automático da branch exclusiva
+
+Ao concluir uma tarefa em uma branch `ai/<agente>/<tarefa>`, o agente pode
+fazer push automático dessa branch para o remoto sem autorização explícita do
+usuário. Esse push é restrito exclusivamente à branch da tarefa atual; jamais
+é permitido fazer push automático para `main`, `dev/proxima-versao` ou
+qualquer outra branch sem permissão explícita do usuário.
+
+Condições para o push automático:
+
+- a branch deve seguir o padrão `ai/<agente>/<tarefa>` e ser de uso exclusivo
+  do agente atual;
+- o agente deve ter concluído todos os passos de conclusão da tarefa (testes,
+  lint, commit, relatório);
+- o push envia somente essa branch, sem alterar refs remotas de outras
+  branches;
+- se o push remoto falhar (conflito, rejeição, erro de rede), o agente deve
+  informar o usuário e não tentar forçar o push.
 
 ### Push de desenvolvimento
 
-É disparado somente por “push de desenvolvimento” ou equivalente inequívoco.
+É disparado somente por “push de desenvolvimento” ou equivalente inequívoco,
+ou automaticamente ao concluir uma tarefa na branch exclusiva conforme
+descrito acima.
 
 - Se o agente estiver em `ai/*`, envie somente essa branch.
 - Se estiver no modo integrador em `dev/proxima-versao`, envie somente
@@ -256,6 +283,7 @@ Nova tarefa
 → implementação e testes
 → relatório .ai/tasks/
 → commit local automático
+→ push automático da branch exclusiva (sem permissão explícita)
 → pronta para integração
 
 Integração solicitada

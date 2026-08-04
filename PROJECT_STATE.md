@@ -22,14 +22,17 @@
   reporta 3 vulnerabilidades pré-existentes em `wrangler`/`undici`
   (devDependency, correção só via `--force` com breaking change), não
   introduzidas por esta integração.
-- **Não integrada**: `ai/opencode/project-state-gta-mods-debt`. Único commit
-  real é uma mudança de política em `AI_RULES.md` (push automático de
-  branches `ai/*` ao concluir tarefa) — decisão de governança que exige
-  aprovação explícita do usuário, não decisão mecânica de integração. Também
-  editou `PROJECT_STATE.md` diretamente a partir de uma tarefa paralela, o que
-  as próprias regras proíbem. O único conteúdo técnico (auditoria de fusos
-  horários) já está coberto pelas correções reais de `ai/hermes/timezone-fix`,
-  que foi integrado. Branch e worktree preservados sem alteração.
+- **`ai/opencode/project-state-gta-mods-debt`**: a política de push automático
+  proposta por essa branch foi aprovada pelo usuário em 04/08/2026 e aplicada
+  manualmente ao `AI_RULES.md` (não via `git merge` — a branch havia divergido
+  de antes das 9 integrações acima; um merge de verdade reverteria ~4500
+  linhas já integradas). Ao mesmo tempo, `AI_RULES.md` ganhou reforço
+  explícito de que uma tarefa paralela nunca deve editar `PROJECT_STATE.md`
+  diretamente, nem para registrar achados de auditoria — o que essa própria
+  branch fez, violando a regra. O único conteúdo técnico dela (auditoria de
+  fusos horários) já está coberto pelas correções reais de
+  `ai/hermes/timezone-fix`, integrado. Branch local/remota preservada até o
+  usuário confirmar que pode ser removida.
 
 ## PENDENTE IMPORTANTE — verificação de ID Token Firebase no backend
 
