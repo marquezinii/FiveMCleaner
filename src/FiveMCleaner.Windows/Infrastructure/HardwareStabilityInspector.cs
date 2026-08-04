@@ -66,10 +66,7 @@ public sealed class WindowsHardwareStabilityInspector : IHardwareStabilityInspec
                     }
 
                     total++;
-                    var description = SafeFormatDescription(entry);
-                    if (description is not null
-                        && (description.Contains("memory", StringComparison.OrdinalIgnoreCase)
-                            || description.Contains("memória", StringComparison.OrdinalIgnoreCase)))
+                    if (IsMemoryRelatedWheaEvent(entry))
                     {
                         memoryFlavored++;
                     }
@@ -86,15 +83,18 @@ public sealed class WindowsHardwareStabilityInspector : IHardwareStabilityInspec
         }
     }
 
-    private static string? SafeFormatDescription(EventRecord entry)
+    private static bool IsMemoryRelatedWheaEvent(EventRecord entry)
     {
         try
         {
-            return entry.FormatDescription();
+            var xml = entry.ToXml();
+            return xml.Contains("Memory", StringComparison.OrdinalIgnoreCase)
+                || xml.Contains("Memória", StringComparison.OrdinalIgnoreCase)
+                || xml.Contains("Memoria", StringComparison.OrdinalIgnoreCase);
         }
         catch (EventLogException)
         {
-            return null;
+            return false;
         }
     }
 

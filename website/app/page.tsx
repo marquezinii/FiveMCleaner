@@ -180,7 +180,7 @@ const copy = {
       body: "O instalador inclui o runtime necessário. Não é preciso procurar .NET, pacotes extras ou executar comandos manualmente.",
       systemTitle: "Requisitos",
       items: [
-        "Windows 10 22H2 ou Windows 11",
+        "Windows 10 2004 ou Windows 11",
         "Sistema x64 (64 bits)",
         "Permissão de administrador nas ações de sistema",
         "Conexão apenas para atualizações e relatórios opcionais",
@@ -422,7 +422,7 @@ const copy = {
       body: "The installer includes the required runtime. You do not need to find .NET, install extra packages or run commands manually.",
       systemTitle: "Requirements",
       items: [
-        "Windows 10 22H2 or Windows 11",
+        "Windows 10 2004 or Windows 11",
         "x64 (64-bit) system",
         "Administrator permission for system actions",
         "Connection only for updates and optional reports",

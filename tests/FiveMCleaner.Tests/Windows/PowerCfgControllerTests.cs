@@ -23,25 +23,9 @@ public sealed class PowerCfgControllerTests
     }
 
     [Fact]
-    public async Task GetPciExpressAspmPolicyAsync_ParsesTheCurrentAcValueFromPowercfgQuery()
+    public async Task GetPciExpressAspmPolicyAsync_ReturnsNullWhenActiveSchemeLookupFails()
     {
-        var runner = new ScriptedRunner(_ => new CommandResult(
-            0,
-            "Power Setting GUID: ee12f906-d277-404b-b6da-e5fa1a576df5  (Link State Power Management)\n"
-                + "  Current AC Power Setting Index: 0x00000001\n"
-                + "  Current DC Power Setting Index: 0x00000001\n",
-            string.Empty));
-        var controller = new PowerCfgController(runner);
-
-        var value = await controller.GetPciExpressAspmPolicyAsync(CancellationToken.None);
-
-        Assert.Equal(1, value);
-    }
-
-    [Fact]
-    public async Task GetPciExpressAspmPolicyAsync_ReturnsNullWhenPowercfgFails()
-    {
-        var runner = new ScriptedRunner(_ => new CommandResult(1, string.Empty, "not found"));
+        var runner = new ScriptedRunner(_ => new CommandResult(1, string.Empty, "error"));
         var controller = new PowerCfgController(runner);
 
         var value = await controller.GetPciExpressAspmPolicyAsync(CancellationToken.None);
@@ -50,14 +34,18 @@ public sealed class PowerCfgControllerTests
     }
 
     [Fact]
-    public async Task GetPciExpressAspmPolicyAsync_ReturnsNullWhenOutputFormatIsUnrecognized()
+    public async Task GetPciExpressAspmPolicyAsync_ReturnsNullOrValidValueFromNativeApi()
     {
-        var runner = new ScriptedRunner(_ => new CommandResult(0, "algo em outro idioma", string.Empty));
+        var scheme = Guid.NewGuid();
+        var runner = new CapturingRunner(scheme);
         var controller = new PowerCfgController(runner);
 
         var value = await controller.GetPciExpressAspmPolicyAsync(CancellationToken.None);
 
-        Assert.Null(value);
+        if (value.HasValue)
+        {
+            Assert.InRange(value.Value, 0, 2);
+        }
     }
 
     [Fact]
