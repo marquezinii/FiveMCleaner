@@ -52,6 +52,36 @@
         <GradientStop Color="#FF9A44" Offset="0" />
         <GradientStop Color="#FF6A00" Offset="1" />
     </LinearGradientBrush>
+    <!-- Superfícies em vidro da Visão geral. -->
+    <LinearGradientBrush x:Key="GlassSurfaceBrush" StartPoint="0,0" EndPoint="0.35,1">
+        <GradientStop Color="#15171C" Offset="0" />
+        <GradientStop Color="#111318" Offset="0.55" />
+        <GradientStop Color="#0D0F13" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="GlassBorderBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#2E323B" Offset="0" />
+        <GradientStop Color="#1E2128" Offset="0.5" />
+        <GradientStop Color="#191C22" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="TileSurfaceBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#14161B" Offset="0" />
+        <GradientStop Color="#0E1014" Offset="1" />
+    </LinearGradientBrush>
+    <RadialGradientBrush x:Key="HeroSurfaceBrush" GradientOrigin="0.86,0.12" Center="0.86,0.12" RadiusX="1.15" RadiusY="1.5">
+        <GradientStop Color="#2A1D14" Offset="0" />
+        <GradientStop Color="#17171B" Offset="0.42" />
+        <GradientStop Color="#0E1013" Offset="1" />
+    </RadialGradientBrush>
+    <LinearGradientBrush x:Key="HeroBorderBrush" StartPoint="1,0" EndPoint="0,1">
+        <GradientStop Color="#5A3A1E" Offset="0" />
+        <GradientStop Color="#25282F" Offset="0.4" />
+        <GradientStop Color="#1B1E24" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="SceneFadeBrush" StartPoint="0,1" EndPoint="0,0">
+        <GradientStop Color="#CC0C0E11" Offset="0" />
+        <GradientStop Color="#000C0E11" Offset="1" />
+    </LinearGradientBrush>
+
     <LinearGradientBrush x:Key="HeroGradientBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#1B1715" Offset="0" />
         <GradientStop Color="#141519" Offset="0.56" />

@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using System.Windows;
-using System.Windows.Media;
 using System.Windows.Threading;
 using FiveMCleaner.App.Services;
 using FiveMCleaner.Contracts;
@@ -28,8 +27,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private static readonly TimeSpan HeadlineMinimumDwell = TimeSpan.FromSeconds(6);
     private static readonly TimeSpan LiveMetricsInterval = TimeSpan.FromSeconds(2);
     private const int LiveMetricsHistoryCapacity = 30;
-    private const double LiveMetricsGraphWidth = 640;
-    private const double LiveMetricsGraphHeight = 110;
     private DispatcherTimer? headlineDwellTimer;
     private DateTime headlineShownAtUtc;
     private CancellationTokenSource? operationCancellation;
@@ -72,8 +69,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private string diskUsageLabel = string.Empty;
     private string networkUsageLabel = string.Empty;
     private string liveMetricsUpdatedLabel = string.Empty;
-    private PointCollection cpuUsagePoints = [];
-    private PointCollection gpuUsagePoints = [];
+    private IReadOnlyList<double> cpuUsageSeries = [];
+    private IReadOnlyList<double> gpuUsageSeries = [];
     private readonly Queue<double> cpuUsageHistory = new();
     private readonly Queue<double> gpuUsageHistory = new();
     private DispatcherTimer? liveMetricsTimer;
@@ -258,9 +255,15 @@ public sealed class MainViewModel : BindableBase, IDisposable
 
     public string LiveMetricsUpdatedLabel { get => liveMetricsUpdatedLabel; private set => SetProperty(ref liveMetricsUpdatedLabel, value); }
 
-    public PointCollection CpuUsagePoints { get => cpuUsagePoints; private set => SetProperty(ref cpuUsagePoints, value); }
+    /// <summary>
+    /// Histórico de CPU em porcentagem, da amostra mais antiga para a mais
+    /// recente. A cena 3D da Visão geral consome os valores crus e cuida da
+    /// projeção; o modelo não conhece geometria de tela.
+    /// </summary>
+    public IReadOnlyList<double> CpuUsageSeries { get => cpuUsageSeries; private set => SetProperty(ref cpuUsageSeries, value); }
 
-    public PointCollection GpuUsagePoints { get => gpuUsagePoints; private set => SetProperty(ref gpuUsagePoints, value); }
+    /// <summary>Histórico de GPU em porcentagem, na mesma ordem de <see cref="CpuUsageSeries"/>.</summary>
+    public IReadOnlyList<double> GpuUsageSeries { get => gpuUsageSeries; private set => SetProperty(ref gpuUsageSeries, value); }
 
     public string LightImpactLabel { get => lightImpactLabel; private set => SetProperty(ref lightImpactLabel, value); }
 
@@ -734,9 +737,20 @@ public sealed class MainViewModel : BindableBase, IDisposable
         }
     }
 
+    /// <summary>
+    /// Verdadeiro enquanto a Visão geral está ativa e coletando. A cena 3D usa
+    /// esse estado para parar de animar quando a página sai de cena ou a janela
+    /// vai para a bandeja, em vez de girar sem ninguém olhando.
+    /// </summary>
+    public bool IsLiveMetricsActive
+    {
+        get => liveMetricsEnabled;
+        private set => SetProperty(ref liveMetricsEnabled, value);
+    }
+
     public void SetLiveMetricsEnabled(bool enabled)
     {
-        liveMetricsEnabled = enabled;
+        IsLiveMetricsActive = enabled;
         if (!enabled)
         {
             liveMetricsTimer?.Stop();
@@ -809,8 +823,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             AddMetricSample(cpuUsageHistory, snapshot.CpuPercent);
             AddMetricSample(gpuUsageHistory, snapshot.GpuPercent);
-            CpuUsagePoints = BuildMetricPoints(cpuUsageHistory);
-            GpuUsagePoints = BuildMetricPoints(gpuUsageHistory);
+            CpuUsageSeries = cpuUsageHistory.ToArray();
+            GpuUsageSeries = gpuUsageHistory.ToArray();
         }
     }
 
@@ -830,22 +844,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             history.Dequeue();
         }
-    }
-
-    private static PointCollection BuildMetricPoints(IReadOnlyCollection<double> history)
-    {
-        var values = history.ToArray();
-        var points = new PointCollection(values.Length);
-        for (var index = 0; index < values.Length; index++)
-        {
-            var x = values.Length == 1
-                ? LiveMetricsGraphWidth
-                : index * LiveMetricsGraphWidth / (values.Length - 1);
-            var y = LiveMetricsGraphHeight * (1 - (values[index] / 100));
-            points.Add(new System.Windows.Point(x, y));
-        }
-
-        return points;
     }
 
     /// <summary>
