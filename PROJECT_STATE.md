@@ -1,5 +1,21 @@
 # Estado do Projeto
 
+## Integração de 2 tarefas de IA em `dev/proxima-versao` — 05/08/2026
+
+- Integradas em `dev/proxima-versao`: `ai/claude/live-monitor-2d`
+  (substituição da cena 3D por gráfico 2D leve com leitura sob cursor, correção
+  do bug de struct PDH — CPU/disco sempre 0%) e
+  `ai/opencode/startup-audit-fix` (race condition no StreamingSoftwareDetector,
+  fire-and-forget inseguro no AuthService, double dispose, cache de
+  PerformanceCounter, restauração de sessão não bloqueante).
+- Ambos os merges (`--no-ff`) fecharam sem conflito manual; auto-merge
+  resolution em `MainWindow.xaml.cs`, `AppOptimizationService.cs` e
+  `ResourceUsageInspector.cs`.
+- Validação integrada: build Release sem avisos, 725 testes .NET,
+  `Verify-Safety.ps1`, `dotnet format --verify-no-changes` e `git diff --check`
+  aprovados. Atalho de desenvolvimento reconstruído e confirmado apontando para
+  `scripts\Start-DevelopmentApp.ps1`.
+
 ## Cadastro com Nome, Sobrenome e Usuário único — 04/08/2026
 
 - Repostos Nome e Sobrenome (lado a lado) e um Usuário único no cadastro,
