@@ -683,6 +683,35 @@
   <data name="Dashboard.LivePerformance.ChartDescription" xml:space="preserve"><value>Histórico de uso da CPU e GPU no último minuto.</value></data>
   <data name="Dashboard.LivePerformance.LocalOnly" xml:space="preserve"><value>Leitura local. Nada é enviado pela internet.</value></data>
   <data name="Dashboard.SystemOverview.Description" xml:space="preserve"><value>Hardware detectado e disponível para FiveM e GTA V.</value></data>
+  <data name="Dashboard.Eyebrow" xml:space="preserve"><value>DIAGNÓSTICO LOCAL</value></data>
+  <data name="Dashboard.LastScan" xml:space="preserve"><value>Última varredura às {0}</value></data>
+  <data name="Dashboard.LastScan.Pending" xml:space="preserve"><value>Analisando…</value></data>
+  <data name="Dashboard.OpenHistory" xml:space="preserve"><value>Ver histórico</value></data>
+  <data name="Dashboard.Kpi.GigabyteValue" xml:space="preserve"><value>{0:0.0} GB</value></data>
+  <data name="Dashboard.Kpi.MegabyteValue" xml:space="preserve"><value>{0:0} MB</value></data>
+  <data name="Dashboard.Kpi.Pressure.Title" xml:space="preserve"><value>PRESSÃO DE DESEMPENHO</value></data>
+  <data name="Dashboard.Kpi.Cores.Title" xml:space="preserve"><value>NÚCLEOS LÓGICOS</value></data>
+  <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Informados pelo Windows</value></data>
+  <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>MEMÓRIA LIVRE</value></data>
+  <data name="Dashboard.Kpi.Memory.Detail" xml:space="preserve"><value>de {0:0.0} GB no total</value></data>
+  <data name="Dashboard.Kpi.Disk.Title" xml:space="preserve"><value>ESPAÇO LIVRE</value></data>
+  <data name="Dashboard.Kpi.Disk.Detail" xml:space="preserve"><value>No disco do sistema</value></data>
+  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHE DO FIVEM</value></data>
+  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisado pelo otimizador</value></data>
+  <data name="Dashboard.Kpi.Cache.None" xml:space="preserve"><value>Nenhum</value></data>
+  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>Nenhum cache encontrado no disco</value></data>
+  <data name="Dashboard.Pressure.Low" xml:space="preserve"><value>Baixa</value></data>
+  <data name="Dashboard.Pressure.Moderate" xml:space="preserve"><value>Moderada</value></data>
+  <data name="Dashboard.Pressure.High" xml:space="preserve"><value>Alta</value></data>
+  <data name="Dashboard.LivePerformance.MemoryDetail" xml:space="preserve"><value>{0:0.0} / {1:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.TrendValue" xml:space="preserve"><value>média {0:0}% · pico {1:0}%</value></data>
+  <data name="Dashboard.LivePerformance.Trend" xml:space="preserve"><value>MÉDIA E PICO</value></data>
+  <data name="Dashboard.LivePerformance.Window" xml:space="preserve"><value>Último minuto</value></data>
+  <data name="Dashboard.LivePerformance.Now" xml:space="preserve"><value>agora</value></data>
+  <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>Última otimização</value></data>
+  <data name="Dashboard.LastRun.None.Title" xml:space="preserve"><value>Nenhuma otimização ainda</value></data>
+  <data name="Dashboard.LastRun.None.Detail" xml:space="preserve"><value>Execute o otimizador para criar um ponto de restauração e um relatório que você poderá consultar aqui.</value></data>
+  <data name="Dashboard.Detection.Title" xml:space="preserve"><value>DETECÇÃO</value></data>
   <data name="Error.Network" xml:space="preserve"><value>Não foi possível conectar agora. Verifique a internet e tente novamente.</value></data>
   <data name="Error.Timeout" xml:space="preserve"><value>Esta ação demorou mais que o esperado. Tente novamente em instantes.</value></data>
   <data name="Error.AccessDenied" xml:space="preserve"><value>O Windows não permitiu esta ação. Verifique a permissão necessária e tente novamente.</value></data>

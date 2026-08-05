@@ -457,6 +457,12 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         Navigate(OptimizerPage);
     }
 
+    private void OpenHistory_Click(object sender, RoutedEventArgs e)
+    {
+        ActivateNavItem(HistoryNav);
+        Navigate(HistoryPage);
+    }
+
     private void ChangeMode_Click(object sender, RoutedEventArgs e) => ProfileSelectorSection.BringIntoView();
 
     private void Navigate(UIElement page)

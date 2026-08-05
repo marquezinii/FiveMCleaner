@@ -12,7 +12,11 @@ public sealed record LiveSystemMetricsSnapshot(
     double? MemoryPercent,
     double? DiskPercent,
     double NetworkThroughputMBps,
-    DateTimeOffset CapturedAt);
+    DateTimeOffset CapturedAt,
+    /// <summary>Physical memory in use, in GiB, or null when Windows did not report it.</summary>
+    double? UsedMemoryGiB = null,
+    /// <summary>Total physical memory, in GiB, or null when Windows did not report it.</summary>
+    double? TotalMemoryGiB = null);
 
 public interface ILiveSystemMetricsProvider
 {
@@ -51,13 +55,23 @@ public sealed class WindowsLiveSystemMetricsProvider : ILiveSystemMetricsProvide
             ? 100d * (system.TotalMemoryBytes - system.AvailableMemoryBytes) / system.TotalMemoryBytes
             : null;
 
+        const double bytesPerGiB = 1024d * 1024 * 1024;
+        double? totalMemoryGiB = system.TotalMemoryBytes > 0
+            ? system.TotalMemoryBytes / bytesPerGiB
+            : null;
+        double? usedMemoryGiB = totalMemoryGiB is null
+            ? null
+            : Math.Max(0, (system.TotalMemoryBytes - system.AvailableMemoryBytes) / bytesPerGiB);
+
         return new LiveSystemMetricsSnapshot(
             usage.CpuPercent,
             usage.GpuPercent,
             memoryPercent is { } value ? Math.Clamp(value, 0, 100) : null,
             usage.DiskPercent,
             usage.NetworkThroughputMBps,
-            capturedAt);
+            capturedAt,
+            usedMemoryGiB,
+            totalMemoryGiB);
     }
 
     public void Dispose()

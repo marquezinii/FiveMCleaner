@@ -61,6 +61,25 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private string streamingReadinessTitle = string.Empty;
     private string streamingReadinessDetail = string.Empty;
     private string readinessLevelLabel = string.Empty;
+    private string logicalProcessorLabel = string.Empty;
+    private string logicalProcessorDetail = string.Empty;
+    private string availableMemoryLabel = string.Empty;
+    private string availableMemoryDetail = string.Empty;
+    private string freeDiskLabel = string.Empty;
+    private string freeDiskDetail = string.Empty;
+    private string legacyCacheLabel = string.Empty;
+    private string legacyCacheDetail = string.Empty;
+    private string performancePressureLabel = string.Empty;
+    private string performancePressureBrushKey = "TextMutedBrush";
+    private string systemArchitectureLabel = string.Empty;
+    private string lastScanLabel = string.Empty;
+    private string lastOptimizationTitle = string.Empty;
+    private string lastOptimizationDateLabel = string.Empty;
+    private string lastOptimizationSummary = string.Empty;
+    private bool hasLastOptimization;
+    private string memoryUsageDetailLabel = string.Empty;
+    private string cpuTrendLabel = string.Empty;
+    private string gpuTrendLabel = string.Empty;
     private double cpuUsagePercent;
     private double gpuUsagePercent;
     private double memoryUsagePercent;
@@ -237,6 +256,48 @@ public sealed class MainViewModel : BindableBase, IDisposable
 
     public string ReadinessLevelLabel { get => readinessLevelLabel; private set => SetProperty(ref readinessLevelLabel, value); }
 
+    /// <summary>Logical processor count reported by the local scan, as a bare number.</summary>
+    public string LogicalProcessorLabel { get => logicalProcessorLabel; private set => SetProperty(ref logicalProcessorLabel, value); }
+
+    public string LogicalProcessorDetail { get => logicalProcessorDetail; private set => SetProperty(ref logicalProcessorDetail, value); }
+
+    /// <summary>Free physical memory at scan time (e.g. "12,4 GB").</summary>
+    public string AvailableMemoryLabel { get => availableMemoryLabel; private set => SetProperty(ref availableMemoryLabel, value); }
+
+    public string AvailableMemoryDetail { get => availableMemoryDetail; private set => SetProperty(ref availableMemoryDetail, value); }
+
+    /// <summary>Free space on the system drive (e.g. "428 GB").</summary>
+    public string FreeDiskLabel { get => freeDiskLabel; private set => SetProperty(ref freeDiskLabel, value); }
+
+    public string FreeDiskDetail { get => freeDiskDetail; private set => SetProperty(ref freeDiskDetail, value); }
+
+    /// <summary>
+    /// Size of the FiveM server cache found on disk. This is the single number
+    /// that most often explains why the optimizer has something to do, so the
+    /// overview shows it instead of leaving the user to guess.
+    /// </summary>
+    public string LegacyCacheLabel { get => legacyCacheLabel; private set => SetProperty(ref legacyCacheLabel, value); }
+
+    public string LegacyCacheDetail { get => legacyCacheDetail; private set => SetProperty(ref legacyCacheDetail, value); }
+
+    public string PerformancePressureLabel { get => performancePressureLabel; private set => SetProperty(ref performancePressureLabel, value); }
+
+    public string PerformancePressureBrushKey { get => performancePressureBrushKey; private set => SetProperty(ref performancePressureBrushKey, value); }
+
+    public string SystemArchitectureLabel { get => systemArchitectureLabel; private set => SetProperty(ref systemArchitectureLabel, value); }
+
+    /// <summary>When the last local scan finished, already localized.</summary>
+    public string LastScanLabel { get => lastScanLabel; private set => SetProperty(ref lastScanLabel, value); }
+
+    public string LastOptimizationTitle { get => lastOptimizationTitle; private set => SetProperty(ref lastOptimizationTitle, value); }
+
+    public string LastOptimizationDateLabel { get => lastOptimizationDateLabel; private set => SetProperty(ref lastOptimizationDateLabel, value); }
+
+    public string LastOptimizationSummary { get => lastOptimizationSummary; private set => SetProperty(ref lastOptimizationSummary, value); }
+
+    /// <summary>False when this machine has never completed an optimization.</summary>
+    public bool HasLastOptimization { get => hasLastOptimization; private set => SetProperty(ref hasLastOptimization, value); }
+
     public double CpuUsagePercent { get => cpuUsagePercent; private set => SetProperty(ref cpuUsagePercent, value); }
 
     public double GpuUsagePercent { get => gpuUsagePercent; private set => SetProperty(ref gpuUsagePercent, value); }
@@ -254,6 +315,15 @@ public sealed class MainViewModel : BindableBase, IDisposable
     public string DiskUsageLabel { get => diskUsageLabel; private set => SetProperty(ref diskUsageLabel, value); }
 
     public string NetworkUsageLabel { get => networkUsageLabel; private set => SetProperty(ref networkUsageLabel, value); }
+
+    /// <summary>Live memory reading in absolute terms (e.g. "12,4 / 31,9 GB").</summary>
+    public string MemoryUsageDetailLabel { get => memoryUsageDetailLabel; private set => SetProperty(ref memoryUsageDetailLabel, value); }
+
+    /// <summary>Average and peak CPU over the samples currently plotted.</summary>
+    public string CpuTrendLabel { get => cpuTrendLabel; private set => SetProperty(ref cpuTrendLabel, value); }
+
+    /// <summary>Average and peak GPU over the samples currently plotted.</summary>
+    public string GpuTrendLabel { get => gpuTrendLabel; private set => SetProperty(ref gpuTrendLabel, value); }
 
     public string LiveMetricsUpdatedLabel { get => liveMetricsUpdatedLabel; private set => SetProperty(ref liveMetricsUpdatedLabel, value); }
 
@@ -817,6 +887,9 @@ public sealed class MainViewModel : BindableBase, IDisposable
         NetworkUsageLabel = localization.Format(
             "Dashboard.LivePerformance.NetworkValue",
             snapshot.NetworkThroughputMBps);
+        MemoryUsageDetailLabel = snapshot is { UsedMemoryGiB: { } used, TotalMemoryGiB: { } total }
+            ? localization.Format("Dashboard.LivePerformance.MemoryDetail", used, total)
+            : string.Empty;
         LiveMetricsUpdatedLabel = localization.Format(
             "Dashboard.LivePerformance.Updated",
             snapshot.CapturedAt.ToLocalTime().ToString("HH:mm:ss"));
@@ -828,6 +901,27 @@ public sealed class MainViewModel : BindableBase, IDisposable
             CpuUsageSeries = cpuUsageHistory.ToArray();
             GpuUsageSeries = gpuUsageHistory.ToArray();
         }
+
+        CpuTrendLabel = DescribeTrend(cpuUsageHistory);
+        GpuTrendLabel = DescribeTrend(gpuUsageHistory);
+    }
+
+    /// <summary>
+    /// Average and peak of the samples currently plotted. Both come from the
+    /// same history the chart draws, so the summary never contradicts the line
+    /// above it; an empty history reports no reading instead of "0%".
+    /// </summary>
+    private string DescribeTrend(Queue<double> history)
+    {
+        if (history.Count == 0)
+        {
+            return localization.GetString("Dashboard.LivePerformance.NotAvailable");
+        }
+
+        return localization.Format(
+            "Dashboard.LivePerformance.TrendValue",
+            history.Average(),
+            history.Max());
     }
 
     private string FormatLivePercent(double? value) => value is { } available
@@ -1410,6 +1504,29 @@ public sealed class MainViewModel : BindableBase, IDisposable
             : localization.Format("Diagnosis.MemoryModules", value.TotalMemoryGiB, value.MemoryModuleLayout);
         DiskLabel = localization.Format("Diagnosis.DiskCapacity", value.FreeDiskGiB);
         WindowsLabel = value.OsLabel;
+        SystemArchitectureLabel = value.SystemArchitecture;
+        LogicalProcessorLabel = value.LogicalProcessorCount.ToString(localization.CurrentCulture);
+        LogicalProcessorDetail = localization.GetString("Dashboard.Kpi.Cores.Detail");
+        AvailableMemoryLabel = localization.Format("Dashboard.Kpi.GigabyteValue", value.AvailableMemoryGiB);
+        AvailableMemoryDetail = localization.Format("Dashboard.Kpi.Memory.Detail", value.TotalMemoryGiB);
+        FreeDiskLabel = localization.Format("Dashboard.Kpi.GigabyteValue", value.FreeDiskGiB);
+        FreeDiskDetail = localization.GetString("Dashboard.Kpi.Disk.Detail");
+        (LegacyCacheLabel, LegacyCacheDetail) = DescribeLegacyCache(value.LegacyCacheBytes);
+        PerformancePressureLabel = value.PerformancePressure switch
+        {
+            PerformancePressureLevel.Low => localization.GetString("Dashboard.Pressure.Low"),
+            PerformancePressureLevel.High => localization.GetString("Dashboard.Pressure.High"),
+            _ => localization.GetString("Dashboard.Pressure.Moderate")
+        };
+        PerformancePressureBrushKey = value.PerformancePressure switch
+        {
+            PerformancePressureLevel.Low => "GreenBrush",
+            PerformancePressureLevel.High => "RedBrush",
+            _ => "YellowBrush"
+        };
+        LastScanLabel = localization.Format(
+            "Dashboard.LastScan",
+            DateTime.Now.ToString("HH:mm", localization.CurrentCulture));
         ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
         ReadinessScore = value.ReadinessScore;
         ReadinessLevelLabel = ReadinessScore switch
@@ -1447,6 +1564,27 @@ public sealed class MainViewModel : BindableBase, IDisposable
         };
         ApplyStreamingReadiness(value);
         ApplyProfileImpact(value.PerformancePressure);
+    }
+
+    /// <summary>
+    /// Formats the FiveM cache footprint for the overview. Below one gibibyte
+    /// the value is shown in mebibytes so a small cache does not collapse into
+    /// "0,0 GB"; a missing installation reports no size instead of a zero.
+    /// </summary>
+    private (string Value, string Detail) DescribeLegacyCache(long bytes)
+    {
+        if (bytes <= 0)
+        {
+            return (
+                localization.GetString("Dashboard.Kpi.Cache.None"),
+                localization.GetString("Dashboard.Kpi.Cache.NoneDetail"));
+        }
+
+        const double bytesPerMiB = 1024d * 1024;
+        var value = bytes >= 1024L * 1024 * 1024
+            ? localization.Format("Dashboard.Kpi.GigabyteValue", bytes / (bytesPerMiB * 1024))
+            : localization.Format("Dashboard.Kpi.MegabyteValue", bytes / bytesPerMiB);
+        return (value, localization.GetString("Dashboard.Kpi.Cache.Detail"));
     }
 
     private void ApplyProfileImpact(PerformancePressureLevel pressure)
@@ -1516,10 +1654,17 @@ public sealed class MainViewModel : BindableBase, IDisposable
         };
         var icon = check.Kind switch
         {
-            StreamingReadinessCheckKind.Software => "\uE8A5",
-            StreamingReadinessCheckKind.Resources => "\uE950",
-            StreamingReadinessCheckKind.GameSession => "\uE7FC",
-            _ => "\uE946"
+            StreamingReadinessCheckKind.Software => "IconStream",
+            StreamingReadinessCheckKind.Resources => "IconPulse",
+            StreamingReadinessCheckKind.GameSession => "IconGame",
+            _ => "IconInfo"
+        };
+        var tone = check.Tone switch
+        {
+            StreamingReadinessTone.Protected => "GreenBrush",
+            StreamingReadinessTone.Ready => "GreenBrush",
+            StreamingReadinessTone.Caution => "YellowBrush",
+            _ => "TextSubtleBrush"
         };
         var title = localization.GetString($"Streaming.Check.{check.Kind}.{suffix}.Title");
         var detail = check.Kind == StreamingReadinessCheckKind.Software
@@ -1529,7 +1674,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
                 string.Join(", ", check.ApplicationNames))
             : localization.GetString($"Streaming.Check.{check.Kind}.{suffix}.Detail");
 
-        return new StreamingReadinessDisplayItem(icon, title, detail);
+        return new StreamingReadinessDisplayItem(icon, title, detail, tone);
     }
 
     private void ApplySettings(AppSettings settings)
@@ -1600,7 +1745,36 @@ public sealed class MainViewModel : BindableBase, IDisposable
                 false));
         }
 
+        ApplyLastOptimization(records);
         OnPropertyChanged(nameof(CanRevertLastOptimization));
+    }
+
+    /// <summary>
+    /// Summarizes the most recent run for the overview. With no history at all
+    /// the card explains that state instead of disappearing and leaving a gap
+    /// in the page.
+    /// </summary>
+    private void ApplyLastOptimization(IReadOnlyList<AppHistoryRecord> records)
+    {
+        var latest = records.Count == 0
+            ? null
+            : records.OrderByDescending(item => item.CreatedAt).First();
+
+        HasLastOptimization = latest is not null;
+        if (latest is null)
+        {
+            LastOptimizationTitle = localization.GetString("Dashboard.LastRun.None.Title");
+            LastOptimizationDateLabel = string.Empty;
+            LastOptimizationSummary = localization.GetString("Dashboard.LastRun.None.Detail");
+            return;
+        }
+
+        LastOptimizationTitle = localization.Format("History.ProfileTitle", ProfileName(latest.Profile));
+        LastOptimizationDateLabel = latest.CreatedAt.LocalDateTime.ToString("g", localization.CurrentCulture);
+        LastOptimizationSummary = localization.Format(
+            "History.AdjustmentsState",
+            latest.ChangedActions,
+            latest.State);
     }
 
     private void RefreshPlan()
@@ -2179,6 +2353,18 @@ public sealed class MainViewModel : BindableBase, IDisposable
             IsGtaVLegacyDetected = false;
             RecommendationTitle = localization.GetString("Status.AnalyzingComputer");
             RecommendationText = localization.GetString("Status.LocalOnly");
+            LogicalProcessorLabel = analyzing;
+            LogicalProcessorDetail = localization.GetString("Dashboard.Kpi.Cores.Detail");
+            AvailableMemoryLabel = analyzing;
+            AvailableMemoryDetail = string.Empty;
+            FreeDiskLabel = analyzing;
+            FreeDiskDetail = localization.GetString("Dashboard.Kpi.Disk.Detail");
+            LegacyCacheLabel = analyzing;
+            LegacyCacheDetail = localization.GetString("Dashboard.Kpi.Cache.Detail");
+            PerformancePressureLabel = analyzing;
+            PerformancePressureBrushKey = "TextMutedBrush";
+            SystemArchitectureLabel = analyzing;
+            LastScanLabel = localization.GetString("Dashboard.LastScan.Pending");
             var pendingImpact = localization.GetString("Profiles.Impact.Pending");
             LightImpactLabel = pendingImpact;
             BalancedImpactLabel = pendingImpact;
@@ -2193,11 +2379,16 @@ public sealed class MainViewModel : BindableBase, IDisposable
             DiskUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
             NetworkUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
             LiveMetricsUpdatedLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            MemoryUsageDetailLabel = string.Empty;
+            CpuTrendLabel = localization.GetString("Dashboard.LivePerformance.NotAvailable");
+            GpuTrendLabel = localization.GetString("Dashboard.LivePerformance.NotAvailable");
         }
         else
         {
             ApplyLiveMetrics(lastLiveMetrics, addHistory: false);
         }
+
+        ApplyLastOptimization(historyRecords);
     }
 
     private void RefreshLocalizedState()
