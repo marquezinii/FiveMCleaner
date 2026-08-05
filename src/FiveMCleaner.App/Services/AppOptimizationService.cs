@@ -396,9 +396,10 @@ public sealed class AppOptimizationService : IAppOptimizationService
                         or WindowsTransactionState.AwaitingStandardRollback
                 });
             }
-            catch (JsonException)
+            catch (Exception exception) when (exception is JsonException
+                or NotSupportedException)
             {
-                // Ignore a single corrupt historical journal; the active transaction is unaffected.
+                // Ignore a single corrupt or schema-incompatible historical journal; the active transaction is unaffected.
             }
         }
 
