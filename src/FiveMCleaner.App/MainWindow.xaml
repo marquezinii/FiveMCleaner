@@ -349,9 +349,9 @@
                                                     </Style>
                                                 </Border.Style>
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <Path Width="14" Height="14" Stretch="Uniform" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" VerticalAlignment="Center">
+                                                    <Path>
                                                         <Path.Style>
-                                                            <Style TargetType="Path">
+                                                            <Style TargetType="Path" BasedOn="{StaticResource VectorIconSmallStyle}">
                                                                 <Setter Property="Data" Value="{StaticResource IconClose}" />
                                                                 <Setter Property="Stroke" Value="{DynamicResource RedBrush}" />
                                                                 <Style.Triggers>
@@ -380,9 +380,9 @@
                                                     </Style>
                                                 </Border.Style>
                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <Path Width="14" Height="14" Stretch="Uniform" StrokeThickness="1.9" StrokeStartLineCap="Round" StrokeEndLineCap="Round" StrokeLineJoin="Round" VerticalAlignment="Center">
+                                                    <Path>
                                                         <Path.Style>
-                                                            <Style TargetType="Path">
+                                                            <Style TargetType="Path" BasedOn="{StaticResource VectorIconSmallStyle}">
                                                                 <Setter Property="Data" Value="{StaticResource IconClose}" />
                                                                 <Setter Property="Stroke" Value="{DynamicResource RedBrush}" />
                                                                 <Style.Triggers>
@@ -550,7 +550,7 @@
                                                             <TextBlock Text="{Binding CpuUsageLabel}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                                         </Grid>
                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,7,0,0">
-                                                            <Path Style="{StaticResource VectorIconSmallStyle}" Width="12" Height="12" Data="{StaticResource IconCpu}" Stroke="{DynamicResource OrangeBrush}" />
+                                                            <Path Style="{StaticResource VectorIconCaptionStyle}" Data="{StaticResource IconCpu}" Stroke="{DynamicResource OrangeBrush}" />
                                                             <TextBlock Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" Margin="6,0,0,0" VerticalAlignment="Center" />
                                                         </StackPanel>
                                                     </StackPanel>
@@ -562,7 +562,7 @@
                                                             <TextBlock Text="{Binding GpuUsageLabel}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                                         </Grid>
                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,7,0,0">
-                                                            <Path Style="{StaticResource VectorIconSmallStyle}" Width="12" Height="12" Data="{StaticResource IconGpu}" Stroke="{DynamicResource BlueBrush}" />
+                                                            <Path Style="{StaticResource VectorIconCaptionStyle}" Data="{StaticResource IconGpu}" Stroke="{DynamicResource BlueBrush}" />
                                                             <TextBlock Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" Margin="6,0,0,0" VerticalAlignment="Center" />
                                                         </StackPanel>
                                                     </StackPanel>
@@ -577,7 +577,7 @@
                                                             </StackPanel>
                                                         </Grid>
                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,7,0,0">
-                                                            <Path Style="{StaticResource VectorIconSmallStyle}" Width="12" Height="12" Data="{StaticResource IconMemory}" Stroke="{DynamicResource GreenBrush}" />
+                                                            <Path Style="{StaticResource VectorIconCaptionStyle}" Data="{StaticResource IconMemory}" Stroke="{DynamicResource GreenBrush}" />
                                                             <TextBlock Text="{Binding [Dashboard.LivePerformance.Memory], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" Margin="6,0,0,0" VerticalAlignment="Center" />
                                                         </StackPanel>
                                                     </StackPanel>
@@ -589,7 +589,7 @@
                                                             <TextBlock Text="{Binding DiskUsageLabel}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="14.5" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
                                                         </Grid>
                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,7,0,0">
-                                                            <Path Style="{StaticResource VectorIconSmallStyle}" Width="12" Height="12" Data="{StaticResource IconDisk}" Stroke="{DynamicResource YellowBrush}" />
+                                                            <Path Style="{StaticResource VectorIconCaptionStyle}" Data="{StaticResource IconDisk}" Stroke="{DynamicResource YellowBrush}" />
                                                             <TextBlock Text="{Binding [Dashboard.LivePerformance.Disk], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" Margin="6,0,0,0" VerticalAlignment="Center" />
                                                         </StackPanel>
                                                     </StackPanel>
@@ -604,7 +604,7 @@
                                                             </StackPanel>
                                                         </Grid>
                                                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,7,0,0">
-                                                            <Path Style="{StaticResource VectorIconSmallStyle}" Width="12" Height="12" Data="{StaticResource IconPulse}" Stroke="{DynamicResource TextMutedBrush}" />
+                                                            <Path Style="{StaticResource VectorIconCaptionStyle}" Data="{StaticResource IconPulse}" Stroke="{DynamicResource TextMutedBrush}" />
                                                             <TextBlock Text="{Binding [Dashboard.LivePerformance.Network], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" Margin="6,0,0,0" VerticalAlignment="Center" />
                                                         </StackPanel>
                                                     </StackPanel>
@@ -747,7 +747,7 @@
                                                 <Border Margin="0,20,0,0" Padding="14" Background="{DynamicResource TileSurfaceBrush}" BorderBrush="{DynamicResource BorderSoftBrush}" BorderThickness="1" CornerRadius="11">
                                                     <StackPanel>
                                                         <StackPanel Orientation="Horizontal">
-                                                            <Path Style="{StaticResource VectorIconSmallStyle}" Width="12" Height="12" Data="{StaticResource IconGauge}" Stroke="{DynamicResource OrangeLightBrush}" />
+                                                            <Path Style="{StaticResource VectorIconCaptionStyle}" Data="{StaticResource IconGauge}" Stroke="{DynamicResource OrangeLightBrush}" />
                                                             <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" Margin="7,0,0,0" VerticalAlignment="Center" />
                                                             <TextBlock Text="{Binding ReadinessLevelLabel}" Margin="8,0,0,0" FontSize="10" FontWeight="SemiBold" Foreground="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" />
                                                         </StackPanel>

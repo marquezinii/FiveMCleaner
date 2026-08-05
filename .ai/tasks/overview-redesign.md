@@ -93,6 +93,51 @@ largura fixa), mas estava exatamente no bloco reconstruído.
   passou a verificar o check/X vetorial no dicionário compartilhado, no lugar
   do traçado inline duplicado.
 
+## Segunda rodada: auditoria com skills de design
+
+Depois da primeira entrega, rodei as skills `frontend-design` e `ui-ux-pro-max`
+(banco de regras de UI/UX, 98 diretrizes + checklist de pré-entrega) contra o
+que já estava pronto, em vez de só contra a ideia inicial. Achados reais:
+
+- **Tokens de ícone inconsistentes**: os dois selos de detecção (FiveM/GTA V)
+  tinham `StrokeThickness="1.9"` embutido, fora dos três tamanhos padronizados
+  em `Icons.xaml`; e seis ícones de legenda (CPU/GPU/memória/disco/rede/
+  prontidão) usavam um `Width="12" Height="12"` improvisado por cima do
+  `VectorIconSmallStyle` de 14px. Ambos corrigidos: os selos passaram a herdar
+  `VectorIconSmallStyle`, e o tamanho de legenda virou um quarto token nomeado,
+  `VectorIconCaptionStyle` (12px, traço 1,8), em vez de um número mágico
+  repetido seis vezes.
+- **Contraste**: `TextSubtleBrush` (#676C76) sobre o fundo do app mede ~3,5–3,7:1
+  — passa no piso de 3:1 para texto secundário, mas é um token global existente
+  usado em todo o app (não só na Visão geral); não alterado aqui por estar fora
+  do escopo desta tarefa.
+- **DPI awareness ausente (bug real, corrigido)**: a checagem específica de
+  stack `wpf` da skill aponta que o app não declarava `PerMonitorV2` em nenhum
+  lugar — `app.manifest` não tinha bloco `dpiAwareness`. Isso é consistente com
+  o defeito do medidor já corrigido nesta tarefa (pontuação perdendo o último
+  dígito em DPI fracionário): sem `PerMonitorV2`, o WPF roda System-DPI-aware e
+  o Windows faz upscale de bitmap da janela inteira ao invés de deixar o WPF
+  recalcular o layout na escala real do monitor.
+  - Primeira tentativa, `ApplicationHighDpiMode` no `.csproj` (sugestão do
+    próprio aviso do compilador `WFO0003`, que aparece porque o projeto usa
+    WinForms para a bandeja do sistema): **não teve efeito nenhum** — essa
+    propriedade só é lida pelo `Program.Main` gerado pelo designer do WinForms
+    (`ApplicationConfiguration.Initialize()`), que este projeto não usa (quem
+    inicia é o `App.xaml` do WPF). Confirmado inspecionando o binário: nenhuma
+    entrada de DPI foi gravada no manifesto embutido.
+  - Correção efetiva: `dpiAwareness=PerMonitorV2` direto no `app.manifest`
+    (onde a `HwndSource` do WPF realmente lê), com o aviso `WFO0003` suprimido
+    deliberadamente via `NoWarn` no `.csproj` — documentado inline nos dois
+    arquivos com o porquê. Confirmado por grep no `.exe` compilado que
+    `PerMonitorV2`/`dpiAwareness` agora estão embutidos, e por captura visual
+    (`--capture=`) que a página renderiza igual, com a pontuação `97 /100`
+    correta.
+
+Validação desta rodada: build Release e suíte completa (725 testes) repetidos
+depois de cada mudança, `dotnet format --verify-no-changes` (precisou de uma
+correção de final de linha, aplicada), `Verify-Safety.ps1` e captura visual
+real do app compilado — todos aprovados.
+
 ## Observações para integração
 
 - `ElevatedBrokerClientTerminalReadTests.ReadUntilTerminalAsync_ReportsLocalizedBrokerPhaseHeadlines`
