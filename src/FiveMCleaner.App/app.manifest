@@ -14,4 +14,21 @@
       <supportedOS Id="{8e0f7a12-bfb3-4fe8-b9a5-48fd50a15a9a}" />
     </application>
   </compatibility>
+  <!--
+    Sem isto o app cai no modo System-DPI-aware: a janela renderiza na
+    escala do monitor onde o processo iniciou e o Windows faz upscale de
+    bitmap ao mover para um monitor com DPI diferente (texto borrado,
+    arredondamento de layout inconsistente). O projeto referencia WinForms
+    só para a bandeja do sistema (quem inicia é o App.xaml do WPF), então a
+    alternativa "ApplicationHighDpiMode" do SDK do WinForms não tem efeito
+    aqui — ela roda no Program.Main gerado pelo designer, que este projeto
+    não usa. A janela WPF só respeita DPI declarado neste manifesto; o
+    aviso WFO0003 é suprimido de propósito no .csproj.
+  -->
+  <application xmlns="urn:schemas-microsoft-com:asm.v3">
+    <windowsSettings>
+      <dpiAwareness xmlns="http://schemas.microsoft.com/SMI/2016/WindowsSettings">PerMonitorV2</dpiAwareness>
+      <dpiAware xmlns="http://schemas.microsoft.com/SMI/2005/WindowsSettings">true/pm</dpiAware>
+    </windowsSettings>
+  </application>
 </assembly>

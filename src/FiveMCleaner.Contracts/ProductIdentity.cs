@@ -7,5 +7,6 @@ public static class ProductIdentity
     public const string Developer = "Felipe Marquezini";
     public const string Copyright = "© 2026 Felipe Marquezini. Todos os direitos reservados.";
     public const string RepositoryUrl = "https://github.com/marquezinii/FiveMCleaner";
+    public const string DiscordInviteUrl = "https://discord.gg/bazcuQB9n6";
     public const int PlanSchemaVersion = 1;
 }

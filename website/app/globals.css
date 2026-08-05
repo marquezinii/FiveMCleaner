@@ -181,6 +181,38 @@ img {
   color: var(--orange-light);
 }
 
+.discord-link {
+  display: inline-flex;
+  width: 38px;
+  height: 38px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  color: var(--text-soft);
+  transition: color 150ms ease, background 150ms ease;
+}
+
+.discord-link:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.discord-link svg {
+  width: 19px;
+  height: 19px;
+}
+
+.footer-discord {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer-discord svg {
+  width: 14px;
+  height: 14px;
+}
+
 .header-download {
   display: inline-flex;
   min-height: 42px;
@@ -1385,8 +1417,8 @@ img {
 
 .footer-links {
   display: grid;
-  min-width: 330px;
-  grid-template-columns: repeat(2, 1fr);
+  min-width: 460px;
+  grid-template-columns: repeat(3, 1fr);
   gap: 60px;
 }
 
@@ -1776,6 +1808,7 @@ img {
   }
 
   .footer-links {
+    grid-template-columns: 1fr;
     gap: 30px;
   }
 }

@@ -25,7 +25,7 @@
         </Grid.RowDefinitions>
 
         <StackPanel Margin="0,0,0,18">
-            <TextBlock Text="Termos de Uso" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="27" FontWeight="Bold" />
+            <TextBlock Text="Termos de Uso" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="27" FontWeight="Bold" />
             <TextBlock Text="{Binding VersionLabel}" Margin="0,6,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="11.5" />
         </StackPanel>
 

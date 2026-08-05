@@ -28,6 +28,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly RemoteServicesOptions remoteServicesOptions;
     private readonly QueuedCloudflareTelemetryService? queuedCloudflareTelemetry;
     private readonly IFirebaseAuthService? accountService;
+    private readonly IAccountProfileService profileService;
     private HwndSource? windowSource;
     private bool allowClose;
     private bool closeAfterOptimizationStops;
@@ -81,10 +82,13 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                     "Updater"));
         var runtimeEnvironment = AppEnvironment.Resolve();
         remoteServicesOptions = RemoteServicesOptionsLoader.Load(runtimeEnvironment, AppContext.BaseDirectory);
+        profileService = TryCreateHttpsEndpoint(remoteServicesOptions.AccountProfileEndpoint, out var profileEndpoint)
+            ? new CloudflareAccountProfileService(profileEndpoint)
+            : new DisabledAccountProfileService();
         if (!demoMode && FirebaseAuthConfiguration.TryGetApiKey(remoteServicesOptions.FirebaseApiKey, out var firebaseApiKey))
         {
             accountService = new FirebaseAuthService(firebaseApiKey);
-            accountService.StateChanged += (_, _) => Dispatcher.Invoke(UpdateAccountButton);
+            accountService.StateChanged += AccountService_StateChanged;
         }
         // Cloudflare is the sole telemetry transport (FormSubmit was
         // removed entirely). If the configured endpoint is ever missing or
@@ -212,9 +216,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             System.Windows.MessageBox.Show("O acesso à conta não está disponível nesta instalação.", "Conta", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
-        IAccountProfileService profileService = TryCreateHttpsEndpoint(remoteServicesOptions.AccountProfileEndpoint, out var profileEndpoint)
-            ? new CloudflareAccountProfileService(profileEndpoint)
-            : new DisabledAccountProfileService();
         var dialog = new AccountWindow(accountService, profileService) { Owner = this };
         if (dialog.ShowDialog() == true) UpdateAccountButton();
     }
@@ -225,6 +226,53 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         AccountInitials.Text = profile?.Initials ?? "\uE77B";
         AccountLabel.Text = profile?.DisplayName ?? "Entrar / Cadastre-se";
         AccountButton.ToolTip = profile is null ? "Entrar ou criar conta" : "Clique para sair da conta";
+    }
+
+    private async void AccountService_StateChanged(object? sender, AuthenticationSnapshot snapshot)
+    {
+        Dispatcher.Invoke(UpdateAccountButton);
+        if (snapshot.State != AuthenticationState.SignedIn || snapshot.User is null)
+        {
+            Dispatcher.Invoke(() => viewModel.SetAccountFirstName(null));
+            return;
+        }
+
+        await SyncAccountFirstNameAsync();
+    }
+
+    /// <summary>
+    /// Reads the caller's own first name for the Overview greeting. Firebase
+    /// Authentication REST never stores it, so it only exists in the
+    /// Worker's profile table; this is why login and quiet session restore
+    /// both need a read call instead of getting it for free off the token.
+    /// </summary>
+    private async Task SyncAccountFirstNameAsync()
+    {
+        if (accountService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var idToken = await accountService.GetIdTokenAsync().ConfigureAwait(false);
+            if (idToken is null)
+            {
+                return;
+            }
+
+            var result = await profileService.FetchAsync(idToken).ConfigureAwait(false);
+            if (result.Outcome == AccountProfileFetchOutcome.Found)
+            {
+                Dispatcher.Invoke(() => viewModel.SetAccountFirstName(result.FirstName));
+            }
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            // Sem nome n\u00E3o \u00E9 um estado de erro vis\u00EDvel: a sauda\u00E7\u00E3o simplesmente
+            // fica sem o nome at\u00E9 a pr\u00F3xima sincroniza\u00E7\u00E3o bem-sucedida.
+        }
     }
 
     private static void ConfirmUpdateHealthIfRequested()
@@ -455,6 +503,12 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         ActivateNavItem(OptimizerNav);
         Navigate(OptimizerPage);
+    }
+
+    private void OpenHistory_Click(object sender, RoutedEventArgs e)
+    {
+        ActivateNavItem(HistoryNav);
+        Navigate(HistoryPage);
     }
 
     private void ChangeMode_Click(object sender, RoutedEventArgs e) => ProfileSelectorSection.BringIntoView();
@@ -745,6 +799,15 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         TryOpenExternal(() => Process.Start(new ProcessStartInfo
         {
             FileName = ProductIdentity.RepositoryUrl,
+            UseShellExecute = true
+        }));
+    }
+
+    private void Discord_Click(object sender, RoutedEventArgs e)
+    {
+        TryOpenExternal(() => Process.Start(new ProcessStartInfo
+        {
+            FileName = ProductIdentity.DiscordInviteUrl,
             UseShellExecute = true
         }));
     }

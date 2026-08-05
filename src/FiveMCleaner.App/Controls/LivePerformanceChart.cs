@@ -117,6 +117,13 @@ public sealed class LivePerformanceChart : FrameworkElement
         typeof(LivePerformanceChart),
         new FrameworkPropertyMetadata("GPU", FrameworkPropertyMetadataOptions.AffectsRender));
 
+    /// <summary>Word shown for the most recent sample in the hover reading.</summary>
+    public static readonly DependencyProperty NowLabelProperty = DependencyProperty.Register(
+        nameof(NowLabel),
+        typeof(string),
+        typeof(LivePerformanceChart),
+        new FrameworkPropertyMetadata("now", FrameworkPropertyMetadataOptions.AffectsRender));
+
     public IReadOnlyList<double>? CpuValues
     {
         get => (IReadOnlyList<double>?)GetValue(CpuValuesProperty);
@@ -187,6 +194,12 @@ public sealed class LivePerformanceChart : FrameworkElement
     {
         get => (string)GetValue(GpuLabelProperty);
         set => SetValue(GpuLabelProperty, value);
+    }
+
+    public string NowLabel
+    {
+        get => (string)GetValue(NowLabelProperty);
+        set => SetValue(NowLabelProperty, value);
     }
 
     protected override void OnMouseMove(MouseEventArgs e)
@@ -374,7 +387,7 @@ public sealed class LivePerformanceChart : FrameworkElement
         {
             (CreateText(
                 seconds <= 0
-                    ? "agora"
+                    ? NowLabel
                     : "-" + seconds.ToString("0", CultureInfo.CurrentCulture) + "s",
                 9,
                 labels),

@@ -19,6 +19,22 @@
   <data name="BugReport.LinkTooltip" xml:space="preserve"><value>Open bug report form</value></data>
   <data name="Dashboard.Title" xml:space="preserve"><value>Overview</value></data>
   <data name="Dashboard.Subtitle" xml:space="preserve"><value>PC status, compatibility and the next recommended step.</value></data>
+  <data name="Greeting.Morning.WithName" xml:space="preserve"><value>Good morning, {0}. What shall we do today?</value></data>
+  <data name="Greeting.Morning.NoName" xml:space="preserve"><value>Good morning. What shall we do today?</value></data>
+  <data name="Greeting.Afternoon.WithName" xml:space="preserve"><value>Good afternoon, {0}. What shall we do today?</value></data>
+  <data name="Greeting.Afternoon.NoName" xml:space="preserve"><value>Good afternoon. What shall we do today?</value></data>
+  <data name="Greeting.Evening.WithName" xml:space="preserve"><value>Good evening, {0}. What shall we do today?</value></data>
+  <data name="Greeting.Evening.NoName" xml:space="preserve"><value>Good evening. What shall we do today?</value></data>
+  <data name="Settings.About.Title" xml:space="preserve"><value>About</value></data>
+  <data name="Settings.About.Description" xml:space="preserve"><value>What FiveMCleaner is, who builds it and where to find help.</value></data>
+  <data name="Settings.About.AppName" xml:space="preserve"><value>FiveMCleaner</value></data>
+  <data name="Settings.About.Tagline" xml:space="preserve"><value>Transparent, reversible optimization for FiveM Legacy on Windows.</value></data>
+  <data name="Settings.About.Repository" xml:space="preserve"><value>Source code on GitHub</value></data>
+  <data name="Settings.About.Changelog" xml:space="preserve"><value>Version history</value></data>
+  <data name="Settings.About.Discord.Title" xml:space="preserve"><value>Join our official Discord</value></data>
+  <data name="Settings.About.Discord.Detail" xml:space="preserve"><value>Get help, follow updates and talk to other FiveMCleaner users.</value></data>
+  <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Open Discord</value></data>
+  <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Join our official Discord</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Scan PC again</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Open optimizer</value></data>
   <data name="Dashboard.SystemOverview" xml:space="preserve"><value>Your computer</value></data>
@@ -29,7 +45,7 @@
   <data name="Dashboard.Storage" xml:space="preserve"><value>STORAGE</value></data>
   <data name="Dashboard.Windows" xml:space="preserve"><value>WINDOWS</value></data>
   <data name="Dashboard.Architecture" xml:space="preserve"><value>SYSTEM ARCHITECTURE</value></data>
-  <data name="Dashboard.ReadinessExplanation" xml:space="preserve"><value>Capacity signal based on available memory, logical processors, free disk space, detected graphics adapter, cache state and FiveM edition. It is not an FPS benchmark or a performance promise.</value></data>
+  <data name="Dashboard.ReadinessExplanation" xml:space="preserve"><value>Based on free memory, processor, disk space and what was found of FiveM on this machine. Not a promise of FPS.</value></data>
   <data name="Profiles.Choose" xml:space="preserve"><value>Choose a level</value></data>
   <data name="Profiles.RecommendedHint" xml:space="preserve"><value>Balanced is recommended for most PCs.</value></data>
   <data name="Profiles.Light.Name" xml:space="preserve"><value>Light</value></data>
@@ -683,6 +699,35 @@
   <data name="Dashboard.LivePerformance.ChartDescription" xml:space="preserve"><value>CPU and GPU usage history for the last minute.</value></data>
   <data name="Dashboard.LivePerformance.LocalOnly" xml:space="preserve"><value>Read locally. Nothing is sent over the internet.</value></data>
   <data name="Dashboard.SystemOverview.Description" xml:space="preserve"><value>Detected hardware available to FiveM and GTA V.</value></data>
+  <data name="Dashboard.Eyebrow" xml:space="preserve"><value>LOCAL DIAGNOSIS</value></data>
+  <data name="Dashboard.LastScan" xml:space="preserve"><value>Last scan at {0}</value></data>
+  <data name="Dashboard.LastScan.Pending" xml:space="preserve"><value>Scanning…</value></data>
+  <data name="Dashboard.OpenHistory" xml:space="preserve"><value>See history</value></data>
+  <data name="Dashboard.Kpi.GigabyteValue" xml:space="preserve"><value>{0:0.0} GB</value></data>
+  <data name="Dashboard.Kpi.MegabyteValue" xml:space="preserve"><value>{0:0} MB</value></data>
+  <data name="Dashboard.Kpi.Pressure.Title" xml:space="preserve"><value>SYSTEM LOAD</value></data>
+  <data name="Dashboard.Kpi.Cores.Title" xml:space="preserve"><value>LOGICAL CORES</value></data>
+  <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Reported by Windows</value></data>
+  <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>FREE MEMORY</value></data>
+  <data name="Dashboard.Kpi.Memory.Detail" xml:space="preserve"><value>of {0:0.0} GB total</value></data>
+  <data name="Dashboard.Kpi.Disk.Title" xml:space="preserve"><value>FREE SPACE</value></data>
+  <data name="Dashboard.Kpi.Disk.Detail" xml:space="preserve"><value>On the system drive</value></data>
+  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>FIVEM CACHE</value></data>
+  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Reviewed by the optimizer</value></data>
+  <data name="Dashboard.Kpi.Cache.None" xml:space="preserve"><value>None</value></data>
+  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>No cache found on disk</value></data>
+  <data name="Dashboard.Pressure.Low" xml:space="preserve"><value>Low</value></data>
+  <data name="Dashboard.Pressure.Moderate" xml:space="preserve"><value>Moderate</value></data>
+  <data name="Dashboard.Pressure.High" xml:space="preserve"><value>High</value></data>
+  <data name="Dashboard.LivePerformance.MemoryDetail" xml:space="preserve"><value>{0:0.0} / {1:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.TrendValue" xml:space="preserve"><value>avg {0:0}% · peak {1:0}%</value></data>
+  <data name="Dashboard.LivePerformance.Trend" xml:space="preserve"><value>AVERAGE AND PEAK</value></data>
+  <data name="Dashboard.LivePerformance.Window" xml:space="preserve"><value>Last minute</value></data>
+  <data name="Dashboard.LivePerformance.Now" xml:space="preserve"><value>now</value></data>
+  <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>Last optimization</value></data>
+  <data name="Dashboard.LastRun.None.Title" xml:space="preserve"><value>No optimization run yet</value></data>
+  <data name="Dashboard.LastRun.None.Detail" xml:space="preserve"><value>Run the optimizer to create a restore point and a report you can review here.</value></data>
+  <data name="Dashboard.Detection.Title" xml:space="preserve"><value>DETECTION</value></data>
   <data name="Error.Network" xml:space="preserve"><value>We could not connect right now. Check your internet connection and try again.</value></data>
   <data name="Error.Timeout" xml:space="preserve"><value>This took longer than expected. Try again in a moment.</value></data>
   <data name="Error.AccessDenied" xml:space="preserve"><value>Windows did not allow this action. Check the required permission and try again.</value></data>

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateAccountProfile, createAccountProfile } from '../../src/auth/accountProfile.js';
+import { validateAccountProfile, createAccountProfile, fetchAccountProfile } from '../../src/auth/accountProfile.js';
 
 const VALID = { username: 'joao_silva', firstName: 'João', lastName: "D'Ávila-Souza" };
 
@@ -124,4 +124,32 @@ test('createAccountProfile maps an unexpected D1 failure to unknown', async () =
   const db = fakeDb({ throwsWithMessage: 'D1_ERROR: network timeout' });
   const result = await createAccountProfile(db, 'uid', validateAccountProfile(VALID));
   assert.deepEqual(result, { ok: false, code: 'unknown' });
+});
+
+function fakeReadDb(row) {
+  const bound = [];
+  return {
+    bound,
+    prepare(sql) {
+      return {
+        bind(...params) {
+          bound.push({ sql, params });
+          return { async first() { return row; } };
+        },
+      };
+    },
+  };
+}
+
+test('fetchAccountProfile maps the stored row to camelCase and reads by the given uid', async () => {
+  const db = fakeReadDb({ username: 'joao_silva', first_name: 'João', last_name: "D'Ávila-Souza" });
+  const result = await fetchAccountProfile(db, 'firebase-uid-123');
+  assert.deepEqual(result, { username: 'joao_silva', firstName: 'João', lastName: "D'Ávila-Souza" });
+  assert.deepEqual(db.bound[0].params, ['firebase-uid-123']);
+});
+
+test('fetchAccountProfile returns null when the account has no profile row', async () => {
+  const db = fakeReadDb(null);
+  const result = await fetchAccountProfile(db, 'uid-without-profile');
+  assert.equal(result, null);
 });

@@ -78,3 +78,26 @@ export async function createAccountProfile(db, uid, profile) {
     return { ok: false, code: 'unknown' };
   }
 }
+
+/**
+ * Reads back the profile for `uid`, the Firebase UID from the verified ID
+ * token -- never a client-supplied identifier, so one account can only ever
+ * read its own profile. Used on login and session restore, when the client
+ * needs the first name for the app's greeting but only has an ID token, not
+ * the fields Firebase itself never stored.
+ *
+ * @param {D1Database} db
+ * @param {string} uid
+ * @returns {Promise<{ username: string, firstName: string, lastName: string } | null>}
+ */
+export async function fetchAccountProfile(db, uid) {
+  const row = await db
+    .prepare('SELECT username, first_name, last_name FROM account_profiles WHERE uid = ?')
+    .bind(uid)
+    .first();
+  if (row === null) {
+    return null;
+  }
+
+  return { username: row.username, firstName: row.first_name, lastName: row.last_name };
+}

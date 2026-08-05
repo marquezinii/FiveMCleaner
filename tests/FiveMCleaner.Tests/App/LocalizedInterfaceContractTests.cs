@@ -204,6 +204,24 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("StartOptimization_Click", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("ProfilePresentationBenefits", dashboard, StringComparison.Ordinal);
 
+        // A faixa de indicadores explica a recomendação com números da própria
+        // varredura local, em vez de deixar o espaço vazio abaixo do medidor.
+        Assert.Contains("PerformancePressureLabel", dashboard, StringComparison.Ordinal);
+        Assert.Contains("LogicalProcessorLabel", dashboard, StringComparison.Ordinal);
+        Assert.Contains("AvailableMemoryLabel", dashboard, StringComparison.Ordinal);
+        Assert.Contains("LegacyCacheLabel", dashboard, StringComparison.Ordinal);
+        // Média e pico saem das mesmas amostras desenhadas no gráfico.
+        Assert.Contains("CpuTrendLabel", dashboard, StringComparison.Ordinal);
+        Assert.Contains("GpuTrendLabel", dashboard, StringComparison.Ordinal);
+        // O fim da página mostra a última execução real, com estado próprio
+        // quando ainda não existe histórico.
+        Assert.Contains("LastOptimizationTitle", dashboard, StringComparison.Ordinal);
+        Assert.Contains("HasLastOptimization", dashboard, StringComparison.Ordinal);
+        Assert.Contains("OpenHistory_Click", dashboard, StringComparison.Ordinal);
+        // Todos os ícones da Visão geral são vetores do dicionário próprio; a
+        // fonte de glifos não é mais usada nesta página.
+        Assert.DoesNotContain("Segoe MDL2 Assets", dashboard, StringComparison.Ordinal);
+
         var viewModel = File.ReadAllText(Path.Combine(root, "src", "FiveMCleaner.App", "ViewModels", "MainViewModel.cs"));
         Assert.Contains("> 75 => localization.GetString(\"Dashboard.Readiness.Excellent\")", viewModel, StringComparison.Ordinal);
         Assert.Contains("> 50 => localization.GetString(\"Dashboard.Readiness.Good\")", viewModel, StringComparison.Ordinal);
@@ -238,7 +256,21 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("x:Key=\"DetectionBadgeLabelStyle\"", styles, StringComparison.Ordinal);
         Assert.Contains("Segoe UI Variable Text, Segoe UI", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"10\"", styles, StringComparison.Ordinal);
-        Assert.Equal(2, Regex.Matches(mainWindow, "M 2.5,7 L 5.5,10 L 11.5,4.5").Count);
+        // Os selos de detecção continuam com um check vetorial único quando
+        // detectado e um X quando não — só que as duas formas agora vêm do
+        // dicionário compartilhado de ícones, em vez de repetir o traçado
+        // inline em cada selo.
+        var icons = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Themes",
+            "Icons.xaml"));
+
+        Assert.Contains("x:Key=\"IconCheck\"", icons, StringComparison.Ordinal);
+        Assert.Contains("x:Key=\"IconClose\"", icons, StringComparison.Ordinal);
+        Assert.Equal(2, Regex.Matches(mainWindow, "Value=\"\\{StaticResource IconCheck\\}\"").Count);
+        Assert.Equal(2, Regex.Matches(mainWindow, "Value=\"\\{StaticResource IconClose\\}\"").Count);
     }
 
     [Fact]
