@@ -138,6 +138,117 @@ depois de cada mudança, `dotnet format --verify-no-changes` (precisou de uma
 correção de final de linha, aplicada), `Verify-Safety.ps1` e captura visual
 real do app compilado — todos aprovados.
 
+## Terceira rodada: Discord, saudação por horário, fontes e mais copy
+
+Pedido do usuário: ícone do Discord (site, app e Configurações), saudação
+personalizada por horário na Visão geral, fontes mais distintas no app e
+continuar removendo jargão. Antes de tocar em código, rodei
+`ui-ux-pro-max --stack wpf` de novo (mesma skill da rodada anterior) para
+checar convenções específicas de ícone/tipografia — sem achados novos além
+dos já aplicados.
+
+### Discord oficial (`https://discord.gg/bazcuQB9n6`)
+
+- **Ícone vetorial próprio** (`Themes/Icons.xaml`, `IconDiscord`): ao
+  contrário dos demais ícones do dicionário (só contorno), este é
+  preenchido — a logomarca do Discord não existe como traço. `Fill` é
+  `{DynamicResource TextBrush}`, que o `ThemeManager` já define como quase
+  branco no escuro e quase preto no claro — satisfaz "branco no escuro,
+  preto no claro" sem nenhuma lógica condicional nova.
+- **Barra de título**: novo botão ícone (`DiscordButton`), com o mesmo
+  padrão visual de hover do botão de conta ao lado, extraído para o estilo
+  compartilhado `TitleBarIconButtonStyle` (`Themes/Controls.xaml`).
+  Tooltip/nome de automação localizados ("Entre no nosso Discord oficial").
+  Clique abre a URL via `Process.Start(UseShellExecute: true)` — o mesmo
+  padrão já usado para o link do GitHub; o Windows decide se um cliente
+  Discord instalado intercepta ou se abre no navegador.
+- **Configurações → nova seção "Sobre"**: ícone e nome do app, tagline,
+  versão + desenvolvedor (reaproveita o binding `AboutVersionDeveloper`, que
+  já existia mas não estava em uso em nenhum lugar), link para o
+  repositório (reaproveita `OpenRepository_Click`, também órfão até agora) e
+  um cartão de CTA para o Discord com o mesmo ícone e o mesmo manipulador de
+  clique da barra de título.
+- **Site público**: adicionado nos dois lugares que geram HTML da versão
+  pública —
+  - `website/app/page.tsx` (Next.js/vinext + Cloudflare Worker, o site em
+    desenvolvimento ativo do redesign do codex): ícone no cabeçalho e uma
+    nova coluna "Comunidade" no rodapé.
+  - `website/public-site/index.html` (HTML estático hospedado no GitHub
+    Pages, com o próprio conjunto de testes que valida sua versão publicada):
+    ícone no topbar e um link "Discord oficial" no rodapé.
+  Nenhum conteúdo do codex foi revertido ou alterado — só adição. Os 3
+  testes de `website/tests/rendered-html.test.mjs` (incluindo o que valida
+  especificamente o site estático) e o lint continuam passando.
+
+### Saudação por horário na Visão geral
+
+- `MainViewModel.GreetingTitle`, computada em `RefreshGreeting()`: script
+  simples de três faixas por hora local (06–12 bom dia, 12–18 boa tarde,
+  18–06 boa noite), com o nome só quando há um `accountFirstName` presente.
+  Recalculada na inicialização, a cada troca de idioma e sempre que a Visão
+  geral volta a ficar visível (reaproveitando o hook que já existe para
+  pausar/retomar a coleta ao vivo) — sem timer dedicado, já que o valor muda
+  no máximo três vezes por dia.
+- Colocada acima do título "Visão geral", como pedido.
+- **Descoberta real durante a implementação**: o Worker só tinha
+  `POST /account/profile` (grava no cadastro); não havia como o cliente ler
+  de volta o nome depois — nem no login normal, nem na restauração
+  silenciosa de sessão. Sem isso, a saudação nunca teria um nome fora do
+  instante do cadastro. Adicionado:
+  - Worker: `fetchAccountProfile` (`accountProfile.js`) e a rota
+    `GET /account/profile`, autenticada do mesmo jeito que a de criação
+    (`requireFirebaseUser`), lendo só o próprio perfil do UID do token —
+    nunca de um id arbitrário. 2 testes novos.
+  - App: `IAccountProfileService.FetchAsync`, implementado em
+    `CloudflareAccountProfileService` e em `DisabledAccountProfileService`.
+    `MainWindow` centralizou a construção do `IAccountProfileService` (antes
+    recriado a cada clique no botão de conta) num campo único, e passou a
+    escutar `StateChanged` com um handler nomeado que também dispara a
+    sincronização do nome — cobre login, cadastro e restauração de sessão,
+    porque os três já convergem para o mesmo evento no `FirebaseAuthService`
+    existente. 4 testes novos no cliente.
+
+### Fontes
+
+- Títulos e valores de destaque (`SectionTitleStyle`, `KpiValueStyle` e as
+  9 ocorrências inline de "Segoe UI Variable Display" no `MainWindow.xaml`
+  e nas 3 janelas secundárias) passaram a usar `Bahnschrift` como primeira
+  opção, com o Segoe UI Variable como fallback. Bahnschrift é uma fonte
+  variável geométrica (estilo DIN) que já vem instalada no Windows 10/11 —
+  zero download, zero risco de licença, contraste tipográfico real com o
+  corpo de texto (que continua em Segoe UI Variable Text). Texto de corpo,
+  legendas e o gráfico de desempenho não foram tocados.
+- Confirmado por captura real: renderiza nítido, sem "tofu"/glifo ausente,
+  peso Bold aplicado corretamente pelo eixo de variação da fonte.
+
+### Mais jargão removido da Visão geral
+
+- Removida a linha "ARQUITETURA DO SISTEMA x64" do cartão "Seu computador"
+  — informação que não muda nenhuma decisão do jogador. A propriedade
+  `SystemArchitectureLabel`, que só existia para essa linha, foi removida
+  do view model (campo, propriedade e as 2 atribuições) em vez de deixada
+  órfã.
+- Frase da prontidão simplificada: "Sinal de capacidade baseado na memória
+  disponível, processadores lógicos, espaço livre, placa de vídeo
+  identificada, estado do cache e edição do FiveM. Não é benchmark de FPS
+  nem promessa de desempenho." virou "Baseado na memória livre, no
+  processador, no espaço em disco e no que foi encontrado do FiveM nesta
+  máquina. Não é uma promessa de FPS." — mesma honestidade, sem
+  "sinal de capacidade"/"processadores lógicos"/"benchmark".
+- Indicador que eu mesmo adicionei na rodada anterior, "PRESSÃO DE
+  DESEMPENHO", renomeado para "CARGA NO PC" — o conceito (Baixa/Moderada/
+  Alta, mesma cor) continua, só o rótulo deixou de soar como termo técnico
+  inventado.
+
+Validação desta rodada: build Release da solução, 729 testes .NET (+4 em
+relação à rodada anterior), 150 testes do Worker (+2), lint e 3 testes do
+site (build + HTML renderizado + site estático), `dotnet format
+--verify-no-changes`, `Verify-Safety.ps1` e `git diff --check` aprovados —
+repetidos após cada mudança. Capturas reais confirmaram o ícone do Discord
+na barra de título, o cartão "Sobre" (precisa rolar a página de
+Configurações — ele está lá, só abaixo da dobra), a saudação acima de
+"Visão geral", a fonte Bahnschrift renderizando e o texto simplificado.
+
 ## Observações para integração
 
 - `ElevatedBrokerClientTerminalReadTests.ReadUntilTerminalAsync_ReportsLocalizedBrokerPhaseHeadlines`

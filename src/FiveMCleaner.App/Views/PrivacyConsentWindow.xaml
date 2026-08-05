@@ -36,7 +36,7 @@
                         <Border Width="30" Height="30" CornerRadius="8" Background="#1837C889">
                             <TextBlock Text="&#xE72E;" FontFamily="Segoe MDL2 Assets" Foreground="{DynamicResource GreenBrush}" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" />
                         </Border>
-                        <TextBlock Text="{Binding [PrivacyConsent.WindowTitle], Source={StaticResource LocalizedStrings}}" Margin="10,0,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [PrivacyConsent.WindowTitle], Source={StaticResource LocalizedStrings}}" Margin="10,0,0,0" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="14" FontWeight="SemiBold" VerticalAlignment="Center" />
                     </StackPanel>
                 </Grid>
             </Border>

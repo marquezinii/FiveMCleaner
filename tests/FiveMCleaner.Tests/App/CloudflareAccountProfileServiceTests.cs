@@ -67,6 +67,63 @@ public sealed class CloudflareAccountProfileServiceTests
     }
 
     [Fact]
+    public async Task FetchAsync_Success_ReturnsFoundWithParsedFields()
+    {
+        HttpRequestMessage? captured = null;
+        var service = CreateService(request =>
+        {
+            captured = request;
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(
+                    "{\"username\":\"joao_silva\",\"firstName\":\"João\",\"lastName\":\"Silva\"}",
+                    Encoding.UTF8,
+                    "application/json"),
+            };
+        });
+
+        var result = await service.FetchAsync("id-token-1");
+
+        Assert.Equal(AccountProfileFetchOutcome.Found, result.Outcome);
+        Assert.Equal("joao_silva", result.Username);
+        Assert.Equal("João", result.FirstName);
+        Assert.Equal("Silva", result.LastName);
+        Assert.Equal(HttpMethod.Get, captured!.Method);
+        Assert.Equal("Bearer", captured.Headers.Authorization!.Scheme);
+        Assert.Equal("id-token-1", captured.Headers.Authorization!.Parameter);
+    }
+
+    [Fact]
+    public async Task FetchAsync_NotFound_ReturnsNotFound()
+    {
+        var service = CreateService(_ => new HttpResponseMessage(HttpStatusCode.NotFound));
+
+        var result = await service.FetchAsync("id-token-1");
+
+        Assert.Equal(AccountProfileFetchOutcome.NotFound, result.Outcome);
+    }
+
+    [Fact]
+    public async Task FetchAsync_ServerError_ReturnsFailed()
+    {
+        var service = CreateService(_ => new HttpResponseMessage(HttpStatusCode.InternalServerError));
+
+        var result = await service.FetchAsync("id-token-1");
+
+        Assert.Equal(AccountProfileFetchOutcome.Failed, result.Outcome);
+    }
+
+    [Fact]
+    public async Task FetchAsync_NetworkFailure_ReturnsFailedInsteadOfThrowing()
+    {
+        var service = CreateService(_ => throw new HttpRequestException("network down"));
+
+        var result = await service.FetchAsync("id-token-1");
+
+        Assert.Equal(AccountProfileFetchOutcome.Failed, result.Outcome);
+    }
+
+    [Fact]
     public void Constructor_RejectsNonHttpsEndpoint()
     {
         var client = new HttpClient(new StubHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));

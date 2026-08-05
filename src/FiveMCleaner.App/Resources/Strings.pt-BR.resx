@@ -19,6 +19,22 @@
   <data name="BugReport.LinkTooltip" xml:space="preserve"><value>Abrir formulário de relato</value></data>
   <data name="Dashboard.Title" xml:space="preserve"><value>Visão geral</value></data>
   <data name="Dashboard.Subtitle" xml:space="preserve"><value>Estado do PC, compatibilidade e o próximo passo recomendado.</value></data>
+  <data name="Greeting.Morning.WithName" xml:space="preserve"><value>Bom dia, {0}. O que iremos fazer hoje?</value></data>
+  <data name="Greeting.Morning.NoName" xml:space="preserve"><value>Bom dia. O que iremos fazer hoje?</value></data>
+  <data name="Greeting.Afternoon.WithName" xml:space="preserve"><value>Boa tarde, {0}. O que iremos fazer hoje?</value></data>
+  <data name="Greeting.Afternoon.NoName" xml:space="preserve"><value>Boa tarde. O que iremos fazer hoje?</value></data>
+  <data name="Greeting.Evening.WithName" xml:space="preserve"><value>Boa noite, {0}. O que iremos fazer hoje?</value></data>
+  <data name="Greeting.Evening.NoName" xml:space="preserve"><value>Boa noite. O que iremos fazer hoje?</value></data>
+  <data name="Settings.About.Title" xml:space="preserve"><value>Sobre</value></data>
+  <data name="Settings.About.Description" xml:space="preserve"><value>O que é o FiveMCleaner, quem desenvolve e onde encontrar ajuda.</value></data>
+  <data name="Settings.About.AppName" xml:space="preserve"><value>FiveMCleaner</value></data>
+  <data name="Settings.About.Tagline" xml:space="preserve"><value>Otimização transparente e reversível para FiveM Legacy no Windows.</value></data>
+  <data name="Settings.About.Repository" xml:space="preserve"><value>Código-fonte no GitHub</value></data>
+  <data name="Settings.About.Changelog" xml:space="preserve"><value>Histórico de versões</value></data>
+  <data name="Settings.About.Discord.Title" xml:space="preserve"><value>Junte-se ao nosso Discord oficial</value></data>
+  <data name="Settings.About.Discord.Detail" xml:space="preserve"><value>Tire dúvidas, acompanhe novidades e converse com outros usuários do FiveMCleaner.</value></data>
+  <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Abrir Discord</value></data>
+  <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Entre no nosso Discord oficial</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Reanalisar PC</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Abrir Otimizador</value></data>
   <data name="Dashboard.SystemOverview" xml:space="preserve"><value>Seu computador</value></data>
@@ -29,7 +45,7 @@
   <data name="Dashboard.Storage" xml:space="preserve"><value>ARMAZENAMENTO</value></data>
   <data name="Dashboard.Windows" xml:space="preserve"><value>WINDOWS</value></data>
   <data name="Dashboard.Architecture" xml:space="preserve"><value>ARQUITETURA DO SISTEMA</value></data>
-  <data name="Dashboard.ReadinessExplanation" xml:space="preserve"><value>Sinal de capacidade baseado na memória disponível, processadores lógicos, espaço livre, placa de vídeo identificada, estado do cache e edição do FiveM. Não é benchmark de FPS nem promessa de desempenho.</value></data>
+  <data name="Dashboard.ReadinessExplanation" xml:space="preserve"><value>Baseado na memória livre, no processador, no espaço em disco e no que foi encontrado do FiveM nesta máquina. Não é uma promessa de FPS.</value></data>
   <data name="Profiles.Choose" xml:space="preserve"><value>Escolha o nível</value></data>
   <data name="Profiles.RecommendedHint" xml:space="preserve"><value>Médio é o recomendado para a maioria dos PCs.</value></data>
   <data name="Profiles.Light.Name" xml:space="preserve"><value>Leve</value></data>
@@ -689,7 +705,7 @@
   <data name="Dashboard.OpenHistory" xml:space="preserve"><value>Ver histórico</value></data>
   <data name="Dashboard.Kpi.GigabyteValue" xml:space="preserve"><value>{0:0.0} GB</value></data>
   <data name="Dashboard.Kpi.MegabyteValue" xml:space="preserve"><value>{0:0} MB</value></data>
-  <data name="Dashboard.Kpi.Pressure.Title" xml:space="preserve"><value>PRESSÃO DE DESEMPENHO</value></data>
+  <data name="Dashboard.Kpi.Pressure.Title" xml:space="preserve"><value>CARGA NO PC</value></data>
   <data name="Dashboard.Kpi.Cores.Title" xml:space="preserve"><value>NÚCLEOS LÓGICOS</value></data>
   <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Informados pelo Windows</value></data>
   <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>MEMÓRIA LIVRE</value></data>

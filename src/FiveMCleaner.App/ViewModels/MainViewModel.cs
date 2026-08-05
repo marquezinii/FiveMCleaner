@@ -71,8 +71,9 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private string legacyCacheDetail = string.Empty;
     private string performancePressureLabel = string.Empty;
     private string performancePressureBrushKey = "TextMutedBrush";
-    private string systemArchitectureLabel = string.Empty;
     private string lastScanLabel = string.Empty;
+    private string greetingTitle = string.Empty;
+    private string? accountFirstName;
     private string lastOptimizationTitle = string.Empty;
     private string lastOptimizationDateLabel = string.Empty;
     private string lastOptimizationSummary = string.Empty;
@@ -165,6 +166,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         ActivityLog.Add(new ActivityLogItem(
             DateTime.Now.ToString("HH:mm:ss"),
             this.localization.GetString("Log.StartedStandardUser")));
+        RefreshGreeting();
     }
 
     public ObservableCollection<ActionDisplayItem> PlannedActions { get; } = [];
@@ -284,10 +286,15 @@ public sealed class MainViewModel : BindableBase, IDisposable
 
     public string PerformancePressureBrushKey { get => performancePressureBrushKey; private set => SetProperty(ref performancePressureBrushKey, value); }
 
-    public string SystemArchitectureLabel { get => systemArchitectureLabel; private set => SetProperty(ref systemArchitectureLabel, value); }
-
     /// <summary>When the last local scan finished, already localized.</summary>
     public string LastScanLabel { get => lastScanLabel; private set => SetProperty(ref lastScanLabel, value); }
+
+    /// <summary>
+    /// "Boa tarde, Felipe. O que iremos fazer hoje?" — greets by local time of
+    /// day, with the first name only when a session is signed in and the
+    /// account has one on file. See <see cref="RefreshGreeting"/>.
+    /// </summary>
+    public string GreetingTitle { get => greetingTitle; private set => SetProperty(ref greetingTitle, value); }
 
     public string LastOptimizationTitle { get => lastOptimizationTitle; private set => SetProperty(ref lastOptimizationTitle, value); }
 
@@ -828,6 +835,11 @@ public sealed class MainViewModel : BindableBase, IDisposable
             liveMetricsTimer?.Stop();
             return;
         }
+
+        // A saudação só é recalculada aqui (ao reabrir a Visão geral), não em
+        // um timer próprio: ela muda no máximo três vezes por dia, então não
+        // vale a pena um relógio dedicado para isso.
+        RefreshGreeting();
 
         liveMetricsTimer ??= new DispatcherTimer(DispatcherPriority.Background)
         {
@@ -1504,7 +1516,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             : localization.Format("Diagnosis.MemoryModules", value.TotalMemoryGiB, value.MemoryModuleLayout);
         DiskLabel = localization.Format("Diagnosis.DiskCapacity", value.FreeDiskGiB);
         WindowsLabel = value.OsLabel;
-        SystemArchitectureLabel = value.SystemArchitecture;
         LogicalProcessorLabel = value.LogicalProcessorCount.ToString(localization.CurrentCulture);
         LogicalProcessorDetail = localization.GetString("Dashboard.Kpi.Cores.Detail");
         AvailableMemoryLabel = localization.Format("Dashboard.Kpi.GigabyteValue", value.AvailableMemoryGiB);
@@ -1775,6 +1786,39 @@ public sealed class MainViewModel : BindableBase, IDisposable
             "History.AdjustmentsState",
             latest.ChangedActions,
             latest.State);
+    }
+
+    /// <summary>
+    /// Called by the window whenever the signed-in account's own profile is
+    /// (re)read from the Worker — on login and on quiet session restore —
+    /// and with <see langword="null"/> on sign-out. Firebase Authentication
+    /// REST never stores a first name, so this is the only path that can
+    /// ever populate it.
+    /// </summary>
+    public void SetAccountFirstName(string? firstName)
+    {
+        accountFirstName = string.IsNullOrWhiteSpace(firstName) ? null : firstName;
+        RefreshGreeting();
+    }
+
+    /// <summary>
+    /// Recomputes <see cref="GreetingTitle"/> from the machine's local clock.
+    /// Boundaries: 06:00–11:59 morning, 12:00–17:59 afternoon, otherwise
+    /// evening/night (18:00–05:59) — a plain three-way split a player reads
+    /// the same way they would read a clock, not a technical period name.
+    /// </summary>
+    private void RefreshGreeting()
+    {
+        var hour = DateTime.Now.Hour;
+        var period = hour switch
+        {
+            >= 6 and < 12 => "Morning",
+            >= 12 and < 18 => "Afternoon",
+            _ => "Evening"
+        };
+        GreetingTitle = accountFirstName is { } name
+            ? localization.Format($"Greeting.{period}.WithName", name)
+            : localization.GetString($"Greeting.{period}.NoName");
     }
 
     private void RefreshPlan()
@@ -2363,7 +2407,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             LegacyCacheDetail = localization.GetString("Dashboard.Kpi.Cache.Detail");
             PerformancePressureLabel = analyzing;
             PerformancePressureBrushKey = "TextMutedBrush";
-            SystemArchitectureLabel = analyzing;
             LastScanLabel = localization.GetString("Dashboard.LastScan.Pending");
             var pendingImpact = localization.GetString("Profiles.Impact.Pending");
             LightImpactLabel = pendingImpact;
@@ -2393,6 +2436,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
 
     private void RefreshLocalizedState()
     {
+        RefreshGreeting();
         OnPropertyChanged(nameof(LanguagePreference));
         OnPropertyChanged(nameof(CurrentLanguage));
         OnPropertyChanged(nameof(IsEnglishSelected));

@@ -52,7 +52,10 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .topbar nav a::after { content: ""; position: absolute; left: 0; right: 100%; bottom: -9px; height: 1px; background: var(--orange); transition: right 220ms var(--ease); }
 .topbar nav a:hover, .topbar nav a:focus-visible { color: #fff; }
 .topbar nav a:hover::after, .topbar nav a:focus-visible::after { right: 0; }
-.top-download { display: inline-flex; align-items: center; gap: 16px; margin-left: 34px; padding: 11px 14px 11px 18px; border: 1px solid rgba(255,131,54,.65); border-radius: 10px; background: linear-gradient(135deg, #ff7b26, #ed5500); color: #160902; text-decoration: none; font-size: 13px; font-weight: 800; box-shadow: 0 10px 34px rgba(228,81,0,.2); transition: transform 140ms var(--ease), box-shadow 220ms var(--ease); }
+.discord-link { display: inline-flex; align-items: center; justify-content: center; width: 38px; height: 38px; margin-left: 18px; border-radius: 10px; color: var(--muted); transition: color 140ms var(--ease), background 140ms var(--ease); }
+.discord-link:hover, .discord-link:focus-visible { color: #fff; background: rgba(255,255,255,.08); }
+.discord-link svg { width: 19px; height: 19px; }
+.top-download { display: inline-flex; align-items: center; gap: 16px; margin-left: 18px; padding: 11px 14px 11px 18px; border: 1px solid rgba(255,131,54,.65); border-radius: 10px; background: linear-gradient(135deg, #ff7b26, #ed5500); color: #160902; text-decoration: none; font-size: 13px; font-weight: 800; box-shadow: 0 10px 34px rgba(228,81,0,.2); transition: transform 140ms var(--ease), box-shadow 220ms var(--ease); }
 .top-download b { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 6px; background: rgba(0,0,0,.13); font-size: 14px; }
 .top-download:hover { transform: translateY(-2px); box-shadow: 0 14px 38px rgba(228,81,0,.32); }
 
@@ -227,7 +230,8 @@ h1 em, h2 em { color: var(--orange); font-style: normal; }
 .download-orb::after { width: 670px; height: 670px; transform: rotateY(74deg); }
 .download-orb span { width: 480px; height: 480px; background: radial-gradient(circle, rgba(255,95,0,.13), transparent 68%); filter: blur(4px); animation: orbPulse 6s var(--slow) infinite; }
 
-footer { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: 30px; padding: 29px max(24px, calc((100vw - 1240px) / 2)); color: #66646b; font-size: 9px; }
+footer { display: grid; grid-template-columns: auto 1fr auto auto auto; align-items: center; gap: 30px; padding: 29px max(24px, calc((100vw - 1240px) / 2)); color: #66646b; font-size: 9px; }
+footer a:hover, footer a:focus-visible { color: #fff; }
 footer p { margin: 0; }
 footer > span { color: #55535a; }
 footer > a:last-child { color: #aaa7ae; text-decoration: none; font-weight: 700; }
@@ -262,7 +266,7 @@ footer > a:last-child { color: #aaa7ae; text-decoration: none; font-weight: 700;
 
 @media (max-width: 780px) {
   .section-shell { width: min(100% - 32px, 640px); }
-  .topbar { height: 68px; padding-inline: 16px; }.topbar nav { display: none; }.top-download { margin-left: auto; padding: 10px 12px; }.top-download span { display: none; }
+  .topbar { height: 68px; padding-inline: 16px; }.topbar nav { display: none; }.discord-link { margin-left: auto; }.top-download { margin-left: 10px; padding: 10px 12px; }.top-download span { display: none; }
   .hero { min-height: auto; padding-block: 74px 55px; }.hero-stage { min-height: 450px; }.app-window { left: 0; width: 100%; transform: translateY(-50%); }.orbit-b { display: none; }.float-chip { transform: scale(.9); }.chip-local { bottom: 0; }
   .proof-strip { grid-template-columns: 1fr; }.proof-strip > div { border-right: 0; border-bottom: 1px solid var(--line); }
   .experience { padding-block: 105px 80px; }.bento-grid, .release-section, .safety-section { grid-template-columns: 1fr; }.bento-large { grid-template-columns: 1fr; min-height: 520px; }.radar { width: 190px; height: 190px; margin-top: 45px; }.bento-profiles { min-height: 390px; }

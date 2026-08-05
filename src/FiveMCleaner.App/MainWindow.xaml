@@ -132,6 +132,14 @@
                     </StackPanel>
                 </ui:TitleBar.Header>
                 <ui:TitleBar.TrailingContent>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="DiscordButton"
+                            Style="{StaticResource TitleBarIconButtonStyle}"
+                            Click="Discord_Click"
+                            ToolTip="{Binding [Discord.TitleBarTooltip], Source={StaticResource LocalizedStrings}}"
+                            AutomationProperties.Name="{Binding [Discord.TitleBarTooltip], Source={StaticResource LocalizedStrings}}">
+                        <Path Width="17" Height="17" Stretch="Uniform" Data="{StaticResource IconDiscord}" Fill="{DynamicResource TextBrush}" />
+                    </Button>
                     <Button x:Name="AccountButton" Padding="10,0" MinHeight="40" VerticalAlignment="Center" Click="Account_Click" ToolTip="Entrar ou criar conta" AutomationProperties.Name="Entrar ou cadastrar-se" Background="Transparent" BorderThickness="0">
                         <Button.Style>
                             <Style TargetType="Button">
@@ -174,6 +182,7 @@
                             <TextBlock x:Name="AccountLabel" Text="Entrar / Cadastre-se" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="12.5" FontWeight="SemiBold" />
                         </StackPanel>
                     </Button>
+                </StackPanel>
                 </ui:TitleBar.TrailingContent>
             </ui:TitleBar>
 
@@ -232,14 +241,14 @@
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Margin="0,0,18,0">
-                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,9">
+                                    <TextBlock Text="{Binding GreetingTitle}" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="15.5" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,0,4" />
+                                    <TextBlock Text="{Binding [Dashboard.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="31" FontWeight="Bold" />
+                                    <StackPanel Orientation="Horizontal" Margin="0,9,0,0">
                                         <Rectangle Width="3" Height="15" RadiusX="1.5" RadiusY="1.5" Fill="{DynamicResource OrangeGradientBrush}" VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding [Dashboard.Eyebrow], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" Margin="9,0,0,0" VerticalAlignment="Center" Foreground="{DynamicResource OrangeLightBrush}" />
                                         <Ellipse Width="3" Height="3" Margin="9,0,0,0" Fill="{DynamicResource TextSubtleBrush}" VerticalAlignment="Center" />
                                         <TextBlock Text="{Binding LastScanLabel}" Style="{StaticResource CaptionStyle}" Margin="9,0,0,0" VerticalAlignment="Center" />
                                     </StackPanel>
-                                    <TextBlock Text="{Binding [Dashboard.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="31" FontWeight="Bold" />
-                                    <TextBlock Text="{Binding [Dashboard.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,8,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13.5" TextWrapping="Wrap" MaxWidth="760" HorizontalAlignment="Left" />
                                 </StackPanel>
                                 <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right" VerticalAlignment="Center" Height="38" Padding="15,0" Click="RefreshDiagnostic_Click" IsEnabled="{Binding CanRefresh}">
                                     <StackPanel Orientation="Horizontal">
@@ -400,7 +409,7 @@
                                                 </StackPanel>
                                             </Border>
                                         </WrapPanel>
-                                        <TextBlock Text="{Binding RecommendationTitle}" Margin="0,12,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="23" FontWeight="Bold" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding RecommendationTitle}" Margin="0,12,0,0" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="23" FontWeight="Bold" TextWrapping="Wrap" />
                                         <TextBlock Text="{Binding RecommendationText}" Margin="0,9,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="12.5" TextWrapping="Wrap" MaxWidth="720" HorizontalAlignment="Left" LineHeight="19" />
                                         <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
                                             <Button Style="{StaticResource PrimaryButtonStyle}" Height="42" Padding="22,0" Click="OpenOptimizer_Click">
@@ -443,7 +452,7 @@
                                                     em escalas fracionárias de DPI (97 aparecia como 9).
                                                 -->
                                                 <TextBlock HorizontalAlignment="Center" TextAlignment="Center" TextOptions.TextFormattingMode="Ideal">
-                                                    <Run Text="{Binding ReadinessScore, Mode=OneWay}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="34" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" /><Run Text=" /100" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" BaselineAlignment="TextTop" />
+                                                    <Run Text="{Binding ReadinessScore, Mode=OneWay}" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="34" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" /><Run Text=" /100" FontSize="9" Foreground="{DynamicResource TextSubtleBrush}" BaselineAlignment="TextTop" />
                                                 </TextBlock>
                                                 <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" Margin="0,1,0,0" HorizontalAlignment="Center" />
                                                 <TextBlock Text="{Binding ReadinessLevelLabel}" Margin="0,5,0,0" FontSize="10.5" FontWeight="SemiBold" HorizontalAlignment="Center" />
@@ -527,7 +536,7 @@
                                             <Grid>
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                                 <StackPanel>
-                                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="18" FontWeight="SemiBold" />
+                                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="18" FontWeight="SemiBold" />
                                                     <TextBlock Text="{Binding [Dashboard.LivePerformance.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1" Margin="16,0,0,0" HorizontalAlignment="Right">
@@ -685,7 +694,7 @@
                                                 <RowDefinition Height="Auto" />
                                                 <RowDefinition Height="*" />
                                             </Grid.RowDefinitions>
-                                            <TextBlock Text="{Binding [Dashboard.SystemOverview], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="17" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding [Dashboard.SystemOverview], Source={StaticResource LocalizedStrings}}" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="17" FontWeight="SemiBold" />
                                             <TextBlock Grid.Row="1" Text="{Binding [Dashboard.SystemOverview.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
                                             <StackPanel Grid.Row="2" Margin="0,18,0,0">
                                                 <Grid Margin="0,0,0,12">
@@ -736,10 +745,6 @@
                                                     <StackPanel Grid.Column="1" Margin="10,0,0,0">
                                                         <TextBlock Text="{Binding [Dashboard.Windows], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" />
                                                         <TextBlock Text="{Binding WindowsLabel}" Margin="0,3,0,0" FontSize="11.5" FontWeight="SemiBold" TextWrapping="Wrap" ToolTip="{Binding WindowsLabel}" />
-                                                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                                                            <TextBlock Text="{Binding [Dashboard.Architecture], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionStyle}" VerticalAlignment="Center" />
-                                                            <TextBlock Text="{Binding SystemArchitectureLabel}" Margin="6,0,0,0" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
-                                                        </StackPanel>
                                                     </StackPanel>
                                                 </Grid>
                                             </StackPanel>
@@ -772,7 +777,7 @@
                                     <StackPanel>
                                         <StackPanel Orientation="Horizontal">
                                             <Path Style="{StaticResource VectorIconLargeStyle}" Data="{StaticResource IconStream}" Stroke="{DynamicResource OrangeLightBrush}" VerticalAlignment="Center" />
-                                            <TextBlock Text="{Binding StreamingReadinessTitle}" Margin="10,0,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding StreamingReadinessTitle}" Margin="10,0,0,0" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="17" FontWeight="SemiBold" VerticalAlignment="Center" TextWrapping="Wrap" />
                                         </StackPanel>
                                         <TextBlock Text="{Binding StreamingReadinessDetail}" Margin="0,7,0,0" FontSize="11.5" Foreground="{DynamicResource TextMutedBrush}" TextWrapping="Wrap" />
                                         <ItemsControl ItemsSource="{Binding StreamingReadinessItems}" Margin="0,16,0,0">
@@ -844,7 +849,7 @@
                         <Grid Margin="0,0,26,20">
                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                             <StackPanel Margin="0,0,22,0" HorizontalAlignment="Left">
-                                <TextBlock Text="{Binding [Optimizer.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="27" FontWeight="Bold" />
+                                <TextBlock Text="{Binding [Optimizer.Title], Source={StaticResource LocalizedStrings}}" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="27" FontWeight="Bold" />
                                 <TextBlock Text="{Binding [Optimizer.Subtitle], Source={StaticResource LocalizedStrings}}" Margin="0,7,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="13.5" TextWrapping="Wrap" MaxWidth="760" />
                             </StackPanel>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -869,7 +874,7 @@
                                                     <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                                     <StackPanel>
                                                         <TextBlock Text="{Binding [Optimizer.Recommended], Source={StaticResource LocalizedStrings}}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OrangeLightBrush}" />
-                                                        <TextBlock Text="{Binding SelectedProfileLabel}" Margin="0,7,0,0" FontFamily="Segoe UI Variable Display, Segoe UI" FontSize="21" FontWeight="SemiBold" />
+                                                        <TextBlock Text="{Binding SelectedProfileLabel}" Margin="0,7,0,0" FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI" FontSize="21" FontWeight="SemiBold" />
                                                     </StackPanel>
                                                     <Border Grid.Column="1" Width="42" Height="42" Background="#20FF7A18" CornerRadius="12"><TextBlock Text="&#xE945;" FontFamily="Segoe MDL2 Assets" FontSize="18" Foreground="{DynamicResource OrangeLightBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" /></Border>
                                                 </Grid>
@@ -1034,6 +1039,40 @@
                                     <TextBlock Text="{Binding [GtaVBenchmark.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,13" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
                                     <Button Content="{Binding [GtaVBenchmark.RunButton], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Click="RunGtaVBenchmark_Click" IsEnabled="{Binding CanRunGtaVBenchmark}" />
                                     <TextBlock Text="{Binding GtaVBenchmarkStatusLabel}" Margin="0,10,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </ui:Card>
+
+                            <!-- Sobre: identidade do app, versão, link do repositório e Discord oficial. -->
+                            <ui:Card Margin="0,0,0,13">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding [Settings.About.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
+                                    <TextBlock Text="{Binding [Settings.About.Description], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,15" Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" />
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                                        <Image Source="Assets/FiveMCleaner.png" Width="40" Height="40" Stretch="Uniform" VerticalAlignment="Top" />
+                                        <StackPanel Grid.Column="1" Margin="12,0,0,0">
+                                            <TextBlock Text="{Binding [Settings.About.AppName], Source={StaticResource LocalizedStrings}}" FontSize="14" FontWeight="SemiBold" />
+                                            <TextBlock Text="{Binding [Settings.About.Tagline], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding AboutVersionDeveloper}" Margin="0,7,0,0" Foreground="{DynamicResource TextSubtleBrush}" FontSize="9.5" />
+                                        </StackPanel>
+                                    </Grid>
+
+                                    <Button Content="{Binding [Settings.About.Repository], Source={StaticResource LocalizedStrings}}" Style="{StaticResource LinkButtonStyle}" Margin="0,13,0,0" Padding="0" HorizontalAlignment="Left" Click="OpenRepository_Click" />
+
+                                    <Separator Margin="0,15,0,13" Background="{DynamicResource BorderSoftBrush}" />
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <Border Style="{StaticResource IconPillStyle}" Width="36" Height="36" CornerRadius="10">
+                                            <Path Width="18" Height="18" Stretch="Uniform" Data="{StaticResource IconDiscord}" Fill="{DynamicResource TextBrush}" />
+                                        </Border>
+                                        <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
+                                            <TextBlock Text="{Binding [Settings.About.Discord.Title], Source={StaticResource LocalizedStrings}}" FontSize="12.5" FontWeight="SemiBold" TextWrapping="Wrap" />
+                                            <TextBlock Text="{Binding [Settings.About.Discord.Detail], Source={StaticResource LocalizedStrings}}" Margin="0,3,0,0" Foreground="{DynamicResource TextMutedBrush}" FontSize="10.5" TextWrapping="Wrap" />
+                                        </StackPanel>
+                                        <Button Grid.Column="2" Content="{Binding [Settings.About.Discord.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Height="36" Padding="15,0" Click="Discord_Click" />
+                                    </Grid>
                                 </StackPanel>
                             </ui:Card>
                         </StackPanel>

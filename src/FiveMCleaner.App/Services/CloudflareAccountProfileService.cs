@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 
 namespace FiveMCleaner.App.Services;
 
@@ -88,6 +89,70 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
             return new AccountProfileResult(AccountProfileOutcome.Created, null);
         }
     }
+
+    public async Task<AccountProfileFetchResult> FetchAsync(
+        string idToken,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idToken);
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, endpoint);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", idToken);
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        {
+            return new AccountProfileFetchResult(AccountProfileFetchOutcome.Failed);
+        }
+
+        using (response)
+        {
+            if (response.StatusCode == HttpStatusCode.NotFound)
+            {
+                return new AccountProfileFetchResult(AccountProfileFetchOutcome.NotFound);
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return new AccountProfileFetchResult(AccountProfileFetchOutcome.Failed);
+            }
+
+            AccountProfileResponseDto? body;
+            try
+            {
+                body = await response.Content
+                    .ReadFromJsonAsync<AccountProfileResponseDto>(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return new AccountProfileFetchResult(AccountProfileFetchOutcome.Failed);
+            }
+
+            if (body is null || string.IsNullOrWhiteSpace(body.FirstName))
+            {
+                return new AccountProfileFetchResult(AccountProfileFetchOutcome.Failed);
+            }
+
+            return new AccountProfileFetchResult(
+                AccountProfileFetchOutcome.Found,
+                body.Username,
+                body.FirstName,
+                body.LastName);
+        }
+    }
+
+    private sealed record AccountProfileResponseDto(
+        [property: JsonPropertyName("username")] string? Username,
+        [property: JsonPropertyName("firstName")] string? FirstName,
+        [property: JsonPropertyName("lastName")] string? LastName);
 
     private static HttpClient CreateClient()
     {

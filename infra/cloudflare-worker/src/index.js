@@ -5,7 +5,7 @@ import { validateUpdaterEvent } from './updaterEvents/validateSubmission.js';
 import { recentUpdaterEvents } from './updaterEvents/queries.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
 import { requireFirebaseUser } from './auth/firebaseIdToken.js';
-import { validateAccountProfile, createAccountProfile } from './auth/accountProfile.js';
+import { validateAccountProfile, createAccountProfile, fetchAccountProfile } from './auth/accountProfile.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
 import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from './cors.js';
@@ -26,6 +26,7 @@ const MAX_ACCOUNT_PROFILE_BODY_BYTES = 4 * 1024;
 //   POST    /telemetry             -- ingest a batch of telemetry events (no auth; validated server-side)
 //   POST    /bugs                  -- ingest one bug report, text-only (no auth; validated server-side)
 //   POST    /account/profile       -- create the username/first/last-name profile for a Firebase account (requires a valid Firebase ID token)
+//   GET     /account/profile       -- read the caller's own username/first/last-name profile (requires a valid Firebase ID token)
 //   POST    /admin/login           -- { password } -> session cookie
 //   POST    /admin/logout          -- clears the session cookie
 //   GET     /api/stats/:name       -- one chart's data (requires a valid session)
@@ -98,6 +99,9 @@ async function route(request, env, url) {
   }
   if (request.method === 'POST' && url.pathname === '/account/profile') {
     return handleAccountProfileCreate(request, env);
+  }
+  if (request.method === 'GET' && url.pathname === '/account/profile') {
+    return handleAccountProfileGet(request, env);
   }
 
   if (request.method === 'POST' && url.pathname === '/admin/login') {
@@ -193,6 +197,24 @@ async function handleAccountProfileCreate(request, env) {
 
   return new Response(JSON.stringify({ success: true }), {
     status: 201,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleAccountProfileGet(request, env) {
+  const auth = await requireFirebaseUser(request);
+  if (!auth.authorized) return auth.response;
+
+  const profile = await fetchAccountProfile(env.TELEMETRY_DB, auth.uid);
+  if (profile === null) {
+    return new Response(JSON.stringify({ error: 'profile-not-found' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return new Response(JSON.stringify(profile), {
+    status: 200,
     headers: { 'Content-Type': 'application/json' },
   });
 }
