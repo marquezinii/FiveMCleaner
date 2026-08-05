@@ -2,6 +2,28 @@
 
 ## Integração de 2 tarefas de IA em `dev/proxima-versao` — 05/08/2026
 
+- Integradas em `dev/proxima-versao`: `ai/claude/overview-redesign`
+  (reconstrução da Visão geral com ícones vetoriais próprios, saudação por
+  horário, botão/link Discord oficial, fonte Bahnschrift, correção de DPI
+  awareness via `app.manifest`, rota `GET /account/profile` no Worker) e
+  `ai/opencode/function-decomposition` (rodada completa de Extract Method em
+  8 arquivos: `WindowsTransactionEngine`, `AppOptimizationService`,
+  `MainViewModel`, `GitHubReleaseUpdateService`, `PlanBuilder`,
+  `ActionCatalog`, `WindowsOptimizationRuntime`, construtor do `MainWindow`).
+- O merge do `overview-redesign` fechou sem conflito; o merge do
+  `function-decomposition` teve conflitos em `MainWindow.xaml.cs` e
+  `MainViewModel.cs` (auto-merge no segundo), resolvidos preservando os
+  métodos refatorados de criação de serviços (`CreateAccountService`,
+  `CreateTelemetryServices`) e as features do redesign (`profileService`,
+  Discord, saudação, sincronização de nome). `MainViewModel` ganhou
+  `SetAccountFirstName` e propriedades derivadas do redesign.
+- Validação integrada: build Release sem avisos, 729 testes .NET,
+  `Verify-Safety.ps1`, `dotnet format --verify-no-changes` e `git diff --check`
+  aprovados. Worker: 150 testes (+2 novos em `accountProfile.test.js`).
+  Dashboard: 43 testes. Site: lint, build e 3 testes aprovados.
+
+## Integração de 2 tarefas de IA (2D monitor + startup audit) em `dev/proxima-versao` — 05/08/2026
+
 - Integradas em `dev/proxima-versao`: `ai/claude/live-monitor-2d`
   (substituição da cena 3D por gráfico 2D leve com leitura sob cursor, correção
   do bug de struct PDH — CPU/disco sempre 0%) e
