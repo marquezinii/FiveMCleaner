@@ -109,6 +109,17 @@ public sealed class PlanBuilder : IPlanBuilder
         OptimizationPlanRequestDto request,
         IReadOnlyList<OptimizationActionDefinition> actions)
     {
+        return [.. CreateRemovalNotices(request, actions),
+            .. CreatePowerAndProcessNotices(actions),
+            .. CreateRepairNotices(actions),
+            .. CreateGraphicsNotices(actions),
+            .. CreateProfileNotices(request)];
+    }
+
+    private static IReadOnlyList<PlanNoticeDto> CreateRemovalNotices(
+        OptimizationPlanRequestDto request,
+        IReadOnlyList<OptimizationActionDefinition> actions)
+    {
         var notices = new List<PlanNoticeDto>();
 
         if (actions.Any(action => action.Id == OptimizationActionIds.PruneLegacyCrashDumps))
@@ -133,6 +144,14 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
+        return notices;
+    }
+
+    private static IReadOnlyList<PlanNoticeDto> CreatePowerAndProcessNotices(
+        IReadOnlyList<OptimizationActionDefinition> actions)
+    {
+        var notices = new List<PlanNoticeDto>();
+
         if (actions.Any(action => action.Id == OptimizationActionIds.EnableSessionPerformancePowerPlan))
         {
             notices.Add(new PlanNoticeDto
@@ -155,6 +174,14 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
+        return notices;
+    }
+
+    private static IReadOnlyList<PlanNoticeDto> CreateRepairNotices(
+        IReadOnlyList<OptimizationActionDefinition> actions)
+    {
+        var notices = new List<PlanNoticeDto>();
+
         if (actions.Any(action => action.Id == OptimizationActionIds.RecreateFiveMLocalData))
         {
             notices.Add(new PlanNoticeDto
@@ -176,6 +203,14 @@ public sealed class PlanBuilder : IPlanBuilder
                 Message = "Só remove ros_id.dat e entitlements quando um padrão de erro específico é detectado no log; exigirá novo login no próximo início do FiveM."
             });
         }
+
+        return notices;
+    }
+
+    private static IReadOnlyList<PlanNoticeDto> CreateGraphicsNotices(
+        IReadOnlyList<OptimizationActionDefinition> actions)
+    {
+        var notices = new List<PlanNoticeDto>();
 
         if (actions.Any(action => action.Id == OptimizationActionIds.ApplyQualityLegacyGraphics
             || action.Id == OptimizationActionIds.ApplyQualityGtaVGraphics))
@@ -222,17 +257,25 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        if (request.Profile == OptimizationProfile.Aggressive)
+        return notices;
+    }
+
+    private static IReadOnlyList<PlanNoticeDto> CreateProfileNotices(OptimizationPlanRequestDto request)
+    {
+        if (request.Profile != OptimizationProfile.Aggressive)
         {
-            notices.Add(new PlanNoticeDto
+            return [];
+        }
+
+        return
+        [
+            new PlanNoticeDto
             {
                 Code = "aggressive-prioritizes-performance",
                 Severity = PlanNoticeSeverity.Warning,
                 Message = "O perfil agressivo prioriza FPS e responsividade, reduzindo a qualidade visual."
-            });
-        }
-
-        return notices;
+            }
+        ];
     }
 
     private static bool IsEnabled(ActionOptionGate gate, OptimizationOptionsDto options)

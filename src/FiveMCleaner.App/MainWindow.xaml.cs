@@ -41,94 +41,45 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         InitializeComponent();
         themeManager = new ThemeManager();
         themeManager.Apply(AppThemePreference.System);
-        var commandLine = Environment.GetCommandLineArgs();
-        var syntheticDemo = commandLine
-            .Any(value => value.Equals("--demo-synthetic", StringComparison.OrdinalIgnoreCase));
-        demoMode = syntheticDemo || commandLine
-            .Any(value => value.Equals("--demo", StringComparison.OrdinalIgnoreCase));
-        startupLaunch = commandLine
-            .Any(value => value.Equals("--startup", StringComparison.OrdinalIgnoreCase));
-        var justUpdatedVersion = commandLine
-            .FirstOrDefault(value => value.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase))
-            ?["--updated=".Length..];
+
+        var commandLine = ParseCommandLine();
+        demoMode = commandLine.DemoMode;
+        startupLaunch = commandLine.StartupLaunch;
+
         var runtimeLayout = RuntimeLayout.Resolve(AppContext.BaseDirectory);
         var installRoot = runtimeLayout.InstallRoot;
         var runtimeRoot = runtimeLayout.RuntimeRoot;
-        IStartupRegistrationService startupRegistration = demoMode
-            ? new SessionStartupRegistrationService()
-            : runtimeRoot is null
-                ? new WindowsStartupRegistrationService()
-                : new WindowsStartupRegistrationService(
-                    Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"));
-        releaseUpdateService = demoMode
-            ? null
-            : runtimeRoot is null ? new GitHubReleaseUpdateService() : new SignedManifestUpdateService();
-        ISilentUpdateInstaller? silentUpdateInstaller = demoMode ? null
-            : runtimeRoot is not null
-                ? new AtomicUpdateInstaller(runtimeRoot, Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"))
-                : new SilentUpdateInstaller(
-                Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    ProductIdentity.Name,
-                    "Updates"),
-                Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    ProductIdentity.Name,
-                    "Logs"),
-                Path.Combine(AppContext.BaseDirectory, "updater", "FiveMCleaner.Updater.exe"),
-                Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    ProductIdentity.Name,
-                    "Updater"));
+
+        var startupRegistration = CreateStartupRegistrationService(demoMode, installRoot, runtimeRoot);
+        releaseUpdateService = CreateReleaseUpdateService(demoMode, runtimeRoot);
+        var silentUpdateInstaller = CreateSilentUpdateInstaller(demoMode, installRoot, runtimeRoot);
+
         var runtimeEnvironment = AppEnvironment.Resolve();
         remoteServicesOptions = RemoteServicesOptionsLoader.Load(runtimeEnvironment, AppContext.BaseDirectory);
+
         profileService = TryCreateHttpsEndpoint(remoteServicesOptions.AccountProfileEndpoint, out var profileEndpoint)
             ? new CloudflareAccountProfileService(profileEndpoint)
             : new DisabledAccountProfileService();
-        if (!demoMode && FirebaseAuthConfiguration.TryGetApiKey(remoteServicesOptions.FirebaseApiKey, out var firebaseApiKey))
+
+        accountService = CreateAccountService(demoMode, remoteServicesOptions);
+        if (accountService is not null)
         {
-            accountService = new FirebaseAuthService(firebaseApiKey);
             accountService.StateChanged += AccountService_StateChanged;
         }
-        // Cloudflare is the sole telemetry transport (FormSubmit was
-        // removed entirely). If the configured endpoint is ever missing or
-        // malformed, telemetry safely does nothing rather than crash or
-        // silently fall back to a different destination.
-        IAnonymousTelemetryService telemetryService;
-        if (demoMode)
-        {
-            telemetryService = DisabledAnonymousTelemetryService.Instance;
-        }
-        else if (TelemetryEndpointPolicy.TryCreate(
-            remoteServicesOptions.TelemetryEndpoint,
-            runtimeEnvironment,
-            out var telemetryEndpoint,
-            out _))
-        {
-            queuedCloudflareTelemetry = new QueuedCloudflareTelemetryService(
-                new LocalTelemetryQueue(Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    ProductIdentity.Name,
-                    "Telemetry",
-                    "pending")),
-                new CloudflareTelemetryTransport(telemetryEndpoint, remoteServicesOptions.Environment));
-            telemetryService = queuedCloudflareTelemetry;
-        }
-        else
-        {
-            telemetryService = DisabledAnonymousTelemetryService.Instance;
-        }
+
+        var telemetry = CreateTelemetryServices(demoMode, remoteServicesOptions, runtimeEnvironment);
+        queuedCloudflareTelemetry = telemetry.Queued;
 
         viewModel = new MainViewModel(
-            new AppOptimizationService(demoMode, syntheticDemo),
+            new AppOptimizationService(demoMode, commandLine.SyntheticDemo),
             localization: LocalizationService.Current,
             startupRegistration: startupRegistration,
             releaseUpdateService: releaseUpdateService,
-            telemetry: telemetryService,
+            telemetry: telemetry.Service,
             silentUpdateInstaller: silentUpdateInstaller);
-        if (!string.IsNullOrWhiteSpace(justUpdatedVersion))
+        if (!string.IsNullOrWhiteSpace(commandLine.JustUpdatedVersion))
         {
-            viewModel.ReportCompletedUpdate(justUpdatedVersion);
+            viewModel.ReportCompletedUpdate(commandLine.JustUpdatedVersion);
         }
         trayIcon = new TrayIconService(LocalizationService.Current);
         trayIcon.ShowRequested += TrayIcon_ShowRequested;
@@ -140,6 +91,137 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
         System.Windows.Application.Current.SessionEnding += Application_SessionEnding;
+    }
+
+    private sealed record MainWindowCommandLine(
+        bool DemoMode,
+        bool SyntheticDemo,
+        bool StartupLaunch,
+        string? JustUpdatedVersion);
+
+    private static MainWindowCommandLine ParseCommandLine()
+    {
+        var commandLine = Environment.GetCommandLineArgs();
+        var syntheticDemo = commandLine
+            .Any(value => value.Equals("--demo-synthetic", StringComparison.OrdinalIgnoreCase));
+        var demoMode = syntheticDemo || commandLine
+            .Any(value => value.Equals("--demo", StringComparison.OrdinalIgnoreCase));
+        var startupLaunch = commandLine
+            .Any(value => value.Equals("--startup", StringComparison.OrdinalIgnoreCase));
+        var justUpdatedVersion = commandLine
+            .FirstOrDefault(value => value.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase))
+            ?["--updated=".Length..];
+        return new MainWindowCommandLine(demoMode, syntheticDemo, startupLaunch, justUpdatedVersion);
+    }
+
+    private IStartupRegistrationService CreateStartupRegistrationService(
+        bool demoMode,
+        string? installRoot,
+        string? runtimeRoot)
+    {
+        if (demoMode)
+        {
+            return new SessionStartupRegistrationService();
+        }
+
+        return runtimeRoot is null
+            ? new WindowsStartupRegistrationService()
+            : new WindowsStartupRegistrationService(
+                Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"));
+    }
+
+    private IReleaseUpdateService? CreateReleaseUpdateService(bool demoMode, string? runtimeRoot)
+    {
+        return demoMode
+            ? null
+            : runtimeRoot is null ? new GitHubReleaseUpdateService() : new SignedManifestUpdateService();
+    }
+
+    private ISilentUpdateInstaller? CreateSilentUpdateInstaller(
+        bool demoMode,
+        string? installRoot,
+        string? runtimeRoot)
+    {
+        if (demoMode)
+        {
+            return null;
+        }
+
+        if (runtimeRoot is not null)
+        {
+            return new AtomicUpdateInstaller(
+                runtimeRoot,
+                Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"));
+        }
+
+        return new SilentUpdateInstaller(
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                ProductIdentity.Name,
+                "Updates"),
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                ProductIdentity.Name,
+                "Logs"),
+            Path.Combine(AppContext.BaseDirectory, "updater", "FiveMCleaner.Updater.exe"),
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                ProductIdentity.Name,
+                "Updater"));
+    }
+
+    private IFirebaseAuthService? CreateAccountService(
+        bool demoMode,
+        RemoteServicesOptions options)
+    {
+        if (demoMode
+            || !FirebaseAuthConfiguration.TryGetApiKey(options.FirebaseApiKey, out var firebaseApiKey))
+        {
+            return null;
+        }
+
+        var service = new FirebaseAuthService(firebaseApiKey);
+        service.StateChanged += (_, _) => Dispatcher.Invoke(UpdateAccountButton);
+        return service;
+    }
+
+    private sealed record MainWindowTelemetry(
+        IAnonymousTelemetryService Service,
+        QueuedCloudflareTelemetryService? Queued);
+
+    /// <summary>
+    /// Cloudflare is the sole telemetry transport (FormSubmit was
+    /// removed entirely). If the configured endpoint is ever missing or
+    /// malformed, telemetry safely does nothing rather than crash or
+    /// silently fall back to a different destination.
+    /// </summary>
+    private MainWindowTelemetry CreateTelemetryServices(
+        bool demoMode,
+        RemoteServicesOptions options,
+        AppRuntimeEnvironment runtimeEnvironment)
+    {
+        if (demoMode)
+        {
+            return new MainWindowTelemetry(DisabledAnonymousTelemetryService.Instance, null);
+        }
+
+        if (TelemetryEndpointPolicy.TryCreate(
+            options.TelemetryEndpoint,
+            runtimeEnvironment,
+            out var telemetryEndpoint,
+            out _))
+        {
+            var queued = new QueuedCloudflareTelemetryService(
+                new LocalTelemetryQueue(Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    ProductIdentity.Name,
+                    "Telemetry",
+                    "pending")),
+                new CloudflareTelemetryTransport(telemetryEndpoint, options.Environment));
+            return new MainWindowTelemetry(queued, queued);
+        }
+
+        return new MainWindowTelemetry(DisabledAnonymousTelemetryService.Instance, null);
     }
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)

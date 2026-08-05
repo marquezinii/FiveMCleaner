@@ -1265,6 +1265,45 @@ public sealed class MainViewModel : BindableBase, IDisposable
 
     public async Task StartOptimizationAsync()
     {
+        if (!TryPrepareOptimizationRun())
+        {
+            return;
+        }
+
+        operationCancellation = new CancellationTokenSource();
+        var progress = new Progress<AppProgressUpdate>(ApplyProgress);
+        var completedSuccessfully = false;
+        var telemetryEventName = "optimization-failed";
+        string? telemetryErrorCategory = null;
+        try
+        {
+            // currentPlan é garantido não-nulo aqui: TryPrepareOptimizationRun
+            // só retorna true quando CanStart é true (e CanStart exige plano).
+            var result = await service.ExecuteAsync(currentPlan!, progress, operationCancellation.Token);
+            completedSuccessfully = result.Succeeded;
+            telemetryEventName = result.Succeeded ? "optimization-completed" : "optimization-failed";
+            await HandleOptimizationResultAsync(result);
+        }
+        catch (OperationCanceledException)
+        {
+            telemetryEventName = "optimization-cancelled";
+            telemetryErrorCategory = "cancelled";
+            HandleOptimizationCancelled();
+        }
+        catch (Exception exception)
+        {
+            telemetryEventName = "optimization-failed";
+            telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
+            HandleOptimizationFailed(exception);
+        }
+        finally
+        {
+            FinalizeOptimizationRun(completedSuccessfully, telemetryEventName, telemetryErrorCategory);
+        }
+    }
+
+    private bool TryPrepareOptimizationRun()
+    {
         // Recria o plano no clique para que o nonce e o timestamp aceitos pelo
         // broker elevado nunca fiquem antigos enquanto a janela permanece aberta.
         RefreshPlan();
@@ -1279,10 +1318,9 @@ public sealed class MainViewModel : BindableBase, IDisposable
             ProgressDetail = block is null
                 ? localization.GetString("Plan.RunDiagnosisAgain")
                 : LocalizeBlock(block);
-            return;
+            return false;
         }
 
-        operationCancellation = new CancellationTokenSource();
         IsBusy = true;
         ProgressPercent = 0;
         ClearProgressHistory();
@@ -1301,66 +1339,64 @@ public sealed class MainViewModel : BindableBase, IDisposable
             AddLog(localization.Format("Log.Warning", LocalizeNotice(notice)));
         }
 
-        var progress = new Progress<AppProgressUpdate>(ApplyProgress);
-        var completedSuccessfully = false;
-        var telemetryEventName = "optimization-failed";
-        string? telemetryErrorCategory = null;
-        try
-        {
-            var result = await service.ExecuteAsync(currentPlan, progress, operationCancellation.Token);
-            completedSuccessfully = result.Succeeded;
-            telemetryEventName = result.Succeeded ? "optimization-completed" : "optimization-failed";
-            ProgressPercent = result.Succeeded ? 100 : ProgressPercent;
-            ProgressStateLabel = result.Succeeded
-                ? localization.GetString("Status.Completed")
-                : result.WasCancelled
-                    ? localization.GetString("Status.Cancelled")
-                    : localization.GetString("Status.Warning");
-            FinalizeHeadline(result.Succeeded
-                ? localization.GetString("Status.OptimizationCompleted")
-                : result.Summary);
-            ProgressDetail = result.BytesFreed > 0
-                ? localization.Format(
-                    "Plan.ActionsCompletedFreed",
-                    result.CompletedActions,
-                    FormatBytes(result.BytesFreed))
-                : localization.Format(
-                    "Plan.ActionsCompletedSummary",
-                    result.CompletedActions,
-                    result.Summary);
-            AddLog(result.Summary);
-            ApplyReport(result.Report);
-            lastTransactionId = result.TransactionId;
-            ApplyComparison(result.Comparison);
-            ApplyHistory(await service.LoadHistoryAsync());
-        }
-        catch (OperationCanceledException)
-        {
-            telemetryEventName = "optimization-cancelled";
-            telemetryErrorCategory = "cancelled";
-            ProgressStateLabel = localization.GetString("Status.Cancelled");
-            FinalizeHeadline(localization.GetString("Status.SafeCancellation.Headline"));
-            ProgressDetail = localization.GetString("Status.SafeCancellation.Detail");
-            AddLog(localization.GetString("Log.CancellationConfirmed"));
-        }
-        catch (Exception exception)
-        {
-            telemetryEventName = "optimization-failed";
-            telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
-            ProgressStateLabel = localization.GetString("Status.SafeFailure");
-            FinalizeHeadline(localization.GetString("Status.CouldNotComplete"));
-            ProgressDetail = localization.DescribeException(exception);
-            AddLog(localization.Format("Log.Error", ProgressDetail));
-        }
-        finally
-        {
-            var executionTime = operationStopwatch?.Elapsed ?? TimeSpan.Zero;
-            StopOperationTiming(completedSuccessfully);
-            TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory);
-            operationCancellation.Dispose();
-            operationCancellation = null;
-            IsBusy = false;
-        }
+        return true;
+    }
+
+    private async Task HandleOptimizationResultAsync(AppOptimizationResult result)
+    {
+        ProgressPercent = result.Succeeded ? 100 : ProgressPercent;
+        ProgressStateLabel = result.Succeeded
+            ? localization.GetString("Status.Completed")
+            : result.WasCancelled
+                ? localization.GetString("Status.Cancelled")
+                : localization.GetString("Status.Warning");
+        FinalizeHeadline(result.Succeeded
+            ? localization.GetString("Status.OptimizationCompleted")
+            : result.Summary);
+        ProgressDetail = result.BytesFreed > 0
+            ? localization.Format(
+                "Plan.ActionsCompletedFreed",
+                result.CompletedActions,
+                FormatBytes(result.BytesFreed))
+            : localization.Format(
+                "Plan.ActionsCompletedSummary",
+                result.CompletedActions,
+                result.Summary);
+        AddLog(result.Summary);
+        ApplyReport(result.Report);
+        lastTransactionId = result.TransactionId;
+        ApplyComparison(result.Comparison);
+        ApplyHistory(await service.LoadHistoryAsync());
+    }
+
+    private void HandleOptimizationCancelled()
+    {
+        ProgressStateLabel = localization.GetString("Status.Cancelled");
+        FinalizeHeadline(localization.GetString("Status.SafeCancellation.Headline"));
+        ProgressDetail = localization.GetString("Status.SafeCancellation.Detail");
+        AddLog(localization.GetString("Log.CancellationConfirmed"));
+    }
+
+    private void HandleOptimizationFailed(Exception exception)
+    {
+        ProgressStateLabel = localization.GetString("Status.SafeFailure");
+        FinalizeHeadline(localization.GetString("Status.CouldNotComplete"));
+        ProgressDetail = localization.DescribeException(exception);
+        AddLog(localization.Format("Log.Error", ProgressDetail));
+    }
+
+    private void FinalizeOptimizationRun(
+        bool completedSuccessfully,
+        string telemetryEventName,
+        string? telemetryErrorCategory)
+    {
+        var executionTime = operationStopwatch?.Elapsed ?? TimeSpan.Zero;
+        StopOperationTiming(completedSuccessfully);
+        TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory);
+        // operationCancellation foi atribuído antes do try em StartOptimizationAsync.
+        operationCancellation!.Dispose();
+        operationCancellation = null;
+        IsBusy = false;
     }
 
     public void CancelOptimization()

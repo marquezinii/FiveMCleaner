@@ -65,6 +65,62 @@ public sealed class WindowsTransactionEngine
         WindowsTransactionOptions? options = null,
         CancellationToken cancellationToken = default)
     {
+        options ??= new WindowsTransactionOptions();
+        var actions = ValidateExecutionRequest(requestedActions, context);
+
+        await executionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var journal = await LoadOrCreateJournalAsync(actions, context, cancellationToken)
+                .ConfigureAwait(false);
+            var selected = BuildSelectedActions(actions, journal, context, options);
+
+            if (selected.Count == 0)
+            {
+                return await CompleteWithNoSelectedActionsAsync(journal, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            journal.State = WindowsTransactionState.Applying;
+            await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+
+            if (options.IsolateFailures)
+            {
+                return await ExecuteIsolatedAsync(journal, selected, context, cancellationToken)
+                    .ConfigureAwait(false);
+            }
+
+            var applied = new List<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)>();
+            try
+            {
+                await ApplyAndCommitAsync(journal, selected, applied, context, cancellationToken)
+                    .ConfigureAwait(false);
+                return CreateResult(
+                    journal,
+                    applied.Select(item => item.Action.Metadata.Id).ToArray(),
+                    GetDeferredAdministratorIds(journal),
+                    null);
+            }
+            catch (Exception exception) when (exception is not StackOverflowException)
+            {
+                return await HandleExecutionFailureAsync(
+                    journal,
+                    applied,
+                    options,
+                    context,
+                    exception).ConfigureAwait(false);
+            }
+        }
+        finally
+        {
+            executionGate.Release();
+        }
+    }
+
+    private IWindowsOptimizationAction[] ValidateExecutionRequest(
+        IEnumerable<IWindowsOptimizationAction> requestedActions,
+        WindowsActionContext context)
+    {
         ArgumentNullException.ThrowIfNull(requestedActions);
         ArgumentNullException.ThrowIfNull(context);
         if (context.TransactionId == Guid.Empty)
@@ -72,7 +128,6 @@ public sealed class WindowsTransactionEngine
             throw new ArgumentException("TransactionId cannot be empty.", nameof(context));
         }
 
-        options ??= new WindowsTransactionOptions();
         var actions = requestedActions.ToArray();
         if (actions.Length == 0)
         {
@@ -90,217 +145,227 @@ public sealed class WindowsTransactionEngine
             throw new ArgumentException("A transaction cannot contain duplicate action IDs.", nameof(requestedActions));
         }
 
-        await executionGate.WaitAsync(cancellationToken).ConfigureAwait(false);
-        try
+        return actions;
+    }
+
+    private async Task<WindowsTransactionJournal> LoadOrCreateJournalAsync(
+        IReadOnlyList<IWindowsOptimizationAction> actions,
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        var journal = await journalStore.LoadAsync(context.TransactionId, cancellationToken)
+            .ConfigureAwait(false);
+        if (journal is null)
         {
-            var journal = await journalStore.LoadAsync(context.TransactionId, cancellationToken)
-                .ConfigureAwait(false);
-            if (journal is null)
+            journal = CreateJournal(actions, context);
+            await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+        }
+        else
+        {
+            ValidateExistingJournal(journal, actions);
+            journal.WasElevated |= context.IsElevated;
+        }
+
+        return journal;
+    }
+
+    private static IReadOnlyList<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)>
+        BuildSelectedActions(
+            IReadOnlyList<IWindowsOptimizationAction> actions,
+            WindowsTransactionJournal journal,
+            WindowsActionContext context,
+            WindowsTransactionOptions options)
+    {
+        var entriesById = journal.Actions.ToDictionary(
+            entry => entry.ActionId,
+            StringComparer.Ordinal);
+        var selected = new List<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)>();
+        foreach (var action in actions)
+        {
+            var entry = entriesById[action.Metadata.Id];
+            if (entry.State == WindowsActionJournalState.SkippedPrivilege)
             {
-                journal = CreateJournal(actions, context);
-                await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
-            }
-            else
-            {
-                ValidateExistingJournal(journal, actions);
-                journal.WasElevated |= context.IsElevated;
+                entry.State = WindowsActionJournalState.DeferredPrivilege;
             }
 
-            var entriesById = journal.Actions.ToDictionary(
-                entry => entry.ActionId,
-                StringComparer.Ordinal);
-            var selected = new List<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)>();
-            foreach (var action in actions)
+            if (entry.State == WindowsActionJournalState.Committed)
             {
-                var entry = entriesById[action.Metadata.Id];
-                if (entry.State == WindowsActionJournalState.SkippedPrivilege)
+                continue;
+            }
+
+            if (entry.State is not (WindowsActionJournalState.Pending
+                or WindowsActionJournalState.DeferredPrivilege))
+            {
+                throw new InvalidOperationException(
+                    $"Action '{entry.ActionId}' cannot resume from state '{entry.State}'.");
+            }
+
+            var isAdministratorAction =
+                action.Metadata.RequiredPrivilege == RequiredPrivilege.Administrator;
+            // An action opted into "attempt without elevation first"
+            // still gets a shot in the standard-user phase even though
+            // it is otherwise gated on IsElevated -- most Windows
+            // configurations allow it, and only a genuine access-denied
+            // result (see the isolated-execution catch below) defers it
+            // to the elevated broker phase.
+            var attemptWithoutElevationFirst = isAdministratorAction
+                && action.Metadata.AttemptWithoutElevationFirst
+                && !context.IsElevated;
+            var include = isAdministratorAction
+                ? (options.IncludeAdministratorActions && context.IsElevated)
+                    || (attemptWithoutElevationFirst && options.IncludeStandardUserActions)
+                : options.IncludeStandardUserActions;
+            if (!include)
+            {
+                if (isAdministratorAction)
                 {
                     entry.State = WindowsActionJournalState.DeferredPrivilege;
                 }
 
-                if (entry.State == WindowsActionJournalState.Committed)
-                {
-                    continue;
-                }
-
-                if (entry.State is not (WindowsActionJournalState.Pending
-                    or WindowsActionJournalState.DeferredPrivilege))
-                {
-                    throw new InvalidOperationException(
-                        $"Action '{entry.ActionId}' cannot resume from state '{entry.State}'.");
-                }
-
-                var isAdministratorAction =
-                    action.Metadata.RequiredPrivilege == RequiredPrivilege.Administrator;
-                // An action opted into "attempt without elevation first"
-                // still gets a shot in the standard-user phase even though
-                // it is otherwise gated on IsElevated -- most Windows
-                // configurations allow it, and only a genuine access-denied
-                // result (see the isolated-execution catch below) defers it
-                // to the elevated broker phase.
-                var attemptWithoutElevationFirst = isAdministratorAction
-                    && action.Metadata.AttemptWithoutElevationFirst
-                    && !context.IsElevated;
-                var include = isAdministratorAction
-                    ? (options.IncludeAdministratorActions && context.IsElevated)
-                        || (attemptWithoutElevationFirst && options.IncludeStandardUserActions)
-                    : options.IncludeStandardUserActions;
-                if (!include)
-                {
-                    if (isAdministratorAction)
-                    {
-                        entry.State = WindowsActionJournalState.DeferredPrivilege;
-                    }
-
-                    continue;
-                }
-
-                selected.Add((action, entry));
+                continue;
             }
 
-            if (selected.Count == 0)
-            {
-                journal.State = DetermineSuccessfulState(journal);
-                await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
-                return CreateResult(journal, [], GetDeferredAdministratorIds(journal), null);
-            }
+            selected.Add((action, entry));
+        }
 
-            journal.State = WindowsTransactionState.Applying;
+        return selected;
+    }
+
+    private async Task<WindowsTransactionResult> CompleteWithNoSelectedActionsAsync(
+        WindowsTransactionJournal journal,
+        CancellationToken cancellationToken)
+    {
+        journal.State = DetermineSuccessfulState(journal);
+        await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+        return CreateResult(journal, [], GetDeferredAdministratorIds(journal), null);
+    }
+
+    private async Task ApplyAndCommitAsync(
+        WindowsTransactionJournal journal,
+        IReadOnlyList<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)> selected,
+        List<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)> applied,
+        WindowsActionContext context,
+        CancellationToken cancellationToken)
+    {
+        var totalWeight = selected.Sum(item => Math.Max(1, item.Action.Metadata.ProgressWeight));
+        var completedWeight = 0;
+
+        foreach (var item in selected)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            item.Entry.State = WindowsActionJournalState.Applying;
+            item.Entry.StartedAtUtc = DateTimeOffset.UtcNow;
+            item.Entry.Error = null;
             await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
 
-            if (options.IsolateFailures)
-            {
-                return await ExecuteIsolatedAsync(journal, selected, context, cancellationToken)
-                    .ConfigureAwait(false);
-            }
+            context.Progress?.Report(new WindowsActionProgress(
+                context.TransactionId,
+                item.Action.Metadata.Id,
+                $"Aplicando {item.Action.Metadata.Name}",
+                completedWeight,
+                totalWeight));
 
-            var applied = new List<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)>();
+            WindowsActionApplyResult result;
             try
             {
-                var totalWeight = selected.Sum(item => Math.Max(1, item.Action.Metadata.ProgressWeight));
-                var completedWeight = 0;
-
-                foreach (var item in selected)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    item.Entry.State = WindowsActionJournalState.Applying;
-                    item.Entry.StartedAtUtc = DateTimeOffset.UtcNow;
-                    item.Entry.Error = null;
-                    await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
-
-                    context.Progress?.Report(new WindowsActionProgress(
-                        context.TransactionId,
-                        item.Action.Metadata.Id,
-                        $"Aplicando {item.Action.Metadata.Name}",
-                        completedWeight,
-                        totalWeight));
-
-                    WindowsActionApplyResult result;
-                    try
-                    {
-                        result = await item.Action.ApplyAsync(context, cancellationToken)
-                            .ConfigureAwait(false);
-                    }
-                    catch (UnauthorizedAccessException) when (
-                        !context.IsElevated
-                        && item.Action.Metadata.RequiredPrivilege == RequiredPrivilege.Administrator
-                        && item.Action.Metadata.AttemptWithoutElevationFirst)
-                    {
-                        // Same "defer instead of fail" handling as the
-                        // isolated-execution path (see ExecuteIsolatedAsync).
-                        item.Entry.State = WindowsActionJournalState.DeferredPrivilege;
-                        item.Entry.StartedAtUtc = null;
-                        item.Entry.Error = null;
-                        await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
-                        continue;
-                    }
-
-                    item.Entry.Changed = result.Changed;
-                    item.Entry.SnapshotJson = result.SnapshotJson;
-                    item.Entry.Messages.AddRange(result.Messages);
-                    item.Entry.State = WindowsActionJournalState.Applied;
-                    item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
-                    applied.Add(item);
-                    completedWeight += Math.Max(1, item.Action.Metadata.ProgressWeight);
-                    await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
-
-                    context.Progress?.Report(new WindowsActionProgress(
-                        context.TransactionId,
-                        item.Action.Metadata.Id,
-                        $"Concluído: {item.Action.Metadata.Name}",
-                        completedWeight,
-                        totalWeight));
-                }
-
-                journal.State = WindowsTransactionState.Committing;
-                await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
-
-                foreach (var item in OrderForCommit(applied))
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-                    item.Entry.State = WindowsActionJournalState.Committing;
-                    await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
-                    await item.Action.CommitAsync(
-                        context,
-                        item.Entry.SnapshotJson,
-                        cancellationToken).ConfigureAwait(false);
-                    item.Entry.State = WindowsActionJournalState.Committed;
-                    item.Entry.Outcome = item.Entry.Changed
-                        ? ActionExecutionOutcome.Applied
-                        : ActionExecutionOutcome.Verified;
-                    item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
-                    await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
-                }
-
-                journal.State = DetermineSuccessfulState(journal);
-                journal.Error = null;
-                await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
-                return CreateResult(
-                    journal,
-                    applied.Select(item => item.Action.Metadata.Id).ToArray(),
-                    GetDeferredAdministratorIds(journal),
-                    null);
+                result = await item.Action.ApplyAsync(context, cancellationToken)
+                    .ConfigureAwait(false);
             }
-            catch (Exception exception) when (exception is not StackOverflowException)
+            catch (UnauthorizedAccessException) when (
+                !context.IsElevated
+                && item.Action.Metadata.RequiredPrivilege == RequiredPrivilege.Administrator
+                && item.Action.Metadata.AttemptWithoutElevationFirst)
             {
-                journal.Error = exception.ToString();
-                journal.State = WindowsTransactionState.Failed;
-                var current = journal.Actions.LastOrDefault(entry =>
-                    entry.State is WindowsActionJournalState.Applying
-                        or WindowsActionJournalState.Committing);
-                if (current is not null)
-                {
-                    current.State = WindowsActionJournalState.Failed;
-                    current.Outcome = ActionExecutionOutcome.Failed;
-                    current.Error = exception.ToString();
-                    current.CompletedAtUtc = DateTimeOffset.UtcNow;
-                }
-
+                // Same "defer instead of fail" handling as the
+                // isolated-execution path (see ExecuteIsolatedAsync).
+                item.Entry.State = WindowsActionJournalState.DeferredPrivilege;
+                item.Entry.StartedAtUtc = null;
+                item.Entry.Error = null;
                 await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
-                if (options.RollbackOnFailure)
-                {
-                    var rollbackCandidates = applied
-                        .Where(item => CanRollback(item.Entry))
-                        .ToArray();
-                    await RollbackAppliedAsync(
-                        journal,
-                        rollbackCandidates,
-                        context,
-                        WindowsTransactionState.RolledBack,
-                        CancellationToken.None).ConfigureAwait(false);
-                }
-
-                return CreateResult(
-                    journal,
-                    applied.Select(item => item.Action.Metadata.Id).ToArray(),
-                    GetDeferredAdministratorIds(journal),
-                    exception.Message);
+                continue;
             }
+
+            item.Entry.Changed = result.Changed;
+            item.Entry.SnapshotJson = result.SnapshotJson;
+            item.Entry.Messages.AddRange(result.Messages);
+            item.Entry.State = WindowsActionJournalState.Applied;
+            item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
+            applied.Add(item);
+            completedWeight += Math.Max(1, item.Action.Metadata.ProgressWeight);
+            await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+
+            context.Progress?.Report(new WindowsActionProgress(
+                context.TransactionId,
+                item.Action.Metadata.Id,
+                $"Concluído: {item.Action.Metadata.Name}",
+                completedWeight,
+                totalWeight));
         }
-        finally
+
+        journal.State = WindowsTransactionState.Committing;
+        await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+
+        foreach (var item in OrderForCommit(applied))
         {
-            executionGate.Release();
+            cancellationToken.ThrowIfCancellationRequested();
+            item.Entry.State = WindowsActionJournalState.Committing;
+            await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+            await item.Action.CommitAsync(
+                context,
+                item.Entry.SnapshotJson,
+                cancellationToken).ConfigureAwait(false);
+            item.Entry.State = WindowsActionJournalState.Committed;
+            item.Entry.Outcome = item.Entry.Changed
+                ? ActionExecutionOutcome.Applied
+                : ActionExecutionOutcome.Verified;
+            item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
+            await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
         }
+
+        journal.State = DetermineSuccessfulState(journal);
+        journal.Error = null;
+        await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+    }
+
+    private async Task<WindowsTransactionResult> HandleExecutionFailureAsync(
+        WindowsTransactionJournal journal,
+        IReadOnlyList<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)> applied,
+        WindowsTransactionOptions options,
+        WindowsActionContext context,
+        Exception exception)
+    {
+        journal.Error = exception.ToString();
+        journal.State = WindowsTransactionState.Failed;
+        var current = journal.Actions.LastOrDefault(entry =>
+            entry.State is WindowsActionJournalState.Applying
+                or WindowsActionJournalState.Committing);
+        if (current is not null)
+        {
+            current.State = WindowsActionJournalState.Failed;
+            current.Outcome = ActionExecutionOutcome.Failed;
+            current.Error = exception.ToString();
+            current.CompletedAtUtc = DateTimeOffset.UtcNow;
+        }
+
+        await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+        if (options.RollbackOnFailure)
+        {
+            var rollbackCandidates = applied
+                .Where(item => CanRollback(item.Entry))
+                .ToArray();
+            await RollbackAppliedAsync(
+                journal,
+                rollbackCandidates,
+                context,
+                WindowsTransactionState.RolledBack,
+                CancellationToken.None).ConfigureAwait(false);
+        }
+
+        return CreateResult(
+            journal,
+            applied.Select(item => item.Action.Metadata.Id).ToArray(),
+            GetDeferredAdministratorIds(journal),
+            exception.Message);
     }
 
     public async Task<WindowsTransactionResult> RollbackAsync(
@@ -627,118 +692,42 @@ public sealed class WindowsTransactionEngine
 
             if (aborted)
             {
-                MarkTerminal(item.Entry, WindowsActionJournalState.Skipped,
-                    ActionExecutionOutcome.NotRun, "Ignorada após uma falha crítica anterior.");
                 completedWeight += weight;
-                await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
-                ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
-                    ActionExecutionOutcome.NotRun);
+                await SkipRemainingAfterAbortAsync(
+                    journal, item, context, step, totalSteps, completedWeight, totalWeight)
+                    .ConfigureAwait(false);
                 continue;
             }
 
             var unmet = FindUnmetPrerequisite(item.Action.Metadata, entriesById);
             if (unmet is not null)
             {
-                MarkTerminal(item.Entry, WindowsActionJournalState.Skipped,
-                    ActionExecutionOutcome.Skipped, $"Pré-requisito não atendido: {unmet}.");
                 completedWeight += weight;
-                await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
-                ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
-                    ActionExecutionOutcome.Skipped);
+                await SkipDueToUnmetPrerequisiteAsync(
+                    journal, item, context, step, totalSteps, completedWeight, totalWeight, unmet)
+                    .ConfigureAwait(false);
                 continue;
             }
 
-            item.Entry.State = WindowsActionJournalState.Applying;
-            item.Entry.StartedAtUtc = DateTimeOffset.UtcNow;
-            item.Entry.Error = null;
-            await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+            await BeginItemApplicationAsync(
+                journal, item, context, step, totalSteps, completedWeight, totalWeight,
+                cancellationToken).ConfigureAwait(false);
+            var result = await ApplyIsolatedItemAsync(journal, item, context, applied, cancellationToken)
+                .ConfigureAwait(false);
+
+            completedWeight += weight;
+            if (result == IsolatedItemResult.FailedCritical)
+            {
+                aborted = true;
+            }
+
             ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
-                ActionExecutionOutcome.Pending);
-
-            try
-            {
-                var result = await item.Action.ApplyAsync(context, cancellationToken)
-                    .ConfigureAwait(false);
-                item.Entry.Changed = result.Changed;
-                item.Entry.SnapshotJson = result.SnapshotJson;
-                item.Entry.Messages.AddRange(result.Messages);
-
-                if (result.Changed)
-                {
-                    item.Entry.State = WindowsActionJournalState.Committing;
-                    await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
-                    await item.Action.CommitAsync(context, item.Entry.SnapshotJson, cancellationToken)
-                        .ConfigureAwait(false);
-                    item.Entry.State = WindowsActionJournalState.Committed;
-                    item.Entry.Outcome = ActionExecutionOutcome.Applied;
-                    applied.Add(item.Action.Metadata.Id);
-                }
-                else
-                {
-                    item.Entry.State = WindowsActionJournalState.Committed;
-                    item.Entry.Outcome = ActionExecutionOutcome.Verified;
-                }
-
-                item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
-                completedWeight += weight;
-                await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
-                ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
-                    item.Entry.Outcome);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                await IsolatedRollbackSelfAsync(journal, item, context).ConfigureAwait(false);
-                await FinalizeCancelledIsolatedRunAsync(journal).ConfigureAwait(false);
-                throw;
-            }
-            catch (UnauthorizedAccessException) when (
-                !context.IsElevated
-                && item.Action.Metadata.RequiredPrivilege == RequiredPrivilege.Administrator
-                && item.Action.Metadata.AttemptWithoutElevationFirst)
-            {
-                // This computer genuinely requires elevation for this
-                // action -- not a failure, just defer it back to the
-                // broker phase exactly as if it had never been attempted.
-                item.Entry.State = WindowsActionJournalState.DeferredPrivilege;
-                item.Entry.Error = null;
-                item.Entry.CompletedAtUtc = null;
-                item.Entry.StartedAtUtc = null;
-                await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
-
-                completedWeight += weight;
-                ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
-                    ActionExecutionOutcome.Skipped);
-            }
-            catch (Exception exception) when (exception is not StackOverflowException)
-            {
-                item.Entry.Error = exception.ToString();
-                item.Entry.State = WindowsActionJournalState.Failed;
-                item.Entry.Outcome = ActionExecutionOutcome.Failed;
-                item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
-                await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
-
-                await IsolatedRollbackSelfAsync(journal, item, context).ConfigureAwait(false);
-
-                completedWeight += weight;
-                if (item.Action.Metadata.IsCritical)
-                {
-                    aborted = true;
-                }
-
-                ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
-                    item.Entry.Outcome);
-            }
+                ReportOutcomeFor(result));
         }
 
         if (aborted)
         {
-            foreach (var entry in journal.Actions.Where(entry =>
-                         entry.State is WindowsActionJournalState.Pending
-                             or WindowsActionJournalState.DeferredPrivilege))
-            {
-                MarkTerminal(entry, WindowsActionJournalState.Skipped,
-                    ActionExecutionOutcome.NotRun, "Ignorada após uma falha crítica anterior.");
-            }
+            AbortRemainingEntries(journal);
         }
 
         journal.State = DetermineIsolatedFinalState(journal);
@@ -751,6 +740,159 @@ public sealed class WindowsTransactionEngine
         await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
 
         return CreateResult(journal, applied, GetDeferredAdministratorIds(journal), journal.Error);
+    }
+
+    private async Task SkipRemainingAfterAbortAsync(
+        WindowsTransactionJournal journal,
+        (IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry) item,
+        WindowsActionContext context,
+        int step,
+        int totalSteps,
+        int completedWeight,
+        int totalWeight)
+    {
+        MarkTerminal(item.Entry, WindowsActionJournalState.Skipped,
+            ActionExecutionOutcome.NotRun, "Ignorada após uma falha crítica anterior.");
+        await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+        ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
+            ActionExecutionOutcome.NotRun);
+    }
+
+    private async Task SkipDueToUnmetPrerequisiteAsync(
+        WindowsTransactionJournal journal,
+        (IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry) item,
+        WindowsActionContext context,
+        int step,
+        int totalSteps,
+        int completedWeight,
+        int totalWeight,
+        string unmet)
+    {
+        MarkTerminal(item.Entry, WindowsActionJournalState.Skipped,
+            ActionExecutionOutcome.Skipped, $"Pré-requisito não atendido: {unmet}.");
+        await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+        ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
+            ActionExecutionOutcome.Skipped);
+    }
+
+    private async Task BeginItemApplicationAsync(
+        WindowsTransactionJournal journal,
+        (IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry) item,
+        WindowsActionContext context,
+        int step,
+        int totalSteps,
+        int completedWeight,
+        int totalWeight,
+        CancellationToken cancellationToken)
+    {
+        item.Entry.State = WindowsActionJournalState.Applying;
+        item.Entry.StartedAtUtc = DateTimeOffset.UtcNow;
+        item.Entry.Error = null;
+        await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+        ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
+            ActionExecutionOutcome.Pending);
+    }
+
+    private async Task<IsolatedItemResult> ApplyIsolatedItemAsync(
+        WindowsTransactionJournal journal,
+        (IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry) item,
+        WindowsActionContext context,
+        List<string> applied,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await item.Action.ApplyAsync(context, cancellationToken)
+                .ConfigureAwait(false);
+            item.Entry.Changed = result.Changed;
+            item.Entry.SnapshotJson = result.SnapshotJson;
+            item.Entry.Messages.AddRange(result.Messages);
+
+            if (result.Changed)
+            {
+                item.Entry.State = WindowsActionJournalState.Committing;
+                await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+                await item.Action.CommitAsync(context, item.Entry.SnapshotJson, cancellationToken)
+                    .ConfigureAwait(false);
+                item.Entry.State = WindowsActionJournalState.Committed;
+                item.Entry.Outcome = ActionExecutionOutcome.Applied;
+                applied.Add(item.Action.Metadata.Id);
+            }
+            else
+            {
+                item.Entry.State = WindowsActionJournalState.Committed;
+                item.Entry.Outcome = ActionExecutionOutcome.Verified;
+            }
+
+            item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
+            await journalStore.SaveAsync(journal, cancellationToken).ConfigureAwait(false);
+            return item.Entry.Changed ? IsolatedItemResult.Applied : IsolatedItemResult.Verified;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            await IsolatedRollbackSelfAsync(journal, item, context).ConfigureAwait(false);
+            await FinalizeCancelledIsolatedRunAsync(journal).ConfigureAwait(false);
+            throw;
+        }
+        catch (UnauthorizedAccessException) when (
+            !context.IsElevated
+            && item.Action.Metadata.RequiredPrivilege == RequiredPrivilege.Administrator
+            && item.Action.Metadata.AttemptWithoutElevationFirst)
+        {
+            // This computer genuinely requires elevation for this
+            // action -- not a failure, just defer it back to the
+            // broker phase exactly as if it had never been attempted.
+            item.Entry.State = WindowsActionJournalState.DeferredPrivilege;
+            item.Entry.Error = null;
+            item.Entry.CompletedAtUtc = null;
+            item.Entry.StartedAtUtc = null;
+            await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+            return IsolatedItemResult.Deferred;
+        }
+        catch (Exception exception) when (exception is not StackOverflowException)
+        {
+            item.Entry.Error = exception.ToString();
+            item.Entry.State = WindowsActionJournalState.Failed;
+            item.Entry.Outcome = ActionExecutionOutcome.Failed;
+            item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
+            await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+
+            await IsolatedRollbackSelfAsync(journal, item, context).ConfigureAwait(false);
+            return item.Action.Metadata.IsCritical
+                ? IsolatedItemResult.FailedCritical
+                : IsolatedItemResult.Failed;
+        }
+    }
+
+    private void AbortRemainingEntries(WindowsTransactionJournal journal)
+    {
+        foreach (var entry in journal.Actions.Where(entry =>
+                     entry.State is WindowsActionJournalState.Pending
+                         or WindowsActionJournalState.DeferredPrivilege))
+        {
+            MarkTerminal(entry, WindowsActionJournalState.Skipped,
+                ActionExecutionOutcome.NotRun, "Ignorada após uma falha crítica anterior.");
+        }
+    }
+
+    private static ActionExecutionOutcome ReportOutcomeFor(IsolatedItemResult result)
+    {
+        return result switch
+        {
+            IsolatedItemResult.Applied => ActionExecutionOutcome.Applied,
+            IsolatedItemResult.Verified => ActionExecutionOutcome.Verified,
+            IsolatedItemResult.Deferred => ActionExecutionOutcome.Skipped,
+            _ => ActionExecutionOutcome.Failed
+        };
+    }
+
+    private enum IsolatedItemResult
+    {
+        Applied,
+        Verified,
+        Deferred,
+        Failed,
+        FailedCritical
     }
 
     private async Task IsolatedRollbackSelfAsync(

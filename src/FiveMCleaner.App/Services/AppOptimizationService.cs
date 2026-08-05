@@ -134,22 +134,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 cacheBytes,
                 gpuWasIdentified);
 
-            var notices = new List<string>();
-            notices.Add(gtaV.IsInstalled
-                ? "GTA V Legacy detectado; executável e settings.xml entrarão nas ações compatíveis."
-                : "O executável do GTA V Legacy não foi confirmado automaticamente.");
-            if (cacheBytes >= 8L * 1024 * 1024 * 1024)
-            {
-                notices.Add("O cache regenerável de servidores está acima de 8 GB; o reparo inteligente pode liberar espaço.");
-            }
-            else if (freeDiskGiB < 15)
-            {
-                notices.Add("Há pouco espaço livre na unidade do Windows; limpezas seguras podem melhorar a responsividade geral.");
-            }
-            else
-            {
-                notices.Add("O PC está estável; o perfil sugerido prioriza consistência sem tweaks de risco.");
-            }
+            var notices = BuildDiagnosticNotices(gtaV, cacheBytes, freeDiskGiB);
 
             // Await remaining parallel tasks
             var cpuName = await cpuNameTask.ConfigureAwait(false);
@@ -187,6 +172,31 @@ public sealed class AppOptimizationService : IAppOptimizationService
     }
 
     public bool SettingsFileExists() => !demoMode && File.Exists(settingsPath);
+
+    private static IReadOnlyList<string> BuildDiagnosticNotices(
+        GtaVInstallationInfo gtaV,
+        long cacheBytes,
+        double freeDiskGiB)
+    {
+        var notices = new List<string>();
+        notices.Add(gtaV.IsInstalled
+            ? "GTA V Legacy detectado; executável e settings.xml entrarão nas ações compatíveis."
+            : "O executável do GTA V Legacy não foi confirmado automaticamente.");
+        if (cacheBytes >= 8L * 1024 * 1024 * 1024)
+        {
+            notices.Add("O cache regenerável de servidores está acima de 8 GB; o reparo inteligente pode liberar espaço.");
+        }
+        else if (freeDiskGiB < 15)
+        {
+            notices.Add("Há pouco espaço livre na unidade do Windows; limpezas seguras podem melhorar a responsividade geral.");
+        }
+        else
+        {
+            notices.Add("O PC está estável; o perfil sugerido prioriza consistência sem tweaks de risco.");
+        }
+
+        return notices;
+    }
 
     public async Task<AppSettings> LoadSettingsAsync(CancellationToken cancellationToken = default)
     {
@@ -555,6 +565,65 @@ public sealed class AppOptimizationService : IAppOptimizationService
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        ReportPreparing(progress);
+
+        var beforeSnapshot = TryCaptureResourceComparisonSnapshot();
+        var runtime = CreateRuntimeForDetectedInstallation();
+        var localResult = await ExecuteLocalPhaseAsync(
+            runtime,
+            plan,
+            progress,
+            cancellationToken).ConfigureAwait(false);
+
+        if (localResult.State is not (
+            WindowsTransactionState.Committed
+            or WindowsTransactionState.CommittedWithErrors
+            or WindowsTransactionState.AwaitingElevation))
+        {
+            return await CreateResultFromJournalAsync(
+                plan.PlanId,
+                plan.Profile,
+                succeeded: false,
+                wasCancelled: false,
+                localResult.Error ?? localization.GetString("Runtime.LocalChangesReverted"),
+                cancellationToken).ConfigureAwait(false);
+        }
+
+        if (localResult.DeferredAdministratorActionIds.Count > 0)
+        {
+            var elevatedResult = await ExecuteElevatedPhaseAsync(
+                runtime,
+                plan,
+                progress,
+                cancellationToken).ConfigureAwait(false);
+            if (elevatedResult is not null)
+            {
+                return elevatedResult;
+            }
+        }
+
+        // O sucesso final é decidido pelo relatório do journal: uma run com
+        // qualquer ação falhada nunca é reportada como totalmente concluída.
+        var runSucceeded = await LoadFinalRunSucceededAsync(plan, cancellationToken).ConfigureAwait(false);
+
+        ReportCompletion(progress, runSucceeded);
+
+        var comparison = await CaptureComparisonAsync(beforeSnapshot).ConfigureAwait(false);
+
+        var result = await CreateResultFromJournalAsync(
+            plan.PlanId,
+            plan.Profile,
+            succeeded: runSucceeded,
+            wasCancelled: false,
+            $"{localization.GetString(runSucceeded ? "Runtime.PlanCompleted" : "Runtime.PlanCompletedWithErrors")}. "
+                + localization.GetString(
+                    runSucceeded ? "Runtime.PlanCompletedDetail" : "Runtime.PlanCompletedWithErrorsDetail"),
+            cancellationToken).ConfigureAwait(false);
+        return comparison is null ? result : result with { Comparison = comparison };
+    }
+
+    private void ReportPreparing(IProgress<AppProgressUpdate> progress)
+    {
         progress.Report(new AppProgressUpdate
         {
             Timestamp = DateTimeOffset.UtcNow,
@@ -563,9 +632,14 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Headline = localization.GetString("Runtime.ValidatingPlan"),
             Detail = localization.GetString("Runtime.ValidatingPlanDetail")
         });
+    }
 
-        var beforeSnapshot = TryCaptureResourceComparisonSnapshot();
-        var runtime = CreateRuntimeForDetectedInstallation();
+    private async Task<WindowsTransactionResult> ExecuteLocalPhaseAsync(
+        WindowsOptimizationRuntime runtime,
+        OptimizationPlanDto plan,
+        IProgress<AppProgressUpdate> progress,
+        CancellationToken cancellationToken)
+    {
         var actionProgress = new InlineProgress<WindowsActionProgress>(update =>
         {
             var percent = update.TotalWeight > 0
@@ -592,7 +666,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
             IsElevated = false,
             Progress = actionProgress
         };
-        var localResult = await runtime.ExecuteAsync(
+        return await runtime.ExecuteAsync(
             plan,
             context,
             new WindowsTransactionOptions
@@ -602,109 +676,113 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 IsolateFailures = true
             },
             cancellationToken).ConfigureAwait(false);
+    }
 
-        if (localResult.State is not (
-            WindowsTransactionState.Committed
-            or WindowsTransactionState.CommittedWithErrors
-            or WindowsTransactionState.AwaitingElevation))
+    /// <summary>
+    /// Executa a fase administrativa no broker elevado. Retorna um resultado
+    /// final quando a fase termina (cancelada, falhou ou foi rejeitada pelo
+    /// UAC); retorna <see langword="null"/> quando a fase elevada concluiu com
+    /// sucesso e a orquestração deve prosseguir.
+    /// </summary>
+    private async Task<AppOptimizationResult?> ExecuteElevatedPhaseAsync(
+        WindowsOptimizationRuntime runtime,
+        OptimizationPlanDto plan,
+        IProgress<AppProgressUpdate> progress,
+        CancellationToken cancellationToken)
+    {
+        progress.Report(new AppProgressUpdate
         {
+            Timestamp = DateTimeOffset.UtcNow,
+            Kind = AppProgressKind.Preparing,
+            Percent = 71,
+            Headline = localization.GetString("Runtime.WindowsConfirmation"),
+            Detail = localization.GetString("Runtime.WindowsConfirmationDetail")
+        });
+
+        var adminProgress = new InlineProgress<AppProgressUpdate>(update => progress.Report(
+            update.ActionId is null
+                ? update
+                : update with { Headline = GetLocalizedActionName(update.ActionId) }));
+
+        ElevatedBrokerResult elevated;
+        try
+        {
+            elevated = await brokerClient.ExecuteAsync(plan, adminProgress, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            var rollback = await TryRollbackLocalPhaseAsync(runtime, plan.PlanId)
+                .ConfigureAwait(false);
+            return await CreateResultFromJournalAsync(
+                plan.PlanId,
+                plan.Profile,
+                succeeded: false,
+                wasCancelled: true,
+                DescribeInterruptedBroker(
+                    localization.GetString("Runtime.AdminConfirmationCancelled"),
+                    rollback),
+                CancellationToken.None).ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            var rollback = await TryRollbackLocalPhaseAsync(runtime, plan.PlanId)
+                .ConfigureAwait(false);
             return await CreateResultFromJournalAsync(
                 plan.PlanId,
                 plan.Profile,
                 succeeded: false,
                 wasCancelled: false,
-                localResult.Error ?? localization.GetString("Runtime.LocalChangesReverted"),
-                cancellationToken).ConfigureAwait(false);
+                DescribeInterruptedBroker(
+                    localization.Format(
+                        "Runtime.BrokerResultUnconfirmed",
+                        localization.DescribeException(exception)),
+                    rollback),
+                CancellationToken.None).ConfigureAwait(false);
         }
 
-        if (localResult.DeferredAdministratorActionIds.Count > 0)
+        if (!elevated.Succeeded)
         {
-            progress.Report(new AppProgressUpdate
-            {
-                Timestamp = DateTimeOffset.UtcNow,
-                Kind = AppProgressKind.Preparing,
-                Percent = 71,
-                Headline = localization.GetString("Runtime.WindowsConfirmation"),
-                Detail = localization.GetString("Runtime.WindowsConfirmationDetail")
-            });
+            // A falha (ou cancelamento do UAC) da fase administrativa não
+            // é motivo para desfazer as ações de usuário padrão já
+            // confirmadas -- isso é o que causava várias etapas
+            // aparentemente "quebradas" quando só o plano de energia
+            // falhava. Só a própria ação administrativa é marcada como
+            // falha; o restante permanece Committed.
+            await runtime.Engine.MarkAdministratorPhaseFailedAsync(
+                plan.PlanId,
+                elevated.Message,
+                CancellationToken.None).ConfigureAwait(false);
+            var summary = elevated.WasCancelled
+                ? localization.GetString("Runtime.UacCancelledPreserved")
+                : localization.Format("Runtime.AdminPhaseFailedPreserved", elevated.Message);
 
-            var adminProgress = new InlineProgress<AppProgressUpdate>(update => progress.Report(
-                update.ActionId is null
-                    ? update
-                    : update with { Headline = GetLocalizedActionName(update.ActionId) }));
-
-            ElevatedBrokerResult elevated;
-            try
-            {
-                elevated = await brokerClient.ExecuteAsync(plan, adminProgress, cancellationToken)
-                    .ConfigureAwait(false);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                var rollback = await TryRollbackLocalPhaseAsync(runtime, plan.PlanId)
-                    .ConfigureAwait(false);
-                return await CreateResultFromJournalAsync(
-                    plan.PlanId,
-                    plan.Profile,
-                    succeeded: false,
-                    wasCancelled: true,
-                    DescribeInterruptedBroker(
-                        localization.GetString("Runtime.AdminConfirmationCancelled"),
-                        rollback),
-                    CancellationToken.None).ConfigureAwait(false);
-            }
-            catch (Exception exception) when (exception is not (
-                OutOfMemoryException or StackOverflowException or AccessViolationException))
-            {
-                var rollback = await TryRollbackLocalPhaseAsync(runtime, plan.PlanId)
-                    .ConfigureAwait(false);
-                return await CreateResultFromJournalAsync(
-                    plan.PlanId,
-                    plan.Profile,
-                    succeeded: false,
-                    wasCancelled: false,
-                    DescribeInterruptedBroker(
-                        localization.Format(
-                            "Runtime.BrokerResultUnconfirmed",
-                            localization.DescribeException(exception)),
-                        rollback),
-                    CancellationToken.None).ConfigureAwait(false);
-            }
-
-            if (!elevated.Succeeded)
-            {
-                // A falha (ou cancelamento do UAC) da fase administrativa não
-                // é motivo para desfazer as ações de usuário padrão já
-                // confirmadas -- isso é o que causava várias etapas
-                // aparentemente "quebradas" quando só o plano de energia
-                // falhava. Só a própria ação administrativa é marcada como
-                // falha; o restante permanece Committed.
-                await runtime.Engine.MarkAdministratorPhaseFailedAsync(
-                    plan.PlanId,
-                    elevated.Message,
-                    CancellationToken.None).ConfigureAwait(false);
-                var summary = elevated.WasCancelled
-                    ? localization.GetString("Runtime.UacCancelledPreserved")
-                    : localization.Format("Runtime.AdminPhaseFailedPreserved", elevated.Message);
-
-                return await CreateResultFromJournalAsync(
-                    plan.PlanId,
-                    plan.Profile,
-                    succeeded: false,
-                    wasCancelled: elevated.WasCancelled,
-                    summary,
-                    CancellationToken.None).ConfigureAwait(false);
-            }
+            return await CreateResultFromJournalAsync(
+                plan.PlanId,
+                plan.Profile,
+                succeeded: false,
+                wasCancelled: elevated.WasCancelled,
+                summary,
+                CancellationToken.None).ConfigureAwait(false);
         }
 
-        // O sucesso final é decidido pelo relatório do journal: uma run com
-        // qualquer ação falhada nunca é reportada como totalmente concluída.
+        return null;
+    }
+
+    private async Task<bool> LoadFinalRunSucceededAsync(
+        OptimizationPlanDto plan,
+        CancellationToken cancellationToken)
+    {
         var finalJournal = await LoadJournalAsync(plan.PlanId, cancellationToken).ConfigureAwait(false);
         var finalReport = finalJournal is null
             ? null
             : OptimizationReportBuilder.Build(finalJournal, plan.Profile);
-        var runSucceeded = finalReport?.Succeeded ?? true;
+        return finalReport?.Succeeded ?? true;
+    }
 
+    private void ReportCompletion(IProgress<AppProgressUpdate> progress, bool runSucceeded)
+    {
         progress.Report(new AppProgressUpdate
         {
             Timestamp = DateTimeOffset.UtcNow,
@@ -715,31 +793,27 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Detail = localization.GetString(
                         runSucceeded ? "Runtime.PlanCompletedDetail" : "Runtime.PlanCompletedWithErrorsDetail")
         });
+    }
 
-        OptimizationComparisonResult? comparison = null;
-        if (beforeSnapshot is not null)
+    private async Task<OptimizationComparisonResult?> CaptureComparisonAsync(
+        ResourceComparisonSnapshot? beforeSnapshot)
+    {
+        if (beforeSnapshot is null)
         {
-            // A curta espera deixa a atividade de disco/CPU da própria otimização
-            // assentar antes de medir "depois", evitando comparar o trabalho da
-            // otimização em si com o estado real pós-otimização.
-            await Task.Delay(TimeSpan.FromSeconds(1), CancellationToken.None).ConfigureAwait(false);
-            var afterSnapshot = TryCaptureResourceComparisonSnapshot();
-            if (afterSnapshot is not null)
-            {
-                comparison = BuildComparison(beforeSnapshot, afterSnapshot);
-            }
+            return null;
         }
 
-        var result = await CreateResultFromJournalAsync(
-            plan.PlanId,
-            plan.Profile,
-            succeeded: runSucceeded,
-            wasCancelled: false,
-            $"{localization.GetString(runSucceeded ? "Runtime.PlanCompleted" : "Runtime.PlanCompletedWithErrors")}. "
-                + localization.GetString(
-                    runSucceeded ? "Runtime.PlanCompletedDetail" : "Runtime.PlanCompletedWithErrorsDetail"),
-            cancellationToken).ConfigureAwait(false);
-        return comparison is null ? result : result with { Comparison = comparison };
+        // A curta espera deixa a atividade de disco/CPU da própria otimização
+        // assentar antes de medir "depois", evitando comparar o trabalho da
+        // otimização em si com o estado real pós-otimização.
+        await Task.Delay(TimeSpan.FromSeconds(1), CancellationToken.None).ConfigureAwait(false);
+        var afterSnapshot = TryCaptureResourceComparisonSnapshot();
+        if (afterSnapshot is null)
+        {
+            return null;
+        }
+
+        return BuildComparison(beforeSnapshot, afterSnapshot);
     }
 
     private ResourceComparisonSnapshot? TryCaptureResourceComparisonSnapshot()
@@ -871,34 +945,13 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
         if (localResult.State == WindowsTransactionState.AwaitingElevationRollback)
         {
-            progress.Report(new AppProgressUpdate
-            {
-                Timestamp = DateTimeOffset.UtcNow,
-                Kind = AppProgressKind.RollingBack,
-                Percent = 70,
-                Headline = localization.GetString("Runtime.ConfirmRestore"),
-                Detail = localization.GetString("Runtime.ConfirmRestoreDetail")
-            });
-            var elevated = await brokerClient.RollbackAsync(
+            var elevated = await ExecuteElevatedRollbackAsync(
                 transactionId,
                 progress,
                 cancellationToken).ConfigureAwait(false);
-            if (!elevated.Succeeded)
+            if (!elevated)
             {
-                if (elevated.WasCancelled)
-                {
-                    progress.Report(new AppProgressUpdate
-                    {
-                        Timestamp = DateTimeOffset.UtcNow,
-                        Kind = AppProgressKind.Warning,
-                        Percent = 72,
-                        Headline = localization.GetString("Runtime.AdminRestorePending"),
-                        Detail = localization.GetString("Runtime.AdminRestorePendingDetail")
-                    });
-                    return false;
-                }
-
-                throw new InvalidOperationException(elevated.Message);
+                return false;
             }
         }
 
@@ -911,6 +964,50 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Detail = localization.GetString("Runtime.RestoreCompletedDetail")
         });
         return true;
+    }
+
+    /// <summary>
+    /// Delega o rollback administrativo ao broker elevado. Retorna
+    /// <see langword="false"/> quando o usuário cancela a confirmação do UAC
+    /// (a transação permanece aguardando restauração) e lança quando o broker
+    /// falha por outro motivo.
+    /// </summary>
+    private async Task<bool> ExecuteElevatedRollbackAsync(
+        Guid transactionId,
+        IProgress<AppProgressUpdate> progress,
+        CancellationToken cancellationToken)
+    {
+        progress.Report(new AppProgressUpdate
+        {
+            Timestamp = DateTimeOffset.UtcNow,
+            Kind = AppProgressKind.RollingBack,
+            Percent = 70,
+            Headline = localization.GetString("Runtime.ConfirmRestore"),
+            Detail = localization.GetString("Runtime.ConfirmRestoreDetail")
+        });
+        var elevated = await brokerClient.RollbackAsync(
+            transactionId,
+            progress,
+            cancellationToken).ConfigureAwait(false);
+        if (elevated.Succeeded)
+        {
+            return true;
+        }
+
+        if (elevated.WasCancelled)
+        {
+            progress.Report(new AppProgressUpdate
+            {
+                Timestamp = DateTimeOffset.UtcNow,
+                Kind = AppProgressKind.Warning,
+                Percent = 72,
+                Headline = localization.GetString("Runtime.AdminRestorePending"),
+                Detail = localization.GetString("Runtime.AdminRestorePendingDetail")
+            });
+            return false;
+        }
+
+        throw new InvalidOperationException(elevated.Message);
     }
 
     private WindowsOptimizationRuntime CreateRuntimeForDetectedInstallation()
