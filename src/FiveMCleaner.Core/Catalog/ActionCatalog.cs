@@ -59,6 +59,21 @@ public sealed class ActionCatalog
     {
         return
         [
+            .. CreateVerificationAndBottleneckActions(),
+            .. CreateHardwareDiagnosisActions(),
+            .. CreateGraphicsDiagnosisActions(),
+            .. CreateCleanupActions(),
+            .. CreateGamingAndPowerActions(),
+            .. CreateGraphicsPresetActions(),
+            .. CreateGamingGuidanceActions(),
+            .. CreateAppearanceActions()
+        ];
+    }
+
+    private static IReadOnlyList<OptimizationActionDefinition> CreateVerificationAndBottleneckActions()
+    {
+        return
+        [
             Define(
                 OptimizationActionIds.VerifyFiveMIsStopped,
                 "Verificar estado do FiveM",
@@ -145,7 +160,14 @@ public sealed class ActionCatalog
                 detectionSummary: "Abre o log mais recente da pasta logs do FiveM com acesso compartilhado, mesmo com o FiveM aberto.",
                 confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
                 undoSummary: "Somente leitura: não altera nem remove nenhum log.",
-                riskLimitations: "Contagem de possíveis erros é aproximada (busca textual); não substitui um diagnóstico completo."),
+                riskLimitations: "Contagem de possíveis erros é aproximada (busca textual); não substitui um diagnóstico completo.")
+        ];
+    }
+
+    private static IReadOnlyList<OptimizationActionDefinition> CreateHardwareDiagnosisActions()
+    {
+        return
+        [
             Define(
                 OptimizationActionIds.GuidePerformanceDiagnostics,
                 "Orientar diagnóstico de desempenho",
@@ -502,7 +524,14 @@ public sealed class ActionCatalog
                 detectionSummary: "Lê os nomes dos arquivos de dump recentes em busca de códigos de erro conhecidos e faz busca textual por palavras-chave de streaming no log mais recente do FiveM.",
                 confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
                 undoSummary: "Somente leitura: não abre, remove nem envia nenhum dump.",
-                riskLimitations: "É uma busca textual por padrões conhecidos, não uma análise de despejo de memória; um padrão ausente não garante ausência do problema."),
+                riskLimitations: "É uma busca textual por padrões conhecidos, não uma análise de despejo de memória; um padrão ausente não garante ausência do problema.")
+        ];
+    }
+
+    private static IReadOnlyList<OptimizationActionDefinition> CreateGraphicsDiagnosisActions()
+    {
+        return
+        [
             Define(
                 OptimizationActionIds.RecommendGraphicsPreset,
                 "Recomendar preset gráfico",
@@ -553,7 +582,14 @@ public sealed class ActionCatalog
                 detectionSummary: "Lê o commandline.txt na pasta de instalação do GTA V standalone, se existir.",
                 confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
                 undoSummary: "Somente leitura: não altera o arquivo.",
-                riskLimitations: "O FiveM ignora commandline.txt do GTA (bloqueio documentado do próprio FiveM); este diagnóstico é relevante apenas para quem também joga o GTA V standalone."),
+                riskLimitations: "O FiveM ignora commandline.txt do GTA (bloqueio documentado do próprio FiveM); este diagnóstico é relevante apenas para quem também joga o GTA V standalone.")
+        ];
+    }
+
+    private static IReadOnlyList<OptimizationActionDefinition> CreateCleanupActions()
+    {
+        return
+        [
             Define(
                 OptimizationActionIds.CleanUserTemporaryFiles,
                 "Limpar temporários antigos",
@@ -659,7 +695,14 @@ public sealed class ActionCatalog
                 detectionSummary: "Lê o log mais recente do FiveM em busca de um padrão de erro de entitlement/autenticação já conhecido antes de tocar em qualquer arquivo.",
                 confirmationSummary: "Só remove ros_id.dat e a pasta de entitlements quando o padrão de erro foi encontrado; caso contrário, não faz nada.",
                 undoSummary: "Reversível via quarentena até a confirmação final da otimização; depois disso, o FiveM solicita novo login para regenerar os dados.",
-                riskLimitations: "Ação de exceção documentada em docs/safety.md: ros_id.dat e entitlements normalmente nunca são removidos automaticamente; esta ação só existe para o cenário específico de erro detectado, nunca em perfis automáticos, e sempre em quarentena reversível."),
+                riskLimitations: "Ação de exceção documentada em docs/safety.md: ros_id.dat e entitlements normalmente nunca são removidos automaticamente; esta ação só existe para o cenário específico de erro detectado, nunca em perfis automáticos, e sempre em quarentena reversível.")
+        ];
+    }
+
+    private static IReadOnlyList<OptimizationActionDefinition> CreateGamingAndPowerActions()
+    {
+        return
+        [
             Define(
                 OptimizationActionIds.EnableGameMode,
                 "Ativar Modo de Jogo",
@@ -747,7 +790,14 @@ public sealed class ActionCatalog
                 detectionSummary: "Lê o índice atual da configuração ASPM (`powercfg /Q`) do plano de energia ativo.",
                 confirmationSummary: "Confirma que o valor foi definido como Off (0) no plano ativo.",
                 undoSummary: "Totalmente reversível: o valor anterior é restaurado no rollback via powercfg.",
-                riskLimitations: "Nem todo chipset/placa-mãe expõe essa configuração; quando ausente, a ação não altera nada. A leitura do valor atual depende do texto de saída do `powercfg /Q`, que varia por idioma do Windows -- em builds não testadas nesse idioma, a ação pode não conseguir ler o valor e simplesmente não fará nada."),
+                riskLimitations: "Nem todo chipset/placa-mãe expõe essa configuração; quando ausente, a ação não altera nada. A leitura do valor atual depende do texto de saída do `powercfg /Q`, que varia por idioma do Windows -- em builds não testadas nesse idioma, a ação pode não conseguir ler o valor e simplesmente não fará nada.")
+        ];
+    }
+
+    private static IReadOnlyList<OptimizationActionDefinition> CreateGraphicsPresetActions()
+    {
+        return
+        [
             Define(
                 OptimizationActionIds.ApplyLightLegacyGraphics,
                 "Ajustar gráficos leves do FiveM",
@@ -981,7 +1031,14 @@ public sealed class ActionCatalog
                 detectionSummary: "Lê o commandline.txt existente (ou trata como vazio, se ausente) e identifica quais parâmetros de reparo já estão presentes.",
                 confirmationSummary: "Confirma que apenas os parâmetros de reparo escolhidos foram adicionados e as demais linhas do arquivo foram preservadas.",
                 undoSummary: "Totalmente reversível: use \"Reverter esta otimização\" assim que terminar de diagnosticar, para não deixar o parâmetro de reparo ativo permanentemente.",
-                riskLimitations: "É um parâmetro de reparo, não uma otimização diária; deixá-lo ativo indefinidamente pode reduzir a qualidade gráfica sem necessidade."),
+                riskLimitations: "É um parâmetro de reparo, não uma otimização diária; deixá-lo ativo indefinidamente pode reduzir a qualidade gráfica sem necessidade.")
+        ];
+    }
+
+    private static IReadOnlyList<OptimizationActionDefinition> CreateGamingGuidanceActions()
+    {
+        return
+        [
             Define(
                 OptimizationActionIds.DiagnoseGpuPreferenceMismatch,
                 "Diagnosticar preferência de GPU em notebooks com duas GPUs",
@@ -1102,7 +1159,14 @@ public sealed class ActionCatalog
                 detectionSummary: "Lê o uso atual de CPU (mesma medição já usada nos diagnósticos de recursos existentes).",
                 confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
                 undoSummary: "Somente leitura: não altera nenhuma configuração de mouse ou de sistema.",
-                riskLimitations: "Não lê a taxa de polling real do mouse (não há API pública documentada para isso) nem correlaciona stutter com movimento do mouse em tempo real; a orientação é sempre condicionada à carga de CPU observada no momento do diagnóstico."),
+                riskLimitations: "Não lê a taxa de polling real do mouse (não há API pública documentada para isso) nem correlaciona stutter com movimento do mouse em tempo real; a orientação é sempre condicionada à carga de CPU observada no momento do diagnóstico.")
+        ];
+    }
+
+    private static IReadOnlyList<OptimizationActionDefinition> CreateAppearanceActions()
+    {
+        return
+        [
             Define(
                 OptimizationActionIds.ReduceWindowsVisualEffects,
                 "Reduzir efeitos visuais do Windows",
