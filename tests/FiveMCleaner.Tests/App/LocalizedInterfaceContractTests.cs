@@ -185,9 +185,10 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("StreamingReadinessItems", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.LivePerformance.Title", dashboard, StringComparison.Ordinal);
-        // O histórico ao vivo é desenhado pela cena 3D, que recebe as amostras
+        // O histórico ao vivo é um gráfico 2D leve, que recebe as amostras
         // cruas; o medidor de prontidão é um anel animado sobre o núcleo 3D.
-        Assert.Contains("controls:PerformanceScene3D", dashboard, StringComparison.Ordinal);
+        Assert.Contains("controls:LivePerformanceChart", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("PerformanceScene3D", dashboard, StringComparison.Ordinal);
         Assert.Contains("CpuValues=\"{Binding CpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("GpuValues=\"{Binding GpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("NetworkUsageLabel", dashboard, StringComparison.Ordinal);

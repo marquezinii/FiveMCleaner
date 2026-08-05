@@ -468,14 +468,20 @@
 
                                             <Border Margin="0,15,0,0" Style="{StaticResource SceneFrameStyle}">
                                                 <Grid>
-                                                    <controls:PerformanceScene3D Height="242"
-                                                                                 IsLive="{Binding IsLiveMetricsActive}"
-                                                                                 CpuValues="{Binding CpuUsageSeries}"
-                                                                                 GpuValues="{Binding GpuUsageSeries}"
-                                                                                 CpuColor="{StaticResource ColorOrange}"
-                                                                                 GpuColor="{StaticResource ColorBlue}"
-                                                                                 AutomationProperties.Name="{Binding [Dashboard.LivePerformance.ChartDescription], Source={StaticResource LocalizedStrings}}" />
-                                                    <Border Background="{DynamicResource SceneFadeBrush}" Height="52" VerticalAlignment="Bottom" IsHitTestVisible="False" />
+                                                    <controls:LivePerformanceChart Height="242"
+                                                                                   Capacity="60"
+                                                                                   SampleIntervalSeconds="1"
+                                                                                   CpuValues="{Binding CpuUsageSeries}"
+                                                                                   GpuValues="{Binding GpuUsageSeries}"
+                                                                                   CpuBrush="{DynamicResource OrangeBrush}"
+                                                                                   GpuBrush="{DynamicResource BlueBrush}"
+                                                                                   GridBrush="{DynamicResource StrongBorderBrush}"
+                                                                                   LabelBrush="{DynamicResource TextSubtleBrush}"
+                                                                                   TooltipBackground="{DynamicResource SurfaceRaisedBrush}"
+                                                                                   TooltipBorderBrush="{DynamicResource StrongBorderBrush}"
+                                                                                   CpuLabel="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}"
+                                                                                   GpuLabel="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}"
+                                                                                   AutomationProperties.Name="{Binding [Dashboard.LivePerformance.ChartDescription], Source={StaticResource LocalizedStrings}}" />
                                                     <Grid Margin="15,13" VerticalAlignment="Top" IsHitTestVisible="False">
                                                         <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                                         <Border Background="#B00A0B0E" CornerRadius="8" Padding="10,6" HorizontalAlignment="Left">

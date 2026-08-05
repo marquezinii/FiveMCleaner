@@ -218,14 +218,6 @@ public sealed class ThemeManager : IDisposable
                 ? [("#F0C79E", 0), ("#DDE1E7", 0.4), ("#E6E9EE", 1)]
                 : [("#5A3A1E", 0), ("#25282F", 0.4), ("#1B1E24", 1)]);
 
-        SetLinearGradient(
-            "SceneFadeBrush",
-            new System.Windows.Point(0, 1),
-            new System.Windows.Point(0, 0),
-            useLightTheme
-                ? [("#CCF4F5F7", 0), ("#00F4F5F7", 1)]
-                : [("#CC0C0E11", 0), ("#000C0E11", 1)]);
-
         (string Color, double Offset)[] heroStops = useLightTheme
             ? [("#FFF2E4", 0), ("#FFFFFF", 0.42), ("#F6F7F9", 1)]
             : [("#2A1D14", 0), ("#17171B", 0.42), ("#0E1013", 1)];
