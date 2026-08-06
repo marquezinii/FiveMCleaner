@@ -29,11 +29,25 @@
   sublinhado padrão do Wpf.Ui que os outros campos não tinham — corrigido
   para o mesmo visual "flutuando" (`Border` + `ScrollViewer`) do resto do
   formulário.
-- Validação integrada: build Release sem avisos, 774 testes .NET (81
-  novos ao todo nesta rodada), 159 testes do Worker, `dotnet format
-  --verify-no-changes`, `git diff --check` aprovados. Atalho de
-  desenvolvimento reconstruído e confirmado apontando para
-  `scripts\Start-DevelopmentApp.ps1`.
+- Rodada extra de correção após revisão visual (commits diretos em
+  `dev/proxima-versao`, mesma sessão): campo de e-mail tinha altura
+  diferente do de senha, o cursor de texto ficava minúsculo fora dos
+  campos de senha e — a mais séria — o texto digitado no e-mail chegava a
+  ficar quase invisível. Causa raiz: `AccountFieldStyle` herdava
+  `Padding="12,9"` de `FormTextBoxStyle`, aplicado como `Margin` do
+  `ScrollViewer` interno; dentro de uma altura fixa de 42px sobravam só
+  24px verticais, e a fonte mais alta simplesmente não cabia — corte
+  quase total do texto. Corrigido copiando a geometria exata do campo de
+  senha (`Padding` só horizontal, altura toda livre para centralizar o
+  texto). Verificado ao vivo no build rodando (não só nos testes
+  automatizados) digitando em todos os campos de ambos os formulários.
+- Validação integrada final: build Release sem avisos, 774 testes .NET
+  (81 novos ao todo nesta rodada), 159 testes do Worker, 43 do dashboard,
+  `dotnet format --verify-no-changes`, `Verify-Safety.ps1`,
+  `git diff --check` aprovados. Atalho de desenvolvimento reconstruído e
+  confirmado apontando para `scripts\Start-DevelopmentApp.ps1`. Branch
+  `ai/claude/account-window-ux` e seu worktree removidos (local e
+  remoto) após confirmação de que já estavam integrados.
 - Pendente: `wrangler deploy` do Worker (rota de disponibilidade de
   username + rate limit) — autorização remota explícita do usuário ainda
   não concedida nesta sessão.
