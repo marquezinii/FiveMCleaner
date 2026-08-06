@@ -40,3 +40,30 @@
 
 ## Commits
 - (a ser criado)
+
+## Worker Backend — Correções de segurança e hardening
+
+### cors.js
+- `Access-Control-Allow-Headers` agora inclui `Authorization` (necessário para `/account/profile`)
+
+### index.js
+- Rate limiting adicionado em `handleTelemetryIngest` (`TELEMETRY_LIMITER`), `handleBugReportIngest` (`BUG_REPORT_LIMITER`) e `handleUpdaterEventIngest` (`UPDATER_EVENT_LIMITER`)
+- Telemetry queries usam `INSERT OR IGNORE` para idempotência
+- Falha parcial de chunk de telemetria loga e continua (não retorna 500)
+- Sanitização do nome de arquivo CSV (`[^a-zA-Z0-9_-]` → `_`)
+
+### passwordAuthProvider.js
+- `getSession`, `saveSession` e `revokeSession` agora armazenam SHA-256 do session ID no D1 (antes plaintext)
+- Bloco de falha de login usa UPDATE atômico (`INSERT ... ON CONFLICT DO UPDATE`) em vez de read-modify-write (fecha TOCTOU no brute-force guard)
+
+### sessionStore.js
+- Nova função exportada `hashToken` (wrapper de `hashSessionId`)
+
+### csv.js
+- Regex de CSV injection ampliada com caracteres Unicode fullwidth (`＝`, `＋`, `＃`) e pipe (`|`)
+
+### filters.js
+- Nova validação ISO 8601 para parâmetros `from`/`to`
+
+### Testes
+- Worker: 159/159 aprovados

@@ -29,7 +29,11 @@ function escapeCsvValue(value) {
   // could run `=HYPERLINK(...)` or `=cmd(...)` on the admin's machine.
   // Neutralizing means quoting the cell AND prefixing a single quote, the
   // spreadsheet convention for "treat as text".
-  const dangerousLeading = /^[=+\-@\t\r]/.test(text);
+  const dangerousLeading = /^[=+\-@\t\r]/.test(text)
+    || text.startsWith('\uFF1D')  // fullwidth equals sign
+    || text.startsWith('\uFF0B')  // fullwidth plus sign
+    || text.startsWith('\uFF03')   // fullwidth number sign
+    || text.startsWith('|');       // pipe (LibreOffice formula)
   const needsQuotes = /[",\n]/.test(text) || dangerousLeading;
   return needsQuotes ? `"${dangerousLeading ? "'" : ''}${text.replaceAll('"', '""')}"` : text;
 }

@@ -164,6 +164,12 @@ function handleSignedReleaseManifest(env) {
 }
 
 async function handleUpdaterEventIngest(request, env) {
+  if (!await withinRateLimit(env.UPDATER_EVENT_LIMITER, rateLimitKey(request))) {
+    return new Response(JSON.stringify({ error: 'rate-limited' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
   const payload = await readBoundedJson(request, MAX_UPDATER_EVENT_BODY_BYTES);
   if (payload === null) return new Response('Invalid JSON', { status: 400 });
   const event = validateUpdaterEvent(payload);
@@ -284,6 +290,12 @@ async function handleUpdaterEventsList(request, env, url) {
 }
 
 async function handleTelemetryIngest(request, env) {
+  if (!await withinRateLimit(env.TELEMETRY_LIMITER, rateLimitKey(request))) {
+    return new Response(JSON.stringify({ error: 'rate-limited' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
   const payload = await readBoundedJson(request, MAX_TELEMETRY_BODY_BYTES);
   if (payload === null) return new Response('Invalid JSON', { status: 400 });
 
@@ -298,7 +310,7 @@ async function handleTelemetryIngest(request, env) {
     statements.push(
       env.TELEMETRY_DB
         .prepare(
-          `INSERT INTO telemetry_events
+          `INSERT OR IGNORE INTO telemetry_events
              (event_name, execution_time_ms, app_version, error_category,
               os_version, system_architecture, cpu_model, gpu_model,
               ram_bucket_gib, profile, environment, received_at)
@@ -326,10 +338,7 @@ async function handleTelemetryIngest(request, env) {
     try {
       results.push(...await env.TELEMETRY_DB.batch(chunk));
     } catch (err) {
-      return new Response(JSON.stringify({ error: 'Database write failed' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      console.error('Telemetry chunk failed, continuing:', err?.message || 'unknown');
     }
   }
 
@@ -394,7 +403,7 @@ async function handleStatsRequest(request, env, url) {
         status: 200,
         headers: {
           'Content-Type': 'text/csv; charset=utf-8',
-          'Content-Disposition': `attachment; filename="${name}.csv"`,
+          'Content-Disposition': `attachment; filename="${name.replace(/[^a-zA-Z0-9_-]/g, '_')}.csv"`,
         },
       });
     }
@@ -411,6 +420,12 @@ async function handleStatsRequest(request, env, url) {
 }
 
 async function handleBugReportIngest(request, env) {
+  if (!await withinRateLimit(env.BUG_REPORT_LIMITER, rateLimitKey(request))) {
+    return new Response(JSON.stringify({ error: 'rate-limited' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
   const payload = await readBoundedJson(request, MAX_BUG_REPORT_BODY_BYTES);
   if (payload === null) return new Response('Invalid JSON', { status: 400 });
 

@@ -22,6 +22,7 @@ import {
   createSessionRow,
   isSessionValid,
   readSessionCookie,
+  hashToken,
 } from './sessionStore.js';
 import { readBoundedJson } from '../requestSecurity.js';
 
@@ -61,23 +62,26 @@ async function saveLoginAttempt(db, ipHash, row) {
 }
 
 async function getSession(db, id) {
+  const hashedId = await hashToken(id);
   return db
     .prepare('SELECT id, created_at, expires_at, revoked_at FROM admin_sessions WHERE id = ?')
-    .bind(id)
+    .bind(hashedId)
     .first();
 }
 
 async function saveSession(db, row) {
+  const hashedId = await hashToken(row.id);
   await db
     .prepare('INSERT INTO admin_sessions (id, created_at, expires_at, revoked_at) VALUES (?, ?, ?, ?)')
-    .bind(row.id, row.created_at, row.expires_at, row.revoked_at)
+    .bind(hashedId, row.created_at, row.expires_at, row.revoked_at)
     .run();
 }
 
 async function revokeSession(db, id, now) {
+  const hashedId = await hashToken(id);
   await db
     .prepare('UPDATE admin_sessions SET revoked_at = ? WHERE id = ?')
-    .bind(now.toISOString(), id)
+    .bind(now.toISOString(), hashedId)
     .run();
 }
 
@@ -111,7 +115,21 @@ export function createPasswordAuthProvider(env, now = () => new Date()) {
         && password.length <= MAX_PASSWORD_CHARACTERS
         && (await verifyPassword(password, env.ADMIN_PASSWORD_HASH));
       if (!isValid) {
-        await saveLoginAttempt(db, ipHash, nextStateAfterFailure(attemptRow, nowValue));
+        // Atomic increment instead of read-modify-write to close the
+        // race window where concurrent requests from the same IP could
+        // each see the old failed_count and bypass the lockout.
+        const next = nextStateAfterFailure(attemptRow, nowValue);
+        await db
+          .prepare(
+            `INSERT INTO login_attempts (ip_hash, failed_count, first_failed_at, locked_until)
+             VALUES (?, ?, ?, ?)
+             ON CONFLICT(ip_hash) DO UPDATE SET
+               failed_count = excluded.failed_count,
+               first_failed_at = excluded.first_failed_at,
+               locked_until = excluded.locked_until`,
+          )
+          .bind(ipHash, next.failed_count, next.first_failed_at, next.locked_until)
+          .run();
         return new Response(
           JSON.stringify({ error: 'invalid-credentials' }),
           { status: 401, headers: { 'Content-Type': 'application/json' } },
