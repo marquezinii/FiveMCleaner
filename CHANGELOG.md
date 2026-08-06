@@ -5,6 +5,17 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.3.1] - 2026-08-06
+
+### Corrigido
+
+- O botão "Continuar com o Google" nunca apareceu no instalador público da
+  v1.3.0: a credencial OAuth vive apenas em um overlay local git-ignorado
+  (por exigência do push protection do GitHub) e o pipeline de release nunca
+  a injetava no pacote publicado. O workflow de release agora escreve esse
+  overlay a partir de segredos do repositório antes de empacotar, e o login
+  com Google passa a funcionar na build oficial.
+
 ## [1.3.0] - 2026-08-06
 
 ### Adicionado

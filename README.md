@@ -37,9 +37,13 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 > Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
 
 > [!NOTE]
-> A `v1.3.0` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
+> A `v1.3.1` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
 
 ## Últimas atualizações
+
+**Versão 1.3.1**
+
+- Corrigido: o login com Google não aparecia no instalador público; o pipeline de release agora empacota a credencial corretamente.
 
 **Versão 1.3.0**
 
@@ -47,7 +51,7 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 - Corrigido: hardening de segurança do Worker de telemetria (CORS, limite de requisições, hashing de sessão, injeção de fórmula em CSV) e diversas condições de corrida no atualizador e na inicialização.
 - Melhorado: Visão geral, Otimizador e dashboard privado redesenhados, com monitor de desempenho ao vivo.
 
-## Estado da v1.3.0
+## Estado da v1.3.1
 
 - contas de usuário: cadastro, login e login com Google via Firebase
   Authentication, com usuário único e gerenciamento (senha, e-mail, foto,
