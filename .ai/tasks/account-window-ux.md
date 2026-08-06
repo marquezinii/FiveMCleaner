@@ -141,23 +141,56 @@ possui.
 cópia instalada, e a própria Google o documenta assim); quem protege a troca é
 o PKCE.
 
-## Pendente para o usuário — necessário para o botão do Google funcionar
+## Credenciais do Google — configuradas e verificadas em 06/08/2026
 
-1. Google Cloud Console → Credentials → OAuth client ID → tipo **Desktop app**.
-2. Firebase Console → Authentication → Sign-in method → habilitar **Google**.
-3. Preencher `googleOAuthClientId` (e o secret, se a credencial tiver um) em
-   `Config/appsettings.Development.json` e `appsettings.Production.json`.
-4. `wrangler deploy` do Worker para publicar `GET /account/username-available`
-   e o binding de rate limit. Enquanto não for publicado, o cliente responde
-   `Unknown` e simplesmente não mostra o rótulo de disponibilidade — nada
-   quebra.
+O usuário criou a credencial OAuth (Google Cloud Console → tipo **Desktop app**,
+projeto `fivemcleaner-app`) e habilitou o provedor Google no Firebase
+Authentication.
 
-Enquanto (1)–(3) não acontecerem, o botão não aparece; o cadastro por e-mail e
-senha funciona normalmente.
+Primeira tentativa foi preencher `googleOAuthClientId`/`googleOAuthClientSecret`
+direto em `Config/appsettings.Development.json` e `appsettings.Production.json`
+— o mesmo lugar onde `firebaseApiKey` já vive. O push dessa branch foi
+**recusado pelo GitHub push protection** (`GH013`, secret scanning) nas duas
+ocorrências do client secret. A explicação de que o "secret" de uma credencial
+*Desktop app* do Google não é sigiloso no sentido usual (ele acompanha todo
+binário instalado; quem protege a troca do código é o PKCE) é verdadeira, mas
+irrelevante para o scanner — o padrão bate, ele bloqueia. Não usei a URL de
+"allow secret" do GitHub para contornar: é uma decisão de segurança do
+repositório, não minha.
+
+Solução adotada, no mesmo espírito do que o Worker já faz para
+`ADMIN_PASSWORD_HASH`/`IP_HASH_SECRET` ("never written to this file or
+committed", ver `wrangler.toml`): `RemoteServicesOptionsLoader` agora aceita
+um overlay opcional, git-ignorado,
+`Config/appsettings.{Development,Production}.local.json`, que sobrescreve só
+os campos presentes nele por cima do JSON versionado — o campo do arquivo
+versionado sobrevive quando o overlay não o define. `FiveMCleaner.App.csproj`
+copia esse glob para o diretório de saída só quando o arquivo existe (checkout
+normal não tem, build não quebra). Os dois arquivos `.local.json` reais, com
+as credenciais de verdade, existem só neste worktree — nunca vão a commit.
+
+**Verificado ponta a ponta pelo usuário** duas vezes — antes e depois da
+mudança para o overlay — rodando o build Release direto (`FiveMCleaner.exe`,
+ambiente Production por padrão fora do atalho de desenvolvimento): clique em
+"Continuar com o Google" abriu o navegador, login real na conta Google,
+retorno ao app, e a janela caiu no passo de completar cadastro com
+nome/sobrenome já preenchidos pelo Google.
+
+**Ainda pendente:**
+1. `wrangler deploy` do Worker, para publicar `GET /account/username-available`
+   e o binding de rate limit em produção. Até lá, a sonda de disponibilidade
+   responde `Unknown` e o rótulo simplesmente não aparece — nada quebra.
+2. Criar `Config/appsettings.Development.local.json` e
+   `appsettings.Production.local.json` (git-ignorados) em qualquer outra
+   máquina/worktree que precise do login com o Google funcionando — o
+   `googleOAuthClientId`/`googleOAuthClientSecret` só existem localmente
+   aqui. Sem eles, `IsConfigured` é `false` e o botão simplesmente não
+   aparece — comportamento seguro, não um erro.
 
 ## Testes
 
-- **753 testes .NET** (24 novos), build Release sem avisos,
+- **758 testes .NET** (29 novos, 5 deles cobrindo o overlay local), build
+  Release sem avisos,
   `dotnet format --verify-no-changes`, `Verify-Safety.ps1` e
   `git diff --check` aprovados.
 - **159 testes do Worker** (9 novos).
@@ -172,9 +205,8 @@ senha funciona normalmente.
 ## Limitações conhecidas
 
 - A metade interativa do `GoogleOAuthClient` (navegador real + conta Google
-  real) não é coberta por teste automatizado; exige validação manual assim que
-  as credenciais existirem. O que é testado sem elas: um build não configurado
-  não abre navegador, não toca a rede e não finge ter autenticado ninguém.
+  real) não é coberta por teste automatizado — foi validada manualmente pelo
+  usuário (ver seção acima) e funcionou de ponta a ponta.
 - O rate limit não foi exercitado contra o Worker implantado — o binding
-  `[[ratelimits]]` só existe na edge. Localmente o caminho fail-open é o que
-  roda, e é o que está testado.
+  `[[ratelimits]]` só existe na edge, e o deploy ainda está pendente.
+  Localmente o caminho fail-open é o que roda, e é o que está testado.
