@@ -441,8 +441,17 @@
     </Style>
 
     <!-- Caixa de texto com a mesma altura e corpo do RevealPasswordBox. -->
+    <!--
+        Height fixa, não MinHeight: com MinHeight, o Padding="12,9" herdado
+        de FormTextBoxStyle (aplicado como Margin do ScrollViewer interno)
+        podia empurrar a caixa acima de 42px dependendo da métrica da fonte,
+        deixando o campo de e-mail visivelmente mais alto que o de senha
+        (RevealPasswordBox, que já usa Height fixa). Height força o mesmo
+        valor exato nos dois, sem risco de estourar — o conteúdo (padding +
+        uma linha de texto) cabe folgado dentro de 42px.
+    -->
     <Style x:Key="AccountFieldStyle" TargetType="TextBox" BasedOn="{StaticResource FormTextBoxStyle}">
-        <Setter Property="MinHeight" Value="42" />
+        <Setter Property="Height" Value="42" />
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="Background" Value="{DynamicResource InsetBrush}" />
     </Style>
