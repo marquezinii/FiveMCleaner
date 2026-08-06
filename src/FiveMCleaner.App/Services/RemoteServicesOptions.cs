@@ -43,6 +43,24 @@ public sealed record RemoteServicesOptions
     /// <summary>Public Firebase Web API key. It identifies the project but is not an administrative credential.</summary>
     public string? FirebaseApiKey { get; init; }
 
+    /// <summary>
+    /// OAuth 2.0 client id of the Google Cloud "Desktop app" credential used
+    /// by <see cref="GoogleOAuthClient"/>. Absent means the account window
+    /// simply does not offer "Continuar com o Google" — the button is hidden
+    /// rather than shown broken.
+    /// </summary>
+    public string? GoogleOAuthClientId { get; init; }
+
+    /// <summary>
+    /// Companion secret Google issues for that same desktop credential.
+    /// Despite the name it is not a real secret — it necessarily ships inside
+    /// every installed copy of the app, and Google documents it as such. PKCE
+    /// is what actually protects the code exchange. Only set it because
+    /// Google's token endpoint rejects the exchange without it when the
+    /// credential was created with one.
+    /// </summary>
+    public string? GoogleOAuthClientSecret { get; init; }
+
     public required string Environment { get; init; }
 }
 
@@ -72,26 +90,86 @@ public static class RemoteServicesOptionsLoader
         var path = File.Exists(environmentSpecificPath) ? environmentSpecificPath : basePath;
 
         var fallback = new RemoteServicesOptions { SentryDsn = null, Environment = environment.ToString() };
-        if (!File.Exists(path))
-        {
-            return fallback;
-        }
+        var loaded = File.Exists(path) ? LoadFile(path) : fallback;
+        // The environment is selected by the executable, never by a
+        // mutable JSON file. Otherwise a stale or edited Production file
+        // could make real user events appear as Development in D1.
+        var result = loaded is null ? fallback : loaded with { Environment = environment.ToString() };
 
+        return ApplyLocalOverlay(result, Path.Combine(baseDirectory, ConfigDirectoryName, $"appsettings.{environment}.local.json"));
+    }
+
+    private static RemoteServicesOptions? LoadFile(string path)
+    {
         try
         {
             using var stream = File.OpenRead(path);
-            var loaded = JsonSerializer.Deserialize<RemoteServicesOptions>(stream, FiveMCleanerJson.Options);
-            // The environment is selected by the executable, never by a
-            // mutable JSON file. Otherwise a stale or edited Production file
-            // could make real user events appear as Development in D1.
-            return loaded is null
-                ? fallback
-                : loaded with { Environment = environment.ToString() };
+            return JsonSerializer.Deserialize<RemoteServicesOptions>(stream, FiveMCleanerJson.Options);
         }
         catch (Exception exception) when (exception is JsonException or IOException or NotSupportedException)
         {
-            return fallback;
+            return null;
         }
+    }
+
+    /// <summary>
+    /// Merges a machine-local, git-ignored <c>appsettings.{environment}.local.json</c>
+    /// on top of the tracked config, matching the Cloudflare Worker's own
+    /// convention for real secrets: <c>ADMIN_PASSWORD_HASH</c> and
+    /// <c>IP_HASH_SECRET</c> are "never written to this file or committed"
+    /// (see <c>infra/cloudflare-worker/wrangler.toml</c>). GitHub's push
+    /// protection rejects a commit containing an OAuth client secret
+    /// regardless of how sensitive that particular value actually is, so
+    /// anything that looks like one belongs only on the developer's machine.
+    /// Absent or unreadable overlay files leave the tracked config untouched.
+    /// </summary>
+    private static RemoteServicesOptions ApplyLocalOverlay(RemoteServicesOptions options, string overlayPath)
+    {
+        if (!File.Exists(overlayPath))
+        {
+            return options;
+        }
+
+        RemoteServicesOverlay? overlay;
+        try
+        {
+            using var stream = File.OpenRead(overlayPath);
+            overlay = JsonSerializer.Deserialize<RemoteServicesOverlay>(stream, FiveMCleanerJson.Options);
+        }
+        catch (Exception exception) when (exception is JsonException or IOException or NotSupportedException)
+        {
+            return options;
+        }
+
+        return overlay is null
+            ? options
+            : options with
+            {
+                SentryDsn = overlay.SentryDsn ?? options.SentryDsn,
+                TelemetryEndpoint = overlay.TelemetryEndpoint ?? options.TelemetryEndpoint,
+                BugReportEndpoint = overlay.BugReportEndpoint ?? options.BugReportEndpoint,
+                AccountProfileEndpoint = overlay.AccountProfileEndpoint ?? options.AccountProfileEndpoint,
+                FirebaseApiKey = overlay.FirebaseApiKey ?? options.FirebaseApiKey,
+                GoogleOAuthClientId = overlay.GoogleOAuthClientId ?? options.GoogleOAuthClientId,
+                GoogleOAuthClientSecret = overlay.GoogleOAuthClientSecret ?? options.GoogleOAuthClientSecret,
+            };
+    }
+
+    /// <summary>
+    /// Same fields as <see cref="RemoteServicesOptions"/>, all optional and
+    /// without a required <see cref="RemoteServicesOptions.Environment"/> —
+    /// a local overlay file only ever sets the handful of values a developer
+    /// needs to override, never the environment itself.
+    /// </summary>
+    private sealed record RemoteServicesOverlay
+    {
+        public string? SentryDsn { get; init; }
+        public string? TelemetryEndpoint { get; init; }
+        public string? BugReportEndpoint { get; init; }
+        public string? AccountProfileEndpoint { get; init; }
+        public string? FirebaseApiKey { get; init; }
+        public string? GoogleOAuthClientId { get; init; }
+        public string? GoogleOAuthClientSecret { get; init; }
     }
 }
 

@@ -29,6 +29,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly QueuedCloudflareTelemetryService? queuedCloudflareTelemetry;
     private readonly IFirebaseAuthService? accountService;
     private readonly IAccountProfileService profileService;
+    private readonly IGoogleOAuthClient googleOAuth;
     private HwndSource? windowSource;
     private bool allowClose;
     private bool closeAfterOptimizationStops;
@@ -60,6 +61,12 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         profileService = TryCreateHttpsEndpoint(remoteServicesOptions.AccountProfileEndpoint, out var profileEndpoint)
             ? new CloudflareAccountProfileService(profileEndpoint)
             : new DisabledAccountProfileService();
+
+        // Demo runs never talk to Google: an unconfigured client reports
+        // IsConfigured=false and the account window hides the button.
+        googleOAuth = new GoogleOAuthClient(
+            demoMode ? null : remoteServicesOptions.GoogleOAuthClientId,
+            demoMode ? null : remoteServicesOptions.GoogleOAuthClientSecret);
 
         accountService = CreateAccountService(demoMode, remoteServicesOptions);
         if (accountService is not null)
@@ -298,7 +305,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             System.Windows.MessageBox.Show("O acesso à conta não está disponível nesta instalação.", "Conta", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
-        var dialog = new AccountWindow(accountService, profileService) { Owner = this };
+        var dialog = new AccountWindow(accountService, profileService, googleOAuth) { Owner = this };
         if (dialog.ShowDialog() == true) UpdateAccountButton();
     }
 

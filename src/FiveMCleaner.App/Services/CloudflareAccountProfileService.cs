@@ -149,6 +149,70 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
         }
     }
 
+    public async Task<UsernameAvailability> CheckUsernameAsync(
+        string username,
+        CancellationToken cancellationToken = default)
+    {
+        // Mirrors the server's own rule (accountProfile.js) so a name that
+        // could never be accepted is reported locally, without a round trip.
+        if (!AccountValidation.IsValidUsername(username))
+        {
+            return UsernameAvailability.Invalid;
+        }
+
+        // "…/account/profile" + "username-available" resolves to
+        // "…/account/username-available": the probe always follows whichever
+        // Worker origin the profile endpoint was configured with.
+        var probe = new Uri(new Uri(endpoint, "username-available"), $"?u={Uri.EscapeDataString(username.Trim())}");
+
+        HttpResponseMessage response;
+        try
+        {
+            response = await httpClient
+                .GetAsync(probe, HttpCompletionOption.ResponseHeadersRead, cancellationToken)
+                .ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        {
+            return UsernameAvailability.Unknown;
+        }
+
+        using (response)
+        {
+            if (!response.IsSuccessStatusCode)
+            {
+                // 400 means the server disagrees with our local rule, 429
+                // means we asked too often -- neither is evidence the name
+                // is free, so both stay Unknown/Invalid rather than green.
+                return response.StatusCode == HttpStatusCode.BadRequest
+                    ? UsernameAvailability.Invalid
+                    : UsernameAvailability.Unknown;
+            }
+
+            UsernameAvailabilityDto? body;
+            try
+            {
+                body = await response.Content
+                    .ReadFromJsonAsync<UsernameAvailabilityDto>(cancellationToken)
+                    .ConfigureAwait(false);
+            }
+            catch (System.Text.Json.JsonException)
+            {
+                return UsernameAvailability.Unknown;
+            }
+
+            if (body?.Available is not { } available)
+            {
+                return UsernameAvailability.Unknown;
+            }
+
+            return available ? UsernameAvailability.Available : UsernameAvailability.Taken;
+        }
+    }
+
+    private sealed record UsernameAvailabilityDto(
+        [property: JsonPropertyName("available")] bool? Available);
+
     private sealed record AccountProfileResponseDto(
         [property: JsonPropertyName("username")] string? Username,
         [property: JsonPropertyName("firstName")] string? FirstName,

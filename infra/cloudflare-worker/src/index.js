@@ -5,7 +5,14 @@ import { validateUpdaterEvent } from './updaterEvents/validateSubmission.js';
 import { recentUpdaterEvents } from './updaterEvents/queries.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
 import { requireFirebaseUser } from './auth/firebaseIdToken.js';
-import { validateAccountProfile, createAccountProfile, fetchAccountProfile } from './auth/accountProfile.js';
+import {
+  validateAccountProfile,
+  createAccountProfile,
+  fetchAccountProfile,
+  normalizeUsername,
+  isUsernameAvailable,
+} from './auth/accountProfile.js';
+import { rateLimitKey, withinRateLimit } from './rateLimit.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
 import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from './cors.js';
@@ -27,6 +34,7 @@ const MAX_ACCOUNT_PROFILE_BODY_BYTES = 4 * 1024;
 //   POST    /bugs                  -- ingest one bug report, text-only (no auth; validated server-side)
 //   POST    /account/profile       -- create the username/first/last-name profile for a Firebase account (requires a valid Firebase ID token)
 //   GET     /account/profile       -- read the caller's own username/first/last-name profile (requires a valid Firebase ID token)
+//   GET     /account/username-available -- advisory "is this username free?" probe for the registration form (no auth; rate limited per IP)
 //   POST    /admin/login           -- { password } -> session cookie
 //   POST    /admin/logout          -- clears the session cookie
 //   GET     /api/stats/:name       -- one chart's data (requires a valid session)
@@ -103,6 +111,9 @@ async function route(request, env, url) {
   if (request.method === 'GET' && url.pathname === '/account/profile') {
     return handleAccountProfileGet(request, env);
   }
+  if (request.method === 'GET' && url.pathname === '/account/username-available') {
+    return handleUsernameAvailability(request, env, url);
+  }
 
   if (request.method === 'POST' && url.pathname === '/admin/login') {
     if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
@@ -164,6 +175,41 @@ async function handleUpdaterEventIngest(request, env) {
   ).bind(event.eventId, event.stage, event.outcome, event.errorCode, event.previousVersion,
     event.candidateVersion, event.environment, new Date().toISOString()).run();
   return new Response(null, { status: 202 });
+}
+
+// Advisory "is this username free?" probe for the registration form, so the
+// user is told a name is taken while typing instead of only after the
+// Firebase account already exists and the profile insert fails with 409.
+//
+// Necessarily unauthenticated -- it runs before the account does -- so it is
+// rate limited per IP and answers a bare boolean: never who holds the name,
+// never anything about that account. Enumeration is still theoretically
+// possible at the allowed rate; the exposure is limited to "this display
+// name exists", which the app shows publicly anyway.
+//
+// Advisory, not authoritative: the UNIQUE index on account_profiles remains
+// the only real arbiter, and handleAccountProfileCreate still returns 409.
+async function handleUsernameAvailability(request, env, url) {
+  if (!await withinRateLimit(env.USERNAME_LOOKUP_LIMITER, rateLimitKey(request))) {
+    return new Response(JSON.stringify({ error: 'rate-limited' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    });
+  }
+
+  const normalized = normalizeUsername(url.searchParams.get('u'));
+  if (normalized === null) {
+    return new Response(JSON.stringify({ error: 'invalid-username' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    });
+  }
+
+  const available = await isUsernameAvailable(env.TELEMETRY_DB, normalized);
+  return new Response(JSON.stringify({ available }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  });
 }
 
 // Completes the profile of a Firebase-authenticated account with the

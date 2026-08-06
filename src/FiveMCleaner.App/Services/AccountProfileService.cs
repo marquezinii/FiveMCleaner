@@ -37,6 +37,21 @@ public sealed record AccountProfileFetchResult(
     string? LastName = null);
 
 /// <summary>
+/// Verdict of the advisory username probe. <see cref="Unknown"/> means the
+/// question could not be answered (offline, rate limited, endpoint not
+/// configured) and must never be presented as "available" — the definitive
+/// answer still comes from <see cref="IAccountProfileService.CreateAsync"/>,
+/// which is what actually holds the uniqueness constraint.
+/// </summary>
+public enum UsernameAvailability
+{
+    Available,
+    Taken,
+    Invalid,
+    Unknown,
+}
+
+/// <summary>
 /// Completes a Firebase account with the fields Firebase Authentication
 /// REST does not manage — username, first name, last name — via the
 /// Cloudflare Worker's <c>/account/profile</c> route. Called once, right
@@ -56,6 +71,17 @@ public interface IAccountProfileService
     /// </summary>
     Task<AccountProfileFetchResult> FetchAsync(
         string idToken,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Asks the Worker whether <paramref name="username"/> is still free, so
+    /// the registration form can say so while the user types instead of only
+    /// after a Firebase account has already been created. Unauthenticated by
+    /// necessity (it runs before the account exists) and rate limited server
+    /// side; treat the answer as a hint, never as a reservation.
+    /// </summary>
+    Task<UsernameAvailability> CheckUsernameAsync(
+        string username,
         CancellationToken cancellationToken = default);
 }
 
@@ -78,4 +104,9 @@ public sealed class DisabledAccountProfileService : IAccountProfileService
         string idToken,
         CancellationToken cancellationToken = default) =>
         Task.FromResult(new AccountProfileFetchResult(AccountProfileFetchOutcome.Failed));
+
+    public Task<UsernameAvailability> CheckUsernameAsync(
+        string username,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(UsernameAvailability.Unknown);
 }

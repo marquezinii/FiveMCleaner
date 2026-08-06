@@ -38,6 +38,15 @@
     <Content Include="Config/appsettings.json;Config/appsettings.Development.json;Config/appsettings.Production.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <!--
+      Machine-local, git-ignored overlay (see RemoteServicesOptionsLoader) for
+      values GitHub's push protection would otherwise reject in a commit, like
+      the Google OAuth client secret. The glob matches nothing on a normal
+      checkout, so it never fails the build when absent.
+    -->
+    <Content Include="Config/appsettings.*.local.json" Condition="Exists('Config')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Target Name="CopyBroker" AfterTargets="Build">
     <ItemGroup>
