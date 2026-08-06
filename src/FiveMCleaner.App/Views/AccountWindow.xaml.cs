@@ -1,5 +1,6 @@
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Media;
 using FiveMCleaner.App.Services;
 
@@ -7,6 +8,8 @@ namespace FiveMCleaner.App.Views;
 
 public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
 {
+    private const int WM_SYSCOMMAND = 0x0112;
+    private const int SC_MOVE = 0xF010;
     /// <summary>
     /// Idle time after the last keystroke before the username is checked
     /// against the server. Long enough that typing a name end to end costs
@@ -60,9 +63,49 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         Close();
     }
 
+    /// <summary>
+    /// Locks the window in place: it opens centered over its owner and stays
+    /// there. Blocking <c>WM_SYSCOMMAND</c>/<c>SC_MOVE</c> covers every way
+    /// Windows can initiate a move -- dragging the title bar, Alt+Space then
+    /// M, double-clicking the system menu icon -- regardless of which one
+    /// Wpf.Ui's <c>ui:TitleBar</c> uses internally to drag the window.
+    /// </summary>
+    protected override void OnSourceInitialized(EventArgs e)
+    {
+        base.OnSourceInitialized(e);
+        if (PresentationSource.FromVisual(this) is HwndSource source)
+        {
+            source.AddHook(BlockWindowMove);
+        }
+    }
+
+    private static IntPtr BlockWindowMove(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+    {
+        handled = IsMoveCommand(msg, wParam);
+        return IntPtr.Zero;
+    }
+
+    /// <summary>
+    /// Extracted so the masking logic (the low nibble of <c>wParam</c> can
+    /// carry an extra flag depending on how the move was initiated) is
+    /// covered by a plain unit test instead of only being exercisable by
+    /// actually dragging a live window.
+    /// </summary>
+    internal static bool IsMoveCommand(int msg, IntPtr wParam) =>
+        msg == WM_SYSCOMMAND && (wParam.ToInt32() & 0xFFF0) == SC_MOVE;
+
     private void Render(AuthenticationSnapshot state)
     {
-        var verified = state.State == AuthenticationState.SignedIn;
+        if (state.State == AuthenticationState.SignedIn && !requiresProfileSetup)
+        {
+            // Account management (senha, e-mail, foto de perfil, excluir
+            // conta) now lives em Configurações > Sua conta -- once the
+            // account is fully signed in, this window's only job (getting
+            // there) is done.
+            CloseAfterSignIn();
+            return;
+        }
+
         var verification = state.State == AuthenticationState.EmailVerificationRequired;
         var hasUser = state.User is not null;
         var showRegistrationExtras = registering && !requiresProfileSetup;
@@ -81,7 +124,6 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         ProviderPanel.Visibility = Show(!hasUser && googleOAuth.IsConfigured);
 
         VerificationPanel.Visibility = Show(verification && !requiresProfileSetup);
-        ManagementPanel.Visibility = Show(verified && !requiresProfileSetup);
         LogoutButton.Visibility = Show(hasUser && !requiresProfileSetup);
         SubmitButton.Visibility = Show(collectingCredentials);
         SwitchButton.Visibility = Show(!hasUser && !requiresProfileSetup);
@@ -102,15 +144,30 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
             VerificationDetailText.Text =
                 $"Enviamos um link de confirmação para {state.User!.Email}. Abra o e-mail e clique no link — se não chegar em alguns minutos, confira o spam ou reenvie abaixo.";
         }
-        else if (verified)
-        {
-            TitleText.Text = "Sua conta";
-            SubtitleText.Text = "Alterações de senha e e-mail pedem a confirmação da sua senha atual.";
-            SignedInEmailText.Text = state.User!.Email;
-        }
         else
         {
             ApplyModeCopy();
+        }
+    }
+
+    /// <summary>
+    /// Closing via <see cref="DialogResult"/> requires the window to have
+    /// been opened with <see cref="Window.ShowDialog"/> -- true for every
+    /// real caller (<c>MainWindow.Account_Click</c>). A harness that built
+    /// the window without showing it (as some tests do, to inspect its
+    /// visual tree without flashing a real window) would hit
+    /// <see cref="InvalidOperationException"/> here; falling back to
+    /// <see cref="Window.Close"/> keeps that scenario safe too.
+    /// </summary>
+    private void CloseAfterSignIn()
+    {
+        try
+        {
+            DialogResult = true;
+        }
+        catch (InvalidOperationException)
+        {
+            Close();
         }
     }
 
@@ -492,40 +549,6 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     {
         await accounts.LogoutAsync();
         DialogResult = true;
-    }
-
-    private async void ChangePassword_Click(object sender, RoutedEventArgs e)
-    {
-        if (CurrentPasswordField.Password.Length == 0) { Reject("Confirme sua senha atual para alterar a senha.", CurrentPasswordField); return; }
-        if (!AccountPasswordPolicy.IsValid(NewPasswordField.Password))
-        {
-            Reject($"A nova senha precisa de pelo menos {AccountPasswordPolicy.MinimumLength} caracteres.", NewPasswordField);
-            return;
-        }
-        await RunAsync(
-            () => accounts.ChangePasswordAsync(CurrentPasswordField.Password, NewPasswordField.Password),
-            "Sua senha foi alterada.");
-    }
-
-    private async void ChangeEmail_Click(object sender, RoutedEventArgs e)
-    {
-        if (CurrentPasswordField.Password.Length == 0) { Reject("Confirme sua senha atual para alterar o e-mail.", CurrentPasswordField); return; }
-        if (!AccountValidation.IsValidEmail(NewEmailBox.Text)) { Reject("Informe um endereço de e-mail válido.", NewEmailBox); return; }
-        await RunAsync(() => accounts.ChangeEmailAsync(CurrentPasswordField.Password, NewEmailBox.Text.Trim()));
-    }
-
-    private async void DeleteAccount_Click(object sender, RoutedEventArgs e)
-    {
-        if (CurrentPasswordField.Password.Length == 0) { Reject("Confirme sua senha atual para excluir a conta.", CurrentPasswordField); return; }
-        if (System.Windows.MessageBox.Show(
-                "Excluir sua conta permanentemente? Seu nome de usuário voltará a ficar disponível para outra pessoa.",
-                "Excluir conta",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning) != MessageBoxResult.Yes)
-        {
-            return;
-        }
-        await RunAsync(() => accounts.DeleteAccountAsync(CurrentPasswordField.Password));
     }
 
     private async Task<FirebaseAuthResult> RunAsync(Func<Task<FirebaseAuthResult>> action, string? success = null)

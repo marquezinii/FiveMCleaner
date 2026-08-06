@@ -145,6 +145,96 @@ public sealed class AccountWindowTests
         RunOnUiThread(window => Assert.Equal(Visibility.Visible, Get<UIElement>(window, "ProviderPanel").Visibility));
     }
 
+    /// <summary>
+    /// Regression guard for the "campo de senha tem uma barrinha embaixo,
+    /// os outros ficam flutuando" report: <c>RevealPasswordBox</c>'s
+    /// PasswordBox/TextBox must render as a bare
+    /// <see cref="System.Windows.Controls.ScrollViewer"/> with nothing else
+    /// in their visual tree. Wpf.Ui's own default chrome (the one that drew
+    /// the underline) adds more than that; if the implicit style in
+    /// RevealPasswordBox.xaml ever stops overriding it, this fails instead
+    /// of only being noticeable by eye.
+    /// </summary>
+    [Fact]
+    public void PasswordFields_HaveNoDefaultChromeUnderline()
+    {
+        RunOnUiThread(window =>
+        {
+            var field = Get<FiveMCleaner.App.Controls.RevealPasswordBox>(window, "PasswordField");
+            var masked = Get<PasswordBox>(field, "Masked");
+            var revealed = Get<TextBox>(field, "Revealed");
+            masked.ApplyTemplate();
+            revealed.ApplyTemplate();
+
+            Assert.Equal(1, System.Windows.Media.VisualTreeHelper.GetChildrenCount(masked));
+            Assert.IsType<ScrollViewer>(System.Windows.Media.VisualTreeHelper.GetChild(masked, 0));
+            Assert.Equal(1, System.Windows.Media.VisualTreeHelper.GetChildrenCount(revealed));
+            Assert.IsType<ScrollViewer>(System.Windows.Media.VisualTreeHelper.GetChild(revealed, 0));
+        });
+    }
+
+    [Fact]
+    public void Window_CannotBeMovedAndOpensWithoutResize()
+    {
+        RunOnUiThread(window =>
+        {
+            Assert.Equal(ResizeMode.NoResize, window.ResizeMode);
+            Assert.Equal(WindowStartupLocation.CenterOwner, window.WindowStartupLocation);
+        });
+    }
+
+    [Theory]
+    [InlineData(0xF010, true)] // SC_MOVE itself
+    [InlineData(0xF012, true)] // SC_MOVE | low-nibble flag some move-initiation paths set
+    [InlineData(0xF030, false)] // SC_MAXIMIZE -- a different system command entirely
+    [InlineData(0xF060, false)] // SC_CLOSE -- must never be swallowed by the move guard
+    public void IsMoveCommand_OnlyMatchesSC_MOVERegardlessOfTheLowNibble(int wParam, bool expected)
+    {
+        const int WM_SYSCOMMAND = 0x0112;
+        const int WM_COMMAND = 0x0111;
+
+        Assert.Equal(expected, AccountWindow.IsMoveCommand(WM_SYSCOMMAND, (IntPtr)wParam));
+        // A different message carrying the exact same wParam bits must never match.
+        Assert.False(AccountWindow.IsMoveCommand(WM_COMMAND, (IntPtr)wParam));
+    }
+
+    /// <summary>
+    /// Once the account is fully signed in, the window's job is done: it
+    /// must not try to show the (now-removed) management UI, and must close
+    /// itself instead. A harness that builds the window without
+    /// <see cref="Window.ShowDialog"/> can't set <see cref="Window.DialogResult"/>
+    /// (WPF throws), so this also exercises the fallback to
+    /// <see cref="Window.Close"/> that keeps that scenario safe.
+    /// </summary>
+    [Fact]
+    public void Window_ClosesInsteadOfShowingManagementUiOnceSignedIn()
+    {
+        Exception? failure = null;
+        var thread = new Thread(() =>
+        {
+            try
+            {
+                EnsureApplicationResources();
+                var window = new AccountWindow(
+                    new SignedInFakeAuthService(),
+                    new FakeProfileService(),
+                    new FakeGoogleOAuthClient(configured: true));
+
+                // Render() runs off the constructor's Loaded handler and
+                // must not throw even though ShowDialog was never called.
+                window.RaiseEvent(new RoutedEventArgs(FrameworkElement.LoadedEvent));
+            }
+            catch (Exception exception)
+            {
+                failure = exception;
+            }
+        });
+        thread.SetApartmentState(ApartmentState.STA);
+        thread.Start();
+        Assert.True(thread.Join(TimeSpan.FromSeconds(60)), "A janela de conta não terminou de ser avaliada a tempo.");
+        if (failure is not null) throw failure;
+    }
+
     // ===================== Harness =====================
 
     private static readonly RoutedEvent ButtonBase_ClickEvent =
@@ -266,6 +356,30 @@ public sealed class AccountWindowTests
             StateChanged?.Invoke(this, Current);
             return Task.FromResult(new FirebaseAuthResult(Current.State, Current.User));
         }
+    }
+
+    /// <summary>Reports SignedIn from the very first read, so the constructor's Loaded-triggered Render() hits the auto-close branch.</summary>
+    private sealed class SignedInFakeAuthService : IFirebaseAuthService
+    {
+        public AuthenticationSnapshot Current { get; } = new(AuthenticationState.SignedIn, new FirebaseUser("uid-1", "person@example.com", true));
+        public event EventHandler<AuthenticationSnapshot>? StateChanged { add { } remove { } }
+
+        public Task<FirebaseAuthResult> RestoreSessionAsync(CancellationToken cancellationToken = default) => Result();
+        public Task<FirebaseAuthResult> RegisterAsync(string email, string password, bool keepSignedIn, CancellationToken cancellationToken = default) => Result();
+        public Task<FirebaseAuthResult> SignInAsync(string email, string password, bool keepSignedIn, CancellationToken cancellationToken = default) => Result();
+        public Task<FederatedSignInResult> SignInWithGoogleAsync(string googleIdToken, bool keepSignedIn, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new FederatedSignInResult(new FirebaseAuthResult(Current.State, Current.User)));
+        public Task<FirebaseAuthResult> RefreshEmailVerificationAsync(CancellationToken cancellationToken = default) => Result();
+        public Task<FirebaseAuthResult> ResendVerificationEmailAsync(CancellationToken cancellationToken = default) => Result();
+        public Task<FirebaseAuthResult> SendPasswordResetEmailAsync(string email, CancellationToken cancellationToken = default) => Result();
+        public Task<FirebaseAuthResult> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken cancellationToken = default) => Result();
+        public Task<FirebaseAuthResult> ChangeEmailAsync(string currentPassword, string newEmail, CancellationToken cancellationToken = default) => Result();
+        public Task<FirebaseAuthResult> DeleteAccountAsync(string currentPassword, CancellationToken cancellationToken = default) => Result();
+        public Task<string?> GetIdTokenAsync(CancellationToken cancellationToken = default) => Task.FromResult<string?>(null);
+        public Task LogoutAsync(CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public void Dispose() { }
+
+        private Task<FirebaseAuthResult> Result() => Task.FromResult(new FirebaseAuthResult(Current.State, Current.User));
     }
 
     private sealed class FakeProfileService : IAccountProfileService

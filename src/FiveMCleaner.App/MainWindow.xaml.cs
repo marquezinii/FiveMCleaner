@@ -74,6 +74,14 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             accountService.StateChanged += AccountService_StateChanged;
         }
 
+        // StateChanged only fires once RestoreSessionAsync actually finds a
+        // stored session; a fresh install or an already-signed-out user
+        // never raises it, so the Settings card needs one explicit call here
+        // to land on the right panel (unavailable/signed-out/signed-in)
+        // instead of relying on whatever Visibility happens to be XAML's
+        // default.
+        RefreshAccountSettingsCard();
+
         var telemetry = CreateTelemetryServices(demoMode, remoteServicesOptions, runtimeEnvironment);
         queuedCloudflareTelemetry = telemetry.Queued;
 
@@ -298,23 +306,44 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
     }
 
-    private async void Account_Click(object sender, RoutedEventArgs e)
+    private void Account_Click(object sender, RoutedEventArgs e)
     {
         if (accountService is null)
         {
             System.Windows.MessageBox.Show("O acesso à conta não está disponível nesta instalação.", "Conta", MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
-        var dialog = new AccountWindow(accountService, profileService, googleOAuth) { Owner = this };
+
+        if (accountService.Current.State == AuthenticationState.SignedIn)
+        {
+            // Já logado: o clique no cabeçalho leva direto para
+            // Configurações > Sua conta, em vez de reabrir a janela de
+            // entrar/cadastrar (que agora só cuida de autenticar, não de
+            // gerenciar a conta -- ver AccountWindow.CloseAfterSignIn).
+            ActivateNavItem(SettingsNav);
+            Navigate(SettingsPage);
+            AccountSettingsCard.BringIntoView();
+            return;
+        }
+
+        OpenAccountWindow();
+    }
+
+    private void OpenAccountWindow()
+    {
+        var dialog = new AccountWindow(accountService!, profileService, googleOAuth) { Owner = this };
         if (dialog.ShowDialog() == true) UpdateAccountButton();
     }
 
     private void UpdateAccountButton()
     {
         var profile = accountService?.Current.User;
-        AccountInitials.Text = profile?.Initials ?? "\uE77B";
         AccountLabel.Text = profile?.DisplayName ?? "Entrar / Cadastre-se";
-        AccountButton.ToolTip = profile is null ? "Entrar ou criar conta" : "Clique para sair da conta";
+        AccountButton.ToolTip = profile is null ? "Entrar ou criar conta" : "Ver minha conta";
+        // Also sets AccountInitials/avatar for both the header and the
+        // Settings card, so a direct assignment here would just be
+        // immediately overwritten.
+        RefreshAccountSettingsCard();
     }
 
     private async void AccountService_StateChanged(object? sender, AuthenticationSnapshot snapshot)
@@ -322,7 +351,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         Dispatcher.Invoke(UpdateAccountButton);
         if (snapshot.State != AuthenticationState.SignedIn || snapshot.User is null)
         {
-            Dispatcher.Invoke(() => viewModel.SetAccountFirstName(null));
+            Dispatcher.Invoke(() =>
+            {
+                viewModel.SetAccountFirstName(null);
+                ApplyAccountSettingsUsername(null);
+            });
             return;
         }
 
@@ -353,7 +386,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             var result = await profileService.FetchAsync(idToken).ConfigureAwait(false);
             if (result.Outcome == AccountProfileFetchOutcome.Found)
             {
-                Dispatcher.Invoke(() => viewModel.SetAccountFirstName(result.FirstName));
+                Dispatcher.Invoke(() =>
+                {
+                    viewModel.SetAccountFirstName(result.FirstName);
+                    ApplyAccountSettingsUsername(result.Username);
+                });
             }
         }
         catch (Exception exception) when (exception is not (

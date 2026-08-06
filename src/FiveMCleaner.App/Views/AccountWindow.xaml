@@ -29,9 +29,9 @@
         <!--
             Barra de título nativa do Wpf.Ui, reduzida ao botão de fechar. É
             o X real do Windows: mesma área de clique, mesmo realce vermelho,
-            mesmo comportamento de acessibilidade que o usuário já conhece —
-            e a janela continua arrastável pela barra. Esc também cancela
-            (ver AccountWindow.xaml.cs).
+            mesmo comportamento de acessibilidade que o usuário já conhece.
+            A janela é fixa — não pode ser arrastada nem redimensionada (ver
+            OnSourceInitialized em AccountWindow.xaml.cs) — e Esc cancela.
         -->
         <ui:TitleBar Grid.Row="0"
                      Height="40"
@@ -276,55 +276,6 @@
                                     Click="RefreshVerification_Click" />
                         </StackPanel>
                     </Border>
-                </StackPanel>
-
-                <!-- ==================== Gerenciar a conta ==================== -->
-                <StackPanel x:Name="ManagementPanel" Visibility="Collapsed">
-                    <Border Style="{StaticResource CardStyle}" Padding="16">
-                        <StackPanel>
-                            <TextBlock Style="{StaticResource SectionLabelStyle}" Text="CONECTADO COMO" />
-                            <TextBlock x:Name="SignedInEmailText" Margin="0,6,0,0" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
-                        </StackPanel>
-                    </Border>
-
-                    <TextBlock Style="{StaticResource SectionLabelStyle}" Margin="0,22,0,10" Text="CONFIRMAÇÃO DE IDENTIDADE" />
-                    <TextBlock Style="{StaticResource FormLabelStyle}" Text="Senha atual" />
-                    <controls:RevealPasswordBox x:Name="CurrentPasswordField"
-                                                MaxLength="128"
-                                                Placeholder="Obrigatória para qualquer alteração abaixo"
-                                                AutomationProperties.Name="Senha atual" />
-
-                    <TextBlock Style="{StaticResource SectionLabelStyle}" Margin="0,22,0,10" Text="ALTERAR SENHA" />
-                    <TextBlock Style="{StaticResource FormLabelStyle}" Text="Nova senha" />
-                    <controls:RevealPasswordBox x:Name="NewPasswordField"
-                                                MaxLength="128"
-                                                Placeholder="Mínimo de 12 caracteres"
-                                                AutomationProperties.Name="Nova senha" />
-                    <Button Margin="0,12,0,0"
-                            Style="{StaticResource SecondaryButtonStyle}"
-                            Content="Salvar nova senha"
-                            Click="ChangePassword_Click" />
-
-                    <TextBlock Style="{StaticResource SectionLabelStyle}" Margin="0,22,0,10" Text="ALTERAR E-MAIL" />
-                    <TextBlock Style="{StaticResource FormLabelStyle}" Text="Novo e-mail" />
-                    <TextBox x:Name="NewEmailBox"
-                             Style="{StaticResource AccountFieldStyle}"
-                             MaxLength="254"
-                             AutomationProperties.Name="Novo e-mail" />
-                    <Button Margin="0,12,0,0"
-                            Style="{StaticResource SecondaryButtonStyle}"
-                            Content="Salvar novo e-mail"
-                            Click="ChangeEmail_Click" />
-
-                    <Border Height="1" Margin="0,24,0,18" Background="{DynamicResource BorderSoftBrush}" />
-                    <TextBlock Style="{StaticResource FormHintStyle}"
-                               Margin="0,0,0,10"
-                               Text="Excluir a conta é permanente e remove seu nome de usuário, que volta a ficar disponível para outra pessoa." />
-                    <Button HorizontalAlignment="Left"
-                            Style="{StaticResource LinkButtonStyle}"
-                            Foreground="{DynamicResource RedBrush}"
-                            Content="Excluir minha conta"
-                            Click="DeleteAccount_Click" />
                 </StackPanel>
 
                 <!-- ==================== Mensagem de status ==================== -->

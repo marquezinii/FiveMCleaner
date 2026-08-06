@@ -177,7 +177,11 @@
                         </Button.Style>
                         <StackPanel Orientation="Horizontal">
                             <Border Width="25" Height="25" CornerRadius="13" Background="{DynamicResource ChipBrush}" Margin="0,0,7,0">
-                                <TextBlock x:Name="AccountInitials" Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" />
+                                <Grid>
+                                    <TextBlock x:Name="AccountInitials" Text="&#xE77B;" FontFamily="Segoe MDL2 Assets" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{DynamicResource TextSubtleBrush}" />
+                                    <!-- Substitui as iniciais quando há uma foto de perfil salva; ver AccountAvatarStore. -->
+                                    <Ellipse x:Name="AccountAvatarEllipse" Width="25" Height="25" Visibility="Collapsed" />
+                                </Grid>
                             </Border>
                             <TextBlock x:Name="AccountLabel" Text="Entrar / Cadastre-se" VerticalAlignment="Center" FontFamily="Segoe UI Variable Text, Segoe UI" FontSize="12.5" FontWeight="SemiBold" />
                         </StackPanel>
@@ -975,6 +979,109 @@
                     <ScrollViewer x:Name="SettingsPage" Padding="0,0,26,0" Visibility="Collapsed" VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock Text="{Binding [Settings.Title], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,18" FontSize="25" FontWeight="Bold" />
+
+                            <!--
+                                Sua conta: perfil (com foto), senha, e-mail e
+                                exclusão. Vive aqui — e não mais num popup à
+                                parte — para reunir tudo que é "conta" num só
+                                lugar organizado, com o mesmo tratamento
+                                visual do resto das Configurações.
+                            -->
+                            <ui:Card x:Name="AccountSettingsCard" Margin="0,0,0,13" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="Sua conta" FontSize="15" FontWeight="SemiBold" />
+
+                                    <StackPanel x:Name="AccountSettingsUnavailablePanel" Margin="0,12,0,0" Visibility="Collapsed">
+                                        <TextBlock Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap" Text="O acesso à conta não está disponível nesta instalação." />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="AccountSettingsSignedOutPanel" Margin="0,12,0,0">
+                                        <TextBlock Foreground="{DynamicResource TextSubtleBrush}" FontSize="10.5" TextWrapping="Wrap"
+                                                   Text="Entre com sua conta para sincronizar preferências entre instalações, adicionar uma foto de perfil e gerenciar sua senha e e-mail." />
+                                        <Button Content="Entrar ou criar conta" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="OpenAccountFromSettings_Click" />
+                                    </StackPanel>
+
+                                    <StackPanel x:Name="AccountSettingsSignedInPanel" Margin="0,12,0,0" Visibility="Collapsed">
+
+                                        <!-- Foto de perfil -->
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Border Width="72" Height="72" CornerRadius="36" Background="{DynamicResource ChipBrush}">
+                                                <Grid>
+                                                    <TextBlock x:Name="AccountSettingsInitials" FontSize="24" FontWeight="SemiBold" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                    <Ellipse x:Name="AccountSettingsAvatarEllipse" Width="72" Height="72" Visibility="Collapsed" />
+                                                </Grid>
+                                            </Border>
+                                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <Button x:Name="ChangePhotoButton" Content="Alterar foto" Style="{StaticResource SecondaryButtonStyle}" Height="34" Padding="14,0" Click="ChangePhoto_Click" />
+                                                    <Button x:Name="RemovePhotoButton" Content="Remover foto" Style="{StaticResource LinkButtonStyle}" Margin="10,0,0,0" Visibility="Collapsed" Click="RemovePhoto_Click" />
+                                                </StackPanel>
+                                                <TextBlock Margin="0,7,0,0" FontSize="10" Foreground="{DynamicResource TextSubtleBrush}" TextWrapping="Wrap"
+                                                           Text="Recomendado: imagem quadrada, no mínimo 256×256px (ideal 512×512px), em JPG ou PNG, até 8 MB. A foto fica salva apenas neste computador por enquanto." />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Separator Margin="0,16,0,13" Background="{DynamicResource BorderSoftBrush}" />
+
+                                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="CONECTADO COMO" />
+                                        <TextBlock x:Name="AccountSettingsEmailText" Margin="0,6,0,0" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />
+                                        <TextBlock x:Name="AccountSettingsUsernameText" Margin="0,2,0,0" FontSize="11" Foreground="{DynamicResource TextSubtleBrush}" />
+
+                                        <Separator Margin="0,16,0,13" Background="{DynamicResource BorderSoftBrush}" />
+
+                                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="CONFIRMAÇÃO DE IDENTIDADE" />
+                                        <TextBlock Style="{StaticResource FormLabelStyle}" Margin="0,10,0,6" Text="Senha atual" />
+                                        <controls:RevealPasswordBox x:Name="AccountSettingsCurrentPasswordField"
+                                                                    MaxLength="128"
+                                                                    Placeholder="Obrigatória para qualquer alteração abaixo"
+                                                                    AutomationProperties.Name="Senha atual" />
+
+                                        <Separator Margin="0,16,0,13" Background="{DynamicResource BorderSoftBrush}" />
+
+                                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="ALTERAR SENHA" />
+                                        <TextBlock Style="{StaticResource FormLabelStyle}" Margin="0,10,0,6" Text="Nova senha" />
+                                        <controls:RevealPasswordBox x:Name="AccountSettingsNewPasswordField"
+                                                                    MaxLength="128"
+                                                                    Placeholder="Mínimo de 12 caracteres"
+                                                                    AutomationProperties.Name="Nova senha" />
+                                        <Button Margin="0,12,0,0" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Content="Salvar nova senha" Click="AccountSettingsChangePassword_Click" />
+
+                                        <Separator Margin="0,16,0,13" Background="{DynamicResource BorderSoftBrush}" />
+
+                                        <TextBlock Style="{StaticResource SectionLabelStyle}" Text="ALTERAR E-MAIL" />
+                                        <TextBlock Style="{StaticResource FormLabelStyle}" Margin="0,10,0,6" Text="Novo e-mail" />
+                                        <TextBox x:Name="AccountSettingsNewEmailBox"
+                                                 Style="{StaticResource AccountFieldStyle}"
+                                                 MaxLength="254"
+                                                 AutomationProperties.Name="Novo e-mail" />
+                                        <Button Margin="0,12,0,0" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Content="Salvar novo e-mail" Click="AccountSettingsChangeEmail_Click" />
+
+                                        <Separator Margin="0,16,0,13" Background="{DynamicResource BorderSoftBrush}" />
+
+                                        <TextBlock Style="{StaticResource FormHintStyle}" Margin="0,0,0,10" Text="Excluir a conta é permanente e remove seu nome de usuário, que volta a ficar disponível para outra pessoa." />
+                                        <Button HorizontalAlignment="Left" Style="{StaticResource LinkButtonStyle}" Foreground="{DynamicResource RedBrush}" Content="Excluir minha conta" Click="AccountSettingsDeleteAccount_Click" />
+
+                                        <Border x:Name="AccountSettingsStatusPanel"
+                                                Visibility="Collapsed"
+                                                Margin="0,16,0,0"
+                                                Padding="13,11"
+                                                CornerRadius="9"
+                                                BorderThickness="1">
+                                            <StackPanel Orientation="Horizontal">
+                                                <Path x:Name="AccountSettingsStatusIcon" Style="{StaticResource VectorIconStyle}" Width="14" Height="14" VerticalAlignment="Top" Margin="0,1,0,0" StrokeThickness="1.8" />
+                                                <TextBlock x:Name="AccountSettingsStatusText" Margin="9,0,0,0" FontSize="11.5" TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive" />
+                                            </StackPanel>
+                                        </Border>
+
+                                        <Button Margin="0,16,0,0" Style="{StaticResource LinkButtonStyle}" HorizontalAlignment="Left" Content="Sair da conta" Click="AccountSettingsLogout_Click" />
+                                    </StackPanel>
+                                </StackPanel>
+                            </ui:Card>
+
                             <ui:Card Margin="0,0,0,13" Padding="16">
                                 <StackPanel>
                                     <TextBlock Text="{Binding [Settings.General.Title], Source={StaticResource LocalizedStrings}}" FontSize="15" FontWeight="SemiBold" />
