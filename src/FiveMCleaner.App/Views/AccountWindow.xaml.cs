@@ -52,7 +52,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         };
     }
 
-    private void Accounts_StateChanged(object? sender, AuthenticationSnapshot state) => Dispatcher.Invoke(() => Render(state));
+    private void Accounts_StateChanged(object? sender, AuthenticationSnapshot state) => _ = Dispatcher.InvokeAsync(() => Render(state));
 
     /// <summary>Esc cancels, exactly like the X in the title bar.</summary>
     protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
@@ -124,7 +124,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         ProviderPanel.Visibility = Show(!hasUser && googleOAuth.IsConfigured);
 
         VerificationPanel.Visibility = Show(verification && !requiresProfileSetup);
-        LogoutButton.Visibility = Show(hasUser && !requiresProfileSetup);
+        LogoutButton.Visibility = Show(hasUser);
         SubmitButton.Visibility = Show(collectingCredentials);
         SwitchButton.Visibility = Show(!hasUser && !requiresProfileSetup);
 
@@ -387,7 +387,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
 
         if (existing.Outcome == AccountProfileFetchOutcome.Found)
         {
-            DialogResult = true;
+            CloseAfterSignIn();
             return;
         }
 
@@ -396,7 +396,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
             // The account is signed in and valid; only the profile lookup
             // failed (offline, Worker down). Forcing the profile step here
             // would risk a duplicate row for a name the user already owns.
-            DialogResult = true;
+            CloseAfterSignIn();
             return;
         }
 
@@ -533,10 +533,15 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
             return;
         }
 
-        var result = await accounts.SendPasswordResetEmailAsync(EmailBox.Text.Trim());
-        Status(
-            result.Error ?? "Se houver uma conta para este e-mail, enviamos as instruções de recuperação.",
-            result.Error is not null);
+        SetBusy(true);
+        try
+        {
+            var result = await accounts.SendPasswordResetEmailAsync(EmailBox.Text.Trim());
+            Status(
+                result.Error ?? "Se houver uma conta para este e-mail, enviamos as instruções de recuperação.",
+                result.Error is not null);
+        }
+        finally { SetBusy(false); }
     }
 
     private async void ResendVerification_Click(object sender, RoutedEventArgs e) =>
@@ -548,7 +553,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     private async void Logout_Click(object sender, RoutedEventArgs e)
     {
         await accounts.LogoutAsync();
-        DialogResult = true;
+        CloseAfterSignIn();
     }
 
     private async Task<FirebaseAuthResult> RunAsync(Func<Task<FirebaseAuthResult>> action, string? success = null)
@@ -570,6 +575,8 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     private void SetBusy(bool busy)
     {
         SubmitButton.IsEnabled = SwitchButton.IsEnabled = GoogleButton.IsEnabled = !busy;
+        ResendVerificationButton.IsEnabled = !busy;
+        RefreshVerificationButton.IsEnabled = !busy;
         Cursor = busy ? System.Windows.Input.Cursors.Wait : null;
     }
 
@@ -587,6 +594,6 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         StatusIcon.Data = (Geometry)FindResource(error ? "IconInfo" : "IconCheck");
         StatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, error ? "RedBrush" : "GreenBrush");
         StatusPanel.SetResourceReference(System.Windows.Controls.Border.BorderBrushProperty, error ? "RedBrush" : "GreenBrush");
-        StatusPanel.Background = new SolidColorBrush(((SolidColorBrush)FindResource(error ? "RedBrush" : "GreenBrush")).Color) { Opacity = 0.12 };
+        StatusPanel.SetResourceReference(BackgroundProperty, error ? "AccountStatusErrorBackgroundBrush" : "AccountStatusSuccessBackgroundBrush");
     }
 }

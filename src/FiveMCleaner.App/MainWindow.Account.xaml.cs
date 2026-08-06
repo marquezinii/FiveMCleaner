@@ -239,6 +239,11 @@ public partial class MainWindow
     private void SetAccountSettingsBusy(bool busy)
     {
         ChangePhotoButton.IsEnabled = !busy;
+        RemovePhotoButton.IsEnabled = !busy;
+        AccountSettingsChangePasswordButton.IsEnabled = !busy;
+        AccountSettingsChangeEmailButton.IsEnabled = !busy;
+        AccountSettingsDeleteAccountButton.IsEnabled = !busy;
+        AccountSettingsLogoutButton.IsEnabled = !busy;
         Cursor = busy ? System.Windows.Input.Cursors.Wait : null;
     }
 
@@ -256,6 +261,6 @@ public partial class MainWindow
         AccountSettingsStatusIcon.Data = (Geometry)FindResource(error ? "IconInfo" : "IconCheck");
         AccountSettingsStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, error ? "RedBrush" : "GreenBrush");
         AccountSettingsStatusPanel.SetResourceReference(BorderBrushProperty, error ? "RedBrush" : "GreenBrush");
-        AccountSettingsStatusPanel.Background = new SolidColorBrush(((SolidColorBrush)FindResource(error ? "RedBrush" : "GreenBrush")).Color) { Opacity = 0.12 };
+        AccountSettingsStatusPanel.SetResourceReference(BackgroundProperty, error ? "AccountStatusErrorBackgroundBrush" : "AccountStatusSuccessBackgroundBrush");
     }
 }

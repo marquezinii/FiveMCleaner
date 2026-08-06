@@ -1048,7 +1048,7 @@
                                                                     MaxLength="128"
                                                                     Placeholder="Mínimo de 12 caracteres"
                                                                     AutomationProperties.Name="Nova senha" />
-                                        <Button Margin="0,12,0,0" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Content="Salvar nova senha" Click="AccountSettingsChangePassword_Click" />
+                                        <Button x:Name="AccountSettingsChangePasswordButton" Margin="0,12,0,0" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Content="Salvar nova senha" Click="AccountSettingsChangePassword_Click" />
 
                                         <Separator Margin="0,16,0,13" Background="{DynamicResource BorderSoftBrush}" />
 
@@ -1058,12 +1058,12 @@
                                                  Style="{StaticResource AccountFieldStyle}"
                                                  MaxLength="254"
                                                  AutomationProperties.Name="Novo e-mail" />
-                                        <Button Margin="0,12,0,0" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Content="Salvar novo e-mail" Click="AccountSettingsChangeEmail_Click" />
+                                        <Button x:Name="AccountSettingsChangeEmailButton" Margin="0,12,0,0" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Content="Salvar novo e-mail" Click="AccountSettingsChangeEmail_Click" />
 
                                         <Separator Margin="0,16,0,13" Background="{DynamicResource BorderSoftBrush}" />
 
                                         <TextBlock Style="{StaticResource FormHintStyle}" Margin="0,0,0,10" Text="Excluir a conta é permanente e remove seu nome de usuário, que volta a ficar disponível para outra pessoa." />
-                                        <Button HorizontalAlignment="Left" Style="{StaticResource LinkButtonStyle}" Foreground="{DynamicResource RedBrush}" Content="Excluir minha conta" Click="AccountSettingsDeleteAccount_Click" />
+                                        <Button x:Name="AccountSettingsDeleteAccountButton" HorizontalAlignment="Left" Style="{StaticResource LinkButtonStyle}" Foreground="{DynamicResource RedBrush}" Content="Excluir minha conta" Click="AccountSettingsDeleteAccount_Click" />
 
                                         <Border x:Name="AccountSettingsStatusPanel"
                                                 Visibility="Collapsed"
@@ -1077,7 +1077,7 @@
                                             </StackPanel>
                                         </Border>
 
-                                        <Button Margin="0,16,0,0" Style="{StaticResource LinkButtonStyle}" HorizontalAlignment="Left" Content="Sair da conta" Click="AccountSettingsLogout_Click" />
+                                        <Button x:Name="AccountSettingsLogoutButton" Margin="0,16,0,0" Style="{StaticResource LinkButtonStyle}" HorizontalAlignment="Left" Content="Sair da conta" Click="AccountSettingsLogout_Click" />
                                     </StackPanel>
                                 </StackPanel>
                             </ui:Card>

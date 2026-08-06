@@ -266,11 +266,13 @@
                                        FontSize="12"
                                        TextWrapping="Wrap"
                                        Foreground="{DynamicResource TextMutedBrush}" />
-                            <Button Margin="0,16,0,0"
+                            <Button x:Name="ResendVerificationButton"
+                                    Margin="0,16,0,0"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     Content="Reenviar e-mail de verificação"
                                     Click="ResendVerification_Click" />
-                            <Button Margin="0,9,0,0"
+                            <Button x:Name="RefreshVerificationButton"
+                                    Margin="0,9,0,0"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     Content="Já confirmei, verificar agora"
                                     Click="RefreshVerification_Click" />

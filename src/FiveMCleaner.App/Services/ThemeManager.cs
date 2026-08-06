@@ -40,7 +40,9 @@ public sealed class ThemeManager : IDisposable
             ["ToggleTrackBorderBrush"] = "#484B53",
             ["ToggleThumbBrush"] = "#D9DBDF",
             ["ScrollThumbBrush"] = "#50545D",
-            ["ScrollThumbHoverBrush"] = "#737985"
+            ["ScrollThumbHoverBrush"] = "#737985",
+            ["AccountStatusErrorBackgroundBrush"] = "#1EF26B6B",
+            ["AccountStatusSuccessBackgroundBrush"] = "#1E37C889"
         };
 
     private static readonly IReadOnlyDictionary<string, string> LightPalette =
@@ -75,7 +77,9 @@ public sealed class ThemeManager : IDisposable
             ["ToggleTrackBorderBrush"] = "#BFC5CE",
             ["ToggleThumbBrush"] = "#FFFFFF",
             ["ScrollThumbBrush"] = "#AAB1BC",
-            ["ScrollThumbHoverBrush"] = "#868E9A"
+            ["ScrollThumbHoverBrush"] = "#868E9A",
+            ["AccountStatusErrorBackgroundBrush"] = "#1EC83B43",
+            ["AccountStatusSuccessBackgroundBrush"] = "#1E16785B"
         };
 
     private AppThemePreference preference = AppThemePreference.System;
