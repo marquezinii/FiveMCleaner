@@ -95,6 +95,27 @@ jobs:
             --configuration Release `
             --no-build
 
+      - name: Write Google sign-in overlay
+        shell: pwsh
+        env:
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+        run: |
+          # Machine-local overlay (see RemoteServicesOptionsLoader / the
+          # Content glob in FiveMCleaner.App.csproj) that a normal checkout
+          # never has. Written here, right before the publish that Build-
+          # Installer.ps1 triggers, so the official installer ships with
+          # "Continuar com o Google" enabled instead of silently hiding it.
+          if ([string]::IsNullOrWhiteSpace($env:GOOGLE_OAUTH_CLIENT_ID) -or
+              [string]::IsNullOrWhiteSpace($env:GOOGLE_OAUTH_CLIENT_SECRET)) {
+            throw 'Google OAuth secrets are required to build the public installer.'
+          }
+          $overlay = [ordered]@{
+            googleOAuthClientId     = $env:GOOGLE_OAUTH_CLIENT_ID
+            googleOAuthClientSecret = $env:GOOGLE_OAUTH_CLIENT_SECRET
+          }
+          $overlay | ConvertTo-Json | Set-Content -LiteralPath ./src/FiveMCleaner.App/Config/appsettings.Production.local.json -Encoding utf8
+
       - name: Build self-contained package and installer
         shell: pwsh
         env:
