@@ -454,6 +454,16 @@
         <Setter Property="Height" Value="42" />
         <Setter Property="FontSize" Value="12.5" />
         <Setter Property="Background" Value="{DynamicResource InsetBrush}" />
+        <!--
+            FormTextBoxStyle sets FontFamily to AppFont ("Segoe UI" plain).
+            RevealPasswordBox's PasswordBox/TextBox never set FontFamily, so
+            they inherit the window's "Segoe UI Variable Text, Segoe UI" —
+            a different font with different line metrics, which made the
+            text caret render tall and normal in the password fields but
+            tiny in every other account field. Matching the same family
+            here makes the caret the same size everywhere in the form.
+        -->
+        <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
     </Style>
 
     <!--
