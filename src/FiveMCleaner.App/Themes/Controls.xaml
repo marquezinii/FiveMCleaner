@@ -440,30 +440,48 @@
         <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
     </Style>
 
-    <!-- Caixa de texto com a mesma altura e corpo do RevealPasswordBox. -->
     <!--
-        Height fixa, não MinHeight: com MinHeight, o Padding="12,9" herdado
-        de FormTextBoxStyle (aplicado como Margin do ScrollViewer interno)
-        podia empurrar a caixa acima de 42px dependendo da métrica da fonte,
-        deixando o campo de e-mail visivelmente mais alto que o de senha
-        (RevealPasswordBox, que já usa Height fixa). Height força o mesmo
-        valor exato nos dois, sem risco de estourar — o conteúdo (padding +
-        uma linha de texto) cabe folgado dentro de 42px.
+        Geometria idêntica à de RevealPasswordBox.xaml (Masked/Revealed), de
+        propósito: FormTextBoxStyle usa Padding="12,9" aplicado como Margin
+        do ScrollViewer interno, que dentro de uma Height fixa de 42px sobra
+        só 24px verticais de área útil (42 - 9 - 9). Com a fonte "Segoe UI
+        Variable Text" (a mesma que o campo de senha usa, herdada da janela)
+        essa área de 24px é menor que a altura natural de uma linha de
+        texto, e o texto/cursor ficava cortado quase por inteiro — não uma
+        questão de tamanho de fonte, e sim de espaço vertical disponível.
+        RevealPasswordBox nunca teve esse problema porque usa Padding
+        somente horizontal ("12,0"), deixando o campo inteiro (42px) livre
+        para centralizar o texto. Copiar exatamente essa estrutura aqui —
+        Padding só horizontal, sem depender do Padding vertical herdado de
+        FormTextBoxStyle — resolve os dois problemas ao mesmo tempo: cursor
+        do mesmo tamanho em todos os campos, e texto sempre visível.
     -->
     <Style x:Key="AccountFieldStyle" TargetType="TextBox" BasedOn="{StaticResource FormTextBoxStyle}">
         <Setter Property="Height" Value="42" />
         <Setter Property="FontSize" Value="12.5" />
+        <Setter Property="Padding" Value="12,0" />
         <Setter Property="Background" Value="{DynamicResource InsetBrush}" />
-        <!--
-            FormTextBoxStyle sets FontFamily to AppFont ("Segoe UI" plain).
-            RevealPasswordBox's PasswordBox/TextBox never set FontFamily, so
-            they inherit the window's "Segoe UI Variable Text, Segoe UI" —
-            a different font with different line metrics, which made the
-            text caret render tall and normal in the password fields but
-            tiny in every other account field. Matching the same family
-            here makes the caret the same size everywhere in the form.
-        -->
-        <Setter Property="FontFamily" Value="Segoe UI Variable Text, Segoe UI" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="TextBox">
+                    <Border x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="8">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalAlignment="Center"
+                                      HorizontalScrollBarVisibility="Hidden"
+                                      VerticalScrollBarVisibility="Hidden" />
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource OrangeBrush}" />
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="Root" Property="Opacity" Value="0.55" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
     <!--
