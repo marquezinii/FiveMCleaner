@@ -1,5 +1,43 @@
 # Estado do Projeto
 
+## Redesenho da janela Entrar/Cadastre-se, login com Google e conta em Configurações — 06/08/2026
+
+- Integrada em `dev/proxima-versao`: `ai/claude/account-window-ux` (X de
+  fechar nativo, tipografia e validação campo a campo, "Esqueci minha
+  senha" condicional ao erro de login, olho de mostrar/ocultar senha,
+  checagem de disponibilidade de nome de usuário via
+  `GET /account/username-available` no Worker, login com o Google via
+  OAuth2 + PKCE com redirect de loopback). Testado ponta a ponta com
+  credenciais reais do Google Cloud (projeto `fivemcleaner-app`): abre
+  navegador, login real, retorna ao app, cai no passo de perfil com
+  nome/sobrenome preenchidos pela Google.
+- Credenciais do Google não vão para o repositório: `RemoteServicesOptionsLoader`
+  agora aceita um overlay opcional `Config/appsettings.{Development,
+  Production}.local.json`, git-ignorado, no mesmo padrão que o Worker já
+  usa para `ADMIN_PASSWORD_HASH`/`IP_HASH_SECRET`. Motivo: uma primeira
+  tentativa de commitar o client secret direto nos arquivos versionados
+  foi recusada pelo GitHub push protection.
+- Três correções pedidas após revisão visual: (1) a janela de conta agora
+  é fixa — não pode ser arrastada nem redimensionada (hook de
+  `WM_SYSCOMMAND`/`SC_MOVE`); (2) clicar no nome/e-mail no cabeçalho, já
+  logado, não reabre mais um popup "Sua conta" — o gerenciamento (senha,
+  e-mail, excluir conta) virou um card permanente em Configurações, com
+  upload de foto de perfil (normalizada para PNG quadrado, até 512px, via
+  `AccountAvatarStore` — armazenamento só local por enquanto, sem backend
+  de avatar ainda; ver `infra/cloudflare-worker/README.md` sobre o mesmo
+  bloqueio já enfrentado pelo R2); (3) os campos de senha tinham um
+  sublinhado padrão do Wpf.Ui que os outros campos não tinham — corrigido
+  para o mesmo visual "flutuando" (`Border` + `ScrollViewer`) do resto do
+  formulário.
+- Validação integrada: build Release sem avisos, 774 testes .NET (81
+  novos ao todo nesta rodada), 159 testes do Worker, `dotnet format
+  --verify-no-changes`, `git diff --check` aprovados. Atalho de
+  desenvolvimento reconstruído e confirmado apontando para
+  `scripts\Start-DevelopmentApp.ps1`.
+- Pendente: `wrangler deploy` do Worker (rota de disponibilidade de
+  username + rate limit) — autorização remota explícita do usuário ainda
+  não concedida nesta sessão.
+
 ## Integração de 2 tarefas de IA em `dev/proxima-versao` — 05/08/2026
 
 - Integradas em `dev/proxima-versao`: `ai/claude/overview-redesign`
