@@ -210,19 +210,6 @@ public sealed class WindowsActionCatalog
         return action;
     }
 
-    public bool TryGet(string id, int version, out IWindowsOptimizationAction? action)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(id);
-        if (actions.TryGetValue(id, out var found) && found.Metadata.Version == version)
-        {
-            action = found;
-            return true;
-        }
-
-        action = null;
-        return false;
-    }
-
     public void Validate(IWindowsOptimizationAction action)
     {
         ArgumentNullException.ThrowIfNull(action);

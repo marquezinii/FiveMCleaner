@@ -32,12 +32,16 @@ public partial class App : System.Windows.Application
             singleInstanceGuard = new SingleInstanceGuard(AppEnvironment.Resolve());
             if (!singleInstanceGuard.TryAcquire())
             {
-                ShowAlreadyRunningMessage();
+                // Another instance is already running: ask it to bring its
+                // window to the foreground and shut down quietly, so a second
+                // launch never stacks a duplicate process or tray icon.
+                singleInstanceGuard.RequestActivation();
                 singleInstanceGuard.Dispose();
                 Shutdown(0);
                 return;
             }
 
+            singleInstanceGuard.ListenForActivation(OnActivationRequested);
             Exit += (_, _) => singleInstanceGuard.Dispose();
         }
 
@@ -56,19 +60,25 @@ public partial class App : System.Windows.Application
         }
     }
 
-    private static void ShowAlreadyRunningMessage()
+    private static void OnActivationRequested()
     {
+        // Raised on the SingleInstanceGuard listener thread; marshal to the
+        // UI thread where the window lives.
         try
         {
-            System.Windows.MessageBox.Show(
-                Services.LocalizationService.Current.GetString("Dialog.AlreadyRunning.Message"),
-                ProductIdentity.Name,
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
+            Current?.Dispatcher.BeginInvoke(ActivateMainWindowIfAvailable);
         }
-        catch
+        catch (Exception exception) when (exception is not (OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            // Never let a dialog failure block shutting down the duplicate instance.
+            // The application is shutting down; there is no window to activate.
+        }
+    }
+
+    private static void ActivateMainWindowIfAvailable()
+    {
+        if (Current?.MainWindow is MainWindow mainWindow)
+        {
+            mainWindow.RequestActivation();
         }
     }
 
@@ -144,7 +154,9 @@ public partial class App : System.Windows.Application
         try
         {
             System.Windows.MessageBox.Show(
-                Services.LocalizationService.Current.Format("Dialog.FatalError.Message", exception.Message),
+                Services.LocalizationService.Current.Format(
+                    "Dialog.FatalError.Message",
+                    Services.LocalizationService.Current.DescribeException(exception)),
                 ProductIdentity.Name,
                 MessageBoxButton.OK,
                 MessageBoxImage.Error);

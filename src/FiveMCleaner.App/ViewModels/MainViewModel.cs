@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Windows;
 using System.Windows.Threading;
 using FiveMCleaner.App.Services;
 using FiveMCleaner.Contracts;
@@ -10,7 +11,7 @@ using FiveMCleaner.Core.Planning;
 
 namespace FiveMCleaner.App.ViewModels;
 
-public sealed class MainViewModel : BindableBase
+public sealed class MainViewModel : BindableBase, IDisposable
 {
     private readonly IAppOptimizationService service;
     private readonly IPlanBuilder planBuilder;
@@ -19,10 +20,15 @@ public sealed class MainViewModel : BindableBase
     private readonly IReleaseUpdateService? releaseUpdateService;
     private readonly ISilentUpdateInstaller? silentUpdateInstaller;
     private readonly IAnonymousTelemetryService telemetry;
+    private readonly ILiveSystemMetricsProvider liveSystemMetricsProvider;
     private readonly ProgressTimingEstimator progressTimingEstimator = new();
     private readonly SemaphoreSlim settingsSaveGate = new(1, 1);
     private readonly Queue<string> pendingHeadlines = new();
     private static readonly TimeSpan HeadlineMinimumDwell = TimeSpan.FromSeconds(6);
+    // Uma amostra por segundo: a leitura em si já leva ~300ms de janela PDH,
+    // então cadências menores só se sobrepõem sem acrescentar informação.
+    private static readonly TimeSpan LiveMetricsInterval = TimeSpan.FromSeconds(1);
+    private const int LiveMetricsHistoryCapacity = 60;
     private DispatcherTimer? headlineDwellTimer;
     private DateTime headlineShownAtUtc;
     private CancellationTokenSource? operationCancellation;
@@ -40,11 +46,9 @@ public sealed class MainViewModel : BindableBase
     private string elapsedTimeLabel = string.Empty;
     private string remainingTimeLabel = string.Empty;
     private string cpuName = string.Empty;
-    private string gpuName = string.Empty;
     private string ramLabel = string.Empty;
     private string diskLabel = string.Empty;
     private string windowsLabel = string.Empty;
-    private string architectureLabel = string.Empty;
     private string gpuDetail = string.Empty;
     private string readinessScoreExplanation = string.Empty;
     private string editionLabel = string.Empty;
@@ -54,10 +58,47 @@ public sealed class MainViewModel : BindableBase
     private bool isGtaVLegacyDetected;
     private string recommendationTitle = string.Empty;
     private string recommendationText = string.Empty;
-    private string streamingProtectionTitle = string.Empty;
-    private string streamingProtectionDetail = string.Empty;
     private string streamingReadinessTitle = string.Empty;
     private string streamingReadinessDetail = string.Empty;
+    private string readinessLevelLabel = string.Empty;
+    private string logicalProcessorLabel = string.Empty;
+    private string logicalProcessorDetail = string.Empty;
+    private string availableMemoryLabel = string.Empty;
+    private string availableMemoryDetail = string.Empty;
+    private string freeDiskLabel = string.Empty;
+    private string freeDiskDetail = string.Empty;
+    private string legacyCacheLabel = string.Empty;
+    private string legacyCacheDetail = string.Empty;
+    private string performancePressureLabel = string.Empty;
+    private string performancePressureBrushKey = "TextMutedBrush";
+    private string lastScanLabel = string.Empty;
+    private string greetingTitle = string.Empty;
+    private string? accountFirstName;
+    private string lastOptimizationTitle = string.Empty;
+    private string lastOptimizationDateLabel = string.Empty;
+    private string lastOptimizationSummary = string.Empty;
+    private bool hasLastOptimization;
+    private string memoryUsageDetailLabel = string.Empty;
+    private string cpuTrendLabel = string.Empty;
+    private string gpuTrendLabel = string.Empty;
+    private double cpuUsagePercent;
+    private double gpuUsagePercent;
+    private double memoryUsagePercent;
+    private double diskUsagePercent;
+    private string cpuUsageLabel = string.Empty;
+    private string gpuUsageLabel = string.Empty;
+    private string memoryUsageLabel = string.Empty;
+    private string diskUsageLabel = string.Empty;
+    private string networkUsageLabel = string.Empty;
+    private string liveMetricsUpdatedLabel = string.Empty;
+    private IReadOnlyList<double> cpuUsageSeries = [];
+    private IReadOnlyList<double> gpuUsageSeries = [];
+    private readonly Queue<double> cpuUsageHistory = new();
+    private readonly Queue<double> gpuUsageHistory = new();
+    private DispatcherTimer? liveMetricsTimer;
+    private bool liveMetricsEnabled;
+    private bool liveMetricsCaptureInProgress;
+    private LiveSystemMetricsSnapshot? lastLiveMetrics;
     private string lightImpactLabel = string.Empty;
     private string balancedImpactLabel = string.Empty;
     private string aggressiveImpactLabel = string.Empty;
@@ -91,10 +132,7 @@ public sealed class MainViewModel : BindableBase
     private bool isReportAvailable;
     private string profilePresentationBenefits = string.Empty;
     private string profilePresentationImpact = string.Empty;
-    private string profilePresentationRisks = string.Empty;
-    private string profilePresentationReversibility = string.Empty;
     private string profilePresentationCategories = string.Empty;
-    private string profilePresentationVariability = string.Empty;
     private OptimizationComparisonResult? lastComparison;
     private Guid? lastTransactionId;
     private bool isComparisonAvailable;
@@ -111,7 +149,8 @@ public sealed class MainViewModel : BindableBase
         IStartupRegistrationService? startupRegistration = null,
         IReleaseUpdateService? releaseUpdateService = null,
         IAnonymousTelemetryService? telemetry = null,
-        ISilentUpdateInstaller? silentUpdateInstaller = null)
+        ISilentUpdateInstaller? silentUpdateInstaller = null,
+        ILiveSystemMetricsProvider? liveSystemMetricsProvider = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
         this.planBuilder = planBuilder ?? new PlanBuilder();
@@ -120,12 +159,14 @@ public sealed class MainViewModel : BindableBase
         this.releaseUpdateService = releaseUpdateService;
         this.silentUpdateInstaller = silentUpdateInstaller;
         this.telemetry = telemetry ?? DisabledAnonymousTelemetryService.Instance;
+        this.liveSystemMetricsProvider = liveSystemMetricsProvider ?? new WindowsLiveSystemMetricsProvider();
         StepLedger.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasStepLedgerItems));
         ResetLocalizedPlaceholders();
         RefreshProfilePresentation();
         ActivityLog.Add(new ActivityLogItem(
             DateTime.Now.ToString("HH:mm:ss"),
             this.localization.GetString("Log.StartedStandardUser")));
+        RefreshGreeting();
     }
 
     public ObservableCollection<ActionDisplayItem> PlannedActions { get; } = [];
@@ -148,7 +189,17 @@ public sealed class MainViewModel : BindableBase
 
     public string ReportRestartLabel { get => reportRestartLabel; private set => SetProperty(ref reportRestartLabel, value); }
 
-    public bool IsReportAvailable { get => isReportAvailable; private set => SetProperty(ref isReportAvailable, value); }
+    public bool IsReportAvailable
+    {
+        get => isReportAvailable;
+        private set
+        {
+            if (SetProperty(ref isReportAvailable, value))
+            {
+                OnPropertyChanged(nameof(IsOptimizerIdle));
+            }
+        }
+    }
 
     public bool IsComparisonAvailable { get => isComparisonAvailable; private set => SetProperty(ref isComparisonAvailable, value); }
 
@@ -173,25 +224,15 @@ public sealed class MainViewModel : BindableBase
 
     public string ProfilePresentationImpact { get => profilePresentationImpact; private set => SetProperty(ref profilePresentationImpact, value); }
 
-    public string ProfilePresentationRisks { get => profilePresentationRisks; private set => SetProperty(ref profilePresentationRisks, value); }
-
-    public string ProfilePresentationReversibility { get => profilePresentationReversibility; private set => SetProperty(ref profilePresentationReversibility, value); }
-
     public string ProfilePresentationCategories { get => profilePresentationCategories; private set => SetProperty(ref profilePresentationCategories, value); }
 
-    public string ProfilePresentationVariability { get => profilePresentationVariability; private set => SetProperty(ref profilePresentationVariability, value); }
-
     public string CpuName { get => cpuName; private set => SetProperty(ref cpuName, value); }
-
-    public string GpuName { get => gpuName; private set => SetProperty(ref gpuName, value); }
 
     public string RamLabel { get => ramLabel; private set => SetProperty(ref ramLabel, value); }
 
     public string DiskLabel { get => diskLabel; private set => SetProperty(ref diskLabel, value); }
 
     public string WindowsLabel { get => windowsLabel; private set => SetProperty(ref windowsLabel, value); }
-
-    public string ArchitectureLabel { get => architectureLabel; private set => SetProperty(ref architectureLabel, value); }
 
     public string GpuDetail { get => gpuDetail; private set => SetProperty(ref gpuDetail, value); }
 
@@ -211,13 +252,97 @@ public sealed class MainViewModel : BindableBase
 
     public string RecommendationText { get => recommendationText; private set => SetProperty(ref recommendationText, value); }
 
-    public string StreamingProtectionTitle { get => streamingProtectionTitle; private set => SetProperty(ref streamingProtectionTitle, value); }
-
-    public string StreamingProtectionDetail { get => streamingProtectionDetail; private set => SetProperty(ref streamingProtectionDetail, value); }
-
     public string StreamingReadinessTitle { get => streamingReadinessTitle; private set => SetProperty(ref streamingReadinessTitle, value); }
 
     public string StreamingReadinessDetail { get => streamingReadinessDetail; private set => SetProperty(ref streamingReadinessDetail, value); }
+
+    public string ReadinessLevelLabel { get => readinessLevelLabel; private set => SetProperty(ref readinessLevelLabel, value); }
+
+    /// <summary>Logical processor count reported by the local scan, as a bare number.</summary>
+    public string LogicalProcessorLabel { get => logicalProcessorLabel; private set => SetProperty(ref logicalProcessorLabel, value); }
+
+    public string LogicalProcessorDetail { get => logicalProcessorDetail; private set => SetProperty(ref logicalProcessorDetail, value); }
+
+    /// <summary>Free physical memory at scan time (e.g. "12,4 GB").</summary>
+    public string AvailableMemoryLabel { get => availableMemoryLabel; private set => SetProperty(ref availableMemoryLabel, value); }
+
+    public string AvailableMemoryDetail { get => availableMemoryDetail; private set => SetProperty(ref availableMemoryDetail, value); }
+
+    /// <summary>Free space on the system drive (e.g. "428 GB").</summary>
+    public string FreeDiskLabel { get => freeDiskLabel; private set => SetProperty(ref freeDiskLabel, value); }
+
+    public string FreeDiskDetail { get => freeDiskDetail; private set => SetProperty(ref freeDiskDetail, value); }
+
+    /// <summary>
+    /// Size of the FiveM server cache found on disk. This is the single number
+    /// that most often explains why the optimizer has something to do, so the
+    /// overview shows it instead of leaving the user to guess.
+    /// </summary>
+    public string LegacyCacheLabel { get => legacyCacheLabel; private set => SetProperty(ref legacyCacheLabel, value); }
+
+    public string LegacyCacheDetail { get => legacyCacheDetail; private set => SetProperty(ref legacyCacheDetail, value); }
+
+    public string PerformancePressureLabel { get => performancePressureLabel; private set => SetProperty(ref performancePressureLabel, value); }
+
+    public string PerformancePressureBrushKey { get => performancePressureBrushKey; private set => SetProperty(ref performancePressureBrushKey, value); }
+
+    /// <summary>When the last local scan finished, already localized.</summary>
+    public string LastScanLabel { get => lastScanLabel; private set => SetProperty(ref lastScanLabel, value); }
+
+    /// <summary>
+    /// "Boa tarde, Felipe. O que iremos fazer hoje?" — greets by local time of
+    /// day, with the first name only when a session is signed in and the
+    /// account has one on file. See <see cref="RefreshGreeting"/>.
+    /// </summary>
+    public string GreetingTitle { get => greetingTitle; private set => SetProperty(ref greetingTitle, value); }
+
+    public string LastOptimizationTitle { get => lastOptimizationTitle; private set => SetProperty(ref lastOptimizationTitle, value); }
+
+    public string LastOptimizationDateLabel { get => lastOptimizationDateLabel; private set => SetProperty(ref lastOptimizationDateLabel, value); }
+
+    public string LastOptimizationSummary { get => lastOptimizationSummary; private set => SetProperty(ref lastOptimizationSummary, value); }
+
+    /// <summary>False when this machine has never completed an optimization.</summary>
+    public bool HasLastOptimization { get => hasLastOptimization; private set => SetProperty(ref hasLastOptimization, value); }
+
+    public double CpuUsagePercent { get => cpuUsagePercent; private set => SetProperty(ref cpuUsagePercent, value); }
+
+    public double GpuUsagePercent { get => gpuUsagePercent; private set => SetProperty(ref gpuUsagePercent, value); }
+
+    public double MemoryUsagePercent { get => memoryUsagePercent; private set => SetProperty(ref memoryUsagePercent, value); }
+
+    public double DiskUsagePercent { get => diskUsagePercent; private set => SetProperty(ref diskUsagePercent, value); }
+
+    public string CpuUsageLabel { get => cpuUsageLabel; private set => SetProperty(ref cpuUsageLabel, value); }
+
+    public string GpuUsageLabel { get => gpuUsageLabel; private set => SetProperty(ref gpuUsageLabel, value); }
+
+    public string MemoryUsageLabel { get => memoryUsageLabel; private set => SetProperty(ref memoryUsageLabel, value); }
+
+    public string DiskUsageLabel { get => diskUsageLabel; private set => SetProperty(ref diskUsageLabel, value); }
+
+    public string NetworkUsageLabel { get => networkUsageLabel; private set => SetProperty(ref networkUsageLabel, value); }
+
+    /// <summary>Live memory reading in absolute terms (e.g. "12,4 / 31,9 GB").</summary>
+    public string MemoryUsageDetailLabel { get => memoryUsageDetailLabel; private set => SetProperty(ref memoryUsageDetailLabel, value); }
+
+    /// <summary>Average and peak CPU over the samples currently plotted.</summary>
+    public string CpuTrendLabel { get => cpuTrendLabel; private set => SetProperty(ref cpuTrendLabel, value); }
+
+    /// <summary>Average and peak GPU over the samples currently plotted.</summary>
+    public string GpuTrendLabel { get => gpuTrendLabel; private set => SetProperty(ref gpuTrendLabel, value); }
+
+    public string LiveMetricsUpdatedLabel { get => liveMetricsUpdatedLabel; private set => SetProperty(ref liveMetricsUpdatedLabel, value); }
+
+    /// <summary>
+    /// Histórico de CPU em porcentagem, da amostra mais antiga para a mais
+    /// recente. A cena 3D da Visão geral consome os valores crus e cuida da
+    /// projeção; o modelo não conhece geometria de tela.
+    /// </summary>
+    public IReadOnlyList<double> CpuUsageSeries { get => cpuUsageSeries; private set => SetProperty(ref cpuUsageSeries, value); }
+
+    /// <summary>Histórico de GPU em porcentagem, na mesma ordem de <see cref="CpuUsageSeries"/>.</summary>
+    public IReadOnlyList<double> GpuUsageSeries { get => gpuUsageSeries; private set => SetProperty(ref gpuUsageSeries, value); }
 
     public string LightImpactLabel { get => lightImpactLabel; private set => SetProperty(ref lightImpactLabel, value); }
 
@@ -273,10 +398,13 @@ public sealed class MainViewModel : BindableBase
         {
             if (SetProperty(ref isBusy, value))
             {
+                OnPropertyChanged(nameof(IsOptimizerIdle));
                 RaiseCommandState();
             }
         }
     }
+
+    public bool IsOptimizerIdle => !IsBusy && !IsReportAvailable;
 
     public bool CanRefresh => !IsBusy && !isInitializing;
 
@@ -390,7 +518,7 @@ public sealed class MainViewModel : BindableBase
             }
             catch (Exception exception)
             {
-                AddLog(localization.Format("Log.StartupSettingFailed", exception.Message));
+                AddLog(localization.Format("Log.StartupSettingFailed", localization.DescribeException(exception)));
                 OnPropertyChanged();
             }
         }
@@ -639,14 +767,18 @@ public sealed class MainViewModel : BindableBase
             AddLog(localization.GetString("Log.DiagnosisCompleted"));
             if (checkForUpdates && releaseUpdateService is not null)
             {
-                _ = CheckForUpdatesAsync();
+                _ = CheckForUpdatesAsync().ContinueWith(
+                    static t => { _ = t.Exception; },
+                    CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
             }
         }
         catch (Exception exception)
         {
             RecommendationTitle = localization.GetString("Diagnosis.Partial");
-            RecommendationText = exception.Message;
-            AddLog(localization.Format("Log.Warning", exception.Message));
+            RecommendationText = localization.DescribeException(exception);
+            AddLog(localization.Format("Log.Warning", RecommendationText));
         }
         finally
         {
@@ -673,14 +805,152 @@ public sealed class MainViewModel : BindableBase
         catch (Exception exception)
         {
             RecommendationTitle = localization.GetString("Diagnosis.CouldNotScanAgain");
-            RecommendationText = exception.Message;
-            AddLog(localization.Format("Log.RescanFailed", exception.Message));
+            RecommendationText = localization.DescribeException(exception);
+            AddLog(localization.Format("Log.RescanFailed", RecommendationText));
         }
         finally
         {
             isInitializing = false;
             RefreshPlan();
             RaiseCommandState();
+        }
+    }
+
+    /// <summary>
+    /// Verdadeiro enquanto a Visão geral está ativa e coletando. A cena 3D usa
+    /// esse estado para parar de animar quando a página sai de cena ou a janela
+    /// vai para a bandeja, em vez de girar sem ninguém olhando.
+    /// </summary>
+    public bool IsLiveMetricsActive
+    {
+        get => liveMetricsEnabled;
+        private set => SetProperty(ref liveMetricsEnabled, value);
+    }
+
+    public void SetLiveMetricsEnabled(bool enabled)
+    {
+        IsLiveMetricsActive = enabled;
+        if (!enabled)
+        {
+            liveMetricsTimer?.Stop();
+            return;
+        }
+
+        // A saudação só é recalculada aqui (ao reabrir a Visão geral), não em
+        // um timer próprio: ela muda no máximo três vezes por dia, então não
+        // vale a pena um relógio dedicado para isso.
+        RefreshGreeting();
+
+        liveMetricsTimer ??= new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = LiveMetricsInterval
+        };
+        liveMetricsTimer.Tick -= LiveMetricsTimer_Tick;
+        liveMetricsTimer.Tick += LiveMetricsTimer_Tick;
+        liveMetricsTimer.Start();
+        _ = CaptureLiveMetricsAsync();
+    }
+
+    private void LiveMetricsTimer_Tick(object? sender, EventArgs e) => _ = CaptureLiveMetricsAsync();
+
+    private async Task CaptureLiveMetricsAsync()
+    {
+        if (!liveMetricsEnabled || liveMetricsCaptureInProgress)
+        {
+            return;
+        }
+
+        liveMetricsCaptureInProgress = true;
+        try
+        {
+            var snapshot = await liveSystemMetricsProvider.CaptureAsync();
+            if (!liveMetricsEnabled)
+            {
+                return;
+            }
+
+            lastLiveMetrics = snapshot;
+            ApplyLiveMetrics(snapshot);
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            if (liveMetricsEnabled)
+            {
+                LiveMetricsUpdatedLabel = localization.GetString("Dashboard.LivePerformance.Unavailable");
+            }
+        }
+        finally
+        {
+            liveMetricsCaptureInProgress = false;
+        }
+    }
+
+    private void ApplyLiveMetrics(LiveSystemMetricsSnapshot snapshot, bool addHistory = true)
+    {
+        CpuUsagePercent = snapshot.CpuPercent ?? 0;
+        GpuUsagePercent = snapshot.GpuPercent ?? 0;
+        MemoryUsagePercent = snapshot.MemoryPercent ?? 0;
+        DiskUsagePercent = snapshot.DiskPercent ?? 0;
+        CpuUsageLabel = FormatLivePercent(snapshot.CpuPercent);
+        GpuUsageLabel = FormatLivePercent(snapshot.GpuPercent);
+        MemoryUsageLabel = FormatLivePercent(snapshot.MemoryPercent);
+        DiskUsageLabel = FormatLivePercent(snapshot.DiskPercent);
+        NetworkUsageLabel = localization.Format(
+            "Dashboard.LivePerformance.NetworkValue",
+            snapshot.NetworkThroughputMBps);
+        MemoryUsageDetailLabel = snapshot is { UsedMemoryGiB: { } used, TotalMemoryGiB: { } total }
+            ? localization.Format("Dashboard.LivePerformance.MemoryDetail", used, total)
+            : string.Empty;
+        LiveMetricsUpdatedLabel = localization.Format(
+            "Dashboard.LivePerformance.Updated",
+            snapshot.CapturedAt.ToLocalTime().ToString("HH:mm:ss"));
+
+        if (addHistory)
+        {
+            AddMetricSample(cpuUsageHistory, snapshot.CpuPercent);
+            AddMetricSample(gpuUsageHistory, snapshot.GpuPercent);
+            CpuUsageSeries = cpuUsageHistory.ToArray();
+            GpuUsageSeries = gpuUsageHistory.ToArray();
+        }
+
+        CpuTrendLabel = DescribeTrend(cpuUsageHistory);
+        GpuTrendLabel = DescribeTrend(gpuUsageHistory);
+    }
+
+    /// <summary>
+    /// Average and peak of the samples currently plotted. Both come from the
+    /// same history the chart draws, so the summary never contradicts the line
+    /// above it; an empty history reports no reading instead of "0%".
+    /// </summary>
+    private string DescribeTrend(Queue<double> history)
+    {
+        if (history.Count == 0)
+        {
+            return localization.GetString("Dashboard.LivePerformance.NotAvailable");
+        }
+
+        return localization.Format(
+            "Dashboard.LivePerformance.TrendValue",
+            history.Average(),
+            history.Max());
+    }
+
+    private string FormatLivePercent(double? value) => value is { } available
+        ? localization.Format("Dashboard.LivePerformance.PercentValue", available)
+        : localization.GetString("Dashboard.LivePerformance.NotAvailable");
+
+    private static void AddMetricSample(Queue<double> history, double? value)
+    {
+        if (value is null)
+        {
+            return;
+        }
+
+        history.Enqueue(Math.Clamp(value.Value, 0, 100));
+        while (history.Count > LiveMetricsHistoryCapacity)
+        {
+            history.Dequeue();
         }
     }
 
@@ -715,7 +985,7 @@ public sealed class MainViewModel : BindableBase
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             // Falha de rede na inicialização não interrompe diagnóstico nem otimização.
-            AddLog(localization.Format("Log.UpdateCheckFailed", exception.Message));
+            AddLog(localization.Format("Log.UpdateCheckFailed", localization.DescribeException(exception)));
         }
     }
 
@@ -752,8 +1022,9 @@ public sealed class MainViewModel : BindableBase
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            AddLog(localization.Format("Log.UpdateCheckFailed", exception.Message));
-            ManualUpdateCheckMessage = localization.Format("Update.ManualCheck.Failed", exception.Message);
+            var message = localization.DescribeException(exception);
+            AddLog(localization.Format("Log.UpdateCheckFailed", message));
+            ManualUpdateCheckMessage = localization.Format("Update.ManualCheck.Failed", message);
         }
         finally
         {
@@ -804,10 +1075,10 @@ public sealed class MainViewModel : BindableBase
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            updateFailureMessage = exception.Message;
+            updateFailureMessage = localization.DescribeException(exception);
             updatePresentationState = UpdatePresentationState.Failed;
             RefreshUpdatePresentation();
-            AddLog(localization.Format("Log.UpdateDownloadFailed", exception.Message));
+            AddLog(localization.Format("Log.UpdateDownloadFailed", updateFailureMessage));
             return null;
         }
         finally
@@ -870,8 +1141,7 @@ public sealed class MainViewModel : BindableBase
                 return true;
             }
 
-            updateFailureMessage = launch.FailureReason
-                ?? localization.GetString("Common.Unknown");
+            updateFailureMessage = localization.GetString("Error.Unexpected");
             updatePresentationState = UpdatePresentationState.Failed;
             RefreshUpdatePresentation();
             AddLog(localization.Format("Log.UpdateInstallFailed", updateFailureMessage));
@@ -880,10 +1150,10 @@ public sealed class MainViewModel : BindableBase
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            updateFailureMessage = exception.Message;
+            updateFailureMessage = localization.DescribeException(exception);
             updatePresentationState = UpdatePresentationState.Failed;
             RefreshUpdatePresentation();
-            AddLog(localization.Format("Log.UpdateInstallFailed", exception.Message));
+            AddLog(localization.Format("Log.UpdateInstallFailed", updateFailureMessage));
             return false;
         }
         finally
@@ -995,6 +1265,45 @@ public sealed class MainViewModel : BindableBase
 
     public async Task StartOptimizationAsync()
     {
+        if (!TryPrepareOptimizationRun())
+        {
+            return;
+        }
+
+        operationCancellation = new CancellationTokenSource();
+        var progress = new Progress<AppProgressUpdate>(ApplyProgress);
+        var completedSuccessfully = false;
+        var telemetryEventName = "optimization-failed";
+        string? telemetryErrorCategory = null;
+        try
+        {
+            // currentPlan é garantido não-nulo aqui: TryPrepareOptimizationRun
+            // só retorna true quando CanStart é true (e CanStart exige plano).
+            var result = await service.ExecuteAsync(currentPlan!, progress, operationCancellation.Token);
+            completedSuccessfully = result.Succeeded;
+            telemetryEventName = result.Succeeded ? "optimization-completed" : "optimization-failed";
+            await HandleOptimizationResultAsync(result);
+        }
+        catch (OperationCanceledException)
+        {
+            telemetryEventName = "optimization-cancelled";
+            telemetryErrorCategory = "cancelled";
+            HandleOptimizationCancelled();
+        }
+        catch (Exception exception)
+        {
+            telemetryEventName = "optimization-failed";
+            telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
+            HandleOptimizationFailed(exception);
+        }
+        finally
+        {
+            FinalizeOptimizationRun(completedSuccessfully, telemetryEventName, telemetryErrorCategory);
+        }
+    }
+
+    private bool TryPrepareOptimizationRun()
+    {
         // Recria o plano no clique para que o nonce e o timestamp aceitos pelo
         // broker elevado nunca fiquem antigos enquanto a janela permanece aberta.
         RefreshPlan();
@@ -1009,10 +1318,9 @@ public sealed class MainViewModel : BindableBase
             ProgressDetail = block is null
                 ? localization.GetString("Plan.RunDiagnosisAgain")
                 : LocalizeBlock(block);
-            return;
+            return false;
         }
 
-        operationCancellation = new CancellationTokenSource();
         IsBusy = true;
         ProgressPercent = 0;
         ClearProgressHistory();
@@ -1031,66 +1339,64 @@ public sealed class MainViewModel : BindableBase
             AddLog(localization.Format("Log.Warning", LocalizeNotice(notice)));
         }
 
-        var progress = new Progress<AppProgressUpdate>(ApplyProgress);
-        var completedSuccessfully = false;
-        var telemetryEventName = "optimization-failed";
-        string? telemetryErrorCategory = null;
-        try
-        {
-            var result = await service.ExecuteAsync(currentPlan, progress, operationCancellation.Token);
-            completedSuccessfully = result.Succeeded;
-            telemetryEventName = result.Succeeded ? "optimization-completed" : "optimization-failed";
-            ProgressPercent = result.Succeeded ? 100 : ProgressPercent;
-            ProgressStateLabel = result.Succeeded
-                ? localization.GetString("Status.Completed")
-                : result.WasCancelled
-                    ? localization.GetString("Status.Cancelled")
-                    : localization.GetString("Status.Warning");
-            FinalizeHeadline(result.Succeeded
-                ? localization.GetString("Status.OptimizationCompleted")
-                : result.Summary);
-            ProgressDetail = result.BytesFreed > 0
-                ? localization.Format(
-                    "Plan.ActionsCompletedFreed",
-                    result.CompletedActions,
-                    FormatBytes(result.BytesFreed))
-                : localization.Format(
-                    "Plan.ActionsCompletedSummary",
-                    result.CompletedActions,
-                    result.Summary);
-            AddLog(result.Summary);
-            ApplyReport(result.Report);
-            lastTransactionId = result.TransactionId;
-            ApplyComparison(result.Comparison);
-            ApplyHistory(await service.LoadHistoryAsync());
-        }
-        catch (OperationCanceledException)
-        {
-            telemetryEventName = "optimization-cancelled";
-            telemetryErrorCategory = "cancelled";
-            ProgressStateLabel = localization.GetString("Status.Cancelled");
-            FinalizeHeadline(localization.GetString("Status.SafeCancellation.Headline"));
-            ProgressDetail = localization.GetString("Status.SafeCancellation.Detail");
-            AddLog(localization.GetString("Log.CancellationConfirmed"));
-        }
-        catch (Exception exception)
-        {
-            telemetryEventName = "optimization-failed";
-            telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
-            ProgressStateLabel = localization.GetString("Status.SafeFailure");
-            FinalizeHeadline(localization.GetString("Status.CouldNotComplete"));
-            ProgressDetail = exception.Message;
-            AddLog(localization.Format("Log.Error", exception.Message));
-        }
-        finally
-        {
-            var executionTime = operationStopwatch?.Elapsed ?? TimeSpan.Zero;
-            StopOperationTiming(completedSuccessfully);
-            TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory);
-            operationCancellation.Dispose();
-            operationCancellation = null;
-            IsBusy = false;
-        }
+        return true;
+    }
+
+    private async Task HandleOptimizationResultAsync(AppOptimizationResult result)
+    {
+        ProgressPercent = result.Succeeded ? 100 : ProgressPercent;
+        ProgressStateLabel = result.Succeeded
+            ? localization.GetString("Status.Completed")
+            : result.WasCancelled
+                ? localization.GetString("Status.Cancelled")
+                : localization.GetString("Status.Warning");
+        FinalizeHeadline(result.Succeeded
+            ? localization.GetString("Status.OptimizationCompleted")
+            : result.Summary);
+        ProgressDetail = result.BytesFreed > 0
+            ? localization.Format(
+                "Plan.ActionsCompletedFreed",
+                result.CompletedActions,
+                FormatBytes(result.BytesFreed))
+            : localization.Format(
+                "Plan.ActionsCompletedSummary",
+                result.CompletedActions,
+                result.Summary);
+        AddLog(result.Summary);
+        ApplyReport(result.Report);
+        lastTransactionId = result.TransactionId;
+        ApplyComparison(result.Comparison);
+        ApplyHistory(await service.LoadHistoryAsync());
+    }
+
+    private void HandleOptimizationCancelled()
+    {
+        ProgressStateLabel = localization.GetString("Status.Cancelled");
+        FinalizeHeadline(localization.GetString("Status.SafeCancellation.Headline"));
+        ProgressDetail = localization.GetString("Status.SafeCancellation.Detail");
+        AddLog(localization.GetString("Log.CancellationConfirmed"));
+    }
+
+    private void HandleOptimizationFailed(Exception exception)
+    {
+        ProgressStateLabel = localization.GetString("Status.SafeFailure");
+        FinalizeHeadline(localization.GetString("Status.CouldNotComplete"));
+        ProgressDetail = localization.DescribeException(exception);
+        AddLog(localization.Format("Log.Error", ProgressDetail));
+    }
+
+    private void FinalizeOptimizationRun(
+        bool completedSuccessfully,
+        string telemetryEventName,
+        string? telemetryErrorCategory)
+    {
+        var executionTime = operationStopwatch?.Elapsed ?? TimeSpan.Zero;
+        StopOperationTiming(completedSuccessfully);
+        TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory);
+        // operationCancellation foi atribuído antes do try em StartOptimizationAsync.
+        operationCancellation!.Dispose();
+        operationCancellation = null;
+        IsBusy = false;
     }
 
     public void CancelOptimization()
@@ -1125,7 +1431,7 @@ public sealed class MainViewModel : BindableBase
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            GtaVBenchmarkStatusLabel = localization.Format("GtaVBenchmark.Error", exception.Message);
+            GtaVBenchmarkStatusLabel = localization.Format("GtaVBenchmark.Error", localization.DescribeException(exception));
             AddLog(GtaVBenchmarkStatusLabel);
         }
         finally
@@ -1206,8 +1512,8 @@ public sealed class MainViewModel : BindableBase
         {
             ProgressStateLabel = localization.GetString("Status.SafeFailure");
             FinalizeHeadline(localization.GetString("Status.CouldNotRestore"));
-            ProgressDetail = exception.Message;
-            AddLog(localization.Format("Log.RollbackFailed", exception.Message));
+            ProgressDetail = localization.DescribeException(exception);
+            AddLog(localization.Format("Log.RollbackFailed", ProgressDetail));
             return false;
         }
         finally
@@ -1238,7 +1544,6 @@ public sealed class MainViewModel : BindableBase
         }
 
         CpuName = value.CpuName;
-        GpuName = value.GpuName;
         GpuDetail = value.GpuNames.Count > 1
             ? string.Join(Environment.NewLine, value.GpuNames)
             : value.GpuName;
@@ -1247,9 +1552,38 @@ public sealed class MainViewModel : BindableBase
             : localization.Format("Diagnosis.MemoryModules", value.TotalMemoryGiB, value.MemoryModuleLayout);
         DiskLabel = localization.Format("Diagnosis.DiskCapacity", value.FreeDiskGiB);
         WindowsLabel = value.OsLabel;
-        ArchitectureLabel = value.SystemArchitecture;
+        LogicalProcessorLabel = value.LogicalProcessorCount.ToString(localization.CurrentCulture);
+        LogicalProcessorDetail = localization.GetString("Dashboard.Kpi.Cores.Detail");
+        AvailableMemoryLabel = localization.Format("Dashboard.Kpi.GigabyteValue", value.AvailableMemoryGiB);
+        AvailableMemoryDetail = localization.Format("Dashboard.Kpi.Memory.Detail", value.TotalMemoryGiB);
+        FreeDiskLabel = localization.Format("Dashboard.Kpi.GigabyteValue", value.FreeDiskGiB);
+        FreeDiskDetail = localization.GetString("Dashboard.Kpi.Disk.Detail");
+        (LegacyCacheLabel, LegacyCacheDetail) = DescribeLegacyCache(value.LegacyCacheBytes);
+        PerformancePressureLabel = value.PerformancePressure switch
+        {
+            PerformancePressureLevel.Low => localization.GetString("Dashboard.Pressure.Low"),
+            PerformancePressureLevel.High => localization.GetString("Dashboard.Pressure.High"),
+            _ => localization.GetString("Dashboard.Pressure.Moderate")
+        };
+        PerformancePressureBrushKey = value.PerformancePressure switch
+        {
+            PerformancePressureLevel.Low => "GreenBrush",
+            PerformancePressureLevel.High => "RedBrush",
+            _ => "YellowBrush"
+        };
+        LastScanLabel = localization.Format(
+            "Dashboard.LastScan",
+            DateTime.Now.ToString("HH:mm", localization.CurrentCulture));
         ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
         ReadinessScore = value.ReadinessScore;
+        ReadinessLevelLabel = ReadinessScore switch
+        {
+            > 75 => localization.GetString("Dashboard.Readiness.Excellent"),
+            > 50 => localization.GetString("Dashboard.Readiness.Good"),
+            > 25 => localization.GetString("Dashboard.Readiness.Average"),
+            > 5 => localization.GetString("Dashboard.Readiness.Poor"),
+            _ => localization.GetString("Dashboard.Readiness.VeryPoor")
+        };
         IsFiveMLegacyDetected = value.Edition == FiveMEdition.Legacy;
         IsGtaVLegacyDetected = value.GtaVDetected || File.Exists(value.GtaVGraphicsSettingsPath);
         EditionLabel = IsFiveMLegacyDetected
@@ -1275,9 +1609,29 @@ public sealed class MainViewModel : BindableBase
             FiveMEdition.Enhanced => localization.GetString("Diagnosis.EnhancedUnsupported"),
             _ => localization.GetString("Diagnosis.InstallLegacy")
         };
-        ApplyStreamingProtection(value.StreamingSoftware);
         ApplyStreamingReadiness(value);
         ApplyProfileImpact(value.PerformancePressure);
+    }
+
+    /// <summary>
+    /// Formats the FiveM cache footprint for the overview. Below one gibibyte
+    /// the value is shown in mebibytes so a small cache does not collapse into
+    /// "0,0 GB"; a missing installation reports no size instead of a zero.
+    /// </summary>
+    private (string Value, string Detail) DescribeLegacyCache(long bytes)
+    {
+        if (bytes <= 0)
+        {
+            return (
+                localization.GetString("Dashboard.Kpi.Cache.None"),
+                localization.GetString("Dashboard.Kpi.Cache.NoneDetail"));
+        }
+
+        const double bytesPerMiB = 1024d * 1024;
+        var value = bytes >= 1024L * 1024 * 1024
+            ? localization.Format("Dashboard.Kpi.GigabyteValue", bytes / (bytesPerMiB * 1024))
+            : localization.Format("Dashboard.Kpi.MegabyteValue", bytes / bytesPerMiB);
+        return (value, localization.GetString("Dashboard.Kpi.Cache.Detail"));
     }
 
     private void ApplyProfileImpact(PerformancePressureLevel pressure)
@@ -1292,45 +1646,6 @@ public sealed class MainViewModel : BindableBase
         LightImpactLabel = localization.GetString($"Profiles.Impact.Light.{suffix}");
         BalancedImpactLabel = localization.GetString($"Profiles.Impact.Balanced.{suffix}");
         AggressiveImpactLabel = localization.GetString($"Profiles.Impact.Aggressive.{suffix}");
-    }
-
-    private void ApplyStreamingProtection(StreamingSoftwareSnapshot snapshot)
-    {
-        var running = snapshot.Applications
-            .Where(item => item.IsProcessRunning)
-            .Select(item => item.DisplayName)
-            .ToArray();
-        if (running.Length > 0)
-        {
-            StreamingProtectionTitle = localization.Format(
-                "Streaming.RunningTitle",
-                string.Join(", ", running));
-            StreamingProtectionDetail = localization.GetString("Streaming.RunningDetail");
-            return;
-        }
-
-        var installed = snapshot.Applications
-            .Where(item => item.IsInstalled)
-            .Select(item => item.DisplayName)
-            .ToArray();
-        if (installed.Length > 0)
-        {
-            StreamingProtectionTitle = localization.Format(
-                "Streaming.InstalledTitle",
-                string.Join(", ", installed));
-            StreamingProtectionDetail = localization.GetString("Streaming.InstalledDetail");
-            return;
-        }
-
-        if (snapshot.IsPartial)
-        {
-            StreamingProtectionTitle = localization.GetString("Streaming.PartialTitle");
-            StreamingProtectionDetail = localization.GetString("Streaming.PartialDetail");
-            return;
-        }
-
-        StreamingProtectionTitle = localization.GetString("Streaming.SafeTitle");
-        StreamingProtectionDetail = localization.GetString("Streaming.SafeDetail");
     }
 
     private void ApplyStreamingReadiness(AppDiagnostic value)
@@ -1386,10 +1701,17 @@ public sealed class MainViewModel : BindableBase
         };
         var icon = check.Kind switch
         {
-            StreamingReadinessCheckKind.Software => "\uE8A5",
-            StreamingReadinessCheckKind.Resources => "\uE950",
-            StreamingReadinessCheckKind.GameSession => "\uE7FC",
-            _ => "\uE946"
+            StreamingReadinessCheckKind.Software => "IconStream",
+            StreamingReadinessCheckKind.Resources => "IconPulse",
+            StreamingReadinessCheckKind.GameSession => "IconGame",
+            _ => "IconInfo"
+        };
+        var tone = check.Tone switch
+        {
+            StreamingReadinessTone.Protected => "GreenBrush",
+            StreamingReadinessTone.Ready => "GreenBrush",
+            StreamingReadinessTone.Caution => "YellowBrush",
+            _ => "TextSubtleBrush"
         };
         var title = localization.GetString($"Streaming.Check.{check.Kind}.{suffix}.Title");
         var detail = check.Kind == StreamingReadinessCheckKind.Software
@@ -1399,7 +1721,7 @@ public sealed class MainViewModel : BindableBase
                 string.Join(", ", check.ApplicationNames))
             : localization.GetString($"Streaming.Check.{check.Kind}.{suffix}.Detail");
 
-        return new StreamingReadinessDisplayItem(icon, title, detail);
+        return new StreamingReadinessDisplayItem(icon, title, detail, tone);
     }
 
     private void ApplySettings(AppSettings settings)
@@ -1424,7 +1746,7 @@ public sealed class MainViewModel : BindableBase
         catch (Exception exception)
         {
             launchAtStartup = settings.LaunchAtStartup;
-            AddLog(localization.Format("Log.StartupReadFailed", exception.Message));
+            AddLog(localization.Format("Log.StartupReadFailed", localization.DescribeException(exception)));
         }
 
         OnPropertyChanged(nameof(LanguagePreference));
@@ -1470,7 +1792,69 @@ public sealed class MainViewModel : BindableBase
                 false));
         }
 
+        ApplyLastOptimization(records);
         OnPropertyChanged(nameof(CanRevertLastOptimization));
+    }
+
+    /// <summary>
+    /// Summarizes the most recent run for the overview. With no history at all
+    /// the card explains that state instead of disappearing and leaving a gap
+    /// in the page.
+    /// </summary>
+    private void ApplyLastOptimization(IReadOnlyList<AppHistoryRecord> records)
+    {
+        var latest = records.Count == 0
+            ? null
+            : records.OrderByDescending(item => item.CreatedAt).First();
+
+        HasLastOptimization = latest is not null;
+        if (latest is null)
+        {
+            LastOptimizationTitle = localization.GetString("Dashboard.LastRun.None.Title");
+            LastOptimizationDateLabel = string.Empty;
+            LastOptimizationSummary = localization.GetString("Dashboard.LastRun.None.Detail");
+            return;
+        }
+
+        LastOptimizationTitle = localization.Format("History.ProfileTitle", ProfileName(latest.Profile));
+        LastOptimizationDateLabel = latest.CreatedAt.LocalDateTime.ToString("g", localization.CurrentCulture);
+        LastOptimizationSummary = localization.Format(
+            "History.AdjustmentsState",
+            latest.ChangedActions,
+            latest.State);
+    }
+
+    /// <summary>
+    /// Called by the window whenever the signed-in account's own profile is
+    /// (re)read from the Worker — on login and on quiet session restore —
+    /// and with <see langword="null"/> on sign-out. Firebase Authentication
+    /// REST never stores a first name, so this is the only path that can
+    /// ever populate it.
+    /// </summary>
+    public void SetAccountFirstName(string? firstName)
+    {
+        accountFirstName = string.IsNullOrWhiteSpace(firstName) ? null : firstName;
+        RefreshGreeting();
+    }
+
+    /// <summary>
+    /// Recomputes <see cref="GreetingTitle"/> from the machine's local clock.
+    /// Boundaries: 06:00–11:59 morning, 12:00–17:59 afternoon, otherwise
+    /// evening/night (18:00–05:59) — a plain three-way split a player reads
+    /// the same way they would read a clock, not a technical period name.
+    /// </summary>
+    private void RefreshGreeting()
+    {
+        var hour = DateTime.Now.Hour;
+        var period = hour switch
+        {
+            >= 6 and < 12 => "Morning",
+            >= 12 and < 18 => "Afternoon",
+            _ => "Evening"
+        };
+        GreetingTitle = accountFirstName is { } name
+            ? localization.Format($"Greeting.{period}.WithName", name)
+            : localization.GetString($"Greeting.{period}.NoName");
     }
 
     private void RefreshPlan()
@@ -1529,16 +1913,10 @@ public sealed class MainViewModel : BindableBase
         var presentation = ProfilePresentationProvider.For(selectedProfile);
         ProfilePresentationBenefits = localization.GetString($"Profiles.Presentation.{selectedProfile}.Benefits");
         ProfilePresentationImpact = localization.GetString($"Profiles.Presentation.Impact.{presentation.ImpactLevel}");
-        ProfilePresentationRisks = localization.GetString($"Profiles.Presentation.{selectedProfile}.Risks");
-        ProfilePresentationReversibility = localization.GetString(
-            presentation.ContainsNonReversible
-                ? "Profiles.Presentation.Reversibility.Mixed"
-                : "Profiles.Presentation.Reversibility.FullyReversible");
         ProfilePresentationCategories = string.Join(
             "  •  ",
             presentation.AnalyzedCategories.Select(category =>
                 localization.GetString($"Category.{category}")));
-        ProfilePresentationVariability = localization.GetString("Profiles.Presentation.VariabilityNote");
     }
 
     private AppSettings BuildSettingsSnapshot() => new()
@@ -1575,7 +1953,7 @@ public sealed class MainViewModel : BindableBase
     /// (<see cref="IAppOptimizationService.SaveSettingsAsync"/>) — no second
     /// storage mechanism is introduced.
     /// </summary>
-    public async Task ConfirmPrivacyConsentAsync(bool acceptAnonymousTelemetry, bool acceptCrashReports)
+    public async Task ConfirmPrivacyConsentAsync(bool acceptAnonymousTelemetry, bool acceptCrashReports = true)
     {
         var snapshot = PrivacyConsentOutcomeBuilder.BuildConfirmed(
             BuildSettingsSnapshot(),
@@ -1583,7 +1961,7 @@ public sealed class MainViewModel : BindableBase
             acceptCrashReports);
 
         shareAnonymousTelemetry = snapshot.ShareAnonymousTelemetry;
-        telemetry.SetEnabled(shareAnonymousTelemetry);
+        telemetry.SetEnabled(snapshot.ShareAnonymousTelemetry);
         shareCrashReports = snapshot.ShareCrashReports;
         privacyConsentVersion = snapshot.PrivacyConsentVersion;
         OnPropertyChanged(nameof(ShareAnonymousTelemetry));
@@ -1611,11 +1989,14 @@ public sealed class MainViewModel : BindableBase
             errorCategory,
             OsVersion: diagnostic?.OsLabel,
             SystemArchitecture: diagnostic?.SystemArchitecture,
-            CpuModel: diagnostic?.CpuName,
-            GpuModel: diagnostic?.GpuName,
-            RamBucketGiB: diagnostic is null ? null : RamBucketCalculator.ComputeBucketGiB(diagnostic.TotalMemoryGiB),
-            Profile: selectedProfile.ToString(),
-            ActionIds: currentPlan?.Actions.Select(action => action.Metadata.Id).ToArray());
+            CpuModel: ShareAnonymousTelemetry ? diagnostic?.CpuName : null,
+            GpuModel: ShareAnonymousTelemetry ? diagnostic?.GpuName : null,
+            RamBucketGiB: ShareAnonymousTelemetry && diagnostic is not null ? RamBucketCalculator.ComputeBucketGiB(diagnostic.TotalMemoryGiB) : null,
+            Profile: ShareAnonymousTelemetry ? selectedProfile.ToString() : null,
+            ActionIds: ShareAnonymousTelemetry ? currentPlan?.Actions
+                .Select(action => action.Metadata.Id)
+                .Take(TelemetryEventValidator.MaxActionIds)
+                .ToArray() : null);
         _ = TrackOptimizationTelemetryAsync(telemetryEvent);
     }
 
@@ -1625,7 +2006,8 @@ public sealed class MainViewModel : BindableBase
         {
             await telemetry.TrackAsync(telemetryEvent).ConfigureAwait(false);
         }
-        catch
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             // Telemetria é opcional e não pode afetar a experiência nem gerar logs locais adicionais.
         }
@@ -1650,7 +2032,8 @@ public sealed class MainViewModel : BindableBase
                 settingsSaveGate.Release();
             }
         }
-        catch
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             AddLog(localization.GetString("Log.SettingsSaveFailed"));
         }
@@ -1910,7 +2293,7 @@ public sealed class MainViewModel : BindableBase
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            AddLog(localization.Format("Log.ReportCopyFailed", exception.Message));
+            AddLog(localization.Format("Log.ReportCopyFailed", localization.DescribeException(exception)));
         }
     }
 
@@ -1937,7 +2320,7 @@ public sealed class MainViewModel : BindableBase
             or UnauthorizedAccessException
             or System.Security.SecurityException)
         {
-            AddLog(localization.Format("Log.ReportSaveFailed", exception.Message));
+            AddLog(localization.Format("Log.ReportSaveFailed", localization.DescribeException(exception)));
         }
     }
 
@@ -2038,30 +2421,58 @@ public sealed class MainViewModel : BindableBase
         {
             var analyzing = localization.GetString("Status.Analyzing");
             CpuName = analyzing;
-            GpuName = analyzing;
             GpuDetail = analyzing;
             RamLabel = analyzing;
             DiskLabel = analyzing;
             WindowsLabel = analyzing;
-            ArchitectureLabel = analyzing;
             ReadinessScoreExplanation = localization.GetString("Dashboard.ReadinessExplanation");
+            ReadinessLevelLabel = analyzing;
             EditionLabel = localization.GetString("Status.SearchingFiveM");
             GtaStatusLabel = localization.GetString("Status.SearchingGtaV");
             IsFiveMLegacyDetected = false;
             IsGtaVLegacyDetected = false;
             RecommendationTitle = localization.GetString("Status.AnalyzingComputer");
             RecommendationText = localization.GetString("Status.LocalOnly");
-            StreamingProtectionTitle = localization.GetString("Streaming.SafeTitle");
-            StreamingProtectionDetail = localization.GetString("Streaming.SafeDetail");
+            LogicalProcessorLabel = analyzing;
+            LogicalProcessorDetail = localization.GetString("Dashboard.Kpi.Cores.Detail");
+            AvailableMemoryLabel = analyzing;
+            AvailableMemoryDetail = string.Empty;
+            FreeDiskLabel = analyzing;
+            FreeDiskDetail = localization.GetString("Dashboard.Kpi.Disk.Detail");
+            LegacyCacheLabel = analyzing;
+            LegacyCacheDetail = localization.GetString("Dashboard.Kpi.Cache.Detail");
+            PerformancePressureLabel = analyzing;
+            PerformancePressureBrushKey = "TextMutedBrush";
+            LastScanLabel = localization.GetString("Dashboard.LastScan.Pending");
             var pendingImpact = localization.GetString("Profiles.Impact.Pending");
             LightImpactLabel = pendingImpact;
             BalancedImpactLabel = pendingImpact;
             AggressiveImpactLabel = pendingImpact;
         }
+
+        if (lastLiveMetrics is null)
+        {
+            CpuUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            GpuUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            MemoryUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            DiskUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            NetworkUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            LiveMetricsUpdatedLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
+            MemoryUsageDetailLabel = string.Empty;
+            CpuTrendLabel = localization.GetString("Dashboard.LivePerformance.NotAvailable");
+            GpuTrendLabel = localization.GetString("Dashboard.LivePerformance.NotAvailable");
+        }
+        else
+        {
+            ApplyLiveMetrics(lastLiveMetrics, addHistory: false);
+        }
+
+        ApplyLastOptimization(historyRecords);
     }
 
     private void RefreshLocalizedState()
     {
+        RefreshGreeting();
         OnPropertyChanged(nameof(LanguagePreference));
         OnPropertyChanged(nameof(CurrentLanguage));
         OnPropertyChanged(nameof(IsEnglishSelected));
@@ -2105,6 +2516,14 @@ public sealed class MainViewModel : BindableBase
         OnPropertyChanged(nameof(CanRunGtaVBenchmark));
         // Updating restarts the app, so the button has to follow IsBusy.
         OnPropertyChanged(nameof(CanDownloadUpdate));
+    }
+
+    public void Dispose()
+    {
+        liveMetricsEnabled = false;
+        liveMetricsTimer?.Stop();
+        liveMetricsTimer = null;
+        (liveSystemMetricsProvider as IDisposable)?.Dispose();
     }
 
     private void RefreshUpdatePresentation()

@@ -4,17 +4,14 @@ import {
   optimizationRunsPerDay,
   osVersionBreakdown,
   appVersionBreakdown,
-  topActions,
   averageOptimizationTimeMs,
   successRate,
   errorsByVersion,
   errorCategoryBreakdown,
-  topActionsInFailures,
   recentFailures,
   topCpuModels,
   topGpuModels,
   ramBucketBreakdown,
-  profileBreakdown,
 } from '../../src/stats/queries.js';
 
 test('optimizationRunsPerDay defaults to the Production environment', () => {
@@ -50,20 +47,6 @@ test('appVersionBreakdown groups by app_version', () => {
   const { sql } = appVersionBreakdown();
 
   assert.match(sql, /GROUP BY app_version/);
-});
-
-test('topActions joins telemetry_event_actions with telemetry_events and applies the limit as a bound parameter', () => {
-  const { sql, params } = topActions({}, 5);
-
-  assert.match(sql, /JOIN telemetry_events/);
-  assert.match(sql, /LIMIT \?/);
-  assert.equal(params.at(-1), 5);
-});
-
-test('topActions defaults to a top-10 limit', () => {
-  const { params } = topActions();
-
-  assert.equal(params.at(-1), 10);
 });
 
 test('averageOptimizationTimeMs only counts completed runs', () => {
@@ -105,26 +88,12 @@ test('ramBucketBreakdown orders numerically by bucket size', () => {
   assert.match(sql, /ORDER BY ram_bucket_gib ASC/);
 });
 
-test('profileBreakdown excludes null profiles', () => {
-  const { sql } = profileBreakdown();
-
-  assert.match(sql, /profile IS NOT NULL/);
-});
-
 test('errorCategoryBreakdown counts failed runs grouped only by category, across every version', () => {
   const { sql } = errorCategoryBreakdown();
 
   assert.match(sql, /event_name = 'optimization-failed'/);
   assert.match(sql, /GROUP BY error_category/);
   assert.doesNotMatch(sql, /app_version/);
-});
-
-test('topActionsInFailures only counts actions from failed runs and applies a limit', () => {
-  const { sql, params } = topActionsInFailures({}, 5);
-
-  assert.match(sql, /e\.event_name = 'optimization-failed'/);
-  assert.match(sql, /JOIN telemetry_events/);
-  assert.equal(params.at(-1), 5);
 });
 
 test('recentFailures orders by received_at descending and applies a limit', () => {
@@ -169,7 +138,6 @@ test('every query filters by environment as the first bound parameter, never omi
     successRate,
     errorsByVersion,
     ramBucketBreakdown,
-    profileBreakdown,
   ]) {
     const { params } = builder();
     assert.equal(params[0], 'Production');

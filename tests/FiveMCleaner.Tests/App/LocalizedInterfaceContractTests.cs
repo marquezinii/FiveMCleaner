@@ -143,7 +143,7 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
-    public void Optimizer_UsesACompactProgressTimelineInsteadOfThePlanAndLedgerLists()
+    public void Optimizer_SeparatesPreparationProgressAndResults()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -153,7 +153,15 @@ public sealed partial class LocalizedInterfaceContractTests
             "MainWindow.xaml"));
         var optimizer = source[source.IndexOf("<!-- Optimizer -->", StringComparison.Ordinal)..source.IndexOf("<!-- History -->", StringComparison.Ordinal)];
 
-        Assert.DoesNotContain("PlannedActions", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsOptimizerIdle", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsBusy", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsReportAvailable", optimizer, StringComparison.Ordinal);
+        Assert.Contains("PlannedActions", optimizer, StringComparison.Ordinal);
+        Assert.Contains("PlanDetailsExpander", optimizer, StringComparison.Ordinal);
+        Assert.Contains("ProfileSelectorSection", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsLightRecommended", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsBalancedRecommended", optimizer, StringComparison.Ordinal);
+        Assert.Contains("IsAggressiveRecommended", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("StepLedger", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("ActivityLog", optimizer, StringComparison.Ordinal);
         Assert.Contains("ProgressBar Value=\"{Binding ProgressPercent", optimizer, StringComparison.Ordinal);
@@ -161,6 +169,65 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("ProgressHeadline, Mode=OneWay", optimizer, StringComparison.Ordinal);
         Assert.Contains("ElapsedTimeLabel", optimizer, StringComparison.Ordinal);
         Assert.Contains("RemainingTimeLabel", optimizer, StringComparison.Ordinal);
+        Assert.Contains("ReportLines", optimizer, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Dashboard_FocusesOnStatusInsteadOfDuplicatingOptimizerControls()
+    {
+        var root = FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml"));
+        var dashboard = source[source.IndexOf("<!-- Dashboard -->", StringComparison.Ordinal)..source.IndexOf("<!-- Optimizer -->", StringComparison.Ordinal)];
+
+        Assert.Contains("StreamingReadinessItems", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Dashboard.LivePerformance.Title", dashboard, StringComparison.Ordinal);
+        // O histórico ao vivo é um gráfico 2D leve, que recebe as amostras
+        // cruas; o medidor de prontidão é um anel animado sobre o núcleo 3D.
+        Assert.Contains("controls:LivePerformanceChart", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("PerformanceScene3D", dashboard, StringComparison.Ordinal);
+        Assert.Contains("CpuValues=\"{Binding CpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("GpuValues=\"{Binding GpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("NetworkUsageLabel", dashboard, StringComparison.Ordinal);
+        Assert.Contains("controls:HoloCore3D", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Value=\"{Binding ReadinessScore, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("TrackBrush=\"{DynamicResource RingBrush}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Value=\"{Binding CpuUsagePercent, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
+        // A coleta pausada precisa pausar também a animação da cena.
+        Assert.Contains("IsLive=\"{Binding IsLiveMetricsActive}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Dashboard.OpenOptimizer", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Dashboard.SystemOverview", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("GroupName=\"Profile\"", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("StartOptimization_Click", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("ProfilePresentationBenefits", dashboard, StringComparison.Ordinal);
+
+        // A faixa de indicadores explica a recomendação com números da própria
+        // varredura local, em vez de deixar o espaço vazio abaixo do medidor.
+        Assert.Contains("PerformancePressureLabel", dashboard, StringComparison.Ordinal);
+        Assert.Contains("LogicalProcessorLabel", dashboard, StringComparison.Ordinal);
+        Assert.Contains("AvailableMemoryLabel", dashboard, StringComparison.Ordinal);
+        Assert.Contains("LegacyCacheLabel", dashboard, StringComparison.Ordinal);
+        // Média e pico saem das mesmas amostras desenhadas no gráfico.
+        Assert.Contains("CpuTrendLabel", dashboard, StringComparison.Ordinal);
+        Assert.Contains("GpuTrendLabel", dashboard, StringComparison.Ordinal);
+        // O fim da página mostra a última execução real, com estado próprio
+        // quando ainda não existe histórico.
+        Assert.Contains("LastOptimizationTitle", dashboard, StringComparison.Ordinal);
+        Assert.Contains("HasLastOptimization", dashboard, StringComparison.Ordinal);
+        Assert.Contains("OpenHistory_Click", dashboard, StringComparison.Ordinal);
+        // Todos os ícones da Visão geral são vetores do dicionário próprio; a
+        // fonte de glifos não é mais usada nesta página.
+        Assert.DoesNotContain("Segoe MDL2 Assets", dashboard, StringComparison.Ordinal);
+
+        var viewModel = File.ReadAllText(Path.Combine(root, "src", "FiveMCleaner.App", "ViewModels", "MainViewModel.cs"));
+        Assert.Contains("> 75 => localization.GetString(\"Dashboard.Readiness.Excellent\")", viewModel, StringComparison.Ordinal);
+        Assert.Contains("> 50 => localization.GetString(\"Dashboard.Readiness.Good\")", viewModel, StringComparison.Ordinal);
+        Assert.Contains("> 25 => localization.GetString(\"Dashboard.Readiness.Average\")", viewModel, StringComparison.Ordinal);
+        Assert.Contains("> 5 => localization.GetString(\"Dashboard.Readiness.Poor\")", viewModel, StringComparison.Ordinal);
+        Assert.Contains("_ => localization.GetString(\"Dashboard.Readiness.VeryPoor\")", viewModel, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -189,7 +256,21 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("x:Key=\"DetectionBadgeLabelStyle\"", styles, StringComparison.Ordinal);
         Assert.Contains("Segoe UI Variable Text, Segoe UI", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"10\"", styles, StringComparison.Ordinal);
-        Assert.Equal(2, Regex.Matches(mainWindow, "M 2.5,7 L 5.5,10 L 11.5,4.5").Count);
+        // Os selos de detecção continuam com um check vetorial único quando
+        // detectado e um X quando não — só que as duas formas agora vêm do
+        // dicionário compartilhado de ícones, em vez de repetir o traçado
+        // inline em cada selo.
+        var icons = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Themes",
+            "Icons.xaml"));
+
+        Assert.Contains("x:Key=\"IconCheck\"", icons, StringComparison.Ordinal);
+        Assert.Contains("x:Key=\"IconClose\"", icons, StringComparison.Ordinal);
+        Assert.Equal(2, Regex.Matches(mainWindow, "Value=\"\\{StaticResource IconCheck\\}\"").Count);
+        Assert.Equal(2, Regex.Matches(mainWindow, "Value=\"\\{StaticResource IconClose\\}\"").Count);
     }
 
     [Fact]
@@ -235,8 +316,7 @@ public sealed partial class LocalizedInterfaceContractTests
             {
                 "{Binding MinimizeToTrayOnClose}",
                 "{Binding LaunchAtStartup}",
-                "{Binding ShareAnonymousTelemetry}",
-                "{Binding ShareCrashReports}"
+                "{Binding ShareAnonymousTelemetry}"
             },
             checkBoxBindings);
 
@@ -248,23 +328,6 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.DoesNotContain("{Binding IsCloseAppOnCloseSelected, Mode=OneWay}", radioBindings);
         Assert.DoesNotContain("{Binding IsMinimizeToTrayOnCloseSelected, Mode=OneWay}", radioBindings);
-    }
-
-    [Fact]
-    public void ReadinessRing_IsATrueCircle()
-    {
-        var root = FindRepositoryRoot();
-        var document = XDocument.Load(
-            Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"));
-        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
-        var ring = Assert.Single(
-            document.Descendants(presentation + "Ellipse"),
-            element => ((string?)element.Attribute("Stroke"))?.Contains(
-                "RingBrush",
-                StringComparison.Ordinal) == true);
-
-        Assert.Equal((string?)ring.Attribute("Width"), (string?)ring.Attribute("Height"));
-        Assert.Equal("Uniform", (string?)ring.Attribute("Stretch"));
     }
 
     [Fact]
@@ -338,17 +401,24 @@ public sealed partial class LocalizedInterfaceContractTests
     public void MainWindow_MaximizesToTheCurrentMonitorWorkArea()
     {
         var root = FindRepositoryRoot();
+        var markup = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "MainWindow.xaml"));
         var source = File.ReadAllText(Path.Combine(
             root,
             "src",
             "FiveMCleaner.App",
             "MainWindow.xaml.cs"));
 
+        Assert.Contains("WindowState=\"Maximized\"", markup, StringComparison.Ordinal);
         Assert.Contains("WmGetMinMaxInfo", source, StringComparison.Ordinal);
         Assert.Contains("WindowMessageHook", source, StringComparison.Ordinal);
         Assert.Contains("MonitorFromWindow", source, StringComparison.Ordinal);
         Assert.Contains("GetMonitorInfo", source, StringComparison.Ordinal);
         Assert.Contains("minMaxInfo.MaxSize", source, StringComparison.Ordinal);
+        Assert.Contains("WindowState = WindowState.Maximized", source, StringComparison.Ordinal);
     }
 
     [Fact]

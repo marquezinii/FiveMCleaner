@@ -1,0 +1,336 @@
+<ui:FluentWindow x:Class="FiveMCleaner.App.Views.AccountWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:controls="clr-namespace:FiveMCleaner.App.Controls"
+                 Title="Sua conta"
+                 Icon="/FiveMCleaner;component/Assets/FiveMCleaner.png"
+                 Width="560"
+                 Height="760"
+                 WindowStartupLocation="CenterOwner"
+                 ResizeMode="NoResize"
+                 ShowInTaskbar="False"
+                 ExtendsContentIntoTitleBar="True"
+                 FontFamily="Segoe UI Variable Text, Segoe UI"
+                 TextOptions.TextFormattingMode="Display"
+                 TextOptions.TextRenderingMode="ClearType"
+                 UseLayoutRounding="True"
+                 SnapsToDevicePixels="True"
+                 Background="{DynamicResource BackgroundBrush}">
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!--
+            Barra de título nativa do Wpf.Ui, reduzida ao botão de fechar. É
+            o X real do Windows: mesma área de clique, mesmo realce vermelho,
+            mesmo comportamento de acessibilidade que o usuário já conhece.
+            A janela é fixa — não pode ser arrastada nem redimensionada (ver
+            OnSourceInitialized em AccountWindow.xaml.cs) — e Esc cancela.
+        -->
+        <ui:TitleBar Grid.Row="0"
+                     Height="40"
+                     ShowMaximize="False"
+                     ShowMinimize="False"
+                     Background="Transparent">
+            <ui:TitleBar.Header>
+                <TextBlock Margin="20,0,0,0"
+                           VerticalAlignment="Center"
+                           Style="{StaticResource SectionLabelStyle}"
+                           Text="CONTA FIVEMCLEANER" />
+            </ui:TitleBar.Header>
+        </ui:TitleBar>
+
+        <StackPanel Grid.Row="1" Margin="30,4,42,0">
+            <TextBlock x:Name="TitleText"
+                       FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI"
+                       FontSize="24"
+                       FontWeight="Bold"
+                       Text="Bem-vindo de volta" />
+            <TextBlock x:Name="SubtitleText"
+                       Margin="0,7,0,0"
+                       FontSize="12"
+                       Foreground="{DynamicResource TextMutedBrush}"
+                       TextWrapping="Wrap"
+                       Text="Entre para sincronizar suas preferências entre instalações." />
+        </StackPanel>
+
+        <!--
+            O ScrollViewer ocupa a largura inteira da janela de propósito: a
+            barra de rolagem fica encostada na borda direita, e é o conteúdo
+            (não o ScrollViewer) que carrega o respiro lateral. Antes a barra
+            nascia colada nos campos porque o recuo estava no contêiner.
+        -->
+        <ScrollViewer Grid.Row="2"
+                      Margin="0,18,0,0"
+                      VerticalScrollBarVisibility="Auto"
+                      HorizontalScrollBarVisibility="Disabled"
+                      Focusable="False">
+            <StackPanel Margin="30,0,30,6">
+
+                <!-- ============ Entrar com um provedor externo ============ -->
+                <StackPanel x:Name="ProviderPanel">
+                    <Button x:Name="GoogleButton"
+                            Style="{StaticResource ProviderButtonStyle}"
+                            Click="GoogleSignIn_Click"
+                            AutomationProperties.Name="Continuar com o Google">
+                        <StackPanel Orientation="Horizontal">
+                            <Image Source="{StaticResource GoogleLogoImage}" Width="18" Height="18" />
+                            <TextBlock x:Name="GoogleButtonText"
+                                       Margin="11,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="12.5"
+                                       FontWeight="SemiBold"
+                                       Text="Continuar com o Google" />
+                        </StackPanel>
+                    </Button>
+
+                    <Grid Margin="0,18,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Height="1" VerticalAlignment="Center" Background="{DynamicResource BorderSoftBrush}" />
+                        <TextBlock x:Name="ProviderDividerText"
+                                   Grid.Column="1"
+                                   Margin="12,0"
+                                   Style="{StaticResource SectionLabelStyle}"
+                                   Text="OU USE SEU E-MAIL" />
+                        <Border Grid.Column="2" Height="1" VerticalAlignment="Center" Background="{DynamicResource BorderSoftBrush}" />
+                    </Grid>
+                </StackPanel>
+
+                <!-- ==================== Entrar / Cadastrar ==================== -->
+                <StackPanel x:Name="AuthenticationPanel">
+
+                    <StackPanel x:Name="ProfileFieldsPanel" Visibility="Collapsed">
+                        <TextBlock Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,10" Text="QUEM É VOCÊ" />
+
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="14" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Style="{StaticResource FormLabelStyle}" Text="Nome" />
+                                <TextBox x:Name="FirstNameBox"
+                                         Style="{StaticResource AccountFieldStyle}"
+                                         MaxLength="60"
+                                         AutomationProperties.Name="Nome" />
+                            </StackPanel>
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Style="{StaticResource FormLabelStyle}" Text="Sobrenome" />
+                                <TextBox x:Name="LastNameBox"
+                                         Style="{StaticResource AccountFieldStyle}"
+                                         MaxLength="60"
+                                         AutomationProperties.Name="Sobrenome" />
+                            </StackPanel>
+                        </Grid>
+
+                        <TextBlock Style="{StaticResource FormLabelStyle}" Margin="0,16,0,6" Text="Nome de usuário" />
+                        <TextBox x:Name="UsernameBox"
+                                 Style="{StaticResource AccountFieldStyle}"
+                                 MaxLength="24"
+                                 TextChanged="Username_TextChanged"
+                                 AutomationProperties.Name="Nome de usuário" />
+                        <TextBlock x:Name="UsernameHintText"
+                                   Style="{StaticResource FormHintStyle}"
+                                   Text="3 a 24 caracteres. Comece com uma letra e use apenas letras, números e “_”." />
+                        <StackPanel x:Name="UsernameStatusPanel"
+                                    Orientation="Horizontal"
+                                    Margin="1,6,0,0"
+                                    Visibility="Collapsed">
+                            <Path x:Name="UsernameStatusIcon"
+                                  Style="{StaticResource VectorIconStyle}"
+                                  Width="12"
+                                  Height="12"
+                                  StrokeThickness="2" />
+                            <TextBlock x:Name="UsernameStatusText"
+                                       Margin="6,0,0,0"
+                                       VerticalAlignment="Center"
+                                       FontSize="10.5"
+                                       AutomationProperties.LiveSetting="Polite" />
+                        </StackPanel>
+
+                        <Border Height="1" Margin="0,20,0,20" Background="{DynamicResource BorderSoftBrush}" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="CredentialFieldsPanel">
+                        <TextBlock x:Name="CredentialsSectionLabel"
+                                   Style="{StaticResource SectionLabelStyle}"
+                                   Margin="0,0,0,10"
+                                   Visibility="Collapsed"
+                                   Text="DADOS DE ACESSO" />
+
+                        <TextBlock Style="{StaticResource FormLabelStyle}" Text="E-mail" />
+                        <TextBox x:Name="EmailBox"
+                                 Style="{StaticResource AccountFieldStyle}"
+                                 MaxLength="254"
+                                 AutomationProperties.Name="E-mail" />
+
+                        <TextBlock Style="{StaticResource FormLabelStyle}" Margin="0,16,0,6" Text="Senha" />
+                        <controls:RevealPasswordBox x:Name="PasswordField"
+                                                    MaxLength="128"
+                                                    Placeholder="Sua senha"
+                                                    PasswordChanged="Password_Changed"
+                                                    AutomationProperties.Name="Senha" />
+                        <StackPanel x:Name="PasswordPolicyPanel" Visibility="Collapsed" Margin="1,7,0,0">
+                            <ProgressBar x:Name="PasswordStrengthBar"
+                                         Height="4"
+                                         Minimum="0"
+                                         Maximum="12"
+                                         Value="0"
+                                         Foreground="{DynamicResource RedBrush}" />
+                            <TextBlock x:Name="PasswordPolicyText"
+                                       Style="{StaticResource FormHintStyle}"
+                                       Margin="0,6,0,0"
+                                       Text="Use pelo menos 12 caracteres." />
+                        </StackPanel>
+
+                        <StackPanel x:Name="ConfirmPanel" Visibility="Collapsed">
+                            <TextBlock Style="{StaticResource FormLabelStyle}" Margin="0,16,0,6" Text="Repetir senha" />
+                            <controls:RevealPasswordBox x:Name="ConfirmPasswordField"
+                                                        MaxLength="128"
+                                                        Placeholder="Digite a senha novamente"
+                                                        PasswordChanged="Password_Changed"
+                                                        AutomationProperties.Name="Repetir senha" />
+                            <StackPanel x:Name="ConfirmStatusPanel"
+                                        Orientation="Horizontal"
+                                        Margin="1,6,0,0"
+                                        Visibility="Collapsed">
+                                <Path x:Name="ConfirmStatusIcon"
+                                      Style="{StaticResource VectorIconStyle}"
+                                      Width="12"
+                                      Height="12"
+                                      StrokeThickness="2" />
+                                <TextBlock x:Name="ConfirmStatusText"
+                                           Margin="6,0,0,0"
+                                           VerticalAlignment="Center"
+                                           FontSize="10.5"
+                                           AutomationProperties.LiveSetting="Polite" />
+                            </StackPanel>
+                        </StackPanel>
+
+                        <Grid Margin="0,18,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <CheckBox x:Name="KeepSignedInBox"
+                                      Style="{StaticResource FormCheckBoxStyle}"
+                                      Content="Manter conectado neste computador"
+                                      IsChecked="True" />
+                            <!--
+                                "Esqueci minha senha" nasce oculto: só faz
+                                sentido depois que uma tentativa de entrar
+                                falhou por senha incorreta, e nunca aparece no
+                                cadastro (não há senha a recuperar ainda).
+                            -->
+                            <Button x:Name="ResetPasswordButton"
+                                    Grid.Column="1"
+                                    Visibility="Collapsed"
+                                    Style="{StaticResource LinkButtonStyle}"
+                                    FontSize="11.5"
+                                    Content="Esqueci minha senha"
+                                    Click="ResetPassword_Click" />
+                        </Grid>
+                    </StackPanel>
+
+                    <StackPanel x:Name="TermsPanel" Visibility="Collapsed" Margin="0,14,0,0">
+                        <CheckBox x:Name="TermsCheckBox" Style="{StaticResource FormCheckBoxStyle}">
+                            <TextBlock TextWrapping="Wrap" FontSize="11.5">
+                                Li e concordo com os <Run Text="Termos de Uso" FontWeight="SemiBold" />
+                            </TextBlock>
+                        </CheckBox>
+                        <Button Margin="28,4,0,0"
+                                HorizontalAlignment="Left"
+                                Style="{StaticResource LinkButtonStyle}"
+                                FontSize="11"
+                                Content="Ler os Termos de Uso"
+                                Click="Terms_Click" />
+                    </StackPanel>
+                </StackPanel>
+
+                <!-- ==================== Verificação de e-mail ==================== -->
+                <StackPanel x:Name="VerificationPanel" Visibility="Collapsed">
+                    <Border Style="{StaticResource CardStyle}">
+                        <StackPanel>
+                            <TextBlock x:Name="VerificationDetailText"
+                                       FontSize="12"
+                                       TextWrapping="Wrap"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                            <Button x:Name="ResendVerificationButton"
+                                    Margin="0,16,0,0"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Content="Reenviar e-mail de verificação"
+                                    Click="ResendVerification_Click" />
+                            <Button x:Name="RefreshVerificationButton"
+                                    Margin="0,9,0,0"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    Content="Já confirmei, verificar agora"
+                                    Click="RefreshVerification_Click" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
+                <!-- ==================== Mensagem de status ==================== -->
+                <Border x:Name="StatusPanel"
+                        Visibility="Collapsed"
+                        Margin="0,18,0,0"
+                        Padding="13,11"
+                        CornerRadius="9"
+                        BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <Path x:Name="StatusIcon"
+                              Style="{StaticResource VectorIconStyle}"
+                              Width="14"
+                              Height="14"
+                              VerticalAlignment="Top"
+                              Margin="0,1,0,0"
+                              StrokeThickness="1.8" />
+                        <TextBlock x:Name="StatusText"
+                                   Margin="9,0,0,0"
+                                   FontSize="11.5"
+                                   TextWrapping="Wrap"
+                                   AutomationProperties.LiveSetting="Assertive" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- ==================== Ações principais ==================== -->
+        <Border Grid.Row="3"
+                Padding="30,16,30,22"
+                Background="{DynamicResource ChromeBrush}"
+                BorderBrush="{DynamicResource BorderSoftBrush}"
+                BorderThickness="0,1,0,0">
+            <StackPanel>
+                <Button x:Name="SubmitButton"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        Content="Entrar"
+                        Click="Submit_Click"
+                        IsDefault="True" />
+                <Button x:Name="SwitchButton"
+                        Margin="0,10,0,0"
+                        HorizontalAlignment="Center"
+                        Style="{StaticResource LinkButtonStyle}"
+                        FontSize="12"
+                        Content="Ainda não tem conta? Criar conta"
+                        Click="Switch_Click" />
+                <Button x:Name="LogoutButton"
+                        Visibility="Collapsed"
+                        Margin="0,10,0,0"
+                        Style="{StaticResource SecondaryButtonStyle}"
+                        Content="Sair da conta"
+                        Click="Logout_Click" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</ui:FluentWindow>

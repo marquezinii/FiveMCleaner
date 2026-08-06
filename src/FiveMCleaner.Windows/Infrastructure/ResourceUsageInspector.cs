@@ -1,5 +1,6 @@
 using System.ComponentModel;
-using System.Diagnostics;
+using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
@@ -15,36 +16,87 @@ public interface IResourceUsageInspector
 }
 
 /// <summary>
-/// Takes a short (roughly 300ms) two-sample reading of CPU and physical disk
-/// utilization via the standard PerformanceCounter API, plus a best-effort
-/// GPU utilization read from the "GPU Engine" counter category Windows has
-/// exposed natively since 10 1803 (no vendor SDK, no driver). Network is
-/// reported as raw throughput rather than a percentage, since adapter link
-/// speed is not reliably available to compute a meaningful utilization
-/// percentage on every adapter. A single snapshot is an instantaneous
-/// sample, not an average — presented that way, not as a trend.
+/// Takes a short (roughly 300ms) two-sample reading of CPU, physical disk,
+/// GPU utilization, and network throughput. CPU and disk use PDH with
+/// PdhAddEnglishCounterW (Vista+), which accepts English counter names
+/// regardless of the OS language — fixing the localized v1 counter names
+/// that fail on non-English Windows (e.g., pt-BR). Network is reported as
+/// raw throughput via NetworkInterface statistics.
 /// </summary>
 public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
 {
     private static readonly TimeSpan SampleInterval = TimeSpan.FromMilliseconds(300);
+    private static bool? gpuEngineCategoryExists;
 
     public ResourceUsageSnapshot GetSnapshot()
     {
-        var cpu = TryReadCounter("Processor", "% Processor Time", "_Total");
-        var disk = TryReadCounter("PhysicalDisk", "% Disk Time", "_Total");
-        var gpu = TryReadGpuUsage();
-        var network = TryReadNetworkThroughputMBps();
-        return new ResourceUsageSnapshot(cpu, disk, gpu, network);
-    }
+        var cpuTask = Task.Run(() => ReadPdhCounterAsync(
+            "\\Processor(_Total)\\% Processor Time"));
+        var diskTask = Task.Run(() => ReadPdhCounterAsync(
+            "\\PhysicalDisk(_Total)\\% Disk Time"));
+        var gpuTask = Task.Run(() => TryReadGpuUsageAsync());
+        var networkTask = Task.Run(() => TryReadNetworkThroughputMBpsAsync());
 
-    private static double? TryReadCounter(string category, string counter, string instance)
-    {
         try
         {
-            using var performanceCounter = new PerformanceCounter(category, counter, instance, true);
-            performanceCounter.NextValue();
-            Thread.Sleep(SampleInterval);
-            return Math.Clamp(performanceCounter.NextValue(), 0, 100);
+            Task.WaitAll(cpuTask, diskTask, gpuTask, networkTask);
+        }
+        catch (AggregateException)
+        {
+        }
+
+        return new ResourceUsageSnapshot(
+            cpuTask.IsCompletedSuccessfully ? cpuTask.Result : null,
+            diskTask.IsCompletedSuccessfully ? diskTask.Result : null,
+            gpuTask.IsCompletedSuccessfully ? gpuTask.Result : null,
+            networkTask.IsCompletedSuccessfully ? networkTask.Result : 0);
+    }
+
+    private static async Task<double?> ReadPdhCounterAsync(string englishCounterPath)
+    {
+        IntPtr queryHandle = IntPtr.Zero;
+        IntPtr counterHandle = IntPtr.Zero;
+        try
+        {
+            if (PdhOpenQueryW(IntPtr.Zero, UIntPtr.Zero, out queryHandle) != 0)
+            {
+                return null;
+            }
+
+            var addStatus = PdhAddEnglishCounterW(queryHandle, englishCounterPath, UIntPtr.Zero, out counterHandle);
+            if (addStatus != 0)
+            {
+                return null;
+            }
+
+            var collectStatus = PdhCollectQueryData(queryHandle);
+            if (collectStatus != 0)
+            {
+                return null;
+            }
+
+            await Task.Delay(SampleInterval).ConfigureAwait(false);
+
+            collectStatus = PdhCollectQueryData(queryHandle);
+            if (collectStatus != 0)
+            {
+                return null;
+            }
+
+            var formatStatus = PdhGetFormattedCounterValue(counterHandle, PDH_FMT_DOUBLE, out _, out var value);
+            if (formatStatus != 0)
+            {
+                return null;
+            }
+
+            // Só PDH_CSTATUS_VALID_DATA e PDH_CSTATUS_NEW_DATA trazem um valor
+            // real; qualquer outro status deixa a união com lixo.
+            if (value.CStatus is not (PDH_CSTATUS_VALID_DATA or PDH_CSTATUS_NEW_DATA))
+            {
+                return null;
+            }
+
+            return Math.Clamp(value.DoubleValue, 0, 100);
         }
         catch (Exception exception) when (exception is InvalidOperationException
             or UnauthorizedAccessException
@@ -52,18 +104,26 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
         {
             return null;
         }
+        finally
+        {
+            if (queryHandle != IntPtr.Zero)
+            {
+                PdhCloseQuery(queryHandle);
+            }
+        }
     }
 
-    private static double? TryReadGpuUsage()
+    private static async Task<double?> TryReadGpuUsageAsync()
     {
         try
         {
-            if (!PerformanceCounterCategory.Exists("GPU Engine"))
+            gpuEngineCategoryExists ??= System.Diagnostics.PerformanceCounterCategory.Exists("GPU Engine");
+            if (!gpuEngineCategoryExists.Value)
             {
                 return null;
             }
 
-            var category = new PerformanceCounterCategory("GPU Engine");
+            var category = new System.Diagnostics.PerformanceCounterCategory("GPU Engine");
             var instances = category.GetInstanceNames()
                 .Where(name => name.Contains("engtype_3D", StringComparison.OrdinalIgnoreCase))
                 .ToArray();
@@ -73,7 +133,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
             }
 
             var counters = instances
-                .Select(instance => new PerformanceCounter(
+                .Select(instance => new System.Diagnostics.PerformanceCounter(
                     "GPU Engine", "Utilization Percentage", instance, true))
                 .ToArray();
             try
@@ -83,7 +143,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
                     counter.NextValue();
                 }
 
-                Thread.Sleep(SampleInterval);
+                await Task.Delay(SampleInterval).ConfigureAwait(false);
                 var total = counters.Sum(counter => counter.NextValue());
                 return Math.Clamp(total, 0, 100);
             }
@@ -103,7 +163,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
         }
     }
 
-    private static double TryReadNetworkThroughputMBps()
+    private static async Task<double> TryReadNetworkThroughputMBpsAsync()
     {
         try
         {
@@ -119,7 +179,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
             });
 
             var before = Sample();
-            Thread.Sleep(SampleInterval);
+            await Task.Delay(SampleInterval).ConfigureAwait(false);
             var after = Sample();
             var bytesPerSecond = (after - before) / SampleInterval.TotalSeconds;
             return Math.Max(0, bytesPerSecond / (1024d * 1024d));
@@ -129,4 +189,47 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
             return 0;
         }
     }
+
+    private const int PDH_FMT_DOUBLE = 0x00000200;
+    private const int PDH_CSTATUS_VALID_DATA = 0x00000000;
+    private const int PDH_CSTATUS_NEW_DATA = 0x00000001;
+
+    /// <summary>
+    /// Espelha <c>PDH_FMT_COUNTERVALUE</c>: um <c>DWORD CStatus</c> seguido da
+    /// união do valor, que o compilador alinha em 8 bytes por causa de
+    /// <c>double</c>/<c>LONGLONG</c>. Sem o <c>CStatus</c>, a união caía sobre
+    /// ele e toda leitura de CPU e disco voltava exatamente 0.
+    /// </summary>
+    [StructLayout(LayoutKind.Explicit)]
+    private struct PdhCounterValue
+    {
+        [FieldOffset(0)]
+        public int CStatus;
+        [FieldOffset(8)]
+        public int LongValue;
+        [FieldOffset(8)]
+        public double DoubleValue;
+        [FieldOffset(8)]
+        public long LargeValue;
+        [FieldOffset(8)]
+        public IntPtr AnsiStringValue;
+        [FieldOffset(8)]
+        public IntPtr WideStringValue;
+    }
+
+    [DllImport("pdh.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
+    private static extern int PdhOpenQueryW(IntPtr dataSource, UIntPtr userData, out IntPtr query);
+
+    [DllImport("pdh.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]
+    private static extern int PdhAddEnglishCounterW(IntPtr query, string counterPath, UIntPtr userData, out IntPtr counter);
+
+    [DllImport("pdh.dll", ExactSpelling = true)]
+    private static extern int PdhCollectQueryData(IntPtr query);
+
+    [DllImport("pdh.dll", ExactSpelling = true)]
+    private static extern int PdhGetFormattedCounterValue(IntPtr counter, int format, out int type, out PdhCounterValue value);
+
+    [DllImport("pdh.dll", ExactSpelling = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static extern bool PdhCloseQuery(IntPtr query);
 }

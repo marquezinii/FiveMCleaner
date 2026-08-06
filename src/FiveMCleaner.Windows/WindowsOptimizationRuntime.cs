@@ -183,6 +183,18 @@ public sealed class WindowsOptimizationActionFactory
         var defaults = new OptimizationOptionsDto();
         return
         [
+            .. CreateDiagnosticActions(),
+            .. CreateCleanupActions(defaults),
+            .. CreateRegistryAndPowerActions(),
+            .. CreateGraphicsPresetActions(defaults),
+            .. CreateVisualEffectsActions()
+        ];
+    }
+
+    private IReadOnlyList<IWindowsOptimizationAction> CreateDiagnosticActions()
+    {
+        return
+        [
             new VerifyFiveMStoppedAction(
                 environment.FiveMInstallationRoot,
                 dependencies.ProcessInspector),
@@ -236,7 +248,14 @@ public sealed class WindowsOptimizationActionFactory
             new InstallationHealthDiagnosisAction(
                 environment.FiveMInstallationRoot,
                 environment.FiveMAppRoot),
-            new CrashPatternDiagnosisAction(environment.FiveMAppRoot),
+            new CrashPatternDiagnosisAction(environment.FiveMAppRoot)
+        ];
+    }
+
+    private IReadOnlyList<IWindowsOptimizationAction> CreateCleanupActions(OptimizationOptionsDto defaults)
+    {
+        return
+        [
             new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
                 TimeSpan.FromDays(defaults.TemporaryFileMinimumAgeDays),
@@ -268,7 +287,14 @@ public sealed class WindowsOptimizationActionFactory
                 RosIdPath,
                 DigitalEntitlementsRoot,
                 AuthQuarantineRoot,
-                dependencies.ProcessInspector),
+                dependencies.ProcessInspector)
+        ];
+    }
+
+    private IReadOnlyList<IWindowsOptimizationAction> CreateRegistryAndPowerActions()
+    {
+        return
+        [
             new GameModeRegistryAction(dependencies.Registry),
             new GpuPreferenceRegistryAction(
                 dependencies.Registry,
@@ -288,7 +314,14 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.PowerPlans,
                 dependencies.PowerStatus),
             new PciExpressPowerManagementAction(dependencies.PowerPlans),
-            new MousePollingRateGuidanceAction(dependencies.ResourceUsage),
+            new MousePollingRateGuidanceAction(dependencies.ResourceUsage)
+        ];
+    }
+
+    private IReadOnlyList<IWindowsOptimizationAction> CreateGraphicsPresetActions(OptimizationOptionsDto defaults)
+    {
+        return
+        [
             new LegacyGraphicsPresetAction(
                 environment.LegacyGraphicsSettingsPath,
                 environment.FiveMInstallationRoot,
@@ -380,10 +413,18 @@ public sealed class WindowsOptimizationActionFactory
                 defaults.UseGtaVSafeMode,
                 defaults.UseGtaVMinimumSettings,
                 defaults.UseGtaVAutoSettingsRebuild,
-                dependencies.GtaVProcessInspector),
+                dependencies.GtaVProcessInspector)
+        ];
+    }
+
+    private IReadOnlyList<IWindowsOptimizationAction> CreateVisualEffectsActions()
+    {
+        return
+        [
             new VisualEffectsAction(dependencies.VisualEffects)
         ];
     }
+
 
     private IWindowsOptimizationAction CreateAction(
         string actionId,
@@ -773,11 +814,6 @@ public sealed class WindowsOptimizationRuntime
     {
         var environment = WindowsOptimizationEnvironment.DetectDefault();
         return Create(environment, WindowsOptimizationDependencies.CreateDefault(environment));
-    }
-
-    public static WindowsOptimizationRuntime CreateDefaultForCurrentUser()
-    {
-        return CreateDefault();
     }
 
     public static WindowsOptimizationRuntime Create(

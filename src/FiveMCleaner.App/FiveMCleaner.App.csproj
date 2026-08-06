@@ -8,6 +8,16 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Assets/FiveMCleaner.ico</ApplicationIcon>
+    <!--
+      ApplicationHighDpiMode (a alternativa sugerida pelo aviso WFO0003) não
+      tem efeito aqui: ela só é aplicada pelo Program.Main gerado pelo
+      designer do WinForms (ApplicationConfiguration.Initialize()), e este
+      projeto usa WinForms só para a bandeja do sistema — quem inicia é o
+      App.xaml do WPF. A leitura efetiva de DPI da janela principal vem do
+      HwndSource do WPF, que só respeita o dpiAwareness declarado no
+      manifesto abaixo. Suprimido intencionalmente, não ignorado por engano.
+    -->
+    <NoWarn>$(NoWarn);WFO0003</NoWarn>
     <AssemblyName>FiveMCleaner</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
@@ -26,6 +36,15 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config/appsettings.json;Config/appsettings.Development.json;Config/appsettings.Production.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <!--
+      Machine-local, git-ignored overlay (see RemoteServicesOptionsLoader) for
+      values GitHub's push protection would otherwise reject in a commit, like
+      the Google OAuth client secret. The glob matches nothing on a normal
+      checkout, so it never fails the build when absent.
+    -->
+    <Content Include="Config/appsettings.*.local.json" Condition="Exists('Config')">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

@@ -1,5 +1,6 @@
 using FiveMCleaner.App.Services;
 using FiveMCleaner.App.ViewModels;
+using System.Globalization;
 using Xunit;
 
 namespace FiveMCleaner.Tests.App;
@@ -65,12 +66,14 @@ public sealed class MainViewModelUpdateCheckTests
         var releaseUpdateService = new FakeReleaseUpdateService(exceptionToThrow: new HttpRequestException("boom"));
         var viewModel = new MainViewModel(
             new FakeAppOptimizationService(new AppSettings(), settingsFileExists: false),
+            localization: new LocalizationService(CultureInfo.GetCultureInfo("pt-BR")),
             releaseUpdateService: releaseUpdateService);
 
         await viewModel.CheckForUpdatesManuallyAsync();
 
         Assert.False(viewModel.IsUpdateBannerVisible);
-        Assert.Contains("boom", viewModel.ManualUpdateCheckMessage);
+        Assert.DoesNotContain("boom", viewModel.ManualUpdateCheckMessage, StringComparison.Ordinal);
+        Assert.Contains("Verifique a internet", viewModel.ManualUpdateCheckMessage, StringComparison.Ordinal);
         Assert.False(viewModel.IsCheckingForUpdatesManually);
     }
 

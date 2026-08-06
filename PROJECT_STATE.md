@@ -1,5 +1,468 @@
 # Estado do Projeto
 
+## Redesenho da janela Entrar/Cadastre-se, login com Google e conta em Configurações — 06/08/2026
+
+- Integrada em `dev/proxima-versao`: `ai/claude/account-window-ux` (X de
+  fechar nativo, tipografia e validação campo a campo, "Esqueci minha
+  senha" condicional ao erro de login, olho de mostrar/ocultar senha,
+  checagem de disponibilidade de nome de usuário via
+  `GET /account/username-available` no Worker, login com o Google via
+  OAuth2 + PKCE com redirect de loopback). Testado ponta a ponta com
+  credenciais reais do Google Cloud (projeto `fivemcleaner-app`): abre
+  navegador, login real, retorna ao app, cai no passo de perfil com
+  nome/sobrenome preenchidos pela Google.
+- Credenciais do Google não vão para o repositório: `RemoteServicesOptionsLoader`
+  agora aceita um overlay opcional `Config/appsettings.{Development,
+  Production}.local.json`, git-ignorado, no mesmo padrão que o Worker já
+  usa para `ADMIN_PASSWORD_HASH`/`IP_HASH_SECRET`. Motivo: uma primeira
+  tentativa de commitar o client secret direto nos arquivos versionados
+  foi recusada pelo GitHub push protection.
+- Três correções pedidas após revisão visual: (1) a janela de conta agora
+  é fixa — não pode ser arrastada nem redimensionada (hook de
+  `WM_SYSCOMMAND`/`SC_MOVE`); (2) clicar no nome/e-mail no cabeçalho, já
+  logado, não reabre mais um popup "Sua conta" — o gerenciamento (senha,
+  e-mail, excluir conta) virou um card permanente em Configurações, com
+  upload de foto de perfil (normalizada para PNG quadrado, até 512px, via
+  `AccountAvatarStore` — armazenamento só local por enquanto, sem backend
+  de avatar ainda; ver `infra/cloudflare-worker/README.md` sobre o mesmo
+  bloqueio já enfrentado pelo R2); (3) os campos de senha tinham um
+  sublinhado padrão do Wpf.Ui que os outros campos não tinham — corrigido
+  para o mesmo visual "flutuando" (`Border` + `ScrollViewer`) do resto do
+  formulário.
+- Rodada extra de correção após revisão visual (commits diretos em
+  `dev/proxima-versao`, mesma sessão): campo de e-mail tinha altura
+  diferente do de senha, o cursor de texto ficava minúsculo fora dos
+  campos de senha e — a mais séria — o texto digitado no e-mail chegava a
+  ficar quase invisível. Causa raiz: `AccountFieldStyle` herdava
+  `Padding="12,9"` de `FormTextBoxStyle`, aplicado como `Margin` do
+  `ScrollViewer` interno; dentro de uma altura fixa de 42px sobravam só
+  24px verticais, e a fonte mais alta simplesmente não cabia — corte
+  quase total do texto. Corrigido copiando a geometria exata do campo de
+  senha (`Padding` só horizontal, altura toda livre para centralizar o
+  texto). Verificado ao vivo no build rodando (não só nos testes
+  automatizados) digitando em todos os campos de ambos os formulários.
+- Validação integrada final: build Release sem avisos, 774 testes .NET
+  (81 novos ao todo nesta rodada), 159 testes do Worker, 43 do dashboard,
+  `dotnet format --verify-no-changes`, `Verify-Safety.ps1`,
+  `git diff --check` aprovados. Atalho de desenvolvimento reconstruído e
+  confirmado apontando para `scripts\Start-DevelopmentApp.ps1`. Branch
+  `ai/claude/account-window-ux` e seu worktree removidos (local e
+  remoto) após confirmação de que já estavam integrados.
+- Pendente: `wrangler deploy` do Worker (rota de disponibilidade de
+  username + rate limit) — autorização remota explícita do usuário ainda
+  não concedida nesta sessão.
+
+## Integração de 2 tarefas de IA em `dev/proxima-versao` — 05/08/2026
+
+- Integradas em `dev/proxima-versao`: `ai/claude/overview-redesign`
+  (reconstrução da Visão geral com ícones vetoriais próprios, saudação por
+  horário, botão/link Discord oficial, fonte Bahnschrift, correção de DPI
+  awareness via `app.manifest`, rota `GET /account/profile` no Worker) e
+  `ai/opencode/function-decomposition` (rodada completa de Extract Method em
+  8 arquivos: `WindowsTransactionEngine`, `AppOptimizationService`,
+  `MainViewModel`, `GitHubReleaseUpdateService`, `PlanBuilder`,
+  `ActionCatalog`, `WindowsOptimizationRuntime`, construtor do `MainWindow`).
+- O merge do `overview-redesign` fechou sem conflito; o merge do
+  `function-decomposition` teve conflitos em `MainWindow.xaml.cs` e
+  `MainViewModel.cs` (auto-merge no segundo), resolvidos preservando os
+  métodos refatorados de criação de serviços (`CreateAccountService`,
+  `CreateTelemetryServices`) e as features do redesign (`profileService`,
+  Discord, saudação, sincronização de nome). `MainViewModel` ganhou
+  `SetAccountFirstName` e propriedades derivadas do redesign.
+- Validação integrada: build Release sem avisos, 729 testes .NET,
+  `Verify-Safety.ps1`, `dotnet format --verify-no-changes` e `git diff --check`
+  aprovados. Worker: 150 testes (+2 novos em `accountProfile.test.js`).
+  Dashboard: 43 testes. Site: lint, build e 3 testes aprovados.
+
+## Integração de 2 tarefas de IA (2D monitor + startup audit) em `dev/proxima-versao` — 05/08/2026
+
+- Integradas em `dev/proxima-versao`: `ai/claude/live-monitor-2d`
+  (substituição da cena 3D por gráfico 2D leve com leitura sob cursor, correção
+  do bug de struct PDH — CPU/disco sempre 0%) e
+  `ai/opencode/startup-audit-fix` (race condition no StreamingSoftwareDetector,
+  fire-and-forget inseguro no AuthService, double dispose, cache de
+  PerformanceCounter, restauração de sessão não bloqueante).
+- Ambos os merges (`--no-ff`) fecharam sem conflito manual; auto-merge
+  resolution em `MainWindow.xaml.cs`, `AppOptimizationService.cs` e
+  `ResourceUsageInspector.cs`.
+- Validação integrada: build Release sem avisos, 725 testes .NET,
+  `Verify-Safety.ps1`, `dotnet format --verify-no-changes` e `git diff --check`
+  aprovados. Atalho de desenvolvimento reconstruído e confirmado apontando para
+  `scripts\Start-DevelopmentApp.ps1`.
+
+## Cadastro com Nome, Sobrenome e Usuário único — 04/08/2026
+
+- Repostos Nome e Sobrenome (lado a lado) e um Usuário único no cadastro,
+  removidos pela migração para Firebase Authentication REST (que só
+  administra e-mail/senha/uid). Ordem final dos campos, como pedido: Nome +
+  Sobrenome, Usuário, E-mail, Senha, Repetir senha.
+- Arquitetura: como Firebase não tem username nem garante unicidade entre
+  instalações, a unicidade só pode ser arbitrada centralmente. Nova rota
+  `POST /account/profile` no Worker, atrás do verificador de ID Token
+  Firebase já integrado (`requireFirebaseUser`), grava username/nome/
+  sobrenome em `account_profiles` (D1), indexado pelo UID do token — nunca
+  por um valor do corpo da requisição. Username duplicado responde
+  `409 username-taken`.
+- Se o cadastro no Firebase for concluído mas o perfil falhar ao salvar
+  (username já em uso, rede), a conta Firebase criada é preservada — a
+  janela pede outro nome de usuário em vez de descartar o cadastro.
+- Detalhes completos em `.ai/tasks/account-registration-profile-fields.md`.
+- Validação: build Release sem avisos, 719 testes .NET (29 novos),
+  `dotnet format --verify-no-changes`, `Verify-Safety.ps1`, 148 testes do
+  Worker (16 novos), `git diff --check` aprovados.
+
+## Integração de 9 tarefas de IA em `dev/proxima-versao` — 04/08/2026
+
+- Integradas em ordem (evitando conflito nos arquivos compartilhados
+  `MainViewModel.cs`, `StreamingSoftwareDetector.cs`,
+  `ResourceUsageInspector.cs`): `ai/opencode/firebase-id-token-verify`,
+  `ai/opencode/installer-ux`, `ai/opencode/password-policy-min-12`,
+  `ai/opencode/single-instance-activation`, `ai/opencode/cross-platform-audit`,
+  `ai/opencode/silent-failure-audit`, `ai/hermes/timezone-fix`,
+  `ai/opencode/bug-hunt-fix`, `ai/claude/overview-3d-redesign`.
+- Verificação de ID Token Firebase (RS256, JWKS Google, aud/iss/exp/sub) agora
+  implementada no Worker — resolve o pendente abaixo, sem rota de produto
+  ainda ligada a ela.
+- Todos os 9 merges (`--no-ff`) fecharam sem conflito manual; dois só
+  precisaram de auto-merge (`StreamingSoftwareDetector.cs`,
+  `ResourceUsageInspector.cs`, `MainViewModel.cs`, `FirebaseAuthService.cs`),
+  sem perda de mudança de nenhum lado.
+- Validação integrada: build Release sem avisos, 690 testes .NET,
+  `Verify-Safety.ps1`, 132 testes do Worker, 43 do dashboard, site (lint,
+  build, 3 testes) e `git diff --check` aprovados. `npm audit` do Worker
+  reporta 3 vulnerabilidades pré-existentes em `wrangler`/`undici`
+  (devDependency, correção só via `--force` com breaking change), não
+  introduzidas por esta integração.
+- **`ai/opencode/project-state-gta-mods-debt`**: a política de push automático
+  proposta por essa branch foi aprovada pelo usuário em 04/08/2026 e aplicada
+  manualmente ao `AI_RULES.md` (não via `git merge` — a branch havia divergido
+  de antes das 9 integrações acima; um merge de verdade reverteria ~4500
+  linhas já integradas). Ao mesmo tempo, `AI_RULES.md` ganhou reforço
+  explícito de que uma tarefa paralela nunca deve editar `PROJECT_STATE.md`
+  diretamente, nem para registrar achados de auditoria — o que essa própria
+  branch fez, violando a regra. O único conteúdo técnico dela (auditoria de
+  fusos horários) já está coberto pelas correções reais de
+  `ai/hermes/timezone-fix`, integrado. Branch local/remota preservada até o
+  usuário confirmar que pode ser removida.
+
+## Verificação de ID Token Firebase no backend — resolvida
+
+- O Worker valida o JWT Firebase (RS256, chaves públicas do Google,
+  `aud = fivemcleaner-app`, `iss = https://securetoken.google.com/fivemcleaner-app`,
+  expiração e `sub`) e agora tem uma rota de produto sobre ele:
+  `POST /account/profile` (ver seção acima). Toda rota autenticada usa
+  exclusivamente o Firebase UID (`sub`) como identificador interno
+  permanente; nunca e-mail.
+- Pendente ainda: a troca do fluxo antigo para Firebase não migrou contas
+  existentes do Worker. Se houver dados/usuários reais a preservar do
+  sistema legado, decidir e implementar uma migração ou um fluxo explícito
+  de recriação/redefinição antes de qualquer release pública que dependa
+  disso.
+
+## Integração do Firebase Authentication REST — 03/08/2026
+
+- O aplicativo agora usa exclusivamente a Firebase Authentication REST API para
+  cadastro, login, verificação de e-mail, recuperação, reautenticação,
+  alteração de senha/e-mail e exclusão de conta; não há SDK Web, npm ou credencial
+  administrativa no cliente.
+- A sessão persiste somente o refresh token opcional, protegido por DPAPI do
+  usuário Windows. O ID Token permanece em memória, é renovado automaticamente
+  e o Firebase UID substitui o e-mail como identificador interno.
+- O fluxo antigo de contas do Worker, suas rotas e schema fonte foram removidos.
+  As rotas já implantadas só deixarão de existir após um deploy futuro autorizado.
+- Validação integrada: .NET Release, formatação, `Verify-Safety.ps1`, Worker
+  (testes + audit), dashboard (43 testes; audit não aplicável sem lockfile),
+  site (lint, typecheck, build, 3 testes + audit) e `git diff --check` aprovados.
+- O atalho `FiveMCleaner - Desenvolvimento` foi reconstruído e confirmado
+  apontando para `scripts\Start-DevelopmentApp.ps1`.
+
+## Refinamento da janela de conta - 02/08/2026
+
+- A janela de login/cadastro agora possui um botão X minimalista e acessível para fechar, além de preservar `Esc` como cancelamento.
+- A largura passou para 620 px, com Nome e Sobrenome lado a lado no cadastro; isso reduziu a altura necessária do formulário.
+- O checkbox de Termos foi substituído por uma marca de seleção compacta e estável, com foco de teclado e estados de hover.
+- O rótulo superior agora é `Entrar / Cadastre-se`, em tipografia variável nativa do Windows e tamanho menor.
+- Validação integrada: .NET Release, smoke WPF, formatação, `Verify-Safety.ps1`, 124 testes do Worker, `npm audit` e `git diff --check` aprovados. Atalho de desenvolvimento reconstruído e verificado.
+
+## Correção do clique do acesso de conta - 02/08/2026
+
+- O botão `Entrar / cadastrar-se` foi movido para `TitleBar.TrailingContent`, a região interativa oficial do Wpf.Ui; o clique agora chega ao fluxo de conta mesmo com a barra de título estendida.
+- Em repouso permanece minimalista; no hover/pressionado mostra uma superfície arredondada translúcida e mantém foco de teclado visível.
+- Validação integrada: .NET Release, teste WPF do evento de abertura da conta, formatação, `Verify-Safety.ps1`, 124 testes do Worker, `npm audit` e `git diff --check` aprovados.
+- O atalho de desenvolvimento foi reconstruído após esta integração e confirmado apontando para `scripts\\Start-DevelopmentApp.ps1`.
+
+## Cadastro, login e Termos de Uso completos - 02/08/2026
+
+- O acesso `Entrar / cadastrar-se` agora abre sem crash e oferece cadastro com nome, sobrenome, usuário, e-mail, senha, confirmação e aceite obrigatório dos Termos de Uso versionados.
+- Criada janela local profissional de Termos de Uso; o link azul abre o documento sem sair do aplicativo.
+- Cliente, Worker e D1 compartilham o novo contrato. Usuário e e-mail são únicos, senha é derivada com PBKDF2, tokens de sessão são persistidos somente como SHA-256 e cadastros são limitados por HMAC do IP.
+- Migração `0001_account_username_terms.sql` aplicada no D1 real e Worker implantado na versão `cf21d454-79b4-4ee2-9b44-2fa119863167`.
+- Smoke remoto de cadastro, login, consulta, logout e sessão revogada aprovado; todos os dados descartáveis do teste foram removidos e confirmados em zero.
+- Validação integrada: testes .NET Release, smoke WPF das duas janelas, 124 testes do Worker, `npm audit`, dry-run do deploy, `Verify-Safety.ps1` e `git diff --check` aprovados.
+
+## Acesso de conta minimalista - 02/08/2026
+
+- Integrado o acesso de visitante no topo: ícone neutro em vez do avatar laranja e ação textual `Entrar / cadastrar-se`, sem caixa visual de botão.
+- O fluxo existente de login, cadastro, restauração de sessão e saída foi preservado.
+- Validação integrada: testes .NET Release, formatação, `Verify-Safety.ps1` e `git diff --check` aprovados.
+- O atalho `FiveMCleaner - Desenvolvimento` foi reconstruído com build Release e confirmado apontando para o checkout atual de `dev/proxima-versao`.
+
+## Simulação local de desenvolvimento - 02/08/2026
+
+- O atalho `FiveMCleaner - Desenvolvimento` foi reconstruído e confirmado na
+  Área de Trabalho do Windows. Ele aponta para
+  `scripts\Start-DevelopmentApp.ps1`, que recompila o Release atual do
+  checkout `dev/proxima-versao` antes de iniciar o executável.
+- `AI_RULES.md` agora exige essa atualização e verificação depois de cada
+  integração. O atalho público `FiveMCleaner.lnk` permanece separado e não é
+  uma simulação da próxima versão.
+
+## Integracao e auditoria de todas as tarefas de IA - 02/08/2026
+
+- Integradas e auditadas: redesign da pagina publica, contas de usuario,
+  diagnosticos essenciais com dados opcionais, otimizacao de coleta de
+  metricas, bug hunt e remocao de codigo morto.
+- O conflito em `MainViewModel` preservou o limite validado de IDs de acao e
+  o controle novo de hardware/perfil/acoes opcionais. A documentacao de
+  seguranca, arquitetura e telemetria foi atualizada para o novo contrato de
+  diagnosticos essenciais; nenhuma mudanca funcional das tarefas foi revertida.
+- Validacao integrada: .NET Release, formatacao, `Verify-Safety.ps1`, 119
+  testes do Worker, 43 do dashboard, lint/build/3 testes do site, `npm audit`
+  sem vulnerabilidades e `git diff --check` aprovados.
+
+## Correcao de CI apos integracao - 02/08/2026
+
+- O teste de falha de transporte da checagem manual de atualizacao esperava
+  texto em portugues sem fixar a cultura; no GitHub Actions, a cultura padrao
+  e inglesa. O teste agora injeta `LocalizationService("pt-BR")`, eliminando
+  a dependencia do ambiente. `dotnet test` Release e formatacao aprovados.
+
+## Integracao local das tarefas pendentes - 02/08/2026
+
+- Integradas em `dev/proxima-versao`: limpeza de divida tecnica, hardening do
+  Worker/dependencias web e mensagens de erro localizadas. O unico conflito,
+  no roteador do Worker, foi resolvido preservando as rotas refatoradas e os
+  limites de corpo, protecao de origem e cabecalhos de seguranca.
+- `readJsonBody.js`, que ficou sem consumidor apos a adocao da leitura limitada,
+  foi removido. Validacao final registrada no commit de integracao.
+
+## Bug sweep: eventos do updater, CSV, telemetria, broker e settings — 01/08/2026
+
+- **Worker `updaterEvents/queries.js`**: o filtro `environment = 'All'` (default
+  do `<select>` do dashboard) era tratado como valor literal e gerava
+  `WHERE environment = 'All'`, que nunca casa linhas — a tabela "Bugs do
+  updater" ficava sempre vazia até o usuário escolher um ambiente específico.
+  Agora `'All'` significa "sem filtro", como no `buildFilters` do stats.
+  Regressão: `test/updaterEvents/queries.test.js`.
+- **Worker `updaterEvents/validateSubmission.js`**: `errorCode` ausente (ou
+  não-string) passava o `SAFE_CODE.test` (regex aplicado a `undefined` vira
+  string vazia) e o banco recebia um código nulo violando a constraint.
+  Exigido `typeof errorCode === 'string'` antes do regex. Regressão:
+  `test/updaterEvents/validateSubmission.test.js`.
+- **Worker `stats/csv.js`**: a exportação CSV permitia injeção de fórmula
+  (`=`, `+`, `-`, `@`, tab e CR iniciais) em campos controlados por
+  usuário/dispositivo (modelo de CPU/GPU, categoria de erro) — abrir o CSV no
+  Excel executaria `=HYPERLINK(...)`/`=cmd(...)` na máquina do admin. Células
+  com prefixo perigoso são aspadas e prefixadas com `'` (convenção de
+  planilhas "trate como texto"). Regressão: `test/stats/csv.test.js`.
+- **Worker `index.js`**: ingest de `bug_reports` virou `INSERT OR IGNORE`
+  (idempotente por `report_id`) — reenvio não estoura mais a PK.
+- **Dashboard `api.js`**: `requestJson` nunca lança. Fetch rejeitado (Worker
+  fora do ar) vira `{ error: 'network-error' }` e corpo não-JSON vira
+  `{ error: 'invalid-response' }`; antes a rejeição do `Promise.all` do
+  `refreshAll` deixava a página presa em "Atualizando dados…". Regressão:
+  `test/api.test.js`.
+- **Dashboard `app.js`**: probe inicial sem rede mostra a tela de login com
+  "Não foi possível conectar à telemetria…" em vez de um dashboard vazio; o
+  submit do login também trata fetch rejeitado.
+- **`AppOptimizationService.LoadSettingsAsync`** resetava silenciosamente as
+  preferências do usuário: um `settings.json` fora do schema atual (unknown
+  members de build novo, edição manual com comentários/casing diferente)
+  lançava `JsonException` sob options estritos, o catch devolvia
+  `new AppSettings()` e rearmava o consentimento de privacidade/telemetria.
+  A leitura agora é tolerante (`PropertyNameCaseInsensitive`,
+  `JsonCommentHandling.Skip`, `UnmappedMemberHandling.Skip` derivado de
+  `FiveMCleanerJson.Options`); a escrita continua estrita. Novo
+  `DeserializeSettings` interno, exposto para teste. Regressão:
+  `tests/FiveMCleaner.Tests/App/AppOptimizationServiceSettingsTests.cs`
+  (5 testes).
+- **`ElevatedBrokerClient`**: o loop de leitura consumia todas as linhas até o
+  cap de 128 eventos sem parar no evento terminal; um plano com progresso
+  suficiente empurrava o terminal para fora da janela, terminava com
+  `terminal == null` e uma fase elevada bem-sucedida era reportada como
+  falha. Extraído `ReadUntilTerminalAsync` (helper puro, testável) que para no
+  primeiro evento terminal (`Completed`/`RollbackCompleted`/`Rejected`/`Failed`);
+  estourar o cap agora é erro honesto (`InvalidDataException`). Os tipos wire
+  viraram `internal`. Regressão:
+  `tests/FiveMCleaner.Tests/App/ElevatedBrokerClientTests.cs` (6 testes).
+- **`Broker/Program.cs`**: rollback sem timeout segurava o processo elevado
+  indefinidamente. Agora `CancellationTokenSource(ExecutionTimeout)` de 90s;
+  estouro grava `rollback-timeout` no diagnóstico e devolve
+  `broker-rollback-timeout` + `BrokerExitCode.RollbackFailed`, preservando o
+  journal para diagnóstico.
+- **`MainWindow.xaml.cs`**: `ConfirmUpdateHealthIfRequested()` rodava depois
+  de `viewModel.InitializeAsync()`; em máquinas lentas a inicialização
+  (varredura WMI/registro, flush de telemetria, checagem de update) podia
+  estourar a janela de saúde de 45s do launcher e um candidato saudável (só
+  lento) era revertido. O recibo agora é gravado antes do `InitializeAsync`.
+- Validação: build Release sem avisos, 616 testes .NET, `Verify-Safety.ps1`
+  aprovado, 118 testes do worker e 43 testes do dashboard aprovados,
+  `git diff --check` limpo. Sem alteração de versão pública, release,
+  instalador ou deploy.
+
+## Rodada de Hardening: telemetria, health-check pós-update e limites do backend — 01/08/2026
+
+- **`UpdaterDiagnostics.IsTelemetryAuthorized`** não capturava
+  `UnauthorizedAccessException` na leitura de `settings.json`. O pior chamador
+  é o `Launcher/Program.cs` dentro do próprio bloco `catch` do `Main`
+  (re-registro de telemetria durante a recuperação): um lock transitório de
+  escrita/AV no arquivo de configurações vazava e derrubava o processo no meio
+  do recovery. Adicionada a exceção ao filtro, cobrindo a abertura do launch e
+  o caminho de erro.
+- **`UpdateHealthReceiptStore.Confirm`** no `MainWindow_Loaded` rodava sem
+  proteção, enquanto a chamada irmã `VersionFloorStore.Advance` já tinha
+  filtro. Um lock transitório em `health.json` no momento crítico pós-update
+  vazava para `DispatcherUnhandledException`. Aplicado o mesmo padrão
+  (`IOException`/`UnauthorizedAccessException`/`CryptographicException`): a
+  falha preserva o app ativo, e o Launcher re-verifica o recibo na próxima
+  abertura.
+- **`CaptureIfRequestedAsync`** (smoke-test `--capture=`) sem tratamento de
+  falhas: caminho inválido, disco cheio ou falha de render subiam como crash
+  da UI. O modo agora captura dentro de try/catch e sempre fecha o app ao
+  final (o orquestrador detecta a falha pela ausência do arquivo de saída).
+- **`PciExpressPowerManagementAction.RollbackAsync`** descartava o retorno
+  `false` de `TrySetPciExpressAspmPolicyAsync`, registrando `RolledBack` sem
+  ter restaurado nada. Agora lança `InvalidOperationException` na falha, e o
+  engine marca o rollback como `RollbackFailed` no journal (mesmo contrato do
+  path de aplicação).
+- **`RecoveryCoordinator.Reconcile`** só convertia `IOException` ao ler
+  `active.json`; um ponteiro corrompido (JSON inválido ou versão indisponível)
+  propagava `JsonException`/`InvalidDataException` como falha de
+  inicialização. O catch agora adia (`RecoveryDecision.Pending`) também para
+  esses casos, com a mesma semântica de "não provado quebrado".
+- **`Launcher/Program.cs`**: o loop de health-check lia `process.HasExited`
+  sem proteção; a leitura no processo já encerrado lança
+  `Win32Exception`/`InvalidOperationException` (mesma janela de corrida que
+  `WaitForParent` já tratava). Adicionado `HasExitedSafely`, tratando o caso
+  como exit em vez de erro.
+- **`VersionFloorStore.Read`** ganhou o mesmo retry curto de
+  `RuntimeActivationStore` para `IOException`/`UnauthorizedAccessException`,
+  para que um AV segurando `version-floor.dpapi` por milissegundos não vire
+  falha fechada de abertura.
+- **Worker (`infra/cloudflare-worker`)**: o `batch()` do D1 aceita no máximo
+  500 statements, mas um lote de telemetria pode gerar até 1500 statements de
+  ações (50 eventos × 30 actionIds). O ingest agora particiona as escritas em
+  chunks de 500 (`chunkStatements`), evitando 500 + escrita parcial em lotes
+  grandes.
+- **Dashboard (`infra/dashboard`)**: o override `?api=` aceitava qualquer
+  origem — em produção um link `?api=https://evil.example` exfiltraria a
+  senha de admin enviada no login. O override agora só é honrado quando o
+  painel é servido de `localhost`/`127.0.0.1`/`[::1]` (uso de dev);
+  qualquer outro host sempre usa o endpoint real do Worker.
+- Cobertura nova: `UpdaterDiagnosticsTests` (consentimento revogado),
+  `RuntimeActivationStoreTests` (retry de lock transitório), worker
+  `test/batchChunking.test.js`, dashboard `test/api.test.js` para
+  `resolveApiBase`.
+- Validação: build Release sem avisos, 605 testes .NET, `Verify-Safety.ps1`,
+  113 testes do worker e 41 testes do dashboard aprovados, `git diff --check`
+  limpo. Sem alteração de versão pública, release, instalador ou deploy.
+
+## Reformulação do dashboard privado de telemetria — 01/08/2026
+
+- O dashboard estático em `infra/dashboard` foi reorganizado em uma visão geral
+  prioritária, seguida por seções de adoção, hardware, diagnóstico e eventos
+  recentes. O visual preserva a marca escura do FiveMCleaner, reserva laranja
+  para a ação de atualizar e usa superfícies, espaçamento e hierarquia mais
+  consistentes.
+- Filtros, estados de foco, atalho para pular a navegação, região de status e
+  adaptação para telas menores foram revisados. Não foram adicionadas
+  dependências nem funcionalidades de telemetria.
+- A apresentação de `app_version` agora extrai somente SemVer estável no formato
+  `X.Y.Z` de rótulos legados, cobrindo os gráficos e as tabelas; valores sem uma
+  versão reconhecível aparecem como `Versão desconhecida` em vez de expor nome
+  de executável ou identificador técnico. Cobertura de regressão foi incluída.
+- Validação local: testes do dashboard (37) e `git diff --check` aprovados.
+  Não houve alteração de versão, release, instalador, deploy ou publicação.
+
+## Medidor circular de prontidão — 01/08/2026
+
+- A prontidão da Visão geral voltou a usar um medidor circular: anel externo
+  sóbrio, detalhe laranja e núcleo com pontuação, nível e a explicação local
+  já existente. A composição preserva o contraste e a informação explícita
+  do modelo anterior, sem duplicar uma barra de progresso.
+- O nível passou a ser uma classificação curta de cinco faixas: 0–5 Péssimo,
+  6–25 Ruim, 26–50 Médio, 51–75 Bom e 76–100 Excelente.
+
+## Monitor de desempenho ao vivo na Visão geral — 01/08/2026
+
+- A Visão geral ganhou um painel local de desempenho com leituras reais de
+  CPU, GPU, memória, disco e rede, quatro indicadores e histórico gráfico de
+  CPU/GPU do último minuto. A coleta começa somente quando a página está
+  visível, pausa ao navegar ou minimizar para a bandeja e retoma ao voltar.
+- O bloco de prontidão agora apresenta nível legível, pontuação, barra e a
+  origem local da análise; o resumo do computador e a proteção para criadores
+  foram reorganizados em uma composição mais preenchida, moderna e responsiva.
+- O coletor ao vivo usa contadores persistentes nativos do Windows. CPU,
+  memória, disco e rede são atualizados a cada 2 segundos; a leitura de GPU,
+  mais custosa, é renovada a cada terceira amostra. Nesta máquina isso reduziu
+  o custo médio observado do painel de aproximadamente 6,3% para 0,6% de CPU
+  total, sem crescimento de memória na janela medida.
+- Limitação conhecida: quando o Windows/driver não expõe um contador, a
+  métrica correspondente aparece como indisponível; nenhum valor é inventado.
+  Não há funcionalidade em andamento, pendência ou bug conhecido desta rodada.
+  Validação: inspeção visual e árvore de acessibilidade em tela maximizada e
+  janela 1160×680, atualização sucessiva e navegação de pausa/retomada, build
+  Release sem avisos, 605 testes .NET, `Verify-Safety.ps1`, format e
+  `git diff --check` aprovados.
+
+## Visão geral orientada ao estado do PC — 01/08/2026
+
+- A Visão geral deixou de duplicar o fluxo completo do Otimizador: foram
+  removidos os três seletores de perfil, benefícios, impacto, riscos,
+  categorias e as ações de revisar/executar o plano.
+- A página agora resume detecção, recomendação e prontidão, oferece uma única
+  chamada para abrir o Otimizador e usa os dados locais já existentes para
+  mostrar contexto de streaming/jogo e um resumo compacto do computador.
+- O layout Fluent escuro foi preservado, com hierarquia mais simples, laranja
+  reservado à ação principal e controles nativos com foco visível. Validação:
+  inspeção visual e árvore de acessibilidade no build local maximizado,
+  navegação real para o Otimizador, build Release sem avisos, 604 testes .NET,
+  `Verify-Safety.ps1`, format e `git diff --check` aprovados.
+
+## Selo de perfil recomendado no Otimizador — 01/08/2026
+
+- Os três cards do Otimizador agora usam as mesmas bindings de recomendação da
+  Visão geral: o selo `RECOMENDADO` aparece no perfil Leve, Médio ou Agressivo
+  que o diagnóstico tiver indicado, e não fica preso ao card Médio.
+
+## Redesign completo do Otimizador — 01/08/2026
+
+- O estado inicial do Otimizador agora apresenta uma recomendação principal,
+  dados reais do computador e das instalações detectadas, seleção dos três
+  perfis e um plano expansível com as ações, descrições, risco e
+  reversibilidade. O layout mantém a estética Fluent escura atual e reserva o
+  laranja para seleção, chamada principal e progresso.
+- A execução ganhou um card dedicado com etapa, percentual, tempos e
+  cancelamento seguro; o resultado possui resumo, orientação de reinício,
+  relatório e ações de copiar/salvar. Métricas que o produto ainda não mede de
+  forma confiável — como FPS, duração fixa, quantidade de processos e tamanho
+  prévio de cache — não foram inventadas na interface.
+- Inspeção visual automatizada aprovada em tela cheia e janela restaurada de
+  1160×680, incluindo plano recolhido/expandido e execução sintética. Um corte
+  dos selos de detecção na coluna lateral foi encontrado e corrigido com quebra
+  responsiva. Validação final: build Release sem avisos, 604 testes .NET,
+  `Verify-Safety.ps1`, format e `git diff --check` aprovados.
+
+## Janela principal maximizada ao abrir — 01/08/2026
+
+- `MainWindow` agora inicia sempre maximizada e, ao ser restaurada pela bandeja,
+  volta maximizada em vez de retornar a uma janela normal. O hook existente de
+  área útil do monitor continua garantindo que a janela maximizada não cubra a
+  barra de tarefas.
+- Cobertura de contrato confirma o estado inicial e a restauração maximizada.
+  Validação: build/testes Release (604 aprovados), `dotnet format --verify-no-changes`
+  e `git diff --check` aprovados.
+
 ## Preparação da publicação v1.2.0 — 01/08/2026
 
 - O conjunto desde `v1.1.3` foi classificado como **minor**: entrega o
@@ -3445,3 +3908,24 @@ prematura para o que o Inno Setup já resolve em modo silencioso.
   Release sem avisos; 570 testes .NET aprovados; `Verify-Safety.ps1` e contrato
   do instalador aprovados; lint, typecheck, build e 3 testes do site aprovados;
   104 testes do Worker e 35 do painel administrativo aprovados.
+
+## Cadastro: validação de credenciais (03/08/2026)
+
+- A janela de conta usa um X vetorial no canto superior direito e o cadastro
+  agora deixa claro que sobrenome é opcional. Nome, usuário, e-mail, senha,
+  confirmação e aceite dos Termos de Uso continuam obrigatórios, com mensagem e
+  foco no campo exato quando algo falta.
+- A senha tem checklist, indicador horizontal de força e controles para
+  mostrar/ocultar senha e confirmação. Cliente e Worker exigem 12+ caracteres,
+  maiúscula, minúscula, número e caractere especial; o Worker mantém os limites
+  de corpo e senha e também aplica a regra, evitando uma validação apenas visual.
+- Os testes .NET e Worker foram executados com sucesso. A confirmação de que a
+  caixa de e-mail existe permanece pendente de configurar um remetente/provedor
+  e o fluxo de confirmação; o projeto não possuía esse serviço e ele não foi simulado.
+
+## Regra do atalho de desenvolvimento (03/08/2026)
+
+- `AI_RULES.md` agora exige que o agente integrador reconstrua e confira o
+  atalho `FiveMCleaner - Desenvolvimento` antes de enviar uma integração para
+  `origin/dev/proxima-versao`. O atalho deve refletir o estado final de
+  `dev/proxima-versao`, nunca `main`, uma branch `ai/*` ou a instalação pública.

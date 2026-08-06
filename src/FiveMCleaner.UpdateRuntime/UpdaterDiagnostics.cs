@@ -25,20 +25,11 @@ public sealed class UpdaterDiagnostics
 
     private readonly string logPath;
     private readonly string pendingRoot;
-    private readonly Uri endpoint;
 
-    public UpdaterDiagnostics(string dataRoot, Uri endpoint)
+    public UpdaterDiagnostics(string dataRoot)
     {
         logPath = Path.Combine(Path.GetFullPath(dataRoot), "Logs", "updater.jsonl");
         pendingRoot = Path.Combine(Path.GetFullPath(dataRoot), "UpdaterTelemetry", "pending");
-        this.endpoint = endpoint.Scheme == Uri.UriSchemeHttps
-            && endpoint.IsDefaultPort
-            && string.IsNullOrEmpty(endpoint.UserInfo)
-            && string.IsNullOrEmpty(endpoint.Query)
-            && string.IsNullOrEmpty(endpoint.Fragment)
-            && endpoint.Host.Equals(TelemetryHost, StringComparison.OrdinalIgnoreCase)
-            && endpoint.AbsolutePath == "/updater-events"
-            ? endpoint : throw new ArgumentException("Endpoint do updater inválido.", nameof(endpoint));
     }
 
     public async Task RecordAsync(UpdaterEvent value, string? localDetail, bool telemetryAuthorized)
@@ -118,7 +109,7 @@ public sealed class UpdaterDiagnostics
                 },
             };
             using var client = new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(10) };
-            using var response = await client.PostAsJsonAsync(endpoint, value).ConfigureAwait(false);
+            using var response = await client.PostAsJsonAsync(UpdaterEventsEndpoint, value).ConfigureAwait(false);
             return response.StatusCode == HttpStatusCode.Accepted
                 || (int)response.StatusCode is >= 400 and < 500;
         }
@@ -134,7 +125,12 @@ public sealed class UpdaterDiagnostics
             return root.TryGetProperty("shareAnonymousTelemetry", out var enabled) && enabled.GetBoolean()
                 && root.TryGetProperty("privacyConsentVersion", out var version) && version.GetInt32() >= 3;
         }
-        catch (Exception exception) when (exception is IOException or JsonException or InvalidOperationException) { return false; }
+        // UnauthorizedAccessException entra no filtro pelo mesmo motivo dos
+        // demais: o app grava settings.json concorrentemente e um lock
+        // transitório de escrita/AV não pode derrubar a abertura do launcher
+        // nem o caminho de catch (que re-registra telemetria dentro do bloco
+        // de recuperação).
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException or InvalidOperationException) { return false; }
     }
 
     private void PrunePending()

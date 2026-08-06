@@ -60,10 +60,8 @@ jobs:
           RELEASE_TAG: ${{ inputs.release_tag }}
           RELEASE_CHANNEL: ${{ inputs.channel }}
         run: |
-          [xml]$props = Get-Content -LiteralPath ./Directory.Build.props -Raw
-          $version = [string](@($props.Project.PropertyGroup.Version) |
-            Where-Object { -not [string]::IsNullOrWhiteSpace([string]$_) } |
-            Select-Object -First 1)
+          . ./scripts/Installer.Common.ps1
+          $version = Get-ProjectVersion -Workspace (Get-Location).Path
           if ($version -notmatch '^\d+\.\d+\.\d+$') {
             throw "Directory.Build.props Version must be numeric SemVer: $version"
           }
@@ -89,10 +87,10 @@ jobs:
 
           "asset_version=$assetVersion" >> $env:GITHUB_OUTPUT
 
-      - name: Safety verification and tests
+      - name: Safety verification and build
         shell: pwsh
         run: |
-          ./scripts/Verify-Safety.ps1
+          ./scripts/Verify-Safety.ps1 -SkipTests
           dotnet test tests/FiveMCleaner.Tests/FiveMCleaner.Tests.csproj `
             --configuration Release `
             --no-build

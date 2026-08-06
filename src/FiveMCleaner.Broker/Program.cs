@@ -133,24 +133,12 @@ internal static class Program
         }
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
-            BrokerDiagnosticsLog.Record("execution-timeout", plan.PlanId);
-            return PublishFailure(
-                events,
-                BrokerEventKind.Failed,
-                "A etapa administrativa excedeu o tempo seguro e foi interrompida. Consulte o relatório antes de tentar novamente.",
-                "broker-operation-timeout",
-                BrokerExitCode.ExecutionFailed);
+            return PublishTimeout(events, plan.PlanId);
         }
 
         if (timeout.IsCancellationRequested)
         {
-            BrokerDiagnosticsLog.Record("execution-timeout", plan.PlanId);
-            return PublishFailure(
-                events,
-                BrokerEventKind.Failed,
-                "A etapa administrativa excedeu o tempo seguro e foi interrompida. Consulte o relatório antes de tentar novamente.",
-                "broker-operation-timeout",
-                BrokerExitCode.ExecutionFailed);
+            return PublishTimeout(events, plan.PlanId);
         }
 
         BrokerDiagnosticsLog.Record("journal-saved", plan.PlanId);
@@ -198,9 +186,24 @@ internal static class Program
             item => item.TransactionId = transactionId);
 
         var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault();
-        var result = await runtime.RollbackAsync(
-            transactionId,
-            CancellationToken.None).ConfigureAwait(false);
+        using var timeout = new CancellationTokenSource(ExecutionTimeout);
+        WindowsTransactionResult result;
+        try
+        {
+            result = await runtime.RollbackAsync(
+                transactionId,
+                timeout.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (timeout.IsCancellationRequested)
+        {
+            BrokerDiagnosticsLog.Record("rollback-timeout", transactionId);
+            return PublishFailure(
+                events,
+                BrokerEventKind.Failed,
+                "A reversão excedeu o tempo seguro e foi interrompida. O journal preserva o estado para diagnóstico.",
+                "broker-rollback-timeout",
+                BrokerExitCode.RollbackFailed);
+        }
 
         if (result.State != WindowsTransactionState.RolledBack)
         {
@@ -231,6 +234,17 @@ internal static class Program
                 item.AppliedActionIds = result.AppliedActionIds;
             });
         return BrokerExitCode.Success;
+    }
+
+    private static int PublishTimeout(NamedPipeEventWriter events, Guid planId)
+    {
+        BrokerDiagnosticsLog.Record("execution-timeout", planId);
+        return PublishFailure(
+            events,
+            BrokerEventKind.Failed,
+            "A etapa administrativa excedeu o tempo seguro e foi interrompida. Consulte o relatório antes de tentar novamente.",
+            "broker-operation-timeout",
+            BrokerExitCode.ExecutionFailed);
     }
 
     private static int PublishFailure(

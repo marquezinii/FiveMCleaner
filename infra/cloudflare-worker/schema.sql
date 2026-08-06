@@ -112,3 +112,22 @@ CREATE TABLE IF NOT EXISTS updater_events (
 
 CREATE INDEX IF NOT EXISTS idx_updater_events_received_at ON updater_events (received_at);
 CREATE INDEX IF NOT EXISTS idx_updater_events_candidate_version ON updater_events (candidate_version);
+
+-- Profile-completion data for a Firebase-authenticated account. Firebase
+-- Authentication REST only owns email/password/uid -- it has no username,
+-- first name, or last name -- so this is the sole place a username's
+-- uniqueness is enforced (see docs/architecture.md and
+-- src/auth/accountProfile.js). `uid` is the Firebase UID (JWT `sub`),
+-- validated server-side by src/auth/firebaseIdToken.js; never trust a
+-- client-supplied identifier here.
+CREATE TABLE IF NOT EXISTS account_profiles (
+    uid TEXT PRIMARY KEY,
+    username TEXT NOT NULL,
+    username_normalized TEXT NOT NULL,
+    first_name TEXT NOT NULL,
+    last_name TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_account_profiles_username_normalized
+    ON account_profiles (username_normalized);

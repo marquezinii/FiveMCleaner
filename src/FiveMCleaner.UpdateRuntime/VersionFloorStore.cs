@@ -19,7 +19,7 @@ public sealed class VersionFloorStore
         try
         {
             var value = Encoding.UTF8.GetString(ProtectedData.Unprotect(
-                File.ReadAllBytes(path), Entropy, DataProtectionScope.CurrentUser));
+                TransientRetry.Read(() => File.ReadAllBytes(path)), Entropy, DataProtectionScope.CurrentUser));
             return Version.TryParse(value, out _) ? value : throw new CryptographicException("Piso de versão inválido.");
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException)

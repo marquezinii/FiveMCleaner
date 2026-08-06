@@ -5,6 +5,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
     <ApplicationIcon>../FiveMCleaner.App/Assets/FiveMCleaner.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>FiveMCleaner.Launcher</AssemblyName>
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
   </PropertyGroup>

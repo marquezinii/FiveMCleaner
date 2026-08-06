@@ -7,6 +7,7 @@ param(
     [string]$Configuration = 'Release'
 )
 
+Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 $workspace = Split-Path -Parent $PSScriptRoot
 $artifactsRoot = [System.IO.Path]::GetFullPath((Join-Path $workspace 'artifacts'))
@@ -17,15 +18,7 @@ $archiveHashPath = "$archivePath.sha256"
 $runtimeArchivePath = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot "FiveMCleaner-Runtime-$Runtime.zip"))
 $runtimeArchiveHashPath = "$runtimeArchivePath.sha256"
 
-function Assert-UnderArtifacts {
-    param([string]$Path)
-
-    $resolved = [System.IO.Path]::GetFullPath($Path)
-    $prefix = $artifactsRoot.TrimEnd('\') + '\'
-    if (-not $resolved.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase)) {
-        throw "Refusing to modify a path outside artifacts: $resolved"
-    }
-}
+. (Join-Path $PSScriptRoot 'Installer.Common.ps1')
 
 Assert-UnderArtifacts $stagingRoot
 Assert-UnderArtifacts $finalRoot
@@ -37,70 +30,44 @@ New-Item -ItemType Directory -Force -Path $artifactsRoot, $stagingRoot | Out-Nul
 
 Push-Location $workspace
 try {
-    & (Join-Path $PSScriptRoot 'Verify-Safety.ps1')
+    & (Join-Path $PSScriptRoot 'Verify-Safety.ps1') -SkipTests
 
     $brokerOutput = Join-Path $stagingRoot 'broker'
     $launcherOutput = Join-Path $stagingRoot 'launcher'
     $appOutput = Join-Path $stagingRoot 'app'
     $pathMap = "$workspace=/_/FiveMCleaner"
-    [xml]$props = Get-Content -LiteralPath (Join-Path $workspace 'Directory.Build.props') -Raw
-    $version = [string](@($props.Project.PropertyGroup.Version) | Where-Object { $_ } | Select-Object -First 1)
+    $version = Get-ProjectVersion -Workspace $workspace
     if ($version -notmatch '^\d+\.\d+\.\d+$') { throw "Invalid stable version: $version" }
 
-    $brokerPublishArguments = @(
-        'publish',
-        '.\src\FiveMCleaner.Broker\FiveMCleaner.Broker.csproj',
-        '--configuration', $Configuration,
-        '--runtime', $Runtime,
-        '--self-contained', 'true',
-        '-p:PublishSingleFile=false',
-        '-p:PublishTrimmed=false',
-        '-p:PublishReadyToRun=false',
-        '-p:ContinuousIntegrationBuild=true',
-        '-p:DebugType=None',
-        '-p:DebugSymbols=false',
-        "-p:PathMap=$pathMap",
-        '--output', $brokerOutput
+    $publishTargets = @(
+        @{ Name = 'Broker'; Project = '.\src\FiveMCleaner.Broker\FiveMCleaner.Broker.csproj'; SingleFile = 'false'; SkipProjectReferences = $false; Output = $brokerOutput }
+        @{ Name = 'Launcher'; Project = '.\src\FiveMCleaner.Launcher\FiveMCleaner.Launcher.csproj'; SingleFile = 'true'; SkipProjectReferences = $false; Output = $launcherOutput }
+        @{ Name = 'App'; Project = '.\src\FiveMCleaner.App\FiveMCleaner.App.csproj'; SingleFile = 'false'; SkipProjectReferences = $true; Output = $appOutput }
     )
-    & dotnet @brokerPublishArguments
-    if ($LASTEXITCODE -ne 0) { throw 'Broker publish failed.' }
-
-    $launcherPublishArguments = @(
-        'publish',
-        '.\src\FiveMCleaner.Launcher\FiveMCleaner.Launcher.csproj',
-        '--configuration', $Configuration,
-        '--runtime', $Runtime,
-        '--self-contained', 'true',
-        '-p:PublishSingleFile=true',
-        '-p:PublishTrimmed=false',
-        '-p:PublishReadyToRun=false',
-        '-p:ContinuousIntegrationBuild=true',
-        '-p:DebugType=None',
-        '-p:DebugSymbols=false',
-        "-p:PathMap=$pathMap",
-        '--output', $launcherOutput
-    )
-    & dotnet @launcherPublishArguments
-    if ($LASTEXITCODE -ne 0) { throw 'Launcher publish failed.' }
-
-    $appPublishArguments = @(
-        'publish',
-        '.\src\FiveMCleaner.App\FiveMCleaner.App.csproj',
-        '--configuration', $Configuration,
-        '--runtime', $Runtime,
-        '--self-contained', 'true',
-        '-p:BuildProjectReferences=false',
-        '-p:PublishSingleFile=false',
-        '-p:PublishTrimmed=false',
-        '-p:PublishReadyToRun=false',
-        '-p:ContinuousIntegrationBuild=true',
-        '-p:DebugType=None',
-        '-p:DebugSymbols=false',
-        "-p:PathMap=$pathMap",
-        '--output', $appOutput
-    )
-    & dotnet @appPublishArguments
-    if ($LASTEXITCODE -ne 0) { throw 'App publish failed.' }
+    foreach ($target in $publishTargets) {
+        $publishArguments = @(
+            'publish',
+            $target.Project,
+            '--configuration', $Configuration,
+            '--runtime', $Runtime,
+            '--self-contained', 'true'
+        )
+        if ($target.SkipProjectReferences) {
+            $publishArguments += '-p:BuildProjectReferences=false'
+        }
+        $publishArguments += @(
+            "-p:PublishSingleFile=$($target.SingleFile)",
+            '-p:PublishTrimmed=false',
+            '-p:PublishReadyToRun=false',
+            '-p:ContinuousIntegrationBuild=true',
+            '-p:DebugType=None',
+            '-p:DebugSymbols=false',
+            "-p:PathMap=$pathMap",
+            '--output', $target.Output
+        )
+        & dotnet @publishArguments
+        if ($LASTEXITCODE -ne 0) { throw "$($target.Name) publish failed." }
+    }
 
     $copiedBroker = Join-Path $appOutput 'broker'
     Assert-UnderArtifacts $copiedBroker

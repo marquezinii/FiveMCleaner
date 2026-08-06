@@ -45,7 +45,7 @@
                         </Border>
                         <TextBlock Text="{Binding TitleText}"
                                    Margin="11,0,0,0"
-                                   FontFamily="Segoe UI Variable Display, Segoe UI"
+                                   FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI"
                                    FontSize="15"
                                    FontWeight="SemiBold"
                                    VerticalAlignment="Center" />

@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Security;
+using System.Threading.Tasks;
 using Microsoft.Win32;
 
 namespace FiveMCleaner.App.Services;
@@ -91,10 +92,10 @@ public static class StreamingSoftwareClassifier
             .ToArray();
 
         return new StreamingSoftwareSnapshot(
-            applications,
-            observedAtUtc.ToUniversalTime(),
-            processScanComplete,
-            installationScanComplete);
+                    applications,
+                    observedAtUtc,
+                    processScanComplete,
+                    installationScanComplete);
     }
 
     private static string? NormalizeProcessName(string? processName)
@@ -122,11 +123,17 @@ public static class StreamingSoftwareClassifier
 /// <summary>
 /// Detector local, somente leitura e best-effort de software de transmissão.
 /// A detecção informa somente instalação e processo em execução.
+/// Otimizado: executa verificações de registro e sistema de arquivos em paralelo.
 /// </summary>
 public sealed class StreamingSoftwareDetector
 {
     private const string UninstallRegistryPath =
         @"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall";
+
+    // Cache de resultados de registro para evitar varreduras repetidas
+    private static readonly object RegistryCacheLock = new();
+    private static Dictionary<string, (IReadOnlyList<string> ProductNames, DateTimeOffset CachedAt)>? registryCache;
+    private static readonly TimeSpan RegistryCacheTtl = TimeSpan.FromMinutes(5);
 
     public Task<StreamingSoftwareSnapshot> DetectAsync(
         CancellationToken cancellationToken = default)
@@ -143,14 +150,26 @@ public sealed class StreamingSoftwareDetector
             processNames,
             cancellationToken);
 
+        // Run registry scan and executable check in parallel
         var installedProductNames = new List<string>();
-        var installationScanComplete = CollectInstalledProductNames(
-            installedProductNames,
-            cancellationToken);
+        var executableKinds = new HashSet<StreamingSoftwareKind>();
+        var installationScanComplete = true;
 
-        var executableKinds = CollectKnownExecutableEvidence(
-            cancellationToken,
-            ref installationScanComplete);
+        var registryTask = Task.Run(() =>
+        {
+            var complete = CollectInstalledProductNames(installedProductNames, cancellationToken);
+            return complete;
+        }, cancellationToken);
+
+        var executableTask = Task.Run(() =>
+        {
+            var complete = true;
+            CollectKnownExecutableEvidence(cancellationToken, executableKinds, ref complete);
+            return complete;
+        }, cancellationToken);
+
+        Task.WaitAll(registryTask, executableTask);
+        installationScanComplete = registryTask.Result && executableTask.Result;
 
         return StreamingSoftwareClassifier.CreateSnapshot(
             processNames,
@@ -196,39 +215,80 @@ public sealed class StreamingSoftwareDetector
     }
 
     private static bool CollectInstalledProductNames(
-        ICollection<string> destination,
-        CancellationToken cancellationToken)
+            ICollection<string> destination,
+            CancellationToken cancellationToken)
     {
+        // Use cached registry results if available and fresh
+        var cached = GetCachedRegistryResults();
+        if (cached is not null)
+        {
+            foreach (var name in cached)
+            {
+                destination.Add(name);
+            }
+            return true;
+        }
+
         var complete = true;
         var probes = new[]
         {
-            (RegistryHive.CurrentUser, RegistryView.Registry64),
-            (RegistryHive.CurrentUser, RegistryView.Registry32),
-            (RegistryHive.LocalMachine, RegistryView.Registry64),
-            (RegistryHive.LocalMachine, RegistryView.Registry32)
-        };
+                (Hive: RegistryHive.CurrentUser, View: RegistryView.Registry64),
+                (Hive: RegistryHive.CurrentUser, View: RegistryView.Registry32),
+                (Hive: RegistryHive.LocalMachine, View: RegistryView.Registry64),
+                (Hive: RegistryHive.LocalMachine, View: RegistryView.Registry32)
+            };
 
-        foreach (var (hive, view) in probes)
+        var perProbeResults = new List<string>[probes.Length];
+        for (var i = 0; i < probes.Length; i++)
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            perProbeResults[i] = [];
+        }
+
+        var tasks = probes.Select((probe, index) => Task.Run(() =>
+        {
             if (!CollectUninstallDisplayNames(
-                    hive,
-                    view,
-                    destination,
+                    probe.Hive,
+                    probe.View,
+                    perProbeResults[index],
                     cancellationToken))
             {
-                complete = false;
+                return false;
+            }
+            return true;
+        }, cancellationToken)).ToArray();
+
+        try
+        {
+            Task.WaitAll(tasks);
+            complete = tasks.All(t => t.Result);
+        }
+        catch (AggregateException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception ex) when (ex is AggregateException agg && agg.InnerExceptions.All(e => IsExpectedProbeException(e)))
+        {
+            complete = false;
+        }
+
+        foreach (var probeList in perProbeResults)
+        {
+            foreach (var name in probeList)
+            {
+                destination.Add(name);
             }
         }
+
+        CacheRegistryResults(destination);
 
         return complete;
     }
 
     private static bool CollectUninstallDisplayNames(
-        RegistryHive hive,
-        RegistryView view,
-        ICollection<string> destination,
-        CancellationToken cancellationToken)
+    RegistryHive hive,
+    RegistryView view,
+    ICollection<string> destination,
+    CancellationToken cancellationToken)
     {
         try
         {
@@ -279,11 +339,49 @@ public sealed class StreamingSoftwareDetector
         }
     }
 
-    private static IReadOnlyCollection<StreamingSoftwareKind> CollectKnownExecutableEvidence(
+    private static IReadOnlyList<string>? GetCachedRegistryResults()
+    {
+        lock (RegistryCacheLock)
+        {
+            if (registryCache is null)
+            {
+                return null;
+            }
+
+            var now = DateTimeOffset.UtcNow;
+            var validEntries = registryCache
+                .Where(kvp => now - kvp.Value.CachedAt < RegistryCacheTtl)
+                .SelectMany(kvp => kvp.Value.ProductNames)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (validEntries.Count == 0)
+            {
+                registryCache = null;
+                return null;
+            }
+
+            return validEntries;
+        }
+    }
+
+    private static void CacheRegistryResults(ICollection<string> productNames)
+    {
+        lock (RegistryCacheLock)
+        {
+            registryCache ??= new Dictionary<string, (IReadOnlyList<string>, DateTimeOffset)>();
+
+            // Store under a composite key (all hives combined)
+            var key = "all_hives";
+            registryCache[key] = (productNames.ToList(), DateTimeOffset.UtcNow);
+        }
+    }
+
+    private static void CollectKnownExecutableEvidence(
         CancellationToken cancellationToken,
+        HashSet<StreamingSoftwareKind> installedKinds,
         ref bool installationScanComplete)
     {
-        var installedKinds = new HashSet<StreamingSoftwareKind>();
         foreach (var candidate in BuildKnownExecutableCandidates())
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -299,8 +397,6 @@ public sealed class StreamingSoftwareDetector
                 installationScanComplete = false;
             }
         }
-
-        return installedKinds;
     }
 
     private static bool TryGetFileExists(string path, out bool exists)

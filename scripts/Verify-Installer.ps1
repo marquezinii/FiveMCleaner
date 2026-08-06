@@ -25,6 +25,11 @@ $requiredPatterns = [ordered]@{
     'modern system-aware theme'     = 'WizardStyle=modern dynamic'
     'official application icon'     = 'SetupIconFile=.*FiveMCleaner\.ico'
     'proportional wizard artwork'   = 'WizardImageFile=\{#InstallerArtworkPath\}'
+    'dark wizard artwork'           = 'WizardImageFileDynamicDark=\{#InstallerArtworkPathDark\}'
+    'ultra lzma compression'        = 'Compression=lzma2/ultra'
+    'localized finished label'      = '(?im)^\s*en\.FinishedLabel='
+    'localized uninstall shortcut'  = 'Name: "\{group\}\\\{cm:UninstallShortcut\}"'
+    'english app comments metadata' = 'AppComments=Transparent and reversible optimization'
     'Windows language detection'    = 'LanguageDetectionMethod=uilanguage'
     'fresh language detection'      = 'UsePreviousLanguage=no'
     'offline embedded payload'      = 'Source: "\{#SourceDir\}\\\*"'
@@ -34,7 +39,7 @@ $requiredPatterns = [ordered]@{
     'no automatic reboot after run' = 'RestartIfNeededByRun=no'
     'concurrent setup guard'        = 'SetupMutex=FiveMCleaner\.Setup\.'
     'desktop shortcut enabled by default' = 'Name: "desktopicon"; Description: "\{cm:DesktopIcon\}"; GroupDescription:'
-    'startup enabled by default'    = 'Name: "startup"; Description: "\{cm:StartWithWindows\}"; GroupDescription:'
+    'startup disabled by default'   = 'Name: "startup"; Description: "\{cm:StartWithWindows\}"; GroupDescription: "\{cm:AdditionalShortcuts\}:"; Flags: unchecked'
     'startup ownership cleanup'     = 'ValueName: "FiveMCleaner"; Flags: deletevalue uninsdeletevalue; Tasks: not startup'
     'no launch in silent installs'  = 'Flags: nowait postinstall skipifsilent'
     'auto-update relaunch gated'    = 'Check: IsAutomaticUpdateRelaunch'
@@ -62,7 +67,7 @@ $forbiddenPatterns = [ordered]@{
     'shell execution helper'  = '(?im)\b(ShellExec|Exec|CreateProcess)\s*\('
     'broad install deletion'  = '(?im)^\s*Type\s*:\s*filesandordirs\b'
     'unchecked desktop shortcut' = 'Name: "desktopicon";.*Flags: unchecked'
-    'unchecked startup task'  = 'Name: "startup";.*Flags: unchecked'
+    'startup checked by default' = 'Name: "startup"; Description: "\{cm:StartWithWindows\}"; GroupDescription: "\{cm:AdditionalShortcuts\}:"\s*$'
 }
 
 foreach ($entry in $forbiddenPatterns.GetEnumerator()) {
@@ -76,6 +81,27 @@ $expectedDeleteStatement = "DelTree(ExpandConstant('{localappdata}\FiveMCleaner'
 if ($deleteStatements.Count -ne 1 -or
     $deleteStatements[0].Value.Trim() -ne $expectedDeleteStatement) {
     throw 'Installer script contains an unapproved local data deletion.'
+}
+
+foreach ($infoRelative in @(
+    'installer\install-info.en.txt',
+    'installer\install-info.pt-BR.txt'
+)) {
+    $infoPath = Join-Path $workspace $infoRelative
+    if (-not (Test-Path -LiteralPath $infoPath -PathType Leaf)) {
+        throw "Installer info file missing: $infoRelative"
+    }
+    $infoText = Get-Content -LiteralPath $infoPath -Raw
+    foreach ($needle in @(
+        'LOCALAPPDATA',
+        'sha256',
+        'marquezinii.github.io/FiveMCleaner',
+        'github.com/marquezinii/FiveMCleaner/releases'
+    )) {
+        if ($infoText -notmatch [regex]::Escape($needle)) {
+            throw "Installer info contract missing '$needle' in $infoRelative."
+        }
+    }
 }
 
 Write-Host 'Installer source contract: OK' -ForegroundColor Green

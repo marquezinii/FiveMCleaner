@@ -7,8 +7,21 @@ Setup runs per user and does not request administrative access. FiveMCleaner
 asks for elevation only when a selected optimization needs to change a protected
 Windows setting.
 
-Optional desktop and Windows startup shortcuts can be selected on the next page.
-Both can be changed later and are removed during uninstall.
+Settings, logs, backups, and downloaded updates live in
+%LOCALAPPDATA%\FiveMCleaner, outside the install folder. During uninstall you
+choose whether to keep that data; the default is to preserve it.
+
+The desktop shortcut is selected by default. Start with Windows is off by
+default and can be enabled if you want it. Both can be changed later and are
+removed during uninstall.
+
+Later updates are offered inside the app after you confirm them. You usually do
+not need to download this installer again.
 
 Download the installer only from:
+https://marquezinii.github.io/FiveMCleaner/
+or the official release page:
 https://github.com/marquezinii/FiveMCleaner/releases
+
+Before running it, verify the published .sha256 sidecar:
+  (Get-FileHash .\FiveMCleaner-Setup-*-win-x64.exe -Algorithm SHA256).Hash

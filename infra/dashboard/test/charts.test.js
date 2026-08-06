@@ -13,6 +13,8 @@ import {
   toRecentFailureRow,
   truncate,
   toBugReportRow,
+  formatAppVersion,
+  toDistributionRows,
 } from '../assets/charts.js';
 
 test('toBarSeries maps arbitrary label/value keys into a uniform shape', () => {
@@ -30,6 +32,19 @@ test('toBarSeries coerces a missing or non-numeric value to zero instead of NaN'
 test('toBarSeries returns an empty array for null/undefined input', () => {
   assert.deepEqual(toBarSeries(null, 'a', 'b'), []);
   assert.deepEqual(toBarSeries(undefined, 'a', 'b'), []);
+});
+
+test('formatAppVersion shows only stable SemVer from raw telemetry labels', () => {
+  assert.equal(formatAppVersion('FiveMCleaner.exe 1.2.0+build.8'), '1.2.0');
+  assert.equal(formatAppVersion('v1.1.3'), '1.1.3');
+  assert.equal(formatAppVersion('unknown'), 'Versão desconhecida');
+});
+
+test('toDistributionRows calculates a compact percentage legend from displayed data', () => {
+  assert.deepEqual(toDistributionRows([{ label: '1.2.0', value: 75 }, { label: '1.1.3', value: 25 }]), [
+    { label: '1.2.0', value: 75, percent: 75 },
+    { label: '1.1.3', value: 25, percent: 25 },
+  ]);
 });
 
 test('toLineSeries maps and sorts by x ascending', () => {
@@ -118,8 +133,14 @@ test('toCombinedBarSeries accepts a custom separator', () => {
   assert.deepEqual(series, [{ label: 'x / y', value: 1 }]);
 });
 
-test('formatTimestamp renders a compact, locale-independent date and time', () => {
-  assert.equal(formatTimestamp('2026-07-25T22:30:05.123Z'), '2026-07-25 22:30');
+test('formatTimestamp renders a compact, locale-dependent local time', () => {
+  // Test that formatTimestamp converts UTC to local time
+  // The exact output depends on the system's timezone, so we verify it's not the raw UTC
+  const result = formatTimestamp('2026-07-25T22:30:05.123Z');
+  assert.ok(typeof result === 'string');
+  assert.ok(result !== '—');
+  // Should not be the raw UTC slice format
+  assert.ok(result !== '2026-07-25 22:30');
 });
 
 test('formatTimestamp renders a dash for missing or malformed values', () => {
@@ -140,8 +161,13 @@ test('toRecentFailureRow maps a row into the table\'s exact column order', () =>
     profile: 'Balanced',
   };
 
-  assert.deepEqual(toRecentFailureRow(row), [
-    '2026-07-25 22:30',
+  const cells = toRecentFailureRow(row);
+  // First cell should be a formatted local timestamp (not raw UTC)
+  assert.ok(typeof cells[0] === 'string');
+  assert.ok(cells[0] !== '—');
+  assert.ok(cells[0] !== '2026-07-25 22:30');
+  // Other cells should match exactly
+  assert.deepEqual(cells.slice(1), [
     'timeout',
     '1.0.4',
     'Production',
@@ -200,8 +226,13 @@ test('toBugReportRow maps a row into the bug report table\'s column order', () =
     log_text: 'crash log excerpt',
   };
 
-  assert.deepEqual(toBugReportRow(row), [
-    '2026-07-26 10:00',
+  const cells = toBugReportRow(row);
+  // First cell should be a formatted local timestamp (not raw UTC)
+  assert.ok(typeof cells[0] === 'string');
+  assert.ok(cells[0] !== '—');
+  assert.ok(cells[0] !== '2026-07-26 10:00');
+  // Other cells should match exactly
+  assert.deepEqual(cells.slice(1), [
     'Falha na otimização',
     'O preset não terminou',
     '1.0.4',

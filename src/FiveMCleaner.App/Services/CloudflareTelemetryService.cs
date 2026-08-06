@@ -18,7 +18,7 @@ public static class TelemetryEventValidator
 {
     private static readonly HashSet<int> AllowedRamBucketsGiB = [2, 4, 8, 16, 32, 64, 128, 256];
     private static readonly HashSet<string> AllowedProfiles = new(StringComparer.Ordinal) { "Light", "Balanced", "Aggressive" };
-    private const int MaxActionIds = 30;
+    public const int MaxActionIds = 30;
     private const int MaxShortFieldLength = 128;
 
     public static void Validate(AnonymousTelemetryEvent telemetryEvent)
@@ -176,12 +176,6 @@ public sealed class LocalTelemetryQueue
     }
 
     public void Remove(string filePath) => TryDelete(filePath);
-
-    /// <summary>
-    /// Drops queued events older than <paramref name="maxAge"/> so an
-    /// extended offline period does not grow the queue forever.
-    /// </summary>
-    public void PurgeOlderThan(TimeSpan maxAge) => Prune(maxAge, maxFiles: int.MaxValue);
 
     /// <summary>
     /// Bounds the queue by age *and* by count. Age alone is not a real bound:
@@ -411,7 +405,11 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
         // queued for the next opportunity (the next TrackAsync call or the
         // next app startup) without delaying or affecting the optimization
         // that just completed.
-        _ = FlushPendingAsync(cancellationToken);
+        _ = FlushPendingAsync(cancellationToken).ContinueWith(
+            static t => { _ = t.Exception; },
+            CancellationToken.None,
+            TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+            TaskScheduler.Default);
     }
 
     /// <summary>

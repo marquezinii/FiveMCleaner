@@ -111,6 +111,12 @@ export function generateSessionId() {
   return toBase64Url(crypto.getRandomValues(new Uint8Array(32)));
 }
 
+/** Stores only a one-way digest of a bearer session token in D1. */
+export async function hashSessionId(sessionId) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(sessionId));
+  return toBase64Url(new Uint8Array(digest));
+}
+
 /**
  * HMACs a client IP with the `IP_HASH_SECRET` Worker secret so brute-force
  * tracking never stores a reversible IP address, only a keyed digest of it.

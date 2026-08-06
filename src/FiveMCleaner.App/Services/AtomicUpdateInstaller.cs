@@ -18,7 +18,7 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
         this.launcherPath = Path.GetFullPath(launcherPath);
         dataRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FiveMCleaner");
-        diagnostics = new UpdaterDiagnostics(dataRoot, UpdaterDiagnostics.UpdaterEventsEndpoint);
+        diagnostics = new UpdaterDiagnostics(dataRoot);
     }
 
     public async Task<SilentUpdateLaunch> StartAsync(DownloadedUpdate update, CancellationToken cancellationToken = default)
@@ -83,7 +83,7 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
                 Guid.NewGuid().ToString("N"), stage, "failed", code,
                 previous, update.Version.CoreVersion, "Production"),
             exception.ToString(),
-            UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
+            telemetryAuthorized: true);
 
     private static string Classify(Exception exception) => exception switch
     {

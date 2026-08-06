@@ -4,9 +4,25 @@ import { recentBugReports } from './bugReports/queries.js';
 import { validateUpdaterEvent } from './updaterEvents/validateSubmission.js';
 import { recentUpdaterEvents } from './updaterEvents/queries.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
+import { requireFirebaseUser } from './auth/firebaseIdToken.js';
+import {
+  validateAccountProfile,
+  createAccountProfile,
+  fetchAccountProfile,
+  normalizeUsername,
+  isUsernameAvailable,
+} from './auth/accountProfile.js';
+import { rateLimitKey, withinRateLimit } from './rateLimit.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
-import { buildCorsHeaders, withCorsHeaders } from './cors.js';
+import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from './cors.js';
+import { readBoundedJson } from './requestSecurity.js';
+import { parseReleaseManifest } from './releaseManifest.js';
+
+const MAX_TELEMETRY_BODY_BYTES = 512 * 1024;
+const MAX_BUG_REPORT_BODY_BYTES = 128 * 1024;
+const MAX_UPDATER_EVENT_BODY_BYTES = 4 * 1024;
+const MAX_ACCOUNT_PROFILE_BODY_BYTES = 4 * 1024;
 
 // FiveMCleaner anonymous telemetry + bug reports + admin dashboard API
 // Worker. See wrangler.toml and README.md for deployment status of each
@@ -16,6 +32,9 @@ import { buildCorsHeaders, withCorsHeaders } from './cors.js';
 // Routes:
 //   POST    /telemetry             -- ingest a batch of telemetry events (no auth; validated server-side)
 //   POST    /bugs                  -- ingest one bug report, text-only (no auth; validated server-side)
+//   POST    /account/profile       -- create the username/first/last-name profile for a Firebase account (requires a valid Firebase ID token)
+//   GET     /account/profile       -- read the caller's own username/first/last-name profile (requires a valid Firebase ID token)
+//   GET     /account/username-available -- advisory "is this username free?" probe for the registration form (no auth; rate limited per IP)
 //   POST    /admin/login           -- { password } -> session cookie
 //   POST    /admin/logout          -- clears the session cookie
 //   GET     /api/stats/:name       -- one chart's data (requires a valid session)
@@ -32,18 +51,31 @@ const STATS_BUILDERS = {
   'runs-per-day': queries.optimizationRunsPerDay,
   'os-versions': queries.osVersionBreakdown,
   'app-versions': queries.appVersionBreakdown,
-  'top-actions': queries.topActions,
   'average-time': queries.averageOptimizationTimeMs,
   'success-rate': queries.successRate,
   'errors-by-version': queries.errorsByVersion,
   'error-categories': queries.errorCategoryBreakdown,
-  'top-actions-in-failures': queries.topActionsInFailures,
   'recent-failures': queries.recentFailures,
   'top-cpu': queries.topCpuModels,
   'top-gpu': queries.topGpuModels,
   'ram-buckets': queries.ramBucketBreakdown,
-  profiles: queries.profileBreakdown,
 };
+
+// D1's batch() rejects calls with more than 500 statements. A single
+// telemetry batch is capped at MAX_BATCH_SIZE=50 events, each carrying up to
+// MAX_ACTION_IDS=30 action ids, so the action-link statements alone can reach
+// 1500 -- well over the limit. Chunking keeps every batch call inside the
+// bound and avoids a 500 + partial write on oversized payloads.
+export const MAX_D1_BATCH_STATEMENTS = 500;
+
+export function chunkStatements(statements, maxStatements = MAX_D1_BATCH_STATEMENTS) {
+  const chunks = [];
+  for (let i = 0; i < statements.length; i += maxStatements) {
+    chunks.push(statements.slice(i, i + maxStatements));
+  }
+  return chunks;
+}
+
 
 export default {
   async fetch(request, env) {
@@ -73,12 +105,27 @@ async function route(request, env, url) {
   if (request.method === 'GET' && url.pathname === '/update/manifest') {
     return handleSignedReleaseManifest(env);
   }
+  if (request.method === 'POST' && url.pathname === '/account/profile') {
+    return handleAccountProfileCreate(request, env);
+  }
+  if (request.method === 'GET' && url.pathname === '/account/profile') {
+    return handleAccountProfileGet(request, env);
+  }
+  if (request.method === 'GET' && url.pathname === '/account/username-available') {
+    return handleUsernameAvailability(request, env, url);
+  }
 
   if (request.method === 'POST' && url.pathname === '/admin/login') {
+    if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
+      return new Response('Forbidden', { status: 403 });
+    }
     return createPasswordAuthProvider(env).login(request);
   }
 
   if (request.method === 'POST' && url.pathname === '/admin/logout') {
+    if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
+      return new Response('Forbidden', { status: 403 });
+    }
     return createPasswordAuthProvider(env).logout(request);
   }
 
@@ -104,28 +151,7 @@ function handleSignedReleaseManifest(env) {
       headers: { 'Cache-Control': 'no-store' },
     });
   }
-  if (manifest.length > 65_536) {
-    return new Response('Release manifest invalid', { status: 500 });
-  }
-  let parsed;
-  try { parsed = JSON.parse(manifest); } catch {
-    return new Response('Release manifest invalid', { status: 500 });
-  }
-  const keys = parsed && typeof parsed === 'object' && !Array.isArray(parsed)
-    ? Object.keys(parsed)
-    : [];
-  const allowed = ['channel', 'version', 'minimumAllowedVersion', 'packageUrl',
-    'packageSha256', 'packageSizeBytes', 'signatureBase64'];
-  if (keys.length !== allowed.length || keys.some((key) => !allowed.includes(key))
-      || parsed.channel !== 'stable'
-      || !/^\d+\.\d+\.\d+$/.test(parsed.version)
-      || !/^\d+\.\d+\.\d+$/.test(parsed.minimumAllowedVersion)
-      || typeof parsed.packageUrl !== 'string'
-      || !/^https:\/\/github\.com\/marquezinii\/FiveMCleaner\/releases\/download\//.test(parsed.packageUrl)
-      || !/^[a-f0-9]{64}$/i.test(parsed.packageSha256)
-      || !Number.isSafeInteger(parsed.packageSizeBytes) || parsed.packageSizeBytes <= 0
-      || typeof parsed.signatureBase64 !== 'string'
-      || parsed.signatureBase64.length < 80 || parsed.signatureBase64.length > 256) {
+  if (parseReleaseManifest(manifest) === null) {
     return new Response('Release manifest invalid', { status: 500 });
   }
   return new Response(manifest, {
@@ -138,8 +164,14 @@ function handleSignedReleaseManifest(env) {
 }
 
 async function handleUpdaterEventIngest(request, env) {
-  let payload;
-  try { payload = await request.json(); } catch { return new Response('Invalid JSON', { status: 400 }); }
+  if (!await withinRateLimit(env.UPDATER_EVENT_LIMITER, rateLimitKey(request))) {
+    return new Response(JSON.stringify({ error: 'rate-limited' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const payload = await readBoundedJson(request, MAX_UPDATER_EVENT_BODY_BYTES);
+  if (payload === null) return new Response('Invalid JSON', { status: 400 });
   const event = validateUpdaterEvent(payload);
   if (event === null) return new Response('Updater event failed validation', { status: 400 });
   await env.TELEMETRY_DB.prepare(
@@ -151,6 +183,94 @@ async function handleUpdaterEventIngest(request, env) {
   return new Response(null, { status: 202 });
 }
 
+// Advisory "is this username free?" probe for the registration form, so the
+// user is told a name is taken while typing instead of only after the
+// Firebase account already exists and the profile insert fails with 409.
+//
+// Necessarily unauthenticated -- it runs before the account does -- so it is
+// rate limited per IP and answers a bare boolean: never who holds the name,
+// never anything about that account. Enumeration is still theoretically
+// possible at the allowed rate; the exposure is limited to "this display
+// name exists", which the app shows publicly anyway.
+//
+// Advisory, not authoritative: the UNIQUE index on account_profiles remains
+// the only real arbiter, and handleAccountProfileCreate still returns 409.
+async function handleUsernameAvailability(request, env, url) {
+  if (!await withinRateLimit(env.USERNAME_LOOKUP_LIMITER, rateLimitKey(request))) {
+    return new Response(JSON.stringify({ error: 'rate-limited' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    });
+  }
+
+  const normalized = normalizeUsername(url.searchParams.get('u'));
+  if (normalized === null) {
+    return new Response(JSON.stringify({ error: 'invalid-username' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    });
+  }
+
+  const available = await isUsernameAvailable(env.TELEMETRY_DB, normalized);
+  return new Response(JSON.stringify({ available }), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+  });
+}
+
+// Completes the profile of a Firebase-authenticated account with the
+// fields Firebase Authentication REST doesn't manage: a unique username,
+// first name, last name. Requires a valid Firebase ID token (verified
+// server-side, see auth/firebaseIdToken.js) -- the uid is always taken from
+// the verified token, never from the request body.
+async function handleAccountProfileCreate(request, env) {
+  const auth = await requireFirebaseUser(request);
+  if (!auth.authorized) return auth.response;
+
+  const payload = await readBoundedJson(request, MAX_ACCOUNT_PROFILE_BODY_BYTES);
+  if (payload === null) return new Response('Invalid JSON', { status: 400 });
+
+  const profile = validateAccountProfile(payload);
+  if (profile === null) {
+    return new Response(JSON.stringify({ error: 'invalid-profile' }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  const result = await createAccountProfile(env.TELEMETRY_DB, auth.uid, profile);
+  if (!result.ok) {
+    const status = result.code === 'username-taken' || result.code === 'uid-taken' ? 409 : 500;
+    return new Response(JSON.stringify({ error: result.code }), {
+      status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return new Response(JSON.stringify({ success: true }), {
+    status: 201,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
+async function handleAccountProfileGet(request, env) {
+  const auth = await requireFirebaseUser(request);
+  if (!auth.authorized) return auth.response;
+
+  const profile = await fetchAccountProfile(env.TELEMETRY_DB, auth.uid);
+  if (profile === null) {
+    return new Response(JSON.stringify({ error: 'profile-not-found' }), {
+      status: 404,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
+  return new Response(JSON.stringify(profile), {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  });
+}
+
 async function handleUpdaterEventsList(request, env, url) {
   const auth = await createPasswordAuthProvider(env).requireSession(request);
   if (!auth.authorized) return auth.response;
@@ -158,17 +278,26 @@ async function handleUpdaterEventsList(request, env, url) {
     environment: url.searchParams.get('environment') || undefined,
     version: url.searchParams.get('version') || undefined,
   }, url.searchParams.get('limit'));
-  const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-  return new Response(JSON.stringify(results), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  try {
+    const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
+    return new Response(JSON.stringify(results), { status: 200, headers: { 'Content-Type': 'application/json' } });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Database query failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }
 
 async function handleTelemetryIngest(request, env) {
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return new Response('Invalid JSON', { status: 400 });
+  if (!await withinRateLimit(env.TELEMETRY_LIMITER, rateLimitKey(request))) {
+    return new Response(JSON.stringify({ error: 'rate-limited' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
+  const payload = await readBoundedJson(request, MAX_TELEMETRY_BODY_BYTES);
+  if (payload === null) return new Response('Invalid JSON', { status: 400 });
 
   const events = validateBatch(payload);
   if (events === null) {
@@ -181,7 +310,7 @@ async function handleTelemetryIngest(request, env) {
     statements.push(
       env.TELEMETRY_DB
         .prepare(
-          `INSERT INTO telemetry_events
+          `INSERT OR IGNORE INTO telemetry_events
              (event_name, execution_time_ms, app_version, error_category,
               os_version, system_architecture, cpu_model, gpu_model,
               ram_bucket_gib, profile, environment, received_at)
@@ -204,7 +333,14 @@ async function handleTelemetryIngest(request, env) {
     );
   }
 
-  const results = await env.TELEMETRY_DB.batch(statements);
+  const results = [];
+  for (const chunk of chunkStatements(statements)) {
+    try {
+      results.push(...await env.TELEMETRY_DB.batch(chunk));
+    } catch (err) {
+      console.error('Telemetry chunk failed, continuing:', err?.message || 'unknown');
+    }
+  }
 
   const actionStatements = [];
   results.forEach((result, index) => {
@@ -222,8 +358,15 @@ async function handleTelemetryIngest(request, env) {
     }
   });
 
-  if (actionStatements.length > 0) {
-    await env.TELEMETRY_DB.batch(actionStatements);
+  for (const chunk of chunkStatements(actionStatements)) {
+    try {
+      await env.TELEMETRY_DB.batch(chunk);
+    } catch (err) {
+      return new Response(JSON.stringify({ error: 'Database write failed for action links' }), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
   }
 
   return new Response(null, { status: 202 });
@@ -253,31 +396,38 @@ async function handleStatsRequest(request, env, url) {
   };
 
   const { sql, params } = builder(filters);
-  const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-
-  if (asCsv) {
-    return new Response(toCsv(results), {
+  try {
+    const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
+    if (asCsv) {
+      return new Response(toCsv(results), {
+        status: 200,
+        headers: {
+          'Content-Type': 'text/csv; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${name.replace(/[^a-zA-Z0-9_-]/g, '_')}.csv"`,
+        },
+      });
+    }
+    return new Response(JSON.stringify(results), {
       status: 200,
-      headers: {
-        'Content-Type': 'text/csv; charset=utf-8',
-        'Content-Disposition': `attachment; filename="${name}.csv"`,
-      },
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Database query failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
     });
   }
-
-  return new Response(JSON.stringify(results), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
 }
 
 async function handleBugReportIngest(request, env) {
-  let payload;
-  try {
-    payload = await request.json();
-  } catch {
-    return new Response('Invalid JSON', { status: 400 });
+  if (!await withinRateLimit(env.BUG_REPORT_LIMITER, rateLimitKey(request))) {
+    return new Response(JSON.stringify({ error: 'rate-limited' }), {
+      status: 429,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
+  const payload = await readBoundedJson(request, MAX_BUG_REPORT_BODY_BYTES);
+  if (payload === null) return new Response('Invalid JSON', { status: 400 });
 
   const report = validateBugReport(payload);
   if (report === null) {
@@ -286,7 +436,7 @@ async function handleBugReportIngest(request, env) {
 
   await env.TELEMETRY_DB
     .prepare(
-      `INSERT INTO bug_reports
+      `INSERT OR IGNORE INTO bug_reports
          (report_id, category, summary, description, app_version, profile,
           technical_summary, email, log_text, environment, received_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
@@ -327,10 +477,16 @@ async function handleBugReportsList(request, env, url) {
   const limit = Number(url.searchParams.get('limit')) || undefined;
 
   const { sql, params } = recentBugReports(filters, limit);
-  const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-
-  return new Response(JSON.stringify(results), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  try {
+    const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
+    return new Response(JSON.stringify(results), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Database query failed' }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
 }

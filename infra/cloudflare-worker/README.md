@@ -25,14 +25,18 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
   top-level, unnamed environment — `wrangler deploy` with no `--env`)
   handles both Development- and Production-tagged telemetry; the
   `environment` column on each row is what separates them for the
-  dashboard's filters, not a second deployment. `env.development`/
-  `env.production` sections exist but are unused today — kept in case a
-  genuine need for physically separate deployments comes up later.
+  dashboard's filters, not a second deployment. (An earlier
+  `env.development`/`env.production` named-environment design was removed:
+  it added no benefit since D1 already distinguishes rows by that column.)
 - `schema.sql` — the D1 tables: `telemetry_events` (one row per optimization
   run, including the version-2-consent hardware profile), 
   `telemetry_event_actions` (one row per applied action ID, for "most used
   function"), `login_attempts` and `admin_sessions` (custom dashboard auth).
   Applied to the real database already.
+- `migrations/` — incremental changes for the already deployed D1 database.
+  The account migration adds a unique username plus the accepted terms version
+  and timestamp. `schema.sql` remains the complete snapshot for a new local
+  database.
 - `src/validateEvent.js` — pure, dependency-free validation of one event or a
   batch. The Worker never trusts client-side validation alone; every field is
   re-checked against the same allowlist server-side.
@@ -44,9 +48,8 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
 - `src/stats/` — `queries.js` (pure SQL+params builders, one per dashboard
   chart) and `csv.js` (pure CSV serialization for the export feature).
   Available `:name` values: `runs-per-day`, `os-versions`, `app-versions`,
-  `profiles`, `top-actions`, `top-cpu`, `top-gpu`, `ram-buckets`,
-  `average-time`, `success-rate`, `error-categories`,
-  `top-actions-in-failures`, `errors-by-version`, `recent-failures`. Every
+  `top-cpu`, `top-gpu`, `ram-buckets`, `average-time`, `success-rate`,
+  `error-categories`, `errors-by-version`, `recent-failures`. Every
   one accepts `?from=&to=&version=&environment=` query filters (`environment`
   defaults to `Production`; pass `All` to look across both).
 - `test/` — unit tests for everything pure-logic above, run with Node's
@@ -90,6 +93,11 @@ URL), authentication is a small, self-contained system:
   domains — a stricter policy silently never sends the cookie back on a
   cross-site `fetch`, which is exactly what made the first deployment's
   login appear to succeed but leave the dashboard stuck on the login screen.
+- **CSRF e limites de entrada**: login e logout exigem o `Origin` exato de
+  `DASHBOARD_ORIGIN`; todos os corpos JSON públicos são lidos com limite de
+  bytes por rota antes do parse. Isso mantém o cookie cross-site necessário
+  sem aceitar mutações administrativas de outras páginas e impede buffering
+  irrestrito de payloads anônimos.
 - **Swappable by design**: `src/auth/passwordAuthProvider.js` exposes exactly
   three functions — `login`, `logout`, `requireSession` — and `index.js` only
   ever calls those three. A future OAuth-based provider (Google/GitHub, or
@@ -99,13 +107,65 @@ URL), authentication is a small, self-contained system:
 **Known test gap**: the pure decision logic behind each of these
 (`crypto.js`, `bruteForceGuard.js`, `sessionStore.js`, `stats/queries.js`,
 `stats/csv.js`, `cors.js`) is unit tested. The D1-touching glue in
-`passwordAuthProvider.js` and the routing in `index.js` are not covered by an
-automated test — that would require Miniflare (a simulated Workers/D1
-runtime), which was not set up in this environment. Both were validated
-manually against the real deployment (see "Verified end-to-end" below); two
+`passwordAuthProvider.js` and the D1-backed routing in `index.js` are not
+covered end-to-end by an automated test — that would require Miniflare (a
+simulated Workers/D1 runtime), which was not set up in this environment. The
+origin gate and bounded request reader are covered without D1. The rest was
+validated manually against the real deployment (see "Verified end-to-end" below); two
 real bugs (the PBKDF2 iteration cap and the `SameSite` cookie policy) were
 only caught that way, not by the unit tests, which is exactly why this gap
 is called out rather than assumed harmless.
+
+## Product accounts
+
+The desktop application uses Firebase Authentication directly through its
+official REST API. This Worker does not receive account passwords or refresh
+tokens. Future account-specific routes must accept a Firebase ID token over
+HTTPS as `Authorization: Bearer <idToken>`, verify it with
+`src/auth/firebaseIdToken.js` (`requireFirebaseUser` /
+`verifyFirebaseIdToken`), and use only the Firebase UID (`sub`) as the
+permanent internal identifier — never email.
+
+Verification is fail-closed: RS256 only, Google JWKS
+(`securetoken@system.gserviceaccount.com`), required claims
+`aud = fivemcleaner-app`,
+`iss = https://securetoken.google.com/fivemcleaner-app`, unexpired `exp`, and
+non-empty `sub`. Invalid tokens produce a generic HTTP 401
+`{ "error": "unauthorized" }` with no claim detail. The pure verifier is unit
+tested.
+
+`POST /account/profile` is the first route built on it: Firebase manages
+email/password/uid only, so this route stores the fields it doesn't —
+username (globally unique, case-insensitive), first name, last name — in
+`account_profiles`, keyed by the verified Firebase UID. A username conflict
+returns `409 { "error": "username-taken" }`; the client is expected to let
+the user pick another one without discarding the Firebase account already
+created. See `src/auth/accountProfile.js`.
+
+`GET /account/username-available?u=<name>` answers `{ "available": true|false }`
+for the registration form, so a taken name is reported while the user types
+instead of only after the Firebase account already exists. It is the one
+D1-backed route with no authentication — it necessarily runs *before* the
+account does — so three things bound it:
+
+- a per-IP `[[ratelimits]]` binding (`USERNAME_LOOKUP_LIMITER`, 20 requests
+  per 60s, declared in `wrangler.toml`; see `src/rateLimit.js`). The binding
+  is optional at runtime: `wrangler dev` and `node --test` run without it and
+  the route stays open, which is the right trade for a read-only probe;
+- the same `USERNAME_PATTERN` the insert uses, so a malformed name is
+  rejected with `400 { "error": "invalid-username" }` without reaching D1;
+- a bare boolean answer — never who holds a name, never anything else about
+  that account.
+
+It is deliberately **advisory**. The UNIQUE index on `account_profiles`
+remains the only arbiter, a name can be claimed between the probe and the
+registration, and `POST /account/profile` still returns 409. The desktop
+client treats a rate-limited, failed or unreadable answer as "unknown" and
+never as "available".
+
+Legacy Worker product tables (`user_accounts` / sessions), if still present on
+remote D1 from the pre-Firebase system, are not migrated. There are no real
+users to preserve; cleanup is a separate authorized deploy/migration task.
 
 ## Verified end-to-end
 
@@ -119,17 +179,17 @@ no test data was left behind).
 
 ```bash
 npm install
-npm run db:migrate:local          # local-only, safe to run anytime
+npm run db:bootstrap:local        # creates a fresh local database from schema.sql
+npm run db:migrate:local          # applies pending migrations to an existing local database
 
 npm run hash-admin-password       # prints the ADMIN_PASSWORD_HASH value
 wrangler secret put ADMIN_PASSWORD_HASH
 wrangler secret put IP_HASH_SECRET   # any long random string
 
-wrangler d1 execute fivemcleaner-telemetry --remote --file=./schema.sql   # touches the real database — ask first
+wrangler d1 migrations apply fivemcleaner-telemetry --remote   # touches the real database — ask first
 wrangler deploy   # touches Cloudflare — ask first
 ```
 
-The `env.development`/`env.production` deploy scripts in `package.json`
-(`deploy:development`/`deploy:production`) target the currently-unused
-named-environment sections mentioned above; the real deployment uses plain
-`wrangler deploy`/`npm run deploy` with no `--env`.
+The real deployment uses plain `wrangler deploy`/`npm run deploy` with no
+`--env` — the old `deploy:development`/`deploy:production` scripts targeted
+named-environment sections that have been removed.

@@ -19,10 +19,17 @@ public sealed record HistoryDisplayItem(
     string Summary,
     bool CanRollback);
 
+/// <summary>
+/// One streaming-readiness check on the overview. <paramref name="IconKey"/> is
+/// the resource key of a vector icon declared in <c>Themes/Icons.xaml</c>, not a
+/// font glyph, so the icon follows the same stroke and color as the rest of the
+/// page.
+/// </summary>
 public sealed record StreamingReadinessDisplayItem(
-    string IconGlyph,
+    string IconKey,
     string Title,
-    string Detail);
+    string Detail,
+    string ToneBrushKey);
 
 /// <summary>One row of the live step ledger shown during optimization.</summary>
 public sealed record StepLedgerItem(

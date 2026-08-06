@@ -26,6 +26,32 @@ public sealed class BrushKeyConverter : IValueConverter
     }
 }
 
+/// <summary>
+/// Resolves a vector icon resource key (e.g. "IconCpu", declared in
+/// <c>Themes/Icons.xaml</c>) to its <see cref="System.Windows.Media.Geometry"/>.
+/// Lets a view model name an icon without referencing WPF drawing types.
+/// </summary>
+public sealed class GeometryKeyConverter : IValueConverter
+{
+    public object Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        var key = value as string;
+        if (string.IsNullOrEmpty(key))
+        {
+            return DependencyProperty.UnsetValue;
+        }
+
+        return System.Windows.Application.Current.TryFindResource(key) is System.Windows.Media.Geometry geometry
+            ? geometry
+            : DependencyProperty.UnsetValue;
+    }
+
+    public object ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
+    {
+        throw new NotSupportedException();
+    }
+}
+
 /// <summary>Collapses an element when the bound string is null or empty.</summary>
 public sealed class StringToVisibilityConverter : IValueConverter
 {

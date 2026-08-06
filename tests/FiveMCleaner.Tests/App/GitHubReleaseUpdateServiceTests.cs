@@ -715,25 +715,4 @@ public sealed class GitHubReleaseUpdateServiceTests
 
         public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
     }
-
-    private sealed class TemporaryDirectory : IDisposable
-    {
-        public TemporaryDirectory()
-        {
-            Path = System.IO.Path.Combine(
-                System.IO.Path.GetTempPath(),
-                $"FiveMCleaner.Updater.Tests.{Guid.NewGuid():N}");
-            Directory.CreateDirectory(Path);
-        }
-
-        public string Path { get; }
-
-        public void Dispose()
-        {
-            if (Directory.Exists(Path))
-            {
-                Directory.Delete(Path, recursive: true);
-            }
-        }
-    }
 }

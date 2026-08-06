@@ -1,0 +1,126 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Ícones vetoriais próprios da Visão geral.
+
+        Todos são desenhados na mesma grade de 24x24 e usam só contorno (sem
+        preenchimento), com espessura, junção e ponta arredondadas definidas em
+        VectorIconStyle. Isso substitui os glifos da fonte "Segoe MDL2 Assets",
+        que variavam de peso, alinhamento óptico e estilo entre si e não
+        acompanhavam a cor nem a espessura do restante da interface.
+    -->
+
+    <Geometry x:Key="IconCpu">M 9,9 H 15 V 15 H 9 Z M 6.5,6.5 H 17.5 V 17.5 H 6.5 Z M 10,6.5 V 3.4 M 14,6.5 V 3.4 M 10,17.5 V 20.6 M 14,17.5 V 20.6 M 6.5,10 H 3.4 M 6.5,14 H 3.4 M 17.5,10 H 20.6 M 17.5,14 H 20.6</Geometry>
+
+    <Geometry x:Key="IconGpu">M 2.6,7 H 21.4 V 15.6 H 2.6 Z M 4.9,11.3 A 2.1,2.1 0 1 1 9.1,11.3 A 2.1,2.1 0 1 1 4.9,11.3 M 12.9,11.3 A 2.1,2.1 0 1 1 17.1,11.3 A 2.1,2.1 0 1 1 12.9,11.3 M 5.6,15.6 V 19.4 M 18.4,15.6 V 19.4</Geometry>
+
+    <Geometry x:Key="IconMemory">M 2.6,7.6 H 21.4 V 16.4 H 2.6 Z M 6.4,16.4 V 19.6 M 12,16.4 V 19.6 M 17.6,16.4 V 19.6 M 6.6,11 V 13.4 M 10.2,11 V 13.4 M 13.8,11 V 13.4 M 17.4,11 V 13.4</Geometry>
+
+    <Geometry x:Key="IconDisk">M 4,6.6 A 8,3.1 0 1 1 20,6.6 A 8,3.1 0 1 1 4,6.6 M 4,6.6 V 17.4 A 8,3.1 0 0 0 20,17.4 V 6.6 M 4,12 A 8,3.1 0 0 0 20,12</Geometry>
+
+    <Geometry x:Key="IconNetwork">M 2.4,11.4 A 13.6,13.6 0 0 1 21.6,11.4 M 6,15 A 8.5,8.5 0 0 1 18,15 M 9.6,18.6 A 3.4,3.4 0 0 1 14.4,18.6 M 11.9,21.4 H 12.1</Geometry>
+
+    <Geometry x:Key="IconPulse">M 2.6,12.4 H 7.2 L 9.6,6.2 L 14.2,17.8 L 16.6,12.4 H 21.4</Geometry>
+
+    <Geometry x:Key="IconRefresh">M 3.6,12 A 8.4,8.4 0 0 1 18.4,6.6 M 20.4,12 A 8.4,8.4 0 0 1 5.6,17.4 M 18.6,3.2 V 6.9 H 14.9 M 5.4,20.8 V 17.1 H 9.1</Geometry>
+
+    <Geometry x:Key="IconBolt">M 13.4,2.6 L 5.4,13.6 H 11.4 L 10.6,21.4 L 18.6,10.4 H 12.6 Z</Geometry>
+
+    <Geometry x:Key="IconShield">M 12,2.7 L 19.4,5.9 V 11.4 C 19.4,16.1 16.4,19.6 12,21.3 C 7.6,19.6 4.6,16.1 4.6,11.4 V 5.9 Z M 8.8,11.9 L 11.2,14.3 L 15.4,9.8</Geometry>
+
+    <Geometry x:Key="IconGauge">M 3.4,17.6 A 9.4,9.4 0 1 1 20.6,17.6 M 12,12.6 L 16.4,8.4</Geometry>
+
+    <Geometry x:Key="IconClock">M 3.4,12 A 8.6,8.6 0 1 1 20.6,12 A 8.6,8.6 0 1 1 3.4,12 M 12,7.2 V 12.4 L 15.6,14.6</Geometry>
+
+    <Geometry x:Key="IconHistory">M 3.6,12 A 8.4,8.4 0 1 0 6.4,5.8 L 3.4,8.6 M 3.4,4.4 V 8.8 H 7.8 M 12,7.6 V 12.4 L 15.4,14.4</Geometry>
+
+    <Geometry x:Key="IconCheck">M 4.6,12.6 L 9.6,17.4 L 19.4,6.6</Geometry>
+
+    <Geometry x:Key="IconClose">M 5.8,5.8 L 18.2,18.2 M 18.2,5.8 L 5.8,18.2</Geometry>
+
+    <Geometry x:Key="IconDownload">M 12,3.4 V 15.6 M 7.2,10.8 L 12,15.6 L 16.8,10.8 M 4.4,20 H 19.6</Geometry>
+
+    <Geometry x:Key="IconInfo">M 3.4,12 A 8.6,8.6 0 1 1 20.6,12 A 8.6,8.6 0 1 1 3.4,12 M 12,11 V 16.4 M 11.9,7.8 H 12.1</Geometry>
+
+    <Geometry x:Key="IconMonitor">M 2.8,4.8 H 21.2 V 16.2 H 2.8 Z M 8.6,20.2 H 15.4 M 12,16.2 V 20.2</Geometry>
+
+    <Geometry x:Key="IconStream">M 8.2,8.2 A 5.4,5.4 0 0 0 8.2,15.8 M 15.8,8.2 A 5.4,5.4 0 0 1 15.8,15.8 M 5.4,5.4 A 9.4,9.4 0 0 0 5.4,18.6 M 18.6,5.4 A 9.4,9.4 0 0 1 18.6,18.6 M 10.4,12 A 1.6,1.6 0 1 1 13.6,12 A 1.6,1.6 0 1 1 10.4,12</Geometry>
+
+    <Geometry x:Key="IconGame">M 7.4,10.4 H 10.6 M 9,8.8 V 12 M 15.4,10.2 H 15.6 M 17.4,12.6 H 17.6 M 7.6,6.6 H 16.4 A 5.6,5.6 0 0 1 21.8,13.4 L 21,17.2 A 2.7,2.7 0 0 1 16.4,18.4 L 14.4,16 H 9.6 L 7.6,18.4 A 2.7,2.7 0 0 1 3,17.2 L 2.2,13.4 A 5.6,5.6 0 0 1 7.6,6.6 Z</Geometry>
+
+    <Geometry x:Key="IconCores">M 4,4 H 10.4 V 10.4 H 4 Z M 13.6,4 H 20 V 10.4 H 13.6 Z M 4,13.6 H 10.4 V 20 H 4 Z M 13.6,13.6 H 20 V 20 H 13.6 Z</Geometry>
+
+    <Geometry x:Key="IconBroom">M 14.6,3.4 L 20.6,9.4 M 17.6,6.4 L 9.4,14.6 M 9.4,14.6 L 4.2,19.8 A 2.4,2.4 0 0 0 7.6,20.6 L 13.4,15.6 Z M 6.6,17.4 L 9.6,20.4</Geometry>
+
+    <Geometry x:Key="IconTrend">M 3.4,16.6 L 9,11 L 13,15 L 20.6,7.4 M 20.6,7.4 H 15.4 M 20.6,7.4 V 12.6</Geometry>
+
+    <Geometry x:Key="IconSpark">M 12,2.8 L 13.9,9.1 L 20.2,11 L 13.9,12.9 L 12,19.2 L 10.1,12.9 L 3.8,11 L 10.1,9.1 Z M 18.8,16.6 L 19.6,19 L 22,19.8 L 19.6,20.6 L 18.8,23 L 18,20.6 L 15.6,19.8 L 18,19 Z</Geometry>
+
+    <!--
+        Logomarca oficial do Discord (traçado simplificado, mesmo usado no
+        site público). Ao contrário dos demais ícones deste dicionário, este
+        é preenchido, não contornado: a marca não existe como traço.
+    -->
+    <Geometry x:Key="IconDiscord">M20.317,4.3698 A19.7913,19.7913 0 0 0 15.4319,2.8546 A0.0741,0.0741 0 0 0 15.3534,2.8917 C15.1424,3.267 14.9087,3.7565 14.7451,4.1412 C12.9004,3.865 11.0651,3.865 9.2583,4.1412 C9.0947,3.7479 8.8525,3.267 8.6406,2.8917 A0.077,0.077 0 0 0 8.5621,2.8547 A19.7363,19.7363 0 0 0 3.677,4.3697 A0.0699,0.0699 0 0 0 3.6449,4.3974 C0.5334,9.0458 -0.319,13.5799 0.0992,18.0578 A0.0824,0.0824 0 0 0 0.1304,18.1139 C2.1832,19.6215 4.1717,20.5367 6.1233,21.1433 A0.0777,0.0777 0 0 0 6.2075,21.1157 C6.6691,20.4853 7.0806,19.8205 7.4335,19.1215 A0.076,0.076 0 0 0 7.3919,19.0158 C6.7391,18.7682 6.1176,18.4663 5.5197,18.1235 A0.077,0.077 0 0 1 5.5121,17.9958 C5.6379,17.9015 5.7638,17.8035 5.8839,17.7044 A0.0743,0.0743 0 0 1 5.9615,17.6939 C9.8893,19.4872 14.1415,19.4872 18.0229,17.6939 A0.0739,0.0739 0 0 1 18.1014,17.7034 C18.2216,17.8024 18.3474,17.9015 18.4742,17.9958 A0.077,0.077 0 0 1 18.4676,18.1234 C17.8696,18.4728 17.2481,18.7682 16.5945,19.0146 A0.0766,0.0766 0 0 0 16.5538,19.1213 C16.9142,19.8193 17.3257,20.4841 17.7788,21.1145 A0.076,0.076 0 0 0 17.863,21.1431 C19.822,20.5364 21.8105,19.6212 23.8633,18.1138 A0.077,0.077 0 0 0 23.8946,18.0586 C24.3948,12.8809 23.0562,8.384 20.3459,3.9975 A0.061,0.061 0 0 0 20.317,3.9698 Z M8.02,15.3312 C6.8375,15.3312 5.8631,14.2455 5.8631,12.9122 C5.8631,11.579 6.8186,10.4933 8.02,10.4933 C9.2308,10.4933 10.1957,11.5885 10.1768,12.9122 C10.1768,14.2455 9.2213,15.3312 8.02,15.3312 Z M15.9948,15.3312 C14.8122,15.3312 13.8379,14.2455 13.8379,12.9122 C13.8379,11.579 14.7933,10.4933 15.9948,10.4933 C17.2056,10.4933 18.1705,11.5885 18.1516,12.9122 C18.1516,14.2455 17.206,15.3312 15.9948,15.3312 Z</Geometry>
+
+    <!--
+        Alternância de visibilidade da senha. São dois contornos do mesmo
+        olho: o segundo apenas acrescenta o traço diagonal, para que a troca
+        entre "mostrando" e "oculto" não desloque nada no formulário.
+    -->
+    <Geometry x:Key="IconEye">M 2.2,12 C 4.6,7.7 8.1,5.5 12,5.5 C 15.9,5.5 19.4,7.7 21.8,12 C 19.4,16.3 15.9,18.5 12,18.5 C 8.1,18.5 4.6,16.3 2.2,12 Z M 9.3,12 A 2.7,2.7 0 1 1 14.7,12 A 2.7,2.7 0 1 1 9.3,12</Geometry>
+
+    <Geometry x:Key="IconEyeOff">M 2.2,12 C 4.6,7.7 8.1,5.5 12,5.5 C 15.9,5.5 19.4,7.7 21.8,12 C 19.4,16.3 15.9,18.5 12,18.5 C 8.1,18.5 4.6,16.3 2.2,12 Z M 9.3,12 A 2.7,2.7 0 1 1 14.7,12 A 2.7,2.7 0 1 1 9.3,12 M 4,4 L 20,20</Geometry>
+
+    <!--
+        Marca oficial do Google, usada no botão "Continuar com o Google". As
+        diretrizes de marca proíbem recolorir o "G": por isso ele é um
+        DrawingImage com as quatro cores fixas, e não um Path que herdaria o
+        Stroke do tema como os demais ícones deste dicionário.
+    -->
+    <DrawingImage x:Key="GoogleLogoImage">
+        <DrawingImage.Drawing>
+            <DrawingGroup>
+                <GeometryDrawing Brush="#4285F4" Geometry="M22.56,12.25 C22.56,11.47 22.49,10.72 22.36,10 L12,10 L12,14.26 L17.92,14.26 C17.66,15.63 16.88,16.79 15.71,17.57 L15.71,20.34 L19.28,20.34 C21.36,18.42 22.56,15.6 22.56,12.25 Z" />
+                <GeometryDrawing Brush="#34A853" Geometry="M12,23 C14.97,23 17.46,22.02 19.28,20.34 L15.71,17.57 C14.73,18.23 13.48,18.63 12,18.63 C9.14,18.63 6.71,16.7 5.84,14.1 L2.18,14.1 L2.18,16.94 C3.99,20.53 7.7,23 12,23 Z" />
+                <GeometryDrawing Brush="#FBBC05" Geometry="M5.84,14.09 C5.62,13.43 5.49,12.73 5.49,12 C5.49,11.27 5.62,10.57 5.84,9.91 L5.84,7.07 L2.18,7.07 C1.43,8.55 1,10.22 1,12 C1,13.78 1.43,15.45 2.18,16.93 L5.03,14.71 L5.84,14.09 Z" />
+                <GeometryDrawing Brush="#EA4335" Geometry="M12,5.38 C13.62,5.38 15.06,5.94 16.21,7.02 L19.36,3.87 C17.45,2.09 14.97,1 12,1 C7.7,1 3.99,3.47 2.18,7.07 L5.84,9.91 C6.71,7.31 9.14,5.38 12,5.38 Z" />
+            </DrawingGroup>
+        </DrawingImage.Drawing>
+    </DrawingImage>
+
+    <Style x:Key="VectorIconStyle" TargetType="Path">
+        <Setter Property="Stretch" Value="Uniform" />
+        <Setter Property="Width" Value="16" />
+        <Setter Property="Height" Value="16" />
+        <Setter Property="Fill" Value="{x:Null}" />
+        <Setter Property="Stroke" Value="{DynamicResource TextMutedBrush}" />
+        <Setter Property="StrokeThickness" Value="1.6" />
+        <Setter Property="StrokeStartLineCap" Value="Round" />
+        <Setter Property="StrokeEndLineCap" Value="Round" />
+        <Setter Property="StrokeLineJoin" Value="Round" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="HorizontalAlignment" Value="Center" />
+        <Setter Property="SnapsToDevicePixels" Value="True" />
+    </Style>
+
+    <!-- Ícone dentro de uma pastilha colorida (cabeçalhos de linha e KPIs). -->
+    <Style x:Key="VectorIconSmallStyle" TargetType="Path" BasedOn="{StaticResource VectorIconStyle}">
+        <Setter Property="Width" Value="14" />
+        <Setter Property="Height" Value="14" />
+        <Setter Property="StrokeThickness" Value="1.7" />
+    </Style>
+
+    <Style x:Key="VectorIconLargeStyle" TargetType="Path" BasedOn="{StaticResource VectorIconStyle}">
+        <Setter Property="Width" Value="19" />
+        <Setter Property="Height" Value="19" />
+        <Setter Property="StrokeThickness" Value="1.5" />
+    </Style>
+
+    <!-- Ícone que acompanha um CaptionStyle (rótulo maiúsculo de 8.5px). -->
+    <Style x:Key="VectorIconCaptionStyle" TargetType="Path" BasedOn="{StaticResource VectorIconStyle}">
+        <Setter Property="Width" Value="12" />
+        <Setter Property="Height" Value="12" />
+        <Setter Property="StrokeThickness" Value="1.8" />
+    </Style>
+</ResourceDictionary>

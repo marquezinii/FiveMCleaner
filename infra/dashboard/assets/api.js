@@ -3,6 +3,22 @@
 // from the DOM-touching glue in app.js so these are unit testable without a
 // browser or a live Worker.
 
+/**
+ * Resolves which Worker base URL the dashboard should talk to. The `?api=`
+ * override exists only for local development (dashboard on one localhost
+ * port, `wrangler dev` on another). It is deliberately ignored on any other
+ * host: in production an attacker could craft `?api=https://evil.example`
+ * and the login form would POST the admin password there.
+ */
+export function resolveApiBase(defaultBase, locationHostname, searchParams) {
+  const override = searchParams.get('api');
+  const isLocalDev = locationHostname === 'localhost'
+    || locationHostname === '127.0.0.1'
+    || locationHostname === '[::1]';
+  return isLocalDev && override ? override : defaultBase;
+}
+
+
 /** Builds the JSON stats URL for one chart, with optional filters. */
 export function buildStatsUrl(baseUrl, statName, filters = {}) {
   const url = new URL(`/api/stats/${statName}`, baseUrl);
@@ -55,10 +71,20 @@ function applyFilters(url, filters) {
 /**
  * A minimal fetch wrapper the dashboard uses for every Worker call: always
  * sends cookies (`credentials: 'include'`), and treats a 401 uniformly as
- * "not logged in" regardless of which endpoint returned it.
+ * "not logged in" regardless of which endpoint returned it. Never throws:
+ * a network failure or a non-JSON body is reported as an `{ error }` result,
+ * so callers like `refreshAll` can render gracefully instead of leaving the
+ * page stuck on "Atualizando dados…" (which is what a thrown fetch rejection
+ * did -- `Promise.all` rejected and the refresh status was never cleared).
  */
 export async function requestJson(url, options = {}, fetchImpl = fetch) {
-  const response = await fetchImpl(url, { ...options, credentials: 'include' });
+  let response;
+  try {
+    response = await fetchImpl(url, { ...options, credentials: 'include' });
+  } catch {
+    return { error: 'network-error' };
+  }
+
   if (response.status === 401) {
     return { unauthorized: true };
   }
@@ -67,5 +93,9 @@ export async function requestJson(url, options = {}, fetchImpl = fetch) {
     return { error: `request-failed-${response.status}` };
   }
 
-  return { data: await response.json() };
+  try {
+    return { data: await response.json() };
+  } catch {
+    return { error: 'invalid-response' };
+  }
 }

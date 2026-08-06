@@ -11,11 +11,13 @@
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
                 <ResourceDictionary Source="Themes/Palette.xaml" />
+                <ResourceDictionary Source="Themes/Icons.xaml" />
                 <ResourceDictionary Source="Themes/Controls.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter" />
             <local:BrushKeyConverter x:Key="BrushKeyConverter" />
             <local:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
+            <local:GeometryKeyConverter x:Key="GeometryKeyConverter" />
             <services:LocalizedStrings x:Key="LocalizedStrings" />
         </ResourceDictionary>
     </Application.Resources>

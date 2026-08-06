@@ -1,214 +1,255 @@
 # Regras para IAs
 
-## Colaboração
+## Princípio de operação
 
-Este projeto é desenvolvido alternadamente por diferentes IAs e por pessoas.
-Cada agente deve preservar o contexto e o trabalho já existente, mesmo quando
-não tiver sido produzido por ele.
+Este projeto pode ser desenvolvido simultaneamente por pessoas e por múltiplos
+agentes de IA. O usuário não deve precisar administrar Git para o fluxo normal:
+ao receber uma tarefa de desenvolvimento, auditoria, correção, refatoração, UI,
+segurança ou equivalente, o agente descobre e executa automaticamente os passos
+mecânicos abaixo. Só peça orientação quando houver uma decisão real de produto,
+comportamento, segurança ou uma ambiguidade que não possa ser resolvida com
+segurança pelo estado do projeto.
 
-## Antes de alterar código ou documentação
+Código-fonte e Git são a fonte principal da verdade; a documentação fornece
+contexto e pode estar defasada. Preserve sempre o contexto e o trabalho já
+existente, mesmo que não tenham sido produzidos pelo agente atual.
 
-1. Leia integralmente `PROJECT_STATE.md`.
-2. Analise o estado atual do Git (`git status`, histórico recente e diferenças
-   relevantes).
-3. Inspecione o código-fonte relacionado à tarefa e os testes existentes antes
-   de propor ou aplicar uma mudança.
-4. Trate o código-fonte e o Git como a fonte principal da verdade. A
-   documentação é contexto e pode estar defasada.
-5. Nunca desfaça, sobrescreva ou descarte alterações anteriores sem primeiro
-   entender sua motivação, impacto e autoria disponível no histórico.
+## Branches e isolamento
 
-## Durante a implementação
+- `main` contém exclusivamente versões públicas já publicadas e só é alterada
+  durante uma **publicação oficial**.
+- `dev/proxima-versao` é a branch oficial de **integração** da próxima versão.
+  Agentes de tarefas normais não desenvolvem diretamente nela.
+- `ai/<agente>/<tarefa>` é uma branch temporária e exclusiva de uma tarefa.
+  O formato preferencial é, por exemplo, `ai/codex/backend-refactor` ou
+  `ai/claude/security-audit`. Use a identidade conhecida do agente; se ela não
+  puder ser determinada, use `ai/agent/<tarefa>`. Gere automaticamente um slug
+  curto e apropriado; se já existir, gere uma variante única sem perguntar.
 
-- Preserve os limites de segurança documentados em `docs/safety.md` e a
-  separação arquitetural descrita em `docs/architecture.md`.
-- Mantenha cada tarefa como uma unidade lógica; não misture refatorações ou
-  limpezas não relacionadas.
-- Não crie commits para experimentos, tentativas intermediárias ou trabalho
-  incompleto.
-- Atualize `PROJECT_STATE.md` somente quando houver mudança relevante de
-  arquitetura, decisão técnica, funcionalidade entregue ou limitação conhecida.
-- Ao final de cada sessão importante de trabalho, além do critério acima, a IA
-  deve atualizar `PROJECT_STATE.md` também com um resumo objetivo de:
-  funcionalidades concluídas; funcionalidades em andamento; próximos passos;
-  decisões de arquitetura; pendências; e bugs conhecidos.
+Para cada nova tarefa normal, o agente deve, automaticamente:
 
-## Ao concluir uma tarefa
+1. identificar a raiz do repositório e ler integralmente `AI_RULES.md` e
+   `PROJECT_STATE.md`;
+2. verificar `git status`, histórico recente, branches e worktrees existentes;
+3. usar `dev/proxima-versao` como base, criando sua branch exclusiva;
+4. criar um Git worktree exclusivo em um diretório irmão do repositório
+   principal, com nome determinado automaticamente;
+5. executar alterações, testes e commits somente nesse worktree, sem trocar a
+   branch do checkout compartilhado.
 
-Toda tarefa concluída termina automaticamente, sem que o usuário precise
-pedir, com os passos abaixo. Um commit local **não** é uma operação remota e
-não exige autorização — é parte obrigatória de finalizar qualquer tarefa.
+Se o agente já estiver em um worktree exclusivo da sua própria tarefa, deve
+reutilizá-lo. Caso um worktree não seja tecnicamente possível, o agente deve
+preservar o checkout compartilhado, evitar trocar sua branch e informar a
+limitação antes de prosseguir por uma alternativa segura.
 
-1. Revise todas as alterações e confirme que não há arquivos acidentais,
-   segredos, builds, caches ou dados locais no escopo do commit.
-2. Execute os testes disponíveis, build, lint e typecheck quando existirem e
-   forem aplicáveis à área modificada.
-3. Corrija os erros introduzidos pela própria tarefa antes de concluir.
-4. Crie automaticamente um único commit Git local, claro, objetivo e
-   profissional, para a tarefa concluída.
+## Segurança no trabalho concorrente
 
-## Branch de trabalho
+Assuma sempre que outros agentes podem estar trabalhando simultaneamente.
 
-Todo o desenvolvimento acontece na branch de desenvolvimento vigente (por
-exemplo, `dev/proxima-versao`). A branch `main` representa exclusivamente
-versões públicas já publicadas do aplicativo e só é atualizada durante uma
-**publicação oficial** (ver seção própria).
+- Nunca apagar, resetar, descartar, sobrescrever ou sincronizar trabalho de
+  outra branch. Nunca usar `git reset --hard` em trabalho que possa pertencer a
+  outro agente, nem force push.
+- Nunca modificar arquivos sem relação com a tarefa por limpeza estética;
+  evite reformatações massivas e refatorações oportunistas não relacionadas.
+- Limite as mudanças ao escopo solicitado e preserve o comportamento existente
+  fora dele.
+- Resolva conflitos conscientemente durante a integração; nunca os oculte com
+  `ours`, `theirs` ou sobrescrita indiscriminada.
+- Preserve os limites de segurança em `docs/safety.md` e a separação
+  arquitetural em `docs/architecture.md`.
+- Antes de alterar código ou documentação relacionada, inspecione os arquivos e
+  testes afetados. Nunca desfaça alterações anteriores sem compreender sua
+  motivação, impacto e autoria disponível no histórico.
+
+## Relatório e conclusão da tarefa
+
+`PROJECT_STATE.md` é o estado **oficial** do projeto e não deve ser alterado
+por tarefas paralelas — nem mesmo para registrar o próprio progresso, uma
+descoberta ou um achado de auditoria. Um agente em tarefa isolada que editar
+`PROJECT_STATE.md` diretamente cometeu um erro de processo e deve ser
+corrigido antes da integração; o agente integrador não deve levar essa edição
+adiante, mesmo que o conteúdo em si seja válido — o conteúdo técnico deve ser
+reincorporado via `.ai/tasks/` e só chega a `PROJECT_STATE.md` pela mão do
+integrador. Durante uma tarefa isolada, crie ou atualize somente o
+relatório exclusivo `.ai/tasks/<identificador-da-tarefa>.md`, usando um
+identificador único derivado da tarefa. Ele deve registrar, de forma curta:
+
+- agente, branch, objetivo e status;
+- resumo das mudanças e arquivos/áreas principais alterados;
+- testes executados e resultados;
+- decisões relevantes, bugs ou limitações restantes;
+- commits criados e observações importantes para integração.
+
+Uma tarefa concluída termina automaticamente, sem pedido adicional do usuário:
+
+1. revise as mudanças e confirme que não há arquivos acidentais, segredos,
+   builds, caches ou dados locais no commit;
+2. execute testes, build, lint e typecheck disponíveis e aplicáveis;
+3. corrija os erros introduzidos pela própria tarefa;
+4. atualize o relatório exclusivo da tarefa;
+5. crie automaticamente um único commit Git local, claro e profissional;
+6. deixe a branch pronta para integração e informe branch, commit, testes e o
+   status **pronto para integração**.
+
+Commits locais são obrigatórios e não exigem autorização remota. Não crie
+commits para experimentos, tentativas intermediárias ou trabalho incompleto.
+Não faça merge automático em `dev/proxima-versao` ao concluir uma tarefa.
+
+Exceção: uma tarefa explicitamente autorizada como integração, ou uma tarefa
+não concorrente explicitamente autorizada diretamente em `dev/proxima-versao`,
+pode atualizar `PROJECT_STATE.md`.
+
+## Integração das tarefas
+
+Frases como “integrar trabalhos”, “integrar as IAs”, “integrar branches”,
+“integrar tarefas concluídas” ou “preparar a dev com os trabalhos concluídos”
+ativam o modo **agente integrador**. Nesse modo, o agente deve:
+
+1. analisar `dev/proxima-versao`, as branches `ai/*` relevantes e os relatórios
+   em `.ai/tasks/`;
+2. identificar quais tarefas estão efetivamente concluídas e prontas;
+3. determinar uma ordem lógica quando houver dependências;
+4. integrar uma branch por vez em `dev/proxima-versao`, examinando e resolvendo
+   conflitos para preservar mudanças válidas dos dois lados;
+5. testar após integrações relevantes, corrigir incompatibilidades e executar a
+   suíte completa aplicável ao final;
+6. atualizar `PROJECT_STATE.md` com o estado oficial já integrado, criar o
+   commit de integração quando necessário e marcar os relatórios integrados.
+7. atualizar a simulação local da próxima versão com
+   `scripts\Install-DevelopmentShortcut.ps1 -Build` e confirmar que o atalho
+   `FiveMCleaner - Desenvolvimento` aponta para
+   `scripts\Start-DevelopmentApp.ps1`. Esse atalho recompila o Release atual
+   antes de abrir o app; portanto ele deve ser usado para validar toda mudança
+   integrada, enquanto `FiveMCleaner.lnk` continua sendo a instalação pública.
+
+Quando o usuário pedir que o agente integrador examine branches e worktrees
+além de `main` e `dev/proxima-versao`, valide os relatórios e integre todas as
+tarefas concluídas aplicáveis. Se o pedido disser para integrar em
+`origin/dev/proxima-versao` (ou usar expressão equivalente), ele também é uma
+autorização explícita para enviar somente `dev/proxima-versao` ao remoto, após
+os testes e a reconstrução obrigatória do atalho. Assim, o atalho
+`FiveMCleaner - Desenvolvimento` deve sempre ser reconstruído para refletir o
+estado final integrado de `dev/proxima-versao` antes desse push; nunca deve
+apontar para `main`, uma branch `ai/*` ou a instalação pública.
+
+Se duas tarefas conflitarem conceitualmente, analise os dois objetivos e
+preserve ambos sempre que isso for seguro e coerente. Não descarte uma solução
+válida sem análise explícita.
+
+Após uma tarefa estar comprovadamente integrada e validada, seu worktree pode
+ser removido e sua branch local temporária pode ser removida se não for mais
+necessária. Nunca remova trabalho não integrado nem branch remota sem
+autorização explícita.
 
 ## Operações remotas
 
-Um commit local nunca autoriza, por si só, qualquer operação remota. Toda
-operação remota (push, criação de release, publicação de site, deploy) exige
-autorização explícita do usuário nesta tarefa, e só pode ser uma das duas
-categorias abaixo — nunca uma operação remota "genérica" fora delas.
+Um commit local nunca autoriza por si só push, release, publicação de site ou
+deploy. Toda operação remota exige autorização explícita do usuário nesta
+tarefa, exceto o push automático da branch exclusiva descrito abaixo.
+
+### Push automático da branch exclusiva
+
+Ao concluir uma tarefa em uma branch `ai/<agente>/<tarefa>`, o agente pode
+fazer push automático dessa branch para o remoto sem autorização explícita do
+usuário. Esse push é restrito exclusivamente à branch da tarefa atual; jamais
+é permitido fazer push automático para `main`, `dev/proxima-versao` ou
+qualquer outra branch sem permissão explícita do usuário.
+
+Condições para o push automático:
+
+- a branch deve seguir o padrão `ai/<agente>/<tarefa>` e ser de uso exclusivo
+  do agente atual;
+- o agente deve ter concluído todos os passos de conclusão da tarefa (testes,
+  lint, commit, relatório);
+- o push envia somente essa branch, sem alterar refs remotas de outras
+  branches;
+- se o push remoto falhar (conflito, rejeição, erro de rede), o agente deve
+  informar o usuário e não tentar forçar o push.
 
 ### Push de desenvolvimento
 
-Disparado quando o usuário autoriza explicitamente um **"push de
-desenvolvimento"** (ou frase equivalente inequívoca). Ao receber essa
-autorização, a IA deve automaticamente:
+É disparado somente por “push de desenvolvimento” ou equivalente inequívoco,
+ou automaticamente ao concluir uma tarefa na branch exclusiva conforme
+descrito acima.
 
-- enviar (`git push`) **apenas** a branch de desenvolvimento atual (a branch
-  em que o trabalho está, nunca `main`);
-- **nunca** enviar ou tocar a branch `main`;
-- **nunca** criar Pull Request;
-- **nunca** criar tag;
-- **nunca** alterar a versão do aplicativo em nenhum arquivo (projeto,
-  assemblies, instalador, manifestos, site, `CHANGELOG.md` ou metadados);
-- **nunca** gerar ou publicar release;
-- **nunca** atualizar, gerar ou publicar o instalador;
-- **nunca** fazer deploy ou publicar/atualizar o site;
-- **nunca** atualizar o changelog de versão pública.
+- Se o agente estiver em `ai/*`, envie somente essa branch.
+- Se estiver no modo integrador em `dev/proxima-versao`, envie somente
+  `dev/proxima-versao`.
+- Nunca envie ou altere `main`, crie Pull Request, tag ou release.
+- Nunca altere versão, `CHANGELOG.md` público, instalador, site, artefatos de
+  distribuição ou updater nesse fluxo.
+- Preserve integralmente o histórico: não faça squash, reescreva commits ou
+  descarte trabalho já commitado sem pedido explícito e inequívoco do usuário.
 
-Finalidade exclusiva do push de desenvolvimento: **backup remoto**,
-**sincronização entre agentes de IA** (por exemplo, Claude Code e Codex
-trabalhando alternadamente no mesmo projeto) e **continuidade do
-desenvolvimento**. Não representa, em nenhuma hipótese, uma publicação.
+Esse push serve apenas para backup remoto, sincronização entre agentes e
+continuidade do desenvolvimento; nunca é publicação.
 
-Preserve integralmente o histórico ao enviar a branch de desenvolvimento: não
-faça squash, não reescreva commits existentes e não descarte trabalho já
-commitado, a menos que o usuário peça isso de forma explícita e inequívoca.
+## Publicação oficial
 
-### Publicação oficial
-
-Disparada **somente** quando o usuário usa uma frase equivalente a:
-"publicar versão", "lançar versão", "criar release", "publicar atualização"
-ou "fazer release oficial". Fora dessas frases, nenhuma ação de publicação
-deve ocorrer, mesmo que uma branch de desenvolvimento já tenha sido enviada.
+É disparada somente por frase como “publicar versão”, “lançar versão”, “criar
+release”, “publicar atualização” ou “fazer release oficial”. Ela sempre parte
+do estado já integrado e consistente de `dev/proxima-versao`; branches `ai/*`
+nunca são publicadas diretamente e tarefas paralelas incompletas não entram na
+publicação.
 
 Ao ser disparada, a IA deve:
 
-1. Revisar completamente o projeto (código, testes, documentação relevante).
-2. Validar build e testes; corrigir falhas antes de prosseguir.
-3. Calcular automaticamente a próxima versão usando
-   [Semantic Versioning](https://semver.org/lang/pt-BR/) — ver critérios
-   abaixo. Não delegar essa decisão ao usuário nem incrementar números de
-   forma arbitrária. A publicação **não** segue uma sequência numérica fixa
-   (ex.: sempre `1.0.3` → `1.0.4`); a IA deve levantar tudo o que mudou de
-   fato desde a última versão publicada (revisando commits, diffs e o
-   histórico da `dev/proxima-versao` desde a última tag) e classificar essa
-   mudança acumulada segundo os critérios de patch/minor/major abaixo. Se o
-   conjunto de mudanças desde a última versão justificar um salto maior
-   (por exemplo, várias funcionalidades novas compatíveis acumuladas desde
-   a última publicação), o incremento correto pode ser `minor` ou `major`
-   diretamente, sem depender de quantas versões patch "deveriam" ter vindo
-   antes.
-4. Atualizar todos os arquivos de versão (projeto/app, assemblies,
-   instalador, manifestos, pacote portátil, metadados de release, workflows,
-   atualizador, site, README e demais arquivos de distribuição), sem deixar
-   números divergentes.
-5. Atualizar `CHANGELOG.md` e as notas de release com um resumo fiel às
-   mudanças reais implementadas e validadas pelos testes.
-6. Atualizar o instalador, o site e demais artefatos de distribuição.
-7. Fazer merge da branch de desenvolvimento para `main`, incorporando
-   integralmente todos os commits e todo o conteúdo validado dessa branch.
-   Esse merge só pode ser dispensado quando estiver comprovado — por
-   comparação explícita de histórico e conteúdo (por exemplo, `git log
-   main..dev/proxima-versao` vazio e `git diff main dev/proxima-versao`
-   vazio) — que `main` já contém exatamente os mesmos commits e o mesmo
-   conteúdo da branch de desenvolvimento. Nunca dispensar o merge apenas
-   porque parece "desnecessário"; a comprovação deve ser verificada e
-   relatada.
-8. Criar a tag correspondente à nova versão.
-9. Publicar oficialmente: `git push` de `main` e da tag, e demais publicações
-   de artefatos (site, release, instalador).
-10. Validar o fluxo de atualização de ponta a ponta (ver "Validação do
-    atualizador" abaixo) antes de considerar a publicação concluída.
-11. Sincronizar a branch de desenvolvimento com a `main` publicada (ver
-    "Sincronização após a publicação" abaixo).
+1. revisar completamente o projeto, o histórico integrado e a documentação
+   relevante, validando build e testes e corrigindo falhas antes de prosseguir;
+2. calcular a próxima versão com [Semantic Versioning](https://semver.org/lang/pt-BR/),
+   usando todas as mudanças efetivamente integradas desde a última tag;
+3. atualizar todos os arquivos de versão, `CHANGELOG.md`, notas de release,
+   instalador, site e demais artefatos de distribuição, sem divergências;
+4. fazer merge de `dev/proxima-versao` para `main`, salvo se uma comparação
+   explícita de histórico e conteúdo provar que ambas já são idênticas;
+5. criar a tag da versão, publicar `main`, a tag e os artefatos oficiais;
+6. validar o atualizador de ponta a ponta e sincronizar `dev/proxima-versao`
+   com a `main` publicada para iniciar o próximo ciclo.
 
-Um push autorizado não autoriza ocultar falhas: se build, testes, lint,
-typecheck, empacotamento ou validação da versão falharem, a IA deve corrigir o
-problema antes do push ou informar claramente que a publicação ficou
-bloqueada.
+Um push autorizado não permite ocultar falhas: build, testes, lint, typecheck,
+empacotamento e validação de versão devem passar, ou o bloqueio deve ser
+informado claramente.
 
-#### Sincronização após a publicação
+### Sincronização após a publicação
 
-Depois que uma publicação oficial for concluída (merge, tag e push de `main`
-realizados com sucesso):
+Depois de uma publicação oficial bem-sucedida, `main` e
+`dev/proxima-versao` devem apontar para o mesmo conteúdo e histórico. A branch
+de integração fica preparada como base das próximas tarefas, que voltarão a
+nascer em branches `ai/*` isoladas.
 
-- a branch de desenvolvimento deve ser sincronizada com a `main` recém
-  publicada, de forma que ambas apontem para o mesmo conteúdo e o mesmo
-  histórico naquele momento;
-- `main` e a branch de desenvolvimento devem representar exatamente a mesma
-  versão e o mesmo conteúdo logo após a publicação;
-- a branch de desenvolvimento permanece como a branch de trabalho ativa; a IA
-  não deve permanecer nem deixar o repositório configurado em `main`;
-- todo o trabalho seguinte — a partir da próxima tarefa — deve continuar
-  exclusivamente na branch de desenvolvimento, iniciando um novo ciclo de
-  desenvolvimento sobre a versão recém-publicada.
+### Validação do atualizador
 
-#### Validação do atualizador
+Antes de considerar qualquer publicação concluída, valide, sempre que possível:
 
-Antes de considerar qualquer publicação oficial concluída, a IA deve validar
-o fluxo de atualização de ponta a ponta, verificando — sempre que
-tecnicamente possível no ambiente disponível — que:
+- consulta da fonte de atualizações pelo aplicativo instalado;
+- detecção e comparação corretas da nova versão;
+- disponibilidade do artefato oficial de instalação/atualização;
+- coerência de links, manifestos, hashes e metadados;
+- aviso correto ao usuário sobre a atualização disponível.
 
-- o aplicativo instalado consegue consultar a fonte de atualizações;
-- a nova versão publicada é detectada corretamente;
-- o número da versão é comparado corretamente (nova versão > versão
-  instalada, sem falsos positivos/negativos);
-- o artefato correto de instalação ou atualização está acessível na origem
-  oficial;
-- links, manifestos, hashes e demais metadados necessários estão válidos e
-  coerentes com o que foi publicado;
-- o usuário receberá corretamente o aviso de nova atualização disponível.
+Quando a validação completa depender de instalação real, rede externa ou
+interação manual, relate exatamente o que foi verificado e o que permanece
+pendente. Nunca afirme que o atualizador funciona sem evidência concreta.
 
-Quando essa validação não puder ser executada de forma completa no ambiente
-atual (por exemplo, por depender de instalação real, rede externa ou
-interação manual), a IA deve informar claramente e por escrito quais partes
-foram efetivamente verificadas e quais dependem de teste externo ou manual
-pendente. A IA nunca deve afirmar que o atualizador funciona sem evidência
-concreta da verificação realizada.
-
-#### Classificação de versão (Semantic Versioning)
+### Classificação de versão (Semantic Versioning)
 
 - **patch** (`X.Y.Z` → `X.Y.(Z+1)`): correções, ajustes visuais, segurança,
-  documentação de release ou melhorias internas compatíveis que não adicionam
-  uma capacidade pública relevante;
+  documentação de release ou melhorias internas compatíveis sem nova capacidade
+  pública relevante;
 - **minor** (`X.Y.Z` → `X.(Y+1).0`): novas funcionalidades públicas
-  compatíveis, fluxos relevantes adicionais ou melhorias de produto que ampliam
-  a capacidade sem quebrar integrações existentes;
+  compatíveis ou melhorias de produto que ampliam capacidade sem quebrar
+  integrações;
 - **major** (`X.Y.Z` → `(X+1).0.0`): mudança incompatível de contrato,
-  instalação, atualização, dados persistidos ou comportamento público que exija
-  migração, atenção explícita ou perda de compatibilidade.
+  instalação, atualização, dados persistidos ou comportamento público.
 
-Dentro de uma mesma categoria (patch, minor ou major), o componente
-correspondente evolui numericamente a partir do que já existe: `1.0.0` →
-`1.0.1` → ... → `1.0.99` → `1.1.0` → `1.1.1` → ... A mesma regra vale para
-todos os componentes posteriores (`1.2.99` → `1.3.0`, e assim por diante).
-O componente final (`Z`) é um inteiro decimal SemVer, sem largura fixa e sem
-zero à esquerda: `1.1.9`, `1.1.10`, `1.1.99` e `1.1.100` são todos válidos.
-Assim, a apresentação `X.X.XX` significa apenas que o patch pode ter duas ou
-mais casas; ela não cria um quarto componente nem usa fração decimal.
-Isso descreve apenas a mecânica de contagem dentro de cada categoria — não
-significa que toda publicação precise passar por patch antes de minor, ou
-por minor antes de major. A categoria em si (qual componente é incrementado)
-é sempre decidida pela classificação real do conjunto de mudanças desde a
-última versão publicada, conforme os critérios acima.
+O componente alterado evolui numericamente a partir da versão existente. O
+patch é um inteiro decimal SemVer sem largura fixa ou zero à esquerda: `1.1.9`,
+`1.1.10`, `1.1.99` e `1.1.100` são válidos. A categoria é decidida pelo
+conjunto real de mudanças integradas desde a última versão publicada, não por
+uma sequência fixa de increments.
 
-O bloco **Últimas atualizações** deve refletir somente alterações realmente
-presentes no commit e na release, sem inventar correções ou prometer
-resultados não testados. Formato:
+O bloco **Últimas atualizações** deve refletir apenas mudanças presentes no
+commit e na release, sem inventar resultados ou prometer itens não testados:
 
 ```text
 Últimas atualizações:
@@ -220,26 +261,43 @@ Versão 1.2.3
 ```
 
 Alterações exclusivamente em `AI_RULES.md` ou em outra documentação de
-governança de IA podem ser enviadas por push de desenvolvimento, sem criar
-uma nova versão pública; nunca devem ser apresentadas como alteração do
-aplicativo.
+governança podem receber push de desenvolvimento autorizado, sem criar versão
+pública; nunca devem ser apresentadas como mudança do aplicativo.
 
 ## Fluxo de trabalho
 
 ```text
-Desenvolvimento na dev/proxima-versao
-→ testes
-→ commits automáticos
-→ push de desenvolvimento quando autorizado
-→ [Somente quando o usuário pedir uma publicação oficial]
-→ preparação da publicação oficial
-→ validação completa (build, testes, lint, typecheck)
-→ atualização de versão, changelog, instalador, site e artefatos
-→ merge integral para main
-→ tag
-→ push da main e da tag
-→ release e demais publicações
-→ validação do atualizador
-→ sincronização da dev/proxima-versao com a main publicada
-→ retorno à dev/proxima-versao para o próximo ciclo de desenvolvimento
+main
+→ versão pública
+
+dev/proxima-versao
+→ integração oficial da próxima versão
+
+ai/<agente>/<tarefa>
+→ trabalho isolado
+
+Nova tarefa
+→ leitura de AI_RULES + PROJECT_STATE
+→ branch automática da tarefa baseada em dev/proxima-versao
+→ worktree exclusivo criado ou reutilizado automaticamente
+→ implementação e testes
+→ relatório .ai/tasks/
+→ commit local automático
+→ push automático da branch exclusiva (sem permissão explícita)
+→ pronta para integração
+
+Integração solicitada
+→ integrar tarefas concluídas em dev/proxima-versao
+→ resolver conflitos conscientemente
+→ testes completos
+→ atualizar PROJECT_STATE
+→ dev pronta
+
+Publicação oficial solicitada
+→ validações e SemVer
+→ changelog e artefatos
+→ merge dev/proxima-versao → main
+→ tag, push e release
+→ validação do updater
+→ sincronização main/dev
 ```

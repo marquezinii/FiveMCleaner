@@ -8,6 +8,7 @@ type Language = "pt" | "en";
 const DOWNLOAD_URL =
   "https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe";
 const GITHUB_URL = "https://github.com/marquezinii/FiveMCleaner";
+const DISCORD_URL = "https://discord.gg/bazcuQB9n6";
 
 const copy = {
   pt: {
@@ -24,6 +25,7 @@ const copy = {
       faq: "Dúvidas",
     },
     headerDownload: "Baixar",
+    discordLabel: "Entre no nosso Discord oficial",
     hero: {
       eyebrow: "CENTRAL OFICIAL DE DOWNLOAD",
       titleStart: "Seu PC mais preparado.",
@@ -180,7 +182,7 @@ const copy = {
       body: "O instalador inclui o runtime necessário. Não é preciso procurar .NET, pacotes extras ou executar comandos manualmente.",
       systemTitle: "Requisitos",
       items: [
-        "Windows 10 22H2 ou Windows 11",
+        "Windows 10 2004 ou Windows 11",
         "Sistema x64 (64 bits)",
         "Permissão de administrador nas ações de sistema",
         "Conexão apenas para atualizações e relatórios opcionais",
@@ -247,6 +249,8 @@ const copy = {
       tagline: "Otimização transparente para FiveM no Windows.",
       product: "Produto",
       trust: "Transparência",
+      community: "Comunidade",
+      discord: "Discord oficial",
       developed: "Desenvolvido por Felipe Marquezini",
       rights: "© 2026 FiveMCleaner. Todos os direitos reservados.",
       noTracking: "Este site não usa cookies, analytics ou formulários.",
@@ -266,6 +270,7 @@ const copy = {
       faq: "FAQ",
     },
     headerDownload: "Download",
+    discordLabel: "Join our official Discord",
     hero: {
       eyebrow: "OFFICIAL DOWNLOAD CENTER",
       titleStart: "A better prepared PC.",
@@ -422,7 +427,7 @@ const copy = {
       body: "The installer includes the required runtime. You do not need to find .NET, install extra packages or run commands manually.",
       systemTitle: "Requirements",
       items: [
-        "Windows 10 22H2 or Windows 11",
+        "Windows 10 2004 or Windows 11",
         "x64 (64-bit) system",
         "Administrator permission for system actions",
         "Connection only for updates and optional reports",
@@ -489,6 +494,8 @@ const copy = {
       tagline: "Transparent optimization for FiveM on Windows.",
       product: "Product",
       trust: "Transparency",
+      community: "Community",
+      discord: "Official Discord",
       developed: "Developed by Felipe Marquezini",
       rights: "© 2026 FiveMCleaner. All rights reserved.",
       noTracking: "This website uses no cookies, analytics or forms.",
@@ -498,6 +505,17 @@ const copy = {
 
 function CheckMark() {
   return <span className="check-mark" aria-hidden="true">✓</span>;
+}
+
+function DiscordIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path
+        fill="currentColor"
+        d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"
+      />
+    </svg>
+  );
 }
 
 export default function Home() {
@@ -551,6 +569,16 @@ export default function Home() {
                 EN
               </button>
             </div>
+            <a
+              className="discord-link"
+              href={DISCORD_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={text.discordLabel}
+              title={text.discordLabel}
+            >
+              <DiscordIcon />
+            </a>
             <a className="header-download" href={DOWNLOAD_URL}>
               {text.headerDownload}
             </a>
@@ -893,6 +921,13 @@ export default function Home() {
               <a href="#safety">{text.nav.safety}</a>
               <a href="#faq">{text.nav.faq}</a>
               <a href={GITHUB_URL}>GitHub</a>
+            </div>
+            <div>
+              <strong>{text.footer.community}</strong>
+              <a className="footer-discord" href={DISCORD_URL} target="_blank" rel="noreferrer">
+                <DiscordIcon />
+                {text.footer.discord}
+              </a>
             </div>
           </div>
         </div>

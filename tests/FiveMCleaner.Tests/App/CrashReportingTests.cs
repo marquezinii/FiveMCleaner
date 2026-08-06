@@ -148,6 +148,81 @@ public sealed class RemoteServicesOptionsLoaderTests : IDisposable
 
         Assert.Equal("Production", options.Environment);
     }
+
+    [Fact]
+    public void Load_LocalOverlayExists_FillsInValuesTheTrackedFileLeavesNull()
+    {
+        WriteConfigFile(
+            "appsettings.Development.json",
+            """{ "environment": "Development", "firebaseApiKey": "tracked-key", "googleOAuthClientId": null, "googleOAuthClientSecret": null }""");
+        WriteConfigFile(
+            "appsettings.Development.local.json",
+            """{ "googleOAuthClientId": "local-client-id", "googleOAuthClientSecret": "local-secret" }""");
+
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Development, tempDirectory);
+
+        // The tracked, committed value survives...
+        Assert.Equal("tracked-key", options.FirebaseApiKey);
+        // ...and the overlay-only value, absent from the tracked file, comes through.
+        Assert.Equal("local-client-id", options.GoogleOAuthClientId);
+        Assert.Equal("local-secret", options.GoogleOAuthClientSecret);
+    }
+
+    [Fact]
+    public void Load_LocalOverlayHasANullField_DoesNotClearTheTrackedValue()
+    {
+        WriteConfigFile(
+            "appsettings.Development.json",
+            """{ "environment": "Development", "firebaseApiKey": "tracked-key" }""");
+        WriteConfigFile("appsettings.Development.local.json", """{ "googleOAuthClientId": "local-client-id" }""");
+
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Development, tempDirectory);
+
+        Assert.Equal("tracked-key", options.FirebaseApiKey);
+        Assert.Equal("local-client-id", options.GoogleOAuthClientId);
+    }
+
+    [Fact]
+    public void Load_NoLocalOverlayFile_ReturnsTheTrackedConfigUnchanged()
+    {
+        WriteConfigFile(
+            "appsettings.Development.json",
+            """{ "environment": "Development", "firebaseApiKey": "tracked-key" }""");
+
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Development, tempDirectory);
+
+        Assert.Equal("tracked-key", options.FirebaseApiKey);
+        Assert.Null(options.GoogleOAuthClientId);
+    }
+
+    [Fact]
+    public void Load_MalformedLocalOverlay_FallsBackToTheTrackedConfigInsteadOfThrowing()
+    {
+        WriteConfigFile(
+            "appsettings.Development.json",
+            """{ "environment": "Development", "firebaseApiKey": "tracked-key" }""");
+        WriteConfigFile("appsettings.Development.local.json", "{ not valid json");
+
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Development, tempDirectory);
+
+        Assert.Equal("tracked-key", options.FirebaseApiKey);
+    }
+
+    /// <summary>
+    /// The overlay applies by environment name: a Development local file must
+    /// never leak into a Production load, which is what would happen if the
+    /// overlay path were computed without the environment segment.
+    /// </summary>
+    [Fact]
+    public void Load_LocalOverlayIsScopedToItsOwnEnvironment()
+    {
+        WriteConfigFile("appsettings.Production.json", """{ "environment": "Production" }""");
+        WriteConfigFile("appsettings.Development.local.json", """{ "googleOAuthClientId": "dev-only" }""");
+
+        var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Production, tempDirectory);
+
+        Assert.Null(options.GoogleOAuthClientId);
+    }
 }
 
 public sealed class TelemetryEndpointPolicyTests
@@ -181,6 +256,20 @@ public sealed class TelemetryEndpointPolicyTests
 
         Assert.False(accepted);
         Assert.False(string.IsNullOrWhiteSpace(error));
+    }
+}
+
+public sealed class FirebaseAuthConfigurationTests
+{
+    [Fact]
+    public void TryGetApiKey_AcceptsOnlyPublicApiKeySyntax()
+    {
+        var accepted = FirebaseAuthConfiguration.TryGetApiKey(
+            "AIzaSyBrYcZtzioKnCc1-LmgCC2YI1R66SW4vdM", out var apiKey);
+
+        Assert.True(accepted);
+        Assert.Equal("AIzaSyBrYcZtzioKnCc1-LmgCC2YI1R66SW4vdM", apiKey);
+        Assert.False(FirebaseAuthConfiguration.TryGetApiKey("https://example.test", out _));
     }
 }
 

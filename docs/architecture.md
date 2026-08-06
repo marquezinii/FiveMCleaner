@@ -15,6 +15,29 @@ Este documento descreve a arquitetura-alvo e os limites entre componentes. Uma c
 
 ## Componentes
 
+## Autenticação Firebase
+
+A conta usa diretamente a Firebase Authentication REST API. `FirebaseAuthService`
+é a única camada de rede; DTOs, armazenamento DPAPI, estado de autenticação e
+mapeamento de erros permanecem separados. Apenas o refresh token opcional é
+persistido e protegido para o usuário Windows; senha e ID token nunca vão para
+disco ou logs. O ID token fica em memória, é renovado antes de vencer e deve
+seguir como `Authorization: Bearer` apenas para um backend HTTPS que o valide e
+use o Firebase UID como identificador interno. No Worker, a verificação fica em
+`infra/cloudflare-worker/src/auth/firebaseIdToken.js` (RS256 + JWKS Google,
+`aud`/`iss`/`exp`/`sub`). Com `emailVerified=false`, o estado é
+`EmailVerificationRequired` e recursos autenticados ficam bloqueados.
+
+`POST /account/profile` é a primeira rota de produto sobre esse verificador:
+como o Firebase só administra e-mail/senha/uid, essa rota guarda o que ele
+não guarda — nome, sobrenome e um nome de usuário único (case-insensitive) —
+em `account_profiles`, sempre indexado pelo UID já validado do token, nunca
+por um valor enviado pelo cliente. `AccountProfileService`
+(`FiveMCleaner.App/Services`) chama essa rota depois que o cadastro no
+Firebase é concluído; se o usuário escolhido já existir, a resposta é
+`409 username-taken` e a conta Firebase já criada é preservada — a janela de
+conta pede outro nome de usuário em vez de descartar o cadastro.
+
 | Projeto                  | Responsabilidade                                                    | Não deve conhecer                                        |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- |
 | `FiveMCleaner.App`       | WPF, navegação, prévia, progresso e confirmação                     | APIs administrativas ou detalhes de registro             |
@@ -96,7 +119,6 @@ Um plano é uma lista ordenada e imutável de ações resolvidas para aquele dia
 - `Failed` — erro genuíno; a própria ação foi revertida;
 - `RolledBack` — revertida com sucesso após falha;
 - `RollbackFailed` — requer atenção e fica destacado no relatório;
-- `Blocked` — edição/segurança não suportada;
 - `NotRun` — não executada porque uma falha crítica anterior abortou o restante da run.
 
 Esse enum é independente do estado transacional interno do journal
@@ -139,7 +161,7 @@ O parser XML altera apenas chaves presentes. Um arquivo inválido gera ação de
 O Enhanced tem launcher, ciclo de processo e cache diferentes. Até o adaptador próprio existir:
 
 1. a descoberta identifica sinais inequívocos da edição;
-2. o Core retorna `Blocked` com explicação;
+2. o planejamento retorna um bloqueio de plano (`PlanBlockCode.EnhancedNotSupported`) com explicação;
 3. nenhum fallback Legacy é tentado;
 4. o usuário recebe links para o estado de suporte do projeto;
 5. testes garantem que nenhum executor seja chamado.
@@ -150,13 +172,12 @@ Quando o suporte for implementado, ele deve ser um adaptador separado e passar p
 
 Progresso é calculado por passos concluídos e pesos declarados. Mensagens devem descrever ações reais, por exemplo “Validando snapshot gráfico”, não frases genéricas. O progresso também expõe etapa atual / total de etapas (`CompletedSteps`/`TotalSteps` em `WindowsActionProgress` e `AppProgressUpdate`) e o outcome de cada etapa. A interface do Otimizador mostra apenas a etapa atual e a imediatamente anterior, mais escura, para manter o acompanhamento claro sem expor uma lista técnica de ações.
 
-## Telemetria opcional
+## Diagnósticos essenciais e dados opcionais
 
 `IAnonymousTelemetryService` é uma fronteira da camada App, separada do
 serviço de otimização. A preferência persistida `AppSettings.ShareAnonymousTelemetry`
-nasce como `true` em instalações novas, mas nada é enviado antes do
-consentimento versionado ser confirmado (`PrivacyConsentEvaluator`); o
-`MainViewModel` só gera um evento ao término de uma otimização após isso. O
+nasce como `true` em instalações novas e controla hardware, perfil e ações;
+os diagnósticos essenciais continuam ativos. O
 contrato `AnonymousTelemetryEvent` não aceita payload livre: contém o nome
 allowlisted do evento, duração, versão, categoria de erro allowlisted em
 falha e, desde a versão 2 do consentimento, um perfil de hardware (CPU/GPU/
@@ -174,10 +195,8 @@ privacidade: [telemetry.md](telemetry.md) e [bug-reports.md](bug-reports.md).
 ### Relatório de falhas e configuração centralizada
 
 `ICrashReportingService` (implementação `SentryCrashReportingService`) é
-outra fronteira da camada App, análoga à de telemetria: nunca inicializada
-antes do consentimento (`AppSettings.ShareCrashReports` combinado com
-`PrivacyConsentVersion` em dia, via o mesmo `PrivacyConsentEvaluator`), e
-nunca referenciada por `Core`/`Windows`/`Broker`. `MainWindow` a inicializa
+outra fronteira da camada App, análoga à de telemetria e parte dos diagnósticos
+essenciais; nunca é referenciada por `Core`/`Windows`/`Broker`. `MainWindow` a inicializa
 uma única vez, logo depois que o fluxo de consentimento resolve, usando
 `RemoteServicesOptionsLoader` para ler o DSN de um arquivo de configuração
 por ambiente (`Config/appsettings.{Development,Production}.json`, com

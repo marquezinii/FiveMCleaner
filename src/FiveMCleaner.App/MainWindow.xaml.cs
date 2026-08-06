@@ -27,97 +27,74 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly bool demoMode;
     private readonly RemoteServicesOptions remoteServicesOptions;
     private readonly QueuedCloudflareTelemetryService? queuedCloudflareTelemetry;
+    private readonly IFirebaseAuthService? accountService;
+    private readonly IAccountProfileService profileService;
+    private readonly IGoogleOAuthClient googleOAuth;
     private HwndSource? windowSource;
     private bool allowClose;
     private bool closeAfterOptimizationStops;
     private bool trayAnnouncementShown;
     private bool systemSessionEnding;
+    private bool syncingLanguageSelector;
 
     public MainWindow()
     {
         InitializeComponent();
         themeManager = new ThemeManager();
         themeManager.Apply(AppThemePreference.System);
-        var commandLine = Environment.GetCommandLineArgs();
-        var syntheticDemo = commandLine
-            .Any(value => value.Equals("--demo-synthetic", StringComparison.OrdinalIgnoreCase));
-        demoMode = syntheticDemo || commandLine
-            .Any(value => value.Equals("--demo", StringComparison.OrdinalIgnoreCase));
-        startupLaunch = commandLine
-            .Any(value => value.Equals("--startup", StringComparison.OrdinalIgnoreCase));
-        var justUpdatedVersion = commandLine
-            .FirstOrDefault(value => value.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase))
-            ?["--updated=".Length..];
+
+        var commandLine = ParseCommandLine();
+        demoMode = commandLine.DemoMode;
+        startupLaunch = commandLine.StartupLaunch;
+
         var runtimeLayout = RuntimeLayout.Resolve(AppContext.BaseDirectory);
         var installRoot = runtimeLayout.InstallRoot;
         var runtimeRoot = runtimeLayout.RuntimeRoot;
-        IStartupRegistrationService startupRegistration = demoMode
-            ? new SessionStartupRegistrationService()
-            : runtimeRoot is null
-                ? new WindowsStartupRegistrationService()
-                : new WindowsStartupRegistrationService(
-                    Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"));
-        releaseUpdateService = demoMode
-            ? null
-            : runtimeRoot is null ? new GitHubReleaseUpdateService() : new SignedManifestUpdateService();
-        ISilentUpdateInstaller? silentUpdateInstaller = demoMode ? null
-            : runtimeRoot is not null
-                ? new AtomicUpdateInstaller(runtimeRoot, Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"))
-                : new SilentUpdateInstaller(
-                Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    ProductIdentity.Name,
-                    "Updates"),
-                Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    ProductIdentity.Name,
-                    "Logs"),
-                Path.Combine(AppContext.BaseDirectory, "updater", "FiveMCleaner.Updater.exe"),
-                Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    ProductIdentity.Name,
-                    "Updater"));
+
+        var startupRegistration = CreateStartupRegistrationService(demoMode, installRoot, runtimeRoot);
+        releaseUpdateService = CreateReleaseUpdateService(demoMode, runtimeRoot);
+        var silentUpdateInstaller = CreateSilentUpdateInstaller(demoMode, installRoot, runtimeRoot);
+
         var runtimeEnvironment = AppEnvironment.Resolve();
         remoteServicesOptions = RemoteServicesOptionsLoader.Load(runtimeEnvironment, AppContext.BaseDirectory);
-        // Cloudflare is the sole telemetry transport (FormSubmit was
-        // removed entirely). If the configured endpoint is ever missing or
-        // malformed, telemetry safely does nothing rather than crash or
-        // silently fall back to a different destination.
-        IAnonymousTelemetryService telemetryService;
-        if (demoMode)
+
+        profileService = TryCreateHttpsEndpoint(remoteServicesOptions.AccountProfileEndpoint, out var profileEndpoint)
+            ? new CloudflareAccountProfileService(profileEndpoint)
+            : new DisabledAccountProfileService();
+
+        // Demo runs never talk to Google: an unconfigured client reports
+        // IsConfigured=false and the account window hides the button.
+        googleOAuth = new GoogleOAuthClient(
+            demoMode ? null : remoteServicesOptions.GoogleOAuthClientId,
+            demoMode ? null : remoteServicesOptions.GoogleOAuthClientSecret);
+
+        accountService = CreateAccountService(demoMode, remoteServicesOptions);
+        if (accountService is not null)
         {
-            telemetryService = DisabledAnonymousTelemetryService.Instance;
-        }
-        else if (TelemetryEndpointPolicy.TryCreate(
-            remoteServicesOptions.TelemetryEndpoint,
-            runtimeEnvironment,
-            out var telemetryEndpoint,
-            out _))
-        {
-            queuedCloudflareTelemetry = new QueuedCloudflareTelemetryService(
-                new LocalTelemetryQueue(Path.Combine(
-                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-                    ProductIdentity.Name,
-                    "Telemetry",
-                    "pending")),
-                new CloudflareTelemetryTransport(telemetryEndpoint, remoteServicesOptions.Environment));
-            telemetryService = queuedCloudflareTelemetry;
-        }
-        else
-        {
-            telemetryService = DisabledAnonymousTelemetryService.Instance;
+            accountService.StateChanged += AccountService_StateChanged;
         }
 
+        // StateChanged only fires once RestoreSessionAsync actually finds a
+        // stored session; a fresh install or an already-signed-out user
+        // never raises it, so the Settings card needs one explicit call here
+        // to land on the right panel (unavailable/signed-out/signed-in)
+        // instead of relying on whatever Visibility happens to be XAML's
+        // default.
+        RefreshAccountSettingsCard();
+
+        var telemetry = CreateTelemetryServices(demoMode, remoteServicesOptions, runtimeEnvironment);
+        queuedCloudflareTelemetry = telemetry.Queued;
+
         viewModel = new MainViewModel(
-            new AppOptimizationService(demoMode, syntheticDemo),
+            new AppOptimizationService(demoMode, commandLine.SyntheticDemo),
             localization: LocalizationService.Current,
             startupRegistration: startupRegistration,
             releaseUpdateService: releaseUpdateService,
-            telemetry: telemetryService,
+            telemetry: telemetry.Service,
             silentUpdateInstaller: silentUpdateInstaller);
-        if (!string.IsNullOrWhiteSpace(justUpdatedVersion))
+        if (!string.IsNullOrWhiteSpace(commandLine.JustUpdatedVersion))
         {
-            viewModel.ReportCompletedUpdate(justUpdatedVersion);
+            viewModel.ReportCompletedUpdate(commandLine.JustUpdatedVersion);
         }
         trayIcon = new TrayIconService(LocalizationService.Current);
         trayIcon.ShowRequested += TrayIcon_ShowRequested;
@@ -131,14 +108,173 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         System.Windows.Application.Current.SessionEnding += Application_SessionEnding;
     }
 
+    private sealed record MainWindowCommandLine(
+        bool DemoMode,
+        bool SyntheticDemo,
+        bool StartupLaunch,
+        string? JustUpdatedVersion);
+
+    private static MainWindowCommandLine ParseCommandLine()
+    {
+        var commandLine = Environment.GetCommandLineArgs();
+        var syntheticDemo = commandLine
+            .Any(value => value.Equals("--demo-synthetic", StringComparison.OrdinalIgnoreCase));
+        var demoMode = syntheticDemo || commandLine
+            .Any(value => value.Equals("--demo", StringComparison.OrdinalIgnoreCase));
+        var startupLaunch = commandLine
+            .Any(value => value.Equals("--startup", StringComparison.OrdinalIgnoreCase));
+        var justUpdatedVersion = commandLine
+            .FirstOrDefault(value => value.StartsWith("--updated=", StringComparison.OrdinalIgnoreCase))
+            ?["--updated=".Length..];
+        return new MainWindowCommandLine(demoMode, syntheticDemo, startupLaunch, justUpdatedVersion);
+    }
+
+    private IStartupRegistrationService CreateStartupRegistrationService(
+        bool demoMode,
+        string? installRoot,
+        string? runtimeRoot)
+    {
+        if (demoMode)
+        {
+            return new SessionStartupRegistrationService();
+        }
+
+        return runtimeRoot is null
+            ? new WindowsStartupRegistrationService()
+            : new WindowsStartupRegistrationService(
+                Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"));
+    }
+
+    private IReleaseUpdateService? CreateReleaseUpdateService(bool demoMode, string? runtimeRoot)
+    {
+        return demoMode
+            ? null
+            : runtimeRoot is null ? new GitHubReleaseUpdateService() : new SignedManifestUpdateService();
+    }
+
+    private ISilentUpdateInstaller? CreateSilentUpdateInstaller(
+        bool demoMode,
+        string? installRoot,
+        string? runtimeRoot)
+    {
+        if (demoMode)
+        {
+            return null;
+        }
+
+        if (runtimeRoot is not null)
+        {
+            return new AtomicUpdateInstaller(
+                runtimeRoot,
+                Path.Combine(installRoot!, "FiveMCleaner.Launcher.exe"));
+        }
+
+        return new SilentUpdateInstaller(
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                ProductIdentity.Name,
+                "Updates"),
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                ProductIdentity.Name,
+                "Logs"),
+            Path.Combine(AppContext.BaseDirectory, "updater", "FiveMCleaner.Updater.exe"),
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                ProductIdentity.Name,
+                "Updater"));
+    }
+
+    private IFirebaseAuthService? CreateAccountService(
+        bool demoMode,
+        RemoteServicesOptions options)
+    {
+        if (demoMode
+            || !FirebaseAuthConfiguration.TryGetApiKey(options.FirebaseApiKey, out var firebaseApiKey))
+        {
+            return null;
+        }
+
+        var service = new FirebaseAuthService(firebaseApiKey);
+        service.StateChanged += (_, _) => Dispatcher.Invoke(UpdateAccountButton);
+        return service;
+    }
+
+    private sealed record MainWindowTelemetry(
+        IAnonymousTelemetryService Service,
+        QueuedCloudflareTelemetryService? Queued);
+
+    /// <summary>
+    /// Cloudflare is the sole telemetry transport (FormSubmit was
+    /// removed entirely). If the configured endpoint is ever missing or
+    /// malformed, telemetry safely does nothing rather than crash or
+    /// silently fall back to a different destination.
+    /// </summary>
+    private MainWindowTelemetry CreateTelemetryServices(
+        bool demoMode,
+        RemoteServicesOptions options,
+        AppRuntimeEnvironment runtimeEnvironment)
+    {
+        if (demoMode)
+        {
+            return new MainWindowTelemetry(DisabledAnonymousTelemetryService.Instance, null);
+        }
+
+        if (TelemetryEndpointPolicy.TryCreate(
+            options.TelemetryEndpoint,
+            runtimeEnvironment,
+            out var telemetryEndpoint,
+            out _))
+        {
+            var queued = new QueuedCloudflareTelemetryService(
+                new LocalTelemetryQueue(Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                    ProductIdentity.Name,
+                    "Telemetry",
+                    "pending")),
+                new CloudflareTelemetryTransport(telemetryEndpoint, options.Environment));
+            return new MainWindowTelemetry(queued, queued);
+        }
+
+        return new MainWindowTelemetry(DisabledAnonymousTelemetryService.Instance, null);
+    }
+
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
         ActivateNavItem(DashboardNav);
+        Navigate(DashboardPage);
+        if (!demoMode)
+        {
+            // O recibo de saúde precisa ser gravado antes do InitializeAsync:
+            // a janela de saúde do launcher (45s) começa no spawn do processo,
+            // e a inicialização (varredura WMI/registro, flush de telemetria,
+            // checagem de update) pode passar disso em máquinas lentas. Um
+            // candidato saudável, apenas lento, não deve ser revertido -- o
+            // recibo confirma "o processo iniciou e a interface respondeu",
+            // não "todo o trabalho em segundo plano terminou".
+            ConfirmUpdateHealthIfRequested();
+        }
+
         await viewModel.InitializeAsync();
+        if (accountService is not null)
+        {
+            _ = RestoreAccountSessionQuietlyAsync();
+        }
         themeManager.Apply(viewModel.ThemePreference);
-        LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected
-            ? 0
-            : viewModel.IsSpanishSelected ? 2 : 1;
+        // A sincronização programática do seletor não pode acionar o
+        // SelectionChanged: ele converteria uma preferência "Automatic" em
+        // um idioma fixo (o detectado), gravando o pin no primeiro launch.
+        syncingLanguageSelector = true;
+        try
+        {
+            LanguageSelector.SelectedIndex = viewModel.IsPortugueseSelected
+                ? 0
+                : viewModel.IsSpanishSelected ? 2 : 1;
+        }
+        finally
+        {
+            syncingLanguageSelector = false;
+        }
         ThemeSelector.SelectedIndex = viewModel.ThemePreference switch
         {
             AppThemePreference.Dark => 1,
@@ -147,7 +283,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         };
         if (!demoMode)
         {
-            ConfirmUpdateHealthIfRequested();
             await ShowPrivacyConsentIfNeededAsync();
             InitializeCrashReportingIfAuthorized();
             await FlushPendingTelemetryIfAnyAsync();
@@ -157,6 +292,113 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             HideToTray();
         }
         await CaptureIfRequestedAsync();
+    }
+
+    private async Task RestoreAccountSessionQuietlyAsync()
+    {
+        try
+        {
+            await accountService!.RestoreSessionAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+        }
+    }
+
+    private void Account_Click(object sender, RoutedEventArgs e)
+    {
+        if (accountService is null)
+        {
+            System.Windows.MessageBox.Show("O acesso à conta não está disponível nesta instalação.", "Conta", MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (accountService.Current.State == AuthenticationState.SignedIn)
+        {
+            // Já logado: o clique no cabeçalho leva direto para
+            // Configurações > Sua conta, em vez de reabrir a janela de
+            // entrar/cadastrar (que agora só cuida de autenticar, não de
+            // gerenciar a conta -- ver AccountWindow.CloseAfterSignIn).
+            ActivateNavItem(SettingsNav);
+            Navigate(SettingsPage);
+            AccountSettingsCard.BringIntoView();
+            return;
+        }
+
+        OpenAccountWindow();
+    }
+
+    private void OpenAccountWindow()
+    {
+        var dialog = new AccountWindow(accountService!, profileService, googleOAuth) { Owner = this };
+        if (dialog.ShowDialog() == true) UpdateAccountButton();
+    }
+
+    private void UpdateAccountButton()
+    {
+        var profile = accountService?.Current.User;
+        AccountLabel.Text = profile?.DisplayName ?? "Entrar / Cadastre-se";
+        AccountButton.ToolTip = profile is null ? "Entrar ou criar conta" : "Ver minha conta";
+        // Also sets AccountInitials/avatar for both the header and the
+        // Settings card, so a direct assignment here would just be
+        // immediately overwritten.
+        RefreshAccountSettingsCard();
+    }
+
+    private async void AccountService_StateChanged(object? sender, AuthenticationSnapshot snapshot)
+    {
+        Dispatcher.Invoke(UpdateAccountButton);
+        if (snapshot.State != AuthenticationState.SignedIn || snapshot.User is null)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                viewModel.SetAccountFirstName(null);
+                ApplyAccountSettingsUsername(null);
+            });
+            return;
+        }
+
+        await SyncAccountFirstNameAsync();
+    }
+
+    /// <summary>
+    /// Reads the caller's own first name for the Overview greeting. Firebase
+    /// Authentication REST never stores it, so it only exists in the
+    /// Worker's profile table; this is why login and quiet session restore
+    /// both need a read call instead of getting it for free off the token.
+    /// </summary>
+    private async Task SyncAccountFirstNameAsync()
+    {
+        if (accountService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var idToken = await accountService.GetIdTokenAsync().ConfigureAwait(false);
+            if (idToken is null)
+            {
+                return;
+            }
+
+            var result = await profileService.FetchAsync(idToken).ConfigureAwait(false);
+            if (result.Outcome == AccountProfileFetchOutcome.Found)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    viewModel.SetAccountFirstName(result.FirstName);
+                    ApplyAccountSettingsUsername(result.Username);
+                });
+            }
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            // Sem nome n\u00E3o \u00E9 um estado de erro vis\u00EDvel: a sauda\u00E7\u00E3o simplesmente
+            // fica sem o nome at\u00E9 a pr\u00F3xima sincroniza\u00E7\u00E3o bem-sucedida.
+        }
     }
 
     private static void ConfirmUpdateHealthIfRequested()
@@ -171,7 +413,15 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             ProductIdentity.Name);
         if (transaction is not null && nonce is not null)
-            new UpdateHealthReceiptStore(runtimeRoot).Confirm(transaction, version, nonce);
+        {
+            try { new UpdateHealthReceiptStore(runtimeRoot).Confirm(transaction, version, nonce); }
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
+            {
+                // A falha preserva o app ativo; o launcher apenas não vê o
+                // recibo de saúde neste momento e re-verifica na próxima
+                // abertura antes de qualquer rollback.
+            }
+        }
         try { new VersionFloorStore(dataRoot).Advance(version); }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
         {
@@ -201,15 +451,12 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
         var consentWindow = new PrivacyConsentWindow(
             decision.Variant,
-            viewModel.ShareAnonymousTelemetry,
-            viewModel.ShareCrashReports)
+            viewModel.ShareAnonymousTelemetry)
         {
             Owner = this
         };
         consentWindow.ShowDialog();
-        await viewModel.ConfirmPrivacyConsentAsync(
-            consentWindow.AcceptedAnonymousTelemetry,
-            consentWindow.AcceptedCrashReports);
+        await viewModel.ConfirmPrivacyConsentAsync(consentWindow.AcceptedAnonymousTelemetry);
     }
 
     /// <summary>
@@ -228,11 +475,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     /// </summary>
     private void InitializeCrashReportingIfAuthorized()
     {
-        if (!viewModel.ShareCrashReports)
-        {
-            return;
-        }
-
         CrashReporting.Current = new SentryCrashReportingService();
         CrashReporting.Current.Initialize(remoteServicesOptions, viewModel.AppVersion);
     }
@@ -379,7 +621,23 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         ActivateNavItem(OptimizerNav);
         Navigate(OptimizerPage);
+        PlanDetailsExpander.IsExpanded = true;
+        PlanDetailsExpander.BringIntoView();
     }
+
+    private void OpenOptimizer_Click(object sender, RoutedEventArgs e)
+    {
+        ActivateNavItem(OptimizerNav);
+        Navigate(OptimizerPage);
+    }
+
+    private void OpenHistory_Click(object sender, RoutedEventArgs e)
+    {
+        ActivateNavItem(HistoryNav);
+        Navigate(HistoryPage);
+    }
+
+    private void ChangeMode_Click(object sender, RoutedEventArgs e) => ProfileSelectorSection.BringIntoView();
 
     private void Navigate(UIElement page)
     {
@@ -388,6 +646,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         HistoryPage.Visibility = Visibility.Collapsed;
         SettingsPage.Visibility = Visibility.Collapsed;
         page.Visibility = Visibility.Visible;
+        viewModel.SetLiveMetricsEnabled(ReferenceEquals(page, DashboardPage));
     }
 
     private void LightProfile_Checked(object sender, RoutedEventArgs e) => viewModel.SelectProfile(OptimizationProfile.Light);
@@ -408,7 +667,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void LanguageSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
-        if (!IsLoaded || LanguageSelector.SelectedItem is not System.Windows.Controls.ComboBoxItem item)
+        if (syncingLanguageSelector || !IsLoaded || LanguageSelector.SelectedItem is not System.Windows.Controls.ComboBoxItem item)
         {
             return;
         }
@@ -561,7 +820,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             System.Windows.MessageBox.Show(
                 LocalizationService.Current.Format(
                     "Dialog.OpenExternal.Message",
-                    exception.Message),
+                    LocalizationService.Current.DescribeException(exception)),
                 LocalizationService.Current.GetString("Dialog.OpenExternal.Title"),
                 MessageBoxButton.OK,
                 MessageBoxImage.Warning);
@@ -670,6 +929,15 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }));
     }
 
+    private void Discord_Click(object sender, RoutedEventArgs e)
+    {
+        TryOpenExternal(() => Process.Start(new ProcessStartInfo
+        {
+            FileName = ProductIdentity.DiscordInviteUrl,
+            UseShellExecute = true
+        }));
+    }
+
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
         if (viewModel.IsBusy && !systemSessionEnding)
@@ -716,11 +984,13 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
+        viewModel.Dispose();
         windowSource?.RemoveHook(WindowMessageHook);
         System.Windows.Application.Current.SessionEnding -= Application_SessionEnding;
         viewModel.UpdateAvailableDetected -= ViewModel_UpdateAvailableDetected;
         themeManager.Dispose();
         trayIcon.Dispose();
+        accountService?.Dispose();
         (releaseUpdateService as IDisposable)?.Dispose();
     }
 
@@ -734,6 +1004,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void HideToTray()
     {
+        viewModel.SetLiveMetricsEnabled(false);
         Hide();
         trayIcon.Show(announce: !trayAnnouncementShown);
         trayAnnouncementShown = true;
@@ -747,16 +1018,26 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         trayIcon.ShowUpdateAvailable(version);
     }
 
-    private void TrayIcon_ShowRequested(object? sender, EventArgs e)
+    private void TrayIcon_ShowRequested(object? sender, EventArgs e) => RequestActivation();
+
+    /// <summary>
+    /// Brings the main window back to the foreground: reveals it if it was
+    /// hidden to the tray, restores it maximized if it was minimized, and
+    /// activates it. Reused by the tray (open/double-click/notification) and
+    /// by the single-instance activation request raised when the user opens
+    /// the app while it is already running.
+    /// </summary>
+    public void RequestActivation()
     {
         trayIcon.Hide();
         Show();
         if (WindowState == WindowState.Minimized)
         {
-            WindowState = WindowState.Normal;
+            WindowState = WindowState.Maximized;
         }
 
         Activate();
+        viewModel.SetLiveMetricsEnabled(DashboardPage.Visibility == Visibility.Visible);
     }
 
     private void TrayIcon_ExitRequested(object? sender, EventArgs e)
@@ -775,24 +1056,37 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             return;
         }
 
-        var outputPath = Path.GetFullPath(argument["--capture=".Length..].Trim('"'));
-        await Task.Delay(450);
-        UpdateLayout();
-        var dpi = VisualTreeHelper.GetDpi(this);
-        var bitmap = new RenderTargetBitmap(
-            Math.Max(1, (int)Math.Round(ActualWidth * dpi.DpiScaleX)),
-            Math.Max(1, (int)Math.Round(ActualHeight * dpi.DpiScaleY)),
-            dpi.PixelsPerInchX,
-            dpi.PixelsPerInchY,
-            PixelFormats.Pbgra32);
-        bitmap.Render(this);
-        var encoder = new PngBitmapEncoder();
-        encoder.Frames.Add(BitmapFrame.Create(bitmap));
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        await using var stream = File.Create(outputPath);
-        encoder.Save(stream);
-        allowClose = true;
-        trayIcon.Hide();
-        Close();
+        try
+        {
+            var outputPath = Path.GetFullPath(argument["--capture=".Length..].Trim('"'));
+            await Task.Delay(450);
+            UpdateLayout();
+            var dpi = VisualTreeHelper.GetDpi(this);
+            var bitmap = new RenderTargetBitmap(
+                Math.Max(1, (int)Math.Round(ActualWidth * dpi.DpiScaleX)),
+                Math.Max(1, (int)Math.Round(ActualHeight * dpi.DpiScaleY)),
+                dpi.PixelsPerInchX,
+                dpi.PixelsPerInchY,
+                PixelFormats.Pbgra32);
+            bitmap.Render(this);
+            var encoder = new PngBitmapEncoder();
+            encoder.Frames.Add(BitmapFrame.Create(bitmap));
+            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+            await using var stream = File.Create(outputPath);
+            encoder.Save(stream);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or ArgumentException)
+        {
+            // O modo --capture= é um smoke-test: um caminho inválido ou um
+            // disco cheio não pode transformar a captura em um crash da UI.
+            // Sem o arquivo de saída, o script que orquestra o smoke-test
+            // detecta a falha pelo resultado do processo.
+        }
+        finally
+        {
+            allowClose = true;
+            trayIcon.Hide();
+            Close();
+        }
     }
 }

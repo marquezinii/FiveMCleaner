@@ -1,3 +1,5 @@
+import { ALLOWED_ENVIRONMENTS } from '../environments.js';
+
 const STAGES = new Set(['manifest', 'download', 'staging', 'activation', 'health-check', 'rollback']);
 const OUTCOMES = new Set(['failed', 'rolled-back', 'recovered', 'completed']);
 const VERSION = /^\d+\.\d+\.\d+$/;
@@ -8,8 +10,8 @@ export function validateUpdaterEvent(value) {
   const keys = Object.keys(value);
   if (keys.some((key) => !['eventId', 'stage', 'outcome', 'errorCode', 'previousVersion', 'candidateVersion', 'environment'].includes(key))) return null;
   if (!/^[a-f0-9]{32}$/.test(value.eventId) || !STAGES.has(value.stage) || !OUTCOMES.has(value.outcome)
-    || !SAFE_CODE.test(value.errorCode) || !VERSION.test(value.candidateVersion)
+    || typeof value.errorCode !== 'string' || !SAFE_CODE.test(value.errorCode) || !VERSION.test(value.candidateVersion)
     || (value.previousVersion !== null && !VERSION.test(value.previousVersion))
-    || !['Development', 'Production'].includes(value.environment)) return null;
+    || typeof value.environment !== 'string' || !ALLOWED_ENVIRONMENTS.has(value.environment)) return null;
   return value;
 }

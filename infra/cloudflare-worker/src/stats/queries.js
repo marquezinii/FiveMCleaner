@@ -12,6 +12,8 @@
 // people; the dashboard must label it that way instead of implying a user
 // count it cannot actually produce.
 
+import { appendEnvironmentClause, appendDateRangeClauses } from '../filters.js';
+
 const DEFAULT_TOP_N = 10;
 
 function buildFilters({ from, to, appVersion, environment = 'Production' } = {}) {
@@ -22,23 +24,9 @@ function buildFilters({ from, to, appVersion, environment = 'Production' } = {})
   // environments at once (e.g. while debugging the pipeline itself) --
   // every other value, including an unrecognized one, still defaults to
   // filtering by it so a typo never silently becomes "show everything".
-  if (environment !== 'All') {
-    clauses.push('environment = ?');
-    params.push(environment);
-  }
+  appendEnvironmentClause(clauses, params, environment);
 
-  if (from) {
-    clauses.push('received_at >= ?');
-    params.push(from);
-  }
-
-  if (to) {
-    // The dashboard sends a calendar date, while received_at is UTC with a
-    // time component. An inclusive string comparison would exclude every
-    // event later on the selected final day.
-    clauses.push("received_at < date(?, '+1 day')");
-    params.push(to);
-  }
+  appendDateRangeClauses(clauses, params, { from, to });
 
   if (appVersion) {
     clauses.push('app_version = ?');
@@ -84,21 +72,6 @@ export function appVersionBreakdown(filters) {
           GROUP BY app_version
           ORDER BY runs DESC`,
     params,
-  };
-}
-
-/** Most-applied action IDs ("most used functions"), top N by count. */
-export function topActions(filters, topN = DEFAULT_TOP_N) {
-  const { whereSql, params } = buildFilters(filters);
-  return {
-    sql: `SELECT a.action_id, COUNT(*) AS uses
-          FROM telemetry_event_actions a
-          JOIN telemetry_events e ON e.id = a.telemetry_event_id
-          WHERE ${whereSql}
-          GROUP BY a.action_id
-          ORDER BY uses DESC
-          LIMIT ?`,
-    params: [...params, topN],
   };
 }
 
@@ -198,26 +171,6 @@ export function errorCategoryBreakdown(filters) {
 }
 
 /**
- * Which applied action IDs show up most often specifically in *failed*
- * runs -- distinct from {@link topActions} (which counts every outcome) and
- * meant to point straight at "this action correlates with failures" without
- * having to cross-reference two charts by hand.
- */
-export function topActionsInFailures(filters, topN = DEFAULT_TOP_N) {
-  const { whereSql, params } = buildFilters(filters);
-  return {
-    sql: `SELECT a.action_id, COUNT(*) AS failures
-          FROM telemetry_event_actions a
-          JOIN telemetry_events e ON e.id = a.telemetry_event_id
-          WHERE ${whereSql} AND e.event_name = 'optimization-failed'
-          GROUP BY a.action_id
-          ORDER BY failures DESC
-          LIMIT ?`,
-    params: [...params, topN],
-  };
-}
-
-/**
  * A raw feed of the most recent failed runs (not aggregated) -- the
  * fastest way to see exactly what environment a fresh bug is showing up in
  * without waiting for it to accumulate enough volume to appear in the
@@ -233,18 +186,5 @@ export function recentFailures(filters, limit = 20) {
           ORDER BY received_at DESC
           LIMIT ?`,
     params: [...params, limit],
-  };
-}
-
-/** Distribution of chosen optimization profiles (Light/Balanced/Aggressive). */
-export function profileBreakdown(filters) {
-  const { whereSql, params } = buildFilters(filters);
-  return {
-    sql: `SELECT profile, COUNT(*) AS runs
-          FROM telemetry_events
-          WHERE ${whereSql} AND profile IS NOT NULL
-          GROUP BY profile
-          ORDER BY runs DESC`,
-    params,
   };
 }

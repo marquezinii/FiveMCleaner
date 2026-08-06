@@ -495,6 +495,38 @@ public sealed class GitHubReleaseUpdateService : IReleaseUpdateService, IDisposa
 
     private ReleaseUpdate ParseManifest(JsonElement root)
     {
+        ValidateReleaseKind(root);
+
+        var tagName = GetRequiredString(root, "tag_name");
+        var version = ParseStableVersion(tagName);
+        var assets = GetAssetsProperty(root);
+        var selectedName = BuildExpectedAssetName(version);
+
+        var assetElement = SelectInstallerAsset(assets, selectedName);
+
+        var size = GetRequiredInt64(assetElement, "size");
+        ValidateInstallerSize(size);
+
+        var digest = GetRequiredString(assetElement, "digest");
+        var hash = ParseSha256Digest(digest);
+
+        var downloadUrl = GetRequiredString(assetElement, "browser_download_url");
+        var downloadUri = ValidateBrowserDownloadUri(downloadUrl, tagName, selectedName);
+
+        var releaseNotesUri = ParseReleaseNotes(root, tagName);
+
+        return new ReleaseUpdate(
+            version,
+            tagName,
+            selectedName,
+            downloadUri,
+            size,
+            hash,
+            releaseNotesUri);
+    }
+
+    private static void ValidateReleaseKind(JsonElement root)
+    {
         if (root.ValueKind != JsonValueKind.Object)
         {
             throw new UpdateSecurityException("O manifesto de atualizacao nao e um objeto JSON.");
@@ -509,8 +541,10 @@ public sealed class GitHubReleaseUpdateService : IReleaseUpdateService, IDisposa
         {
             throw new UpdateSecurityException("Pre-releases nao sao aceitas pelo canal estavel.");
         }
+    }
 
-        var tagName = GetRequiredString(root, "tag_name");
+    private static StableSemanticVersion ParseStableVersion(string tagName)
+    {
         if (!StableSemanticVersion.TryParse(tagName, out var version))
         {
             throw new UpdateSecurityException("A tag da release nao e um SemVer estavel valido.");
@@ -521,13 +555,22 @@ public sealed class GitHubReleaseUpdateService : IReleaseUpdateService, IDisposa
             throw new UpdateSecurityException("A tag estavel precisa usar exatamente o formato vX.Y.Z.");
         }
 
+        return version;
+    }
+
+    private static JsonElement GetAssetsProperty(JsonElement root)
+    {
         var assets = GetRequiredProperty(root, "assets");
         if (assets.ValueKind != JsonValueKind.Array)
         {
             throw new UpdateSecurityException("A lista de assets da release e invalida.");
         }
 
-        var selectedName = BuildExpectedAssetName(version);
+        return assets;
+    }
+
+    private static JsonElement SelectInstallerAsset(JsonElement assets, string selectedName)
+    {
         JsonElement? selectedAsset = null;
         foreach (var asset in assets.EnumerateArray())
         {
@@ -562,36 +605,25 @@ public sealed class GitHubReleaseUpdateService : IReleaseUpdateService, IDisposa
             throw new UpdateSecurityException("O asset do instalador ainda nao esta completamente publicado.");
         }
 
-        var size = GetRequiredInt64(assetElement, "size");
-        ValidateInstallerSize(size);
+        return assetElement;
+    }
 
-        var digest = GetRequiredString(assetElement, "digest");
-        var hash = ParseSha256Digest(digest);
-
-        var downloadUrl = GetRequiredString(assetElement, "browser_download_url");
-        var downloadUri = ValidateBrowserDownloadUri(downloadUrl, tagName, selectedName);
-        Uri? releaseNotesUri = null;
+    private static Uri? ParseReleaseNotes(JsonElement root, string tagName)
+    {
         var releaseNotesElement = TryGetUniqueProperty(root, "html_url");
-        if (releaseNotesElement is JsonElement element)
+        if (releaseNotesElement is not JsonElement element)
         {
-            if (element.ValueKind != JsonValueKind.String)
-            {
-                throw new UpdateSecurityException("A pagina de notas da release e invalida.");
-            }
-
-            releaseNotesUri = ValidateReleaseNotesUri(
-                element.GetString() ?? string.Empty,
-                tagName);
+            return null;
         }
 
-        return new ReleaseUpdate(
-            version,
-            tagName,
-            selectedName,
-            downloadUri,
-            size,
-            hash,
-            releaseNotesUri);
+        if (element.ValueKind != JsonValueKind.String)
+        {
+            throw new UpdateSecurityException("A pagina de notas da release e invalida.");
+        }
+
+        return ValidateReleaseNotesUri(
+            element.GetString() ?? string.Empty,
+            tagName);
     }
 
     private ValidatedUpdate ValidateUpdateForDownload(ReleaseUpdate update)

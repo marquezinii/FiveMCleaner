@@ -184,26 +184,48 @@ public sealed partial class PowerCfgController : IPowerPlanController
 
     public async Task<int?> GetPciExpressAspmPolicyAsync(CancellationToken cancellationToken)
     {
-        var result = await commandRunner.RunAsync(
-            powerCfgPath,
-            ["/Q", "SCHEME_CURRENT", PciExpressSubgroupGuid, AspmPolicySettingGuid],
-            TimeSpan.FromSeconds(10),
-            cancellationToken).ConfigureAwait(false);
-        if (!result.Succeeded)
+        try
+        {
+            var activeScheme = await GetActiveSchemeGuidAsync(cancellationToken).ConfigureAwait(false);
+            if (activeScheme is null)
+            {
+                return null;
+            }
+
+            var status = PowerReadACValueIndex(
+                IntPtr.Zero,
+                activeScheme.Value,
+                new Guid(PciExpressSubgroupGuid),
+                new Guid(AspmPolicySettingGuid),
+                out var value);
+
+            return status == 0 ? value : null;
+        }
+        catch (Exception exception) when (exception is DllNotFoundException or EntryPointNotFoundException)
         {
             return null;
         }
-
-        var match = AspmCurrentValueRegex().Match(result.StandardOutput);
-        return match.Success
-            && int.TryParse(
-                match.Groups["value"].Value,
-                NumberStyles.HexNumber,
-                CultureInfo.InvariantCulture,
-                out var value)
-            ? value
-            : null;
     }
+
+    private async Task<Guid?> GetActiveSchemeGuidAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            return await GetActiveSchemeAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    [DllImport("powrprof.dll", ExactSpelling = true)]
+    private static extern int PowerReadACValueIndex(
+        IntPtr rootPowerKey,
+        Guid schemeGuid,
+        Guid subGroupOfPowerSettings,
+        Guid powerSetting,
+        out int acValueIndex);
 
     public async Task<bool> TrySetPciExpressAspmPolicyAsync(int policyValue, CancellationToken cancellationToken)
     {
@@ -240,11 +262,6 @@ public sealed partial class PowerCfgController : IPowerPlanController
         @"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
         RegexOptions.CultureInvariant)]
     private static partial Regex PowerSchemeGuidRegex();
-
-    [GeneratedRegex(
-        @"Current AC Power Setting Index:\s*0x0*(?<value>[0-9a-fA-F]+)",
-        RegexOptions.CultureInvariant | RegexOptions.IgnoreCase)]
-    private static partial Regex AspmCurrentValueRegex();
 }
 
 public sealed class SessionPerformancePowerPlanAction : WindowsOptimizationAction
@@ -399,7 +416,14 @@ public sealed class PciExpressPowerManagementAction : WindowsOptimizationAction
         CancellationToken cancellationToken)
     {
         var snapshot = WindowsActionSnapshot.Deserialize<PciExpressAspmSnapshot>(snapshotJson);
-        await controller.TrySetPciExpressAspmPolicyAsync(snapshot.PreviousPolicy, cancellationToken)
-            .ConfigureAwait(false);
+        // Uma falha de restauração precisa ser visível ao engine (que registra
+        // o RollbackFailed no journal), não engolida: sem isso o histórico
+        // reporta um rollback concluído que na verdade não restaurou nada.
+        if (!await controller.TrySetPciExpressAspmPolicyAsync(snapshot.PreviousPolicy, cancellationToken)
+                .ConfigureAwait(false))
+        {
+            throw new InvalidOperationException(
+                "Não foi possível restaurar o PCI Express Link State Power Management para o valor anterior.");
+        }
     }
 }

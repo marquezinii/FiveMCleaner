@@ -1,5 +1,4 @@
 using System.Net;
-using System.Text;
 using FiveMCleaner.App.Services;
 using Xunit;
 
@@ -184,19 +183,6 @@ public sealed class LocalTelemetryQueueTests : IDisposable
     }
 
     [Fact]
-    public async Task PurgeOlderThan_RemovesFilesOlderThanTheGivenAge()
-    {
-        var queue = new LocalTelemetryQueue(tempDirectory);
-        await queue.EnqueueAsync(SampleEvent());
-        var filePath = Directory.GetFiles(tempDirectory, "*.json").Single();
-        File.SetCreationTimeUtc(filePath, DateTime.UtcNow.AddDays(-30));
-
-        queue.PurgeOlderThan(TimeSpan.FromDays(14));
-
-        Assert.Empty(queue.ReadPending(10));
-    }
-
-    [Fact]
     public void ReadPending_NoDirectoryYet_ReturnsEmpty()
     {
         var queue = new LocalTelemetryQueue(tempDirectory);
@@ -368,33 +354,6 @@ public sealed class CloudflareTelemetryTransportTests
         using var client = new HttpClient(new RecordingHandler());
 
         Assert.Throws<ArgumentException>(() => new CloudflareTelemetryTransport(client, new Uri("http://insecure.example.com")));
-    }
-
-    private sealed class RecordingHandler(HttpStatusCode statusCode = HttpStatusCode.Accepted) : HttpMessageHandler
-    {
-        public int CallCount { get; private set; }
-        public HttpMethod? Method { get; private set; }
-        public string Body { get; private set; } = string.Empty;
-
-        protected override async Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken)
-        {
-            CallCount++;
-            Method = request.Method;
-            Body = request.Content is null
-                ? string.Empty
-                : Encoding.UTF8.GetString(await request.Content.ReadAsByteArrayAsync(cancellationToken));
-            return new HttpResponseMessage(statusCode);
-        }
-    }
-
-    private sealed class ThrowingHandler : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(
-            HttpRequestMessage request,
-            CancellationToken cancellationToken) =>
-            throw new HttpRequestException("simulated network failure");
     }
 }
 

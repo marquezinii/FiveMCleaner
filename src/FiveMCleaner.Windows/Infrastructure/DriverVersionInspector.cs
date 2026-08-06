@@ -1,4 +1,5 @@
 using System.Management;
+using System.Threading;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
@@ -21,10 +22,41 @@ public interface IDriverVersionInspector
 /// class, so they are approximated by matching "chipset" in the device name
 /// among System-class entries; when nothing matches, the chipset group is
 /// simply empty rather than guessing a device.
+///
+/// Caches results for 30 seconds to avoid repeated WMI queries during a single session.
 /// </summary>
 public sealed class WindowsDriverVersionInspector : IDriverVersionInspector
 {
+    private static readonly object CacheLock = new();
+    private static DriverVersionSnapshot? cachedSnapshot;
+    private static DateTimeOffset? cachedAt;
+    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(30);
+
     public DriverVersionSnapshot GetSnapshot()
+    {
+        // Check cache first
+        lock (CacheLock)
+        {
+            if (cachedSnapshot is not null && cachedAt is not null &&
+                DateTimeOffset.UtcNow - cachedAt.Value < CacheTtl)
+            {
+                return cachedSnapshot;
+            }
+        }
+
+        var snapshot = GetSnapshotInternal();
+
+        // Update cache
+        lock (CacheLock)
+        {
+            cachedSnapshot = snapshot;
+            cachedAt = DateTimeOffset.UtcNow;
+        }
+
+        return snapshot;
+    }
+
+    private static DriverVersionSnapshot GetSnapshotInternal()
     {
         var video = new List<DriverVersionInfo>();
         var network = new List<DriverVersionInfo>();

@@ -2,12 +2,28 @@
 // canvas/DOM rendering (rendering.js) so this logic is unit testable
 // without a browser -- see chart-data-shaping tests under test/.
 
+/** Substitutes a placeholder for any missing optional field instead of a blank cell. */
+const fallback = (value) => value ?? '—';
+
 /** Turns `{label, value}`-shaped rows (any two keys) into a bar-chart series. */
 export function toBarSeries(rows, labelKey, valueKey) {
   return (rows ?? []).map((row) => ({
     label: String(row[labelKey]),
     value: Number(row[valueKey]) || 0,
   }));
+}
+
+/** Extracts the stable SemVer from legacy labels without exposing executable names or hashes. */
+export function formatAppVersion(value) {
+  const match = String(value ?? '').match(/(?:^|[^\d])(\d+\.\d+\.\d+)(?:$|[^\d])/);
+  return match ? match[1] : 'Versão desconhecida';
+}
+
+/** Produces percentage rows for a compact chart legend from displayed data. */
+export function toDistributionRows(series, limit = 5) {
+  const items = topN(series, limit);
+  const total = items.reduce((sum, item) => sum + item.value, 0);
+  return items.map((item) => ({ ...item, percent: total ? (item.value / total) * 100 : 0 }));
 }
 
 /** Turns rows into an x/y line-chart series, sorted by x ascending. */
@@ -78,7 +94,7 @@ export function sumBy(rows, valueKey) {
 
 /**
  * Formats an ISO timestamp (as stored in `received_at`) as a compact,
- * locale-independent "YYYY-MM-DD HH:mm" for the recent-failures table --
+ * locale-dependent local time for the recent-failures table --
  * never throws on a missing/malformed value.
  */
 export function formatTimestamp(isoString) {
@@ -91,7 +107,11 @@ export function formatTimestamp(isoString) {
     return '—';
   }
 
-  return isoString.slice(0, 16).replace('T', ' ');
+  // Convert UTC to local timezone for display
+  return date.toLocaleString(undefined, {
+    year: 'numeric', month: '2-digit', day: '2-digit',
+    hour: '2-digit', minute: '2-digit', hour12: false
+  }).replace(',', '');
 }
 
 /**
@@ -100,11 +120,10 @@ export function formatTimestamp(isoString) {
  * instead of showing a blank cell.
  */
 export function toRecentFailureRow(row) {
-  const fallback = (value) => value ?? '—';
   return [
     formatTimestamp(row.received_at),
     fallback(row.error_category),
-    fallback(row.app_version),
+    formatAppVersion(row.app_version),
     fallback(row.environment),
     fallback(row.os_version),
     fallback(row.cpu_model),
@@ -131,12 +150,11 @@ export function truncate(text, maxLength) {
  * column, since that feature (and its R2 dependency) was dropped.
  */
 export function toBugReportRow(row) {
-  const fallback = (value) => value ?? '—';
   return [
     formatTimestamp(row.received_at),
     fallback(row.category),
     truncate(row.summary, 60),
-    fallback(row.app_version),
+    formatAppVersion(row.app_version),
     fallback(row.profile),
     fallback(row.environment),
     fallback(row.email),
@@ -145,14 +163,13 @@ export function toBugReportRow(row) {
 }
 
 export function toUpdaterEventRow(row) {
-  const fallback = (value) => value ?? '—';
   return [
     formatTimestamp(row.received_at),
     fallback(row.stage),
     fallback(row.outcome),
     fallback(row.error_code),
-    fallback(row.previous_version),
-    fallback(row.candidate_version),
+    formatAppVersion(row.previous_version),
+    formatAppVersion(row.candidate_version),
     fallback(row.environment),
   ];
 }

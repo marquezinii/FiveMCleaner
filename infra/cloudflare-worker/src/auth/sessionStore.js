@@ -2,7 +2,7 @@
 // be unit tested without a database. A row shape mirrors the
 // `admin_sessions` table: { id, created_at, expires_at, revoked_at }.
 
-import { generateSessionId } from './crypto.js';
+import { generateSessionId, hashSessionId } from './crypto.js';
 
 export const SESSION_DURATION_MS = 12 * 60 * 60 * 1000; // 12h
 export const SESSION_COOKIE_NAME = 'fmc_dashboard_session';
@@ -63,4 +63,9 @@ export function buildSessionCookie(sessionId, expiresAt) {
 /** Builds the `Set-Cookie` header value that clears the session cookie. */
 export function buildExpiredSessionCookie() {
   return `${SESSION_COOKIE_NAME}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; Secure; SameSite=None`;
+}
+
+/** Hashes a raw session token for database storage. */
+export async function hashToken(token) {
+  return hashSessionId(token);
 }

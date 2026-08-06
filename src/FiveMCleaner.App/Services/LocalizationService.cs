@@ -1,6 +1,10 @@
 using System.ComponentModel;
 using System.Globalization;
+using System.IO;
+using System.Net.Http;
 using System.Resources;
+using System.Security;
+using System.Security.Cryptography;
 
 namespace FiveMCleaner.App.Services;
 
@@ -14,13 +18,13 @@ public interface ILocalizationService
 
     CultureInfo CurrentCulture { get; }
 
-    IReadOnlyList<AppLanguageOption> SupportedLanguages { get; }
-
     string this[string key] { get; }
 
     string GetString(string key);
 
     string Format(string key, params object?[] arguments);
+
+    string DescribeException(Exception exception);
 
     void Apply(AppLanguagePreference preference, CultureInfo? systemUiCulture = null);
 
@@ -41,12 +45,6 @@ public sealed class LocalizationService : ILocalizationService
     private static readonly ResourceManager Resources = new(
         ResourceBaseName,
         typeof(LocalizationService).Assembly);
-    private static readonly IReadOnlyList<AppLanguageOption> LanguageOptions = Array.AsReadOnly(
-    [
-        new AppLanguageOption(AppLanguage.English, EnglishCulture.Name, "English"),
-        new AppLanguageOption(AppLanguage.PortugueseBrazil, PortugueseBrazilCulture.Name, "Português (Brasil)"),
-        new AppLanguageOption(AppLanguage.Spanish, SpanishCulture.Name, "Español")
-    ]);
 
     private readonly object sync = new();
     private AppLanguage currentLanguage;
@@ -86,8 +84,6 @@ public sealed class LocalizationService : ILocalizationService
 
     public CultureInfo CurrentCulture => CultureFor(CurrentLanguage);
 
-    public IReadOnlyList<AppLanguageOption> SupportedLanguages => LanguageOptions;
-
     public string this[string key] => GetString(key);
 
     public string GetString(string key)
@@ -108,6 +104,22 @@ public sealed class LocalizationService : ILocalizationService
     {
         ArgumentNullException.ThrowIfNull(arguments);
         return string.Format(CurrentCulture, GetString(key), arguments);
+    }
+
+    public string DescribeException(Exception exception)
+    {
+        ArgumentNullException.ThrowIfNull(exception);
+
+        return GetString(exception switch
+        {
+            HttpRequestException => "Error.Network",
+            TimeoutException => "Error.Timeout",
+            UnauthorizedAccessException or SecurityException => "Error.AccessDenied",
+            IOException => "Error.FileUnavailable",
+            UpdateSecurityException or CryptographicException => "Error.SecurityCheck",
+            InvalidDataException => "Error.InvalidData",
+            _ => "Error.Unexpected"
+        });
     }
 
     public void Apply(AppLanguagePreference preference, CultureInfo? systemUiCulture = null)

@@ -18,8 +18,26 @@
   <data name="BugReport.Link" xml:space="preserve"><value>Reportar un error</value></data>
   <data name="BugReport.LinkTooltip" xml:space="preserve"><value>Abrir formulario de reporte de errores</value></data>
   <data name="Dashboard.Title" xml:space="preserve"><value>Resumen</value></data>
-  <data name="Dashboard.Subtitle" xml:space="preserve"><value>Diagnóstico local y optimización transparente para FiveM.</value></data>
+  <data name="Dashboard.Subtitle" xml:space="preserve"><value>Estado de la PC, compatibilidad y el próximo paso recomendado.</value></data>
+  <data name="Greeting.Morning.WithName" xml:space="preserve"><value>Buenos días, {0}. ¿Qué haremos hoy?</value></data>
+  <data name="Greeting.Morning.NoName" xml:space="preserve"><value>Buenos días. ¿Qué haremos hoy?</value></data>
+  <data name="Greeting.Afternoon.WithName" xml:space="preserve"><value>Buenas tardes, {0}. ¿Qué haremos hoy?</value></data>
+  <data name="Greeting.Afternoon.NoName" xml:space="preserve"><value>Buenas tardes. ¿Qué haremos hoy?</value></data>
+  <data name="Greeting.Evening.WithName" xml:space="preserve"><value>Buenas noches, {0}. ¿Qué haremos hoy?</value></data>
+  <data name="Greeting.Evening.NoName" xml:space="preserve"><value>Buenas noches. ¿Qué haremos hoy?</value></data>
+  <data name="Settings.About.Title" xml:space="preserve"><value>Acerca de</value></data>
+  <data name="Settings.About.Description" xml:space="preserve"><value>Qué es FiveMCleaner, quién lo desarrolla y dónde encontrar ayuda.</value></data>
+  <data name="Settings.About.AppName" xml:space="preserve"><value>FiveMCleaner</value></data>
+  <data name="Settings.About.Tagline" xml:space="preserve"><value>Optimización transparente y reversible para FiveM Legacy en Windows.</value></data>
+  <data name="Settings.About.Repository" xml:space="preserve"><value>Código fuente en GitHub</value></data>
+  <data name="Settings.About.Changelog" xml:space="preserve"><value>Historial de versiones</value></data>
+  <data name="Settings.About.Discord.Title" xml:space="preserve"><value>Únete a nuestro Discord oficial</value></data>
+  <data name="Settings.About.Discord.Detail" xml:space="preserve"><value>Resuelve dudas, sigue las novedades y habla con otros usuarios de FiveMCleaner.</value></data>
+  <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Abrir Discord</value></data>
+  <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Únete a nuestro Discord oficial</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Escanear PC de nuevo</value></data>
+  <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Abrir optimizador</value></data>
+  <data name="Dashboard.SystemOverview" xml:space="preserve"><value>Tu computadora</value></data>
   <data name="Dashboard.Readiness" xml:space="preserve"><value>PREPARACIÓN</value></data>
   <data name="Dashboard.Processor" xml:space="preserve"><value>PROCESADOR</value></data>
   <data name="Dashboard.GraphicsCard" xml:space="preserve"><value>TARJETA GRÁFICA</value></data>
@@ -27,7 +45,7 @@
   <data name="Dashboard.Storage" xml:space="preserve"><value>ALMACENAMIENTO</value></data>
   <data name="Dashboard.Windows" xml:space="preserve"><value>WINDOWS</value></data>
   <data name="Dashboard.Architecture" xml:space="preserve"><value>ARQUITECTURA DEL SISTEMA</value></data>
-  <data name="Dashboard.ReadinessExplanation" xml:space="preserve"><value>Señal de capacidad basada en la memoria disponible, procesadores lógicos, espacio libre en disco, adaptador gráfico detectado, estado de la caché y edición de FiveM. No es una prueba de FPS ni una promesa de rendimiento.</value></data>
+  <data name="Dashboard.ReadinessExplanation" xml:space="preserve"><value>Basado en la memoria libre, el procesador, el espacio en disco y lo que se encontró del FiveM en esta máquina. No es una promesa de FPS.</value></data>
   <data name="Profiles.Choose" xml:space="preserve"><value>Elige un nivel</value></data>
   <data name="Profiles.RecommendedHint" xml:space="preserve"><value>Se recomienda Equilibrado para la mayoría de las PC.</value></data>
   <data name="Profiles.Light.Name" xml:space="preserve"><value>Ligero</value></data>
@@ -43,9 +61,20 @@
   <data name="Plan.VerifiedActions" xml:space="preserve"><value>{0} acciones verificadas  •  {1}</value></data>
   <data name="Plan.Review" xml:space="preserve"><value>Revisar plan</value></data>
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Optimizar ahora</value></data>
-  <data name="Optimizer.Title" xml:space="preserve"><value>Optimizador</value></data>
-  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Plan determinista: el asistente solo acepta acciones integradas conocidas.</value></data>
-  <data name="Optimizer.NoRemoteScripts" xml:space="preserve"><value>SIN SCRIPTS REMOTOS</value></data>
+  <data name="Optimizer.Title" xml:space="preserve"><value>Optimizador de FiveM</value></data>
+  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Prepara tu equipo para jugar con menos interrupciones, procesos innecesarios y problemas de caché.</value></data>
+  <data name="Optimizer.NoRemoteScripts" xml:space="preserve"><value>100% LOCAL</value></data>
+  <data name="Optimizer.SystemReady" xml:space="preserve"><value>Sistema listo</value></data>
+  <data name="Optimizer.Recommended" xml:space="preserve"><value>OPTIMIZACIÓN RECOMENDADA</value></data>
+  <data name="Optimizer.Computer" xml:space="preserve"><value>Tu equipo</value></data>
+  <data name="Optimizer.Impact" xml:space="preserve"><value>Impacto esperado</value></data>
+  <data name="Optimizer.Execution" xml:space="preserve"><value>Ejecución</value></data>
+  <data name="Optimizer.ChangeMode" xml:space="preserve"><value>Cambiar modo</value></data>
+  <data name="Optimizer.RunningTitle" xml:space="preserve"><value>Optimizando tu equipo</value></data>
+  <data name="Optimizer.ShowDetails" xml:space="preserve"><value>Mostrar detalles</value></data>
+  <data name="Optimizer.CompletedTitle" xml:space="preserve"><value>Optimización completada</value></data>
+  <data name="Optimizer.NextStep" xml:space="preserve"><value>SIGUIENTE PASO RECOMENDADO</value></data>
+  <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Plan de optimización</value></data>
   <data name="Optimizer.CurrentPlan" xml:space="preserve"><value>Plan actual</value></data>
   <data name="Optimizer.RunPlan" xml:space="preserve"><value>Ejecutar plan</value></data>
   <data name="Progress.Title" xml:space="preserve"><value>Progreso</value></data>
@@ -261,8 +290,10 @@
   <data name="PrivacyConsent.Intro.FirstInstallation" xml:space="preserve"><value>Estos datos nos ayudan a encontrar errores y mejorar FiveMCleaner. Puedes ajustar cada opción a continuación antes de continuar.</value></data>
   <data name="PrivacyConsent.Intro.Upgrade" xml:space="preserve"><value>Tu instalación ya enviaba telemetría de uso. Ahora también puedes elegir enviar reportes de fallos automáticos. Revisa ambas opciones antes de continuar.</value></data>
   <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>Cambiamos lo que se recopila o adónde van los datos. Revisa las opciones a continuación y confirma de nuevo antes de continuar.</value></data>
-  <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Enviar datos técnicos de uso</value></data>
-  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Duración y resultado de la optimización, versión de la app y categorías de errores cerradas.</value></data>
+  <data name="PrivacyConsent.Essential.Title" xml:space="preserve"><value>Diagnósticos esenciales</value></data>
+  <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>Recopilamos el mínimo necesario para actualizaciones, seguridad, estabilidad y diagnóstico: versión de la app y Windows, arquitectura, fallos, eventos del actualizador y resultados técnicos de optimización. No se puede desactivar.</value></data>
+  <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Ayudar a mejorar FiveMCleaner</value></data>
+  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Comparte datos anónimos opcionales de hardware, perfil y uso de funciones para mejorar la aplicación. Puedes desactivarlo cuando quieras.</value></data>
   <data name="PrivacyConsent.CrashReports.Title" xml:space="preserve"><value>Enviar reportes automáticos de errores y fallos</value></data>
   <data name="PrivacyConsent.CrashReports.Description" xml:space="preserve"><value>Trazas de pila depuradas y versión de la app cuando FiveMCleaner falla o encuentra un error inesperado.</value></data>
   <data name="PrivacyConsent.Continue" xml:space="preserve"><value>Continuar</value></data>
@@ -288,7 +319,6 @@
 • Lista completa de procesos o programas
 • Rutas personales sin depurar</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>FiveMCleaner encontró un error inesperado. No se aplicará ningún cambio nuevo.\n\n{0}</value></data>
-  <data name="Dialog.AlreadyRunning.Message" xml:space="preserve"><value>FiveMCleaner ya está en ejecución. Revisa la bandeja del sistema o tus ventanas abiertas.</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>acciones verificadas</value></data>
   <data name="Progress.ElapsedFormat" xml:space="preserve"><value>Transcurrido {0}</value></data>
@@ -311,14 +341,6 @@
   <data name="BugReport.Send.NotConfirmed" xml:space="preserve"><value>El servicio de entrega no confirmó la recepción. Copia el reporte e intenta de nuevo más tarde.</value></data>
   <data name="BugReport.Send.UnexpectedResponse" xml:space="preserve"><value>El servicio devolvió una respuesta inesperada. Copia el reporte e intenta de nuevo más tarde.</value></data>
   <data name="BugReport.Send.Accepted" xml:space="preserve"><value>El servicio de entrega recibió el reporte.</value></data>
-  <data name="Streaming.RunningTitle" xml:space="preserve"><value>{0} está en ejecución</value></data>
-  <data name="Streaming.RunningDetail" xml:space="preserve"><value>FiveMCleaner preservará la app y nunca asumirá que estás en vivo.</value></data>
-  <data name="Streaming.InstalledTitle" xml:space="preserve"><value>{0} detectado</value></data>
-  <data name="Streaming.InstalledDetail" xml:space="preserve"><value>El plan no altera escenas, cuentas ni archivos de grabación.</value></data>
-  <data name="Streaming.SafeTitle" xml:space="preserve"><value>Optimización segura para streaming</value></data>
-  <data name="Streaming.SafeDetail" xml:space="preserve"><value>Los perfiles no cierran OBS, Streamlabs ni TikTok LIVE Studio.</value></data>
-  <data name="Streaming.PartialTitle" xml:space="preserve"><value>La verificación de streaming fue parcial</value></data>
-  <data name="Streaming.PartialDetail" xml:space="preserve"><value>Algunas ubicaciones no se pudieron leer; las reglas conservadoras siguen activas.</value></data>
   <data name="Streaming.Readiness.Protected.Title" xml:space="preserve"><value>La protección de streaming está activa</value></data>
   <data name="Streaming.Readiness.Protected.Detail" xml:space="preserve"><value>Hay una app de streaming abierta. FiveMCleaner la preserva; confirma tu estado de transmisión antes de optimizar.</value></data>
   <data name="Streaming.Readiness.Attention.Title" xml:space="preserve"><value>Haz una prueba antes de salir en vivo</value></data>
@@ -477,6 +499,8 @@
   <data name="Runtime.ConfirmRestoreDetail" xml:space="preserve"><value>El plan de energía anterior requiere que el intermediario elevado sea restaurado.</value></data>
   <data name="Runtime.AdminRestorePending" xml:space="preserve"><value>Restauración administrativa pendiente</value></data>
   <data name="Runtime.AdminRestorePendingDetail" xml:space="preserve"><value>Confirma UAC desde Historial cuando quieras completar la reversión.</value></data>
+  <data name="Runtime.BrokerApplying" xml:space="preserve"><value>Aplicando ajustes administrativos</value></data>
+  <data name="Runtime.BrokerRestoring" xml:space="preserve"><value>Restaurando configuración administrativa</value></data>
   <data name="Plan.Notice.NoLegacy" xml:space="preserve"><value>No se detectó ninguna instalación compatible de FiveM Legacy.</value></data>
   <data name="Plan.Notice.EnhancedUnsupported" xml:space="preserve"><value>FiveM Enhanced aún no es compatible. Ninguna acción de Legacy se ejecutará en esa edición.</value></data>
   <data name="Plan.Notice.DiagnosticsRetention" xml:space="preserve"><value>Los diagnósticos con más de {0} días serán eliminados permanentemente.</value></data>
@@ -642,20 +666,9 @@
   <data name="Profiles.Presentation.Light.Benefits" xml:space="preserve"><value>Libera espacio y aplica ajustes ligeros con impacto mínimo, manteniendo la calidad visual casi intacta.</value></data>
   <data name="Profiles.Presentation.Balanced.Benefits" xml:space="preserve"><value>Equilibra la calidad visual, el uso de GPU y la estabilidad de fotogramas con ajustes moderados y totalmente reversibles.</value></data>
   <data name="Profiles.Presentation.Aggressive.Benefits" xml:space="preserve"><value>Prioriza el FPS y la capacidad de respuesta sobre la calidad visual, aplicando todos los ajustes seguros disponibles.</value></data>
-  <data name="Profiles.Presentation.Light.Risks" xml:space="preserve"><value>Riesgo muy bajo: solo ajustes bien conocidos, totalmente reversibles, con impacto visual mínimo.</value></data>
-  <data name="Profiles.Presentation.Balanced.Risks" xml:space="preserve"><value>Riesgo moderado: puede solicitar una confirmación de administrador para el plan de energía de rendimiento.</value></data>
-  <data name="Profiles.Presentation.Aggressive.Risks" xml:space="preserve"><value>Riesgo mayor: la calidad visual baja notablemente y se reducen los efectos visuales de Windows.</value></data>
   <data name="Profiles.Presentation.Impact.Low" xml:space="preserve"><value>Impacto bajo</value></data>
   <data name="Profiles.Presentation.Impact.Moderate" xml:space="preserve"><value>Impacto moderado</value></data>
   <data name="Profiles.Presentation.Impact.High" xml:space="preserve"><value>Impacto alto</value></data>
-  <data name="Profiles.Presentation.Reversibility.Mixed" xml:space="preserve"><value>Mayormente reversible; algunas limpiezas liberan espacio en disco de forma permanente.</value></data>
-  <data name="Profiles.Presentation.Reversibility.FullyReversible" xml:space="preserve"><value>Totalmente reversible desde el historial.</value></data>
-  <data name="Profiles.Presentation.VariabilityNote" xml:space="preserve"><value>Los resultados varían según la computadora, los controladores y el servidor; no se garantiza ninguna ganancia específica de FPS.</value></data>
-  <data name="Profiles.Presentation.Benefits.Label" xml:space="preserve"><value>Beneficios esperados</value></data>
-  <data name="Profiles.Presentation.Impact.Label" xml:space="preserve"><value>Nivel de impacto</value></data>
-  <data name="Profiles.Presentation.Risks.Label" xml:space="preserve"><value>Riesgos posibles</value></data>
-  <data name="Profiles.Presentation.Reversibility.Label" xml:space="preserve"><value>Reversibilidad</value></data>
-  <data name="Profiles.Presentation.Categories.Label" xml:space="preserve"><value>Categorías analizadas</value></data>
   <data name="Category.Safety" xml:space="preserve"><value>Seguridad</value></data>
   <data name="Category.Storage" xml:space="preserve"><value>Almacenamiento</value></data>
   <data name="Category.WindowsGaming" xml:space="preserve"><value>Juegos en Windows</value></data>
@@ -663,4 +676,63 @@
   <data name="Category.Appearance" xml:space="preserve"><value>Apariencia</value></data>
   <data name="Category.FiveMGraphics" xml:space="preserve"><value>Gráficos de FiveM/GTA V</value></data>
   <data name="Optimizer.StepLedger.Title" xml:space="preserve"><value>Resultados de pasos</value></data>
+  <data name="Dashboard.Readiness.Excellent" xml:space="preserve"><value>Excelente</value></data>
+  <data name="Dashboard.Readiness.Good" xml:space="preserve"><value>Bueno</value></data>
+  <data name="Dashboard.Readiness.Average" xml:space="preserve"><value>Medio</value></data>
+  <data name="Dashboard.Readiness.Poor" xml:space="preserve"><value>Malo</value></data>
+  <data name="Dashboard.Readiness.VeryPoor" xml:space="preserve"><value>Muy malo</value></data>
+  <data name="Dashboard.Readiness.LocalAnalysis" xml:space="preserve"><value>Análisis local de capacidad y compatibilidad</value></data>
+  <data name="Dashboard.LivePerformance.Title" xml:space="preserve"><value>Rendimiento en vivo</value></data>
+  <data name="Dashboard.LivePerformance.Description" xml:space="preserve"><value>Uso real de los recursos, actualizado mientras esta página esté abierta.</value></data>
+  <data name="Dashboard.LivePerformance.Live" xml:space="preserve"><value>EN VIVO</value></data>
+  <data name="Dashboard.LivePerformance.Updated" xml:space="preserve"><value>Actualizado a las {0}</value></data>
+  <data name="Dashboard.LivePerformance.Unavailable" xml:space="preserve"><value>Lectura no disponible</value></data>
+  <data name="Dashboard.LivePerformance.Waiting" xml:space="preserve"><value>Leyendo…</value></data>
+  <data name="Dashboard.LivePerformance.NotAvailable" xml:space="preserve"><value>No disponible</value></data>
+  <data name="Dashboard.LivePerformance.PercentValue" xml:space="preserve"><value>{0:0}%</value></data>
+  <data name="Dashboard.LivePerformance.NetworkValue" xml:space="preserve"><value>{0:0.0} MB/s</value></data>
+  <data name="Dashboard.LivePerformance.Cpu" xml:space="preserve"><value>CPU</value></data>
+  <data name="Dashboard.LivePerformance.Gpu" xml:space="preserve"><value>GPU</value></data>
+  <data name="Dashboard.LivePerformance.Memory" xml:space="preserve"><value>MEMORIA</value></data>
+  <data name="Dashboard.LivePerformance.Disk" xml:space="preserve"><value>DISCO</value></data>
+  <data name="Dashboard.LivePerformance.Network" xml:space="preserve"><value>RED</value></data>
+  <data name="Dashboard.LivePerformance.ChartDescription" xml:space="preserve"><value>Historial de uso de CPU y GPU durante el último minuto.</value></data>
+  <data name="Dashboard.LivePerformance.LocalOnly" xml:space="preserve"><value>Lectura local. No se envía nada por internet.</value></data>
+  <data name="Dashboard.SystemOverview.Description" xml:space="preserve"><value>Hardware detectado y disponible para FiveM y GTA V.</value></data>
+  <data name="Dashboard.Eyebrow" xml:space="preserve"><value>DIAGNÓSTICO LOCAL</value></data>
+  <data name="Dashboard.LastScan" xml:space="preserve"><value>Último análisis a las {0}</value></data>
+  <data name="Dashboard.LastScan.Pending" xml:space="preserve"><value>Analizando…</value></data>
+  <data name="Dashboard.OpenHistory" xml:space="preserve"><value>Ver historial</value></data>
+  <data name="Dashboard.Kpi.GigabyteValue" xml:space="preserve"><value>{0:0.0} GB</value></data>
+  <data name="Dashboard.Kpi.MegabyteValue" xml:space="preserve"><value>{0:0} MB</value></data>
+  <data name="Dashboard.Kpi.Pressure.Title" xml:space="preserve"><value>CARGA DEL PC</value></data>
+  <data name="Dashboard.Kpi.Cores.Title" xml:space="preserve"><value>NÚCLEOS LÓGICOS</value></data>
+  <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Informados por Windows</value></data>
+  <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>MEMORIA LIBRE</value></data>
+  <data name="Dashboard.Kpi.Memory.Detail" xml:space="preserve"><value>de {0:0.0} GB en total</value></data>
+  <data name="Dashboard.Kpi.Disk.Title" xml:space="preserve"><value>ESPACIO LIBRE</value></data>
+  <data name="Dashboard.Kpi.Disk.Detail" xml:space="preserve"><value>En el disco del sistema</value></data>
+  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHÉ DE FIVEM</value></data>
+  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisada por el optimizador</value></data>
+  <data name="Dashboard.Kpi.Cache.None" xml:space="preserve"><value>Ninguna</value></data>
+  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>No se encontró caché en el disco</value></data>
+  <data name="Dashboard.Pressure.Low" xml:space="preserve"><value>Baja</value></data>
+  <data name="Dashboard.Pressure.Moderate" xml:space="preserve"><value>Moderada</value></data>
+  <data name="Dashboard.Pressure.High" xml:space="preserve"><value>Alta</value></data>
+  <data name="Dashboard.LivePerformance.MemoryDetail" xml:space="preserve"><value>{0:0.0} / {1:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.TrendValue" xml:space="preserve"><value>media {0:0}% · pico {1:0}%</value></data>
+  <data name="Dashboard.LivePerformance.Trend" xml:space="preserve"><value>MEDIA Y PICO</value></data>
+  <data name="Dashboard.LivePerformance.Window" xml:space="preserve"><value>Último minuto</value></data>
+  <data name="Dashboard.LivePerformance.Now" xml:space="preserve"><value>ahora</value></data>
+  <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>Última optimización</value></data>
+  <data name="Dashboard.LastRun.None.Title" xml:space="preserve"><value>Aún sin optimizaciones</value></data>
+  <data name="Dashboard.LastRun.None.Detail" xml:space="preserve"><value>Ejecuta el optimizador para crear un punto de restauración y un informe que podrás consultar aquí.</value></data>
+  <data name="Dashboard.Detection.Title" xml:space="preserve"><value>DETECCIÓN</value></data>
+  <data name="Error.Network" xml:space="preserve"><value>No se pudo conectar ahora. Comprueba tu conexión a Internet e inténtalo de nuevo.</value></data>
+  <data name="Error.Timeout" xml:space="preserve"><value>Esta acción tardó más de lo esperado. Inténtalo de nuevo en unos instantes.</value></data>
+  <data name="Error.AccessDenied" xml:space="preserve"><value>Windows no permitió esta acción. Comprueba el permiso necesario e inténtalo de nuevo.</value></data>
+  <data name="Error.FileUnavailable" xml:space="preserve"><value>Un archivo necesario no está disponible o está en uso. Cierra las aplicaciones relacionadas e inténtalo de nuevo.</value></data>
+  <data name="Error.SecurityCheck" xml:space="preserve"><value>La comprobación de seguridad no se aprobó. No se cambió nada.</value></data>
+  <data name="Error.InvalidData" xml:space="preserve"><value>No se pudo verificar la información recibida de forma segura. No se cambió nada.</value></data>
+  <data name="Error.Unexpected" xml:space="preserve"><value>Ocurrió un problema inesperado. Inténtalo de nuevo; si continúa, envía un informe de error.</value></data>
 </root>

@@ -34,8 +34,9 @@ internal sealed class ElevatedBrokerClient
     private static readonly TimeSpan OperationTimeout = TimeSpan.FromMinutes(2);
     private readonly string requestDirectory;
     private readonly string brokerPath;
+    private readonly ILocalizationService localization;
 
-    public ElevatedBrokerClient(string appDataDirectory)
+    public ElevatedBrokerClient(string appDataDirectory, ILocalizationService? localization = null)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(appDataDirectory);
         requestDirectory = Path.Combine(Path.GetFullPath(appDataDirectory), "Requests");
@@ -43,6 +44,7 @@ internal sealed class ElevatedBrokerClient
             AppContext.BaseDirectory,
             "broker",
             "FiveMCleaner.Broker.exe"));
+        this.localization = localization ?? LocalizationService.Current;
     }
 
     public async Task<ElevatedBrokerResult> ExecuteAsync(
@@ -178,55 +180,12 @@ internal sealed class ElevatedBrokerClient
                 bufferSize: 4096,
                 leaveOpen: true);
 
-            BrokerEventWire? terminal = null;
-            long previousSequence = 0;
-            for (var count = 0; count < MaximumEvents; count++)
-            {
-                var line = await reader.ReadLineAsync(timeout.Token).ConfigureAwait(false);
-                if (line is null)
-                {
-                    break;
-                }
-
-                if (line.Length > MaximumEventCharacters)
-                {
-                    throw new InvalidDataException("O broker retornou um evento local acima do limite seguro.");
-                }
-
-                var brokerEvent = JsonSerializer.Deserialize<BrokerEventWire>(
-                    line,
-                    FiveMCleanerJson.Options)
-                    ?? throw new JsonException("O broker retornou um evento vazio.");
-                if (brokerEvent.SchemaVersion != 1 || brokerEvent.Sequence <= previousSequence)
-                {
-                    throw new InvalidDataException("A sequência de eventos do broker é inválida.");
-                }
-
-                if (brokerEvent.TransactionId is Guid eventTransactionId
-                    && eventTransactionId != expectedTransactionId)
-                {
-                    throw new InvalidDataException(
-                        "O broker retornou eventos para outra transação.");
-                }
-
-                if (brokerEvent.Kind is BrokerEventKindWire.Completed
-                    or BrokerEventKindWire.RollbackCompleted
-                    && brokerEvent.TransactionId != expectedTransactionId)
-                {
-                    throw new InvalidDataException(
-                        "O evento terminal do broker não confirmou a transação solicitada.");
-                }
-
-                previousSequence = brokerEvent.Sequence;
-                ReportBrokerProgress(brokerEvent, progress);
-                if (brokerEvent.Kind is BrokerEventKindWire.Completed
-                    or BrokerEventKindWire.RollbackCompleted
-                    or BrokerEventKindWire.Rejected
-                    or BrokerEventKindWire.Failed)
-                {
-                    terminal = brokerEvent;
-                }
-            }
+            BrokerEventWire? terminal = await ReadUntilTerminalAsync(
+                reader,
+                expectedTransactionId,
+                progress,
+                localization,
+                timeout.Token).ConfigureAwait(false);
 
             await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
             var succeeded = process.ExitCode == 0
@@ -320,9 +279,94 @@ internal sealed class ElevatedBrokerClient
                 + "do Windows Defender (ou do seu antivírus) antes de tentar novamente.";
     }
 
+    /// <summary>
+    /// Reads broker wire events until the terminal event for the transaction,
+    /// EOF, or the safety cap. Exposed as a pure-ish helper (a reader plus a
+    /// progress sink) so the reading rules can be regression-tested without
+    /// a real elevated broker process. Previously the loop consumed every
+    /// line up to the cap without stopping at the terminal: a plan producing
+    /// enough progress events pushed the terminal event past the 128-event
+    /// window, the loop ended with <c>terminal == null</c>, and a successful
+    /// elevated phase was reported as failed. Breaking as soon as the
+    /// terminal arrives (the broker always publishes it as its last event)
+    /// makes the cap unreachable in normal operation; hitting the cap anyway
+    /// is now an explicit, honest error instead of a silent false failure.
+    /// </summary>
+    internal static async Task<BrokerEventWire?> ReadUntilTerminalAsync(
+        TextReader reader,
+        Guid expectedTransactionId,
+        IProgress<AppProgressUpdate> progress,
+        ILocalizationService localization,
+        CancellationToken cancellationToken)
+    {
+        BrokerEventWire? terminal = null;
+        long previousSequence = 0;
+        var read = 0;
+        for (; read < MaximumEvents; read++)
+        {
+            var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
+            if (line is null)
+            {
+                break;
+            }
+
+            if (line.Length > MaximumEventCharacters)
+            {
+                throw new InvalidDataException("O broker retornou um evento local acima do limite seguro.");
+            }
+
+            var brokerEvent = JsonSerializer.Deserialize<BrokerEventWire>(
+                line,
+                FiveMCleanerJson.Options)
+                ?? throw new JsonException("O broker retornou um evento vazio.");
+            if (brokerEvent.SchemaVersion != 1 || brokerEvent.Sequence <= previousSequence)
+            {
+                throw new InvalidDataException("A sequência de eventos do broker é inválida.");
+            }
+
+            if (brokerEvent.TransactionId is Guid eventTransactionId
+                && eventTransactionId != expectedTransactionId)
+            {
+                throw new InvalidDataException(
+                    "O broker retornou eventos para outra transação.");
+            }
+
+            if (brokerEvent.Kind is BrokerEventKindWire.Completed
+                or BrokerEventKindWire.RollbackCompleted
+                && brokerEvent.TransactionId != expectedTransactionId)
+            {
+                throw new InvalidDataException(
+                    "O evento terminal do broker não confirmou a transação solicitada.");
+            }
+
+            previousSequence = brokerEvent.Sequence;
+            ReportBrokerProgress(brokerEvent, progress, localization);
+            if (IsTerminalEvent(brokerEvent.Kind))
+            {
+                terminal = brokerEvent;
+                break;
+            }
+        }
+
+        if (terminal is null && read >= MaximumEvents)
+        {
+            throw new InvalidDataException(
+                "O broker produziu mais eventos do que o esperado sem confirmar a conclusão da transação.");
+        }
+
+        return terminal;
+    }
+
+    private static bool IsTerminalEvent(BrokerEventKindWire kind) =>
+        kind is BrokerEventKindWire.Completed
+            or BrokerEventKindWire.RollbackCompleted
+            or BrokerEventKindWire.Rejected
+            or BrokerEventKindWire.Failed;
+
     private static void ReportBrokerProgress(
         BrokerEventWire brokerEvent,
-        IProgress<AppProgressUpdate> progress)
+        IProgress<AppProgressUpdate> progress,
+        ILocalizationService localization)
     {
         var localPercent = brokerEvent.TotalWeight is > 0
             ? 72d + (23d * brokerEvent.CompletedWeight.GetValueOrDefault() / brokerEvent.TotalWeight.Value)
@@ -342,8 +386,8 @@ internal sealed class ElevatedBrokerClient
             Percent = Math.Clamp(localPercent, 72, 98),
             Headline = brokerEvent.Kind is BrokerEventKindWire.RollbackStarted
                 or BrokerEventKindWire.RollbackCompleted
-                ? "Restaurando configurações administrativas"
-                : "Aplicando ajustes administrativos",
+                ? localization.GetString("Runtime.BrokerRestoring")
+                : localization.GetString("Runtime.BrokerApplying"),
             Detail = brokerEvent.Message,
             ActionId = brokerEvent.ActionId,
             Outcome = brokerEvent.ActionId is null ? null : brokerEvent.Kind switch
@@ -378,7 +422,7 @@ internal sealed class ElevatedBrokerClient
         }
     }
 
-    private enum BrokerEventKindWire
+    internal enum BrokerEventKindWire
     {
         Started,
         Progress,
@@ -389,7 +433,7 @@ internal sealed class ElevatedBrokerClient
         Failed
     }
 
-    private sealed record BrokerEventWire
+    internal sealed record BrokerEventWire
     {
         public required int SchemaVersion { get; init; }
 

@@ -1,5 +1,3 @@
-using System.Globalization;
-
 namespace FiveMCleaner.App.Services;
 
 /// <summary>
@@ -19,14 +17,6 @@ public enum AppLanguage
     English,
     PortugueseBrazil,
     Spanish
-}
-
-public sealed record AppLanguageOption(
-    AppLanguage Language,
-    string CultureName,
-    string NativeDisplayName)
-{
-    public CultureInfo Culture => CultureInfo.GetCultureInfo(CultureName);
 }
 
 public sealed class AppLanguageChangedEventArgs : EventArgs

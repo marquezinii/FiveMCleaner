@@ -5,33 +5,6 @@ using FiveMCleaner.Windows.Infrastructure;
 
 namespace FiveMCleaner.Tests.Windows;
 
-internal sealed class TemporaryDirectory : IDisposable
-{
-    public TemporaryDirectory()
-    {
-        Path = System.IO.Path.Combine(
-            System.IO.Path.GetTempPath(),
-            "FiveMCleaner.Tests",
-            Guid.NewGuid().ToString("N"));
-        Directory.CreateDirectory(Path);
-    }
-
-    public string Path { get; }
-
-    public string Combine(params string[] parts)
-    {
-        return parts.Aggregate(Path, System.IO.Path.Combine);
-    }
-
-    public void Dispose()
-    {
-        if (Directory.Exists(Path))
-        {
-            Directory.Delete(Path, recursive: true);
-        }
-    }
-}
-
 internal sealed class FakeRegistryStore : IRegistryStore
 {
     private readonly Dictionary<RegistryAddress, RegistryValueState> values = [];
