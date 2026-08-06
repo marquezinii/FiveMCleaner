@@ -58,6 +58,37 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
         return response.Error is null ? await AcceptTokensAsync(response.Value!, keepSignedIn, cancellationToken).ConfigureAwait(false) : Fail(response.Error, sensitiveFlow: true);
     }
 
+    public async Task<FederatedSignInResult> SignInWithGoogleAsync(string googleIdToken, bool keepSignedIn, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(googleIdToken);
+        SetState(AuthenticationState.SigningIn);
+
+        // requestUri is not a redirect here: Identity Toolkit only uses it as
+        // the claimed origin of the assertion, and the loopback port the
+        // browser actually used is irrelevant to it.
+        var response = await PostAsync<FirebaseIdpResponse>(
+            "accounts:signInWithIdp",
+            new
+            {
+                postBody = $"id_token={Uri.EscapeDataString(googleIdToken)}&providerId=google.com",
+                requestUri = "http://localhost",
+                returnIdpCredential = true,
+                returnSecureToken = true,
+            },
+            cancellationToken).ConfigureAwait(false);
+
+        if (response.Error is not null)
+        {
+            return new FederatedSignInResult(Fail(response.Error, sensitiveFlow: true));
+        }
+
+        var idp = response.Value!;
+        var result = await AcceptTokensAsync(idp.ToTokens(), keepSignedIn, cancellationToken).ConfigureAwait(false);
+        return result.Succeeded
+            ? new FederatedSignInResult(result, idp.isNewUser, idp.firstName, idp.lastName)
+            : new FederatedSignInResult(result);
+    }
+
     public async Task<FirebaseAuthResult> RefreshEmailVerificationAsync(CancellationToken cancellationToken = default)
     {
         var token = await GetIdTokenAsync(cancellationToken).ConfigureAwait(false);

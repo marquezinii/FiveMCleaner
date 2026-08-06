@@ -50,3 +50,15 @@ DASHBOARD_ORIGIN = "https://fivemcleaner-dashboard.pages.dev"
 binding = "TELEMETRY_DB"
 database_name = "fivemcleaner-telemetry"
 database_id = "fe276121-a71a-4ba4-ab62-81cccdf601c6"
+
+## Per-IP budget for GET /account/username-available, the one route that
+## reaches D1 without any authentication. 20 lookups per 60s is far above
+## what the registration form's debounced typing produces (one request per
+## pause, per user) and far below what a useful enumeration sweep needs.
+##
+## The binding is optional at runtime -- see src/rateLimit.js. `wrangler dev`
+## and the unit tests run without it and the route stays open.
+[[ratelimits]]
+binding = "USERNAME_LOOKUP_LIMITER"
+namespace_id = "1001"
+simple = { limit = 20, period = 60 }

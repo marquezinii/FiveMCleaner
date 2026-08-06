@@ -28,6 +28,20 @@ public sealed record FirebaseAuthResult(AuthenticationState State, FirebaseUser?
     public bool Succeeded => Error is null && User is not null;
 }
 
+/// <summary>
+/// Result of signing in through an identity provider (currently Google).
+/// Carries the same <see cref="FirebaseAuthResult"/> as the password flows
+/// plus the two things only the provider can tell us: whether this is the
+/// account's first sign-in — meaning it still needs a username and has no
+/// profile row yet — and the names Google already knows, used to prefill
+/// the profile step instead of asking the user to retype them.
+/// </summary>
+public sealed record FederatedSignInResult(
+    FirebaseAuthResult Result,
+    bool IsNewUser = false,
+    string? FirstName = null,
+    string? LastName = null);
+
 public interface IFirebaseAuthService : IDisposable
 {
     AuthenticationSnapshot Current { get; }
@@ -35,6 +49,14 @@ public interface IFirebaseAuthService : IDisposable
     Task<FirebaseAuthResult> RestoreSessionAsync(CancellationToken cancellationToken = default);
     Task<FirebaseAuthResult> RegisterAsync(string email, string password, bool keepSignedIn, CancellationToken cancellationToken = default);
     Task<FirebaseAuthResult> SignInAsync(string email, string password, bool keepSignedIn, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Exchanges a Google OpenID Connect id_token (obtained by
+    /// <see cref="IGoogleOAuthClient"/>) for a Firebase session. Google has
+    /// already verified the address, so the account never goes through the
+    /// e-mail verification step.
+    /// </summary>
+    Task<FederatedSignInResult> SignInWithGoogleAsync(string googleIdToken, bool keepSignedIn, CancellationToken cancellationToken = default);
     Task<FirebaseAuthResult> RefreshEmailVerificationAsync(CancellationToken cancellationToken = default);
     Task<FirebaseAuthResult> ResendVerificationEmailAsync(CancellationToken cancellationToken = default);
     Task<FirebaseAuthResult> SendPasswordResetEmailAsync(string email, CancellationToken cancellationToken = default);
@@ -46,6 +68,18 @@ public interface IFirebaseAuthService : IDisposable
 }
 
 internal sealed record FirebaseTokenResponse(string? localId, string? email, string? idToken, string? refreshToken, string? expiresIn);
+internal sealed record FirebaseIdpResponse(
+    string? localId,
+    string? email,
+    string? idToken,
+    string? refreshToken,
+    string? expiresIn,
+    string? firstName,
+    string? lastName,
+    bool isNewUser)
+{
+    public FirebaseTokenResponse ToTokens() => new(localId, email, idToken, refreshToken, expiresIn);
+}
 internal sealed record FirebaseLookupResponse(FirebaseLookupUser[]? users);
 internal sealed record FirebaseLookupUser(string? localId, string? email, bool emailVerified);
 internal sealed record FirebaseErrorEnvelope(FirebaseError? error);

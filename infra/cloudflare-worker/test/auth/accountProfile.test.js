@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateAccountProfile, createAccountProfile, fetchAccountProfile } from '../../src/auth/accountProfile.js';
+import {
+  validateAccountProfile,
+  createAccountProfile,
+  fetchAccountProfile,
+  normalizeUsername,
+  isUsernameAvailable,
+} from '../../src/auth/accountProfile.js';
 
 const VALID = { username: 'joao_silva', firstName: 'João', lastName: "D'Ávila-Souza" };
 
@@ -152,4 +158,28 @@ test('fetchAccountProfile returns null when the account has no profile row', asy
   const db = fakeReadDb(null);
   const result = await fetchAccountProfile(db, 'uid-without-profile');
   assert.equal(result, null);
+});
+
+test('normalizeUsername lowercases a valid username and trims it', () => {
+  assert.equal(normalizeUsername('  JoaoSilva  '), 'joaosilva');
+  assert.equal(normalizeUsername('a_1'), 'a_1');
+});
+
+test('normalizeUsername rejects anything createAccountProfile would also reject', () => {
+  assert.equal(normalizeUsername('ab'), null, 'too short');
+  assert.equal(normalizeUsername('a'.repeat(25)), null, 'too long');
+  assert.equal(normalizeUsername('1joao'), null, 'must start with a letter');
+  assert.equal(normalizeUsername('joao silva'), null, 'no spaces');
+  assert.equal(normalizeUsername('joão_silva'), null, 'ASCII letters only');
+  assert.equal(normalizeUsername(null), null);
+  assert.equal(normalizeUsername(42), null);
+});
+
+test('isUsernameAvailable is true only when no row holds the normalized name', async () => {
+  const free = fakeReadDb(null);
+  assert.equal(await isUsernameAvailable(free, 'joao_silva'), true);
+  assert.deepEqual(free.bound[0].params, ['joao_silva']);
+
+  const taken = fakeReadDb({ taken: 1 });
+  assert.equal(await isUsernameAvailable(taken, 'joao_silva'), false);
 });

@@ -43,6 +43,24 @@ public sealed record RemoteServicesOptions
     /// <summary>Public Firebase Web API key. It identifies the project but is not an administrative credential.</summary>
     public string? FirebaseApiKey { get; init; }
 
+    /// <summary>
+    /// OAuth 2.0 client id of the Google Cloud "Desktop app" credential used
+    /// by <see cref="GoogleOAuthClient"/>. Absent means the account window
+    /// simply does not offer "Continuar com o Google" — the button is hidden
+    /// rather than shown broken.
+    /// </summary>
+    public string? GoogleOAuthClientId { get; init; }
+
+    /// <summary>
+    /// Companion secret Google issues for that same desktop credential.
+    /// Despite the name it is not a real secret — it necessarily ships inside
+    /// every installed copy of the app, and Google documents it as such. PKCE
+    /// is what actually protects the code exchange. Only set it because
+    /// Google's token endpoint rejects the exchange without it when the
+    /// credential was created with one.
+    /// </summary>
+    public string? GoogleOAuthClientSecret { get; init; }
+
     public required string Environment { get; init; }
 }
 

@@ -142,6 +142,27 @@ returns `409 { "error": "username-taken" }`; the client is expected to let
 the user pick another one without discarding the Firebase account already
 created. See `src/auth/accountProfile.js`.
 
+`GET /account/username-available?u=<name>` answers `{ "available": true|false }`
+for the registration form, so a taken name is reported while the user types
+instead of only after the Firebase account already exists. It is the one
+D1-backed route with no authentication — it necessarily runs *before* the
+account does — so three things bound it:
+
+- a per-IP `[[ratelimits]]` binding (`USERNAME_LOOKUP_LIMITER`, 20 requests
+  per 60s, declared in `wrangler.toml`; see `src/rateLimit.js`). The binding
+  is optional at runtime: `wrangler dev` and `node --test` run without it and
+  the route stays open, which is the right trade for a read-only probe;
+- the same `USERNAME_PATTERN` the insert uses, so a malformed name is
+  rejected with `400 { "error": "invalid-username" }` without reaching D1;
+- a bare boolean answer — never who holds a name, never anything else about
+  that account.
+
+It is deliberately **advisory**. The UNIQUE index on `account_profiles`
+remains the only arbiter, a name can be claimed between the probe and the
+registration, and `POST /account/profile` still returns 409. The desktop
+client treats a rate-limited, failed or unreadable answer as "unknown" and
+never as "available".
+
 Legacy Worker product tables (`user_accounts` / sessions), if still present on
 remote D1 from the pre-Firebase system, are not migrated. There are no real
 users to preserve; cleanup is a separate authorized deploy/migration task.

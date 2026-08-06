@@ -90,6 +90,43 @@ export async function createAccountProfile(db, uid, profile) {
  * @param {string} uid
  * @returns {Promise<{ username: string, firstName: string, lastName: string } | null>}
  */
+/**
+ * Validates a standalone username -- the availability probe carries only
+ * that one field, not a whole profile -- and returns its normalized form,
+ * or null when the value could never be accepted by createAccountProfile
+ * anyway. Sharing USERNAME_PATTERN keeps the probe from ever reporting
+ * "available" for a name the insert would reject.
+ *
+ * @param {unknown} value
+ * @returns {string | null}
+ */
+export function normalizeUsername(value) {
+  if (typeof value !== 'string') {
+    return null;
+  }
+
+  const trimmed = value.trim();
+  return USERNAME_PATTERN.test(trimmed) ? trimmed.toLowerCase() : null;
+}
+
+/**
+ * True when no account currently holds `usernameNormalized`. Advisory only:
+ * uniqueness is still enforced by the UNIQUE index at insert time, so a name
+ * can be claimed between this check and the actual registration. The caller
+ * must keep handling the 409 from createAccountProfile.
+ *
+ * @param {D1Database} db
+ * @param {string} usernameNormalized
+ * @returns {Promise<boolean>}
+ */
+export async function isUsernameAvailable(db, usernameNormalized) {
+  const row = await db
+    .prepare('SELECT 1 AS taken FROM account_profiles WHERE username_normalized = ?')
+    .bind(usernameNormalized)
+    .first();
+  return row === null;
+}
+
 export async function fetchAccountProfile(db, uid) {
   const row = await db
     .prepare('SELECT username, first_name, last_name FROM account_profiles WHERE uid = ?')
