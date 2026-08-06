@@ -5,6 +5,41 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.3.0] - 2026-08-06
+
+### Adicionado
+
+- Contas de usuário completas: cadastro e login com Firebase Authentication
+  (nome, sobrenome e usuário único reservado pelo backend), login com Google
+  via OAuth2 + PKCE, e gerenciamento de conta (senha, e-mail, foto de perfil,
+  exclusão) diretamente em Configurações.
+- Monitor de desempenho ao vivo na Visão geral, com leituras reais de CPU,
+  GPU, memória, disco e rede e histórico gráfico do último minuto.
+
+### Corrigido
+
+- Reforçada a segurança do Worker de telemetria: CORS restrito à origem do
+  painel, limite de requisições na consulta de disponibilidade de usuário,
+  hashing de sessão, proteção contra injeção de fórmula na exportação CSV e
+  idempotência de ingestão.
+- Eliminadas condições de corrida na detecção de software na inicialização,
+  no encerramento do processo anterior do atualizador, no rollback elevado do
+  broker (agora com timeout) e na restauração de sessão.
+- Corrigida a leitura de contadores de desempenho que mantinha CPU e disco
+  sempre em 0% no monitor ao vivo, e corrigida a política de senha para
+  exigir apenas o mínimo de 12 caracteres.
+- Corrigida a compatibilidade multiplataforma para Windows 10/11 em
+  localidades diferentes de pt-BR e o carregamento tolerante de
+  `settings.json` fora do schema atual.
+
+### Melhorado
+
+- Visão geral, Otimizador e o dashboard privado de telemetria redesenhados,
+  com ícones vetoriais próprios, saudação por horário e link oficial do
+  Discord.
+- Reativação da instância em execução ao tentar abrir o aplicativo uma
+  segunda vez, em vez de abrir uma nova janela.
+
 ## [1.2.0] - 2026-08-01
 
 ### Adicionado
