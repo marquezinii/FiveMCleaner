@@ -88,7 +88,13 @@ Uma tarefa concluída termina automaticamente, sem pedido adicional do usuário:
 3. corrija os erros introduzidos pela própria tarefa;
 4. atualize o relatório exclusivo da tarefa;
 5. crie automaticamente um único commit Git local, claro e profissional;
-6. deixe a branch pronta para integração e informe branch, commit, testes e o
+6. reconstrua o atalho `FiveMCleaner - Desenvolvimento` da área de trabalho
+   com `scripts\Install-DevelopmentShortcut.ps1 -Build`, para que o usuário
+   consiga abrir e ver imediatamente o resultado de qualquer alteração feita
+   por uma IA, em qualquer tarefa, branch ou worktree. Se o script falhar ou
+   não puder ser executado no ambiente atual, informe explicitamente que o
+   atalho não foi reconstruído e por quê, em vez de omitir o passo;
+7. deixe a branch pronta para integração e informe branch, commit, testes e o
    status **pronto para integração**.
 
 Commits locais são obrigatórios e não exigem autorização remota. Não crie
