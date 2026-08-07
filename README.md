@@ -1,11 +1,15 @@
 <p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d0f14,100:1a1f2b&height=160&section=header&text=FiveMCleaner&fontColor=f97316&fontSize=52&fontAlignY=45&animation=fadeIn&desc=Otimização%20transparente%20e%20reversível%20para%20FiveM%20Legacy&descAlignY=68&descSize=18&descColor=d6dbe5" alt="FiveMCleaner">
+</p>
+
+<p align="center">
   <img src="docs/assets/icon.png" alt="Ícone oficial do FiveMCleaner" width="112">
 </p>
 
-<h1 align="center">FiveMCleaner</h1>
-
 <p align="center">
-  <strong>Otimização transparente, reversível e orientada por diagnóstico para FiveM Legacy no Windows.</strong>
+  <a href="https://marquezinii.github.io/FiveMCleaner/">
+    <img src="https://readme-typing-svg.demolab.com?font=Segoe+UI&weight=600&size=20&pause=2500&color=F97316&center=true&vCenter=true&width=620&lines=Diagn%C3%B3stico+real+do+seu+PC+antes+de+qualquer+mudan%C3%A7a;Cada+a%C3%A7%C3%A3o+%C3%A9+revers%C3%ADvel+e+auditada;Sem+shell%2C+sem+comandos+ocultos%2C+sem+promessas+irreais" alt="FiveMCleaner — principais diferenciais">
+  </a>
 </p>
 
 <p align="center">
@@ -18,6 +22,13 @@
   <img alt="Windows 10 e 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb?style=flat-square">
   <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10.0-7c3aed?style=flat-square">
   <a href="LICENSE"><img alt="Licença Source-Available" src="https://img.shields.io/badge/licen%C3%A7a-Source--Available-ef6c00?style=flat-square"></a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/marquezinii/FiveMCleaner/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/marquezinii/FiveMCleaner/ci.yml?branch=main&style=flat-square&label=CI"></a>
+  <a href="https://github.com/marquezinii/FiveMCleaner/releases/latest"><img alt="Última release" src="https://img.shields.io/github/v/release/marquezinii/FiveMCleaner?style=flat-square&color=f97316"></a>
+  <a href="https://github.com/marquezinii/FiveMCleaner/commits/main"><img alt="Último commit" src="https://img.shields.io/github/last-commit/marquezinii/FiveMCleaner?style=flat-square"></a>
+  <a href="https://github.com/marquezinii/FiveMCleaner/discussions"><img alt="Discussions" src="https://img.shields.io/github/discussions/marquezinii/FiveMCleaner?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -175,19 +186,31 @@ dotnet run --project src/FiveMCleaner.App/FiveMCleaner.App.csproj
 
 ```text
 src/
-├── FiveMCleaner.App/        # aplicação WPF sem elevação permanente
-├── FiveMCleaner.Contracts/  # contratos de ações, progresso e resultados
-├── FiveMCleaner.Core/       # orquestração, políticas e rollback
-├── FiveMCleaner.Windows/    # descoberta e integrações Windows/FiveM
-└── FiveMCleaner.Broker/     # operações administrativas estritamente tipadas
+├── FiveMCleaner.App/           # aplicação WPF sem elevação permanente
+├── FiveMCleaner.Contracts/     # contratos de ações, progresso e resultados
+├── FiveMCleaner.Core/          # orquestração, políticas e rollback
+├── FiveMCleaner.Windows/       # descoberta e integrações Windows/FiveM
+├── FiveMCleaner.Broker/        # operações administrativas estritamente tipadas
+├── FiveMCleaner.Launcher/      # processo pai: inicia o app e supervisiona o health-check pós-update
+├── FiveMCleaner.Updater/       # aplica a atualização transacional (staging, ativação, rollback)
+├── FiveMCleaner.UpdateRuntime/ # primitivas compartilhadas do updater (arquivo atômico, manifesto assinado, journal)
+└── FiveMCleaner.ReleaseTool/   # empacotamento e assinatura dos artefatos de release
 tests/
-└── FiveMCleaner.Tests/      # testes de política, segurança e execução
+└── FiveMCleaner.Tests/         # testes de política, segurança e execução
+infra/
+├── cloudflare-worker/          # backend de telemetria, contas e relatos de bug (Cloudflare Workers + D1)
+└── dashboard/                  # painel privado estático de leitura da telemetria
+installer/                      # roteiro Inno Setup e textos do instalador Windows
+scripts/                        # automação local: build, empacotamento, atalho de desenvolvimento, verificações de segurança
+website/                        # site público de download (Next.js) publicado via GitHub Pages
 docs/
-├── architecture.md
-├── bug-reports.md
-├── research.md
-├── release-preview.md
-└── safety.md
+├── architecture.md             # limites entre App/Core/Windows/Broker e fluxo de uma otimização
+├── safety.md                   # matriz de risco, reversibilidade e dados protegidos por ação
+├── research.md                 # fontes e fundamentação técnica das otimizações
+├── release-preview.md          # integridade de release, simulação e atalho de desenvolvimento
+├── telemetry.md                # o que a telemetria opcional envia e como desativar
+├── bug-reports.md              # o que um relato de bug envia e como é tratado
+└── brand/                      # identidade visual oficial (ícone, paleta, uso da marca)
 ```
 
 Detalhes: [Arquitetura](docs/architecture.md).
