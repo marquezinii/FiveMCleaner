@@ -33,9 +33,15 @@ Não execute testes destrutivos na instalação real do FiveM. Use diretórios t
 
 1. Crie uma branch curta, por exemplo `feat/preview-cache` ou `fix/rollback-xml`.
 2. Mantenha cada commit focado em uma decisão.
-3. Atualize testes e documentação junto com o comportamento.
-4. Rode build e testes em `Release`.
-5. Abra um pull request preenchendo todo o checklist.
+3. Escreva a mensagem em [Conventional Commits](https://www.conventionalcommits.org/pt-br/):
+   `tipo(escopo opcional): descrição curta no imperativo` (ex.: `fix(worker):
+   corrige rate limit da rota de telemetria`). Evite mensagens genéricas ou de
+   artefato de build (`WIP`, `update`, `Build FiveMCleaner vX.Y MVP`). Para
+   validar localmente, ative o hook incluído com
+   `git config core.hooksPath scripts/githooks`.
+4. Atualize testes e documentação junto com o comportamento.
+5. Rode build e testes em `Release`.
+6. Abra um pull request preenchendo todo o checklist.
 
 Não inclua binários gerados, caches, dumps, logs pessoais ou credenciais no commit.
 

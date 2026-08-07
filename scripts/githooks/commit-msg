@@ -1,0 +1,16 @@
+#!/bin/sh
+# Valida o padrão Conventional Commits definido em AI_RULES.md/CONTRIBUTING.md.
+# Ativar: git config core.hooksPath scripts/githooks
+
+msg_file="$1"
+first_line=$(head -n 1 "$msg_file")
+
+pattern='^(feat|fix|docs|refactor|test|chore|ci|perf|build|revert)(\([a-z0-9_-]+\))?!?: .{1,}'
+
+if ! echo "$first_line" | grep -qE "$pattern"; then
+  echo "Commit rejeitado: mensagem fora do padrão Conventional Commits." >&2
+  echo "Esperado: tipo(escopo opcional): descrição curta no imperativo" >&2
+  echo "Tipos aceitos: feat, fix, docs, refactor, test, chore, ci, perf, build, revert" >&2
+  echo "Recebido: $first_line" >&2
+  exit 1
+fi
