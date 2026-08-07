@@ -735,24 +735,161 @@
         </Setter>
     </Style>
 
-    <Style x:Key="ModeRadioStyle" TargetType="RadioButton">
-        <Setter Property="Background" Value="{DynamicResource SurfaceBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}" />
+    <!--
+        ===================================================================
+        Otimizador
+        ===================================================================
+        Estas superfícies são exclusivas da página do Otimizador. Elas se
+        apoiam nas mesmas cores e no mesmo raio do restante do aplicativo,
+        mas acrescentam profundidade (elevação real, brilho interno, plano
+        de fundo em gradiente) e movimento com propósito: cada animação
+        responde a um estado — perfil selecionado, execução em andamento,
+        conclusão — e nunca é decoração cíclica sem significado.
+    -->
+
+    <!--
+        Etapa da trilha do cabeçalho (preparar → executar → resultado). Em
+        repouso a pastilha fica esmaecida; a etapa ativa é acesa por um
+        DataTrigger no mesmo estado que decide qual cartão aparece na página.
+    -->
+    <Style x:Key="StageChipStyle" TargetType="Border">
+        <Setter Property="Padding" Value="11,6" />
+        <Setter Property="CornerRadius" Value="9" />
         <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource TileSurfaceBrush}" />
+        <Setter Property="Opacity" Value="0.42" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <!--
+        Cartão de perfil (Leve/Médio/Agressivo). O cartão inteiro é o alvo do
+        clique. Ao ser selecionado ele sobe, acende o brilho laranja e a barra
+        de acento cresce da esquerda para a direita; ao passar o ponteiro ele
+        só sobe um pouco, sem trocar de cor, para que hover e seleção nunca
+        sejam confundidos.
+    -->
+    <Style x:Key="ProfileCardStyle" TargetType="RadioButton">
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalContentAlignment" Value="Stretch" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Root" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}" BorderThickness="{TemplateBinding BorderThickness}" CornerRadius="13" Padding="18">
-                        <ContentPresenter />
-                    </Border>
+                    <Grid>
+                        <Grid.RenderTransform>
+                            <TranslateTransform x:Name="Lift" Y="0" />
+                        </Grid.RenderTransform>
+
+                        <!-- Sombra projetada: só aparece quando o cartão sobe. -->
+                        <Border x:Name="Shadow"
+                                Margin="4,8,4,0"
+                                CornerRadius="16"
+                                Background="#000000"
+                                Opacity="0">
+                            <Border.Effect>
+                                <BlurEffect Radius="22" />
+                            </Border.Effect>
+                        </Border>
+
+                        <!--
+                            Superfície em vidro, e não a do tile de indicador: o
+                            cartão precisa ter uma borda visível mesmo quando não
+                            está selecionado, senão os três níveis somem no fundo
+                            e só o escolhido parece existir.
+                        -->
+                        <Border x:Name="Root"
+                                CornerRadius="16"
+                                BorderThickness="1"
+                                BorderBrush="{DynamicResource GlassBorderBrush}"
+                                Background="{DynamicResource GlassSurfaceBrush}"
+                                ClipToBounds="True">
+                            <Grid>
+                                <!-- Brilho de seleção, cortado pelo raio do cartão. -->
+                                <Border x:Name="Glow" Opacity="0">
+                                    <Border.Background>
+                                        <RadialGradientBrush GradientOrigin="0.1,0" Center="0.1,0" RadiusX="1.25" RadiusY="1.6">
+                                            <GradientStop Color="#3AFF7A18" Offset="0" />
+                                            <GradientStop Color="#12FF7A18" Offset="0.45" />
+                                            <GradientStop Color="#00FF7A18" Offset="1" />
+                                        </RadialGradientBrush>
+                                    </Border.Background>
+                                </Border>
+
+                                <!--
+                                    Barra de acento: abre em altura ao selecionar. A escala
+                                    foi deliberadamente evitada aqui — a interface Fluent
+                                    deste aplicativo não usa transformação de escala, para
+                                    que nada se desloque sob o ponteiro.
+                                -->
+                                <Rectangle x:Name="Accent"
+                                           Height="0"
+                                           Opacity="0"
+                                           VerticalAlignment="Top"
+                                           Fill="{DynamicResource OrangeGradientBrush}" />
+
+                                <ContentPresenter Margin="18,19,18,18"
+                                                  VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+
+                                <!-- Foco de teclado visível sem depender da cor de seleção. -->
+                                <Border x:Name="FocusRing"
+                                        CornerRadius="16"
+                                        BorderThickness="1.5"
+                                        BorderBrush="{DynamicResource OrangeLightBrush}"
+                                        Opacity="0"
+                                        IsHitTestVisible="False" />
+                            </Grid>
+                        </Border>
+                    </Grid>
+
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource StrongBorderBrush}" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Lift" Storyboard.TargetProperty="Y" To="-4" Duration="0:0:0.18">
+                                            <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                        <DoubleAnimation Storyboard.TargetName="Shadow" Storyboard.TargetProperty="Opacity" To="0.5" Duration="0:0:0.18" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Lift" Storyboard.TargetProperty="Y" To="0" Duration="0:0:0.22" />
+                                        <DoubleAnimation Storyboard.TargetName="Shadow" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.22" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
+
                         <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="#22FF7A18" />
-                            <Setter TargetName="Root" Property="BorderBrush" Value="#B8FF7A18" />
+                            <Setter TargetName="Root" Property="BorderBrush" Value="#9EFF7A18" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.34" />
+                                        <DoubleAnimation Storyboard.TargetName="Accent" Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.2" />
+                                        <DoubleAnimation Storyboard.TargetName="Accent" Storyboard.TargetProperty="Height" To="3" Duration="0:0:0.34">
+                                            <DoubleAnimation.EasingFunction><CubicEase EasingMode="EaseOut" /></DoubleAnimation.EasingFunction>
+                                        </DoubleAnimation>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="Glow" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.26" />
+                                        <DoubleAnimation Storyboard.TargetName="Accent" Storyboard.TargetProperty="Opacity" To="0" Duration="0:0:0.26" />
+                                        <DoubleAnimation Storyboard.TargetName="Accent" Storyboard.TargetProperty="Height" To="0" Duration="0:0:0.26" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
+                        </Trigger>
+
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="FocusRing" Property="Opacity" Value="1" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter TargetName="Root" Property="Opacity" Value="0.55" />
@@ -761,6 +898,165 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!--
+        Escada de três degraus que traduz o nível do perfil sem número: o
+        degrau aceso indica a posição na escala Leve → Médio → Agressivo.
+    -->
+    <Style x:Key="ProfileStepStyle" TargetType="Rectangle">
+        <Setter Property="Width" Value="16" />
+        <Setter Property="Height" Value="4" />
+        <Setter Property="RadiusX" Value="2" />
+        <Setter Property="RadiusY" Value="2" />
+        <Setter Property="Margin" Value="0,0,4,0" />
+        <Setter Property="Fill" Value="{DynamicResource StrongBorderBrush}" />
+    </Style>
+
+    <!--
+        Barra de progresso da execução. O indicador é sólido em laranja e
+        atravessado por um brilho que corre continuamente enquanto a barra
+        está visível — sinal de "ainda trabalhando" mesmo quando o percentual
+        fica alguns segundos parado numa ação longa.
+    -->
+    <Style x:Key="OptimizerProgressBarStyle" TargetType="ProgressBar">
+        <Setter Property="Height" Value="12" />
+        <Setter Property="Minimum" Value="0" />
+        <Setter Property="Maximum" Value="100" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Border CornerRadius="7"
+                            Background="{DynamicResource InsetBrush}"
+                            BorderBrush="{DynamicResource BorderSoftBrush}"
+                            BorderThickness="1"
+                            ClipToBounds="True">
+                        <Grid x:Name="PART_Track">
+                            <Border x:Name="PART_Indicator"
+                                    HorizontalAlignment="Left"
+                                    CornerRadius="6"
+                                    Background="{DynamicResource OrangeGradientBrush}"
+                                    ClipToBounds="True">
+                                <Rectangle x:Name="Shimmer" Width="120" HorizontalAlignment="Left">
+                                    <Rectangle.Fill>
+                                        <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                                            <GradientStop Color="#00FFFFFF" Offset="0" />
+                                            <GradientStop Color="#4DFFFFFF" Offset="0.5" />
+                                            <GradientStop Color="#00FFFFFF" Offset="1" />
+                                        </LinearGradientBrush>
+                                    </Rectangle.Fill>
+                                    <Rectangle.RenderTransform>
+                                        <TranslateTransform X="-140" />
+                                    </Rectangle.RenderTransform>
+                                </Rectangle>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsVisible" Value="True">
+                            <Trigger.EnterActions>
+                                <BeginStoryboard Name="ShimmerStoryboard">
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation Storyboard.TargetName="Shimmer"
+                                                         Storyboard.TargetProperty="RenderTransform.(TranslateTransform.X)"
+                                                         From="-140"
+                                                         To="1400"
+                                                         Duration="0:0:2.1" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <StopStoryboard BeginStoryboardName="ShimmerStoryboard" />
+                            </Trigger.ExitActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!--
+        Halo do núcleo 3D: respira devagar em repouso e some quando a cena
+        não está visível, no mesmo padrão dos demais loops desta interface.
+    -->
+    <Style x:Key="CoreHaloStyle" TargetType="Ellipse">
+        <Setter Property="IsHitTestVisible" Value="False" />
+        <Setter Property="Fill">
+            <Setter.Value>
+                <RadialGradientBrush>
+                    <GradientStop Color="#2EFF7A18" Offset="0" />
+                    <GradientStop Color="#12FF7A18" Offset="0.55" />
+                    <GradientStop Color="#00FF7A18" Offset="1" />
+                </RadialGradientBrush>
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsVisible" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard Name="HaloStoryboard">
+                        <Storyboard RepeatBehavior="Forever">
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0.45" To="1" Duration="0:0:3.2" AutoReverse="True">
+                                <DoubleAnimation.EasingFunction><SineEase EasingMode="EaseInOut" /></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+                <Trigger.ExitActions>
+                    <StopStoryboard BeginStoryboardName="HaloStoryboard" />
+                </Trigger.ExitActions>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!--
+        Cartão de ação do plano. Sem elevação nem escala: a lista não pode
+        "andar" sob o ponteiro. Só a borda, o fundo e a faixa lateral reagem.
+    -->
+    <Style x:Key="PlanActionCardStyle" TargetType="Border">
+        <Setter Property="CornerRadius" Value="13" />
+        <Setter Property="Padding" Value="14" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSoftBrush}" />
+        <Setter Property="Background" Value="{DynamicResource TileSurfaceBrush}" />
+        <Setter Property="Margin" Value="0,0,0,8" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="BorderBrush" Value="{DynamicResource StrongBorderBrush}" />
+                <Setter Property="Background" Value="{DynamicResource SurfaceRaisedBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!--
+        Selo de conclusão: entra uma única vez, quando o cartão de resultado
+        aparece. É o único movimento de celebração da página, e chega subindo
+        em vez de crescendo — a interface Fluent deste aplicativo não usa
+        transformação de escala. O TranslateTransform é declarado no próprio
+        elemento, porque um Freezable em Setter.Value é congelado ao selar o
+        estilo e deixaria de ser animável.
+    -->
+    <Style x:Key="CompletionSealStyle" TargetType="Border">
+        <Setter Property="Width" Value="58" />
+        <Setter Property="Height" Value="58" />
+        <Setter Property="CornerRadius" Value="29" />
+        <Setter Property="Background" Value="#1E37C889" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush" Value="#5537C889" />
+        <Setter Property="Opacity" Value="0" />
+        <Style.Triggers>
+            <Trigger Property="IsVisible" Value="True">
+                <Trigger.EnterActions>
+                    <BeginStoryboard>
+                        <Storyboard>
+                            <DoubleAnimation Storyboard.TargetProperty="Opacity" To="1" Duration="0:0:0.4" />
+                            <DoubleAnimation Storyboard.TargetProperty="RenderTransform.(TranslateTransform.Y)" From="14" To="0" Duration="0:0:0.62">
+                                <DoubleAnimation.EasingFunction><BackEase EasingMode="EaseOut" Amplitude="0.5" /></DoubleAnimation.EasingFunction>
+                            </DoubleAnimation>
+                        </Storyboard>
+                    </BeginStoryboard>
+                </Trigger.EnterActions>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <Style x:Key="ToggleSwitchStyle" TargetType="CheckBox">

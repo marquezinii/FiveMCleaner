@@ -352,7 +352,25 @@ public sealed class MainViewModel : BindableBase, IDisposable
 
     public int ReadinessScore { get => readinessScore; private set => SetProperty(ref readinessScore, value); }
 
-    public double ProgressPercent { get => progressPercent; private set => SetProperty(ref progressPercent, value); }
+    public double ProgressPercent
+    {
+        get => progressPercent;
+        private set
+        {
+            if (SetProperty(ref progressPercent, value))
+            {
+                OnPropertyChanged(nameof(ProgressIntensity));
+            }
+        }
+    }
+
+    /// <summary>
+    /// Progresso real da execução mapeado para a faixa 0,3–1, que a cena 3D do
+    /// Otimizador usa como velocidade e brilho. Não é uma medida nova: é o
+    /// mesmo <see cref="ProgressPercent"/>, com um piso para que o núcleo nunca
+    /// pareça parado nos primeiros segundos de uma execução que já começou.
+    /// </summary>
+    public double ProgressIntensity => 0.3 + (Math.Clamp(ProgressPercent / 100d, 0, 1) * 0.7);
 
     public string ProgressHeadline
     {
@@ -733,6 +751,21 @@ public sealed class MainViewModel : BindableBase, IDisposable
                 : upper;
         }
     }
+
+    /// <summary>
+    /// Posição do perfil selecionado na escala Leve → Médio → Agressivo, de 0 a 1.
+    /// Não é uma estimativa de ganho nem uma medida de FPS: é só o nível
+    /// escolhido, exposto para que a cena 3D e o anel do Otimizador reajam de
+    /// forma visível quando o usuário troca de perfil.
+    /// </summary>
+    public double ProfileIntensity => selectedProfile switch
+    {
+        OptimizationProfile.Light => 0.34,
+        OptimizationProfile.Aggressive => 1,
+        _ => 0.67
+    };
+
+    public double ProfileIntensityPercent => ProfileIntensity * 100;
 
     public string SafetySummary => currentPlan?.RequiresElevation == true
         ? localization.GetString("Plan.Elevation.OnePrompt")
@@ -1220,6 +1253,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         OnPropertyChanged(nameof(IsAggressiveSelected));
         OnPropertyChanged(nameof(SelectedProfileLabel));
         OnPropertyChanged(nameof(SelectedProfileName));
+        OnPropertyChanged(nameof(ProfileIntensity));
+        OnPropertyChanged(nameof(ProfileIntensityPercent));
         RefreshPlan();
     }
 
@@ -1541,6 +1576,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
             OnPropertyChanged(nameof(IsAggressiveSelected));
             OnPropertyChanged(nameof(SelectedProfileLabel));
             OnPropertyChanged(nameof(SelectedProfileName));
+            OnPropertyChanged(nameof(ProfileIntensity));
+            OnPropertyChanged(nameof(ProfileIntensityPercent));
         }
 
         CpuName = value.CpuName;

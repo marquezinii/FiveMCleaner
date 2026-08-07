@@ -735,4 +735,10 @@
   <data name="Error.SecurityCheck" xml:space="preserve"><value>The security check did not pass. Nothing was changed.</value></data>
   <data name="Error.InvalidData" xml:space="preserve"><value>The information received could not be verified safely. Nothing was changed.</value></data>
   <data name="Error.Unexpected" xml:space="preserve"><value>An unexpected problem occurred. Try again; if it continues, send a bug report.</value></data>
+  <data name="Optimizer.Level" xml:space="preserve"><value>LEVEL</value></data>
+  <data name="Optimizer.Safety" xml:space="preserve"><value>Safety</value></data>
+  <data name="Optimizer.Detected" xml:space="preserve"><value>Detected on this computer</value></data>
+  <data name="Optimizer.Stage.Prepare" xml:space="preserve"><value>Prepare</value></data>
+  <data name="Optimizer.Stage.Run" xml:space="preserve"><value>Run</value></data>
+  <data name="Optimizer.Stage.Result" xml:space="preserve"><value>Result</value></data>
 </root>
