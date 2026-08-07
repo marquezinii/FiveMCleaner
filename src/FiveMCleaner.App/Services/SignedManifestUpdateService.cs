@@ -25,22 +25,28 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
     private readonly UpdaterDiagnostics diagnostics;
 
     public SignedManifestUpdateService()
-    {
-        var handler = new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.None,
-            SslOptions =
+        : this(
+            new SocketsHttpHandler
             {
-                EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
-                CertificateRevocationCheckMode = X509RevocationMode.Online,
+                AllowAutoRedirect = false,
+                AutomaticDecompression = DecompressionMethods.None,
+                SslOptions =
+                {
+                    EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
+                    CertificateRevocationCheckMode = X509RevocationMode.Online,
+                },
             },
-        };
+            Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "FiveMCleaner"))
+    {
+    }
+
+    internal SignedManifestUpdateService(HttpMessageHandler handler, string dataRoot)
+    {
         client = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(15) };
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("FiveMCleaner-Updater", "2.0"));
-        dataRoot = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "FiveMCleaner");
+        this.dataRoot = dataRoot;
         updatesRoot = Path.Combine(dataRoot, "Updates");
         versionFloor = new VersionFloorStore(dataRoot);
         diagnostics = new UpdaterDiagnostics(dataRoot);
@@ -165,28 +171,33 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
             if (response.Content.Headers.ContentLength is long length && length != update.SizeBytes)
                 throw new UpdateSecurityException("O tamanho HTTP do pacote difere do manifesto.");
             await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
-            await using var destination = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65_536, true);
-            using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
-            var buffer = ArrayPool<byte>.Shared.Rent(65_536);
-            long total = 0;
-            try
+            // O handle do .part precisa estar fechado antes do File.Move: ele é
+            // aberto com FileShare.None, então um `await using` de método inteiro
+            // deixaria o arquivo em uso justamente na hora de movê-lo.
+            await using (var destination = new FileStream(temporary, FileMode.CreateNew, FileAccess.Write, FileShare.None, 65_536, true))
             {
-                int read;
-                while ((read = await source.ReadAsync(buffer, cancellationToken)) != 0)
+                using var hash = IncrementalHash.CreateHash(HashAlgorithmName.SHA256);
+                var buffer = ArrayPool<byte>.Shared.Rent(65_536);
+                long total = 0;
+                try
                 {
-                    total = checked(total + read);
-                    if (total > update.SizeBytes) throw new UpdateSecurityException("O pacote excede o tamanho assinado.");
-                    hash.AppendData(buffer, 0, read);
-                    await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
-                    progress?.Report(new UpdateDownloadProgress(total, update.SizeBytes));
+                    int read;
+                    while ((read = await source.ReadAsync(buffer, cancellationToken)) != 0)
+                    {
+                        total = checked(total + read);
+                        if (total > update.SizeBytes) throw new UpdateSecurityException("O pacote excede o tamanho assinado.");
+                        hash.AppendData(buffer, 0, read);
+                        await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
+                        progress?.Report(new UpdateDownloadProgress(total, update.SizeBytes));
+                    }
+                    if (total != update.SizeBytes
+                        || !Convert.ToHexString(hash.GetHashAndReset()).Equals(update.Sha256Hex, StringComparison.OrdinalIgnoreCase))
+                        throw new UpdateSecurityException("A integridade do pacote baixado falhou.");
+                    await destination.FlushAsync(cancellationToken);
+                    destination.Flush(true);
                 }
-                if (total != update.SizeBytes
-                    || !Convert.ToHexString(hash.GetHashAndReset()).Equals(update.Sha256Hex, StringComparison.OrdinalIgnoreCase))
-                    throw new UpdateSecurityException("A integridade do pacote baixado falhou.");
-                await destination.FlushAsync(cancellationToken);
-                destination.Flush(true);
+                finally { ArrayPool<byte>.Shared.Return(buffer, true); }
             }
-            finally { ArrayPool<byte>.Shared.Return(buffer, true); }
             File.Move(temporary, finalPath, true);
             return new DownloadedUpdate(update.Version, finalPath, update.SizeBytes, update.Sha256Hex, false);
         }
