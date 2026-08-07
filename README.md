@@ -1,11 +1,15 @@
 <p align="center">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d0f14,100:1a1f2b&height=160&section=header&text=FiveMCleaner&fontColor=f97316&fontSize=52&fontAlignY=45&animation=fadeIn&desc=Otimização%20transparente%20e%20reversível%20para%20FiveM%20Legacy&descAlignY=68&descSize=18&descColor=d6dbe5" alt="FiveMCleaner">
+</p>
+
+<p align="center">
   <img src="docs/assets/icon.png" alt="Ícone oficial do FiveMCleaner" width="112">
 </p>
 
-<h1 align="center">FiveMCleaner</h1>
-
 <p align="center">
-  <strong>Otimização transparente, reversível e orientada por diagnóstico para FiveM Legacy no Windows.</strong>
+  <a href="https://marquezinii.github.io/FiveMCleaner/">
+    <img src="https://readme-typing-svg.demolab.com?font=Segoe+UI&weight=600&size=20&pause=2500&color=F97316&center=true&vCenter=true&width=620&lines=Diagn%C3%B3stico+real+do+seu+PC+antes+de+qualquer+mudan%C3%A7a;Cada+a%C3%A7%C3%A3o+%C3%A9+revers%C3%ADvel+e+auditada;Sem+shell%2C+sem+comandos+ocultos%2C+sem+promessas+irreais" alt="FiveMCleaner — principais diferenciais">
+  </a>
 </p>
 
 <p align="center">
