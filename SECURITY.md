@@ -4,8 +4,6 @@ O FiveMCleaner altera configurações locais e possui operações que podem exig
 
 ## Versões cobertas
 
-Enquanto o projeto estiver na série `0.x`, recebem correções:
-
 | Versão               | Suporte |
 | -------------------- | ------- |
 | branch `main`        | sim     |
