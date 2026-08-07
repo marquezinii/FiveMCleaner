@@ -1,5 +1,24 @@
 # Estado do Projeto
 
+## Revisão profissional do README (apresentação do repositório) — 07/08/2026
+
+- Tarefa direta em `dev/proxima-versao` (autorizada explicitamente pelo
+  usuário), sem branch `ai/*`: apenas apresentação, sem mudança de
+  comportamento, versão ou release.
+- README: adicionados badges de CI, última release, último commit e
+  Discussions; a árvore de `## Estrutura` foi corrigida para refletir os 9
+  projetos reais de `src/` (faltavam `Launcher`, `Updater`, `UpdateRuntime`,
+  `ReleaseTool`) e ganhou descrição de `infra/`, `installer/`, `scripts/`,
+  `website/` e mais entradas de `docs/` (`safety.md`, `telemetry.md`,
+  `bug-reports.md`, `docs/brand/`), que antes não apareciam no mapa do
+  repositório.
+- Validação: build Release sem avisos, 775 testes .NET, `Verify-Safety.ps1`
+  aprovados, `git diff --check` limpo.
+- Pendente (fora desta rodada, avaliar depois): descrição/topics do
+  repositório no GitHub já estão presentes e coerentes; social preview
+  image e banner animado no README não foram adicionados por dependerem de
+  decisão de marca do usuário.
+
 ## Redesenho da janela Entrar/Cadastre-se, login com Google e conta em Configurações — 06/08/2026
 
 - Integrada em `dev/proxima-versao`: `ai/claude/account-window-ux` (X de
