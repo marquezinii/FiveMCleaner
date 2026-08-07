@@ -1059,6 +1059,26 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         try
         {
             var outputPath = Path.GetFullPath(argument["--capture=".Length..].Trim('"'));
+
+            // O smoke-test de captura sempre abriu na Visão geral. Com
+            // --capture-page= ele consegue fotografar qualquer página, o que
+            // é o único jeito de conferir o Otimizador sem interação manual.
+            var page = Environment.GetCommandLineArgs()
+                .FirstOrDefault(value => value.StartsWith("--capture-page=", StringComparison.OrdinalIgnoreCase));
+            if (page is not null)
+            {
+                var tag = page["--capture-page=".Length..].Trim('"');
+                var target = tag switch
+                {
+                    "Optimizer" => (Element: (UIElement)OptimizerPage, Nav: OptimizerNav),
+                    "History" => (HistoryPage, HistoryNav),
+                    "Settings" => (SettingsPage, SettingsNav),
+                    _ => (DashboardPage, DashboardNav)
+                };
+                ActivateNavItem(target.Nav);
+                Navigate(target.Element);
+            }
+
             await Task.Delay(450);
             UpdateLayout();
             var dpi = VisualTreeHelper.GetDpi(this);

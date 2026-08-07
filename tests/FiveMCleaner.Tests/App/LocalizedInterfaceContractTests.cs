@@ -269,8 +269,11 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("x:Key=\"IconCheck\"", icons, StringComparison.Ordinal);
         Assert.Contains("x:Key=\"IconClose\"", icons, StringComparison.Ordinal);
-        Assert.Equal(2, Regex.Matches(mainWindow, "Value=\"\\{StaticResource IconCheck\\}\"").Count);
-        Assert.Equal(2, Regex.Matches(mainWindow, "Value=\"\\{StaticResource IconClose\\}\"").Count);
+        // Quatro pares: os dois selos da Visão geral (FiveM e GTA V) e os dois
+        // equivalentes do Otimizador, que passaram a usar o mesmo selo vetorial
+        // do dicionário compartilhado em vez de só texto.
+        Assert.Equal(4, Regex.Matches(mainWindow, "Value=\"\\{StaticResource IconCheck\\}\"").Count);
+        Assert.Equal(4, Regex.Matches(mainWindow, "Value=\"\\{StaticResource IconClose\\}\"").Count);
     }
 
     [Fact]
