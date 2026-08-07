@@ -202,7 +202,10 @@ Ao ser disparada, a IA deve:
    instalador, site e demais artefatos de distribuição, sem divergências;
 4. fazer merge de `dev/proxima-versao` para `main`, salvo se uma comparação
    explícita de histórico e conteúdo provar que ambas já são idênticas;
-5. criar a tag da versão, publicar `main`, a tag e os artefatos oficiais;
+5. criar a tag da versão, publicar `main`, a tag, os artefatos oficiais e a
+   GitHub Release, cujo corpo segue obrigatoriamente o
+   [Padrão das GitHub Releases](#padrão-das-github-releases-release-notes)
+   definido abaixo;
 6. validar o atualizador de ponta a ponta e sincronizar `dev/proxima-versao`
    com a `main` publicada para iniciar o próximo ciclo.
 
@@ -230,6 +233,156 @@ Antes de considerar qualquer publicação concluída, valide, sempre que possív
 Quando a validação completa depender de instalação real, rede externa ou
 interação manual, relate exatamente o que foi verificado e o que permanece
 pendente. Nunca afirme que o atualizador funciona sem evidência concreta.
+
+### Padrão das GitHub Releases (Release Notes)
+
+O corpo (`body`) de toda GitHub Release estável é consumido automaticamente
+pelo canal oficial de atualizações do Discord. Por isso, a partir do momento
+em que essa automação existir, as Release Notes deixam de ser um detalhe
+interno e passam a ser uma **saída pública oficial do projeto**, com padrão
+obrigatório.
+
+**Tag e título**
+
+- Tag: `vMAJOR.MINOR.PATCH` (ex.: `v1.4.2`) — sem `v` duplicado, sem espaços
+  e sem formato alternativo.
+- Título: `FiveMCleaner vMAJOR.MINOR.PATCH` (ex.: `FiveMCleaner v1.4.2`).
+
+**Tipo de release**
+
+Enquanto o projeto usar somente o canal estável: toda release oficial é uma
+release normal/stable — nunca marcada como `pre-release`, nunca deixada como
+`draft` ao final da publicação. Branches `ai/*` jamais geram release pública
+(já coberto em "Publicação oficial" acima).
+
+**Estrutura obrigatória do corpo**
+
+Markdown, usando somente as seções abaixo que forem aplicáveis, sempre nesta
+ordem, sem seções vazias (se não houver item real para uma seção, omita a
+seção inteira — nunca escreva algo como "Nenhuma alteração"):
+
+```markdown
+## ✨ Novidades
+
+- ...
+
+## 🔧 Melhorias
+
+- ...
+
+## 🐛 Correções
+
+- ...
+
+## 🔒 Segurança
+
+- ...
+
+## ⚙️ Alterações técnicas
+
+- ...
+```
+
+- `## ✨ Novidades`: novas funcionalidades, novas capacidades públicas,
+  recursos percebidos diretamente pelo usuário.
+- `## 🔧 Melhorias`: UX, desempenho, confiabilidade, estabilidade,
+  refinamento de comportamento já existente.
+- `## 🐛 Correções`: bugs, regressões e comportamentos incorretos
+  efetivamente corrigidos.
+- `## 🔒 Segurança`: correções ou hardening relevantes, validações
+  adicionais, mitigação de risco — descritas de forma responsável, sem
+  detalhes que facilitem exploração de uma vulnerabilidade ainda relevante.
+- `## ⚙️ Alterações técnicas`: refatorações relevantes, dependências,
+  arquitetura, build, updater, telemetria, instalador e manutenção técnica
+  relevante.
+
+**Regras de conteúdo**
+
+1. Nunca publicar uma release oficial sem Release Notes.
+2. Antes de escrever, analise efetivamente todas as mudanças integradas
+   desde a última versão pública/tag — as notas devem refletir somente
+   mudanças realmente presentes na versão publicada.
+3. Nunca invente funcionalidades, melhorias, correções, resultados de teste,
+   ganhos de desempenho ou melhorias de segurança; não prometa recursos
+   futuros.
+4. Não inclua trabalho que ficou só em branches `ai/*` sem integrar, nem
+   tarefas canceladas ou experimentais.
+5. Escreva sempre em português do Brasil, para o usuário final: claro,
+   profissional, objetivo, curto, compreensível, sem jargão interno
+   desnecessário. Traduza mensagens de commit cruas (`fix null ref
+   AccountVM`, `bump package`, `cleanup`) em descrições públicas
+   compreensíveis quando forem relevantes.
+6. Cada bullet representa uma mudança concreta; não repita a mesma mudança
+   em seções diferentes; agrupe alterações muito pequenas quando fizer
+   sentido, mas sem esconder mudanças relevantes.
+7. Preserve nomes oficiais de funcionalidades, telas e componentes públicos
+   do FiveMCleaner.
+8. Nunca inclua hashes de commit, nomes de branch internas, caminhos locais,
+   worktrees, prompts, nomes de agentes de IA, detalhes de processo interno,
+   segredos, tokens ou dados pessoais.
+9. Uma alteração técnica sem impacto ou relevância pública pode permanecer
+   só no `CHANGELOG.md` técnico e não precisa aparecer na GitHub Release.
+
+**Relação com o `CHANGELOG.md`**
+
+`CHANGELOG.md` continua sendo o histórico completo e oficial das versões; a
+GitHub Release é a apresentação pública resumida e organizada daquela mesma
+versão. Os dois devem permanecer coerentes: a Release nunca pode contradizer
+o `CHANGELOG.md`, e uma mudança relevante da versão não deve desaparecer das
+Release Notes sem motivo. Informação puramente interna pode continuar só no
+changelog técnico.
+
+**Integração com Discord**
+
+O corpo da GitHub Release é consumido automaticamente pelo sistema oficial
+de notificações do Discord. Por isso:
+
+- não insira um cabeçalho manual como "FiveMCleaner vX.Y.Z está disponível"
+  nem repita a versão no início do corpo — o sistema do Discord já cria esse
+  cabeçalho a partir do título/tag;
+- não adicione links genéricos de download no corpo só para o Discord — a
+  automação já anexa o asset da release separadamente;
+- nunca use `@everyone`, `@here` ou menções de cargo/usuário;
+- evite emojis além dos já padronizados nos títulos das seções;
+- evite tabelas Markdown (a apresentação no Discord pode ficar ruim) —
+  prefira listas simples com bullets;
+- mantenha o Markdown compatível com GitHub e Discord ao mesmo tempo;
+- mantenha as notas concisas, mas completas.
+
+**Qualidade antes de publicar**
+
+Antes de criar/publicar a GitHub Release, confirme: versão, tag e título
+corretos; Release Notes geradas a partir das mudanças reais; nenhuma seção
+vazia; nenhuma mudança inventada ou item relevante omitido; nenhum dado
+interno/sensível; coerência entre Release Notes, `CHANGELOG.md`, código
+publicado e versão; assets oficiais corretos anexados; release não marcada
+como pre-release enquanto o projeto for só stable. Se qualquer verificação
+falhar, corrija antes de publicar.
+
+**Exemplo estrutural** (apenas de formato — nunca copie um item dele para
+uma release real sem que a mudança correspondente exista de fato):
+
+```markdown
+## ✨ Novidades
+
+- Adicionado diagnóstico detalhado das configurações relevantes para o FiveM.
+- Adicionada nova visualização das otimizações aplicadas.
+
+## 🔧 Melhorias
+
+- Melhorado o desempenho da análise inicial do sistema.
+- Aprimorada a experiência da tela de restauração.
+
+## 🐛 Correções
+
+- Corrigido problema que poderia impedir determinadas otimizações no Windows 11.
+- Corrigida inconsistência na exibição do status de algumas ações.
+
+## ⚙️ Alterações técnicas
+
+- Melhorado o tratamento interno de erros e logs.
+- Atualizadas dependências utilizadas pelo processo de atualização.
+```
 
 ### Classificação de versão (Semantic Versioning)
 
@@ -259,6 +412,15 @@ Versão 1.2.3
 - Melhorado: descrição objetiva da melhoria.
 - Atualizado: descrição objetiva de dependências, componentes ou dados.
 ```
+
+Esse bloco continua sendo usado onde o projeto hoje espera esse formato (por
+exemplo, README e site público) e deve ser derivado das mesmas mudanças
+reais usadas no `CHANGELOG.md` e nas GitHub Release Notes — nunca pode
+divergir da release publicada. As categorias `Corrigido`, `Melhorado` e
+`Atualizado` continuam seguindo as regras de conteúdo já definidas acima; ele
+não substitui a estrutura de seções (`Novidades`/`Melhorias`/`Correções`/
+`Segurança`/`Alterações técnicas`) exigida para o corpo da GitHub Release em
+[Padrão das GitHub Releases](#padrão-das-github-releases-release-notes).
 
 Alterações exclusivamente em `AI_RULES.md` ou em outra documentação de
 governança podem receber push de desenvolvimento autorizado, sem criar versão
