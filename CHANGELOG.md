@@ -5,6 +5,18 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.3.2] - 2026-08-06
+
+### Corrigido
+
+- O download de atualização de um clique falhava sempre, em qualquer
+  máquina, com "Um arquivo necessário está indisponível ou em uso": o
+  arquivo temporário do download era movido para o destino final antes de
+  o `FileStream` de escrita ser fechado, e o Windows nunca libera esse
+  handle a tempo. O download inteiro (133 MB) completava e validava o
+  hash normalmente, só falhava no último passo. Corrigido fechando o
+  stream antes do `File.Move`; cobertura de regressão adicionada.
+
 ## [1.3.1] - 2026-08-06
 
 ### Corrigido
