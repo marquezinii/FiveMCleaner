@@ -64,7 +64,7 @@ public sealed class FirebaseAuthServiceTests
         using var client = new HttpClient(new StubHandler(request => request.RequestUri!.Host == "securetoken.googleapis.com"
             ? Json("""{"user_id":"uid-1","id_token":"id-2","refresh_token":"refresh-2","expires_in":"3600"}""")
             : Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true}]}""")));
-        using var service = new FirebaseAuthService(client, "AIzaSyBrYcZtzioKnCc1-LmgCC2YI1R66SW4vdM", store);
+        using var service = new FirebaseAuthService(client, "test-firebase-api-key-1234567890", store);
 
         var result = await service.RestoreSessionAsync();
 
@@ -135,7 +135,7 @@ public sealed class FirebaseAuthServiceTests
     {
         var path = Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session");
         var client = new HttpClient(new StubHandler(request => { requests.Add(request.RequestUri!.AbsolutePath); return send(request); }));
-        return new FirebaseAuthService(client, "AIzaSyBrYcZtzioKnCc1-LmgCC2YI1R66SW4vdM", new SecureFirebaseSessionStore(path));
+        return new FirebaseAuthService(client, "test-firebase-api-key-1234567890", new SecureFirebaseSessionStore(path));
     }
 
     private static HttpResponseMessage Json(string payload, HttpStatusCode status = HttpStatusCode.OK) => new(status) { Content = new StringContent(payload, Encoding.UTF8, "application/json") };

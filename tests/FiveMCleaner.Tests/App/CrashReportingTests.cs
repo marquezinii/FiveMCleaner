@@ -265,10 +265,10 @@ public sealed class FirebaseAuthConfigurationTests
     public void TryGetApiKey_AcceptsOnlyPublicApiKeySyntax()
     {
         var accepted = FirebaseAuthConfiguration.TryGetApiKey(
-            "AIzaSyBrYcZtzioKnCc1-LmgCC2YI1R66SW4vdM", out var apiKey);
+            "test-firebase-api-key-1234567890", out var apiKey);
 
         Assert.True(accepted);
-        Assert.Equal("AIzaSyBrYcZtzioKnCc1-LmgCC2YI1R66SW4vdM", apiKey);
+        Assert.Equal("test-firebase-api-key-1234567890", apiKey);
         Assert.False(FirebaseAuthConfiguration.TryGetApiKey("https://example.test", out _));
     }
 }

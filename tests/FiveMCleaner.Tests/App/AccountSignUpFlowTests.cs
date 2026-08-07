@@ -224,7 +224,7 @@ public sealed class AccountSignUpFlowTests
     {
         var path = sessionPath ?? TempSessionPath();
         var client = new HttpClient(new StubHandler(request => { requests.Add(request.RequestUri!.AbsolutePath); return send(request); }));
-        return new FirebaseAuthService(client, "AIzaSyBrYcZtzioKnCc1-LmgCC2YI1R66SW4vdM", new SecureFirebaseSessionStore(path));
+        return new FirebaseAuthService(client, "test-firebase-api-key-1234567890", new SecureFirebaseSessionStore(path));
     }
 
     private static string TempSessionPath() => Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session");
