@@ -1,0 +1,466 @@
+name: Discord - Nova versão estável
+
+on:
+  release:
+    types: [published]
+
+  # Permite testar manualmente sem precisar criar uma release falsa.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  notify-discord:
+    # Hoje usamos somente versões estáveis.
+    # Mesmo que alguém publique uma pre-release no futuro,
+    # ela não será anunciada neste canal.
+    if: github.event_name == 'workflow_dispatch' || (github.event.release.prerelease == false && github.event.release.draft == false)
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+
+    steps:
+      - name: Publicar atualização no Discord
+        shell: bash
+
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_RELEASE_WEBHOOK }}
+
+        run: |
+          python3 <<'PY'
+          import json
+          import os
+          import sys
+          import urllib.error
+          import urllib.request
+          from pathlib import Path
+
+          WEBHOOK_URL = os.environ.get(
+              "DISCORD_WEBHOOK_URL",
+              ""
+          ).strip()
+
+          EVENT_PATH = os.environ.get(
+              "GITHUB_EVENT_PATH",
+              ""
+          )
+
+          EVENT_NAME = os.environ.get(
+              "GITHUB_EVENT_NAME",
+              ""
+          )
+
+          REPOSITORY = os.environ.get(
+              "GITHUB_REPOSITORY",
+              "FiveMCleaner"
+          )
+
+          # Cor laranja da identidade visual do FiveMCleaner.
+          COLOR = 0xFF8A00
+
+          if not WEBHOOK_URL:
+              print(
+                  "ERRO: secret DISCORD_RELEASE_WEBHOOK não configurado.",
+                  file=sys.stderr
+              )
+              sys.exit(1)
+
+          def split_markdown(text: str, limit: int = 3900):
+              """
+              Divide release notes grandes em várias mensagens
+              sem ultrapassar os limites do Discord.
+              """
+
+              text = (text or "").strip()
+
+              if not text:
+                  return [
+                      "Nenhuma nota de versão foi informada nesta release."
+                  ]
+
+              chunks = []
+              current = ""
+
+              for line in text.splitlines(keepends=True):
+
+                  while len(line) > limit:
+
+                      if current:
+                          chunks.append(current.rstrip())
+                          current = ""
+
+                      chunks.append(
+                          line[:limit].rstrip()
+                      )
+
+                      line = line[limit:]
+
+                  if len(current) + len(line) > limit:
+
+                      if current:
+                          chunks.append(
+                              current.rstrip()
+                          )
+
+                      current = line
+
+                  else:
+                      current += line
+
+              if current.strip():
+                  chunks.append(
+                      current.rstrip()
+                  )
+
+              return chunks or [
+                  "Nenhuma nota de versão foi informada nesta release."
+              ]
+
+          def post(payload):
+              """
+              Envia uma mensagem para o webhook e falha
+              o workflow caso o Discord rejeite a requisição.
+              """
+
+              data = json.dumps(
+                  payload,
+                  ensure_ascii=False
+              ).encode("utf-8")
+
+              separator = "&" if "?" in WEBHOOK_URL else "?"
+
+              request = urllib.request.Request(
+                  WEBHOOK_URL + separator + "wait=true",
+                  data=data,
+                  headers={
+                      "Content-Type":
+                          "application/json; charset=utf-8",
+
+                      "User-Agent":
+                          "FiveMCleaner-GitHub-Actions/1.0",
+                  },
+                  method="POST",
+              )
+
+              try:
+
+                  with urllib.request.urlopen(
+                      request,
+                      timeout=20
+                  ) as response:
+
+                      if response.status not in (200, 204):
+                          raise RuntimeError(
+                              f"Discord retornou HTTP "
+                              f"{response.status}"
+                          )
+
+              except urllib.error.HTTPError as exc:
+
+                  body = exc.read().decode(
+                      "utf-8",
+                      errors="replace"
+                  )
+
+                  print(
+                      f"ERRO Discord HTTP "
+                      f"{exc.code}: {body}",
+                      file=sys.stderr
+                  )
+
+                  raise
+
+          event = json.loads(
+              Path(EVENT_PATH).read_text(
+                  encoding="utf-8"
+              )
+          )
+
+          # ==========================================================
+          # TESTE MANUAL
+          # ==========================================================
+
+          if EVENT_NAME == "workflow_dispatch":
+
+              release = {
+                  "tag_name":
+                      "v0.0.0-teste",
+
+                  "name":
+                      "FiveMCleaner v0.0.0-teste",
+
+                  "html_url":
+                      f"https://github.com/"
+                      f"{REPOSITORY}/releases",
+
+                  "published_at":
+                      None,
+
+                  "body":
+                      "## ✨ Novidades\n"
+                      "- Exemplo de nova funcionalidade.\n\n"
+
+                      "## 🔧 Melhorias\n"
+                      "- Exemplo de melhoria de desempenho.\n\n"
+
+                      "## 🐛 Correções\n"
+                      "- Exemplo de correção de bug.\n\n"
+
+                      "> Esta é apenas uma mensagem de teste "
+                      "do sistema de notificações.",
+
+                  "assets": [],
+              }
+
+              test_mode = True
+
+          else:
+
+              release = event["release"]
+              test_mode = False
+
+          # ==========================================================
+          # DADOS DA RELEASE
+          # ==========================================================
+
+          version = (
+              release.get("tag_name")
+              or release.get("name")
+              or "Nova versão"
+          )
+
+          release_url = (
+              release.get("html_url")
+              or f"https://github.com/{REPOSITORY}/releases"
+          )
+
+          published_at = release.get(
+              "published_at"
+          )
+
+          body = release.get(
+              "body"
+          ) or ""
+
+          assets = release.get(
+              "assets"
+          ) or []
+
+          # ==========================================================
+          # PROCURAR INSTALADOR
+          # ==========================================================
+
+          installer = None
+
+          preferred_extensions = (
+              ".exe",
+              ".msi",
+              ".msix"
+          )
+
+          for asset in assets:
+
+              name = (
+                  asset.get("name")
+                  or ""
+              ).lower()
+
+              if name.endswith(
+                  preferred_extensions
+              ):
+
+                  installer = asset
+                  break
+
+          if installer:
+
+              installer_name = installer.get(
+                  "name",
+                  "instalador"
+              )
+
+              installer_url = installer.get(
+                  "browser_download_url"
+              )
+
+              download_text = (
+                  f"[Baixar {installer_name}]"
+                  f"({installer_url})"
+              )
+
+          else:
+
+              download_text = (
+                  f"[Abrir página da versão]"
+                  f"({release_url})"
+              )
+
+          # ==========================================================
+          # RELEASE NOTES
+          # ==========================================================
+
+          notes_chunks = split_markdown(
+              body
+          )
+
+          # ==========================================================
+          # CABEÇALHO
+          # ==========================================================
+
+          if test_mode:
+
+              header_title = (
+                  "🧪 TESTE • Notificação de atualização"
+              )
+
+              header_description = (
+                  "O sistema automático de atualizações "
+                  "está funcionando corretamente."
+              )
+
+          else:
+
+              header_title = (
+                  f"🚀 FiveMCleaner "
+                  f"{version} está disponível!"
+              )
+
+              header_description = (
+                  "Uma nova versão estável do "
+                  "**FiveMCleaner** acaba de ser publicada. "
+                  "Confira abaixo tudo o que mudou."
+              )
+
+          header_embed = {
+
+              "title":
+                  header_title[:256],
+
+              "url":
+                  release_url,
+
+              "description":
+                  header_description,
+
+              "color":
+                  COLOR,
+
+              "fields": [
+
+                  {
+                      "name":
+                          "📦 Versão",
+
+                      "value":
+                          f"`{version}`",
+
+                      "inline":
+                          True,
+                  },
+
+                  {
+                      "name":
+                          "⬇️ Download",
+
+                      "value":
+                          download_text,
+
+                      "inline":
+                          True,
+                  },
+
+              ],
+
+              "footer": {
+                  "text":
+                      "FiveMCleaner • Atualizações oficiais"
+              },
+          }
+
+          if published_at:
+              header_embed["timestamp"] = (
+                  published_at
+              )
+
+          # ==========================================================
+          # PRIMEIRO BLOCO DE RELEASE NOTES
+          # ==========================================================
+
+          notes_embed = {
+
+              "title":
+                  "📝 Notas da versão",
+
+              "description":
+                  notes_chunks[0],
+
+              "color":
+                  COLOR,
+          }
+
+          # ==========================================================
+          # ENVIAR MENSAGEM PRINCIPAL
+          # ==========================================================
+
+          post({
+
+              "username":
+                  "FiveMCleaner Updates",
+
+              # Impede que texto vindo das release notes
+              # consiga disparar @everyone, @here etc.
+              "allowed_mentions": {
+                  "parse": []
+              },
+
+              "embeds": [
+                  header_embed,
+                  notes_embed
+              ],
+          })
+
+          # ==========================================================
+          # CONTINUAÇÕES, CASO O CHANGELOG SEJA MUITO GRANDE
+          # ==========================================================
+
+          for index, chunk in enumerate(
+              notes_chunks[1:],
+              start=2
+          ):
+
+              post({
+
+                  "username":
+                      "FiveMCleaner Updates",
+
+                  "allowed_mentions": {
+                      "parse": []
+                  },
+
+                  "embeds": [{
+
+                      "title":
+                          f"📝 Notas da versão "
+                          f"• continuação {index}",
+
+                      "description":
+                          chunk,
+
+                      "color":
+                          COLOR,
+
+                      "footer": {
+                          "text":
+                              f"FiveMCleaner • {version}"
+                      },
+
+                  }],
+              })
+
+          print(
+              f"Notificação enviada ao Discord "
+              f"para {version}."
+          )
+
+          PY
