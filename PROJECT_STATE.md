@@ -1,5 +1,43 @@
 # Estado do Projeto
 
+## Reconstrução completa da aba Otimizador (3D, animações, novas superfícies) — 07/08/2026
+
+- Integrada em `dev/proxima-versao`: `ai/claude/optimizer-redesign`, no mesmo
+  espírito da reconstrução já feita antes na Visão geral. Merge sem conflitos.
+- Nova cena `OptimizerCore3D` (`Viewport3D` real: icosaedro facetado no centro
+  e três toros procedurais contra-rotativos, normais explícitas para o anel
+  ficar liso contra o núcleo facetado). Usada nos dois estados da página — em
+  repouso alimentada pelo nível do perfil selecionado, em execução pelo
+  progresso real; para e retoma sozinha quando a página sai de primeiro
+  plano, como o `HoloCore3D` da Visão geral.
+- Página recomposta: trilha de três etapas no cabeçalho (Preparar → Executar
+  → Resultado) acesa pelo mesmo estado que decide o cartão exibido; cartão
+  herói com o núcleo 3D, halo pulsante, anel orbital e escada de degraus
+  Leve/Médio/Agressivo; cartões de nível com elevação real no hover e barra
+  de acento; resumo do computador em tiles com ícones vetoriais; execução com
+  barra de progresso animada; resultado com selo de conclusão animado.
+  Plano e relatório também redesenhados.
+- Nenhuma animação nova usa `ScaleTransform` — preserva a regra de interação
+  Fluent já registrada no projeto (escala deslocava listas sob o ponteiro),
+  verificada por teste de contrato.
+- As propriedades novas do view model (`ProfileIntensity`, `ProgressIntensity`)
+  não são métricas inventadas: descrevem a posição do perfil na escala e o
+  próprio percentual de progresso já existente.
+- O smoke-test de captura (`--capture=`) só fotografava a Visão geral; ganhou
+  `--capture-page=Optimizer|History|Settings|Dashboard`, usado para conferir
+  visualmente os três estados da página nesta rodada.
+- Teste de contrato ajustado: a contagem fixa de selos vetoriais
+  `IconCheck`/`IconClose` em `MainWindow.xaml` foi de 2 para 4, já que o
+  Otimizador passou a usar os mesmos selos vetoriais da Visão geral em vez de
+  só texto.
+- Validação integrada: build Release sem avisos, 775 testes .NET,
+  `dotnet format --verify-no-changes`, `Verify-Safety.ps1` e `git diff --check`
+  aprovados. Atalho de desenvolvimento reconstruído e confirmado apontando
+  para `scripts\Start-DevelopmentApp.ps1`.
+- Pendente: os estados de execução e resultado foram conferidos visualmente
+  com dados sintéticos (`--demo-synthetic`); uma execução real completa na
+  máquina do usuário ainda é a prova final desses dois estados.
+
 ## Revisão profissional do README (apresentação do repositório) — 07/08/2026
 
 - Tarefa direta em `dev/proxima-versao` (autorizada explicitamente pelo
