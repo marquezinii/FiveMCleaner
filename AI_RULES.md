@@ -95,6 +95,27 @@ Commits locais são obrigatórios e não exigem autorização remota. Não crie
 commits para experimentos, tentativas intermediárias ou trabalho incompleto.
 Não faça merge automático em `dev/proxima-versao` ao concluir uma tarefa.
 
+### Padrão de mensagens de commit
+
+Toda mensagem de commit segue [Conventional Commits](https://www.conventionalcommits.org/pt-br/):
+`tipo(escopo opcional): descrição curta no imperativo`, por exemplo
+`fix(worker): corrige rate limit da rota de telemetria` ou
+`docs: atualiza README com nova estrutura de pastas`. Tipos comuns: `feat`,
+`fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `perf`, `build`, `revert`.
+
+- Nunca gere mensagens genéricas ou de artefato de build (ex.: `Build
+  FiveMCleaner vX.Y MVP`, `WIP`, `update`, `fix stuff`) — cada commit deve
+  descrever a decisão real, não o processo que o produziu.
+- Não invente número de versão na mensagem; a versão só muda durante uma
+  publicação oficial (ver seção correspondente).
+- Corpo opcional em linhas adicionais quando o contexto não couber no título;
+  sem menção a nomes de agente de IA, prompt ou ferramenta interna.
+- Este padrão vale a partir de agora; commits antigos já publicados
+  (inclusive os de releases já publicadas) não são reescritos — reescrever
+  histórico publicado quebraria tags de release existentes e é proibido pela
+  seção "Segurança no trabalho concorrente" acima, salvo pedido explícito e
+  inequívoco do usuário ciente do risco.
+
 Exceção: uma tarefa explicitamente autorizada como integração, ou uma tarefa
 não concorrente explicitamente autorizada diretamente em `dev/proxima-versao`,
 pode atualizar `PROJECT_STATE.md`.
