@@ -21,6 +21,13 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/marquezinii/FiveMCleaner/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/marquezinii/FiveMCleaner/ci.yml?branch=main&style=flat-square&label=CI"></a>
+  <a href="https://github.com/marquezinii/FiveMCleaner/releases/latest"><img alt="Última release" src="https://img.shields.io/github/v/release/marquezinii/FiveMCleaner?style=flat-square&color=f97316"></a>
+  <a href="https://github.com/marquezinii/FiveMCleaner/commits/main"><img alt="Último commit" src="https://img.shields.io/github/last-commit/marquezinii/FiveMCleaner?style=flat-square"></a>
+  <a href="https://github.com/marquezinii/FiveMCleaner/discussions"><img alt="Discussions" src="https://img.shields.io/github/discussions/marquezinii/FiveMCleaner?style=flat-square"></a>
+</p>
+
+<p align="center">
   <a href="https://marquezinii.github.io/FiveMCleaner/"><strong><ins>DOWNLOAD</ins></strong></a>
 </p>
 
@@ -175,19 +182,31 @@ dotnet run --project src/FiveMCleaner.App/FiveMCleaner.App.csproj
 
 ```text
 src/
-├── FiveMCleaner.App/        # aplicação WPF sem elevação permanente
-├── FiveMCleaner.Contracts/  # contratos de ações, progresso e resultados
-├── FiveMCleaner.Core/       # orquestração, políticas e rollback
-├── FiveMCleaner.Windows/    # descoberta e integrações Windows/FiveM
-└── FiveMCleaner.Broker/     # operações administrativas estritamente tipadas
+├── FiveMCleaner.App/           # aplicação WPF sem elevação permanente
+├── FiveMCleaner.Contracts/     # contratos de ações, progresso e resultados
+├── FiveMCleaner.Core/          # orquestração, políticas e rollback
+├── FiveMCleaner.Windows/       # descoberta e integrações Windows/FiveM
+├── FiveMCleaner.Broker/        # operações administrativas estritamente tipadas
+├── FiveMCleaner.Launcher/      # processo pai: inicia o app e supervisiona o health-check pós-update
+├── FiveMCleaner.Updater/       # aplica a atualização transacional (staging, ativação, rollback)
+├── FiveMCleaner.UpdateRuntime/ # primitivas compartilhadas do updater (arquivo atômico, manifesto assinado, journal)
+└── FiveMCleaner.ReleaseTool/   # empacotamento e assinatura dos artefatos de release
 tests/
-└── FiveMCleaner.Tests/      # testes de política, segurança e execução
+└── FiveMCleaner.Tests/         # testes de política, segurança e execução
+infra/
+├── cloudflare-worker/          # backend de telemetria, contas e relatos de bug (Cloudflare Workers + D1)
+└── dashboard/                  # painel privado estático de leitura da telemetria
+installer/                      # roteiro Inno Setup e textos do instalador Windows
+scripts/                        # automação local: build, empacotamento, atalho de desenvolvimento, verificações de segurança
+website/                        # site público de download (Next.js) publicado via GitHub Pages
 docs/
-├── architecture.md
-├── bug-reports.md
-├── research.md
-├── release-preview.md
-└── safety.md
+├── architecture.md             # limites entre App/Core/Windows/Broker e fluxo de uma otimização
+├── safety.md                   # matriz de risco, reversibilidade e dados protegidos por ação
+├── research.md                 # fontes e fundamentação técnica das otimizações
+├── release-preview.md          # integridade de release, simulação e atalho de desenvolvimento
+├── telemetry.md                # o que a telemetria opcional envia e como desativar
+├── bug-reports.md              # o que um relato de bug envia e como é tratado
+└── brand/                      # identidade visual oficial (ícone, paleta, uso da marca)
 ```
 
 Detalhes: [Arquitetura](docs/architecture.md).
