@@ -98,6 +98,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private DispatcherTimer? liveMetricsTimer;
     private bool liveMetricsEnabled;
     private bool liveMetricsCaptureInProgress;
+    private bool liveMetricsUnavailable;
     private LiveSystemMetricsSnapshot? lastLiveMetrics;
     private string lightImpactLabel = string.Empty;
     private string balancedImpactLabel = string.Empty;
@@ -738,19 +739,19 @@ public sealed class MainViewModel : BindableBase, IDisposable
     {
         get
         {
-            var name = selectedProfile switch
-            {
-                OptimizationProfile.Light => localization.GetString("Profiles.Light.Name"),
-                OptimizationProfile.Balanced => localization.GetString("Profiles.Balanced.Name"),
-                OptimizationProfile.Aggressive => localization.GetString("Profiles.Aggressive.Name"),
-                _ => localization.GetString("Common.Unknown")
-            };
-            var upper = name.ToUpper(localization.CurrentCulture);
+            var upper = SelectedProfileName.ToUpper(localization.CurrentCulture);
             return selectedProfile == RecommendedProfile
                 ? $"{upper} • {localization.GetString("Profiles.RecommendedBadge")}"
                 : upper;
         }
     }
+
+    /// <summary>
+    /// True when the "Recomendado" mark should render as its own badge next
+    /// to <see cref="SelectedProfileName"/>, instead of text concatenated
+    /// into the all-caps <see cref="SelectedProfileLabel"/> heading.
+    /// </summary>
+    public bool IsSelectedProfileRecommended => selectedProfile == RecommendedProfile;
 
     /// <summary>
     /// Posição do perfil selecionado na escala Leve → Médio → Agressivo, de 0 a 1.
@@ -860,9 +861,31 @@ public sealed class MainViewModel : BindableBase, IDisposable
         private set => SetProperty(ref liveMetricsEnabled, value);
     }
 
+    /// <summary>
+    /// Estado real do bloco "Desempenho ao vivo": a pílula, o gráfico e o
+    /// rótulo de atualização precisam concordar entre si em vez de a pílula
+    /// dizer "AO VIVO" enquanto os valores ainda leem "Lendo..." ou falharam.
+    /// </summary>
+    public bool IsLivePerformanceLive => liveMetricsEnabled && lastLiveMetrics is not null && !liveMetricsUnavailable;
+
+    public bool IsLivePerformanceWaiting => liveMetricsEnabled && lastLiveMetrics is null && !liveMetricsUnavailable;
+
+    public bool IsLivePerformanceUnavailable => liveMetricsEnabled && liveMetricsUnavailable;
+
+    public bool HasLiveMetricsSample => lastLiveMetrics is not null;
+
+    private void NotifyLivePerformanceStateChanged()
+    {
+        OnPropertyChanged(nameof(IsLivePerformanceLive));
+        OnPropertyChanged(nameof(IsLivePerformanceWaiting));
+        OnPropertyChanged(nameof(IsLivePerformanceUnavailable));
+        OnPropertyChanged(nameof(HasLiveMetricsSample));
+    }
+
     public void SetLiveMetricsEnabled(bool enabled)
     {
         IsLiveMetricsActive = enabled;
+        NotifyLivePerformanceStateChanged();
         if (!enabled)
         {
             liveMetricsTimer?.Stop();
@@ -903,14 +926,18 @@ public sealed class MainViewModel : BindableBase, IDisposable
             }
 
             lastLiveMetrics = snapshot;
+            liveMetricsUnavailable = false;
             ApplyLiveMetrics(snapshot);
+            NotifyLivePerformanceStateChanged();
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             if (liveMetricsEnabled)
             {
+                liveMetricsUnavailable = true;
                 LiveMetricsUpdatedLabel = localization.GetString("Dashboard.LivePerformance.Unavailable");
+                NotifyLivePerformanceStateChanged();
             }
         }
         finally
@@ -1253,6 +1280,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         OnPropertyChanged(nameof(IsAggressiveSelected));
         OnPropertyChanged(nameof(SelectedProfileLabel));
         OnPropertyChanged(nameof(SelectedProfileName));
+        OnPropertyChanged(nameof(IsSelectedProfileRecommended));
         OnPropertyChanged(nameof(ProfileIntensity));
         OnPropertyChanged(nameof(ProfileIntensityPercent));
         RefreshPlan();
@@ -1567,6 +1595,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         OnPropertyChanged(nameof(IsBalancedRecommended));
         OnPropertyChanged(nameof(IsAggressiveRecommended));
         OnPropertyChanged(nameof(SelectedProfileLabel));
+        OnPropertyChanged(nameof(SelectedProfileName));
+        OnPropertyChanged(nameof(IsSelectedProfileRecommended));
         if (!profileInitializedFromDiagnostic)
         {
             selectedProfile = value.RecommendedProfile;
@@ -1576,6 +1606,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
             OnPropertyChanged(nameof(IsAggressiveSelected));
             OnPropertyChanged(nameof(SelectedProfileLabel));
             OnPropertyChanged(nameof(SelectedProfileName));
+            OnPropertyChanged(nameof(IsSelectedProfileRecommended));
             OnPropertyChanged(nameof(ProfileIntensity));
             OnPropertyChanged(nameof(ProfileIntensityPercent));
         }
@@ -1819,16 +1850,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
                 record.CanRollback));
         }
 
-        if (HistoryItems.Count == 0)
-        {
-            HistoryItems.Add(new HistoryDisplayItem(
-                Guid.Empty,
-                localization.GetString("History.Empty.Title"),
-                localization.GetString("History.Empty.Date"),
-                localization.GetString("History.Empty.Summary"),
-                false));
-        }
-
+        // A composição vazia (silhueta do núcleo + texto) vive na própria
+        // página; a coleção precisa continuar realmente vazia para que ela
+        // apareça, em vez de uma linha de ledger fantasma com "Desfazer"
+        // desabilitado — reverter uma execução que não existe não faz sentido.
         ApplyLastOptimization(records);
         OnPropertyChanged(nameof(CanRevertLastOptimization));
     }
@@ -2237,17 +2262,36 @@ public sealed class MainViewModel : BindableBase, IDisposable
     {
         return outcome switch
         {
-            ActionExecutionOutcome.Verified => (localization.GetString("Outcome.Verified"), "", "GreenBrush"),
-            ActionExecutionOutcome.Applied => (localization.GetString("Outcome.Applied"), "", "GreenBrush"),
-            ActionExecutionOutcome.Skipped => (localization.GetString("Outcome.Skipped"), "", "TextMutedBrush"),
-            ActionExecutionOutcome.Warning => (localization.GetString("Outcome.Warning"), "", "YellowBrush"),
-            ActionExecutionOutcome.Failed => (localization.GetString("Outcome.Failed"), "", "RedBrush"),
-            ActionExecutionOutcome.RolledBack => (localization.GetString("Outcome.RolledBack"), "", "YellowBrush"),
-            ActionExecutionOutcome.RollbackFailed => (localization.GetString("Outcome.RollbackFailed"), "", "RedBrush"),
-            ActionExecutionOutcome.NotRun => (localization.GetString("Outcome.NotRun"), "", "TextMutedBrush"),
-            _ => (localization.GetString("Outcome.Running"), "", "BlueBrush")
+            ActionExecutionOutcome.Verified => (localization.GetString("Outcome.Verified"), "IconMarkVerified", "InfoBaseBrush"),
+            ActionExecutionOutcome.Applied => (localization.GetString("Outcome.Applied"), "IconMarkApplied", "SuccessBaseBrush"),
+            ActionExecutionOutcome.Skipped => (localization.GetString("Outcome.Skipped"), "IconMarkSkipped", "NeutralBaseBrush"),
+            ActionExecutionOutcome.Warning => (localization.GetString("Outcome.Warning"), "IconMarkWarning", "WarningBaseBrush"),
+            ActionExecutionOutcome.Failed => (localization.GetString("Outcome.Failed"), "IconMarkFailed", "DangerBaseBrush"),
+            ActionExecutionOutcome.RolledBack => (localization.GetString("Outcome.RolledBack"), "IconMarkRolledBack", "RevertBaseBrush"),
+            ActionExecutionOutcome.RollbackFailed => (localization.GetString("Outcome.RollbackFailed"), "IconMarkRollbackFailed", "DangerBaseBrush"),
+            ActionExecutionOutcome.NotRun => (localization.GetString("Outcome.NotRun"), "IconMarkNotRun", "TextTertiaryBrush"),
+            _ => (localization.GetString("Outcome.Running"), "IconMarkPending", "AccentBrush")
         };
     }
+
+    /// <summary>
+    /// Desfecho apresentável do relatório, derivado só de contagens já
+    /// existentes em <see cref="OptimizationReportDto"/> — nunca um estado
+    /// inventado. A revisão de design pediu quatro tratamentos visuais
+    /// distintos (sucesso, sucesso com falhas isoladas, falha, rollback sem
+    /// sucesso) e este é o único ponto de decisão para os quatro.
+    /// </summary>
+    public bool ReportSucceeded => lastReport?.Succeeded ?? false;
+
+    public bool ReportHasRollbackFailures => (lastReport?.RollbackFailedCount ?? 0) > 0;
+
+    public bool ReportHasIsolatedFailures => !ReportSucceeded
+        && !ReportHasRollbackFailures
+        && (lastReport?.ChangedCount ?? 0) > 0;
+
+    public bool ReportFailedOutright => !ReportSucceeded
+        && !ReportHasRollbackFailures
+        && (lastReport?.ChangedCount ?? 0) == 0;
 
     private void ApplyReport(OptimizationReportDto? report)
     {
@@ -2255,6 +2299,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
         IsReportAvailable = report is not null;
         OnPropertyChanged(nameof(CanShareReport));
         OnPropertyChanged(nameof(SuggestedReportFileName));
+        OnPropertyChanged(nameof(ReportSucceeded));
+        OnPropertyChanged(nameof(ReportHasRollbackFailures));
+        OnPropertyChanged(nameof(ReportHasIsolatedFailures));
+        OnPropertyChanged(nameof(ReportFailedOutright));
         ReportLines.Clear();
         if (report is null)
         {
@@ -2504,6 +2552,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
             ApplyLiveMetrics(lastLiveMetrics, addHistory: false);
         }
 
+        NotifyLivePerformanceStateChanged();
         ApplyLastOptimization(historyRecords);
     }
 
@@ -2517,6 +2566,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         OnPropertyChanged(nameof(IsSpanishSelected));
         OnPropertyChanged(nameof(SelectedProfileLabel));
         OnPropertyChanged(nameof(SelectedProfileName));
+        OnPropertyChanged(nameof(IsSelectedProfileRecommended));
         OnPropertyChanged(nameof(ElevationLabel));
         OnPropertyChanged(nameof(PlanSummary));
         OnPropertyChanged(nameof(PlanHeader));
@@ -2630,11 +2680,30 @@ public sealed class MainViewModel : BindableBase, IDisposable
             ActionRisk.High => localization.GetString("Risk.HighReversible"),
             _ => action.Risk.ToString().ToUpperInvariant()
         };
-        var privilege = action.RequiredPrivilege == RequiredPrivilege.Administrator
+        var riskBrushKey = action.Risk switch
+        {
+            ActionRisk.Informational => "TextTertiaryBrush",
+            ActionRisk.Low => "InfoBaseBrush",
+            ActionRisk.Moderate => "WarningBaseBrush",
+            ActionRisk.High => "DangerBaseBrush",
+            _ => "TextTertiaryBrush"
+        };
+        var requiresElevation = action.RequiredPrivilege == RequiredPrivilege.Administrator;
+        var privilege = requiresElevation
             ? localization.GetString("Privilege.RequiresUac")
             : action.Reversibility is ActionReversibility.Irreversible or ActionReversibility.RebuildableData
                 ? localization.GetString("Privilege.PermanentCleanup")
                 : localization.GetString("Privilege.Reversible");
+        var categoryLabel = action.Category switch
+        {
+            ActionCategory.Safety => localization.GetString("Category.Safety"),
+            ActionCategory.Storage => localization.GetString("Category.Storage"),
+            ActionCategory.WindowsGaming => localization.GetString("Category.WindowsGaming"),
+            ActionCategory.Power => localization.GetString("Category.Power"),
+            ActionCategory.Appearance => localization.GetString("Category.Appearance"),
+            ActionCategory.FiveMGraphics => localization.GetString("Category.FiveMGraphics"),
+            _ => action.Category.ToString()
+        };
         var nameKey = $"Actions.{action.Id}.Name";
         var descriptionKey = $"Actions.{action.Id}.Description";
         var localizedName = localization.GetString(nameKey);
@@ -2645,7 +2714,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
             localizedDescription == descriptionKey ? action.Description : localizedDescription,
             icon,
             risk,
-            privilege);
+            riskBrushKey,
+            privilege,
+            requiresElevation,
+            categoryLabel);
     }
 
     private string LocalizeBlock(PlanBlockDto block) => block.Code switch

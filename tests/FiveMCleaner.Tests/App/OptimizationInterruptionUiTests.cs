@@ -28,7 +28,9 @@ public sealed class OptimizationInterruptionUiTests
             root,
             "src",
             "FiveMCleaner.App",
-            "MainWindow.xaml"));
+            "Views",
+            "Pages",
+            "OptimizerPage.xaml"));
 
         Assert.Contains("Text=\"{Binding Name}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding Description}\"", source, StringComparison.Ordinal);

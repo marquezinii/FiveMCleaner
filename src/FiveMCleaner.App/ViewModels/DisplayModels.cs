@@ -8,7 +8,10 @@ public sealed record ActionDisplayItem(
     string Description,
     string IconGlyph,
     string RiskLabel,
-    string PrivilegeLabel);
+    string RiskBrushKey,
+    string PrivilegeLabel,
+    bool RequiresElevation,
+    string CategoryLabel);
 
 public sealed record ActivityLogItem(string Time, string Message);
 

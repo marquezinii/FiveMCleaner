@@ -16,10 +16,10 @@
         FontFamily="Segoe UI Variable Text, Segoe UI"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
-        Background="{DynamicResource BackgroundBrush}">
+        Background="{DynamicResource CanvasBaseBrush}">
 
-    <Border Background="{DynamicResource SurfaceBrush}"
-            BorderBrush="{DynamicResource StrongBorderBrush}"
+    <Border Background="{DynamicResource Surface1Brush}"
+            BorderBrush="{DynamicResource BorderStrongBrush}"
             BorderThickness="1"
             CornerRadius="12">
         <Grid>
@@ -29,8 +29,8 @@
                 <RowDefinition Height="70" />
             </Grid.RowDefinitions>
 
-            <ui:TitleBar Background="{DynamicResource ChromeBrush}"
-                    BorderBrush="{DynamicResource BorderSoftBrush}"
+            <ui:TitleBar Background="{DynamicResource SurfaceRailBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="0,0,0,1"
                    >
                 <ui:TitleBar.Header>
@@ -39,7 +39,7 @@
                             <TextBlock Text="&#xE7BA;"
                                        FontFamily="Segoe MDL2 Assets"
                                        FontSize="15"
-                                       Foreground="{DynamicResource OrangeLightBrush}"
+                                       Foreground="{DynamicResource AccentBrightBrush}"
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center" />
                         </Border>
@@ -59,13 +59,13 @@
                     <TextBlock Text="&#xE7BA;"
                                FontFamily="Segoe MDL2 Assets"
                                FontSize="14"
-                               Foreground="{DynamicResource OrangeLightBrush}"
+                               Foreground="{DynamicResource AccentBrightBrush}"
                                HorizontalAlignment="Center"
                                VerticalAlignment="Center" />
                 </Border>
                 <TextBlock Grid.Column="1"
                            Text="{Binding MessageText}"
-                           Foreground="{DynamicResource TextMutedBrush}"
+                           Foreground="{DynamicResource TextSecondaryBrush}"
                            FontSize="12"
                            LineHeight="18"
                            TextWrapping="Wrap"
@@ -73,8 +73,8 @@
             </Grid>
 
             <Border Grid.Row="2"
-                    Background="{DynamicResource ChromeBrush}"
-                    BorderBrush="{DynamicResource BorderSoftBrush}"
+                    Background="{DynamicResource SurfaceRailBrush}"
+                    BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="0,1,0,0"
                     CornerRadius="0,0,12,12">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="18,0">

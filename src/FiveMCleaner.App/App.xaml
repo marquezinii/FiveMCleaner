@@ -10,7 +10,15 @@
             <ResourceDictionary.MergedDictionaries>
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
-                <ResourceDictionary Source="Themes/Palette.xaml" />
+                <!-- Tokens de cor: ThemeManager troca este item de lugar por
+                     Colors.Light.xaml em runtime; o valor inicial aqui só
+                     importa para o instante entre o carregamento do XAML e a
+                     primeira chamada a ThemeManager.Apply. -->
+                <ResourceDictionary Source="Themes/Tokens/Colors.Dark.xaml" />
+                <ResourceDictionary Source="Themes/Tokens/Radii.xaml" />
+                <ResourceDictionary Source="Themes/Tokens/Motion.xaml" />
+                <ResourceDictionary Source="Themes/Typography.xaml" />
+                <ResourceDictionary Source="Themes/Surfaces.xaml" />
                 <ResourceDictionary Source="Themes/Icons.xaml" />
                 <ResourceDictionary Source="Themes/Controls.xaml" />
             </ResourceDictionary.MergedDictionaries>
@@ -18,6 +26,8 @@
             <local:BrushKeyConverter x:Key="BrushKeyConverter" />
             <local:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
             <local:GeometryKeyConverter x:Key="GeometryKeyConverter" />
+            <local:PercentWidthConverter x:Key="PercentWidthConverter" />
+            <local:CollectionEmptyToVisibilityConverter x:Key="CollectionEmptyToVisibilityConverter" />
             <services:LocalizedStrings x:Key="LocalizedStrings" />
         </ResourceDictionary>
     </Application.Resources>

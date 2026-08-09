@@ -15,6 +15,13 @@ using FiveMCleaner.UpdateRuntime;
 
 namespace FiveMCleaner.App;
 
+/// <summary>
+/// O shell: title bar, navegação lateral e as quatro seções de nível
+/// superior. É o único dono de estado de janela (fechar, bandeja, conta,
+/// atualização) — as páginas em <c>Views/Pages</c> chamam de volta os
+/// métodos <c>Request*</c> públicos abaixo quando uma ação delas precisa
+/// desse estado; o resto é local a cada página.
+/// </summary>
 public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 {
     private const uint MonitorDefaultToNearest = 2;
@@ -40,6 +47,10 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     public MainWindow()
     {
         InitializeComponent();
+        // Precisa ser marcado em código, não em XAML: setar IsChecked="True"
+        // inline dispara o evento Checked durante o próprio parse do
+        // documento, antes de os outros campos nomeados existirem.
+        CategoryGeneral.IsChecked = true;
         themeManager = new ThemeManager();
         themeManager.Apply(AppThemePreference.System);
 
@@ -275,12 +286,18 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         {
             syncingLanguageSelector = false;
         }
-        ThemeSelector.SelectedIndex = viewModel.ThemePreference switch
+        switch (viewModel.ThemePreference)
         {
-            AppThemePreference.Dark => 1,
-            AppThemePreference.Light => 2,
-            _ => 0
-        };
+            case AppThemePreference.Dark:
+                ThemeDarkOption.IsChecked = true;
+                break;
+            case AppThemePreference.Light:
+                ThemeLightOption.IsChecked = true;
+                break;
+            default:
+                ThemeSystemOption.IsChecked = true;
+                break;
+        }
         if (!demoMode)
         {
             await ShowPrivacyConsentIfNeededAsync();
@@ -396,8 +413,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            // Sem nome n\u00E3o \u00E9 um estado de erro vis\u00EDvel: a sauda\u00E7\u00E3o simplesmente
-            // fica sem o nome at\u00E9 a pr\u00F3xima sincroniza\u00E7\u00E3o bem-sucedida.
+            // Sem nome não é um estado de erro visível: a saudação simplesmente
+            // fica sem o nome até a próxima sincronização bem-sucedida.
         }
     }
 
@@ -617,28 +634,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         SettingsNav.IsActive = ReferenceEquals(selected, SettingsNav);
     }
 
-    private void ReviewPlan_Click(object sender, RoutedEventArgs e)
-    {
-        ActivateNavItem(OptimizerNav);
-        Navigate(OptimizerPage);
-        PlanDetailsExpander.IsExpanded = true;
-        PlanDetailsExpander.BringIntoView();
-    }
-
-    private void OpenOptimizer_Click(object sender, RoutedEventArgs e)
-    {
-        ActivateNavItem(OptimizerNav);
-        Navigate(OptimizerPage);
-    }
-
-    private void OpenHistory_Click(object sender, RoutedEventArgs e)
-    {
-        ActivateNavItem(HistoryNav);
-        Navigate(HistoryPage);
-    }
-
-    private void ChangeMode_Click(object sender, RoutedEventArgs e) => ProfileSelectorSection.BringIntoView();
-
     private void Navigate(UIElement page)
     {
         DashboardPage.Visibility = Visibility.Collapsed;
@@ -649,90 +644,26 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         viewModel.SetLiveMetricsEnabled(ReferenceEquals(page, DashboardPage));
     }
 
-    private void LightProfile_Checked(object sender, RoutedEventArgs e) => viewModel.SelectProfile(OptimizationProfile.Light);
+    // ===================== Pontes para as páginas extraídas =====================
+    // As páginas em Views/Pages têm o mesmo DataContext (MainViewModel) e
+    // chamam seus métodos diretamente para tudo que não depende de estado da
+    // janela. Só as ações abaixo — que fecham o app, mostram diálogos de
+    // confirmação nativos ou cruzam para outra página — precisam voltar para
+    // o shell, que continua sendo o único dono desse estado.
 
-    private void BalancedProfile_Checked(object sender, RoutedEventArgs e) => viewModel.SelectProfile(OptimizationProfile.Balanced);
-
-    private void AggressiveProfile_Checked(object sender, RoutedEventArgs e) => viewModel.SelectProfile(OptimizationProfile.Aggressive);
-
-    private void SystemTheme_Checked(object sender, RoutedEventArgs e) => ApplyTheme(AppThemePreference.System);
-
-    private void DarkTheme_Checked(object sender, RoutedEventArgs e) => ApplyTheme(AppThemePreference.Dark);
-
-    private void LightTheme_Checked(object sender, RoutedEventArgs e) => ApplyTheme(AppThemePreference.Light);
-
-    private void EnglishLanguage_Checked(object sender, RoutedEventArgs e) => ApplyLanguage(AppLanguage.English);
-
-    private void PortugueseLanguage_Checked(object sender, RoutedEventArgs e) => ApplyLanguage(AppLanguage.PortugueseBrazil);
-
-    private void LanguageSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    internal void RequestNavigateToOptimizer()
     {
-        if (syncingLanguageSelector || !IsLoaded || LanguageSelector.SelectedItem is not System.Windows.Controls.ComboBoxItem item)
-        {
-            return;
-        }
-
-        ApplyLanguage((item.Tag as string) switch
-        {
-            "pt-BR" => AppLanguage.PortugueseBrazil,
-            "es" => AppLanguage.Spanish,
-            _ => AppLanguage.English
-        });
+        ActivateNavItem(OptimizerNav);
+        Navigate(OptimizerPage);
     }
 
-    private void ThemeSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+    internal void RequestNavigateToHistory()
     {
-        if (!IsLoaded || ThemeSelector.SelectedItem is not System.Windows.Controls.ComboBoxItem item)
-        {
-            return;
-        }
-
-        ApplyTheme((string?)item.Tag switch
-        {
-            "dark" => AppThemePreference.Dark,
-            "light" => AppThemePreference.Light,
-            _ => AppThemePreference.System
-        });
+        ActivateNavItem(HistoryNav);
+        Navigate(HistoryPage);
     }
 
-    private void CloseAppOnClose_Checked(object sender, RoutedEventArgs e)
-    {
-        if (IsLoaded)
-        {
-            viewModel.MinimizeToTrayOnClose = false;
-        }
-    }
-
-    private void MinimizeToTrayOnClose_Checked(object sender, RoutedEventArgs e)
-    {
-        if (IsLoaded)
-        {
-            viewModel.MinimizeToTrayOnClose = true;
-        }
-    }
-
-    private void ApplyTheme(AppThemePreference preference)
-    {
-        if (!IsLoaded)
-        {
-            return;
-        }
-
-        viewModel.SelectTheme(preference);
-        themeManager.Apply(preference);
-    }
-
-    private void ApplyLanguage(AppLanguage language)
-    {
-        if (IsLoaded)
-        {
-            viewModel.SelectLanguage(language);
-        }
-    }
-
-    private async void RefreshDiagnostic_Click(object sender, RoutedEventArgs e) => await viewModel.RefreshDiagnosticAsync();
-
-    private async void StartOptimization_Click(object sender, RoutedEventArgs e)
+    internal async Task RequestStartOptimizationAsync()
     {
         ActivateNavItem(OptimizerNav);
         Navigate(OptimizerPage);
@@ -745,6 +676,16 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
     }
 
+    internal void RequestCancelOptimization()
+    {
+        if (!viewModel.IsBusy || !ConfirmOptimizationInterruption(closeApplication: false))
+        {
+            return;
+        }
+
+        viewModel.CancelOptimization();
+    }
+
     /// <summary>
     /// The whole one-click update: confirm once, then the view model downloads
     /// the hash-verified installer and runs it silently. There is no second
@@ -754,7 +695,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     /// files. A failure at any point (download or install) leaves the app open
     /// with the banner explaining what happened.
     /// </summary>
-    private async void DownloadUpdate_Click(object sender, RoutedEventArgs e)
+    internal async Task RequestDownloadUpdateAsync()
     {
         if (!viewModel.CanDownloadUpdate || viewModel.AvailableUpdateVersion is not { } pendingVersion)
         {
@@ -784,7 +725,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         Close();
     }
 
-    private void OpenReleaseNotes_Click(object sender, RoutedEventArgs e)
+    internal void RequestOpenReleaseNotes()
     {
         if (viewModel.ReleaseNotesUri is not { } releaseNotesUri)
         {
@@ -798,9 +739,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }));
     }
 
-    private void DismissCompletedUpdate_Click(object sender, RoutedEventArgs e) =>
-        viewModel.DismissCompletedUpdateBanner();
-
     /// <summary>
     /// Shell launches fail for reasons outside the app's control (no default
     /// browser or folder handler registered, group policy blocking the verb,
@@ -808,100 +746,66 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     /// DispatcherUnhandledException, which shuts FiveMCleaner down — closing
     /// the app over a failed "open this link" is never the right outcome.
     /// </summary>
-    private static void TryOpenExternal(Action launch)
+    private static void TryOpenExternal(Action launch) => ExternalLauncher.TryOpen(launch);
+
+    /// <summary>
+    /// Duas regiões de Configurações: a categoria marcada decide qual painel
+    /// de conteúdo aparece. Só um fica visível por vez; nenhuma outra lógica
+    /// de navegação — a rolagem e a categoria são independentes da página
+    /// selecionada na barra lateral.
+    /// </summary>
+    private void SettingsCategory_Changed(object sender, RoutedEventArgs e)
     {
-        try
-        {
-            launch();
-        }
-        catch (Exception exception) when (exception is not (
-            OutOfMemoryException or StackOverflowException or AccessViolationException))
-        {
-            System.Windows.MessageBox.Show(
-                LocalizationService.Current.Format(
-                    "Dialog.OpenExternal.Message",
-                    LocalizationService.Current.DescribeException(exception)),
-                LocalizationService.Current.GetString("Dialog.OpenExternal.Title"),
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
-        }
+        AccountSettingsCard.Visibility = ReferenceEquals(sender, CategoryAccount) ? Visibility.Visible : Visibility.Collapsed;
+        GeneralSettingsPanel.Visibility = ReferenceEquals(sender, CategoryGeneral) ? Visibility.Visible : Visibility.Collapsed;
+        PrivacySettingsPanel.Visibility = ReferenceEquals(sender, CategoryPrivacy) ? Visibility.Visible : Visibility.Collapsed;
+        ToolsSettingsPanel.Visibility = ReferenceEquals(sender, CategoryTools) ? Visibility.Visible : Visibility.Collapsed;
+        AboutSettingsPanel.Visibility = ReferenceEquals(sender, CategoryAbout) ? Visibility.Visible : Visibility.Collapsed;
     }
 
-    private void CancelOptimization_Click(object sender, RoutedEventArgs e)
+    private void SystemTheme_Checked(object sender, RoutedEventArgs e) => ApplyTheme(AppThemePreference.System);
+
+    private void DarkTheme_Checked(object sender, RoutedEventArgs e) => ApplyTheme(AppThemePreference.Dark);
+
+    private void LightTheme_Checked(object sender, RoutedEventArgs e) => ApplyTheme(AppThemePreference.Light);
+
+    private void LanguageSelector_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
     {
-        if (!viewModel.IsBusy || !ConfirmOptimizationInterruption(closeApplication: false))
+        if (syncingLanguageSelector || !IsLoaded || LanguageSelector.SelectedItem is not System.Windows.Controls.ComboBoxItem item)
         {
             return;
         }
 
-        viewModel.CancelOptimization();
+        ApplyLanguage((item.Tag as string) switch
+        {
+            "pt-BR" => AppLanguage.PortugueseBrazil,
+            "es" => AppLanguage.Spanish,
+            _ => AppLanguage.English
+        });
     }
 
-    private void CopyTechnicalReport_Click(object sender, RoutedEventArgs e) => viewModel.CopyTechnicalReport();
-
-    private void SaveTechnicalReport_Click(object sender, RoutedEventArgs e)
+    private void ApplyTheme(AppThemePreference preference)
     {
-        if (!viewModel.CanShareReport)
+        if (!IsLoaded)
         {
             return;
         }
 
-        var dialog = new Microsoft.Win32.SaveFileDialog
-        {
-            FileName = viewModel.SuggestedReportFileName,
-            DefaultExt = ".txt",
-            Filter = "Text (*.txt)|*.txt|All files (*.*)|*.*"
-        };
+        viewModel.SelectTheme(preference);
+        themeManager.Apply(preference);
+    }
 
-        if (dialog.ShowDialog(this) == true)
+    private void ApplyLanguage(AppLanguage language)
+    {
+        if (IsLoaded)
         {
-            viewModel.SaveTechnicalReport(dialog.FileName);
+            viewModel.SelectLanguage(language);
         }
     }
 
     private async void RunGtaVBenchmark_Click(object sender, RoutedEventArgs e) => await viewModel.RunGtaVBenchmarkAsync();
 
     private async void CheckForUpdatesManually_Click(object sender, RoutedEventArgs e) => await viewModel.CheckForUpdatesManuallyAsync();
-
-    private async void RevertLastOptimization_Click(object sender, RoutedEventArgs e)
-    {
-        if (viewModel.CanRevertLastOptimization)
-        {
-            await viewModel.RevertLastOptimizationAsync();
-        }
-    }
-
-    private async void RollbackHistory_Click(object sender, RoutedEventArgs e)
-    {
-        if (sender is not FrameworkElement { Tag: HistoryDisplayItem item } || !item.CanRollback)
-        {
-            return;
-        }
-
-        var decision = System.Windows.MessageBox.Show(
-            LocalizationService.Current.GetString("Dialog.Rollback.Message"),
-            LocalizationService.Current.GetString("Dialog.Rollback.Title"),
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-        if (decision == MessageBoxResult.Yes)
-        {
-            await viewModel.RollbackAsync(item);
-        }
-    }
-
-    private void OpenLogs_Click(object sender, RoutedEventArgs e)
-    {
-        TryOpenExternal(() =>
-        {
-            Directory.CreateDirectory(viewModel.LogsDirectory);
-            Process.Start(new ProcessStartInfo
-            {
-                FileName = "explorer.exe",
-                Arguments = $"\"{viewModel.LogsDirectory}\"",
-                UseShellExecute = true
-            });
-        });
-    }
 
     private void ReportBug_Click(object sender, RoutedEventArgs e)
     {

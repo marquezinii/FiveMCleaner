@@ -47,6 +47,10 @@ public partial class MainWindow
         AccountSettingsSignedOutPanel.Visibility = user is null ? Visibility.Visible : Visibility.Collapsed;
         AccountSettingsSignedInPanel.Visibility = user is null ? Visibility.Collapsed : Visibility.Visible;
 
+        // Signed in, the header button is just the avatar/initials -- the
+        // "Entrar / Cadastre-se" prompt only makes sense while signed out.
+        AccountLabel.Visibility = user is null ? Visibility.Visible : Visibility.Collapsed;
+
         if (user is null)
         {
             ApplyAvatar(null, AccountAvatarEllipse, AccountInitials, SignedOutGlyph, isGlyph: true);
@@ -257,10 +261,10 @@ public partial class MainWindow
 
         AccountSettingsStatusPanel.Visibility = Visibility.Visible;
         AccountSettingsStatusText.Text = text;
-        AccountSettingsStatusText.SetResourceReference(ForegroundProperty, error ? "RedBrush" : "GreenBrush");
-        AccountSettingsStatusIcon.Data = (Geometry)FindResource(error ? "IconInfo" : "IconCheck");
-        AccountSettingsStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, error ? "RedBrush" : "GreenBrush");
-        AccountSettingsStatusPanel.SetResourceReference(BorderBrushProperty, error ? "RedBrush" : "GreenBrush");
-        AccountSettingsStatusPanel.SetResourceReference(BackgroundProperty, error ? "AccountStatusErrorBackgroundBrush" : "AccountStatusSuccessBackgroundBrush");
+        AccountSettingsStatusText.SetResourceReference(ForegroundProperty, error ? "DangerBaseBrush" : "SuccessBaseBrush");
+        AccountSettingsStatusIcon.Data = (Geometry)FindResource(error ? "IconAlertTriangle" : "IconCheck");
+        AccountSettingsStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, error ? "DangerBaseBrush" : "SuccessBaseBrush");
+        AccountSettingsStatusPanel.SetResourceReference(BorderBrushProperty, error ? "DangerBorderBrush" : "SuccessBorderBrush");
+        AccountSettingsStatusPanel.SetResourceReference(BackgroundProperty, error ? "DangerSurfaceBrush" : "SuccessSurfaceBrush");
     }
 }

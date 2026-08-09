@@ -1,0 +1,21 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Linguagem de movimento única do app. Nenhuma Storyboard nova deve usar
+        um valor de duração/easing fora daqui. MotionPolicy (código) decide se
+        a duração real vira 0 quando o sistema pede menos animação.
+    -->
+    <Duration x:Key="MotionMicro">0:0:0.12</Duration>
+    <Duration x:Key="MotionControl">0:0:0.18</Duration>
+    <Duration x:Key="MotionNav">0:0:0.24</Duration>
+    <Duration x:Key="MotionEnter">0:0:0.32</Duration>
+    <Duration x:Key="MotionStructural">0:0:0.42</Duration>
+    <Duration x:Key="MotionExit">0:0:0.16</Duration>
+
+    <CubicEase x:Key="EaseMicro" EasingMode="EaseOut" />
+    <CubicEase x:Key="EaseControl" EasingMode="EaseOut" />
+    <CubicEase x:Key="EaseNav" EasingMode="EaseInOut" />
+    <CubicEase x:Key="EaseEnter" EasingMode="EaseOut" />
+    <PowerEase x:Key="EaseStructural" EasingMode="EaseOut" Power="4" />
+    <QuadraticEase x:Key="EaseExit" EasingMode="EaseIn" />
+</ResourceDictionary>

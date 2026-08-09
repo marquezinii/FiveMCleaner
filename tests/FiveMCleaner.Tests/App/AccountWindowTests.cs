@@ -315,9 +315,15 @@ public sealed class AccountWindowTests
         var application = Application.Current ?? new Application { ShutdownMode = ShutdownMode.OnExplicitShutdown };
         if (application.Resources.MergedDictionaries.Count > 0) return;
 
+        // App.xaml declares this directly in its own top-level resources
+        // (not in a merged dictionary file), so a bare Application built by
+        // this test never gets it for free — every StaticResource lookup for
+        // localized strings would fail otherwise.
+        application.Resources["LocalizedStrings"] = new LocalizedStrings();
+
         application.Resources.MergedDictionaries.Add(new Wpf.Ui.Markup.ThemesDictionary { Theme = Wpf.Ui.Appearance.ApplicationTheme.Dark });
         application.Resources.MergedDictionaries.Add(new Wpf.Ui.Markup.ControlsDictionary());
-        foreach (var theme in new[] { "Palette", "Icons", "Controls" })
+        foreach (var theme in new[] { "Tokens/Colors.Dark", "Tokens/Radii", "Tokens/Motion", "Typography", "Surfaces", "Icons", "Controls" })
         {
             application.Resources.MergedDictionaries.Add(new ResourceDictionary
             {

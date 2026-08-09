@@ -146,25 +146,28 @@ public sealed partial class LocalizedInterfaceContractTests
     public void Optimizer_SeparatesPreparationProgressAndResults()
     {
         var root = FindRepositoryRoot();
-        var source = File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "FiveMCleaner.App",
-            "MainWindow.xaml"));
-        var optimizer = source[source.IndexOf("<!-- Optimizer -->", StringComparison.Ordinal)..source.IndexOf("<!-- History -->", StringComparison.Ordinal)];
+        var pageDirectory = Path.Combine(root, "src", "FiveMCleaner.App", "Views", "Pages");
+        var optimizer = File.ReadAllText(Path.Combine(pageDirectory, "OptimizerPage.xaml"))
+            + File.ReadAllText(Path.Combine(pageDirectory, "OptimizerPage.xaml.cs"));
 
         Assert.Contains("IsOptimizerIdle", optimizer, StringComparison.Ordinal);
         Assert.Contains("IsBusy", optimizer, StringComparison.Ordinal);
         Assert.Contains("IsReportAvailable", optimizer, StringComparison.Ordinal);
         Assert.Contains("PlannedActions", optimizer, StringComparison.Ordinal);
-        Assert.Contains("PlanDetailsExpander", optimizer, StringComparison.Ordinal);
-        Assert.Contains("ProfileSelectorSection", optimizer, StringComparison.Ordinal);
+        // O trilho único (SpectrumSelector) substituiu o hero recomendado +
+        // três cards de perfil por um único sistema visual; o sinal de
+        // "recomendado" chega via RecommendedIndex, calculado a partir das
+        // mesmas três propriedades do ViewModel.
+        Assert.Contains("SpectrumSelector", optimizer, StringComparison.Ordinal);
+        Assert.Contains("RecommendedIndex", optimizer, StringComparison.Ordinal);
         Assert.Contains("IsLightRecommended", optimizer, StringComparison.Ordinal);
         Assert.Contains("IsBalancedRecommended", optimizer, StringComparison.Ordinal);
         Assert.Contains("IsAggressiveRecommended", optimizer, StringComparison.Ordinal);
-        Assert.DoesNotContain("StepLedger", optimizer, StringComparison.Ordinal);
+        // O ledger de execução (StepLedger) agora é exibido de verdade, com
+        // marca de resultado por ação, em vez de ficar populado sem uso.
+        Assert.Contains("StepLedger", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("ActivityLog", optimizer, StringComparison.Ordinal);
-        Assert.Contains("ProgressBar Value=\"{Binding ProgressPercent", optimizer, StringComparison.Ordinal);
+        Assert.Contains("Binding ProgressPercent, Mode=OneWay", optimizer, StringComparison.Ordinal);
         Assert.Contains("PreviousProgressHeadline", optimizer, StringComparison.Ordinal);
         Assert.Contains("ProgressHeadline, Mode=OneWay", optimizer, StringComparison.Ordinal);
         Assert.Contains("ElapsedTimeLabel", optimizer, StringComparison.Ordinal);
@@ -176,12 +179,13 @@ public sealed partial class LocalizedInterfaceContractTests
     public void Dashboard_FocusesOnStatusInsteadOfDuplicatingOptimizerControls()
     {
         var root = FindRepositoryRoot();
-        var source = File.ReadAllText(Path.Combine(
+        var dashboard = File.ReadAllText(Path.Combine(
             root,
             "src",
             "FiveMCleaner.App",
-            "MainWindow.xaml"));
-        var dashboard = source[source.IndexOf("<!-- Dashboard -->", StringComparison.Ordinal)..source.IndexOf("<!-- Optimizer -->", StringComparison.Ordinal)];
+            "Views",
+            "Pages",
+            "OverviewPage.xaml"));
 
         Assert.Contains("StreamingReadinessItems", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.LivePerformance.Title", dashboard, StringComparison.Ordinal);
@@ -192,9 +196,12 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("CpuValues=\"{Binding CpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("GpuValues=\"{Binding GpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("NetworkUsageLabel", dashboard, StringComparison.Ordinal);
-        Assert.Contains("controls:HoloCore3D", dashboard, StringComparison.Ordinal);
+        // HoloCore3D e OptimizerCore3D se fundiram num único CoreVisual
+        // (Mode=Readiness|Engine) — o mesmo objeto em toda a interface.
+        Assert.Contains("controls:CoreVisual", dashboard, StringComparison.Ordinal);
+        Assert.Contains("Mode=\"Readiness\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding ReadinessScore, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
-        Assert.Contains("TrackBrush=\"{DynamicResource RingBrush}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("TrackBrush=\"{DynamicResource BorderSubtleBrush}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding CpuUsagePercent, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
         // A coleta pausada precisa pausar também a animação da cena.
         Assert.Contains("IsLive=\"{Binding IsLiveMetricsActive}\"", dashboard, StringComparison.Ordinal);
@@ -240,26 +247,39 @@ public sealed partial class LocalizedInterfaceContractTests
             "FiveMCleaner.App",
             "Themes",
             "Controls.xaml"));
-        var mainWindow = File.ReadAllText(Path.Combine(
+        var typography = File.ReadAllText(Path.Combine(
             root,
             "src",
             "FiveMCleaner.App",
-            "MainWindow.xaml"));
+            "Themes",
+            "Typography.xaml"));
+        var pageDirectory = Path.Combine(root, "src", "FiveMCleaner.App", "Views", "Pages");
+        var overview = File.ReadAllText(Path.Combine(pageDirectory, "OverviewPage.xaml"));
+        var optimizer = File.ReadAllText(Path.Combine(pageDirectory, "OptimizerPage.xaml"));
 
-        Assert.DoesNotContain("ScaleTransform", styles, StringComparison.Ordinal);
+        // ScaleTransform é banido de listas (já causou itens se deslocando sob
+        // o ponteiro), mas é uma exceção deliberada e isolada no press do
+        // botão primário — nunca dentro de um estilo de linha/lista.
+        var primaryButtonStyle = styles[styles.IndexOf("x:Key=\"PrimaryButtonStyle\"", StringComparison.Ordinal)..styles.IndexOf("x:Key=\"SecondaryButtonStyle\"", StringComparison.Ordinal)];
+        var stylesOutsidePrimaryButton = styles.Replace(primaryButtonStyle, string.Empty, StringComparison.Ordinal);
+        Assert.Contains("ScaleTransform", primaryButtonStyle, StringComparison.Ordinal);
+        Assert.DoesNotContain("ScaleTransform", stylesOutsidePrimaryButton, StringComparison.Ordinal);
+        Assert.DoesNotContain("ScaleTransform", overview, StringComparison.Ordinal);
+        Assert.DoesNotContain("ScaleTransform", optimizer, StringComparison.Ordinal);
         Assert.True(Regex.Matches(styles, "Property=\"IsKeyboardFocused\"").Count >= 3);
         Assert.Contains("<Style TargetType=\"ScrollBar\">", styles, StringComparison.Ordinal);
         Assert.Contains("HorizontalAlignment=\"Right\"", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"5\"", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("Width=\"3\" Height=\"3\"", styles, StringComparison.Ordinal);
-        Assert.Contains("x:Key=\"DetectionBadgeStyle\"", styles, StringComparison.Ordinal);
-        Assert.Contains("x:Key=\"DetectionBadgeLabelStyle\"", styles, StringComparison.Ordinal);
-        Assert.Contains("Segoe UI Variable Text, Segoe UI", styles, StringComparison.Ordinal);
+        // A fonte variável do Fluent é declarada uma vez, em Typography.xaml,
+        // e consumida por todos os estilos nomeados — não mais espalhada.
+        Assert.Contains("Segoe UI Variable Text, Segoe UI", typography, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"10\"", styles, StringComparison.Ordinal);
-        // Os selos de detecção continuam com um check vetorial único quando
-        // detectado e um X quando não — só que as duas formas agora vêm do
-        // dicionário compartilhado de ícones, em vez de repetir o traçado
-        // inline em cada selo.
+        // O selo de detecção (FiveM/GTA V) continua com um check vetorial
+        // quando detectado e um X quando não, composto inline via DataTrigger
+        // em vez de um estilo nomeado dedicado — mas o traçado em si continua
+        // vindo do dicionário compartilhado de ícones. Ele existe só na Visão
+        // geral: o Otimizador removeu sua cópia duplicada do mesmo selo.
         var icons = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -269,11 +289,10 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("x:Key=\"IconCheck\"", icons, StringComparison.Ordinal);
         Assert.Contains("x:Key=\"IconClose\"", icons, StringComparison.Ordinal);
-        // Quatro pares: os dois selos da Visão geral (FiveM e GTA V) e os dois
-        // equivalentes do Otimizador, que passaram a usar o mesmo selo vetorial
-        // do dicionário compartilhado em vez de só texto.
-        Assert.Equal(4, Regex.Matches(mainWindow, "Value=\"\\{StaticResource IconCheck\\}\"").Count);
-        Assert.Equal(4, Regex.Matches(mainWindow, "Value=\"\\{StaticResource IconClose\\}\"").Count);
+        Assert.Contains("{StaticResource IconCheck}", overview, StringComparison.Ordinal);
+        Assert.Contains("{StaticResource IconClose}", overview, StringComparison.Ordinal);
+        Assert.DoesNotContain("{StaticResource IconCheck}", optimizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("{StaticResource IconClose}", optimizer, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -358,25 +377,28 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.All(
             selectorStyle.Descendants(presentation + "Border")
                 .Where(border => border.Attribute("CornerRadius") is not null),
-            border => Assert.Equal("0", (string?)border.Attribute("CornerRadius")));
+            border => Assert.Equal("{StaticResource RadiusMd}", (string?)border.Attribute("CornerRadius")));
     }
 
     [Fact]
-    public void BugReportAndCopyright_AreInTheGlobalFooter()
+    public void BugReportAndCopyright_AreInSettingsInsteadOfAGlobalFooter()
     {
+        // O rodapé global ("Relatar um bug · © ano") foi removido do shell —
+        // as duas informações agora moram em Configurações, perto de onde já
+        // fazem sentido (Ferramentas e Sobre), e usam a mesma chave de
+        // localização de antes.
         var root = FindRepositoryRoot();
-        var document = XDocument.Load(
-            Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"));
+        var mainWindowPath = Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml");
+        var mainWindow = File.ReadAllText(mainWindowPath);
+        var document = XDocument.Load(mainWindowPath);
         XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
-        var reportButton = Assert.Single(
+
+        Assert.DoesNotContain("Grid.Row=\"2\"", mainWindow, StringComparison.Ordinal);
+        Assert.Single(
             document.Descendants(presentation + "Button"),
             element => (string?)element.Attribute("Click") == "ReportBug_Click");
-        var footer = reportButton.Ancestors(presentation + "Border").FirstOrDefault();
-
-        Assert.NotNull(footer);
-        Assert.Equal("2", (string?)footer!.Attribute("Grid.Row"));
         Assert.Contains(
-            footer.Descendants(presentation + "TextBlock"),
+            document.Descendants(presentation + "TextBlock"),
             element => ((string?)element.Attribute("Text"))?.Contains("Brand.FooterCopyright", StringComparison.Ordinal) == true);
     }
 
@@ -391,7 +413,7 @@ public sealed partial class LocalizedInterfaceContractTests
         // visual) is what actually removes it.
         var root = FindRepositoryRoot();
         var document = XDocument.Load(
-            Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"));
+            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "Pages", "OverviewPage.xaml"));
         XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         var releaseNotesButton = Assert.Single(
             document.Descendants(presentation + "Button"),
@@ -442,8 +464,14 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains(linkStyle.Descendants(presentation + "ControlTemplate"), template =>
             (string?)template.Attribute("TargetType") == "Button");
-        Assert.DoesNotContain(linkStyle.Descendants(presentation + "Trigger"), trigger =>
+        // O redesign acrescentou feedback de hover (opacidade reduzida) a
+        // este botão — toda microinteração do app precisa reagir a
+        // hover/pressed/focused, e um link sem nenhum dos três não cumpria
+        // essa exigência.
+        Assert.Contains(linkStyle.Descendants(presentation + "Trigger"), trigger =>
             (string?)trigger.Attribute("Property") == "IsMouseOver");
+        Assert.Contains(linkStyle.Descendants(presentation + "Trigger"), trigger =>
+            (string?)trigger.Attribute("Property") == "IsKeyboardFocused");
     }
 
     [Fact]
@@ -491,9 +519,11 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("VerticalAlignment=\"Center\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Text=\"{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Text=\"{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding AppVersion, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Foreground=\"{DynamicResource TextBrush}\"", mainWindow, StringComparison.Ordinal);
+        // A hierarquia de texto agora vem da escala tipográfica (Overline/
+        // Caption/Body), não de um Foreground fixo por elemento.
+        Assert.Contains("Style=\"{StaticResource CaptionText}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Padding=\"{TemplateBinding Padding}\"", controls, StringComparison.Ordinal);
     }
 

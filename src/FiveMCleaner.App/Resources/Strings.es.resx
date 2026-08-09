@@ -35,6 +35,7 @@
   <data name="Settings.About.Discord.Detail" xml:space="preserve"><value>Resuelve dudas, sigue las novedades y habla con otros usuarios de FiveMCleaner.</value></data>
   <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Abrir Discord</value></data>
   <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Únete a nuestro Discord oficial</value></data>
+  <data name="Account.TitleBar.SignInPrompt" xml:space="preserve"><value>Iniciar sesión / Registrarse</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Escanear PC de nuevo</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Abrir optimizador</value></data>
   <data name="Dashboard.SystemOverview" xml:space="preserve"><value>Tu computadora</value></data>
@@ -67,12 +68,14 @@
   <data name="Optimizer.SystemReady" xml:space="preserve"><value>Sistema listo</value></data>
   <data name="Optimizer.Recommended" xml:space="preserve"><value>OPTIMIZACIÓN RECOMENDADA</value></data>
   <data name="Optimizer.Computer" xml:space="preserve"><value>Tu equipo</value></data>
-  <data name="Optimizer.Impact" xml:space="preserve"><value>Impacto esperado</value></data>
-  <data name="Optimizer.Execution" xml:space="preserve"><value>Ejecución</value></data>
+  <data name="Optimizer.Impact" xml:space="preserve"><value>IMPACTO ESPERADO</value></data>
+  <data name="Optimizer.Execution" xml:space="preserve"><value>EJECUCIÓN</value></data>
   <data name="Optimizer.ChangeMode" xml:space="preserve"><value>Cambiar modo</value></data>
   <data name="Optimizer.RunningTitle" xml:space="preserve"><value>Optimizando tu equipo</value></data>
   <data name="Optimizer.ShowDetails" xml:space="preserve"><value>Mostrar detalles</value></data>
   <data name="Optimizer.CompletedTitle" xml:space="preserve"><value>Optimización completada</value></data>
+  <data name="Optimizer.Result.Failed" xml:space="preserve"><value>La optimización no se completó</value></data>
+  <data name="Optimizer.Result.PartialTitle" xml:space="preserve"><value>Completado con errores</value></data>
   <data name="Optimizer.NextStep" xml:space="preserve"><value>SIGUIENTE PASO RECOMENDADO</value></data>
   <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Plan de optimización</value></data>
   <data name="Optimizer.CurrentPlan" xml:space="preserve"><value>Plan actual</value></data>
@@ -297,7 +300,7 @@
   <data name="PrivacyConsent.CrashReports.Title" xml:space="preserve"><value>Enviar reportes automáticos de errores y fallos</value></data>
   <data name="PrivacyConsent.CrashReports.Description" xml:space="preserve"><value>Trazas de pila depuradas y versión de la app cuando FiveMCleaner falla o encuentra un error inesperado.</value></data>
   <data name="PrivacyConsent.Continue" xml:space="preserve"><value>Continuar</value></data>
-  <data name="Privacy.Collects.Title" xml:space="preserve"><value>Recopilamos</value></data>
+  <data name="Privacy.Collects.Title" xml:space="preserve"><value>RECOPILAMOS</value></data>
   <data name="Privacy.Collects.Items" xml:space="preserve"><value>• Versión de FiveMCleaner
 • Versión y arquitectura general de Windows
 • Duración y resultado de las optimizaciones
@@ -307,7 +310,7 @@
 • Códigos de error depurados
 • Trazas de pila depuradas en reportes de fallos
 • Versión de la app donde ocurrió el error</value></data>
-  <data name="Privacy.DoesNotCollect.Title" xml:space="preserve"><value>No recopilamos</value></data>
+  <data name="Privacy.DoesNotCollect.Title" xml:space="preserve"><value>NO RECOPILAMOS</value></data>
   <data name="Privacy.DoesNotCollect.Items" xml:space="preserve"><value>• Nombre de usuario
 • Nombre de la computadora
 • Archivos personales
@@ -320,7 +323,7 @@
 • Rutas personales sin depurar</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>FiveMCleaner encontró un error inesperado. No se aplicará ningún cambio nuevo.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
-  <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>acciones verificadas</value></data>
+  <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>ACCIONES VERIFICADAS</value></data>
   <data name="Progress.ElapsedFormat" xml:space="preserve"><value>Transcurrido {0}</value></data>
   <data name="Progress.RemainingFormat" xml:space="preserve"><value>Quedan aproximadamente {0}</value></data>
   <data name="Progress.Finishing" xml:space="preserve"><value>Finalizando...</value></data>
@@ -724,7 +727,7 @@
   <data name="Dashboard.LivePerformance.Trend" xml:space="preserve"><value>MEDIA Y PICO</value></data>
   <data name="Dashboard.LivePerformance.Window" xml:space="preserve"><value>Último minuto</value></data>
   <data name="Dashboard.LivePerformance.Now" xml:space="preserve"><value>ahora</value></data>
-  <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>Última optimización</value></data>
+  <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>ÚLTIMA OPTIMIZACIÓN</value></data>
   <data name="Dashboard.LastRun.None.Title" xml:space="preserve"><value>Aún sin optimizaciones</value></data>
   <data name="Dashboard.LastRun.None.Detail" xml:space="preserve"><value>Ejecuta el optimizador para crear un punto de restauración y un informe que podrás consultar aquí.</value></data>
   <data name="Dashboard.Detection.Title" xml:space="preserve"><value>DETECCIÓN</value></data>
@@ -738,7 +741,71 @@
   <data name="Optimizer.Level" xml:space="preserve"><value>NIVEL</value></data>
   <data name="Optimizer.Safety" xml:space="preserve"><value>Seguridad</value></data>
   <data name="Optimizer.Detected" xml:space="preserve"><value>Detectado en esta computadora</value></data>
-  <data name="Optimizer.Stage.Prepare" xml:space="preserve"><value>Preparar</value></data>
-  <data name="Optimizer.Stage.Run" xml:space="preserve"><value>Ejecutar</value></data>
-  <data name="Optimizer.Stage.Result" xml:space="preserve"><value>Resultado</value></data>
+  <data name="Optimizer.Stage.Prepare" xml:space="preserve"><value>PREPARAR</value></data>
+  <data name="Optimizer.Stage.Run" xml:space="preserve"><value>EJECUTAR</value></data>
+  <data name="Optimizer.Stage.Result" xml:space="preserve"><value>RESULTADO</value></data>
+  <data name="Account.WindowTitle" xml:space="preserve"><value>Tu cuenta</value></data>
+  <data name="Account.TitleBarHeader" xml:space="preserve"><value>CUENTA FIVEMCLEANER</value></data>
+  <data name="Account.Welcome.Title" xml:space="preserve"><value>Bienvenido de nuevo</value></data>
+  <data name="Account.Welcome.Subtitle" xml:space="preserve"><value>Inicia sesión para sincronizar tus preferencias entre instalaciones.</value></data>
+  <data name="Account.Register.Title" xml:space="preserve"><value>Crea tu cuenta</value></data>
+  <data name="Account.Register.Subtitle" xml:space="preserve"><value>Toma menos de un minuto. Después solo confirma tu correo.</value></data>
+  <data name="Account.ProfileSetup.Title" xml:space="preserve"><value>Ya casi</value></data>
+  <data name="Account.ProfileSetup.Subtitle" xml:space="preserve"><value>Elige un nombre de usuario disponible para terminar tu registro.</value></data>
+  <data name="Account.Verification.Title" xml:space="preserve"><value>Confirma tu correo</value></data>
+  <data name="Account.Verification.Subtitle" xml:space="preserve"><value>Solo falta un clic en el enlace que enviamos.</value></data>
+  <data name="Account.Verification.Detail" xml:space="preserve"><value>Enviamos un enlace de confirmación a {0}. Abre el correo y haz clic en el enlace — si no llega en unos minutos, revisa el spam o reenvíalo abajo.</value></data>
+  <data name="Account.Provider.ContinueWithGoogle" xml:space="preserve"><value>Continuar con Google</value></data>
+  <data name="Account.Provider.SignUpWithGoogle" xml:space="preserve"><value>Registrarse con Google</value></data>
+  <data name="Account.Provider.DividerSignIn" xml:space="preserve"><value>O USA TU CORREO</value></data>
+  <data name="Account.Provider.DividerRegister" xml:space="preserve"><value>O REGÍSTRATE CON CORREO</value></data>
+  <data name="Account.Profile.SectionLabel" xml:space="preserve"><value>QUIÉN ERES</value></data>
+  <data name="Account.Profile.FirstNameLabel" xml:space="preserve"><value>Nombre</value></data>
+  <data name="Account.Profile.LastNameLabel" xml:space="preserve"><value>Apellido</value></data>
+  <data name="Account.Profile.UsernameLabel" xml:space="preserve"><value>Nombre de usuario</value></data>
+  <data name="Account.Profile.UsernameHint" xml:space="preserve"><value>De 3 a 24 caracteres. Empieza con una letra y usa solo letras, números y "_".</value></data>
+  <data name="Account.Credentials.SectionLabel" xml:space="preserve"><value>DATOS DE ACCESO</value></data>
+  <data name="Account.Credentials.EmailLabel" xml:space="preserve"><value>Correo electrónico</value></data>
+  <data name="Account.Credentials.PasswordLabel" xml:space="preserve"><value>Contraseña</value></data>
+  <data name="Account.Credentials.PasswordPlaceholder" xml:space="preserve"><value>Tu contraseña</value></data>
+  <data name="Account.Credentials.PasswordPlaceholderRegister" xml:space="preserve"><value>Crea una contraseña segura</value></data>
+  <data name="Account.Credentials.ConfirmPasswordLabel" xml:space="preserve"><value>Repetir contraseña</value></data>
+  <data name="Account.Credentials.ConfirmPasswordPlaceholder" xml:space="preserve"><value>Escribe la contraseña de nuevo</value></data>
+  <data name="Account.Options.KeepSignedIn" xml:space="preserve"><value>Mantener la sesión iniciada en esta computadora</value></data>
+  <data name="Account.Actions.ForgotPassword" xml:space="preserve"><value>Olvidé mi contraseña</value></data>
+  <data name="Account.Terms.AgreementPrefix" xml:space="preserve"><value>He leído y acepto los</value></data>
+  <data name="Account.Terms.TermsOfUseLink" xml:space="preserve"><value>Términos de Uso</value></data>
+  <data name="Account.Terms.ReadLink" xml:space="preserve"><value>Leer los Términos de Uso</value></data>
+  <data name="Account.Actions.SignIn" xml:space="preserve"><value>Iniciar sesión</value></data>
+  <data name="Account.Actions.CreateAccount" xml:space="preserve"><value>Crear mi cuenta</value></data>
+  <data name="Account.Actions.FinishRegistration" xml:space="preserve"><value>Completar registro</value></data>
+  <data name="Account.Switch.ToRegister" xml:space="preserve"><value>¿Aún no tienes cuenta? Crear cuenta</value></data>
+  <data name="Account.Switch.ToSignIn" xml:space="preserve"><value>¿Ya tienes una cuenta? Iniciar sesión</value></data>
+  <data name="Account.Actions.SignOut" xml:space="preserve"><value>Cerrar sesión</value></data>
+  <data name="Account.Verification.Resend" xml:space="preserve"><value>Reenviar correo de verificación</value></data>
+  <data name="Account.Verification.Refresh" xml:space="preserve"><value>Ya confirmé, verificar ahora</value></data>
+  <data name="Account.Username.Checking" xml:space="preserve"><value>Comprobando disponibilidad…</value></data>
+  <data name="Account.Username.Available" xml:space="preserve"><value>Este nombre de usuario está disponible.</value></data>
+  <data name="Account.Username.Taken" xml:space="preserve"><value>Este nombre de usuario ya está en uso.</value></data>
+  <data name="Account.Password.PolicyMinimum" xml:space="preserve"><value>Usa al menos {0} caracteres.</value></data>
+  <data name="Account.Password.PolicyRemaining" xml:space="preserve"><value>Faltan {0} carácter(es) para el mínimo de {1}.</value></data>
+  <data name="Account.Password.PolicyMet" xml:space="preserve"><value>¡Bien! Tu contraseña cumple el mínimo requerido.</value></data>
+  <data name="Account.Password.ConfirmMatch" xml:space="preserve"><value>Las contraseñas coinciden.</value></data>
+  <data name="Account.Password.ConfirmMismatch" xml:space="preserve"><value>Las contraseñas no coinciden.</value></data>
+  <data name="Account.Validation.InvalidEmail" xml:space="preserve"><value>Ingresa una dirección de correo válida.</value></data>
+  <data name="Account.Validation.PasswordRequired" xml:space="preserve"><value>Escribe tu contraseña para iniciar sesión.</value></data>
+  <data name="Account.Validation.FirstNameRequired" xml:space="preserve"><value>Ingresa tu nombre.</value></data>
+  <data name="Account.Validation.LastNameRequired" xml:space="preserve"><value>Ingresa tu apellido.</value></data>
+  <data name="Account.Validation.UsernameFormat" xml:space="preserve"><value>El nombre de usuario debe tener de 3 a 24 caracteres, empezar con una letra y usar solo letras, números y "_".</value></data>
+  <data name="Account.Validation.PasswordMinLength" xml:space="preserve"><value>Tu contraseña necesita al menos 12 caracteres.</value></data>
+  <data name="Account.Validation.PasswordsMustMatch" xml:space="preserve"><value>Las dos contraseñas deben coincidir.</value></data>
+  <data name="Account.Validation.TermsRequired" xml:space="preserve"><value>Acepta los Términos de Uso para crear tu cuenta.</value></data>
+  <data name="Account.Validation.EmailRequiredForReset" xml:space="preserve"><value>Ingresa tu correo para recibir las instrucciones de recuperación.</value></data>
+  <data name="Account.Session.Expired" xml:space="preserve"><value>Tu sesión expiró. Inicia sesión de nuevo para completar tu registro.</value></data>
+  <data name="Account.Profile.SaveFailed" xml:space="preserve"><value>No se pudo guardar tu perfil.</value></data>
+  <data name="Account.Google.SigningIn" xml:space="preserve"><value>Completando el inicio de sesión en la ventana de tu navegador…</value></data>
+  <data name="Account.Google.Failed" xml:space="preserve"><value>No se pudo iniciar sesión con Google.</value></data>
+  <data name="Account.PasswordReset.Sent" xml:space="preserve"><value>Si existe una cuenta para este correo, enviamos las instrucciones de recuperación.</value></data>
+  <data name="Account.Verification.ResentConfirmation" xml:space="preserve"><value>Reenviamos el correo de confirmación.</value></data>
+  <data name="Account.Verification.PleaseConfirm" xml:space="preserve"><value>Confirma tu correo para continuar.</value></data>
 </root>
