@@ -137,6 +137,45 @@ jobs:
           ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
         run: ./scripts/Build-Installer.ps1 -Version $env:ASSET_VERSION
 
+      - name: Sign broker integrity manifest
+        shell: pwsh
+        env:
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
+          FIVEMCLEANER_SIGNING_PASSWORD: ${{ secrets.FIVEMCLEANER_SIGNING_PASSWORD }}
+          RELEASE_SIGNING_PRIVATE_KEY: ${{ secrets.RELEASE_SIGNING_PRIVATE_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_SIGNING_PRIVATE_KEY) -or
+              [string]::IsNullOrWhiteSpace($env:FIVEMCLEANER_SIGNING_PASSWORD)) {
+            throw 'Public builds require the offline release signing secrets for broker integrity.'
+          }
+          $privateKey = Join-Path $env:RUNNER_TEMP 'fivemcleaner-broker-private.pem'
+          try {
+            [IO.File]::WriteAllText(
+              $privateKey,
+              $env:RELEASE_SIGNING_PRIVATE_KEY,
+              [Text.UTF8Encoding]::new($false))
+            $versionRoot = "./artifacts/FiveMCleaner-win-x64/Runtime/versions/$env:ASSET_VERSION"
+            dotnet run --project ./src/FiveMCleaner.ReleaseTool/FiveMCleaner.ReleaseTool.csproj `
+              --configuration Release --no-build -- `
+              sign-broker "$versionRoot/broker/SHA256SUMS.txt" $env:ASSET_VERSION `
+              $privateKey "$versionRoot/broker-integrity.json"
+            if ($LASTEXITCODE -ne 0) { throw 'Signing the broker integrity manifest failed.' }
+            dotnet run --project ./src/FiveMCleaner.ReleaseTool/FiveMCleaner.ReleaseTool.csproj `
+              --configuration Release --no-build -- `
+              verify-broker "$versionRoot/broker-integrity.json" `
+              ./src/FiveMCleaner.App/Assets/release-public-key.pem
+            if ($LASTEXITCODE -ne 0) { throw 'The broker manifest does not match the embedded public key.' }
+          }
+          finally {
+            if (Test-Path -LiteralPath $privateKey) { Remove-Item -LiteralPath $privateKey -Force }
+          }
+
+      - name: Repackage signed broker
+        shell: pwsh
+        env:
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
+        run: ./scripts/Finalize-BrokerIntegrity.ps1 -Version $env:ASSET_VERSION
+
       - name: Install and uninstall smoke test
         shell: pwsh
         env:

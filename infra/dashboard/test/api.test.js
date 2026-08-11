@@ -129,6 +129,26 @@ test('resolveApiBase honors ?api= only on localhost', () => {
     resolveApiBase(BASE, '127.0.0.1', new URLSearchParams({ api: override })),
     override,
   );
+  assert.equal(
+    resolveApiBase(BASE, '[::1]', new URLSearchParams({ api: 'http://[::1]:8787' })),
+    'http://[::1]:8787',
+  );
+});
+
+test('resolveApiBase refuses non-loopback or malformed destinations even on localhost', () => {
+  for (const override of [
+    'https://evil.example',
+    'https://localhost.evil.example',
+    'file:///tmp/fake-worker',
+    'http://user:password@127.0.0.1:8787',
+    'not a url',
+  ]) {
+    assert.equal(
+      resolveApiBase(BASE, 'localhost', new URLSearchParams({ api: override })),
+      BASE,
+      override,
+    );
+  }
 });
 
 test('resolveApiBase never honors ?api= on a production host', () => {
