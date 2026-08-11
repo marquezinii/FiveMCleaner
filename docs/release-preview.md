@@ -65,9 +65,10 @@ SHA-256, sem enviar arquivos pessoais a serviços externos.
 
 O script `scripts/Install-DevelopmentShortcut.ps1`, disponível no checkout do
 repositório e não no ZIP portátil, cria na Área de Trabalho um atalho para o
-caminho estável do build `Release` dentro deste workspace. O atalho aponta
-diretamente para o executável WPF e usa `--demo`; ele não usa PowerShell, CMD ou
-`dotnet run` ao ser aberto, portanto não cria janela de console.
+caminho estável do build `Release` dentro deste workspace. O atalho chama
+`scripts/Start-DevelopmentApp.ps1`, que abre o executável WPF com
+`--demo-synthetic`; a janela do PowerShell permanece oculta e não usa
+`dotnet run`.
 
 ```powershell
 # Compila Release e instala/atualiza o atalho.
@@ -77,9 +78,13 @@ diretamente para o executável WPF e usa `--demo`; ele não usa PowerShell, CMD 
 .\scripts\Install-DevelopmentShortcut.ps1
 ```
 
-O modo `--demo` usa diagnóstico e histórico fictícios e não executa o plano de
-otimização nem salva as opções da simulação. A tela de relato de bug continua
-podendo acessar a rede **somente depois de um clique explícito em Enviar**.
+O modo `--demo-synthetic` usa um diagnóstico FiveM Legacy/GTA V plausível e
+simula o plano de otimização completo sem executar alterações, gravar opções
+ou acessar o histórico real. Ele permite validar a interface de desenvolvimento
+mesmo sem os jogos instalados. A versão pública não recebe esse argumento e
+mantém a detecção real de FiveM Legacy e GTA V como pré-condição para as ações
+compatíveis. A tela de relato de bug continua podendo acessar a rede **somente
+depois de um clique explícito em Enviar**.
 
 O `.lnk` não contém uma cópia congelada do aplicativo. Cada nova build Release
 substitui o executável no mesmo destino, e o atalho passa a abrir esse build. Se

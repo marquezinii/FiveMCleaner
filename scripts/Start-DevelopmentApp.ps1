@@ -66,4 +66,11 @@ if ($NoLaunch) {
 # never mixes with end-user errors reported by installed Production copies.
 # See FiveMCleaner.App/Services/AppEnvironment.cs.
 $env:FIVEMCLEANER_ENVIRONMENT = 'Development'
-Start-Process -FilePath $applicationPath -WorkingDirectory $outputDirectory
+
+# The development launcher must remain useful on a machine that does not have
+# FiveM or GTA V installed. The explicit demo switch supplies a realistic,
+# deterministic Legacy diagnostic and simulates the complete optimization
+# flow without reading or writing game files, invoking the broker, or showing
+# UAC. Production launchers never pass this switch, so they keep the real
+# installation detection and optimization preconditions.
+Start-Process -FilePath $applicationPath -ArgumentList '--demo-synthetic' -WorkingDirectory $outputDirectory
