@@ -123,13 +123,13 @@ Os perfis são composições de ações independentes. O usuário pode revisar c
 
 ### Atalho de simulação
 
-No checkout do repositório, desenvolvedores podem criar um atalho vivo na Área de Trabalho para o build `Release` atual. O script não acompanha o ZIP portátil. O atalho abre diretamente o executável WPF com `--demo`, usa o ícone oficial e não cria janela de console:
+No checkout do repositório, desenvolvedores podem criar um atalho vivo na Área de Trabalho para o build `Release` atual. O script não acompanha o ZIP portátil. O atalho chama o inicializador de desenvolvimento, que abre o executável WPF em simulação sintética, usa o ícone oficial e não deixa uma janela de console aberta:
 
 ```powershell
 .\scripts\Install-DevelopmentShortcut.ps1 -Build
 ```
 
-O atalho não copia um executável congelado: novas builds Release continuam usando o mesmo destino. O modo demo não aplica otimizações nem salva suas opções; um envio de bug só acessa a rede após clique explícito. Detalhes e limitações estão em [docs/release-preview.md](docs/release-preview.md).
+O atalho não copia um executável congelado: novas builds Release continuam usando o mesmo destino. A simulação mostra um ambiente FiveM Legacy/GTA V plausível e percorre o plano de otimização sem tocar em arquivos do jogo, salvar opções, abrir UAC ou acessar o histórico real. Builds públicas não recebem esse argumento: nelas FiveM Legacy e GTA V devem ser detectados de verdade antes das ações compatíveis. Um envio de bug só acessa a rede após clique explícito. Detalhes e limitações estão em [docs/release-preview.md](docs/release-preview.md).
 
 ## Cache inteligente
 
