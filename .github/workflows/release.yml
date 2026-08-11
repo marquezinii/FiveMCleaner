@@ -81,6 +81,21 @@ jobs:
           if ($tagCommit -ne $headCommit) {
             throw 'Checked out commit does not match the requested tag.'
           }
+          if ($env:RELEASE_CHANNEL -eq 'stable') {
+            # Secret-bearing signing and deployment steps must never execute
+            # source selected only by an arbitrary tag. Resolve main from the
+            # remote inside this trusted workflow and require the stable tag
+            # to identify that exact reviewed commit before any secrets are
+            # made available to later steps.
+            git fetch --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
+            if ($LASTEXITCODE -ne 0) {
+              throw 'Could not resolve the trusted origin/main release commit.'
+            }
+            $trustedMainCommit = (git rev-parse refs/remotes/origin/main).Trim()
+            if ($tagCommit -ne $trustedMainCommit) {
+              throw 'Stable release tag must point to the current origin/main commit.'
+            }
+          }
           if (git status --porcelain=v1 --untracked-files=all) {
             throw 'Release checkout is not clean.'
           }

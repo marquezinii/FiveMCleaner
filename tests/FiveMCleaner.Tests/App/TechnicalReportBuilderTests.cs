@@ -10,11 +10,11 @@ public sealed class ReportSanitizerTests
     [Fact]
     public void Sanitize_RemovesGenericUsersPathRegardlessOfAccountName()
     {
-        var text = @"Falha ao gravar C:\Users\felipe.marquezini\Documents\Rockstar Games\GTA V\settings.xml";
+        var text = @"Falha ao gravar C:\Users\usuario.exemplo\Documents\Rockstar Games\GTA V\settings.xml";
 
         var sanitized = ReportSanitizer.Sanitize(text);
 
-        Assert.DoesNotContain("felipe.marquezini", sanitized, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("usuario.exemplo", sanitized, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("%USERPROFILE%", sanitized);
     }
 
