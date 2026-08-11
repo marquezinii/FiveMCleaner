@@ -18,7 +18,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "1.50.0",
+    "@cloudflare/vite-plugin": "1.51.3",
     "@cloudflare/workers-types": "^5.20260801.1",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
@@ -32,15 +32,16 @@
     "react-server-dom-webpack": "19.2.8",
     "tailwindcss": "4.2.1",
     "typescript": "5.9.3",
-    "vinext": "0.0.50",
+    "vinext": "0.0.45",
     "vite": "8.2.0",
-    "wrangler": "4.118.0"
+    "wrangler": "4.120.1"
   },
   "overrides": {
     "@esbuild-kit/core-utils": {
       "esbuild": "0.25.12"
     },
     "postcss": "8.5.25",
+    "nanoid": "3.3.17",
     "sharp": "0.35.3"
   },
   "type": "module"
