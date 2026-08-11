@@ -86,6 +86,20 @@ try {
         }
     }
     Copy-Item -LiteralPath $brokerOutput -Destination $copiedBroker -Recurse
+
+    $brokerOutputPrefix = $copiedBroker.TrimEnd('\') + '\'
+    $brokerChecksums = Get-ChildItem -LiteralPath $copiedBroker -Recurse -File |
+        Sort-Object FullName |
+        ForEach-Object {
+            if (-not $_.FullName.StartsWith($brokerOutputPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                throw "Refusing to hash a file outside the broker staging directory: $($_.FullName)"
+            }
+            $relative = $_.FullName.Substring($brokerOutputPrefix.Length).Replace('\', '/')
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $relative"
+        }
+    Set-Content -LiteralPath (Join-Path $copiedBroker 'SHA256SUMS.txt') -Value $brokerChecksums -Encoding utf8
+
     Copy-Item -LiteralPath '.\README.md', '.\LICENSE', '.\SECURITY.md', '.\CONTRIBUTING.md', '.\CODE_OF_CONDUCT.md' -Destination $appOutput
     Copy-Item -LiteralPath '.\docs' -Destination (Join-Path $appOutput 'docs') -Recurse
 

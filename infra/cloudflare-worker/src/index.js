@@ -12,7 +12,7 @@ import {
   normalizeUsername,
   isUsernameAvailable,
 } from './auth/accountProfile.js';
-import { rateLimitKey, withinRateLimit } from './rateLimit.js';
+import { rateLimitKey, withinRateLimit, withinRequiredRateLimit } from './rateLimit.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
 import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from './cors.js';
@@ -164,7 +164,7 @@ function handleSignedReleaseManifest(env) {
 }
 
 async function handleUpdaterEventIngest(request, env) {
-  if (!await withinRateLimit(env.UPDATER_EVENT_LIMITER, rateLimitKey(request))) {
+  if (!await withinRequiredRateLimit(env.UPDATER_EVENT_LIMITER, rateLimitKey(request))) {
     return new Response(JSON.stringify({ error: 'rate-limited' }), {
       status: 429,
       headers: { 'Content-Type': 'application/json' },
@@ -290,7 +290,7 @@ async function handleUpdaterEventsList(request, env, url) {
 }
 
 async function handleTelemetryIngest(request, env) {
-  if (!await withinRateLimit(env.TELEMETRY_LIMITER, rateLimitKey(request))) {
+  if (!await withinRequiredRateLimit(env.TELEMETRY_LIMITER, rateLimitKey(request))) {
     return new Response(JSON.stringify({ error: 'rate-limited' }), {
       status: 429,
       headers: { 'Content-Type': 'application/json' },
@@ -420,7 +420,7 @@ async function handleStatsRequest(request, env, url) {
 }
 
 async function handleBugReportIngest(request, env) {
-  if (!await withinRateLimit(env.BUG_REPORT_LIMITER, rateLimitKey(request))) {
+  if (!await withinRequiredRateLimit(env.BUG_REPORT_LIMITER, rateLimitKey(request))) {
     return new Response(JSON.stringify({ error: 'rate-limited' }), {
       status: 429,
       headers: { 'Content-Type': 'application/json' },

@@ -12,8 +12,10 @@
 
 import { hashIp, verifyPassword } from './crypto.js';
 import {
+  FAILURE_WINDOW_MS,
+  LOCKOUT_DURATION_MS,
+  MAX_FAILED_ATTEMPTS,
   isLockedOut,
-  nextStateAfterFailure,
   stateAfterSuccess,
 } from './bruteForceGuard.js';
 import {
@@ -59,6 +61,44 @@ async function saveLoginAttempt(db, ipHash, row) {
     )
     .bind(ipHash, row.failed_count, row.first_failed_at, row.locked_until)
     .run();
+}
+
+export function buildFailedLoginMutation(ipHash, now) {
+  const nowIso = now.toISOString();
+  const windowStartIso = new Date(now.getTime() - FAILURE_WINDOW_MS).toISOString();
+  const lockoutUntilIso = new Date(now.getTime() + LOCKOUT_DURATION_MS).toISOString();
+  return {
+    sql: `INSERT INTO login_attempts (ip_hash, failed_count, first_failed_at, locked_until)
+          VALUES (?, 1, ?, NULL)
+          ON CONFLICT(ip_hash) DO UPDATE SET
+            failed_count = CASE
+              WHEN login_attempts.first_failed_at < ? THEN 1
+              ELSE login_attempts.failed_count + 1
+            END,
+            first_failed_at = CASE
+              WHEN login_attempts.first_failed_at < ? THEN excluded.first_failed_at
+              ELSE login_attempts.first_failed_at
+            END,
+            locked_until = CASE
+              WHEN login_attempts.first_failed_at < ? THEN NULL
+              WHEN login_attempts.failed_count + 1 >= ? THEN ?
+              ELSE NULL
+            END`,
+    bindings: [
+      ipHash,
+      nowIso,
+      windowStartIso,
+      windowStartIso,
+      windowStartIso,
+      MAX_FAILED_ATTEMPTS,
+      lockoutUntilIso,
+    ],
+  };
+}
+
+async function recordFailedLoginAttempt(db, ipHash, now) {
+  const mutation = buildFailedLoginMutation(ipHash, now);
+  await db.prepare(mutation.sql).bind(...mutation.bindings).run();
 }
 
 async function getSession(db, id) {
@@ -115,21 +155,7 @@ export function createPasswordAuthProvider(env, now = () => new Date()) {
         && password.length <= MAX_PASSWORD_CHARACTERS
         && (await verifyPassword(password, env.ADMIN_PASSWORD_HASH));
       if (!isValid) {
-        // Atomic increment instead of read-modify-write to close the
-        // race window where concurrent requests from the same IP could
-        // each see the old failed_count and bypass the lockout.
-        const next = nextStateAfterFailure(attemptRow, nowValue);
-        await db
-          .prepare(
-            `INSERT INTO login_attempts (ip_hash, failed_count, first_failed_at, locked_until)
-             VALUES (?, ?, ?, ?)
-             ON CONFLICT(ip_hash) DO UPDATE SET
-               failed_count = excluded.failed_count,
-               first_failed_at = excluded.first_failed_at,
-               locked_until = excluded.locked_until`,
-          )
-          .bind(ipHash, next.failed_count, next.first_failed_at, next.locked_until)
-          .run();
+        await recordFailedLoginAttempt(db, ipHash, nowValue);
         return new Response(
           JSON.stringify({ error: 'invalid-credentials' }),
           { status: 401, headers: { 'Content-Type': 'application/json' } },

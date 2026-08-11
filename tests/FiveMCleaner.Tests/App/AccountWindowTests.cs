@@ -128,6 +128,12 @@ public sealed class AccountWindowTests
             toggle.IsChecked = false;
             Assert.Equal(Visibility.Visible, masked.Visibility);
             Assert.Equal("minhasenha123", field.Password);
+            Assert.Empty(revealed.Text);
+
+            field.RaiseEvent(new RoutedEventArgs(FrameworkElement.UnloadedEvent));
+            Assert.Empty(masked.Password);
+            Assert.Empty(revealed.Text);
+            Assert.Empty(field.Password);
         });
     }
 

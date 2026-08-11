@@ -163,6 +163,13 @@ registration, and `POST /account/profile` still returns 409. The desktop
 client treats a rate-limited, failed or unreadable answer as "unknown" and
 never as "available".
 
+The public write routes use separate required `[[ratelimits]]` bindings:
+`TELEMETRY_LIMITER`, `BUG_REPORT_LIMITER`, and `UPDATER_EVENT_LIMITER`. Unlike
+the advisory username lookup, those routes fail closed when a binding is
+missing or unavailable so a deployment mistake cannot silently expose D1 to
+unbounded writes. Local handler tests must provide an explicit limiter stub
+when they exercise one of those routes.
+
 Legacy Worker product tables (`user_accounts` / sessions), if still present on
 remote D1 from the pre-Firebase system, are not migrated. There are no real
 users to preserve; cleanup is a separate authorized deploy/migration task.

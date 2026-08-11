@@ -12,10 +12,24 @@
  */
 export function resolveApiBase(defaultBase, locationHostname, searchParams) {
   const override = searchParams.get('api');
-  const isLocalDev = locationHostname === 'localhost'
-    || locationHostname === '127.0.0.1'
-    || locationHostname === '[::1]';
-  return isLocalDev && override ? override : defaultBase;
+  if (!isLoopbackHost(locationHostname) || !override) {
+    return defaultBase;
+  }
+
+  try {
+    const target = new URL(override);
+    const usesHttp = target.protocol === 'http:' || target.protocol === 'https:';
+    const hasCredentials = target.username.length > 0 || target.password.length > 0;
+    return usesHttp && !hasCredentials && isLoopbackHost(target.hostname)
+      ? target.origin
+      : defaultBase;
+  } catch {
+    return defaultBase;
+  }
+}
+
+function isLoopbackHost(hostname) {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
 }
 
 

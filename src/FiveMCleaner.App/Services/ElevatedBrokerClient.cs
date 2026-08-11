@@ -103,6 +103,10 @@ internal sealed class ElevatedBrokerClient
                 brokerPath);
         }
 
+        using var integrityLease = BrokerIntegrityVerifier.VerifyBeforeElevation(
+            AppContext.BaseDirectory,
+            brokerPath);
+
         cancellationToken.ThrowIfCancellationRequested();
         var pipeId = Guid.NewGuid();
         await using var pipe = new NamedPipeServerStream(

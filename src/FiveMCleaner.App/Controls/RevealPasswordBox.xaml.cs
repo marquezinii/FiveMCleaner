@@ -122,6 +122,7 @@ public partial class RevealPasswordBox : System.Windows.Controls.UserControl
         else
         {
             Masked.Password = Revealed.Text;
+            Revealed.Clear();
         }
         synchronizing = false;
 
@@ -139,6 +140,8 @@ public partial class RevealPasswordBox : System.Windows.Controls.UserControl
 
         UpdatePlaceholder();
     }
+
+    private void RevealPasswordBox_Unloaded(object sender, RoutedEventArgs e) => Clear();
 
     private void UpdatePlaceholder() =>
         PlaceholderText.Visibility = Password.Length == 0 ? Visibility.Visible : Visibility.Collapsed;

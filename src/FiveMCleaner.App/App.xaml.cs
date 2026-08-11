@@ -53,7 +53,6 @@ public partial class App : System.Windows.Application
         }
         catch (Exception exception)
         {
-            try { File.AppendAllText(@"C:\Projetos\fivemcleaner-debug.log", $"{DateTime.Now:HH:mm:ss.fff} App: EXCEPTION {exception}\n"); } catch { }
             WriteCrashLog(exception);
             TryCaptureException(exception);
             ShowFatalError(exception);

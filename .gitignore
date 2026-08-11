@@ -27,10 +27,18 @@ Thumbs.db
 *.pfx
 *.p12
 *.snk
+*.jks
+*.keystore
+*.kdbx
+.netrc
 secrets.json
 credentials.json
 **/secrets.json
 **/credentials.json
+service-account*.json
+**/service-account*.json
+firebase-admin*.json
+**/firebase-admin*.json
 appsettings.*.local.json
 
 # Local data, caches, logs and test output
