@@ -7,7 +7,7 @@
 
 - **Produto:** FiveMCleaner, aplicativo desktop Windows para otimização transparente, reversível e orientada por diagnóstico do FiveM para **GTAV Legacy**.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
-- **Último estado consolidado neste documento-fonte:** 07/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
+- **Último estado consolidado neste documento-fonte:** 11/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
 - **Versão pública:** o histórico registra `v1.1.3` como última instalação pública em 01/08/2026. Também registra preparação local de `v1.2.0`, mas não uma publicação concluída; portanto confirme tags/releases antes de assumir a versão pública vigente.
 - **Atalho de desenvolvimento:** `FiveMCleaner - Desenvolvimento` deve representar somente o estado integrado de `dev/proxima-versao` e usar `scripts\Start-DevelopmentApp.ps1`. A reconstrução/validação do atalho pertence ao fluxo de integração, não a tarefas paralelas isoladas.
 
@@ -113,15 +113,12 @@ Somente itens ainda relevantes devem permanecer aqui. Quando resolvidos e integr
 5. **Watcher de sessão FiveM/GTA** — ajustes que precisariam ser aplicados/restaurados durante o ciclo de vida do jogo (prioridade, afinidade, core parking, timer resolution e semelhantes) continuam fora do catálogo até existir uma arquitetura segura de monitoramento e reversão mesmo se o FiveMCleaner for encerrado. Ver `docs/graphics-optimizations-backlog.md`.
 6. **GTAV Enhanced** — sem suporte operacional; requer adaptador/projeto específico antes de habilitar qualquer ação.
 7. **Branding opcional do repositório** — social preview/banner não foi definido por depender de decisão de marca; não é bloqueador técnico.
-8. **Dependências do Worker** — em 04/08 `npm audit` registrava 3 vulnerabilidades pré-existentes em `wrangler`/`undici` como devDependency, com correção indicada apenas via `--force`/breaking change. Revalidar antes de release/deploy; não aplicar force update cegamente.
 
 ## 6. Baseline de validação registrada
 
 Estes números são **referência histórica do último estado validado**, não substituem testes da branch atual.
 
-- **07/08/2026:** build .NET Release sem avisos, **775 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` aprovados após o redesign do Otimizador.
-- **06/08/2026:** **159 testes do Worker** e **43 do dashboard** aprovados na rodada de conta/login; .NET estava em 774 testes nessa rodada.
-- **05/08/2026:** site com lint, build e **3 testes** aprovados na última validação explícita registrada para essa superfície.
+- **11/08/2026:** após manutenção de dependências, build e testes .NET Release, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` aprovados. Worker: **165 testes** e `npm audit` sem vulnerabilidades. Site: lint, build, **3 testes** e `npm audit` sem vulnerabilidades.
 
 Ao alterar uma superfície, execute a validação aplicável novamente e use os resultados atuais no PR. Nunca use estes números para afirmar que código posterior foi testado.
 

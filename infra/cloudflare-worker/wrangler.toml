@@ -41,7 +41,7 @@
 
 name = "fivemcleaner-telemetry"
 main = "src/index.js"
-compatibility_date = "2025-01-01"
+compatibility_date = "2026-08-11"
 
 [vars]
 DASHBOARD_ORIGIN = "https://fivemcleaner-dashboard.pages.dev"

@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout exact tag
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.release_tag }}
           fetch-depth: 0
@@ -296,7 +296,7 @@ jobs:
 
     steps:
       - name: Checkout release infrastructure
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.release_tag }}
 
@@ -307,7 +307,7 @@ jobs:
           path: release
 
       - name: Attest installer provenance
-        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        uses: actions/attest-build-provenance@8beda2b7ed98355c0e97c0a63bec38ae472e66c4 # v4
         with:
           subject-path: release/FiveMCleaner-Setup-*-win-x64.exe
 
