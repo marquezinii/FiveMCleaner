@@ -2,7 +2,9 @@ name: CI
 
 on:
   push:
+    branches: [main, dev/proxima-versao]
   pull_request:
+    branches: [main, dev/proxima-versao]
   workflow_dispatch:
 
 permissions:
@@ -35,6 +37,14 @@ jobs:
 
       - name: Show SDK information
         run: dotnet --info
+
+      - name: Restore with NuGet vulnerability gate
+        shell: pwsh
+        run: >-
+          dotnet restore FiveMCleaner.slnx
+          -p:NuGetAudit=true
+          -p:NuGetAuditMode=all
+          -p:WarningsAsErrors=NU1901%3BNU1902%3BNU1903%3BNU1904
 
       - name: Safety verification and build
         shell: pwsh
