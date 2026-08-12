@@ -1,9 +1,10 @@
 # Instalador, atualização e publicação
 
 O instalador oficial do FiveMCleaner é um executável Inno Setup moderno para
-Windows 10 build 19041 ou mais recente e Windows 11, em sistemas compatíveis com
-binários x64. Ele instala por usuário em `{autopf}\FiveMCleaner`; por padrão,
-isso corresponde à pasta de programas local do usuário e não exige UAC.
+Windows 11 e, em compatibilidade legada, Windows 10 build 19041 ou mais recente,
+em sistemas compatíveis com binários x64. Windows 11 é o sistema recomendado.
+Ele instala por usuário em `{autopf}\FiveMCleaner`; por padrão, isso corresponde
+à pasta de programas local do usuário e não exige UAC.
 
 ## Dependências e funcionamento offline
 
@@ -54,7 +55,7 @@ $installer = Resolve-Path .\artifacts\installer\FiveMCleaner-Setup-1.0.0-win-x64
 
 O script primeiro executa a verificação de segurança e o publish self-contained,
 depois compila o instalador, gera SHA-256 e um manifesto de release. Se o Inno
-Setup 6.7.3 não estiver instalado, o build baixa a release imutável oficial para
+Setup 7.0.2 x64 não estiver instalado, o build baixa a release imutável oficial para
 um cache dentro de `artifacts/.tools`, exige o SHA-256 fixado no script e valida
 a assinatura Authenticode de `Pyrsys B.V.` antes de executar o compilador.
 

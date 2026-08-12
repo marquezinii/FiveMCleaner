@@ -25,8 +25,8 @@ public sealed class AccountWindowTests
     {
         RunOnUiThread(window =>
         {
-            Assert.Equal("Bem-vindo de volta", Text(window, "TitleText"));
-            Assert.Equal("Entrar", Get<Button>(window, "SubmitButton").Content);
+            Assert.Equal(LocalizationService.Current["Account.Welcome.Title"], Text(window, "TitleText"));
+            Assert.Equal(LocalizationService.Current["Account.Actions.SignIn"], Get<Button>(window, "SubmitButton").Content);
 
             // Cadastro-only surfaces stay hidden while signing in.
             Assert.Equal(Visibility.Collapsed, Get<UIElement>(window, "ConfirmPanel").Visibility);
@@ -77,7 +77,7 @@ public sealed class AccountWindowTests
             Assert.Equal(Visibility.Collapsed, link.Visibility);
             Assert.Equal(Visibility.Visible, Get<UIElement>(window, "ConfirmPanel").Visibility);
             Assert.Equal(Visibility.Visible, Get<UIElement>(window, "ProfileFieldsPanel").Visibility);
-            Assert.Equal("Crie sua conta", Text(window, "TitleText"));
+            Assert.Equal(LocalizationService.Current["Account.Register.Title"], Text(window, "TitleText"));
         });
     }
 
@@ -98,11 +98,10 @@ public sealed class AccountWindowTests
 
             SetPassword(confirm, "senhadiferente");
             Assert.Equal(Visibility.Visible, statusPanel.Visibility);
-            Assert.Contains("não coincidem", status.Text, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(LocalizationService.Current["Account.Password.ConfirmMismatch"], status.Text);
 
             SetPassword(confirm, "senhaseguraaqui");
-            Assert.Contains("coincidem", status.Text, StringComparison.OrdinalIgnoreCase);
-            Assert.DoesNotContain("não", status.Text, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(LocalizationService.Current["Account.Password.ConfirmMatch"], status.Text);
         });
     }
 

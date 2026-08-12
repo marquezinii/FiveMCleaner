@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=24.19.0 <25"
+  },
   "description": "Private admin dashboard for FiveMCleaner telemetry (static site for Cloudflare Pages).",
   "scripts": {
     "test": "node --test test/api.test.js test/charts.test.js"

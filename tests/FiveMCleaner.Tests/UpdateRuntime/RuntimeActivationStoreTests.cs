@@ -58,7 +58,7 @@ public sealed class RuntimeActivationStoreTests : IDisposable
             IsBackground = true
         };
         lockThread.Start();
-        lockAcquired.Wait();
+        lockAcquired.Wait(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         Assert.Null(lockThreadException);
 
         // ReadActiveVersion já está tentando contra o arquivo travado; libera

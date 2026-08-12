@@ -22,7 +22,7 @@ public sealed class WindowsTransactionEngineTests
 
         var first = await engine.ExecuteAsync(
             [standard, administrator],
-            Context(transactionId, elevated: false));
+            Context(transactionId, elevated: false), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.AwaitingElevation, first.State);
         Assert.Equal([standard.Metadata.Id], first.AppliedActionIds);
@@ -38,7 +38,7 @@ public sealed class WindowsTransactionEngineTests
             {
                 IncludeStandardUserActions = false,
                 IncludeAdministratorActions = true
-            });
+            }, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.Committed, second.State);
         Assert.Equal([administrator.Metadata.Id], second.AppliedActionIds);
@@ -52,7 +52,7 @@ public sealed class WindowsTransactionEngineTests
 
         var repeated = await engine.ExecuteAsync(
             [administrator],
-            Context(transactionId, elevated: true));
+            Context(transactionId, elevated: true), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         Assert.Equal(WindowsTransactionState.Committed, repeated.State);
         Assert.Empty(repeated.AppliedActionIds);
         Assert.Equal(1, administrator.ApplyCount);
@@ -71,12 +71,12 @@ public sealed class WindowsTransactionEngineTests
 
         var first = await engine.ExecuteAsync(
             [standard, administrator],
-            Context(transactionId, elevated: false));
+            Context(transactionId, elevated: false), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         Assert.Equal(WindowsTransactionState.AwaitingElevation, first.State);
 
         var result = await engine.MarkAdministratorPhaseFailedAsync(
             transactionId,
-            "O Windows recusou a elevação.");
+            "O Windows recusou a elevação.", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.CommittedWithErrors, result.State);
         var journal = journals.Get(transactionId);
@@ -106,7 +106,7 @@ public sealed class WindowsTransactionEngineTests
                 IncludeStandardUserActions = true,
                 IncludeAdministratorActions = false,
                 IsolateFailures = true
-            });
+            }, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.Committed, result.State);
         Assert.Empty(result.DeferredAdministratorActionIds);
@@ -134,7 +134,7 @@ public sealed class WindowsTransactionEngineTests
                 IncludeStandardUserActions = true,
                 IncludeAdministratorActions = false,
                 IsolateFailures = true
-            });
+            }, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.AwaitingElevation, result.State);
         Assert.Equal([administrator.Metadata.Id], result.DeferredAdministratorActionIds);
@@ -159,14 +159,14 @@ public sealed class WindowsTransactionEngineTests
         var transactionId = Guid.NewGuid();
         _ = await engine.ExecuteAsync(
             [standard, administrator],
-            Context(transactionId, elevated: false));
+            Context(transactionId, elevated: false), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         _ = await engine.ExecuteAsync(
             [administrator],
-            Context(transactionId, elevated: true));
+            Context(transactionId, elevated: true), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         var standardRollback = await engine.RollbackAsync(
             transactionId,
-            isElevated: false);
+            isElevated: false, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.AwaitingElevationRollback, standardRollback.State);
         Assert.Equal([administrator.Metadata.Id], standardRollback.DeferredAdministratorActionIds);
@@ -175,7 +175,7 @@ public sealed class WindowsTransactionEngineTests
 
         var elevatedRollback = await engine.RollbackAsync(
             transactionId,
-            isElevated: true);
+            isElevated: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.RolledBack, elevatedRollback.State);
         Assert.Empty(elevatedRollback.DeferredAdministratorActionIds);
@@ -197,10 +197,10 @@ public sealed class WindowsTransactionEngineTests
         var transactionId = Guid.NewGuid();
         _ = await engine.ExecuteAsync(
             [standard, administrator],
-            Context(transactionId, elevated: false));
+            Context(transactionId, elevated: false), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         _ = await engine.ExecuteAsync(
             [administrator],
-            Context(transactionId, elevated: true));
+            Context(transactionId, elevated: true), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         var result = await engine.RollbackAsync(
             transactionId,
@@ -209,7 +209,7 @@ public sealed class WindowsTransactionEngineTests
             {
                 IncludeStandardUserActions = false,
                 IncludeAdministratorActions = true
-            });
+            }, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.AwaitingStandardRollback, result.State);
         Assert.Equal(0, standard.RollbackCount);
@@ -231,7 +231,7 @@ public sealed class WindowsTransactionEngineTests
         var transactionId = Guid.NewGuid();
         _ = await engine.ExecuteAsync(
             [standard, administrator],
-            Context(transactionId, elevated: false));
+            Context(transactionId, elevated: false), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         var journal = journals.Get(transactionId);
         journal.Actions[0] = journal.Actions[0] with
@@ -246,7 +246,7 @@ public sealed class WindowsTransactionEngineTests
             {
                 IncludeStandardUserActions = false,
                 IncludeAdministratorActions = true
-            }));
+            }, cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
         Assert.Equal(0, standard.RollbackCount);
         Assert.Equal(0, administrator.RollbackCount);
     }
@@ -264,7 +264,7 @@ public sealed class WindowsTransactionEngineTests
 
         var result = await engine.ExecuteAsync(
             [standard, failing],
-            Context(transactionId, elevated: false));
+            Context(transactionId, elevated: false), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.RolledBack, result.State);
         Assert.NotNull(result.Error);

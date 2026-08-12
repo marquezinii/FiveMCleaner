@@ -139,7 +139,7 @@ public sealed class ElevatedBrokerClientTerminalReadTests
     public async Task ReadUntilTerminalAsync_ReportsLocalizedBrokerPhaseHeadlines()
     {
         var captured = new List<AppProgressUpdate>();
-        var progress = new Progress<AppProgressUpdate>(captured.Add);
+        var progress = new InlineProgress<AppProgressUpdate>(captured.Add);
         var events = new[]
         {
             Event(1, BrokerEventKindWire.Progress, "applying something"),
@@ -154,5 +154,10 @@ public sealed class ElevatedBrokerClientTerminalReadTests
         var rollbackUpdate = captured[1];
         Assert.Equal("Applying administrative adjustments", progressUpdate.Headline);
         Assert.Equal("Restoring administrative settings", rollbackUpdate.Headline);
+    }
+
+    private sealed class InlineProgress<T>(Action<T> report) : IProgress<T>
+    {
+        public void Report(T value) => report(value);
     }
 }

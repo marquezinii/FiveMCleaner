@@ -54,7 +54,7 @@ public sealed class SilentUpdateInstallerTests : IDisposable
     public async Task StartAsync_CopiesUpdaterOutsideInstallAndStartsIt()
     {
         var launcher = new RecordingLauncher();
-        var launch = await Create(launcher).StartAsync(CreateVerifiedInstaller());
+        var launch = await Create(launcher).StartAsync(CreateVerifiedInstaller(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(launch.Started);
         Assert.Equal(Path.Combine(updaterRuntime, "FiveMCleaner.Updater.exe"), launcher.UpdaterPath);
@@ -66,10 +66,10 @@ public sealed class SilentUpdateInstallerTests : IDisposable
     public async Task StartAsync_RejectsAnInstallerOutsideTheVerifiedUpdatesRoot()
     {
         var outside = Path.Combine(root, "outside.exe");
-        await File.WriteAllTextAsync(outside, "not verified");
+        await File.WriteAllTextAsync(outside, "not verified", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         var update = new DownloadedUpdate(StableSemanticVersion.Parse("9.9.9"), outside, 1, new string('a', 64), false);
 
-        var launch = await Create().StartAsync(update);
+        var launch = await Create().StartAsync(update, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(launch.Started);
     }
@@ -79,7 +79,7 @@ public sealed class SilentUpdateInstallerTests : IDisposable
     {
         var update = CreateVerifiedInstaller() with { Sha256Hex = "bad" };
 
-        var launch = await Create().StartAsync(update);
+        var launch = await Create().StartAsync(update, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(launch.Started);
     }
