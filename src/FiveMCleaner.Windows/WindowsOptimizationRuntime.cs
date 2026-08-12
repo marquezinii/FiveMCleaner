@@ -691,12 +691,9 @@ public sealed class WindowsOptimizationActionFactory
             throw new InvalidOperationException("Only an executable FiveM Legacy plan can be resolved.");
         }
 
-        var canonical = new PlanBuilder().Build(new OptimizationPlanRequestDto
-        {
-            Profile = plan.Profile,
-            Edition = plan.Edition,
-            Options = plan.Options with { }
-        });
+        var canonical = PlanBuilder.Build(
+            PlanBuilder.CanonicalRequestFor(plan),
+            PlanBuildContext.For(plan));
         if (!canonical.IsExecutable
             || canonical.Actions.Count != plan.Actions.Count
             || canonical.RequiresElevation != plan.RequiresElevation

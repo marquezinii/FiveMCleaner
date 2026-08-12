@@ -64,13 +64,9 @@ internal sealed class PlanValidator
         OptimizationPlanDto expected;
         try
         {
-            expected = new PlanBuilder(ActionCatalog.Current, timeProvider).Build(
-                new OptimizationPlanRequestDto
-                {
-                    Profile = plan.Profile,
-                    Edition = plan.Edition,
-                    Options = plan.Options
-                });
+            expected = PlanBuilder.Build(
+                PlanBuilder.CanonicalRequestFor(plan),
+                PlanBuildContext.For(plan, ActionCatalog.Current));
         }
         catch (Exception exception) when (exception is ArgumentException or InvalidOperationException)
         {
@@ -126,32 +122,13 @@ internal sealed class PlanValidator
                 || actualAction.Sequence != index + 1
                 || expectedAction.Sequence != actualAction.Sequence
                 || !ids.Add(actualAction.Metadata.Id)
-                || !MetadataMatches(actualAction.Metadata, expectedAction.Metadata))
+                || !actualAction.Metadata.MatchesExactly(expectedAction.Metadata))
             {
                 return false;
             }
         }
 
         return true;
-    }
-
-    private static bool MetadataMatches(ActionMetadataDto actual, ActionMetadataDto expected)
-    {
-        return string.Equals(actual.Id, expected.Id, StringComparison.Ordinal)
-            && actual.Version == expected.Version
-            && string.Equals(actual.Name, expected.Name, StringComparison.Ordinal)
-            && string.Equals(actual.Description, expected.Description, StringComparison.Ordinal)
-            && actual.Category == expected.Category
-            && actual.SupportedProfiles is not null
-            && actual.SupportedProfiles.SequenceEqual(expected.SupportedProfiles)
-            && actual.Risk == expected.Risk
-            && actual.Reversibility == expected.Reversibility
-            && actual.RequiredPrivilege == expected.RequiredPrivilege
-            && actual.RequiresFiveMStopped == expected.RequiresFiveMStopped
-            && actual.RequiresAcPower == expected.RequiresAcPower
-            && actual.RequiresRestart == expected.RequiresRestart
-            && actual.ProgressWeight == expected.ProgressWeight
-            && string.Equals(actual.ExpectedImpact, expected.ExpectedImpact, StringComparison.Ordinal);
     }
 
     private static bool NoticesMatch(
