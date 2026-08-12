@@ -159,7 +159,7 @@ public sealed class DisabledBugReportServiceTests
             Description = "x",
             AppVersion = "1.0.0",
             Profile = "Médio"
-        });
+        }, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Accepted);
         Assert.False(string.IsNullOrWhiteSpace(result.Message));

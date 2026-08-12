@@ -9,6 +9,7 @@ const DOWNLOAD_URL =
   "https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe";
 const GITHUB_URL = "https://github.com/marquezinii/FiveMCleaner";
 const DISCORD_URL = "https://discord.gg/bazcuQB9n6";
+const ICON_URL = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icon.png`;
 
 const copy = {
   pt: {
@@ -35,7 +36,7 @@ const copy = {
       github: "Ver código no GitHub",
       releaseNote: "Download pelo GitHub Releases · sem cadastro",
       included: "Runtime incluído",
-      windows: "Windows 10 e 11",
+      windows: "Windows 11 recomendado",
       rollback: "Rollback disponível",
       releaseKicker: "RELEASE OFICIAL",
       releaseTitle: "Instalação simples. Sem dependências extras.",
@@ -182,7 +183,7 @@ const copy = {
       body: "O instalador inclui o runtime necessário. Não é preciso procurar .NET, pacotes extras ou executar comandos manualmente.",
       systemTitle: "Requisitos",
       items: [
-        "Windows 10 2004 ou Windows 11",
+        "Windows 11 recomendado; Windows 10 em compatibilidade legada",
         "Sistema x64 (64 bits)",
         "Permissão de administrador nas ações de sistema",
         "Conexão apenas para atualizações e relatórios opcionais",
@@ -280,7 +281,7 @@ const copy = {
       github: "View code on GitHub",
       releaseNote: "Download via GitHub Releases · no account required",
       included: "Runtime included",
-      windows: "Windows 10 and 11",
+      windows: "Windows 11 recommended",
       rollback: "Rollback available",
       releaseKicker: "OFFICIAL RELEASE",
       releaseTitle: "Simple installation. No extra dependencies.",
@@ -427,7 +428,7 @@ const copy = {
       body: "The installer includes the required runtime. You do not need to find .NET, install extra packages or run commands manually.",
       systemTitle: "Requirements",
       items: [
-        "Windows 10 2004 or Windows 11",
+        "Windows 11 recommended; legacy compatibility with Windows 10",
         "x64 (64-bit) system",
         "Administrator permission for system actions",
         "Connection only for updates and optional reports",
@@ -538,7 +539,7 @@ export default function Home() {
       <header className="site-header">
         <div className="header-inner">
           <a className="brand" href="#top" aria-label="FiveMCleaner">
-            <Image src="/icon.png" width={38} height={38} alt="" unoptimized priority />
+            <Image src={ICON_URL} width={38} height={38} alt="" unoptimized priority />
             <span>FiveM<span>Cleaner</span></span>
           </a>
 
@@ -633,7 +634,7 @@ export default function Home() {
               <div className="product-preview">
                 <div className="preview-topbar">
                   <div className="preview-brand">
-                    <Image src="/icon.png" width={28} height={28} alt="" unoptimized />
+                    <Image src={ICON_URL} width={28} height={28} alt="" unoptimized />
                     <span>FiveMCleaner</span>
                   </div>
                   <span className="system-ready"><i />{text.preview.appStatus}</span>
@@ -863,7 +864,7 @@ export default function Home() {
             <div className="faq-heading">
               <p className="eyebrow"><span />{text.faq.eyebrow}</p>
               <h2>{text.faq.title}</h2>
-              <Image src="/icon.png" width={108} height={108} alt="" unoptimized />
+              <Image src={ICON_URL} width={108} height={108} alt="" unoptimized />
             </div>
             <div className="faq-list">
               {text.faq.items.map(([question, answer], index) => (
@@ -882,7 +883,7 @@ export default function Home() {
         <section className="final-cta-section">
           <div className="section-shell final-cta">
             <div className="final-logo" aria-hidden="true">
-              <Image src="/icon.png" width={72} height={72} alt="" unoptimized />
+              <Image src={ICON_URL} width={72} height={72} alt="" unoptimized />
             </div>
             <p className="eyebrow"><span />{text.finalCta.eyebrow}</p>
             <h2>{text.finalCta.title}</h2>
@@ -904,7 +905,7 @@ export default function Home() {
         <div className="section-shell footer-top">
           <div>
             <a className="brand footer-brand" href="#top" aria-label="FiveMCleaner">
-              <Image src="/icon.png" width={42} height={42} alt="" unoptimized />
+              <Image src={ICON_URL} width={42} height={42} alt="" unoptimized />
               <span>FiveM<span>Cleaner</span></span>
             </a>
             <p>{text.footer.tagline}</p>

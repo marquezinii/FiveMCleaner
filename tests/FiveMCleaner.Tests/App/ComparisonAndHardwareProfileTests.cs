@@ -13,7 +13,7 @@ public sealed class GtaVBenchmarkServiceTests
         var service = new AppOptimizationService(demoMode: true);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
-            () => service.RunGtaVBenchmarkAsync(iterations));
+            () => service.RunGtaVBenchmarkAsync(iterations, cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -21,7 +21,7 @@ public sealed class GtaVBenchmarkServiceTests
     {
         var service = new AppOptimizationService(demoMode: true);
 
-        var result = await service.RunGtaVBenchmarkAsync(3);
+        var result = await service.RunGtaVBenchmarkAsync(3, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal("demo-mode", result.FailureReason);

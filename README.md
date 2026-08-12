@@ -44,6 +44,9 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 > [!IMPORTANT]
 > O escopo atual é **FiveM para GTAV Legacy**. O cliente para GTAV Enhanced, anunciado em early access para 21 de julho de 2026, usa launcher e gerenciamento de cache diferentes. O FiveMCleaner detecta essa edição e bloqueia alterações até existir uma integração específica validada.
 
+> [!NOTE]
+> **Windows 11 é o sistema recomendado.** O aplicativo preserva compatibilidade legada com Windows 10 x64 build 19041 ou mais recente enquanto isso continuar tecnicamente viável, mas as edições comuns do Windows 10 já encerraram seu ciclo regular de suporte.
+
 > [!WARNING]
 > Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
 
@@ -169,7 +172,8 @@ O FiveMCleaner não:
 ## Requisitos para desenvolver
 
 - Windows 10 ou 11 x64;
-- [.NET SDK 10.0.302](https://dotnet.microsoft.com/download/dotnet/10.0) ou patch compatível definido em `global.json`;
+- [.NET SDK 10.0.303](https://dotnet.microsoft.com/download/dotnet/10.0) ou patch compatível definido em `global.json`;
+- [Node.js 24.19.0 LTS](https://nodejs.org/) para desenvolver e validar o site, o Worker e o dashboard;
 - PowerShell 7 é opcional para tarefas locais, não para o funcionamento da aplicação;
 - cópia legítima e atualizada do GTAV Legacy e FiveM para testes de integração.
 

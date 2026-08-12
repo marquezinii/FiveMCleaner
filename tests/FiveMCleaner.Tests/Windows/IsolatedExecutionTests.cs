@@ -23,7 +23,7 @@ public sealed class IsolatedExecutionTests
         var succeeding = ConfigurableTestAction.Changing(OptimizationActionIds.EnableGameMode);
         var (engine, journals, id) = Build(failing, succeeding);
 
-        var result = await engine.ExecuteAsync([failing, succeeding], Context(id), Isolated);
+        var result = await engine.ExecuteAsync([failing, succeeding], Context(id), Isolated, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.CommittedWithErrors, result.State);
         Assert.NotNull(result.Error);
@@ -40,7 +40,7 @@ public sealed class IsolatedExecutionTests
         var laterAction = ConfigurableTestAction.Changing(OptimizationActionIds.EnableGameMode);
         var (engine, journals, id) = Build(criticalVerify, laterAction);
 
-        var result = await engine.ExecuteAsync([criticalVerify, laterAction], Context(id), Isolated);
+        var result = await engine.ExecuteAsync([criticalVerify, laterAction], Context(id), Isolated, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.CommittedWithErrors, result.State);
         var journal = journals.Get(id);
@@ -57,7 +57,7 @@ public sealed class IsolatedExecutionTests
         var dependent = ConfigurableTestAction.Changing(OptimizationActionIds.PruneLegacyCrashDumps);
         var (engine, journals, id) = Build(dependent);
 
-        var result = await engine.ExecuteAsync([dependent], Context(id), Isolated);
+        var result = await engine.ExecuteAsync([dependent], Context(id), Isolated, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.Committed, result.State);
         var journal = journals.Get(id);
@@ -72,7 +72,7 @@ public sealed class IsolatedExecutionTests
         var commitFails = ConfigurableTestAction.CommitFailing(OptimizationActionIds.DisableBackgroundCapture);
         var (engine, journals, id) = Build(healthy, commitFails);
 
-        var result = await engine.ExecuteAsync([healthy, commitFails], Context(id), Isolated);
+        var result = await engine.ExecuteAsync([healthy, commitFails], Context(id), Isolated, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.CommittedWithErrors, result.State);
         var journal = journals.Get(id);
@@ -111,7 +111,7 @@ public sealed class IsolatedExecutionTests
         var verified = ConfigurableTestAction.NoChange(OptimizationActionIds.EnableGameMode);
         var (engine, journals, id) = Build(verified);
 
-        var result = await engine.ExecuteAsync([verified], Context(id), Isolated);
+        var result = await engine.ExecuteAsync([verified], Context(id), Isolated, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(WindowsTransactionState.Committed, result.State);
         Assert.Null(result.Error);

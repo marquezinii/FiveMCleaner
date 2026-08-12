@@ -28,11 +28,11 @@ public sealed class SignedManifestUpdateServiceDownloadTests
             sha256,
             new Uri("https://example.invalid/notes"));
 
-        var downloaded = await service.DownloadUpdateAsync(update);
+        var downloaded = await service.DownloadUpdateAsync(update, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(downloaded.WasAlreadyDownloaded);
         Assert.True(File.Exists(downloaded.InstallerPath));
-        Assert.Equal(payload, await File.ReadAllBytesAsync(downloaded.InstallerPath));
+        Assert.Equal(payload, await File.ReadAllBytesAsync(downloaded.InstallerPath, cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
         Assert.Empty(Directory.GetFiles(
             Path.GetDirectoryName(downloaded.InstallerPath)!,
             "*.part"));

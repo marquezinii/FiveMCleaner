@@ -40,7 +40,7 @@ public sealed class ResourceUsageInspectorTests
         finally
         {
             await busy.CancelAsync();
-            await Task.WhenAll(load).WaitAsync(TimeSpan.FromSeconds(5));
+            await Task.WhenAll(load).WaitAsync(TimeSpan.FromSeconds(5), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         }
     }
 }

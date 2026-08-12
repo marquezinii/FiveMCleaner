@@ -3,6 +3,9 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=24.19.0 <25"
+  },
   "description": "FiveMCleaner anonymous telemetry + admin dashboard API Cloudflare Worker (D1-backed). Deployed at https://fivemcleaner-telemetry.felipemarquesini10.workers.dev.",
   "scripts": {
     "test": "node --test",
@@ -14,5 +17,9 @@
   },
   "devDependencies": {
     "wrangler": "^4.121.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "workerd@1.20260804.1": true
   }
 }

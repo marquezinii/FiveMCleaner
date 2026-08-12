@@ -69,7 +69,7 @@ public sealed class SingleInstanceGuardTests
         }
 
         Assert.True(
-            activationObserved.Wait(TimeSpan.FromSeconds(5)),
+            activationObserved.Wait(TimeSpan.FromSeconds(5), cancellationToken: global::Xunit.TestContext.Current.CancellationToken),
             "The running instance should have observed the activation request.");
     }
 
@@ -97,7 +97,7 @@ public sealed class SingleInstanceGuardTests
         runningGuard.ListenForActivation(activationObserved.Set);
 
         Assert.True(
-            activationObserved.Wait(TimeSpan.FromSeconds(5)),
+            activationObserved.Wait(TimeSpan.FromSeconds(5), cancellationToken: global::Xunit.TestContext.Current.CancellationToken),
             "A request made before listening should still be observed.");
     }
 
@@ -135,7 +135,7 @@ public sealed class SingleInstanceGuardTests
             IsBackground = true
         };
         holderThread.Start();
-        firstAcquired.Wait();
+        firstAcquired.Wait(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         try
         {

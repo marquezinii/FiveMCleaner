@@ -20,7 +20,7 @@ attachment/screenshot, no R2) — see `infra/cloudflare-worker/README.md`.
   version, profile, environment, optional email, and whether a log excerpt
   was included; no attachment/screenshot, that feature was dropped).
 - `assets/img/logo.png` — the app's own icon, reused as-is (same asset as
-  `website/public-site/icon.png`).
+  `website/public/icon.png`).
 - `assets/api.js` — pure URL-building and response-shaping for the Worker's
   `/api/stats/*` endpoints. Unit tested (`test/api.test.js`).
 - `assets/charts.js` — pure data-shaping (turning raw stat rows into

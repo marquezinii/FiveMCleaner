@@ -1,4 +1,4 @@
-name: CI Windows .NET 10
+name: CI
 
 on:
   push:
@@ -16,10 +16,11 @@ env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
   DOTNET_NOLOGO: "1"
   NUGET_XMLDOC_MODE: skip
+  TESTINGPLATFORM_TELEMETRY_OPTOUT: "1"
 
 jobs:
-  build-and-test:
-    name: Build and test
+  dotnet:
+    name: .NET build and test
     runs-on: windows-latest
     timeout-minutes: 20
 
@@ -44,9 +45,15 @@ jobs:
           dotnet test tests/FiveMCleaner.Tests/FiveMCleaner.Tests.csproj
           --configuration Release
           --no-build
-          --logger "trx;LogFileName=tests.trx"
           --results-directory TestResults
-          --collect:"XPlat Code Coverage"
+          --report-xunit-trx
+          --report-xunit-trx-filename tests.trx
+          --coverlet
+          --coverlet-output-format cobertura
+          --coverlet-file-prefix coverage
+
+      - name: Check NuGet vulnerabilities
+        run: dotnet list FiveMCleaner.slnx package --vulnerable --include-transitive
 
       - name: Upload test results
         if: always()
@@ -56,3 +63,119 @@ jobs:
           path: TestResults/**
           if-no-files-found: ignore
           retention-days: 14
+
+  sbom:
+    name: Release SBOM
+    needs: dotnet
+    runs-on: windows-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+
+      - name: Restore pinned tools
+        run: dotnet tool restore
+
+      - name: Build self-contained portable artifact
+        shell: pwsh
+        run: ./scripts/Build-Portable.ps1 -Runtime win-x64 -Configuration Release
+
+      - name: Generate SPDX SBOM
+        shell: pwsh
+        run: |
+          [xml]$props = Get-Content -LiteralPath ./Directory.Build.props -Raw
+          $version = [string]$props.Project.PropertyGroup.Version
+          dotnet tool run sbom-tool generate `
+            -b ./artifacts/FiveMCleaner-win-x64 `
+            -bc . `
+            -pn FiveMCleaner `
+            -pv $version `
+            -ps "Felipe Marquezini" `
+            -nsb https://github.com/marquezinii/FiveMCleaner
+
+      - name: Upload SPDX SBOM
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: sbom-spdx-${{ github.run_id }}
+          path: artifacts/FiveMCleaner-win-x64/_manifest/**
+          if-no-files-found: error
+          retention-days: 30
+
+  website:
+    name: Website
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Build and test
+        run: npm test
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+  worker:
+    name: Cloudflare Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: infra/cloudflare-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: infra/cloudflare-worker/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Test
+        run: npm test
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+  dashboard:
+    name: Dashboard
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: infra/dashboard
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Node.js
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: infra/dashboard/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Test
+        run: npm test
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
