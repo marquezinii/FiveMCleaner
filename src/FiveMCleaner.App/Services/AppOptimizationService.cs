@@ -389,7 +389,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 var changed = journal.Actions.Count(action => action.Changed);
                 var canRollback = journal.Actions.Any(action =>
                     action.Changed
-                    && action.State == WindowsActionJournalState.Committed
+                    && action.State == ActionJournalState.Committed
                     && action.Reversibility is not (
                         ActionReversibility.Irreversible
                         or ActionReversibility.RebuildableData));
@@ -401,9 +401,9 @@ public sealed class AppOptimizationService : IAppOptimizationService
                     State = TranslateState(journal.State),
                     ChangedActions = changed,
                     CanRollback = canRollback && journal.State is
-                        WindowsTransactionState.Committed
-                        or WindowsTransactionState.AwaitingElevationRollback
-                        or WindowsTransactionState.AwaitingStandardRollback
+                        TransactionState.Committed
+                        or TransactionState.AwaitingElevationRollback
+                        or TransactionState.AwaitingStandardRollback
                 });
             }
             catch (Exception exception) when (exception is JsonException
@@ -576,9 +576,9 @@ public sealed class AppOptimizationService : IAppOptimizationService
             cancellationToken).ConfigureAwait(false);
 
         if (localResult.State is not (
-            WindowsTransactionState.Committed
-            or WindowsTransactionState.CommittedWithErrors
-            or WindowsTransactionState.AwaitingElevation))
+            TransactionState.Committed
+            or TransactionState.CommittedWithErrors
+            or TransactionState.AwaitingElevation))
         {
             return await CreateResultFromJournalAsync(
                 plan.PlanId,
@@ -938,12 +938,12 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 IncludeAdministratorActions = false
             },
             cancellationToken).ConfigureAwait(false);
-        if (localResult.State == WindowsTransactionState.RollbackFailed)
+        if (localResult.State == TransactionState.RollbackFailed)
         {
             throw new InvalidOperationException(localization.GetString("Runtime.RollbackConflict"));
         }
 
-        if (localResult.State == WindowsTransactionState.AwaitingElevationRollback)
+        if (localResult.State == TransactionState.AwaitingElevationRollback)
         {
             var elevated = await ExecuteElevatedRollbackAsync(
                 transactionId,
@@ -1067,11 +1067,11 @@ public sealed class AppOptimizationService : IAppOptimizationService
     {
         return rollback?.State switch
         {
-            WindowsTransactionState.RolledBack =>
+            TransactionState.RolledBack =>
                 localization.Format("Runtime.Interrupted.RolledBack", reason),
-            WindowsTransactionState.AwaitingElevationRollback =>
+            TransactionState.AwaitingElevationRollback =>
                 localization.Format("Runtime.Interrupted.AdminPending", reason),
-            WindowsTransactionState.RollbackFailed =>
+            TransactionState.RollbackFailed =>
                 localization.Format("Runtime.Interrupted.RollbackFailed", reason),
             null =>
                 localization.Format("Runtime.Interrupted.Unconfirmed", reason),
@@ -1096,7 +1096,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
             WasCancelled = wasCancelled,
             Summary = summary,
             CompletedActions = journal?.Actions.Count(action =>
-                action.State == WindowsActionJournalState.Committed) ?? 0,
+                action.State == ActionJournalState.Committed) ?? 0,
             BytesFreed = journal is null ? 0 : SumCommittedCleanupBytes(journal),
             Report = journal is null ? null : OptimizationReportBuilder.Build(journal, profile)
         };
@@ -1136,7 +1136,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
         };
 
         foreach (var entry in journal.Actions.Where(entry =>
-                     entry.State == WindowsActionJournalState.Committed
+                     entry.State == ActionJournalState.Committed
                      && cleanupIds.Contains(entry.ActionId)
                      && !string.IsNullOrWhiteSpace(entry.SnapshotJson)))
         {
@@ -1465,15 +1465,15 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 : OptimizationProfile.Light;
     }
 
-    private string TranslateState(WindowsTransactionState state) => localization.GetString(state switch
+    private string TranslateState(TransactionState state) => localization.GetString(state switch
     {
-        WindowsTransactionState.Committed => "History.State.Committed",
-        WindowsTransactionState.AwaitingElevation => "History.State.AwaitingUac",
-        WindowsTransactionState.AwaitingElevationRollback => "History.State.AdminRollbackPending",
-        WindowsTransactionState.AwaitingStandardRollback => "History.State.LocalRollbackPending",
-        WindowsTransactionState.RolledBack => "History.State.RolledBack",
-        WindowsTransactionState.RollbackFailed => "History.State.RollbackFailed",
-        WindowsTransactionState.Failed => "History.State.FailedSafely",
+        TransactionState.Committed => "History.State.Committed",
+        TransactionState.AwaitingElevation => "History.State.AwaitingUac",
+        TransactionState.AwaitingElevationRollback => "History.State.AdminRollbackPending",
+        TransactionState.AwaitingStandardRollback => "History.State.LocalRollbackPending",
+        TransactionState.RolledBack => "History.State.RolledBack",
+        TransactionState.RollbackFailed => "History.State.RollbackFailed",
+        TransactionState.Failed => "History.State.FailedSafely",
         _ => "History.State.Interrupted"
     });
 

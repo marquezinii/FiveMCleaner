@@ -85,34 +85,39 @@ public enum PlanNoticeSeverity
 /// applied, validated and recorded it. Distinct from the low-level journal
 /// state so reports and the UI can present outcomes honestly.
 /// </summary>
+/// <remarks>
+/// DURABLE CONTRACT. Persisted by name into the transaction journal (see
+/// <see cref="TransactionState"/>). Members may be appended, never renamed,
+/// removed or renumbered.
+/// </remarks>
 public enum ActionExecutionOutcome
 {
     /// <summary>The action has not produced a result yet.</summary>
-    Pending,
+    Pending = 0,
 
     /// <summary>The machine already matched the desired state; nothing was written.</summary>
-    Verified,
+    Verified = 1,
 
     /// <summary>The change was applied and its post-condition confirmed.</summary>
-    Applied,
+    Applied = 2,
 
     /// <summary>A precondition, option or path was absent; skipped without error.</summary>
-    Skipped,
+    Skipped = 3,
 
     /// <summary>Applied with a caveat or reportable partial success.</summary>
-    Warning,
+    Warning = 4,
 
     /// <summary>A genuine error occurred; the action reverted itself.</summary>
-    Failed,
+    Failed = 5,
 
     /// <summary>The action reverted successfully after a failure.</summary>
-    RolledBack,
+    RolledBack = 6,
 
     /// <summary>The action could not revert and needs attention.</summary>
-    RollbackFailed,
+    RollbackFailed = 7,
 
     /// <summary>The action did not run because an earlier critical failure aborted the run.</summary>
-    NotRun
+    NotRun = 8
 }
 
 /// <summary>

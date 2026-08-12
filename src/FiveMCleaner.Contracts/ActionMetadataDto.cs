@@ -66,4 +66,50 @@ public sealed record ActionMetadataDto
 
     /// <summary>Known risks and limitations of the action.</summary>
     public string RiskLimitations { get; init; } = string.Empty;
+
+    /// <summary>
+    /// Compares every member of the contract, including the risk,
+    /// reversibility and prerequisite metadata that governs elevation and
+    /// rollback.
+    /// </summary>
+    /// <remarks>
+    /// The record's generated equality cannot be used here: the list members
+    /// compare by reference, so two structurally identical instances that were
+    /// deserialized separately would not be equal. Both the elevated broker
+    /// and the Windows catalog reject a plan whose metadata drifted from the
+    /// local catalog, and restating the field list at each boundary let the
+    /// two checks fall out of sync. Keeping the comparison on the contract
+    /// makes a newly added member impossible to forget.
+    /// </remarks>
+    public bool MatchesExactly(ActionMetadataDto other)
+    {
+        ArgumentNullException.ThrowIfNull(other);
+
+        return string.Equals(Id, other.Id, StringComparison.Ordinal)
+            && Version == other.Version
+            && string.Equals(Name, other.Name, StringComparison.Ordinal)
+            && string.Equals(Description, other.Description, StringComparison.Ordinal)
+            && Category == other.Category
+            && SupportedProfiles is not null
+            && other.SupportedProfiles is not null
+            && SupportedProfiles.SequenceEqual(other.SupportedProfiles)
+            && Risk == other.Risk
+            && Reversibility == other.Reversibility
+            && RequiredPrivilege == other.RequiredPrivilege
+            && RequiresFiveMStopped == other.RequiresFiveMStopped
+            && RequiresAcPower == other.RequiresAcPower
+            && RequiresRestart == other.RequiresRestart
+            && ProgressWeight == other.ProgressWeight
+            && string.Equals(ExpectedImpact, other.ExpectedImpact, StringComparison.Ordinal)
+            && Prerequisites is not null
+            && other.Prerequisites is not null
+            && Prerequisites.SequenceEqual(other.Prerequisites, StringComparer.Ordinal)
+            && IsCritical == other.IsCritical
+            && AttemptWithoutElevationFirst == other.AttemptWithoutElevationFirst
+            && SupportedWindows == other.SupportedWindows
+            && string.Equals(DetectionSummary, other.DetectionSummary, StringComparison.Ordinal)
+            && string.Equals(ConfirmationSummary, other.ConfirmationSummary, StringComparison.Ordinal)
+            && string.Equals(UndoSummary, other.UndoSummary, StringComparison.Ordinal)
+            && string.Equals(RiskLimitations, other.RiskLimitations, StringComparison.Ordinal);
+    }
 }
