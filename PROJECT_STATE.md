@@ -7,8 +7,8 @@
 
 - **Produto:** FiveMCleaner, aplicativo desktop Windows para otimização transparente, reversível e orientada por diagnóstico do FiveM para **GTAV Legacy**.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
-- **Último estado consolidado neste documento-fonte:** 11/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
-- **Versão pública:** o histórico registra `v1.1.3` como última instalação pública em 01/08/2026. Também registra preparação local de `v1.2.0`, mas não uma publicação concluída; portanto confirme tags/releases antes de assumir a versão pública vigente.
+- **Último estado consolidado neste documento-fonte:** 12/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
+- **Versão pública:** `v1.3.2`, publicada em 07/08/2026 a partir de `main`. Confirme tags/releases antes de iniciar uma nova publicação.
 - **Atalho de desenvolvimento:** `FiveMCleaner - Desenvolvimento` deve representar somente o estado integrado de `dev/proxima-versao` e usar `scripts\Start-DevelopmentApp.ps1`. A reconstrução/validação do atalho pertence ao fluxo de integração, não a tarefas paralelas isoladas.
 
 ## 2. Objetivo e invariantes de segurança
@@ -44,14 +44,18 @@ Documentos normativos: `docs/safety.md` e `docs/architecture.md`.
 
 Testes .NET ficam em `tests/FiveMCleaner.Tests/`.
 
+A toolchain integrada usa .NET 10 LTS com SDK 10.0.303, C# 14 fixo e NuGet Central Package Management em `Directory.Packages.props`. Os testes usam xUnit v3 sobre Microsoft Testing Platform, com cobertura via `coverlet.MTP`.
+
 ### Infraestrutura e web
 
 - `infra/cloudflare-worker/` — backend Cloudflare Worker + D1 para telemetria, relatos de bug e perfil de conta.
 - `infra/dashboard/` — painel administrativo privado da telemetria/bugs.
-- `website/` — site/landing page e superfície pública de download.
-- `installer/` — Inno Setup.
+- `website/` — fonte única do site/landing page, gerada como export estático nativo do Next.js para GitHub Pages.
+- `installer/` — Inno Setup 7 em arquitetura x64.
 - `scripts/` — build, validação, release, smoke tests e launcher de desenvolvimento.
-- `.github/workflows/` — CI, Pages e release.
+- `.github/workflows/` — CI de .NET/site/Worker/dashboard, Pages, SBOM e release. Dependabot cobre NuGet, npm e Actions; o CodeQL usa o default setup do GitHub para C#, JavaScript/TypeScript e Actions.
+
+Node 24.19 LTS é o baseline versionado para site, Worker e dashboard.
 
 ### Persistência local
 
@@ -99,7 +103,7 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 
 - Cadeia de atualização é independente/transacional, com staging, validações de origem/integridade, estado durável, health receipt, recuperação/rollback e proteção contra downgrade conforme documentação específica.
 - Launcher/Updater tratam locks transitórios e corridas de processo; broker e fluxos elevados possuem timeouts para evitar bloqueio indefinido.
-- Instalador Inno Setup é self-contained `win-x64`; tarefas como atalho e startup são configuráveis no modo interativo.
+- Instalador Inno Setup 7 é self-contained `win-x64`, usa setup x64 e mantém tarefas como atalho e startup configuráveis no modo interativo.
 - Site público, README, instalador, manifesto/checksums e release devem permanecer coerentes com a versão realmente publicada.
 
 ## 5. Pendências e decisões abertas
@@ -113,12 +117,14 @@ Somente itens ainda relevantes devem permanecer aqui. Quando resolvidos e integr
 5. **Watcher de sessão FiveM/GTA** — ajustes que precisariam ser aplicados/restaurados durante o ciclo de vida do jogo (prioridade, afinidade, core parking, timer resolution e semelhantes) continuam fora do catálogo até existir uma arquitetura segura de monitoramento e reversão mesmo se o FiveMCleaner for encerrado. Ver `docs/graphics-optimizations-backlog.md`.
 6. **GTAV Enhanced** — sem suporte operacional; requer adaptador/projeto específico antes de habilitar qualquer ação.
 7. **Branding opcional do repositório** — social preview/banner não foi definido por depender de decisão de marca; não é bloqueador técnico.
+8. **Authenticode público** — executáveis e instalador ainda não possuem assinatura de publisher confiável; a implementação depende de certificado/conta externa e deve assinar antes dos hashes e manifestos finais.
+9. **Próximas majors do frontend** — TypeScript 7 ainda excede o peer range suportado pelo `typescript-eslint` vigente, e ESLint 10 ainda não é aceito por plugins do stack Next. O estado suportado permanece TypeScript 6 e ESLint 9 até os peers oficiais convergirem.
 
 ## 6. Baseline de validação registrada
 
 Estes números são **referência histórica do último estado validado**, não substituem testes da branch atual.
 
-- **11/08/2026:** após manutenção de dependências, build e testes .NET Release, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` aprovados. Worker: **165 testes** e `npm audit` sem vulnerabilidades. Site: lint, build, **3 testes** e `npm audit` sem vulnerabilidades.
+- **12/08/2026:** build .NET Release sem warnings, **781 testes** sob Microsoft Testing Platform, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1`, auditoria NuGet e `git diff --check` aprovados. Site: lint, typecheck, export estático e **3 testes**; Worker: **165 testes**; dashboard: **44 testes**. As três auditorias npm ficaram sem vulnerabilidades. Instalador Inno 7 x64 e SBOM SPDX também foram gerados e validados.
 
 Ao alterar uma superfície, execute a validação aplicável novamente e use os resultados atuais no PR. Nunca use estes números para afirmar que código posterior foi testado.
 
@@ -157,7 +163,7 @@ Build/distribuição, quando aplicável:
 
 - `main` não recebe desenvolvimento normal. Integração ocorre em `dev/proxima-versao`; publicação oficial segue `AI_RULES.md`.
 - Não inferir autorização de push/deploy/release a partir de um commit local ou de uma validação bem-sucedida.
-- Antes de calcular versão ou publicar, confirme tags/releases reais e o diff desde a última versão pública; o registro histórico de `v1.2.0` é preparação, não prova de publicação.
+- Antes de calcular versão ou publicar, confirme tags/releases reais e o diff desde `v1.3.2`, a versão pública confirmada neste snapshot.
 - Deploy do Worker, Pages, release, tags, assets e demais operações remotas devem seguir as permissões e gatilhos definidos em `AI_RULES.md`.
 - Release pública exige coerência entre código, versão, `CHANGELOG.md`, GitHub Release, instalador, updater, site e artefatos.
 
