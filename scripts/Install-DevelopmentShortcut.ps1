@@ -13,21 +13,34 @@ if (-not (Test-Path -LiteralPath $projectPath -PathType Leaf)) {
     throw "FiveMCleaner.App.csproj was not found under the expected workspace: $workspace"
 }
 
-[xml]$project = Get-Content -LiteralPath $projectPath -Raw -Encoding utf8
-$propertyGroups = @($project.Project.PropertyGroup)
-$targetFramework = $propertyGroups.TargetFramework |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-    Select-Object -First 1
-$assemblyName = $propertyGroups.AssemblyName |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-    Select-Object -First 1
-$outputType = $propertyGroups.OutputType |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-    Select-Object -First 1
+$dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
+if ($null -eq $dotnet) {
+    throw 'The .NET SDK is required to install the FiveMCleaner development shortcut.'
+}
+
+$propertyOutput = @(& $dotnet.Source msbuild $projectPath -nologo `
+        -property:Configuration=Release `
+        -getProperty:TargetFramework `
+        -getProperty:AssemblyName `
+        -getProperty:OutputType 2>&1)
+if ($LASTEXITCODE -ne 0) {
+    throw "MSBuild could not resolve the app project properties:`n$($propertyOutput -join "`n")"
+}
+
+try {
+    $projectProperties = (($propertyOutput -join "`n") | ConvertFrom-Json -ErrorAction Stop).Properties
+}
+catch {
+    throw "MSBuild returned invalid app project properties: $($propertyOutput -join "`n")"
+}
+
+$targetFramework = [string]$projectProperties.TargetFramework
+$assemblyName = [string]$projectProperties.AssemblyName
+$outputType = [string]$projectProperties.OutputType
 
 if ([string]::IsNullOrWhiteSpace($targetFramework) -or
     [string]::IsNullOrWhiteSpace($assemblyName)) {
-    throw 'The app project does not declare TargetFramework and AssemblyName.'
+    throw 'MSBuild did not resolve TargetFramework and AssemblyName for the app.'
 }
 
 if ($outputType -ne 'WinExe') {
