@@ -273,6 +273,16 @@ Rollback precisa ser testável e simétrico. Restaurar significa recuperar:
 
 Cache já removido sem quarentena é explicitamente marcado como não reversível; sua recuperação ocorrerá por novo download do FiveM.
 
+**O journal é pré-requisito do rollback.** Restaurar uma transação passada
+depende de conseguir desserializar `Transactions/<id>.json`, que pode ter sido
+escrito por uma versão anterior do aplicativo. Um journal que não carrega não
+falha de forma visível: a transação simplesmente desaparece do histórico e
+deixa de ser reversível. Por isso os enums persistidos são contrato durável —
+membros só podem ser acrescentados, nunca renomeados, removidos ou
+renumerados — e `PersistedEnumContractTests` existe para tornar essa quebra
+impossível de passar despercebida. Ver `docs/architecture.md`, seções
+"Resultado" e "Persistência".
+
 ## Broker elevado
 
 A interface e a maior parte do motor executam sem elevação. O broker administrativo:

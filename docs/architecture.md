@@ -41,7 +41,7 @@ conta pede outro nome de usuário em vez de descartar o cadastro.
 | Projeto                  | Responsabilidade                                                    | Não deve conhecer                                        |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- |
 | `FiveMCleaner.App`       | WPF, navegação, prévia, progresso e confirmação                     | APIs administrativas ou detalhes de registro             |
-| `FiveMCleaner.Contracts` | DTOs, IDs, estados, erros e contratos entre processos               | WPF ou implementação Windows                             |
+| `FiveMCleaner.Contracts` | DTOs, IDs, estados (inclusive transacionais), erros e contratos entre processos | WPF ou implementação Windows                  |
 | `FiveMCleaner.Core`      | casos de uso, composição de perfis, políticas, transação e rollback | controles visuais ou comandos shell                      |
 | `FiveMCleaner.Windows`   | descoberta de hardware/instalação e adaptadores Windows/FiveM       | decisão de qual perfil o usuário deve escolher           |
 | `FiveMCleaner.Broker`    | executor elevado com allowlist mínima                               | navegação, telemetria ou lógica de produto ampla         |
@@ -97,7 +97,11 @@ versões do Windows suportadas
 documentação: como detectar, como confirmar, como desfazer, riscos/limitações
 ```
 
-IDs são estáveis para que relatórios e snapshots continuem interpretáveis entre versões. Os campos de pré-requisito, criticidade, versões do Windows e documentação vivem em `ActionMetadataDto`/`OptimizationActionDefinition` e alimentam tanto o motor de execução quanto a revisão do plano na interface.
+IDs são estáveis para que relatórios e snapshots continuem interpretáveis entre versões. Os campos de pré-requisito, criticidade, versões do Windows e documentação vivem em `ActionMetadataDto`/`OptimizationActionDefinition`.
+
+Pré-requisito, criticidade e privilégio alimentam o motor de execução. Os quatro campos de documentação (`DetectionSummary`, `ConfirmationSummary`, `UndoSummary`, `RiskLimitations`) hoje são obrigatórios por teste e participam da verificação de integridade do plano, mas **ainda não são exibidos na interface**; expô-los na revisão do plano continua sendo trabalho em aberto.
+
+`ActionMetadataDto.MatchesExactly` é a única comparação de metadados do projeto. O broker elevado e o catálogo Windows rejeitam um plano cujos metadados divergem do catálogo local, e ambos delegam a esse método — antes cada fronteira repetia a lista de campos e as duas versões haviam divergido.
 
 ### Plano
 
@@ -107,6 +111,10 @@ Um plano é uma lista ordenada e imutável de ações resolvidas para aquele dia
 - caminhos não podem ser recalculados para outro alvo;
 - conflito entre ações invalida o plano;
 - o broker recebe somente o subconjunto privilegiado já aprovado.
+
+O planejamento é uma **função pura**: `PlanBuilder.Build(request, context)` produz sempre o mesmo plano para a mesma entrada. Tudo que não é determinístico — identidade do plano, instante de criação e catálogo — entra por `PlanBuildContext`, resolvido pelo chamador (`PlanBuildContext.New` para um plano novo, `PlanBuildContext.For` para reconstruir um plano existente). O planejador não lê relógio, disco, registro nem estado ambiente.
+
+Isso é o que torna a validação possível: tanto o broker elevado quanto `WindowsOptimizationRuntime` **replanejam** o plano recebido e o comparam campo a campo. A reconstrução da requisição canônica vive em `PlanBuilder.CanonicalRequestFor`, em um único lugar, em vez de repetida em cada fronteira.
 
 ### Resultado
 
@@ -121,9 +129,26 @@ Um plano é uma lista ordenada e imutável de ações resolvidas para aquele dia
 - `RollbackFailed` — requer atenção e fica destacado no relatório;
 - `NotRun` — não executada porque uma falha crítica anterior abortou o restante da run.
 
-Esse enum é independente do estado transacional interno do journal
-(`WindowsActionJournalState`), que continua controlando elegibilidade de
-rollback e resumo de transação.
+Esse enum é independente do estado transacional do journal
+(`ActionJournalState`), que continua controlando elegibilidade de
+rollback, e do estado da transação inteira (`TransactionState`).
+
+Os três vivem em `FiveMCleaner.Contracts` (`OptimizationEnums.cs` e
+`TransactionEnums.cs`) porque são vocabulário compartilhado entre App, Windows
+e Broker — antes App e Broker importavam `FiveMCleaner.Windows.Engine` só para
+enxergar o estado da transação.
+
+**Contrato durável.** Os três são persistidos *pelo nome* (camelCase) em
+`%LOCALAPPDATA%\FiveMCleaner\Transactions\{id}.json`, que sobrevive à versão
+que o escreveu. Renomear, remover ou renumerar um membro torna journals
+existentes ilegíveis e destrói silenciosamente a capacidade de rollback de quem
+já tem o aplicativo instalado. Membros só podem ser **acrescentados ao final**.
+`PersistedEnumContractTests` congela nomes, valores e strings serializadas
+justamente para impedir que isso passe despercebido.
+
+`ActionExecutionOutcome.Warning` está definido, é contado por
+`OptimizationReportDto.WarningCount` e localizado, mas nenhuma ação o emite
+ainda.
 
 ## Perfis
 
@@ -341,6 +366,11 @@ O MVP grava somente sob `%LOCALAPPDATA%\FiveMCleaner`:
 - `Requests/<id>.json`: solicitação efêmera e de uso único consumida atomicamente pelo broker;
 - `settings.json`: preferências do próprio FiveMCleaner;
 - `crash.log`: exceções fatais locais, criado apenas quando necessário.
+
+Esses arquivos têm durabilidades diferentes e isso muda o que pode ser alterado:
+
+- `Transactions/<id>.json` é **durável entre versões**. É o único registro que mantém uma execução passada auditável e reversível, e um journal escrito por uma versão anterior precisa continuar carregando. Enums serializam como string camelCase (`allowIntegerValues: false`), e `UnmappedMemberHandling.Disallow` significa que **remover** uma propriedade do journal quebra JSON antigo — acrescentar é seguro, remover não. Ver `TransactionState`/`ActionJournalState`/`ActionExecutionOutcome` em "Resultado".
+- `Requests/<id>.json` é **efêmero**: reivindicado e apagado pelo broker, com janela de validade curta. Seu schema pode evoluir junto com o build.
 
 Caches não são copiados para o journal. Durante uma limpeza, arquivos allowlisted são movidos para uma quarentena dentro do próprio volume; a ação restaura essa quarentena se falhar antes do commit e a remove somente ao confirmar a transação.
 
