@@ -360,7 +360,7 @@ public sealed class PlanBuilderTests
     [Fact]
     public void EnhancedEdition_IsBlockedWithoutLegacyActions()
     {
-        var plan = new PlanBuilder().Build(new OptimizationPlanRequestDto
+        var plan = BuildPlan(new OptimizationPlanRequestDto
         {
             Profile = OptimizationProfile.Aggressive,
             Edition = FiveMEdition.Enhanced
@@ -376,7 +376,7 @@ public sealed class PlanBuilderTests
     [Fact]
     public void UnknownEdition_IsBlocked()
     {
-        var plan = new PlanBuilder().Build(new OptimizationPlanRequestDto
+        var plan = BuildPlan(new OptimizationPlanRequestDto
         {
             Profile = OptimizationProfile.Light,
             Edition = FiveMEdition.Unknown
@@ -408,7 +408,7 @@ public sealed class PlanBuilderTests
             }
         };
 
-        Assert.Throws<ArgumentOutOfRangeException>(() => new PlanBuilder().Build(request));
+        Assert.Throws<ArgumentOutOfRangeException>(() => BuildPlan(request));
     }
 
     [Fact]
@@ -441,16 +441,72 @@ public sealed class PlanBuilderTests
         Assert.NotEqual(Guid.Empty, plan.PlanId);
     }
 
+    [Fact]
+    public void SameRequestAndContext_AlwaysProduceTheSamePlan()
+    {
+        var request = new OptimizationPlanRequestDto
+        {
+            Profile = OptimizationProfile.Aggressive,
+            Edition = FiveMEdition.Legacy,
+            Options = new OptimizationOptionsDto { ApplyGtaVGraphicsPreset = true }
+        };
+        var context = new PlanBuildContext
+        {
+            PlanId = Guid.Parse("11111111-2222-3333-4444-555555555555"),
+            CreatedAtUtc = DateTimeOffset.UnixEpoch
+        };
+
+        var first = PlanBuilder.Build(request, context);
+        var second = PlanBuilder.Build(request, context);
+
+        // Planning reads no clock and generates no identifier of its own, so
+        // the broker and the runtime can rebuild a submitted plan and compare
+        // it field by field.
+        Assert.Equal(context.PlanId, first.PlanId);
+        Assert.Equal(DateTimeOffset.UnixEpoch, first.CreatedAtUtc);
+        Assert.Equal(first.PlanId, second.PlanId);
+        Assert.Equal(first.CreatedAtUtc, second.CreatedAtUtc);
+        Assert.Equal(Ids(first), Ids(second));
+        Assert.Equal(
+            first.Notices.Select(notice => notice.Code),
+            second.Notices.Select(notice => notice.Code));
+    }
+
+    [Fact]
+    public void CanonicalRequestFor_ReproducesThePlanItCameFrom()
+    {
+        var original = Build(OptimizationProfile.Balanced);
+
+        var rebuilt = PlanBuilder.Build(
+            PlanBuilder.CanonicalRequestFor(original),
+            PlanBuildContext.For(original));
+
+        Assert.Equal(original.PlanId, rebuilt.PlanId);
+        Assert.Equal(original.CreatedAtUtc, rebuilt.CreatedAtUtc);
+        Assert.Equal(Ids(original), Ids(rebuilt));
+        Assert.Equal(original.RequiresElevation, rebuilt.RequiresElevation);
+        Assert.Equal(original.ContainsNonReversibleActions, rebuilt.ContainsNonReversibleActions);
+        Assert.Equal(original.MaximumRisk, rebuilt.MaximumRisk);
+        Assert.All(
+            original.Actions.Zip(rebuilt.Actions),
+            pair => Assert.True(pair.First.Metadata.MatchesExactly(pair.Second.Metadata)));
+    }
+
     private static OptimizationPlanDto Build(
         OptimizationProfile profile,
         OptimizationOptionsDto? options = null)
     {
-        return new PlanBuilder().Build(new OptimizationPlanRequestDto
+        return BuildPlan(new OptimizationPlanRequestDto
         {
             Profile = profile,
             Edition = FiveMEdition.Legacy,
             Options = options ?? new OptimizationOptionsDto { ApplyGtaVGraphicsPreset = true }
         });
+    }
+
+    private static OptimizationPlanDto BuildPlan(OptimizationPlanRequestDto request)
+    {
+        return PlanBuilder.Build(request, PlanBuildContext.New(TimeProvider.System));
     }
 
     private static string[] Ids(OptimizationPlanDto plan)

@@ -3,34 +3,28 @@ using FiveMCleaner.Core.Catalog;
 
 namespace FiveMCleaner.Core.Planning;
 
-public sealed class PlanBuilder : IPlanBuilder
+/// <summary>
+/// Turns an optimization request into a plan. Pure: the same request and
+/// context always produce the same plan, and planning never reads the clock,
+/// the file system, the registry or any ambient state.
+/// </summary>
+public static class PlanBuilder
 {
-    private readonly ActionCatalog _catalog;
-    private readonly TimeProvider _timeProvider;
-
-    public PlanBuilder()
-        : this(ActionCatalog.Current, TimeProvider.System)
-    {
-    }
-
-    public PlanBuilder(ActionCatalog catalog, TimeProvider timeProvider)
-    {
-        _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
-        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
-    }
-
-    public OptimizationPlanDto Build(OptimizationPlanRequestDto request)
+    public static OptimizationPlanDto Build(
+        OptimizationPlanRequestDto request,
+        PlanBuildContext context)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(context);
         ValidateRequest(request);
 
         var blocks = CreateBlocks(request.Edition);
         if (blocks.Count > 0)
         {
-            return CreatePlan(request, [], blocks, []);
+            return CreatePlan(request, context, [], blocks, []);
         }
 
-        var selectedDefinitions = _catalog.Actions
+        var selectedDefinitions = context.Catalog.Actions
             .Where(action => action.Supports(request.Profile))
             .Where(action => action.SupportsWindows(request.DetectedWindows))
             .Where(action => IsEnabled(action.OptionGate, request.Options))
@@ -45,11 +39,40 @@ public sealed class PlanBuilder : IPlanBuilder
             .ToArray();
 
         var notices = CreateNotices(request, selectedDefinitions);
-        return CreatePlan(request, plannedActions, [], notices);
+        return CreatePlan(request, context, plannedActions, [], notices);
     }
 
-    private OptimizationPlanDto CreatePlan(
+    /// <summary>
+    /// Rebuilds the request that must reproduce <paramref name="plan"/>. Both
+    /// the elevated broker and the Windows runtime re-plan a submitted plan and
+    /// reject it when the result differs, so the reconstruction lives here
+    /// rather than being restated at each boundary.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="OptimizationPlanRequestDto.DetectedWindows"/> is deliberately
+    /// left at its default: the plan does not carry the detected Windows
+    /// version, so a validator cannot know it. Every catalog action is
+    /// currently eligible on every supported version, which keeps the
+    /// reconstruction exact. If an action ever becomes version-gated, the
+    /// detected version has to travel with the plan or validation will reject
+    /// legitimate plans.
+    /// </remarks>
+    public static OptimizationPlanRequestDto CanonicalRequestFor(OptimizationPlanDto plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentNullException.ThrowIfNull(plan.Options);
+
+        return new OptimizationPlanRequestDto
+        {
+            Profile = plan.Profile,
+            Edition = plan.Edition,
+            Options = plan.Options with { }
+        };
+    }
+
+    private static OptimizationPlanDto CreatePlan(
         OptimizationPlanRequestDto request,
+        PlanBuildContext context,
         IReadOnlyList<PlannedActionDto> actions,
         IReadOnlyList<PlanBlockDto> blocks,
         IReadOnlyList<PlanNoticeDto> notices)
@@ -58,12 +81,12 @@ public sealed class PlanBuilder : IPlanBuilder
 
         return new OptimizationPlanDto
         {
-            PlanId = Guid.NewGuid(),
+            PlanId = context.PlanId,
             SchemaVersion = ProductIdentity.PlanSchemaVersion,
             CatalogVersion = ActionCatalog.CurrentVersion,
             ProductName = ProductIdentity.Name,
             ProductSubtitle = ProductIdentity.Subtitle,
-            CreatedAtUtc = _timeProvider.GetUtcNow(),
+            CreatedAtUtc = context.CreatedAtUtc,
             Profile = request.Profile,
             Edition = request.Edition,
             Options = request.Options with { },

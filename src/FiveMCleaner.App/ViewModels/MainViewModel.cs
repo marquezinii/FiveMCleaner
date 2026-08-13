@@ -14,7 +14,6 @@ namespace FiveMCleaner.App.ViewModels;
 public sealed class MainViewModel : BindableBase, IDisposable
 {
     private readonly IAppOptimizationService service;
-    private readonly IPlanBuilder planBuilder;
     private readonly ILocalizationService localization;
     private readonly IStartupRegistrationService startupRegistration;
     private readonly IReleaseUpdateService? releaseUpdateService;
@@ -145,7 +144,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
 
     public MainViewModel(
         IAppOptimizationService service,
-        IPlanBuilder? planBuilder = null,
         ILocalizationService? localization = null,
         IStartupRegistrationService? startupRegistration = null,
         IReleaseUpdateService? releaseUpdateService = null,
@@ -154,7 +152,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         ILiveSystemMetricsProvider? liveSystemMetricsProvider = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
-        this.planBuilder = planBuilder ?? new PlanBuilder();
         this.localization = localization ?? LocalizationService.Current;
         this.startupRegistration = startupRegistration ?? new WindowsStartupRegistrationService();
         this.releaseUpdateService = releaseUpdateService;
@@ -1946,12 +1943,14 @@ public sealed class MainViewModel : BindableBase, IDisposable
             ReduceWindowsVisualEffects = selectedProfile == OptimizationProfile.Aggressive
         };
 
-        currentPlan = planBuilder.Build(new OptimizationPlanRequestDto
-        {
-            Profile = selectedProfile,
-            Edition = edition,
-            Options = options
-        });
+        currentPlan = PlanBuilder.Build(
+            new OptimizationPlanRequestDto
+            {
+                Profile = selectedProfile,
+                Edition = edition,
+                Options = options
+            },
+            PlanBuildContext.New(TimeProvider.System));
 
         PlannedActions.Clear();
         foreach (var action in currentPlan.Actions)

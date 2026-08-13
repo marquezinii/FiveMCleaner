@@ -212,8 +212,13 @@ docs/
 ├── safety.md                   # matriz de risco, reversibilidade e dados protegidos por ação
 ├── research.md                 # fontes e fundamentação técnica das otimizações
 ├── release-preview.md          # integridade de release, simulação e atalho de desenvolvimento
+├── installer.md                # instalador Inno Setup e fluxo de instalação
+├── updater-next-generation.md  # cadeia Launcher/Updater/UpdateRuntime
 ├── telemetry.md                # o que a telemetria opcional envia e como desativar
+├── telemetry-operations.md     # operação e manutenção do backend de telemetria
 ├── bug-reports.md              # o que um relato de bug envia e como é tratado
+├── streaming-safety.md         # cuidados com software de captura e transmissão
+├── graphics-optimizations-backlog.md # decisões e backlog técnico de otimizações gráficas
 └── brand/                      # identidade visual oficial (ícone, paleta, uso da marca)
 ```
 

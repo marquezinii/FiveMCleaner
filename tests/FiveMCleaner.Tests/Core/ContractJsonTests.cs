@@ -33,11 +33,13 @@ public sealed class ContractJsonTests
     [Fact]
     public void Plan_RoundTripsWithActionMetadata()
     {
-        var original = new PlanBuilder().Build(new OptimizationPlanRequestDto
-        {
-            Profile = OptimizationProfile.Aggressive,
-            Edition = FiveMEdition.Legacy
-        });
+        var original = PlanBuilder.Build(
+            new OptimizationPlanRequestDto
+            {
+                Profile = OptimizationProfile.Aggressive,
+                Edition = FiveMEdition.Legacy
+            },
+            PlanBuildContext.New(TimeProvider.System));
 
         var json = FiveMCleanerJson.SerializePlan(original);
         var restored = FiveMCleanerJson.DeserializePlan(json);

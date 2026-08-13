@@ -4,38 +4,6 @@ using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.Windows.Engine;
 
-public enum WindowsTransactionState
-{
-    Created,
-    Applying,
-    Committing,
-    Committed,
-    CommittedWithErrors,
-    AwaitingElevation,
-    AwaitingElevationRollback,
-    AwaitingStandardRollback,
-    RollingBack,
-    RolledBack,
-    Failed,
-    RollbackFailed
-}
-
-public enum WindowsActionJournalState
-{
-    Pending,
-    SkippedPrivilege,
-    DeferredPrivilege,
-    Applying,
-    Applied,
-    Committing,
-    Committed,
-    Skipped,
-    RollingBack,
-    RolledBack,
-    Failed,
-    RollbackFailed
-}
-
 public sealed record WindowsActionJournalEntry
 {
     public required int Sequence { get; init; }
@@ -48,7 +16,7 @@ public sealed record WindowsActionJournalEntry
 
     public required ActionReversibility Reversibility { get; init; }
 
-    public required WindowsActionJournalState State { get; set; }
+    public required ActionJournalState State { get; set; }
 
     /// <summary>
     /// Semantic outcome for reporting. Independent from <see cref="State"/>,
@@ -84,7 +52,7 @@ public sealed record WindowsTransactionJournal
 
     public required bool WasElevated { get; set; }
 
-    public required WindowsTransactionState State { get; set; }
+    public required TransactionState State { get; set; }
 
     public string? Error { get; set; }
 

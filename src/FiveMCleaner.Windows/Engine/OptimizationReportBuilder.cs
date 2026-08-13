@@ -84,16 +84,16 @@ public static class OptimizationReportBuilder
         // Fallback for journals written before outcomes were recorded.
         return entry.State switch
         {
-            WindowsActionJournalState.Committed => entry.Changed
+            ActionJournalState.Committed => entry.Changed
                 ? ActionExecutionOutcome.Applied
                 : ActionExecutionOutcome.Verified,
-            WindowsActionJournalState.RolledBack => ActionExecutionOutcome.RolledBack,
-            WindowsActionJournalState.RollbackFailed => ActionExecutionOutcome.RollbackFailed,
-            WindowsActionJournalState.Failed => ActionExecutionOutcome.Failed,
-            WindowsActionJournalState.Skipped => ActionExecutionOutcome.Skipped,
-            WindowsActionJournalState.Pending
-                or WindowsActionJournalState.DeferredPrivilege
-                or WindowsActionJournalState.SkippedPrivilege => ActionExecutionOutcome.NotRun,
+            ActionJournalState.RolledBack => ActionExecutionOutcome.RolledBack,
+            ActionJournalState.RollbackFailed => ActionExecutionOutcome.RollbackFailed,
+            ActionJournalState.Failed => ActionExecutionOutcome.Failed,
+            ActionJournalState.Skipped => ActionExecutionOutcome.Skipped,
+            ActionJournalState.Pending
+                or ActionJournalState.DeferredPrivilege
+                or ActionJournalState.SkippedPrivilege => ActionExecutionOutcome.NotRun,
             _ => ActionExecutionOutcome.Pending
         };
     }

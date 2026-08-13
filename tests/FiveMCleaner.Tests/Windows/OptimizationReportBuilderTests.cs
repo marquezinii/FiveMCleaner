@@ -63,7 +63,7 @@ public sealed class OptimizationReportBuilderTests
             CreatedAtUtc = DateTimeOffset.UtcNow,
             UpdatedAtUtc = DateTimeOffset.UtcNow,
             WasElevated = false,
-            State = WindowsTransactionState.CommittedWithErrors,
+            State = TransactionState.CommittedWithErrors,
             Actions = entries.ToList()
         };
     }
@@ -81,7 +81,7 @@ public sealed class OptimizationReportBuilderTests
             Version = definition.Version,
             RequiredPrivilege = definition.RequiredPrivilege,
             Reversibility = definition.Reversibility,
-            State = WindowsActionJournalState.Committed,
+            State = ActionJournalState.Committed,
             Outcome = outcome,
             Changed = outcome == ActionExecutionOutcome.Applied
         };
