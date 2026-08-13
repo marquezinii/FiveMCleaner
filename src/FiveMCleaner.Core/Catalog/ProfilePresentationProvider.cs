@@ -40,10 +40,16 @@ public static class ProfilePresentationProvider
         OptimizationProfile profile,
         ActionCatalog? catalog = null)
     {
-        if (!Enum.IsDefined(profile))
+        var impactLevel = profile switch
         {
-            throw new ArgumentOutOfRangeException(nameof(profile), profile, "Unknown optimization profile.");
-        }
+            OptimizationProfile.Light => ProfileImpactLevel.Low,
+            OptimizationProfile.Balanced => ProfileImpactLevel.Moderate,
+            OptimizationProfile.Aggressive => ProfileImpactLevel.High,
+            _ => throw new ArgumentOutOfRangeException(
+                nameof(profile),
+                profile,
+                "Unknown optimization profile.")
+        };
 
         catalog ??= ActionCatalog.Current;
         var actions = catalog.Actions.Where(action => action.Supports(profile)).ToArray();
@@ -57,13 +63,7 @@ public static class ProfilePresentationProvider
         return new OptimizationProfilePresentation
         {
             Profile = profile,
-            ImpactLevel = profile switch
-            {
-                OptimizationProfile.Light => ProfileImpactLevel.Low,
-                OptimizationProfile.Balanced => ProfileImpactLevel.Moderate,
-                OptimizationProfile.Aggressive => ProfileImpactLevel.High,
-                _ => ProfileImpactLevel.Moderate
-            },
+            ImpactLevel = impactLevel,
             AnalyzedCategories = categories,
             ContainsNonReversible = actions.Any(action =>
                 action.Reversibility is ActionReversibility.Irreversible

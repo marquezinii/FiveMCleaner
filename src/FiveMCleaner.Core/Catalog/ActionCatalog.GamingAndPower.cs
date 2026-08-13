@@ -1,0 +1,101 @@
+using FiveMCleaner.Contracts;
+
+namespace FiveMCleaner.Core.Catalog;
+
+public sealed partial class ActionCatalog
+{
+    private static IReadOnlyList<OptimizationActionDefinition> CreateGamingAndPowerActions()
+    {
+        return
+        [
+            Define(
+                OptimizationActionIds.EnableGameMode,
+                "Ativar Modo de Jogo",
+                "Ativa o recurso de jogos do Windows para priorização quando jogos estão em execução.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Low,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 5,
+                expectedImpact: "Pode melhorar a consistência da sessão em sistemas compatíveis.",
+                ActionOptionGate.EnableGameMode,
+                detectionSummary: "Lê o valor AutoGameModeEnabled do registro do usuário atual.",
+                confirmationSummary: "Confirma que o Modo de Jogo ficou habilitado após a gravação.",
+                undoSummary: "Totalmente reversível: o valor anterior do registro é restaurado no rollback.",
+                riskLimitations: "O ganho depende do hardware e da versão do Windows; pode não ter efeito perceptível."),
+            Define(
+                OptimizationActionIds.PreferHighPerformanceGpu,
+                "Preferir GPU de alto desempenho",
+                "Define a preferência gráfica do Windows para o launcher e os renderizadores detectados do FiveM Legacy.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Low,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: true,
+                progressWeight: 5,
+                expectedImpact: "Evita o uso acidental da GPU econômica em computadores com múltiplas GPUs.",
+                ActionOptionGate.PreferHighPerformanceGpu,
+                prerequisites: RequiresFiveMStoppedFirst,
+                detectionSummary: "Lê a preferência gráfica registrada para o executável do FiveM.",
+                confirmationSummary: "Confirma que a preferência de alto desempenho ficou registrada.",
+                undoSummary: "Totalmente reversível: a preferência anterior é restaurada no rollback.",
+                riskLimitations: "Só faz diferença em computadores com mais de uma GPU."),
+            Define(
+                OptimizationActionIds.DisableBackgroundCapture,
+                "Desativar captura em segundo plano",
+                "Desativa a gravação contínua em segundo plano do Windows sem remover o Game Bar.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Low,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                BalancedAndAggressive,
+                requiresFiveMStopped: false,
+                progressWeight: 4,
+                expectedImpact: "Reduz atividade de captura quando ela estava habilitada.",
+                ActionOptionGate.DisableBackgroundCapture,
+                detectionSummary: "Lê o valor de gravação em segundo plano (Game DVR) do registro do usuário.",
+                confirmationSummary: "Confirma que a captura em segundo plano ficou desabilitada.",
+                undoSummary: "Totalmente reversível: o valor anterior é restaurado no rollback.",
+                riskLimitations: "Não remove o Game Bar nem afeta gravações manuais que você iniciar."),
+            Define(
+                OptimizationActionIds.EnableSessionPerformancePowerPlan,
+                "Ativar plano de energia de alto desempenho",
+                "Ativa um plano de energia de desempenho na tomada e registra o estado anterior para rollback.",
+                ActionCategory.Power,
+                ActionRisk.Moderate,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.Administrator,
+                BalancedAndAggressive,
+                requiresFiveMStopped: false,
+                progressWeight: 7,
+                expectedImpact: "Reduz limitação de energia; aumenta consumo e temperatura até o rollback.",
+                ActionOptionGate.UseSessionPerformancePowerPlan,
+                requiresAcPower: true,
+                detectionSummary: "Lê o plano de energia ativo e verifica se o computador está na tomada.",
+                confirmationSummary: "Confirma que o plano de desempenho ficou ativo.",
+                undoSummary: "Totalmente reversível: o plano anterior é restaurado no rollback.",
+                riskLimitations: "Só é aplicado na tomada; aumenta consumo e temperatura enquanto ativo.",
+                attemptWithoutElevationFirst: true),
+            Define(
+                OptimizationActionIds.AdjustPciExpressPowerManagement,
+                "Ajustar PCI Express Link State Power Management",
+                "Desativa o gerenciamento de energia de link do PCI Express (ASPM) no plano de energia ativo, reduzindo picos de latência em troca de um consumo levemente maior.",
+                ActionCategory.Power,
+                ActionRisk.Low,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                BalancedAndAggressive,
+                requiresFiveMStopped: false,
+                progressWeight: 3,
+                expectedImpact: "Reduz picos de latência de link do PCI Express (armazenamento/rede/GPU); aumenta levemente o consumo de energia.",
+                ActionOptionGate.AdjustPciExpressPowerManagement,
+                detectionSummary: "Lê o índice atual da configuração ASPM (`powercfg /Q`) do plano de energia ativo.",
+                confirmationSummary: "Confirma que o valor foi definido como Off (0) no plano ativo.",
+                undoSummary: "Totalmente reversível: o valor anterior é restaurado no rollback via powercfg.",
+                riskLimitations: "Nem todo chipset/placa-mãe expõe essa configuração; quando ausente, a ação não altera nada. A leitura do valor atual depende do texto de saída do `powercfg /Q`, que varia por idioma do Windows -- em builds não testadas nesse idioma, a ação pode não conseguir ler o valor e simplesmente não fará nada.")
+        ];
+    }
+}

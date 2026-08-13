@@ -1,3 +1,4 @@
+using System.Reflection;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Catalog;
 using Xunit;
@@ -41,6 +42,26 @@ public sealed class ActionCatalogTests
             Assert.All(action.Prerequisites, prerequisiteId =>
                 Assert.True(catalog.TryGet(prerequisiteId, out _)));
         });
+    }
+
+    [Fact]
+    public void CurrentCatalog_DefinesEveryPublishedActionIdExactlyOnce()
+    {
+        var publishedIds = typeof(OptimizationActionIds)
+            .GetFields(BindingFlags.Public | BindingFlags.Static)
+            .Where(field => field.IsLiteral
+                && !field.IsInitOnly
+                && field.FieldType == typeof(string))
+            .Select(field => Assert.IsType<string>(field.GetRawConstantValue()))
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        var catalogIds = ActionCatalog.Current.Actions
+            .Select(action => action.Id)
+            .Order(StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(publishedIds, catalogIds);
     }
 
     [Theory]
