@@ -123,6 +123,44 @@ public sealed class PersistedEnumContractTests
     }
 
     [Fact]
+    public void ActionReversibility_MembersAndValuesAreFrozen()
+    {
+        AssertMembersAreFrozen<ActionReversibility>(new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            ["ReadOnly"] = 0,
+            ["FullyReversible"] = 1,
+            ["RebuildableData"] = 2,
+            ["Irreversible"] = 3
+        });
+    }
+
+    [Fact]
+    public void ActionReversibility_SerializesAsCamelCaseStrings()
+    {
+        AssertSerializesAs(ActionReversibility.ReadOnly, "readOnly");
+        AssertSerializesAs(ActionReversibility.FullyReversible, "fullyReversible");
+        AssertSerializesAs(ActionReversibility.RebuildableData, "rebuildableData");
+        AssertSerializesAs(ActionReversibility.Irreversible, "irreversible");
+    }
+
+    [Fact]
+    public void RequiredPrivilege_MembersAndValuesAreFrozen()
+    {
+        AssertMembersAreFrozen<RequiredPrivilege>(new Dictionary<string, int>(StringComparer.Ordinal)
+        {
+            ["StandardUser"] = 0,
+            ["Administrator"] = 1
+        });
+    }
+
+    [Fact]
+    public void RequiredPrivilege_SerializesAsCamelCaseStrings()
+    {
+        AssertSerializesAs(RequiredPrivilege.StandardUser, "standardUser");
+        AssertSerializesAs(RequiredPrivilege.Administrator, "administrator");
+    }
+
+    [Fact]
     public async Task Journal_WritesEnumsToDiskAsCamelCaseStrings()
     {
         var directory = CreateTemporaryDirectory();
