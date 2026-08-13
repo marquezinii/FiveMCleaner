@@ -5,13 +5,6 @@ using FiveMCleaner.Windows.Infrastructure;
 
 namespace FiveMCleaner.Windows.Actions;
 
-internal sealed record DisplayPreferencesSnapshot(
-    string SettingsPath,
-    string BackupPath,
-    string OriginalSha256,
-    string AppliedSha256,
-    IReadOnlyList<string> ChangedSettings);
-
 /// <summary>
 /// Writes only windowed mode and VSync to the existing gta5_settings.xml or
 /// settings.xml, reusing the same backup/hash/atomic-replace safety
@@ -25,12 +18,25 @@ public sealed class DisplayPreferencesAction : WindowsOptimizationAction
 {
     private static readonly IReadOnlySet<string> AllowedSettingNames =
         new HashSet<string>(StringComparer.Ordinal) { "Windowed", "VSync" };
+    private static readonly SafeXmlTransactionMessages TransactionMessages = new(
+        "Display preferences backup directory cannot be a reparse point.",
+        "A display preferences transaction artifact already exists.",
+        "O arquivo de exibição excede o limite seguro de 4 MB.",
+        "As configurações de exibição mudaram durante a preparação; a gravação foi cancelada.",
+        "As configurações de exibição mudaram no instante da troca; a versão mais recente foi restaurada.",
+        "O snapshot de exibição aponta para caminhos inesperados.",
+        "Display preferences backup is unavailable.",
+        "O backup de exibição não corresponde ao snapshot original.",
+        "Display settings changed after optimization; rollback refused to overwrite newer user edits.",
+        "Um artefato de rollback de exibição já existe.",
+        "As configurações de exibição mudaram durante o rollback; a restauração foi cancelada.",
+        "As configurações de exibição mudaram no instante do rollback; a versão mais recente foi restaurada.");
 
     private readonly string settingsPath;
     private readonly string? gameRoot;
     private readonly IReadOnlyDictionary<string, bool> preferences;
-    private readonly IFiveMProcessInspector processInspector;
-    private readonly IGtaVProcessInspector gtaVProcessInspector;
+    private readonly GraphicsTargetProcessGuard processGuard;
+    private readonly SafeXmlSettingsTransaction transaction;
     private readonly GraphicsSettingsTarget target;
 
     public DisplayPreferencesAction(
@@ -55,9 +61,16 @@ public sealed class DisplayPreferencesAction : WindowsOptimizationAction
         }
 
         this.gameRoot = string.IsNullOrWhiteSpace(gameRoot) ? null : SafePath.Normalize(gameRoot);
-        this.processInspector = processInspector ?? throw new ArgumentNullException(nameof(processInspector));
-        this.gtaVProcessInspector = gtaVProcessInspector
-            ?? throw new ArgumentNullException(nameof(gtaVProcessInspector));
+        processGuard = new GraphicsTargetProcessGuard(
+            target,
+            this.gameRoot,
+            processInspector,
+            gtaVProcessInspector);
+        transaction = new SafeXmlSettingsTransaction(
+            this.settingsPath,
+            "display",
+            TransactionMessages,
+            processGuard.IsRunning);
         preferences = new Dictionary<string, bool>(StringComparer.Ordinal)
         {
             ["Windowed"] = preferWindowedMode,
@@ -90,13 +103,9 @@ public sealed class DisplayPreferencesAction : WindowsOptimizationAction
                     : "settings.xml ainda não existe; abra o GTA V Legacy uma vez antes de aplicar a preferência."));
         }
 
-        if (IsTargetRunning())
-        {
-            throw new InvalidOperationException(
-                target == GraphicsSettingsTarget.FiveM
-                    ? "FiveM precisa estar fechado para editar a exibição."
-                    : "GTA V precisa estar fechado para editar a exibição.");
-        }
+        processGuard.EnsureStopped(
+            "FiveM precisa estar fechado para editar a exibição.",
+            "GTA V precisa estar fechado para editar a exibição.");
 
         var (document, originalHash) = SafeXmlDocumentStore.LoadSafeDocumentWithHash(
             settingsPath,
@@ -152,66 +161,10 @@ public sealed class DisplayPreferencesAction : WindowsOptimizationAction
                 "Janela e VSync já estavam na preferência solicitada, ou não foram encontrados no arquivo."));
         }
 
-        var directory = Path.GetDirectoryName(settingsPath)!;
-        var backupDirectory = Path.Combine(directory, ".fivemcleaner-backups");
-        Directory.CreateDirectory(backupDirectory);
-        if ((new DirectoryInfo(backupDirectory).Attributes & FileAttributes.ReparsePoint) != 0)
-        {
-            throw new IOException("Display preferences backup directory cannot be a reparse point.");
-        }
-
-        var temporaryPath = Path.Combine(
-            directory,
-            $".{Path.GetFileName(settingsPath)}.{context.TransactionId:N}.display.tmp");
-        var backupPath = Path.Combine(
-            backupDirectory,
-            $"{Path.GetFileNameWithoutExtension(settingsPath)}.{context.TransactionId:N}.display.bak");
-        if (File.Exists(temporaryPath) || File.Exists(backupPath))
-        {
-            throw new IOException("A display preferences transaction artifact already exists.");
-        }
-
-        try
-        {
-            SafeXmlDocumentStore.SaveDocument(document, temporaryPath);
-            _ = SafeXmlDocumentStore.LoadSafeDocument(
-                temporaryPath,
-                "O arquivo de exibição excede o limite seguro de 4 MB.");
-            var appliedHash = SafeXmlDocumentStore.ComputeSha256(temporaryPath);
-            if (IsTargetRunning())
-            {
-                throw new IOException("O jogo foi iniciado durante a preparação; nenhuma configuração foi substituída.");
-            }
-
-            if (!SafeXmlDocumentStore.ComputeSha256(settingsPath).Equals(originalHash, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new IOException(
-                    "As configurações de exibição mudaram durante a preparação; a gravação foi cancelada.");
-            }
-
-            SafeXmlDocumentStore.ReplaceAndVerifyDisplacedOriginal(
-                temporaryPath,
-                settingsPath,
-                backupPath,
-                originalHash,
-                "As configurações de exibição mudaram no instante da troca; a versão mais recente foi restaurada.");
-
-            return Task.FromResult(WindowsActionApplyResult.ChangedWith(
-                new DisplayPreferencesSnapshot(
-                    settingsPath,
-                    backupPath,
-                    originalHash,
-                    appliedHash,
-                    changed),
-                $"Backup criado e {changed.Count} preferência(s) de exibição atualizada(s)."));
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-            {
-                File.Delete(temporaryPath);
-            }
-        }
+        var snapshot = transaction.Apply(document, context.TransactionId, originalHash, changed);
+        return Task.FromResult(WindowsActionApplyResult.ChangedWith(
+            snapshot,
+            $"Backup criado e {changed.Count} preferência(s) de exibição atualizada(s)."));
     }
 
     public override Task RollbackAsync(
@@ -219,104 +172,12 @@ public sealed class DisplayPreferencesAction : WindowsOptimizationAction
         string? snapshotJson,
         CancellationToken cancellationToken)
     {
-        var snapshot = WindowsActionSnapshot.Deserialize<DisplayPreferencesSnapshot>(snapshotJson);
+        var snapshot = WindowsActionSnapshot.Deserialize<SafeXmlSettingsSnapshot>(snapshotJson);
         cancellationToken.ThrowIfCancellationRequested();
-        if (IsTargetRunning())
-        {
-            throw new InvalidOperationException(
-                target == GraphicsSettingsTarget.FiveM
-                    ? "FiveM precisa estar fechado para restaurar a exibição."
-                    : "GTA V precisa estar fechado para restaurar a exibição.");
-        }
-
-        var expectedBackupPath = Path.Combine(
-            Path.GetDirectoryName(settingsPath)!,
-            ".fivemcleaner-backups",
-            $"{Path.GetFileNameWithoutExtension(settingsPath)}.{context.TransactionId:N}.display.bak");
-        if (!Path.GetFullPath(snapshot.SettingsPath).Equals(settingsPath, StringComparison.OrdinalIgnoreCase)
-            || !Path.GetFullPath(snapshot.BackupPath).Equals(expectedBackupPath, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidDataException("O snapshot de exibição aponta para caminhos inesperados.");
-        }
-
-        if (!File.Exists(expectedBackupPath))
-        {
-            throw new FileNotFoundException("Display preferences backup is unavailable.", expectedBackupPath);
-        }
-
-        _ = SafeXmlDocumentStore.LoadSafeDocument(
-            expectedBackupPath,
-            "O arquivo de exibição excede o limite seguro de 4 MB.");
-        if (!SafeXmlDocumentStore.ComputeSha256(expectedBackupPath).Equals(
-                snapshot.OriginalSha256,
-                StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidDataException("O backup de exibição não corresponde ao snapshot original.");
-        }
-
-        if (!File.Exists(settingsPath))
-        {
-            if (IsTargetRunning())
-            {
-                throw new IOException("O jogo foi iniciado durante o rollback; nenhuma configuração foi restaurada.");
-            }
-
-            File.Copy(expectedBackupPath, settingsPath, overwrite: false);
-            return Task.CompletedTask;
-        }
-
-        var currentHash = SafeXmlDocumentStore.ComputeSha256(settingsPath);
-        if (!currentHash.Equals(snapshot.AppliedSha256, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new IOException(
-                "Display settings changed after optimization; rollback refused to overwrite newer user edits.");
-        }
-
-        var temporaryPath = Path.Combine(
-            Path.GetDirectoryName(settingsPath)!,
-            $".{Path.GetFileName(settingsPath)}.{context.TransactionId:N}.display-rollback.tmp");
-        var displacedPath = Path.Combine(
-            Path.GetDirectoryName(settingsPath)!,
-            $".{Path.GetFileName(settingsPath)}.{context.TransactionId:N}.display-rollback-current.bak");
-        if (File.Exists(temporaryPath) || File.Exists(displacedPath))
-        {
-            throw new IOException("Um artefato de rollback de exibição já existe.");
-        }
-
-        File.Copy(expectedBackupPath, temporaryPath, overwrite: false);
-        try
-        {
-            _ = SafeXmlDocumentStore.LoadSafeDocument(
-                temporaryPath,
-                "O arquivo de exibição excede o limite seguro de 4 MB.");
-            if (IsTargetRunning())
-            {
-                throw new IOException("O jogo foi iniciado durante o rollback; nenhuma configuração foi substituída.");
-            }
-
-            if (!SafeXmlDocumentStore.ComputeSha256(settingsPath).Equals(currentHash, StringComparison.OrdinalIgnoreCase))
-            {
-                throw new IOException(
-                    "As configurações de exibição mudaram durante o rollback; a restauração foi cancelada.");
-            }
-
-            SafeXmlDocumentStore.ReplaceAndVerifyDisplacedOriginal(
-                temporaryPath,
-                settingsPath,
-                displacedPath,
-                currentHash,
-                "As configurações de exibição mudaram no instante do rollback; a versão mais recente foi restaurada.");
-
-            File.Delete(displacedPath);
-        }
-        finally
-        {
-            if (File.Exists(temporaryPath))
-            {
-                File.Delete(temporaryPath);
-            }
-        }
-
+        processGuard.EnsureStopped(
+            "FiveM precisa estar fechado para restaurar a exibição.",
+            "GTA V precisa estar fechado para restaurar a exibição.");
+        transaction.Rollback(context.TransactionId, snapshot);
         return Task.CompletedTask;
     }
 
@@ -353,13 +214,6 @@ public sealed class DisplayPreferencesAction : WindowsOptimizationAction
         return existingRawValue is "0" or "1"
             ? (value ? "1" : "0")
             : (value ? "true" : "false");
-    }
-
-    private bool IsTargetRunning()
-    {
-        return target == GraphicsSettingsTarget.FiveM
-            ? processInspector.IsRunningFrom(gameRoot!)
-            : gtaVProcessInspector.IsRunningFrom(gameRoot);
     }
 
 }
