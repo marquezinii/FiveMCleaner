@@ -1,5 +1,4 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.Windows.Engine;
@@ -77,12 +76,12 @@ public sealed class JsonWindowsTransactionJournalStore : IWindowsTransactionJour
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(rootDirectory);
         this.rootDirectory = Path.GetFullPath(rootDirectory);
+        // The copy already carries the camelCase string-enum converter from the
+        // shared contract; adding a second identical one would never be reached.
         serializerOptions = new JsonSerializerOptions(FiveMCleanerJson.Options)
         {
             WriteIndented = true
         };
-        serializerOptions.Converters.Add(
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false));
     }
 
     public static JsonWindowsTransactionJournalStore CreateDefault()
