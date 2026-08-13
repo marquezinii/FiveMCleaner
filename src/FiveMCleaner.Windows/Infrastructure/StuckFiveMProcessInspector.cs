@@ -10,8 +10,11 @@ public sealed record StuckFiveMProcessSnapshot(
 public interface IStuckFiveMProcessInspector
 {
     StuckFiveMProcessSnapshot GetSnapshot(string installationRoot);
+}
 
-    bool TryTerminate(int processId);
+public interface IFiveMProcessTerminator
+{
+    bool TryTerminate(StuckFiveMProcessSnapshot snapshot, string installationRoot);
 }
 
 /// <summary>
@@ -28,29 +31,52 @@ public sealed class WindowsStuckFiveMProcessInspector : IStuckFiveMProcessInspec
         {
             using (process)
             {
-                if (!BelongsToInstallation(process, normalizedRoot))
+                if (!ProcessInspection.IsExecutableWithinRoot(process, normalizedRoot))
                 {
                     continue;
                 }
 
-                if (!IsNotResponding(process))
+                if (!ProcessInspection.IsNotResponding(process))
                 {
                     continue;
                 }
 
-                var name = TryGetProcessName(process);
+                var name = ProcessInspection.GetNameOrEmpty(process);
                 return new StuckFiveMProcessSnapshot(true, process.Id, name);
             }
         }
 
         return new StuckFiveMProcessSnapshot(false, 0, string.Empty);
     }
+}
 
-    public bool TryTerminate(int processId)
+/// <summary>
+/// Terminates only the exact stuck FiveM process that was inspected. The
+/// executable path and non-responsive state are checked again immediately
+/// before termination to reject PID reuse and stale observations.
+/// </summary>
+public sealed class WindowsFiveMProcessTerminator : IFiveMProcessTerminator
+{
+    public bool TryTerminate(StuckFiveMProcessSnapshot snapshot, string installationRoot)
     {
+        if (!snapshot.Found || snapshot.ProcessId <= 0)
+        {
+            return false;
+        }
+
+        var normalizedRoot = SafePath.Normalize(installationRoot);
         try
         {
-            using var process = Process.GetProcessById(processId);
+            using var process = Process.GetProcessById(snapshot.ProcessId);
+            if (!ProcessInspection.GetNameOrEmpty(process).Equals(
+                    snapshot.ProcessName,
+                    StringComparison.OrdinalIgnoreCase)
+                || !ProcessInspection.IsExecutableWithinRoot(process, normalizedRoot)
+                || !ProcessInspection.IsNotResponding(process))
+            {
+                return false;
+            }
+
             process.Kill(entireProcessTree: false);
             process.WaitForExit(5000);
             return process.HasExited;
@@ -61,66 +87,6 @@ public sealed class WindowsStuckFiveMProcessInspector : IStuckFiveMProcessInspec
             or NotSupportedException)
         {
             return false;
-        }
-    }
-
-    private static bool BelongsToInstallation(Process process, string normalizedRoot)
-    {
-        var name = TryGetProcessName(process);
-        if (WindowsFiveMProcessInspector.LooksLikeFiveMProcessName(name))
-        {
-            return true;
-        }
-
-        try
-        {
-            var fileName = process.MainModule?.FileName;
-            if (fileName is null)
-            {
-                return false;
-            }
-
-            var normalizedProcessPath = Path.GetFullPath(fileName);
-            return normalizedProcessPath.Equals(normalizedRoot, StringComparison.OrdinalIgnoreCase)
-                || normalizedProcessPath.StartsWith(
-                    normalizedRoot + Path.DirectorySeparatorChar,
-                    StringComparison.OrdinalIgnoreCase);
-        }
-        catch (Exception exception) when (exception is InvalidOperationException
-            or System.ComponentModel.Win32Exception
-            or NotSupportedException)
-        {
-            return false;
-        }
-    }
-
-    private static bool IsNotResponding(Process process)
-    {
-        try
-        {
-            return !process.Responding;
-        }
-        catch (Exception exception) when (exception is InvalidOperationException
-            or System.ComponentModel.Win32Exception
-            or NotSupportedException)
-        {
-            // A process without a message loop (or one that already exited)
-            // is never treated as a confirmed-stuck target.
-            return false;
-        }
-    }
-
-    private static string TryGetProcessName(Process process)
-    {
-        try
-        {
-            return process.ProcessName;
-        }
-        catch (Exception exception) when (exception is InvalidOperationException
-            or System.ComponentModel.Win32Exception
-            or NotSupportedException)
-        {
-            return string.Empty;
         }
     }
 }

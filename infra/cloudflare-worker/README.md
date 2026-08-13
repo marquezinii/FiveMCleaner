@@ -197,6 +197,15 @@ wrangler d1 migrations apply fivemcleaner-telemetry --remote   # touches the rea
 wrangler deploy   # touches Cloudflare — ask first
 ```
 
+`RELEASE_MANIFEST_JSON` is the complete signed stable update manifest served by
+`GET /update/manifest`. The official stable-release workflow validates the
+manifest against the embedded public key and publishes it automatically with
+`wrangler secret put RELEASE_MANIFEST_JSON` immediately before deploying this
+Worker. Do not hand-author, truncate, or commit that value. A manual repair is
+part of the authorized release procedure only and must pipe the generated
+`release/FiveMCleaner-signed-update-manifest.json` file unchanged into the same
+Wrangler command. Preview releases do not update this stable feed.
+
 The real deployment uses plain `wrangler deploy`/`npm run deploy` with no
 `--env` — the old `deploy:development`/`deploy:production` scripts targeted
 named-environment sections that have been removed.

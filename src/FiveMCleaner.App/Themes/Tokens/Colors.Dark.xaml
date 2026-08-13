@@ -36,14 +36,12 @@
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#EEF0F4" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="#A2A9B5" />
     <SolidColorBrush x:Key="TextTertiaryBrush" Color="#7B8391" />
-    <SolidColorBrush x:Key="TextDisabledBrush" Color="#565D68" />
     <SolidColorBrush x:Key="TextOnAccentBrush" Color="#1A0E04" />
 
     <SolidColorBrush x:Key="AccentBrush" Color="#FF7A18" />
     <SolidColorBrush x:Key="AccentTextBrush" Color="#FF7A18" />
     <SolidColorBrush x:Key="AccentBrightBrush" Color="#FFA24D" />
     <SolidColorBrush x:Key="AccentDeepBrush" Color="#8A3E08" />
-    <SolidColorBrush x:Key="AccentMutedBrush" Color="#C15A12" />
     <SolidColorBrush x:Key="AccentWashBrush" Color="#1FFF7A18" />
     <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,1">
         <GradientStop Color="#FFA24D" Offset="0" />
@@ -67,23 +65,14 @@
     <SolidColorBrush x:Key="InfoBorderBrush" Color="#1E3A5C" />
 
     <SolidColorBrush x:Key="RevertBaseBrush" Color="#A98BFF" />
-    <SolidColorBrush x:Key="RevertSurfaceBrush" Color="#1A1630" />
-    <SolidColorBrush x:Key="RevertBorderBrush" Color="#332B5C" />
 
     <SolidColorBrush x:Key="NeutralBaseBrush" Color="#8A93A1" />
 
-    <SolidColorBrush x:Key="ToggleTrackBrush" Color="#363B45" />
     <SolidColorBrush x:Key="ToggleTrackOffBrush" Color="#282C34" />
     <SolidColorBrush x:Key="ToggleThumbBrush" Color="#EEF0F4" />
     <SolidColorBrush x:Key="ScrollThumbBrush" Color="#3A3F49" />
     <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#565D68" />
     <SolidColorBrush x:Key="FocusRingBrush" Color="#FF7A18" />
-
-    <!-- Vinheta sutil do canvas: calor no canto superior direito, quase imperceptível. -->
-    <RadialGradientBrush x:Key="CanvasVignetteBrush" GradientOrigin="0.92,0.05" Center="0.92,0.05" RadiusX="0.9" RadiusY="1.1">
-        <GradientStop Color="#08FF7A18" Offset="0" />
-        <GradientStop Color="#00FF7A18" Offset="1" />
-    </RadialGradientBrush>
 
     <DropShadowEffect x:Key="Elevation2Shadow" Color="#000000" Opacity="0.26" BlurRadius="24" ShadowDepth="6" Direction="270" />
     <DropShadowEffect x:Key="Elevation3Shadow" Color="#000000" Opacity="0.40" BlurRadius="48" ShadowDepth="14" Direction="270" />

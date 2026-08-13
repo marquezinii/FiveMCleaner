@@ -124,6 +124,7 @@ public sealed class WindowsOptimizationRuntimeTests
             HardwareStability = new FakeHardwareStabilityInspector(),
             BackgroundProcess = new FakeBackgroundProcessInspector(),
             StuckProcess = new FakeStuckFiveMProcessInspector(),
+            StuckProcessTerminator = new FakeFiveMProcessTerminator(),
             VendorLaptopSoftware = new FakeVendorLaptopSoftwareInspector()
         };
 

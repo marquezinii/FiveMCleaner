@@ -255,11 +255,6 @@
         <Setter Property="Margin" Value="1,0,0,6" />
     </Style>
 
-    <Style x:Key="FieldErrorStyle" TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
-        <Setter Property="Foreground" Value="{DynamicResource DangerBaseBrush}" />
-        <Setter Property="Margin" Value="1,5,0,0" />
-    </Style>
-
     <!-- ================= Seleção ================= -->
 
     <!-- Caixa de seleção quadrada e compacta, tamanho fixo marcada/desmarcada. -->
@@ -579,9 +574,6 @@
     <!-- ================= Wpf.Ui ================= -->
 
     <Style TargetType="ui:Card" BasedOn="{StaticResource {x:Type ui:Card}}">
-        <Style.Resources>
-            <CornerRadius x:Key="ControlCornerRadius">12</CornerRadius>
-        </Style.Resources>
         <Setter Property="Background" Value="{DynamicResource Surface1Brush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource EdgeLightBrush}" />
     </Style>
@@ -592,36 +584,6 @@
     </Style>
 
     <!-- ================= Composição ================= -->
-
-    <!-- Item da nova navegação lateral. O indicador ativo é um elemento
-         compartilhado que desliza entre os itens (ver NavigationRail),
-         então este estilo só cuida de hover/seleção de conteúdo. -->
-    <Style x:Key="NavigationRailItemStyle" TargetType="RadioButton">
-        <Setter Property="Height" Value="40" />
-        <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="RadioButton">
-                    <Border x:Name="Root" Background="Transparent" CornerRadius="{StaticResource RadiusMd}">
-                        <ContentPresenter Margin="12,0" VerticalAlignment="Center" TextBlock.Foreground="{TemplateBinding Foreground}" />
-                    </Border>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsMouseOver" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="#26FFFFFF" />
-                        </Trigger>
-                        <Trigger Property="IsChecked" Value="True">
-                            <Setter TargetName="Root" Property="Background" Value="{DynamicResource Surface2Brush}" />
-                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource FocusRingBrush}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
 
     <!--
         Categoria de Configurações: deliberadamente mais quieto que a
@@ -683,16 +645,6 @@
     <Style x:Key="AlertRowInfoStyle" TargetType="Border" BasedOn="{StaticResource AlertRowStyle}">
         <Setter Property="Background" Value="{DynamicResource InfoSurfaceBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource InfoBorderBrush}" />
-    </Style>
-
-    <Style x:Key="AlertRowWarningStyle" TargetType="Border" BasedOn="{StaticResource AlertRowStyle}">
-        <Setter Property="Background" Value="{DynamicResource WarningSurfaceBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource WarningBorderBrush}" />
-    </Style>
-
-    <Style x:Key="AlertRowDangerStyle" TargetType="Border" BasedOn="{StaticResource AlertRowStyle}">
-        <Setter Property="Background" Value="{DynamicResource DangerSurfaceBrush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource DangerBorderBrush}" />
     </Style>
 
     <!-- Célula da faixa de instrumentos (InstrumentStrip): rótulo + valor + detalhe, sem card. -->

@@ -184,7 +184,7 @@ internal sealed class ElevatedBrokerClient
                 bufferSize: 4096,
                 leaveOpen: true);
 
-            BrokerEventWire? terminal = await ReadUntilTerminalAsync(
+            BrokerEvent? terminal = await ReadUntilTerminalAsync(
                 reader,
                 expectedTransactionId,
                 progress,
@@ -194,8 +194,8 @@ internal sealed class ElevatedBrokerClient
             await process.WaitForExitAsync(timeout.Token).ConfigureAwait(false);
             var succeeded = process.ExitCode == 0
                 && terminal?.Success == true
-                && terminal.Kind is BrokerEventKindWire.Completed
-                    or BrokerEventKindWire.RollbackCompleted;
+                && terminal.Kind is BrokerEventKind.Completed
+                    or BrokerEventKind.RollbackCompleted;
             return new ElevatedBrokerResult
             {
                 Succeeded = succeeded,
@@ -296,14 +296,14 @@ internal sealed class ElevatedBrokerClient
     /// makes the cap unreachable in normal operation; hitting the cap anyway
     /// is now an explicit, honest error instead of a silent false failure.
     /// </summary>
-    internal static async Task<BrokerEventWire?> ReadUntilTerminalAsync(
+    internal static async Task<BrokerEvent?> ReadUntilTerminalAsync(
         TextReader reader,
         Guid expectedTransactionId,
         IProgress<AppProgressUpdate> progress,
         ILocalizationService localization,
         CancellationToken cancellationToken)
     {
-        BrokerEventWire? terminal = null;
+        BrokerEvent? terminal = null;
         long previousSequence = 0;
         var read = 0;
         for (; read < MaximumEvents; read++)
@@ -319,7 +319,7 @@ internal sealed class ElevatedBrokerClient
                 throw new InvalidDataException("O broker retornou um evento local acima do limite seguro.");
             }
 
-            var brokerEvent = JsonSerializer.Deserialize<BrokerEventWire>(
+            var brokerEvent = JsonSerializer.Deserialize<BrokerEvent>(
                 line,
                 FiveMCleanerJson.Options)
                 ?? throw new JsonException("O broker retornou um evento vazio.");
@@ -335,8 +335,8 @@ internal sealed class ElevatedBrokerClient
                     "O broker retornou eventos para outra transação.");
             }
 
-            if (brokerEvent.Kind is BrokerEventKindWire.Completed
-                or BrokerEventKindWire.RollbackCompleted
+            if (brokerEvent.Kind is BrokerEventKind.Completed
+                or BrokerEventKind.RollbackCompleted
                 && brokerEvent.TransactionId != expectedTransactionId)
             {
                 throw new InvalidDataException(
@@ -361,20 +361,20 @@ internal sealed class ElevatedBrokerClient
         return terminal;
     }
 
-    private static bool IsTerminalEvent(BrokerEventKindWire kind) =>
-        kind is BrokerEventKindWire.Completed
-            or BrokerEventKindWire.RollbackCompleted
-            or BrokerEventKindWire.Rejected
-            or BrokerEventKindWire.Failed;
+    private static bool IsTerminalEvent(BrokerEventKind kind) =>
+        kind is BrokerEventKind.Completed
+            or BrokerEventKind.RollbackCompleted
+            or BrokerEventKind.Rejected
+            or BrokerEventKind.Failed;
 
     private static void ReportBrokerProgress(
-        BrokerEventWire brokerEvent,
+        BrokerEvent brokerEvent,
         IProgress<AppProgressUpdate> progress,
         ILocalizationService localization)
     {
         var localPercent = brokerEvent.TotalWeight is > 0
             ? 72d + (23d * brokerEvent.CompletedWeight.GetValueOrDefault() / brokerEvent.TotalWeight.Value)
-            : brokerEvent.Kind is BrokerEventKindWire.Completed or BrokerEventKindWire.RollbackCompleted
+            : brokerEvent.Kind is BrokerEventKind.Completed or BrokerEventKind.RollbackCompleted
                 ? 98d
                 : 72d;
         progress.Report(new AppProgressUpdate
@@ -382,23 +382,23 @@ internal sealed class ElevatedBrokerClient
             Timestamp = brokerEvent.TimestampUtc.ToLocalTime(),
             Kind = brokerEvent.Kind switch
             {
-                BrokerEventKindWire.Completed or BrokerEventKindWire.RollbackCompleted => AppProgressKind.Verifying,
-                BrokerEventKindWire.Failed or BrokerEventKindWire.Rejected => AppProgressKind.Warning,
-                BrokerEventKindWire.RollbackStarted => AppProgressKind.RollingBack,
+                BrokerEventKind.Completed or BrokerEventKind.RollbackCompleted => AppProgressKind.Verifying,
+                BrokerEventKind.Failed or BrokerEventKind.Rejected => AppProgressKind.Warning,
+                BrokerEventKind.RollbackStarted => AppProgressKind.RollingBack,
                 _ => AppProgressKind.Applying
             },
             Percent = Math.Clamp(localPercent, 72, 98),
-            Headline = brokerEvent.Kind is BrokerEventKindWire.RollbackStarted
-                or BrokerEventKindWire.RollbackCompleted
+            Headline = brokerEvent.Kind is BrokerEventKind.RollbackStarted
+                or BrokerEventKind.RollbackCompleted
                 ? localization.GetString("Runtime.BrokerRestoring")
                 : localization.GetString("Runtime.BrokerApplying"),
             Detail = brokerEvent.Message,
             ActionId = brokerEvent.ActionId,
             Outcome = brokerEvent.ActionId is null ? null : brokerEvent.Kind switch
             {
-                BrokerEventKindWire.Completed or BrokerEventKindWire.RollbackCompleted =>
+                BrokerEventKind.Completed or BrokerEventKind.RollbackCompleted =>
                     brokerEvent.Success == true ? ActionExecutionOutcome.Applied : ActionExecutionOutcome.Failed,
-                BrokerEventKindWire.Failed or BrokerEventKindWire.Rejected => ActionExecutionOutcome.Failed,
+                BrokerEventKind.Failed or BrokerEventKind.Rejected => ActionExecutionOutcome.Failed,
                 _ => null
             }
         });
@@ -426,43 +426,4 @@ internal sealed class ElevatedBrokerClient
         }
     }
 
-    internal enum BrokerEventKindWire
-    {
-        Started,
-        Progress,
-        Completed,
-        RollbackStarted,
-        RollbackCompleted,
-        Rejected,
-        Failed
-    }
-
-    internal sealed record BrokerEventWire
-    {
-        public required int SchemaVersion { get; init; }
-
-        public required long Sequence { get; init; }
-
-        public required DateTimeOffset TimestampUtc { get; init; }
-
-        public required BrokerEventKindWire Kind { get; init; }
-
-        public Guid? TransactionId { get; init; }
-
-        public string? ActionId { get; init; }
-
-        public required string Message { get; init; }
-
-        public int? CompletedWeight { get; init; }
-
-        public int? TotalWeight { get; init; }
-
-        public bool? Success { get; init; }
-
-        public string? State { get; init; }
-
-        public string? ErrorCode { get; init; }
-
-        public IReadOnlyList<string>? AppliedActionIds { get; init; }
-    }
 }

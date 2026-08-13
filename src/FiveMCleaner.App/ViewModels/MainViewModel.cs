@@ -40,8 +40,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private double progressPercent;
     private string progressHeadline = string.Empty;
     private string previousProgressHeadline = string.Empty;
-    private string progressDetail = string.Empty;
-    private string progressStateLabel = string.Empty;
     private string elapsedTimeLabel = string.Empty;
     private string remainingTimeLabel = string.Empty;
     private string cpuName = string.Empty;
@@ -64,8 +62,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private string logicalProcessorDetail = string.Empty;
     private string availableMemoryLabel = string.Empty;
     private string availableMemoryDetail = string.Empty;
-    private string freeDiskLabel = string.Empty;
-    private string freeDiskDetail = string.Empty;
     private string legacyCacheLabel = string.Empty;
     private string legacyCacheDetail = string.Empty;
     private string performancePressureLabel = string.Empty;
@@ -99,9 +95,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private bool liveMetricsCaptureInProgress;
     private bool liveMetricsUnavailable;
     private LiveSystemMetricsSnapshot? lastLiveMetrics;
-    private string lightImpactLabel = string.Empty;
-    private string balancedImpactLabel = string.Empty;
-    private string aggressiveImpactLabel = string.Empty;
     private int readinessScore;
     private AppLanguagePreference languagePreference = AppLanguagePreference.Automatic;
     private AppThemePreference themePreference = AppThemePreference.System;
@@ -125,7 +118,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private bool profileInitializedFromDiagnostic;
     private Stopwatch? operationStopwatch;
     private DispatcherTimer? operationTimer;
-    private string stepCounterLabel = string.Empty;
     private OptimizationReportDto? lastReport;
     private string reportSummaryLabel = string.Empty;
     private string reportRestartLabel = string.Empty;
@@ -161,15 +153,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
         StepLedger.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasStepLedgerItems));
         ResetLocalizedPlaceholders();
         RefreshProfilePresentation();
-        ActivityLog.Add(new ActivityLogItem(
-            DateTime.Now.ToString("HH:mm:ss"),
-            this.localization.GetString("Log.StartedStandardUser")));
         RefreshGreeting();
     }
 
     public ObservableCollection<ActionDisplayItem> PlannedActions { get; } = [];
-
-    public ObservableCollection<ActivityLogItem> ActivityLog { get; } = [];
 
     public ObservableCollection<HistoryDisplayItem> HistoryItems { get; } = [];
 
@@ -178,8 +165,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     public ObservableCollection<StepLedgerItem> StepLedger { get; } = [];
 
     public ObservableCollection<ReportLineDisplayItem> ReportLines { get; } = [];
-
-    public string StepCounterLabel { get => stepCounterLabel; private set => SetProperty(ref stepCounterLabel, value); }
 
     public bool HasStepLedgerItems => StepLedger.Count > 0;
 
@@ -266,11 +251,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
 
     public string AvailableMemoryDetail { get => availableMemoryDetail; private set => SetProperty(ref availableMemoryDetail, value); }
 
-    /// <summary>Free space on the system drive (e.g. "428 GB").</summary>
-    public string FreeDiskLabel { get => freeDiskLabel; private set => SetProperty(ref freeDiskLabel, value); }
-
-    public string FreeDiskDetail { get => freeDiskDetail; private set => SetProperty(ref freeDiskDetail, value); }
-
     /// <summary>
     /// Size of the FiveM server cache found on disk. This is the single number
     /// that most often explains why the optimizer has something to do, so the
@@ -342,12 +322,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     /// <summary>Histórico de GPU em porcentagem, na mesma ordem de <see cref="CpuUsageSeries"/>.</summary>
     public IReadOnlyList<double> GpuUsageSeries { get => gpuUsageSeries; private set => SetProperty(ref gpuUsageSeries, value); }
 
-    public string LightImpactLabel { get => lightImpactLabel; private set => SetProperty(ref lightImpactLabel, value); }
-
-    public string BalancedImpactLabel { get => balancedImpactLabel; private set => SetProperty(ref balancedImpactLabel, value); }
-
-    public string AggressiveImpactLabel { get => aggressiveImpactLabel; private set => SetProperty(ref aggressiveImpactLabel, value); }
-
     public int ReadinessScore { get => readinessScore; private set => SetProperty(ref readinessScore, value); }
 
     public double ProgressPercent
@@ -398,10 +372,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     }
 
     public bool HasPreviousProgressHeadline => !string.IsNullOrWhiteSpace(PreviousProgressHeadline);
-
-    public string ProgressDetail { get => progressDetail; private set => SetProperty(ref progressDetail, value); }
-
-    public string ProgressStateLabel { get => progressStateLabel; private set => SetProperty(ref progressStateLabel, value); }
 
     public string ElapsedTimeLabel { get => elapsedTimeLabel; private set => SetProperty(ref elapsedTimeLabel, value); }
 
@@ -532,9 +502,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
                 OnPropertyChanged();
                 SettingsChanged(refreshPlan: false);
             }
-            catch (Exception exception)
+            catch (Exception)
             {
-                AddLog(localization.Format("Log.StartupSettingFailed", localization.DescribeException(exception)));
                 OnPropertyChanged();
             }
         }
@@ -795,7 +764,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
                 service.SettingsFileExists());
             ApplyDiagnostic(await diagnosticTask);
             ApplyHistory(await historyTask);
-            AddLog(localization.GetString("Log.DiagnosisCompleted"));
             if (checkForUpdates && releaseUpdateService is not null)
             {
                 _ = CheckForUpdatesAsync().ContinueWith(
@@ -809,7 +777,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             RecommendationTitle = localization.GetString("Diagnosis.Partial");
             RecommendationText = localization.DescribeException(exception);
-            AddLog(localization.Format("Log.Warning", RecommendationText));
         }
         finally
         {
@@ -831,13 +798,11 @@ public sealed class MainViewModel : BindableBase, IDisposable
         try
         {
             ApplyDiagnostic(await service.DiagnoseAsync());
-            AddLog(localization.GetString("Log.ComputerScannedAgain"));
         }
         catch (Exception exception)
         {
             RecommendationTitle = localization.GetString("Diagnosis.CouldNotScanAgain");
             RecommendationText = localization.DescribeException(exception);
-            AddLog(localization.Format("Log.RescanFailed", RecommendationText));
         }
         finally
         {
@@ -1042,7 +1007,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             // Falha de rede na inicialização não interrompe diagnóstico nem otimização.
-            AddLog(localization.Format("Log.UpdateCheckFailed", localization.DescribeException(exception)));
         }
     }
 
@@ -1080,7 +1044,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             var message = localization.DescribeException(exception);
-            AddLog(localization.Format("Log.UpdateCheckFailed", message));
             ManualUpdateCheckMessage = localization.Format("Update.ManualCheck.Failed", message);
         }
         finally
@@ -1097,7 +1060,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         availableUpdate = update;
         updatePresentationState = UpdatePresentationState.Available;
         RefreshUpdatePresentation();
-        AddLog(localization.Format("Log.UpdateAvailable", update.Version.CoreVersion));
         UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
     }
 
@@ -1126,7 +1088,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             UpdateDownloadPercent = 100;
             updatePresentationState = UpdatePresentationState.Ready;
             RefreshUpdatePresentation();
-            AddLog(localization.GetString("Log.UpdateVerified"));
             return downloaded;
         }
         catch (Exception exception) when (exception is not (
@@ -1135,7 +1096,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             updateFailureMessage = localization.DescribeException(exception);
             updatePresentationState = UpdatePresentationState.Failed;
             RefreshUpdatePresentation();
-            AddLog(localization.Format("Log.UpdateDownloadFailed", updateFailureMessage));
             return null;
         }
         finally
@@ -1192,16 +1152,12 @@ public sealed class MainViewModel : BindableBase, IDisposable
                 .ConfigureAwait(true);
             if (launch.Started)
             {
-                AddLog(localization.Format(
-                    "Log.UpdateInstallStarted",
-                    downloaded.Version.CoreVersion));
                 return true;
             }
 
             updateFailureMessage = localization.GetString("Error.Unexpected");
             updatePresentationState = UpdatePresentationState.Failed;
             RefreshUpdatePresentation();
-            AddLog(localization.Format("Log.UpdateInstallFailed", updateFailureMessage));
             return false;
         }
         catch (Exception exception) when (exception is not (
@@ -1210,7 +1166,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             updateFailureMessage = localization.DescribeException(exception);
             updatePresentationState = UpdatePresentationState.Failed;
             RefreshUpdatePresentation();
-            AddLog(localization.Format("Log.UpdateInstallFailed", updateFailureMessage));
             return false;
         }
         finally
@@ -1236,7 +1191,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         updatePresentationState = UpdatePresentationState.None;
         UpdateBannerTitle = localization.Format("Update.Completed.Title", installedVersion);
         UpdateBannerDetail = localization.GetString("Update.Completed.Detail");
-        AddLog(localization.Format("Log.UpdateCompleted", installedVersion));
         OnPropertyChanged(nameof(JustUpdatedToVersion));
         OnPropertyChanged(nameof(IsUpdateBannerVisible));
         OnPropertyChanged(nameof(CanDownloadUpdate));
@@ -1354,7 +1308,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             telemetryEventName = "optimization-failed";
             telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
-            HandleOptimizationFailed(exception);
+            HandleOptimizationFailed();
         }
         finally
         {
@@ -1374,55 +1328,26 @@ public sealed class MainViewModel : BindableBase, IDisposable
                 : diagnostic?.GtaVIsRunning == true
                     ? localization.GetString("Plan.CloseGtaV")
                     : localization.GetString("Plan.Unavailable");
-            var block = currentPlan?.Blocks.FirstOrDefault();
-            ProgressDetail = block is null
-                ? localization.GetString("Plan.RunDiagnosisAgain")
-                : LocalizeBlock(block);
             return false;
         }
 
         IsBusy = true;
         ProgressPercent = 0;
         ClearProgressHistory();
-        ProgressStateLabel = localization.GetString("Status.Preparing");
         StartOperationTiming();
-        ActivityLog.Clear();
         StepLedger.Clear();
-        StepCounterLabel = string.Empty;
         ApplyReport(null);
         ApplyComparison(null);
         lastTransactionId = null;
-        AddLog(localization.Format("Log.StartingProfile", SelectedProfileLabel.ToLower(localization.CurrentCulture)));
-        foreach (var notice in currentPlan.Notices.Where(item =>
-                     item.Severity == PlanNoticeSeverity.Warning))
-        {
-            AddLog(localization.Format("Log.Warning", LocalizeNotice(notice)));
-        }
-
         return true;
     }
 
     private async Task HandleOptimizationResultAsync(AppOptimizationResult result)
     {
         ProgressPercent = result.Succeeded ? 100 : ProgressPercent;
-        ProgressStateLabel = result.Succeeded
-            ? localization.GetString("Status.Completed")
-            : result.WasCancelled
-                ? localization.GetString("Status.Cancelled")
-                : localization.GetString("Status.Warning");
         FinalizeHeadline(result.Succeeded
             ? localization.GetString("Status.OptimizationCompleted")
             : result.Summary);
-        ProgressDetail = result.BytesFreed > 0
-            ? localization.Format(
-                "Plan.ActionsCompletedFreed",
-                result.CompletedActions,
-                FormatBytes(result.BytesFreed))
-            : localization.Format(
-                "Plan.ActionsCompletedSummary",
-                result.CompletedActions,
-                result.Summary);
-        AddLog(result.Summary);
         ApplyReport(result.Report);
         lastTransactionId = result.TransactionId;
         ApplyComparison(result.Comparison);
@@ -1431,18 +1356,12 @@ public sealed class MainViewModel : BindableBase, IDisposable
 
     private void HandleOptimizationCancelled()
     {
-        ProgressStateLabel = localization.GetString("Status.Cancelled");
         FinalizeHeadline(localization.GetString("Status.SafeCancellation.Headline"));
-        ProgressDetail = localization.GetString("Status.SafeCancellation.Detail");
-        AddLog(localization.GetString("Log.CancellationConfirmed"));
     }
 
-    private void HandleOptimizationFailed(Exception exception)
+    private void HandleOptimizationFailed()
     {
-        ProgressStateLabel = localization.GetString("Status.SafeFailure");
         FinalizeHeadline(localization.GetString("Status.CouldNotComplete"));
-        ProgressDetail = localization.DescribeException(exception);
-        AddLog(localization.Format("Log.Error", ProgressDetail));
     }
 
     private void FinalizeOptimizationRun(
@@ -1466,8 +1385,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             return;
         }
 
-        ProgressStateLabel = localization.GetString("Status.Cancelling");
-        ProgressDetail = localization.GetString("Status.CancellationPending");
         operationCancellation.Cancel();
         RaiseCommandState();
     }
@@ -1486,13 +1403,11 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             var result = await service.RunGtaVBenchmarkAsync(3);
             GtaVBenchmarkStatusLabel = DescribeGtaVBenchmarkResult(result);
-            AddLog(GtaVBenchmarkStatusLabel);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             GtaVBenchmarkStatusLabel = localization.Format("GtaVBenchmark.Error", localization.DescribeException(exception));
-            AddLog(GtaVBenchmarkStatusLabel);
         }
         finally
         {
@@ -1559,21 +1474,15 @@ public sealed class MainViewModel : BindableBase, IDisposable
             var restored = await service.RollbackAsync(item.TransactionId, progress, operationCancellation.Token);
             completedSuccessfully = restored;
             ApplyHistory(await service.LoadHistoryAsync());
-            AddLog(localization.GetString(
-                restored ? "Log.RollbackCompleted" : "Log.NoReversibleChanges"));
             return restored;
         }
         catch (OperationCanceledException)
         {
-            AddLog(localization.GetString("Log.RollbackCancelled"));
             return false;
         }
-        catch (Exception exception)
+        catch (Exception)
         {
-            ProgressStateLabel = localization.GetString("Status.SafeFailure");
             FinalizeHeadline(localization.GetString("Status.CouldNotRestore"));
-            ProgressDetail = localization.DescribeException(exception);
-            AddLog(localization.Format("Log.RollbackFailed", ProgressDetail));
             return false;
         }
         finally
@@ -1621,8 +1530,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         LogicalProcessorDetail = localization.GetString("Dashboard.Kpi.Cores.Detail");
         AvailableMemoryLabel = localization.Format("Dashboard.Kpi.GigabyteValue", value.AvailableMemoryGiB);
         AvailableMemoryDetail = localization.Format("Dashboard.Kpi.Memory.Detail", value.TotalMemoryGiB);
-        FreeDiskLabel = localization.Format("Dashboard.Kpi.GigabyteValue", value.FreeDiskGiB);
-        FreeDiskDetail = localization.GetString("Dashboard.Kpi.Disk.Detail");
         (LegacyCacheLabel, LegacyCacheDetail) = DescribeLegacyCache(value.LegacyCacheBytes);
         PerformancePressureLabel = value.PerformancePressure switch
         {
@@ -1675,7 +1582,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             _ => localization.GetString("Diagnosis.InstallLegacy")
         };
         ApplyStreamingReadiness(value);
-        ApplyProfileImpact(value.PerformancePressure);
     }
 
     /// <summary>
@@ -1697,20 +1603,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             ? localization.Format("Dashboard.Kpi.GigabyteValue", bytes / (bytesPerMiB * 1024))
             : localization.Format("Dashboard.Kpi.MegabyteValue", bytes / bytesPerMiB);
         return (value, localization.GetString("Dashboard.Kpi.Cache.Detail"));
-    }
-
-    private void ApplyProfileImpact(PerformancePressureLevel pressure)
-    {
-        var suffix = pressure switch
-        {
-            PerformancePressureLevel.Low => "Low",
-            PerformancePressureLevel.Moderate => "Moderate",
-            PerformancePressureLevel.High => "High",
-            _ => "Moderate"
-        };
-        LightImpactLabel = localization.GetString($"Profiles.Impact.Light.{suffix}");
-        BalancedImpactLabel = localization.GetString($"Profiles.Impact.Balanced.{suffix}");
-        AggressiveImpactLabel = localization.GetString($"Profiles.Impact.Aggressive.{suffix}");
     }
 
     private void ApplyStreamingReadiness(AppDiagnostic value)
@@ -1808,10 +1700,9 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             launchAtStartup = startupRegistration.IsEnabled();
         }
-        catch (Exception exception)
+        catch (Exception)
         {
             launchAtStartup = settings.LaunchAtStartup;
-            AddLog(localization.Format("Log.StartupReadFailed", localization.DescribeException(exception)));
         }
 
         OnPropertyChanged(nameof(LanguagePreference));
@@ -2096,7 +1987,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            AddLog(localization.GetString("Log.SettingsSaveFailed"));
+            // Settings are best-effort; a later revision can still persist.
         }
     }
 
@@ -2104,27 +1995,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
     {
         ProgressPercent = Math.Clamp(update.Percent, 0, 100);
         EnqueueHeadline(update.Headline);
-        ProgressDetail = update.Detail;
-        ProgressStateLabel = update.Kind switch
-        {
-            AppProgressKind.Preparing => localization.GetString("Status.Preparing"),
-            AppProgressKind.Applying => localization.GetString("Status.Optimizing"),
-            AppProgressKind.Verifying => localization.GetString("Status.Verifying"),
-            AppProgressKind.RollingBack => localization.GetString("Status.Restoring"),
-            AppProgressKind.Completed => localization.GetString("Status.Completed"),
-            AppProgressKind.Warning => localization.GetString("Status.Warning"),
-            AppProgressKind.Failed => localization.GetString("Status.SafeFailure"),
-            _ => localization.GetString("Status.InProgress")
-        };
-
-        if (update.TotalSteps > 0)
-        {
-            StepCounterLabel = localization.Format(
-                "Progress.StepCounter",
-                update.CompletedSteps,
-                update.TotalSteps);
-        }
-
         if (update.ActionId is not null && update.Outcome is { } outcome
             && outcome != ActionExecutionOutcome.Pending)
         {
@@ -2132,7 +2002,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         }
 
         UpdateOperationTiming();
-        AddLog(update.Detail);
     }
 
     private void ClearProgressHistory()
@@ -2372,12 +2241,11 @@ public sealed class MainViewModel : BindableBase, IDisposable
         try
         {
             System.Windows.Clipboard.SetText(text);
-            AddLog(localization.GetString("Log.ReportCopied"));
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            AddLog(localization.Format("Log.ReportCopyFailed", localization.DescribeException(exception)));
+            // Clipboard ownership is best-effort and must not destabilize the UI.
         }
     }
 
@@ -2398,13 +2266,12 @@ public sealed class MainViewModel : BindableBase, IDisposable
         try
         {
             File.WriteAllText(filePath, text);
-            AddLog(localization.Format("Log.ReportSaved", filePath));
         }
         catch (Exception exception) when (exception is IOException
             or UnauthorizedAccessException
             or System.Security.SecurityException)
         {
-            AddLog(localization.Format("Log.ReportSaveFailed", localization.DescribeException(exception)));
+            // The caller owns the selected path; a failed export leaves no partial app state.
         }
     }
 
@@ -2495,8 +2362,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         if (!IsBusy)
         {
             ProgressHeadline = localization.GetString("Status.Ready.Headline");
-            ProgressDetail = localization.GetString("Status.Ready.Detail");
-            ProgressStateLabel = localization.GetString("Status.Waiting");
             ElapsedTimeLabel = localization.Format("Progress.ElapsedFormat", "00:00");
             RemainingTimeLabel = localization.GetString("Progress.Calculating");
         }
@@ -2521,17 +2386,11 @@ public sealed class MainViewModel : BindableBase, IDisposable
             LogicalProcessorDetail = localization.GetString("Dashboard.Kpi.Cores.Detail");
             AvailableMemoryLabel = analyzing;
             AvailableMemoryDetail = string.Empty;
-            FreeDiskLabel = analyzing;
-            FreeDiskDetail = localization.GetString("Dashboard.Kpi.Disk.Detail");
             LegacyCacheLabel = analyzing;
             LegacyCacheDetail = localization.GetString("Dashboard.Kpi.Cache.Detail");
             PerformancePressureLabel = analyzing;
             PerformancePressureBrushKey = "TextMutedBrush";
             LastScanLabel = localization.GetString("Dashboard.LastScan.Pending");
-            var pendingImpact = localization.GetString("Profiles.Impact.Pending");
-            LightImpactLabel = pendingImpact;
-            BalancedImpactLabel = pendingImpact;
-            AggressiveImpactLabel = pendingImpact;
         }
 
         if (lastLiveMetrics is null)
@@ -2582,15 +2441,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
         RefreshPlan();
         UpdateOperationTiming();
         RefreshUpdatePresentation();
-    }
-
-    private void AddLog(string message)
-    {
-        ActivityLog.Add(new ActivityLogItem(DateTime.Now.ToString("HH:mm:ss"), message));
-        while (ActivityLog.Count > 100)
-        {
-            ActivityLog.RemoveAt(0);
-        }
     }
 
     private void RaiseCommandState()

@@ -3,8 +3,8 @@ using System.Text.Json;
 using FiveMCleaner.App.Services;
 using FiveMCleaner.Contracts;
 using Xunit;
-using BrokerEventKindWire = FiveMCleaner.App.Services.ElevatedBrokerClient.BrokerEventKindWire;
-using BrokerEventWire = FiveMCleaner.App.Services.ElevatedBrokerClient.BrokerEventWire;
+using BrokerEventKindWire = FiveMCleaner.Contracts.BrokerEventKind;
+using BrokerEventWire = FiveMCleaner.Contracts.BrokerEvent;
 
 namespace FiveMCleaner.Tests.App;
 
@@ -31,6 +31,25 @@ public sealed class ElevatedBrokerClientTerminalReadTests
     {
         var lines = events.Select(item => JsonSerializer.Serialize(item, FiveMCleanerJson.Options));
         return new StringReader(string.Join('\n', lines));
+    }
+
+    [Fact]
+    public void BrokerEventContract_RoundTripsFailureMetadata()
+    {
+        var source = Event(1, BrokerEventKindWire.Failed, "failed", success: false) with
+        {
+            State = "rolled-back",
+            ErrorCode = "transaction-not-committed",
+            AppliedActionIds = ["action.one"]
+        };
+
+        var json = JsonSerializer.Serialize(source, FiveMCleanerJson.Options);
+        var restored = JsonSerializer.Deserialize<BrokerEventWire>(json, FiveMCleanerJson.Options);
+
+        Assert.NotNull(restored);
+        Assert.Equal(source.Kind, restored.Kind);
+        Assert.Equal(source.ErrorCode, restored.ErrorCode);
+        Assert.Equal(source.AppliedActionIds, restored.AppliedActionIds);
     }
 
     // Regression: the old loop kept reading past the terminal event up to the

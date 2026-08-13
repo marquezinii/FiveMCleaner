@@ -1,6 +1,6 @@
-namespace FiveMCleaner.Broker;
+namespace FiveMCleaner.Contracts;
 
-internal enum BrokerEventKind
+public enum BrokerEventKind
 {
     Started,
     Progress,
@@ -11,7 +11,7 @@ internal enum BrokerEventKind
     Failed
 }
 
-internal sealed record BrokerEvent
+public sealed record BrokerEvent
 {
     public required int SchemaVersion { get; init; }
 
@@ -40,7 +40,7 @@ internal sealed record BrokerEvent
     public IReadOnlyList<string>? AppliedActionIds { get; init; }
 }
 
-internal static class BrokerEventSchema
+public static class BrokerEventSchema
 {
     public const int CurrentVersion = 1;
 }

@@ -13,8 +13,6 @@ public sealed record ActionDisplayItem(
     bool RequiresElevation,
     string CategoryLabel);
 
-public sealed record ActivityLogItem(string Time, string Message);
-
 public sealed record HistoryDisplayItem(
     Guid TransactionId,
     string Title,
