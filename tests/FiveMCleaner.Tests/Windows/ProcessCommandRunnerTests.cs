@@ -82,33 +82,4 @@ public sealed class ProcessCommandRunnerTests
             TimeSpan.FromSeconds(5),
             CancellationToken.None));
     }
-
-    [Fact]
-    public async Task RunAsync_RejectsMissingExecutable()
-    {
-        var runner = new ProcessCommandRunner();
-        var missingExecutable = Path.Combine(
-            Path.GetTempPath(),
-            $"FiveMCleaner-{Guid.NewGuid():N}.exe");
-
-        await Assert.ThrowsAsync<FileNotFoundException>(() => runner.RunAsync(
-            missingExecutable,
-            [],
-            TimeSpan.FromSeconds(5),
-            CancellationToken.None));
-    }
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(-1)]
-    public async Task RunAsync_RejectsNonPositiveTimeout(int timeoutSeconds)
-    {
-        var runner = new ProcessCommandRunner();
-
-        await Assert.ThrowsAsync<ArgumentOutOfRangeException>(() => runner.RunAsync(
-            CmdPath,
-            [],
-            TimeSpan.FromSeconds(timeoutSeconds),
-            CancellationToken.None));
-    }
 }

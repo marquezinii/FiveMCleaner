@@ -1,4 +1,3 @@
-using System.Globalization;
 using Microsoft.Win32;
 
 namespace FiveMCleaner.Windows.Infrastructure;
@@ -82,7 +81,7 @@ public sealed class WindowsRegistryStore : IRegistryStore
         ArgumentNullException.ThrowIfNull(address);
         using var baseKey = RegistryKey.OpenBaseKey(address.Hive, view);
         using var key = baseKey.OpenSubKey(address.SubKey, writable: false);
-        if (key is null || !key.GetValueNames().Contains(address.ValueName, StringComparer.OrdinalIgnoreCase))
+        if (key is null || !key.GetValueNames().Contains(address.ValueName, StringComparer.Ordinal))
         {
             return RegistryValueState.Missing;
         }
@@ -124,13 +123,13 @@ public sealed class WindowsRegistryStore : IRegistryStore
             {
                 Exists = true,
                 Kind = kind,
-                NumericValue = Convert.ToInt64(value, CultureInfo.InvariantCulture)
+                NumericValue = Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture)
             },
             RegistryValueKind.QWord => new RegistryValueState
             {
                 Exists = true,
                 Kind = kind,
-                NumericValue = Convert.ToInt64(value, CultureInfo.InvariantCulture)
+                NumericValue = Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture)
             },
             RegistryValueKind.MultiString => new RegistryValueState
             {
@@ -148,7 +147,7 @@ public sealed class WindowsRegistryStore : IRegistryStore
             {
                 Exists = true,
                 Kind = kind,
-                StringValue = Convert.ToString(value, CultureInfo.InvariantCulture) ?? string.Empty
+                StringValue = Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? string.Empty
             },
             _ => throw new NotSupportedException($"Registry value kind '{kind}' is not supported.")
         };

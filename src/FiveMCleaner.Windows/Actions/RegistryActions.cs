@@ -535,7 +535,6 @@ public sealed class HagsToggleAction : AllowlistedRegistryAction
         var flipped = current == EnabledValue ? DisabledValue : EnabledValue;
         return RegistryValueState.FromDword((int)flipped);
     }
-
 }
 
 /// <summary>

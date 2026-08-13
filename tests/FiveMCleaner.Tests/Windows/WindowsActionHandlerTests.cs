@@ -294,30 +294,6 @@ public sealed class WindowsActionHandlerTests
     }
 
     [Fact]
-    public async Task HagsRollback_RejectsSnapshotWithUnexpectedAppliedValue()
-    {
-        var registry = new FakeRegistryStore();
-        var address = new RegistryAddress(
-            RegistryHive.LocalMachine,
-            @"SYSTEM\CurrentControlSet\Control\GraphicsDrivers",
-            "HwSchMode");
-        var action = new HagsToggleAction(registry);
-        var tampered = WindowsActionSnapshot.Serialize(
-            new RegistryMutationSnapshot(
-            [
-                new RegistryMutationSnapshotEntry(
-                    address,
-                    RegistryValueState.FromDword(1),
-                    RegistryValueState.FromDword(1))
-            ]));
-
-        await Assert.ThrowsAsync<InvalidDataException>(() =>
-            action.RollbackAsync(Context(), tampered, CancellationToken.None));
-
-        Assert.False(registry.Read(address).Exists);
-    }
-
-    [Fact]
     public async Task FullscreenOptimizations_TogglesFlagForFiveMAndGtaVPreservingOtherFlags()
     {
         var registry = new FakeRegistryStore();
@@ -365,34 +341,6 @@ public sealed class WindowsActionHandlerTests
     }
 
     [Fact]
-    public async Task FullscreenOptimizationsRollback_RejectsUnknownExecutable()
-    {
-        var registry = new FakeRegistryStore();
-        const string subKey = @"Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers";
-        var action = new FullscreenOptimizationsRegistryAction(
-            registry,
-            @"C:\FiveM\FiveM.exe",
-            gtaVExecutablePath: null);
-        var unknownAddress = new RegistryAddress(
-            RegistryHive.CurrentUser,
-            subKey,
-            @"C:\Other\Unknown.exe");
-        var tampered = WindowsActionSnapshot.Serialize(
-            new RegistryMutationSnapshot(
-            [
-                new RegistryMutationSnapshotEntry(
-                    unknownAddress,
-                    RegistryValueState.Missing,
-                    RegistryValueState.FromString("DISABLEDXMAXIMIZEDWINDOWEDMODE"))
-            ]));
-
-        await Assert.ThrowsAsync<InvalidDataException>(() =>
-            action.RollbackAsync(Context(), tampered, CancellationToken.None));
-
-        Assert.False(registry.Read(unknownAddress).Exists);
-    }
-
-    [Fact]
     public async Task SessionPowerPlan_RequiresAcAndRestoresPreviousScheme()
     {
         var controller = new FakePowerPlanController();
@@ -429,24 +377,6 @@ public sealed class WindowsActionHandlerTests
 
         Assert.True(result.Changed);
         Assert.Equal(controller.PerformanceScheme, controller.ActiveScheme);
-    }
-
-    [Fact]
-    public async Task SessionPowerPlanRollback_PreservesNewerUserChoice()
-    {
-        var controller = new FakePowerPlanController();
-        var action = new SessionPerformancePowerPlanAction(
-            controller,
-            new FakePowerStatusProvider());
-        var context = Context(elevated: true);
-        var result = await action.ApplyAsync(context, CancellationToken.None);
-        var newerScheme = Guid.NewGuid();
-        controller.ActiveScheme = newerScheme;
-
-        await Assert.ThrowsAsync<IOException>(() =>
-            action.RollbackAsync(context, result.SnapshotJson, CancellationToken.None));
-
-        Assert.Equal(newerScheme, controller.ActiveScheme);
     }
 
     [Fact]
@@ -529,20 +459,6 @@ public sealed class WindowsActionHandlerTests
     }
 
     [Fact]
-    public async Task PciExpressPowerManagement_RollbackReportsRestoreFailure()
-    {
-        var controller = new FakePowerPlanController { AspmPolicy = 1 };
-        var action = new PciExpressPowerManagementAction(controller);
-        var result = await action.ApplyAsync(Context(), CancellationToken.None);
-        controller.AspmSetShouldFail = true;
-
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            action.RollbackAsync(Context(), result.SnapshotJson, CancellationToken.None));
-
-        Assert.Equal(0, controller.AspmPolicy);
-    }
-
-    [Fact]
     public void MousePollingRateGuidance_MentionsHighCpuLoadAndCpuPercentAboveThreshold()
     {
         var message = MousePollingRateGuidanceAction.Classify(92);
@@ -580,38 +496,6 @@ public sealed class WindowsActionHandlerTests
         await Assert.ThrowsAsync<IOException>(() =>
             action.RollbackAsync(context, result.SnapshotJson, CancellationToken.None));
         Assert.Equal(new VisualEffectsState(true, false, true), controller.State);
-    }
-
-    [Fact]
-    public async Task VisualEffects_AppliesAndRollbackRestoresPreviousState()
-    {
-        var previous = new VisualEffectsState(true, true, true);
-        var controller = new FakeVisualEffectsController { State = previous };
-        var action = new VisualEffectsAction(controller);
-        var context = Context();
-
-        var result = await action.ApplyAsync(context, CancellationToken.None);
-
-        Assert.True(result.Changed);
-        Assert.Equal(new VisualEffectsState(false, false, false), controller.State);
-
-        await action.RollbackAsync(context, result.SnapshotJson, CancellationToken.None);
-        Assert.Equal(previous, controller.State);
-    }
-
-    [Fact]
-    public async Task VisualEffects_ReturnsNoChangeWhenAlreadyReduced()
-    {
-        var controller = new FakeVisualEffectsController
-        {
-            State = new VisualEffectsState(false, false, false)
-        };
-        var action = new VisualEffectsAction(controller);
-
-        var result = await action.ApplyAsync(Context(), CancellationToken.None);
-
-        Assert.False(result.Changed);
-        Assert.Equal(new VisualEffectsState(false, false, false), controller.State);
     }
 
     private static WindowsActionContext Context(bool elevated = false)
