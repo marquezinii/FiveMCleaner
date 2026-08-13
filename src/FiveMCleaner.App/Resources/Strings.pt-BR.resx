@@ -4,10 +4,6 @@
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
-  <data name="Window.Minimize" xml:space="preserve"><value>Minimizar</value></data>
-  <data name="Window.Maximize" xml:space="preserve"><value>Maximizar</value></data>
-  <data name="Window.Restore" xml:space="preserve"><value>Restaurar</value></data>
-  <data name="Window.Close" xml:space="preserve"><value>Fechar</value></data>
   <data name="Navigation.Section" xml:space="preserve"><value>NAVEGAÇÃO</value></data>
   <data name="Navigation.Overview" xml:space="preserve"><value>Visão geral</value></data>
   <data name="Navigation.Optimizer" xml:space="preserve"><value>Otimizador</value></data>
@@ -154,12 +150,9 @@
   <data name="BugReport.Validation.Description" xml:space="preserve"><value>A descrição deve ter entre 20 e 8.000 caracteres.</value></data>
   <data name="BugReport.Validation.Email" xml:space="preserve"><value>Informe um e-mail válido ou deixe em branco.</value></data>
   <data name="BugReport.Validation.Log" xml:space="preserve"><value>O trecho de log excede o limite de 100 KB.</value></data>
-  <data name="Common.Cancel" xml:space="preserve"><value>Cancelar</value></data>
-  <data name="Common.Continue" xml:space="preserve"><value>Continuar</value></data>
   <data name="Common.Retry" xml:space="preserve"><value>Tentar novamente</value></data>
   <data name="Common.Unknown" xml:space="preserve"><value>Desconhecido</value></data>
   <data name="Status.Ready.Headline" xml:space="preserve"><value>Pronto para otimizar</value></data>
-  <data name="Status.Ready.Detail" xml:space="preserve"><value>Revise o plano e escolha Executar plano quando estiver pronto.</value></data>
   <data name="Status.Waiting" xml:space="preserve"><value>AGUARDANDO</value></data>
   <data name="Status.Analyzing" xml:space="preserve"><value>Analisando…</value></data>
   <data name="Status.SearchingFiveM" xml:space="preserve"><value>PROCURANDO FIVEM</value></data>
@@ -172,14 +165,11 @@
   <data name="Status.Restoring" xml:space="preserve"><value>RESTAURANDO</value></data>
   <data name="Status.Completed" xml:space="preserve"><value>CONCLUÍDO</value></data>
   <data name="Status.Cancelled" xml:space="preserve"><value>CANCELADO</value></data>
-  <data name="Status.Cancelling" xml:space="preserve"><value>CANCELANDO</value></data>
   <data name="Status.Warning" xml:space="preserve"><value>ATENÇÃO</value></data>
   <data name="Status.SafeFailure" xml:space="preserve"><value>FALHA SEGURA</value></data>
   <data name="Status.InProgress" xml:space="preserve"><value>EM ANDAMENTO</value></data>
   <data name="Status.OptimizationCompleted" xml:space="preserve"><value>Otimização concluída</value></data>
   <data name="Status.SafeCancellation.Headline" xml:space="preserve"><value>Operação cancelada com segurança</value></data>
-  <data name="Status.SafeCancellation.Detail" xml:space="preserve"><value>O cancelamento ocorreu entre ações. Alterações incompletas foram revertidas.</value></data>
-  <data name="Status.CancellationPending" xml:space="preserve"><value>A etapa atual terminará antes do cancelamento.</value></data>
   <data name="Status.CouldNotComplete" xml:space="preserve"><value>Não foi possível concluir</value></data>
   <data name="Status.CouldNotRestore" xml:space="preserve"><value>Não foi possível restaurar</value></data>
   <data name="Plan.CloseFiveM" xml:space="preserve"><value>Feche o FiveM primeiro</value></data>
@@ -194,7 +184,6 @@
   <data name="Plan.Safety.Reversible" xml:space="preserve"><value>Todas as mudanças deste plano podem ser desfeitas.</value></data>
   <data name="Plan.NoAdditionalWarnings" xml:space="preserve"><value>Nenhum aviso adicional para este plano.</value></data>
   <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} ações • catálogo v{1}</value></data>
-  <data name="Plan.ActionsCompletedFreed" xml:space="preserve"><value>{0} ações concluídas • {1} liberados.</value></data>
   <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>{0} ações concluídas. {1}</value></data>
   <data name="Diagnosis.Partial" xml:space="preserve"><value>Diagnóstico parcial</value></data>
   <data name="Diagnosis.CouldNotScanAgain" xml:space="preserve"><value>Não foi possível reanalisar agora</value></data>
@@ -263,21 +252,6 @@
   <data name="Tray.Message" xml:space="preserve"><value>Clique duas vezes no ícone da bandeja para voltar.</value></data>
   <data name="Notification.UpdateAvailable.Title" xml:space="preserve"><value>Atualização do FiveMCleaner disponível</value></data>
   <data name="Notification.UpdateAvailable.Message" xml:space="preserve"><value>A versão {0} já está disponível. Clique para abrir o FiveMCleaner.</value></data>
-  <data name="Log.StartedStandardUser" xml:space="preserve"><value>FiveMCleaner iniciado sem privilégios elevados.</value></data>
-  <data name="Log.StartupSettingFailed" xml:space="preserve"><value>Não foi possível atualizar a inicialização: {0}</value></data>
-  <data name="Log.StartupReadFailed" xml:space="preserve"><value>Não foi possível ler a inicialização: {0}</value></data>
-  <data name="Log.DiagnosisCompleted" xml:space="preserve"><value>Diagnóstico local concluído.</value></data>
-  <data name="Log.ComputerScannedAgain" xml:space="preserve"><value>PC reanalisado.</value></data>
-  <data name="Log.RescanFailed" xml:space="preserve"><value>Falha segura na reanálise: {0}</value></data>
-  <data name="Log.StartingProfile" xml:space="preserve"><value>Iniciando perfil {0}.</value></data>
-  <data name="Log.Warning" xml:space="preserve"><value>Atenção: {0}</value></data>
-  <data name="Log.Error" xml:space="preserve"><value>Erro: {0}</value></data>
-  <data name="Log.CancellationConfirmed" xml:space="preserve"><value>Cancelamento confirmado.</value></data>
-  <data name="Log.RollbackCompleted" xml:space="preserve"><value>Rollback concluído.</value></data>
-  <data name="Log.NoReversibleChanges" xml:space="preserve"><value>Nenhuma alteração reversível encontrada.</value></data>
-  <data name="Log.RollbackCancelled" xml:space="preserve"><value>Rollback cancelado entre etapas.</value></data>
-  <data name="Log.RollbackFailed" xml:space="preserve"><value>Falha segura no rollback: {0}</value></data>
-  <data name="Log.SettingsSaveFailed" xml:space="preserve"><value>Não foi possível salvar as configurações agora.</value></data>
   <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Ao clicar no X, o FiveMCleaner passará a ser minimizado para a bandeja do sistema em vez de ser fechado.</value></data>
   <data name="Settings.Telemetry.Title" xml:space="preserve"><value>Ajude a melhorar o FiveMCleaner</value></data>
   <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Envie telemetria técnica anonimizada, somente se você quiser.</value></data>
@@ -547,27 +521,10 @@
   <data name="Dialog.UpdateInstall.Failed" xml:space="preserve"><value>Não foi possível instalar a atualização verificada: {0}</value></data>
   <data name="Dialog.OpenExternal.Title" xml:space="preserve"><value>Não foi possível abrir</value></data>
   <data name="Dialog.OpenExternal.Message" xml:space="preserve"><value>O Windows não conseguiu abrir este item: {0}</value></data>
-  <data name="Log.UpdateAvailable" xml:space="preserve"><value>A atualização {0} está disponível na release oficial do GitHub.</value></data>
-  <data name="Log.UpdateCheckFailed" xml:space="preserve"><value>Não foi possível verificar atualizações: {0}</value></data>
-  <data name="Log.UpdateVerified" xml:space="preserve"><value>Atualização baixada e verificada com SHA-256.</value></data>
-  <data name="Log.UpdateInstallStarted" xml:space="preserve"><value>Instalando a atualização {0} em segundo plano; o FiveMCleaner vai reabrir sozinho.</value></data>
-  <data name="Log.UpdateInstallFailed" xml:space="preserve"><value>A atualização não foi instalada: {0}</value></data>
-  <data name="Log.UpdateCompleted" xml:space="preserve"><value>O FiveMCleaner foi atualizado para a versão {0}.</value></data>
-  <data name="Log.UpdateDownloadFailed" xml:space="preserve"><value>Falha segura ao baixar a atualização: {0}</value></data>
   <data name="Diagnosis.MemoryAvailable" xml:space="preserve"><value>{0:0.#} GB • {1:0.#} GB disponíveis</value></data>
   <data name="Diagnosis.MemoryTotal" xml:space="preserve"><value>{0:0} GB</value></data>
   <data name="Diagnosis.MemoryModules" xml:space="preserve"><value>{0:0} GB · {1}</value></data>
   <data name="Diagnosis.DiskCapacity" xml:space="preserve"><value>{0:0} GB</value></data>
-  <data name="Profiles.Impact.Pending" xml:space="preserve"><value>Potencial calculado após o diagnóstico local</value></data>
-  <data name="Profiles.Impact.Light.Low" xml:space="preserve"><value>Potencial baixo • FPS não medido</value></data>
-  <data name="Profiles.Impact.Light.Moderate" xml:space="preserve"><value>Potencial moderado • FPS não medido</value></data>
-  <data name="Profiles.Impact.Light.High" xml:space="preserve"><value>Potencial limitado neste PC • FPS não medido</value></data>
-  <data name="Profiles.Impact.Balanced.Low" xml:space="preserve"><value>Potencial baixo • FPS não medido</value></data>
-  <data name="Profiles.Impact.Balanced.Moderate" xml:space="preserve"><value>Potencial moderado • FPS não medido</value></data>
-  <data name="Profiles.Impact.Balanced.High" xml:space="preserve"><value>Potencial alto • FPS não medido</value></data>
-  <data name="Profiles.Impact.Aggressive.Low" xml:space="preserve"><value>Potencial baixo • forte redução visual • FPS não medido</value></data>
-  <data name="Profiles.Impact.Aggressive.Moderate" xml:space="preserve"><value>Potencial alto • forte redução visual • FPS não medido</value></data>
-  <data name="Profiles.Impact.Aggressive.High" xml:space="preserve"><value>Maior potencial • forte redução visual • FPS não medido</value></data>
   <data name="Demo.Cpu" xml:space="preserve"><value>Processador de 6 núcleos</value></data>
   <data name="Demo.Gpu" xml:space="preserve"><value>GPU dedicada • 8 GB</value></data>
   <data name="Demo.Notice" xml:space="preserve"><value>Configuração equilibrada; o perfil recomendado preserva qualidade e prioriza consistência.</value></data>
@@ -609,7 +566,6 @@
   <data name="Runtime.ActionSkipped" xml:space="preserve"><value>Ignorada: {0}</value></data>
   <data name="Runtime.ActionFailed" xml:space="preserve"><value>Falhou: {0}</value></data>
   <data name="Runtime.ActionRolledBack" xml:space="preserve"><value>Revertida após falha: {0}</value></data>
-  <data name="Progress.StepCounter" xml:space="preserve"><value>Etapa {0} de {1}</value></data>
   <data name="Outcome.Verified" xml:space="preserve"><value>Verificado</value></data>
   <data name="Outcome.Applied" xml:space="preserve"><value>Alterado</value></data>
   <data name="Outcome.Skipped" xml:space="preserve"><value>Ignorado</value></data>
@@ -660,12 +616,8 @@
   <data name="GtaVBenchmark.Failure.Timeout" xml:space="preserve"><value>O GTA V não encerrou dentro do tempo esperado; o benchmark foi cancelado.</value></data>
   <data name="GtaVBenchmark.Failure.Generic" xml:space="preserve"><value>Não foi possível concluir o benchmark oficial.</value></data>
   <data name="Report.SaveButton" xml:space="preserve"><value>Salvar relatório em arquivo</value></data>
-  <data name="Log.ReportSaved" xml:space="preserve"><value>Relatório técnico salvo em {0}.</value></data>
-  <data name="Log.ReportSaveFailed" xml:space="preserve"><value>Não foi possível salvar o relatório: {0}</value></data>
   <data name="Common.Yes" xml:space="preserve"><value>Sim</value></data>
   <data name="Common.No" xml:space="preserve"><value>Não</value></data>
-  <data name="Log.ReportCopied" xml:space="preserve"><value>Relatório técnico copiado para a área de transferência.</value></data>
-  <data name="Log.ReportCopyFailed" xml:space="preserve"><value>Não foi possível copiar o relatório: {0}</value></data>
   <data name="Profiles.Presentation.Light.Benefits" xml:space="preserve"><value>Libera espaço e aplica ajustes leves de baixo impacto, preservando quase toda a qualidade visual.</value></data>
   <data name="Profiles.Presentation.Balanced.Benefits" xml:space="preserve"><value>Equilibra qualidade visual, uso de GPU e estabilidade de quadros com ajustes moderados e totalmente reversíveis.</value></data>
   <data name="Profiles.Presentation.Aggressive.Benefits" xml:space="preserve"><value>Prioriza FPS e responsividade em vez de qualidade visual, aplicando todos os ajustes seguros disponíveis.</value></data>
@@ -713,8 +665,6 @@
   <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Informados pelo Windows</value></data>
   <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>MEMÓRIA LIVRE</value></data>
   <data name="Dashboard.Kpi.Memory.Detail" xml:space="preserve"><value>de {0:0.0} GB no total</value></data>
-  <data name="Dashboard.Kpi.Disk.Title" xml:space="preserve"><value>ESPAÇO LIVRE</value></data>
-  <data name="Dashboard.Kpi.Disk.Detail" xml:space="preserve"><value>No disco do sistema</value></data>
   <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHE DO FIVEM</value></data>
   <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisado pelo otimizador</value></data>
   <data name="Dashboard.Kpi.Cache.None" xml:space="preserve"><value>Nenhum</value></data>

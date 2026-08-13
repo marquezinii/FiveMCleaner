@@ -27,7 +27,7 @@ public sealed class BrushKeyConverter : IValueConverter
 }
 
 /// <summary>
-/// Resolves a vector icon resource key (e.g. "IconCpu", declared in
+/// Resolves a vector icon resource key (e.g. "IconShield", declared in
 /// <c>Themes/Icons.xaml</c>) to its <see cref="System.Windows.Media.Geometry"/>.
 /// Lets a view model name an icon without referencing WPF drawing types.
 /// </summary>
