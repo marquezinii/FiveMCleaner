@@ -7,7 +7,7 @@
 
 - **Produto:** FiveMCleaner, aplicativo desktop Windows para otimização transparente, reversível e orientada por diagnóstico do FiveM para **GTAV Legacy**.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
-- **Último estado consolidado neste documento-fonte:** 12/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
+- **Último estado consolidado neste documento-fonte:** 13/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
 - **Versão pública:** `v1.3.2`, publicada em 07/08/2026 a partir de `main`. Confirme tags/releases antes de iniciar uma nova publicação.
 - **Atalho de desenvolvimento:** `FiveMCleaner - Desenvolvimento` deve representar somente o estado integrado de `dev/proxima-versao` e usar `scripts\Start-DevelopmentApp.ps1`. A reconstrução/validação do atalho pertence ao fluxo de integração, não a tarefas paralelas isoladas.
 
@@ -33,8 +33,8 @@ Documentos normativos: `docs/safety.md` e `docs/architecture.md`.
 `FiveMCleaner.slnx` separa responsabilidades. A árvore de `src/` possui nove projetos principais:
 
 - `FiveMCleaner.App` — WPF, navegação, localização, tema, conta, apresentação, progresso e interação.
-- `FiveMCleaner.Contracts` — DTOs, IDs, enums e contratos compartilhados.
-- `FiveMCleaner.Core` — catálogo de ações, perfis, planejamento e regras independentes de Windows/UI.
+- `FiveMCleaner.Contracts` — DTOs, IDs, enums e contratos compartilhados; os estados persistidos de transação e journal são contratos duráveis append-only.
+- `FiveMCleaner.Core` — catálogo de ações, perfis, planejamento e regras independentes de Windows/UI; o planejamento é puro e recebe explicitamente suas entradas variáveis.
 - `FiveMCleaner.Windows` — descoberta e adaptadores Windows, filesystem, registro, diagnósticos e ações permitidas.
 - `FiveMCleaner.Broker` — processo administrativo efêmero e allowlisted; sem shell/comandos arbitrários.
 - `FiveMCleaner.Launcher` — inicialização/ativação do runtime e coordenação do fluxo de atualização.
@@ -78,7 +78,8 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 - Diagnósticos cobrem FiveM/GTA, CPU, GPU, RAM, armazenamento, cache, processos, rede, pagefile/commit, drivers, monitor, HAGS, energia, WHEA, sinais de throttling e outros dados obtidos por APIs nativas/best-effort.
 - Existem diagnósticos somente leitura para gargalo provável, overlays/captura, logs do FiveM e orientação de medição pelas ferramentas oficiais do FiveM.
 - Relatório estruturado e relatório técnico sanitizado podem ser copiados/salvos explicitamente pelo usuário.
-- Journal, snapshots e rollback preservam rastreabilidade das ações.
+- Journal, snapshots e rollback preservam rastreabilidade das ações; a revalidação de planos compara integralmente os metadados de ações e usa a reconstrução canônica da requisição.
+- Ações XML de gráficos usam uma transação segura compartilhada; inspeção de processos e adaptadores de GPU têm primitivas de leitura separadas das mutações.
 - Diagnóstico de criadores reconhece OBS, Streamlabs Desktop e TikTok LIVE Studio sem fechar processos nem inferir que uma live está ativa.
 
 ### Conta e autenticação
@@ -124,7 +125,7 @@ Somente itens ainda relevantes devem permanecer aqui. Quando resolvidos e integr
 
 Estes números são **referência histórica do último estado validado**, não substituem testes da branch atual.
 
-- **12/08/2026:** build .NET Release sem warnings, **781 testes** sob Microsoft Testing Platform, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1`, auditoria NuGet e `git diff --check` aprovados. Site: lint, typecheck, export estático e **3 testes**; Worker: **165 testes**; dashboard: **44 testes**. As três auditorias npm ficaram sem vulnerabilidades. Instalador Inno 7 x64 e SBOM SPDX também foram gerados e validados.
+- **13/08/2026:** após integrar a refatoração de contratos/Core, infraestrutura Windows, ações XML, App e IPC, `dotnet build` Release sem restore, suíte .NET Release, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` foram aprovados. Site: lint, typecheck, export estático e **3 testes** aprovados. Os gates completos de Worker, dashboard, SBOM e CI do GitHub também passaram nos PRs integrados.
 
 Ao alterar uma superfície, execute a validação aplicável novamente e use os resultados atuais no PR. Nunca use estes números para afirmar que código posterior foi testado.
 
