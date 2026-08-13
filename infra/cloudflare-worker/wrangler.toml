@@ -30,6 +30,8 @@
 ##   ADMIN_PASSWORD_HASH -- output of `npm run hash-admin-password`
 ##   IP_HASH_SECRET      -- a long random string, used only to keep
 ##                          brute-force tracking from storing a raw IP
+##   RELEASE_MANIFEST_JSON -- signed stable feed generated and published by
+##                            the official stable-release workflow
 ##
 ## DASHBOARD_ORIGIN below is a plain, non-secret var -- the exact origin the
 ## dashboard is served from, so CORS headers are only ever sent back to that
