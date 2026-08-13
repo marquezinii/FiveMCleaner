@@ -32,16 +32,12 @@ public enum ActionRisk
     High
 }
 
-/// <summary>
-/// How far a single action can be undone once it has been applied. Drives the
-/// rollback ordering, the non-reversible warning shown before a plan runs and
-/// the report's restore flag.
-/// </summary>
+/// <summary>How far an applied action can be undone; drives rollback and the non-reversible warning.</summary>
 /// <remarks>
-/// DURABLE CONTRACT. Persisted by name (camelCase) on every action entry of
-/// <c>%LOCALAPPDATA%\FiveMCleaner\Transactions\{id}.json</c>, so a rollback
-/// performed by a later build still reads the reversibility recorded when the
-/// change was made. Members may be appended, never renamed or removed.
+/// DURABLE CONTRACT. Persisted by name on every action entry of the transaction
+/// journal, so a rollback by a later build still reads the reversibility
+/// recorded when the change was made. The append-only rule of
+/// <see cref="ActionExecutionOutcome"/> applies.
 /// </remarks>
 public enum ActionReversibility
 {
@@ -60,15 +56,12 @@ public enum ActionReversibility
 
 /// <summary>Privilege an action needs in order to run.</summary>
 /// <remarks>
-/// DURABLE CONTRACT. Persisted by name alongside <see cref="ActionReversibility"/>
-/// in the transaction journal; the same append-only rule applies.
+/// DURABLE CONTRACT. Persisted by name alongside <see cref="ActionReversibility"/>;
+/// the same append-only rule applies.
 /// </remarks>
 public enum RequiredPrivilege
 {
-    /// <summary>Runs in the normal, unelevated application process.</summary>
     StandardUser = 0,
-
-    /// <summary>Deferred to the elevated broker when it cannot run unelevated.</summary>
     Administrator = 1
 }
 

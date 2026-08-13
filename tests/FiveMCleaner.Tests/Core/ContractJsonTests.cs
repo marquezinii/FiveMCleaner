@@ -78,11 +78,6 @@ public sealed class ContractJsonTests
         Assert.Equal(original.Blocks, restored.Blocks);
     }
 
-    /// <summary>
-    /// The shared options are the one serializer contract behind the plan, the
-    /// broker events and the durable journal. A consumer that mutated them
-    /// would change every one of those boundaries at once.
-    /// </summary>
     [Fact]
     public void SharedOptions_CannotBeMutatedByConsumers()
     {

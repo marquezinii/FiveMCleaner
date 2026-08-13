@@ -76,8 +76,7 @@ public sealed class JsonWindowsTransactionJournalStore : IWindowsTransactionJour
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(rootDirectory);
         this.rootDirectory = Path.GetFullPath(rootDirectory);
-        // The copy already carries the camelCase string-enum converter from the
-        // shared contract; adding a second identical one would never be reached.
+        // The copy already carries the shared string-enum converter.
         serializerOptions = new JsonSerializerOptions(FiveMCleanerJson.Options)
         {
             WriteIndented = true

@@ -57,11 +57,8 @@ public sealed class ActionMetadataContractTests
         }
     }
 
-    /// <summary>
-    /// Makes the divergence theory self-maintaining: a member added to
-    /// <see cref="ActionMetadataDto"/> without a matching tampered case fails
-    /// here instead of silently becoming a field the broker never compares.
-    /// </summary>
+    // A member added to the contract without a tampered case fails here instead
+    // of silently becoming a field the broker never compares.
     [Fact]
     public void DivergenceTheory_CoversEveryContractMember()
     {

@@ -3,30 +3,20 @@ using System.Text.Json.Serialization;
 
 namespace FiveMCleaner.Contracts;
 
-/// <summary>
-/// The single JSON contract shared by every FiveMCleaner boundary: the plan
-/// handed to the elevated broker, the broker's progress events, the durable
-/// transaction journal and the locally persisted settings.
-/// </summary>
 public static class FiveMCleanerJson
 {
     /// <summary>
-    /// Canonical, strict serializer settings: camelCase members and enums,
-    /// no comments, no numeric enum values and no unmapped members.
+    /// Shared by the plan sent to the broker, the broker events, the durable
+    /// journal and the local settings. Read-only: mutating it would change all
+    /// four boundaries at once, so a boundary that needs different behaviour
+    /// copies it instead.
     /// </summary>
-    /// <remarks>
-    /// Deliberately read-only. A consumer that added a converter or relaxed a
-    /// setting here would silently change every boundary at once, including
-    /// the journal that keeps past runs reversible; a boundary that genuinely
-    /// needs different behaviour copies these options
-    /// (<c>new JsonSerializerOptions(FiveMCleanerJson.Options)</c>) and adjusts
-    /// the copy.
-    /// </remarks>
     public static JsonSerializerOptions Options { get; } = CreateOptions();
 
     public static string SerializeRequest(OptimizationPlanRequestDto request)
     {
-        return Serialize(request);
+        ArgumentNullException.ThrowIfNull(request);
+        return JsonSerializer.Serialize(request, Options);
     }
 
     public static OptimizationPlanRequestDto DeserializeRequest(string json)
@@ -36,20 +26,13 @@ public static class FiveMCleanerJson
 
     public static string SerializePlan(OptimizationPlanDto plan)
     {
-        return Serialize(plan);
+        ArgumentNullException.ThrowIfNull(plan);
+        return JsonSerializer.Serialize(plan, Options);
     }
 
     public static OptimizationPlanDto DeserializePlan(string json)
     {
         return DeserializeRequired<OptimizationPlanDto>(json);
-    }
-
-    private static string Serialize<T>(T value)
-        where T : class
-    {
-        ArgumentNullException.ThrowIfNull(value);
-
-        return JsonSerializer.Serialize(value, Options);
     }
 
     private static T DeserializeRequired<T>(string json)
@@ -73,8 +56,8 @@ public static class FiveMCleanerJson
 
         options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false));
 
-        // Locked here rather than left to the first serialization so the
-        // guarantee does not depend on which boundary happens to run first.
+        // Locked here, not on first use, so the guarantee does not depend on
+        // which boundary happens to serialize first.
         options.MakeReadOnly(populateMissingResolver: true);
         return options;
     }
