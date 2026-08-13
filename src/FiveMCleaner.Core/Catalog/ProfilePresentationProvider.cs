@@ -45,10 +45,7 @@ public static class ProfilePresentationProvider
             OptimizationProfile.Light => ProfileImpactLevel.Low,
             OptimizationProfile.Balanced => ProfileImpactLevel.Moderate,
             OptimizationProfile.Aggressive => ProfileImpactLevel.High,
-            _ => throw new ArgumentOutOfRangeException(
-                nameof(profile),
-                profile,
-                "Unknown optimization profile.")
+            _ => throw new ArgumentOutOfRangeException(nameof(profile), profile, "Unknown optimization profile.")
         };
 
         catalog ??= ActionCatalog.Current;
@@ -70,9 +67,7 @@ public static class ProfilePresentationProvider
                     or ActionReversibility.RebuildableData),
             RequiresElevation = actions.Any(action =>
                 action.RequiredPrivilege == RequiredPrivilege.Administrator),
-            MaximumRisk = actions.Length == 0
-                ? ActionRisk.Informational
-                : actions.Max(action => action.Risk)
+            MaximumRisk = actions.Max(action => action.Risk)
         };
     }
 }

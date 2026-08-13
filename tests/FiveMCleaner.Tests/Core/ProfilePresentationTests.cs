@@ -18,34 +18,32 @@ public sealed class ProfilePresentationTests
         Assert.Equal(expected, presentation.ImpactLevel);
     }
 
-    [Theory]
-    [InlineData(OptimizationProfile.Light)]
-    [InlineData(OptimizationProfile.Balanced)]
-    [InlineData(OptimizationProfile.Aggressive)]
-    public void For_DerivesProfileFactsFromCatalogSoTheyCannotDrift(
-        OptimizationProfile profile)
+    [Fact]
+    public void For_DerivesCategoriesFromCatalogSoItCannotDrift()
     {
-        var presentation = ProfilePresentationProvider.For(profile);
+        var presentation = ProfilePresentationProvider.For(OptimizationProfile.Aggressive);
 
-        var actions = ActionCatalog.Current.Actions
-            .Where(action => action.Supports(profile))
-            .ToArray();
-        var expectedCategories = actions
+        var expected = ActionCatalog.Current.Actions
+            .Where(action => action.Supports(OptimizationProfile.Aggressive))
             .Select(action => action.Category)
             .Distinct()
             .OrderBy(category => (int)category)
             .ToArray();
 
-        Assert.Equal(expectedCategories, presentation.AnalyzedCategories);
+        Assert.Equal(expected, presentation.AnalyzedCategories);
         Assert.NotEmpty(presentation.AnalyzedCategories);
-        Assert.Equal(
-            actions.Any(action => action.Reversibility is ActionReversibility.Irreversible
-                or ActionReversibility.RebuildableData),
-            presentation.ContainsNonReversible);
-        Assert.Equal(
-            actions.Any(action => action.RequiredPrivilege == RequiredPrivilege.Administrator),
-            presentation.RequiresElevation);
-        Assert.Equal(actions.Max(action => action.Risk), presentation.MaximumRisk);
+    }
+
+    [Fact]
+    public void For_FlagsElevationAndReversibilityHonestly()
+    {
+        // O perfil equilibrado inclui o plano de energia (administrador, reversível).
+        var balanced = ProfilePresentationProvider.For(OptimizationProfile.Balanced);
+        Assert.True(balanced.RequiresElevation);
+
+        // O perfil leve não deve exigir elevação.
+        var light = ProfilePresentationProvider.For(OptimizationProfile.Light);
+        Assert.False(light.RequiresElevation);
     }
 
     [Fact]

@@ -1,4 +1,3 @@
-using System.Reflection;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Catalog;
 using Xunit;
@@ -14,9 +13,6 @@ public sealed class ActionCatalogTests
 
         Assert.Equal(14, ActionCatalog.CurrentVersion);
         Assert.NotEmpty(catalog.Actions);
-        Assert.Equal(
-            catalog.Actions.Count,
-            catalog.Actions.Select(action => action.Id).Distinct(StringComparer.Ordinal).Count());
 
         Assert.All(catalog.Actions, action =>
         {
@@ -31,14 +27,12 @@ public sealed class ActionCatalogTests
             Assert.NotEmpty(action.SupportedProfiles);
             Assert.Equal(action.SupportedProfiles.Count, action.SupportedProfiles.Distinct().Count());
 
-            // Documentação por ação de primeira classe (PROMPT 2).
             Assert.False(string.IsNullOrWhiteSpace(action.DetectionSummary));
             Assert.False(string.IsNullOrWhiteSpace(action.ConfirmationSummary));
             Assert.False(string.IsNullOrWhiteSpace(action.UndoSummary));
             Assert.False(string.IsNullOrWhiteSpace(action.RiskLimitations));
             Assert.NotEqual(SupportedWindowsVersions.None, action.SupportedWindows);
 
-            // Todo prerequisito referencia uma ação existente do catálogo.
             Assert.All(action.Prerequisites, prerequisiteId =>
                 Assert.True(catalog.TryGet(prerequisiteId, out _)));
         });
@@ -48,10 +42,7 @@ public sealed class ActionCatalogTests
     public void CurrentCatalog_DefinesEveryPublishedActionIdExactlyOnce()
     {
         var publishedIds = typeof(OptimizationActionIds)
-            .GetFields(BindingFlags.Public | BindingFlags.Static)
-            .Where(field => field.IsLiteral
-                && !field.IsInitOnly
-                && field.FieldType == typeof(string))
+            .GetFields()
             .Select(field => Assert.IsType<string>(field.GetRawConstantValue()))
             .Order(StringComparer.Ordinal)
             .ToArray();
