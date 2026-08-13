@@ -108,6 +108,8 @@ public sealed record WindowsOptimizationDependencies
 
     public required IStuckFiveMProcessInspector StuckProcess { get; init; }
 
+    public required IFiveMProcessTerminator StuckProcessTerminator { get; init; }
+
     public required IVendorLaptopSoftwareInspector VendorLaptopSoftware { get; init; }
 
     public static WindowsOptimizationDependencies CreateDefault(
@@ -141,6 +143,7 @@ public sealed record WindowsOptimizationDependencies
             HardwareStability = new WindowsHardwareStabilityInspector(),
             BackgroundProcess = new WindowsBackgroundProcessInspector(),
             StuckProcess = new WindowsStuckFiveMProcessInspector(),
+            StuckProcessTerminator = new WindowsFiveMProcessTerminator(),
             VendorLaptopSoftware = new WindowsVendorLaptopSoftwareInspector()
         };
     }
@@ -275,7 +278,8 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.FileTree),
             new StuckProcessTerminationAction(
                 environment.FiveMInstallationRoot,
-                dependencies.StuckProcess),
+                dependencies.StuckProcess,
+                dependencies.StuckProcessTerminator),
             new RecreateFiveMLocalDataAction(
                 environment.FiveMAppRoot,
                 environment.FiveMInstallationRoot,
@@ -514,7 +518,8 @@ public sealed class WindowsOptimizationActionFactory
                 environment.FiveMAppRoot),
             OptimizationActionIds.TerminateStuckFiveMProcess => new StuckProcessTerminationAction(
                 environment.FiveMInstallationRoot,
-                dependencies.StuckProcess),
+                dependencies.StuckProcess,
+                dependencies.StuckProcessTerminator),
             OptimizationActionIds.RecreateFiveMLocalData => new RecreateFiveMLocalDataAction(
                 environment.FiveMAppRoot,
                 environment.FiveMInstallationRoot,

@@ -283,11 +283,26 @@ internal sealed class FakeStuckFiveMProcessInspector : IStuckFiveMProcessInspect
 {
     public StuckFiveMProcessSnapshot Snapshot { get; set; } = new(false, 0, string.Empty);
 
+    public StuckFiveMProcessSnapshot GetSnapshot(string installationRoot) => Snapshot;
+}
+
+internal sealed class FakeFiveMProcessTerminator : IFiveMProcessTerminator
+{
     public bool TerminateSucceeds { get; set; } = true;
 
-    public StuckFiveMProcessSnapshot GetSnapshot(string installationRoot) => Snapshot;
+    public int CallCount { get; private set; }
 
-    public bool TryTerminate(int processId) => TerminateSucceeds;
+    public StuckFiveMProcessSnapshot? LastSnapshot { get; private set; }
+
+    public string? LastInstallationRoot { get; private set; }
+
+    public bool TryTerminate(StuckFiveMProcessSnapshot snapshot, string installationRoot)
+    {
+        CallCount++;
+        LastSnapshot = snapshot;
+        LastInstallationRoot = installationRoot;
+        return TerminateSucceeds;
+    }
 }
 
 internal sealed class InMemoryJournalStore : IWindowsTransactionJournalStore
@@ -368,6 +383,7 @@ internal static class WindowsTestRuntime
             HardwareStability = new FakeHardwareStabilityInspector(),
             BackgroundProcess = new FakeBackgroundProcessInspector(),
             StuckProcess = new FakeStuckFiveMProcessInspector(),
+            StuckProcessTerminator = new FakeFiveMProcessTerminator(),
             VendorLaptopSoftware = new FakeVendorLaptopSoftwareInspector()
         };
 

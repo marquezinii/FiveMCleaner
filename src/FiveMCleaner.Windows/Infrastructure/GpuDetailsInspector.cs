@@ -1,6 +1,3 @@
-using Microsoft.Win32;
-using System.Threading;
-
 namespace FiveMCleaner.Windows.Infrastructure;
 
 public enum GpuKindGuess
@@ -73,54 +70,12 @@ public sealed class WindowsGpuDetailsInspector : IGpuDetailsInspector
 
     private static IReadOnlyList<GpuAdapterDetails> GetSnapshotInternal()
     {
-        var results = new List<GpuAdapterDetails>();
-        try
-        {
-            using var video = Registry.LocalMachine.OpenSubKey(
-                @"SYSTEM\CurrentControlSet\Control\Video");
-            if (video is null)
-            {
-                return results;
-            }
-
-            foreach (var deviceKeyName in video.GetSubKeyNames())
-            {
-                using var device = video.OpenSubKey(deviceKeyName);
-                if (device is null)
-                {
-                    continue;
-                }
-
-                foreach (var adapterKeyName in device.GetSubKeyNames()
-                             .Where(name => name.Length == 4 && name.All(char.IsDigit)))
-                {
-                    using var adapter = device.OpenSubKey(adapterKeyName);
-                    var name = (adapter?.GetValue("DriverDesc") as string)?.Trim();
-                    if (string.IsNullOrWhiteSpace(name)
-                        || name.Contains("Basic Render", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    var vram = adapter?.GetValue("HardwareInformation.qwMemorySize") switch
-                    {
-                        long value and > 0 => value,
-                        int value and > 0 => (long)value,
-                        _ => (long?)null
-                    };
-
-                    results.Add(new GpuAdapterDetails(name, vram, GuessKind(name)));
-                }
-            }
-        }
-        catch (Exception exception) when (exception is System.Security.SecurityException
-            or UnauthorizedAccessException
-            or System.ComponentModel.Win32Exception)
-        {
-            return [];
-        }
-
-        return results;
+        return GpuAdapterRegistryReader.ReadAll()
+            .Select(adapter => new GpuAdapterDetails(
+                adapter.DriverDescription,
+                adapter.VramBytes,
+                GuessKind(adapter.DriverDescription)))
+            .ToArray();
     }
 
     private static GpuKindGuess GuessKind(string driverDescription)

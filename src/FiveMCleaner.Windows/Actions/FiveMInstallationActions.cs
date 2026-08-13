@@ -460,13 +460,16 @@ public sealed class StuckProcessTerminationAction : WindowsOptimizationAction
 {
     private readonly string fiveMInstallationRoot;
     private readonly IStuckFiveMProcessInspector inspector;
+    private readonly IFiveMProcessTerminator terminator;
 
     public StuckProcessTerminationAction(
         string fiveMInstallationRoot,
-        IStuckFiveMProcessInspector inspector)
+        IStuckFiveMProcessInspector inspector,
+        IFiveMProcessTerminator terminator)
     {
         this.fiveMInstallationRoot = SafePath.Normalize(fiveMInstallationRoot);
         this.inspector = inspector ?? throw new ArgumentNullException(nameof(inspector));
+        this.terminator = terminator ?? throw new ArgumentNullException(nameof(terminator));
     }
 
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
@@ -484,7 +487,7 @@ public sealed class StuckProcessTerminationAction : WindowsOptimizationAction
                 "Nenhum processo travado do FiveM foi encontrado; nada para encerrar."));
         }
 
-        if (!inspector.TryTerminate(snapshot.ProcessId))
+        if (!terminator.TryTerminate(snapshot, fiveMInstallationRoot))
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
                 $"Processo travado '{snapshot.ProcessName}' (PID {snapshot.ProcessId}) foi encontrado, mas não foi possível encerrá-lo agora."));
