@@ -64,7 +64,7 @@ const copy = {
     quickFacts: [
       ["01 clique", "para iniciar"],
       ["03 perfis", "decididos pelo app"],
-      ["Local", "sem telemetria"],
+      ["Local", "telemetria opcional"],
       ["Reversível", "com snapshots"],
     ],
     profiles: {
@@ -230,7 +230,7 @@ const copy = {
         ],
         [
           "O aplicativo coleta meus dados?",
-          "Não há telemetria. A otimização acontece localmente. A rede é usada para verificar atualizações e somente envia um relatório de bug se você escolher essa ação.",
+          "A telemetria técnica anônima vem habilitada por padrão em instalações novas e pode ser desligada a qualquer momento. Ela envia apenas erros categorizados, tempo de execução e versão; a otimização continua acontecendo localmente.",
         ],
         [
           "Por que o SmartScreen pode alertar?",
@@ -309,7 +309,7 @@ const copy = {
     quickFacts: [
       ["01 click", "to start"],
       ["03 profiles", "decided by the app"],
-      ["Local", "no telemetry"],
+      ["Local", "optional telemetry"],
       ["Reversible", "with snapshots"],
     ],
     profiles: {
