@@ -1,3 +1,5 @@
+using System.Collections;
+using System.Reflection;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Catalog;
 using Xunit;
@@ -55,7 +57,27 @@ public sealed class ActionMetadataContractTests
         }
     }
 
+    /// <summary>
+    /// Makes the divergence theory self-maintaining: a member added to
+    /// <see cref="ActionMetadataDto"/> without a matching tampered case fails
+    /// here instead of silently becoming a field the broker never compares.
+    /// </summary>
+    [Fact]
+    public void DivergenceTheory_CoversEveryContractMember()
+    {
+        var baseline = Metadata();
+        var declared = ContractMembers().Select(property => property.Name);
+        var covered = Divergences().Select(tampered => DivergentMember(baseline, tampered));
+
+        Assert.Equal(declared.Order(StringComparer.Ordinal), covered.Order(StringComparer.Ordinal));
+    }
+
     public static TheoryData<ActionMetadataDto> DivergentMetadata()
+    {
+        return [.. Divergences()];
+    }
+
+    private static IReadOnlyList<ActionMetadataDto> Divergences()
     {
         var baseline = Metadata();
 
@@ -93,6 +115,32 @@ public sealed class ActionMetadataContractTests
         return ActionCatalog.Current
             .GetRequired(OptimizationActionIds.EnableSessionPerformancePowerPlan)
             .ToMetadata();
+    }
+
+    private static IEnumerable<PropertyInfo> ContractMembers()
+    {
+        return typeof(ActionMetadataDto).GetProperties(BindingFlags.Public | BindingFlags.Instance);
+    }
+
+    private static string DivergentMember(ActionMetadataDto baseline, ActionMetadataDto tampered)
+    {
+        var changed = ContractMembers()
+            .Where(property => !ValuesMatch(property.GetValue(baseline), property.GetValue(tampered)))
+            .Select(property => property.Name)
+            .ToArray();
+
+        return Assert.Single(changed);
+    }
+
+    private static bool ValuesMatch(object? left, object? right)
+    {
+        if (left is IEnumerable leftItems and not string
+            && right is IEnumerable rightItems and not string)
+        {
+            return leftItems.Cast<object>().SequenceEqual(rightItems.Cast<object>());
+        }
+
+        return Equals(left, right);
     }
 
     private static OptimizationPlanDto PlanWith(ActionMetadataDto metadata)
