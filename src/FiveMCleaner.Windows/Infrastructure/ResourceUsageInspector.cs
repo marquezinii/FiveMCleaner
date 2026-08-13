@@ -1,6 +1,7 @@
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
-using System.Threading.Tasks;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
@@ -117,14 +118,13 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
     {
         try
         {
-            gpuEngineCategoryExists ??= System.Diagnostics.PerformanceCounterCategory.Exists("GPU Engine");
+            gpuEngineCategoryExists ??= PerformanceCounterCategory.Exists("GPU Engine");
             if (!gpuEngineCategoryExists.Value)
             {
                 return null;
             }
 
-            var category = new System.Diagnostics.PerformanceCounterCategory("GPU Engine");
-            var instances = category.GetInstanceNames()
+            var instances = new PerformanceCounterCategory("GPU Engine").GetInstanceNames()
                 .Where(name => name.Contains("engtype_3D", StringComparison.OrdinalIgnoreCase))
                 .ToArray();
             if (instances.Length == 0)
@@ -133,7 +133,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
             }
 
             var counters = instances
-                .Select(instance => new System.Diagnostics.PerformanceCounter(
+                .Select(instance => new PerformanceCounter(
                     "GPU Engine", "Utilization Percentage", instance, true))
                 .ToArray();
             try
@@ -167,9 +167,9 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
     {
         try
         {
-            var interfaces = System.Net.NetworkInformation.NetworkInterface.GetAllNetworkInterfaces()
-                .Where(nic => nic.OperationalStatus == System.Net.NetworkInformation.OperationalStatus.Up
-                    && nic.NetworkInterfaceType != System.Net.NetworkInformation.NetworkInterfaceType.Loopback)
+            var interfaces = NetworkInterface.GetAllNetworkInterfaces()
+                .Where(nic => nic.OperationalStatus == OperationalStatus.Up
+                    && nic.NetworkInterfaceType != NetworkInterfaceType.Loopback)
                 .ToArray();
 
             long Sample() => interfaces.Sum(nic =>
@@ -184,7 +184,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
             var bytesPerSecond = (after - before) / SampleInterval.TotalSeconds;
             return Math.Max(0, bytesPerSecond / (1024d * 1024d));
         }
-        catch (System.Net.NetworkInformation.NetworkInformationException)
+        catch (NetworkInformationException)
         {
             return 0;
         }
@@ -198,7 +198,10 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
     /// Espelha <c>PDH_FMT_COUNTERVALUE</c>: um <c>DWORD CStatus</c> seguido da
     /// união do valor, que o compilador alinha em 8 bytes por causa de
     /// <c>double</c>/<c>LONGLONG</c>. Sem o <c>CStatus</c>, a união caía sobre
-    /// ele e toda leitura de CPU e disco voltava exatamente 0.
+    /// ele e toda leitura de CPU e disco voltava exatamente 0. Só o braço
+    /// <c>double</c> é declarado, porque as leituras aqui sempre pedem
+    /// <c>PDH_FMT_DOUBLE</c>; os demais braços da união nativa têm o mesmo
+    /// tamanho e não alterariam o layout.
     /// </summary>
     [StructLayout(LayoutKind.Explicit)]
     private struct PdhCounterValue
@@ -206,15 +209,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
         [FieldOffset(0)]
         public int CStatus;
         [FieldOffset(8)]
-        public int LongValue;
-        [FieldOffset(8)]
         public double DoubleValue;
-        [FieldOffset(8)]
-        public long LargeValue;
-        [FieldOffset(8)]
-        public IntPtr AnsiStringValue;
-        [FieldOffset(8)]
-        public IntPtr WideStringValue;
     }
 
     [DllImport("pdh.dll", CharSet = CharSet.Unicode, ExactSpelling = true)]

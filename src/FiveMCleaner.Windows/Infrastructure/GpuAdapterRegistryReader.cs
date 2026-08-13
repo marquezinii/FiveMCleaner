@@ -2,7 +2,10 @@ using Microsoft.Win32;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
-internal sealed record GpuRegistryAdapter(string DriverDescription, long? VramBytes);
+internal sealed record GpuRegistryAdapter(
+    string DriverDescription,
+    long? VramBytes,
+    string? MatchingDeviceId);
 
 internal static class GpuAdapterRegistryReader
 {
@@ -43,7 +46,10 @@ internal static class GpuAdapterRegistryReader
                         int value and > 0 => (long)value,
                         _ => (long?)null
                     };
-                    adapters.Add(new GpuRegistryAdapter(description, vramBytes));
+                    adapters.Add(new GpuRegistryAdapter(
+                        description,
+                        vramBytes,
+                        adapter?.GetValue("MatchingDeviceId") as string));
                 }
             }
         }
