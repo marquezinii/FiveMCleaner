@@ -122,16 +122,16 @@ public sealed class WindowsVisualEffectsController : IVisualEffectsController
 
 public sealed class VisualEffectsAction : WindowsOptimizationAction
 {
+    private static readonly VisualEffectsState DesiredState = new(
+        UiEffects: false,
+        ClientAreaAnimation: false,
+        MinimizeAnimation: false);
+
     private readonly IVisualEffectsController controller;
-    private readonly VisualEffectsState desired;
 
     public VisualEffectsAction(IVisualEffectsController controller)
     {
         this.controller = controller ?? throw new ArgumentNullException(nameof(controller));
-        desired = new VisualEffectsState(
-            UiEffects: false,
-            ClientAreaAnimation: false,
-            MinimizeAnimation: false);
     }
 
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
@@ -143,7 +143,7 @@ public sealed class VisualEffectsAction : WindowsOptimizationAction
     {
         cancellationToken.ThrowIfCancellationRequested();
         var previous = controller.Get();
-        if (previous == desired)
+        if (previous == DesiredState)
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
                 "Os efeitos visuais já estavam no estado solicitado."));
@@ -151,7 +151,7 @@ public sealed class VisualEffectsAction : WindowsOptimizationAction
 
         try
         {
-            controller.Set(desired);
+            controller.Set(DesiredState);
         }
         catch
         {
@@ -160,7 +160,7 @@ public sealed class VisualEffectsAction : WindowsOptimizationAction
         }
 
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
-            new VisualEffectsSnapshot(previous, desired),
+            new VisualEffectsSnapshot(previous, DesiredState),
             "Efeitos visuais atualizados por API oficial do Windows."));
     }
 

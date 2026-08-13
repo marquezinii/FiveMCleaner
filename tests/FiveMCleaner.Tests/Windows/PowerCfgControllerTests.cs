@@ -48,6 +48,49 @@ public sealed class PowerCfgControllerTests
         }
     }
 
+    [Theory]
+    [InlineData(0, "", PowerPlanActivationOutcome.Activated)]
+    [InlineData(5, "", PowerPlanActivationOutcome.AccessDenied)]
+    [InlineData(1, "Access is denied.", PowerPlanActivationOutcome.AccessDenied)]
+    [InlineData(1, "Acesso negado.", PowerPlanActivationOutcome.AccessDenied)]
+    [InlineData(1, "Scheme not available.", PowerPlanActivationOutcome.SchemeUnavailable)]
+    public async Task TryActivatePerformanceSchemeAsync_ClassifiesPowerCfgResult(
+        int exitCode,
+        string error,
+        PowerPlanActivationOutcome expected)
+    {
+        var runner = new ScriptedRunner(_ => new CommandResult(exitCode, string.Empty, error));
+        var controller = new PowerCfgController(runner);
+
+        var actual = await controller.TryActivatePerformanceSchemeAsync(CancellationToken.None);
+
+        Assert.Equal(expected, actual);
+        Assert.Equal(["/SETACTIVE", "SCHEME_MIN"], runner.Calls.Single());
+    }
+
+    [Fact]
+    public async Task ActivateSchemeAsync_UsesTheExactSchemeGuid()
+    {
+        var runner = new ScriptedRunner(_ => new CommandResult(0, string.Empty, string.Empty));
+        var controller = new PowerCfgController(runner);
+        var scheme = Guid.NewGuid();
+
+        await controller.ActivateSchemeAsync(scheme, CancellationToken.None);
+
+        Assert.Equal(["/SETACTIVE", scheme.ToString("D")], runner.Calls.Single());
+    }
+
+    [Fact]
+    public async Task GetPciExpressAspmPolicyAsync_PropagatesCallerCancellation()
+    {
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+        var controller = new PowerCfgController(new CancellationAwareRunner());
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => controller.GetPciExpressAspmPolicyAsync(cancellation.Token));
+    }
+
     [Fact]
     public async Task TrySetPciExpressAspmPolicyAsync_SetsBothAcAndDcThenAppliesTheScheme()
     {
@@ -123,13 +166,29 @@ public sealed class PowerCfgControllerTests
             this.respond = respond;
         }
 
+        public List<IReadOnlyList<string>> Calls { get; } = [];
+
         public Task<CommandResult> RunAsync(
             string executable,
             IReadOnlyList<string> arguments,
             TimeSpan timeout,
             CancellationToken cancellationToken)
         {
+            Calls.Add(arguments.ToArray());
             return Task.FromResult(respond(arguments));
+        }
+    }
+
+    private sealed class CancellationAwareRunner : ICommandRunner
+    {
+        public Task<CommandResult> RunAsync(
+            string executable,
+            IReadOnlyList<string> arguments,
+            TimeSpan timeout,
+            CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            return Task.FromResult(new CommandResult(0, string.Empty, string.Empty));
         }
     }
 }

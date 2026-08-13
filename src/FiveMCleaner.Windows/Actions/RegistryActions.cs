@@ -7,8 +7,7 @@ namespace FiveMCleaner.Windows.Actions;
 
 public sealed record RegistryMutation(
     RegistryAddress Address,
-    RegistryValueState DesiredValue,
-    bool RequireExistingValue = false);
+    RegistryValueState DesiredValue);
 
 internal sealed record RegistryMutationSnapshotEntry(
     RegistryAddress Address,
@@ -45,7 +44,9 @@ public abstract class AllowlistedRegistryAction : WindowsOptimizationAction
         var key = CanonicalAddress(address);
         var mutation = currentMutations.FirstOrDefault(candidate =>
             CanonicalAddress(candidate.Address).Equals(key, StringComparison.OrdinalIgnoreCase));
-        return mutation is not null && Equivalent(appliedValue, mutation.DesiredValue);
+        return mutation is not null
+            && ResolveDesiredValue(mutation, previousValue) is { } expectedAppliedValue
+            && Equivalent(appliedValue, expectedAppliedValue);
     }
 
     public override Task<WindowsActionApplyResult> ApplyAsync(
@@ -59,11 +60,6 @@ public abstract class AllowlistedRegistryAction : WindowsOptimizationAction
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var previous = Registry.Read(mutation.Address);
-                if (mutation.RequireExistingValue && !previous.Exists)
-                {
-                    continue;
-                }
-
                 var desired = ResolveDesiredValue(mutation, previous);
                 if (desired is null || Equivalent(previous, desired))
                 {
@@ -540,22 +536,6 @@ public sealed class HagsToggleAction : AllowlistedRegistryAction
         return RegistryValueState.FromDword((int)flipped);
     }
 
-    protected override bool IsAllowedRollbackEntry(
-        RegistryAddress address,
-        RegistryValueState previousValue,
-        RegistryValueState appliedValue,
-        IReadOnlyList<RegistryMutation> currentMutations)
-    {
-        if (address.Hive != Address.Hive
-            || !address.SubKey.Equals(Address.SubKey, StringComparison.OrdinalIgnoreCase)
-            || !address.ValueName.Equals(Address.ValueName, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        return ResolveDesiredValue(currentMutations[0], previousValue) is { } expected
-            && Equivalent(appliedValue, expected);
-    }
 }
 
 /// <summary>
@@ -613,48 +593,6 @@ public sealed class FullscreenOptimizationsRegistryAction : AllowlistedRegistryA
         return ToggleFlag(previousValue) is { } desired
             ? RegistryValueState.FromString(desired)
             : null;
-    }
-
-    protected override bool IsAllowedRollbackEntry(
-        RegistryAddress address,
-        RegistryValueState previousValue,
-        RegistryValueState appliedValue,
-        IReadOnlyList<RegistryMutation> currentMutations)
-    {
-        if (address.Hive != Hive
-            || !address.SubKey.Equals(SubKeyPath, StringComparison.OrdinalIgnoreCase))
-        {
-            return false;
-        }
-
-        string target;
-        try
-        {
-            if (!Path.IsPathFullyQualified(address.ValueName))
-            {
-                return false;
-            }
-
-            target = Path.GetFullPath(address.ValueName);
-            if (!target.Equals(address.ValueName, StringComparison.OrdinalIgnoreCase))
-            {
-                return false;
-            }
-        }
-        catch (Exception exception) when (exception is ArgumentException
-            or NotSupportedException
-            or PathTooLongException)
-        {
-            return false;
-        }
-
-        if (!addresses.Any(known => known.ValueName.Equals(target, StringComparison.OrdinalIgnoreCase)))
-        {
-            return false;
-        }
-
-        return ToggleFlag(previousValue) is { } expected
-            && Equivalent(appliedValue, RegistryValueState.FromString(expected));
     }
 
     /// <summary>

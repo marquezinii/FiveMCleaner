@@ -24,24 +24,18 @@ public interface IPowerStatusProvider
 
 public sealed class WindowsPowerStatusProvider : IPowerStatusProvider
 {
-    public bool IsOnAcPower()
+    public bool IsOnAcPower() => GetStatus().AcLineStatus == 1;
+
+    public bool IsBatterySaverActive() => (GetStatus().SystemStatusFlag & 1) == 1;
+
+    private static SystemPowerStatus GetStatus()
     {
         if (!GetSystemPowerStatus(out var status))
         {
             throw new Win32Exception(Marshal.GetLastWin32Error());
         }
 
-        return status.AcLineStatus == 1;
-    }
-
-    public bool IsBatterySaverActive()
-    {
-        if (!GetSystemPowerStatus(out var status))
-        {
-            throw new Win32Exception(Marshal.GetLastWin32Error());
-        }
-
-        return (status.SystemStatusFlag & 1) == 1;
+        return status;
     }
 
     [StructLayout(LayoutKind.Sequential)]
@@ -94,6 +88,13 @@ public interface IPowerPlanController
 
 public sealed partial class PowerCfgController : IPowerPlanController
 {
+    private const int AccessDeniedExitCode = 5;
+    private const string PciExpressSubgroupGuidText = "501a4d13-42af-4429-9fd1-a8218c268e20";
+    private const string AspmPolicySettingGuidText = "ee12f906-d277-404b-b6da-e5fa1a576df5";
+    private static readonly Guid PciExpressSubgroupGuid = new(PciExpressSubgroupGuidText);
+    private static readonly Guid AspmPolicySettingGuid = new(AspmPolicySettingGuidText);
+    private static readonly TimeSpan CommandTimeout = TimeSpan.FromSeconds(10);
+
     private readonly ICommandRunner commandRunner;
     private readonly string powerCfgPath;
 
@@ -109,11 +110,8 @@ public sealed partial class PowerCfgController : IPowerPlanController
 
     public async Task<Guid> GetActiveSchemeAsync(CancellationToken cancellationToken)
     {
-        var result = await commandRunner.RunAsync(
-            powerCfgPath,
-            ["/GETACTIVESCHEME"],
-            TimeSpan.FromSeconds(10),
-            cancellationToken).ConfigureAwait(false);
+        var result = await RunPowerCfgAsync(cancellationToken, "/GETACTIVESCHEME")
+            .ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw new InvalidOperationException(
@@ -126,20 +124,11 @@ public sealed partial class PowerCfgController : IPowerPlanController
             : throw new InvalidOperationException("powercfg did not return a valid active scheme GUID.");
     }
 
-    // ERROR_ACCESS_DENIED. powercfg.exe surfaces this both as this exit code
-    // and (locale-dependently) in stderr text, so the exit code is checked
-    // first as the reliable signal and the text patterns are a fallback for
-    // older/odd builds that don't set it.
-    private const int AccessDeniedExitCode = 5;
-
     public async Task<PowerPlanActivationOutcome> TryActivatePerformanceSchemeAsync(
         CancellationToken cancellationToken)
     {
-        var result = await commandRunner.RunAsync(
-            powerCfgPath,
-            ["/SETACTIVE", "SCHEME_MIN"],
-            TimeSpan.FromSeconds(10),
-            cancellationToken).ConfigureAwait(false);
+        var result = await RunPowerCfgAsync(cancellationToken, "/SETACTIVE", "SCHEME_MIN")
+            .ConfigureAwait(false);
         if (result.Succeeded)
         {
             return PowerPlanActivationOutcome.Activated;
@@ -152,6 +141,8 @@ public sealed partial class PowerCfgController : IPowerPlanController
 
     private static bool LooksLikeAccessDenied(CommandResult result)
     {
+        // ERROR_ACCESS_DENIED is the stable signal. Text is only a fallback
+        // for older builds that fail to set it and varies with Windows locale.
         if (result.ExitCode == AccessDeniedExitCode)
         {
             return true;
@@ -166,21 +157,16 @@ public sealed partial class PowerCfgController : IPowerPlanController
         Guid schemeId,
         CancellationToken cancellationToken)
     {
-        var result = await commandRunner.RunAsync(
-            powerCfgPath,
-            ["/SETACTIVE", schemeId.ToString("D")],
-            TimeSpan.FromSeconds(10),
-            cancellationToken).ConfigureAwait(false);
+        var result = await RunPowerCfgAsync(
+            cancellationToken,
+            "/SETACTIVE",
+            schemeId.ToString("D")).ConfigureAwait(false);
         if (!result.Succeeded)
         {
             throw new InvalidOperationException(
                 $"powercfg failed while restoring scheme {schemeId:D} (exit {result.ExitCode}).");
         }
     }
-
-    // SUB_PCIEXPRESS / ASPM_POLICY, documented Windows power setting GUIDs.
-    private const string PciExpressSubgroupGuid = "501a4d13-42af-4429-9fd1-a8218c268e20";
-    private const string AspmPolicySettingGuid = "ee12f906-d277-404b-b6da-e5fa1a576df5";
 
     public async Task<int?> GetPciExpressAspmPolicyAsync(CancellationToken cancellationToken)
     {
@@ -195,8 +181,8 @@ public sealed partial class PowerCfgController : IPowerPlanController
             var status = PowerReadACValueIndex(
                 IntPtr.Zero,
                 activeScheme.Value,
-                new Guid(PciExpressSubgroupGuid),
-                new Guid(AspmPolicySettingGuid),
+                PciExpressSubgroupGuid,
+                AspmPolicySettingGuid,
                 out var value);
 
             return status == 0 ? value : null;
@@ -213,7 +199,7 @@ public sealed partial class PowerCfgController : IPowerPlanController
         {
             return await GetActiveSchemeAsync(cancellationToken).ConfigureAwait(false);
         }
-        catch
+        catch (Exception exception) when (exception is not OperationCanceledException)
         {
             return null;
         }
@@ -235,27 +221,39 @@ public sealed partial class PowerCfgController : IPowerPlanController
         }
 
         var indexText = policyValue.ToString(CultureInfo.InvariantCulture);
-        var ac = await commandRunner.RunAsync(
-            powerCfgPath,
-            ["/setacvalueindex", "SCHEME_CURRENT", PciExpressSubgroupGuid, AspmPolicySettingGuid, indexText],
-            TimeSpan.FromSeconds(10),
-            cancellationToken).ConfigureAwait(false);
-        var dc = await commandRunner.RunAsync(
-            powerCfgPath,
-            ["/setdcvalueindex", "SCHEME_CURRENT", PciExpressSubgroupGuid, AspmPolicySettingGuid, indexText],
-            TimeSpan.FromSeconds(10),
-            cancellationToken).ConfigureAwait(false);
+        var ac = await RunPowerCfgAsync(
+            cancellationToken,
+            "/setacvalueindex",
+            "SCHEME_CURRENT",
+            PciExpressSubgroupGuidText,
+            AspmPolicySettingGuidText,
+            indexText).ConfigureAwait(false);
+        var dc = await RunPowerCfgAsync(
+            cancellationToken,
+            "/setdcvalueindex",
+            "SCHEME_CURRENT",
+            PciExpressSubgroupGuidText,
+            AspmPolicySettingGuidText,
+            indexText).ConfigureAwait(false);
         if (!ac.Succeeded || !dc.Succeeded)
         {
             return false;
         }
 
-        var apply = await commandRunner.RunAsync(
-            powerCfgPath,
-            ["/S", "SCHEME_CURRENT"],
-            TimeSpan.FromSeconds(10),
-            cancellationToken).ConfigureAwait(false);
+        var apply = await RunPowerCfgAsync(cancellationToken, "/S", "SCHEME_CURRENT")
+            .ConfigureAwait(false);
         return apply.Succeeded;
+    }
+
+    private Task<CommandResult> RunPowerCfgAsync(
+        CancellationToken cancellationToken,
+        params string[] arguments)
+    {
+        return commandRunner.RunAsync(
+            powerCfgPath,
+            arguments,
+            CommandTimeout,
+            cancellationToken);
     }
 
     [GeneratedRegex(

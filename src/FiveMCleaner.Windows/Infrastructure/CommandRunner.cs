@@ -95,14 +95,12 @@ public sealed class ProcessCommandRunner : ICommandRunner
         catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested
             && !cancellationToken.IsCancellationRequested)
         {
-            TryKill(process);
-            await ObserveAsync(outputTask, errorTask).ConfigureAwait(false);
+            await TerminateAndObserveAsync(process, outputTask, errorTask).ConfigureAwait(false);
             throw new TimeoutException($"'{executable}' exceeded the {timeout} timeout.");
         }
         catch
         {
-            TryKill(process);
-            await ObserveAsync(outputTask, errorTask).ConfigureAwait(false);
+            await TerminateAndObserveAsync(process, outputTask, errorTask).ConfigureAwait(false);
             throw;
         }
 
@@ -115,11 +113,15 @@ public sealed class ProcessCommandRunner : ICommandRunner
     /// from surfacing later as unobserved task exceptions on the finalizer
     /// thread, far from the call that actually failed.
     /// </summary>
-    private static async Task ObserveAsync(params Task[] tasks)
+    private static async Task TerminateAndObserveAsync(
+        Process process,
+        Task outputTask,
+        Task errorTask)
     {
+        TryKill(process);
         try
         {
-            await Task.WhenAll(tasks).ConfigureAwait(false);
+            await Task.WhenAll(outputTask, errorTask).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
