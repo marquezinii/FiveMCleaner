@@ -32,19 +32,43 @@ public enum ActionRisk
     High
 }
 
+/// <summary>How far an applied action can be undone; drives rollback and the non-reversible warning.</summary>
+/// <remarks>
+/// DURABLE CONTRACT. Persisted by name on every action entry of the transaction
+/// journal, so a rollback by a later build still reads the reversibility
+/// recorded when the change was made. The append-only rule of
+/// <see cref="ActionExecutionOutcome"/> applies.
+/// </remarks>
 public enum ActionReversibility
 {
-    ReadOnly,
-    FullyReversible,
-    SessionScoped,
-    RebuildableData,
-    Irreversible
+    /// <summary>Diagnostic only; nothing is written, so nothing needs undoing.</summary>
+    ReadOnly = 0,
+
+    /// <summary>A snapshot restores the previous value exactly.</summary>
+    FullyReversible = 1,
+
+    /// <summary>
+    /// Reserved legacy value kept for transaction-journal compatibility.
+    /// New actions should model session lifecycle explicitly instead.
+    /// </summary>
+    SessionScoped = 2,
+
+    /// <summary>Removed data the system rebuilds on demand, such as a cache.</summary>
+    RebuildableData = 3,
+
+    /// <summary>Data is removed for good; the plan must warn before running it.</summary>
+    Irreversible = 4
 }
 
+/// <summary>Privilege an action needs in order to run.</summary>
+/// <remarks>
+/// DURABLE CONTRACT. Persisted by name alongside <see cref="ActionReversibility"/>;
+/// the same append-only rule applies.
+/// </remarks>
 public enum RequiredPrivilege
 {
-    StandardUser,
-    Administrator
+    StandardUser = 0,
+    Administrator = 1
 }
 
 public enum CacheRepairPolicy

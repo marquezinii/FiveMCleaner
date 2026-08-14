@@ -323,7 +323,8 @@ internal sealed class ElevatedBrokerClient
                 line,
                 FiveMCleanerJson.Options)
                 ?? throw new JsonException("O broker retornou um evento vazio.");
-            if (brokerEvent.SchemaVersion != 1 || brokerEvent.Sequence <= previousSequence)
+            if (brokerEvent.SchemaVersion != BrokerEventSchema.CurrentVersion
+                || brokerEvent.Sequence <= previousSequence)
             {
                 throw new InvalidDataException("A sequência de eventos do broker é inválida.");
             }
