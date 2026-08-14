@@ -125,7 +125,7 @@ Somente itens ainda relevantes devem permanecer aqui. Quando resolvidos e integr
 
 Estes números são **referência histórica do último estado validado**, não substituem testes da branch atual.
 
-- **13/08/2026:** após integrar a refatoração de contratos/Core, infraestrutura Windows, ações XML, App e IPC, `dotnet build` Release sem restore, suíte .NET Release, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` foram aprovados. Site: lint, typecheck, export estático e **3 testes** aprovados. Os gates completos de Worker, dashboard, SBOM e CI do GitHub também passaram nos PRs integrados.
+- **13/08/2026:** no estado integrado atual, restore e build .NET Release sem warnings, **842 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` foram aprovados. Site: audit sem vulnerabilidades, lint, typecheck, export estático e **3 testes** aprovados. Worker: audit sem vulnerabilidades e **165 testes**; dashboard: audit sem vulnerabilidades e **44 testes**. Os PRs integrados também passaram pelos gates oficiais de .NET, site, Worker, dashboard e SBOM.
 
 Ao alterar uma superfície, execute a validação aplicável novamente e use os resultados atuais no PR. Nunca use estes números para afirmar que código posterior foi testado.
 
