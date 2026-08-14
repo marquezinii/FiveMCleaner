@@ -684,75 +684,75 @@ public sealed class StaleAuthDataRepairAction : WindowsOptimizationAction
     }
 
     private static void RestoreItems(IReadOnlyList<QuarantinedAuthItem> items)
+    {
+        foreach (var item in items.Reverse())
         {
-            foreach (var item in items.Reverse())
+            if (item.IsDirectory)
             {
-                if (item.IsDirectory)
+                if (Directory.Exists(item.QuarantinePath) && !Directory.Exists(item.OriginalPath))
                 {
-                    if (Directory.Exists(item.QuarantinePath) && !Directory.Exists(item.OriginalPath))
-                    {
-                        Directory.Move(item.QuarantinePath, item.OriginalPath);
-                    }
-                }
-                else if (File.Exists(item.QuarantinePath) && !File.Exists(item.OriginalPath))
-                {
-                    File.Move(item.QuarantinePath, item.OriginalPath);
+                    Directory.Move(item.QuarantinePath, item.OriginalPath);
                 }
             }
-        }
-
-        private static string? ReadLatestLogTail(string fiveMAppRoot)
-        {
-            var logsDirectory = Path.Combine(fiveMAppRoot, "logs");
-            if (!Directory.Exists(logsDirectory))
+            else if (File.Exists(item.QuarantinePath) && !File.Exists(item.OriginalPath))
             {
-                return null;
+                File.Move(item.QuarantinePath, item.OriginalPath);
             }
-
-            FileInfo? latest;
-            try
-            {
-                latest = new DirectoryInfo(logsDirectory)
-                    .EnumerateFiles("*", SearchOption.TopDirectoryOnly)
-                    .OrderByDescending(file => file.LastWriteTimeUtc)
-                    .FirstOrDefault();
-            }
-            catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
-            {
-                return null;
-            }
-
-            if (latest is null)
-            {
-                return null;
-            }
-
-            try
-            {
-                using var stream = new FileStream(
-                    latest.FullName,
-                    FileMode.Open,
-                    FileAccess.Read,
-                    FileShare.ReadWrite | FileShare.Delete);
-                if (stream.Length > MaxTailBytes)
-                {
-                    stream.Seek(-MaxTailBytes, SeekOrigin.End);
-                }
-
-                using var reader = new StreamReader(stream);
-                return reader.ReadToEnd();
-            }
-            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-            {
-                return null;
-            }
-        }
-
-        private static bool ContainsEntitlementFailurePattern(string logTail)
-        {
-            return EntitlementFailureKeywords.Any(
-                keyword => logTail.Contains(keyword, StringComparison.OrdinalIgnoreCase)
-                    && (logTail.Contains("error", StringComparison.OrdinalIgnoreCase)
-                        || logTail.Contains("fail", StringComparison.OrdinalIgnoreCase)));
         }
     }
+
+    private static string? ReadLatestLogTail(string fiveMAppRoot)
+    {
+        var logsDirectory = Path.Combine(fiveMAppRoot, "logs");
+        if (!Directory.Exists(logsDirectory))
+        {
+            return null;
+        }
+
+        FileInfo? latest;
+        try
+        {
+            latest = new DirectoryInfo(logsDirectory)
+                .EnumerateFiles("*", SearchOption.TopDirectoryOnly)
+                .OrderByDescending(file => file.LastWriteTimeUtc)
+                .FirstOrDefault();
+        }
+        catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
+        {
+            return null;
+        }
+
+        if (latest is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var stream = new FileStream(
+                latest.FullName,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            if (stream.Length > MaxTailBytes)
+            {
+                stream.Seek(-MaxTailBytes, SeekOrigin.End);
+            }
+
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+
+    private static bool ContainsEntitlementFailurePattern(string logTail)
+    {
+        return EntitlementFailureKeywords.Any(
+            keyword => logTail.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                && (logTail.Contains("error", StringComparison.OrdinalIgnoreCase)
+                    || logTail.Contains("fail", StringComparison.OrdinalIgnoreCase)));
+    }
+}
