@@ -26,7 +26,6 @@
             <local:BrushKeyConverter x:Key="BrushKeyConverter" />
             <local:StringToVisibilityConverter x:Key="StringToVisibilityConverter" />
             <local:GeometryKeyConverter x:Key="GeometryKeyConverter" />
-            <local:PercentWidthConverter x:Key="PercentWidthConverter" />
             <local:CollectionEmptyToVisibilityConverter x:Key="CollectionEmptyToVisibilityConverter" />
             <services:LocalizedStrings x:Key="LocalizedStrings" />
         </ResourceDictionary>
