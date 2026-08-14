@@ -1,5 +1,4 @@
 using System.Management;
-using System.Threading;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
@@ -20,41 +19,14 @@ public interface ICpuInspector
 /// when the read fails; callers must report that honestly instead of
 /// guessing. Follows the same try/graceful-null WMI pattern already used for
 /// RAM module layout in <c>AppOptimizationService</c>.
-///
-/// Caches results for 30 seconds to avoid repeated WMI queries during a single session.
 /// </summary>
 public sealed class WindowsCpuInspector : ICpuInspector
 {
-    private static readonly object CacheLock = new();
-    private static CpuSnapshot? cachedSnapshot;
-    private static DateTimeOffset? cachedAt;
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(30);
+    private static readonly TimedSnapshotCache<CpuSnapshot> Cache = new();
 
-    public CpuSnapshot? GetSnapshot()
-    {
-        // Check cache first
-        lock (CacheLock)
-        {
-            if (cachedSnapshot is not null && cachedAt is not null &&
-                DateTimeOffset.UtcNow - cachedAt.Value < CacheTtl)
-            {
-                return cachedSnapshot;
-            }
-        }
+    public CpuSnapshot? GetSnapshot() => Cache.GetOrReadOptional(Read);
 
-        var snapshot = GetSnapshotInternal();
-
-        // Update cache
-        lock (CacheLock)
-        {
-            cachedSnapshot = snapshot;
-            cachedAt = DateTimeOffset.UtcNow;
-        }
-
-        return snapshot;
-    }
-
-    private static CpuSnapshot? GetSnapshotInternal()
+    private static CpuSnapshot? Read()
     {
         try
         {
@@ -83,11 +55,7 @@ public sealed class WindowsCpuInspector : ICpuInspector
 
             return null;
         }
-        catch (ManagementException)
-        {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
+        catch (Exception exception) when (exception is ManagementException or UnauthorizedAccessException)
         {
             return null;
         }

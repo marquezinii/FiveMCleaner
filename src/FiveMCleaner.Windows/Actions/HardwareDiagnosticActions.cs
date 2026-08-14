@@ -1,18 +1,21 @@
-using System.Runtime.InteropServices;
+using System.Globalization;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Catalog;
 using FiveMCleaner.Windows.Infrastructure;
+using Microsoft.Win32;
 
 namespace FiveMCleaner.Windows.Actions;
 
 /// <summary>
-/// Read-only hardware/system diagnostics from the TERCEIRA FASE request.
-/// Every action here always resolves to <see cref="WindowsActionApplyResult.NoChange"/>
-/// with an honest message; none of them ever writes to the system, installs
-/// a driver, or claims data it could not actually read.
+/// Read-only hardware/system diagnostics. Every action here always resolves to
+/// <see cref="WindowsActionApplyResult.NoChange"/> with an honest message; none
+/// of them ever writes to the system, installs a driver, or claims data it
+/// could not actually read.
 /// </summary>
-public sealed class CpuDetailsDiagnosisAction : WindowsOptimizationAction
+public sealed class CpuDetailsDiagnosisAction : ReadOnlyDiagnosticAction
 {
+    private const double SignificantClockDropRatio = 0.5d;
+
     private readonly ICpuInspector inspector;
 
     public CpuDetailsDiagnosisAction(ICpuInspector inspector)
@@ -23,18 +26,7 @@ public sealed class CpuDetailsDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseCpuDetails);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(inspector.GetSnapshot())));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override string Describe() => Classify(inspector.GetSnapshot());
 
     internal static string Classify(CpuSnapshot? snapshot)
     {
@@ -45,7 +37,7 @@ public sealed class CpuDetailsDiagnosisAction : WindowsOptimizationAction
 
         var message = $"{snapshot.PhysicalCores} núcleo(s) físico(s), {snapshot.LogicalThreads} thread(s) lógica(s). "
             + $"Frequência atual: {snapshot.CurrentClockMhz} MHz de {snapshot.MaxClockMhz} MHz máximos.";
-        if (snapshot.MaxClockMhz > 0 && snapshot.CurrentClockMhz < snapshot.MaxClockMhz * 0.5)
+        if (snapshot.MaxClockMhz > 0 && snapshot.CurrentClockMhz < snapshot.MaxClockMhz * SignificantClockDropRatio)
         {
             message += " A frequência atual está bem abaixo do máximo (economia de energia ou possível throttling).";
         }
@@ -54,7 +46,7 @@ public sealed class CpuDetailsDiagnosisAction : WindowsOptimizationAction
     }
 }
 
-public sealed class GpuDetailsDiagnosisAction : WindowsOptimizationAction
+public sealed class GpuDetailsDiagnosisAction : ReadOnlyDiagnosticAction
 {
     private readonly IGpuDetailsInspector inspector;
 
@@ -66,18 +58,7 @@ public sealed class GpuDetailsDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseGpuDetails);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(inspector.GetSnapshot())));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override string Describe() => Classify(inspector.GetSnapshot());
 
     internal static string Classify(IReadOnlyList<GpuAdapterDetails> adapters)
     {
@@ -89,7 +70,7 @@ public sealed class GpuDetailsDiagnosisAction : WindowsOptimizationAction
         var parts = adapters.Select(adapter =>
         {
             var vram = adapter.VramBytes is > 0
-                ? $"{adapter.VramBytes.Value / (1024d * 1024d * 1024d):0.#} GB de VRAM"
+                ? $"{adapter.VramBytes.Value / (double)DiagnosticSignals.GiB:0.#} GB de VRAM"
                 : "VRAM não detectada";
             var kind = adapter.KindGuess switch
             {
@@ -104,8 +85,16 @@ public sealed class GpuDetailsDiagnosisAction : WindowsOptimizationAction
     }
 }
 
-public sealed class RamDetailsDiagnosisAction : WindowsOptimizationAction
+public sealed class RamDetailsDiagnosisAction : ReadOnlyDiagnosticAction
 {
+    /// <summary>
+    /// Tolerance below the module's rated (SPD) speed before XMP/EXPO is
+    /// reported as probably disabled: reported clocks are rounded and vendors
+    /// publish slightly different rated values, so an exact comparison would
+    /// produce false alarms.
+    /// </summary>
+    private const double RatedClockTolerance = 0.9d;
+
     private readonly IRamDetailsInspector inspector;
 
     public RamDetailsDiagnosisAction(IRamDetailsInspector inspector)
@@ -116,18 +105,7 @@ public sealed class RamDetailsDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseRamDetails);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(inspector.GetSnapshot())));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override string Describe() => Classify(inspector.GetSnapshot());
 
     internal static string Classify(RamDetailsSnapshot snapshot)
     {
@@ -138,8 +116,8 @@ public sealed class RamDetailsDiagnosisAction : WindowsOptimizationAction
 
         var count = snapshot.Modules.Count;
         var configured = snapshot.Modules
-            .Where(module => module.ConfiguredClockMhz > 0)
             .Select(module => module.ConfiguredClockMhz)
+            .Where(clock => clock > 0)
             .DefaultIfEmpty(0u)
             .Max();
 
@@ -149,31 +127,31 @@ public sealed class RamDetailsDiagnosisAction : WindowsOptimizationAction
                 ? "provavelmente multi-channel (quantidade par de pentes)"
                 : "quantidade ímpar de pentes; a configuração de canais não pôde ser confirmada";
 
-        var xmpHint = BuildXmpHint(snapshot.Modules);
-
         var frequencyLabel = configured > 0
             ? $"{configured} MHz configurados"
             : "frequência configurada não disponível";
 
-        return $"{count} módulo(s) de memória detectado(s), {frequencyLabel}. {channelHint}. {xmpHint}";
+        return $"{count} módulo(s) de memória detectado(s), {frequencyLabel}. {channelHint}. "
+            + BuildXmpHint(snapshot.Modules);
     }
 
     private static string BuildXmpHint(IReadOnlyList<RamModuleInfo> modules)
     {
-        var withRated = modules.Where(module => module.RatedClockMhz > 0 && module.ConfiguredClockMhz > 0).ToArray();
+        var withRated = modules
+            .Where(module => module.RatedClockMhz > 0 && module.ConfiguredClockMhz > 0)
+            .ToArray();
         if (withRated.Length == 0)
         {
             return "Não foi possível comparar a velocidade configurada com a velocidade nominal (XMP/EXPO).";
         }
 
-        var belowRated = withRated.Any(module => module.ConfiguredClockMhz < module.RatedClockMhz * 0.9);
-        return belowRated
+        return withRated.Any(module => module.ConfiguredClockMhz < module.RatedClockMhz * RatedClockTolerance)
             ? "A memória parece rodar abaixo da velocidade nominal (XMP/EXPO possivelmente desativado)."
             : "A memória parece rodar na velocidade nominal ou acima (XMP/EXPO provavelmente ativo).";
     }
 }
 
-public sealed class StorageHealthDiagnosisAction : WindowsOptimizationAction
+public sealed class StorageHealthDiagnosisAction : ReadOnlyDiagnosticAction
 {
     private readonly IStorageHealthInspector inspector;
 
@@ -185,18 +163,7 @@ public sealed class StorageHealthDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseStorageHealth);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(inspector.GetSnapshot())));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override string Describe() => Classify(inspector.GetSnapshot());
 
     internal static string Classify(StorageHealthSnapshot snapshot)
     {
@@ -205,18 +172,20 @@ public sealed class StorageHealthDiagnosisAction : WindowsOptimizationAction
             return "Não foi possível ler o tipo/saúde das unidades físicas neste momento.";
         }
 
-        var unhealthy = snapshot.Disks.Where(disk => !disk.IsHealthy).ToArray();
+        var unhealthyCount = snapshot.Disks.Count(disk => !disk.IsHealthy);
         var summary = string.Join("; ", snapshot.Disks.Select(disk =>
             $"{disk.FriendlyName} ({disk.MediaTypeLabel}, {disk.HealthStatusLabel})"));
 
-        return unhealthy.Length > 0
-            ? $"Atenção: {unhealthy.Length} unidade(s) com alerta de saúde. Unidades detectadas: {summary}."
+        return unhealthyCount > 0
+            ? $"Atenção: {unhealthyCount} unidade(s) com alerta de saúde. Unidades detectadas: {summary}."
             : $"Todas as unidades detectadas relatam saúde normal. Unidades: {summary}.";
     }
 }
 
-public sealed class DriverVersionsDiagnosisAction : WindowsOptimizationAction
+public sealed class DriverVersionsDiagnosisAction : ReadOnlyDiagnosticAction
 {
+    private const int OldVideoDriverThresholdMonths = 18;
+
     private readonly IDriverVersionInspector inspector;
 
     public DriverVersionsDiagnosisAction(IDriverVersionInspector inspector)
@@ -227,29 +196,16 @@ public sealed class DriverVersionsDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseDriverVersions);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
         var buildLabel = OperatingSystem.IsWindows()
             ? $"build {Environment.OSVersion.Version.Build}"
             : "build desconhecido";
         var snapshot = inspector.GetSnapshot();
         var message = $"Windows {buildLabel}. {Classify(snapshot)}";
         var oldDriverWarning = ClassifyOldDrivers(snapshot, DateTimeOffset.UtcNow);
-        if (oldDriverWarning is not null)
-        {
-            message += $" {oldDriverWarning}";
-        }
-
-        return Task.FromResult(WindowsActionApplyResult.NoChange(message));
+        return oldDriverWarning is null ? message : $"{message} {oldDriverWarning}";
     }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
 
     internal static string Classify(DriverVersionSnapshot snapshot)
     {
@@ -273,16 +229,17 @@ public sealed class DriverVersionsDiagnosisAction : WindowsOptimizationAction
 
     /// <summary>
     /// Flags a video driver whose <c>DriverDate</c> (WMI-reported, the same
-    /// date shown in Device Manager's Driver tab) is older than 18 months --
-    /// an objective, verifiable signal rather than guessing from the version
-    /// string, which vendors format inconsistently. Only video drivers are
-    /// checked: the graphics driver is what this product's optimizations
-    /// actually depend on. Returns null when there is nothing to flag (date
-    /// unavailable, or driver recent enough) -- never a false alarm.
+    /// date shown in Device Manager's Driver tab) is older than
+    /// <see cref="OldVideoDriverThresholdMonths"/> months -- an objective,
+    /// verifiable signal rather than guessing from the version string, which
+    /// vendors format inconsistently. Only video drivers are checked: the
+    /// graphics driver is what this product's optimizations actually depend on.
+    /// Returns null when there is nothing to flag (date unavailable, or driver
+    /// recent enough) -- never a false alarm.
     /// </summary>
     internal static string? ClassifyOldDrivers(DriverVersionSnapshot snapshot, DateTimeOffset now)
     {
-        var threshold = now.AddMonths(-18);
+        var threshold = now.AddMonths(-OldVideoDriverThresholdMonths);
         var old = snapshot.Video
             .Where(item => item.DriverDate is { } date && date < threshold)
             .ToArray();
@@ -293,7 +250,7 @@ public sealed class DriverVersionsDiagnosisAction : WindowsOptimizationAction
 
         var names = string.Join(", ", old.Select(item =>
             $"{item.DeviceName} ({item.DriverDate!.Value:yyyy-MM})"));
-        return $"Driver de vídeo com mais de 18 meses sem atualização: {names}. "
+        return $"Driver de vídeo com mais de {OldVideoDriverThresholdMonths} meses sem atualização: {names}. "
             + "Considere atualizar pelo site oficial do fabricante.";
     }
 }
@@ -307,8 +264,14 @@ public sealed class DriverVersionsDiagnosisAction : WindowsOptimizationAction
 /// supports. Never enables G-SYNC itself: there is no public, documented
 /// API for that (see docs/graphics-optimizations-backlog.md, seção 10).
 /// </summary>
-public sealed class GSyncGuidanceDiagnosisAction : WindowsOptimizationAction
+public sealed class GSyncGuidanceDiagnosisAction : ReadOnlyDiagnosticAction
 {
+    /// <summary>
+    /// Frames subtracted from the monitor's maximum refresh rate to keep the
+    /// frame rate inside the variable range, as the vendors recommend.
+    /// </summary>
+    private const int VariableRangeHeadroomFps = 3;
+
     private readonly IDisplayConfigurationInspector inspector;
     private readonly IGpuVendorInspector gpuVendor;
 
@@ -323,31 +286,18 @@ public sealed class GSyncGuidanceDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.GuideGSync);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(
-            Classify(inspector.GetSnapshot(), gpuVendor.GetSnapshot())));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override string Describe() => Classify(inspector.GetSnapshot(), gpuVendor.GetSnapshot());
 
     internal static string Classify(DisplayConfigurationSnapshot? snapshot, GpuVendorSnapshot gpuSnapshot)
     {
-        var panel = DescribeControlPanel(gpuSnapshot);
         var baseGuidance = "G-SYNC/FreeSync/VRR não tem uma API pública para ser ativado por este app; "
-            + $"confirme e ative pelo {panel} ou pelo menu do próprio monitor.";
+            + $"confirme e ative pelo {DescribeControlPanel(gpuSnapshot)} ou pelo menu do próprio monitor.";
         if (snapshot is null || snapshot.MaxRefreshHzAtCurrentResolution <= 0)
         {
             return baseGuidance;
         }
 
-        var recommendedCap = Math.Max(1, snapshot.MaxRefreshHzAtCurrentResolution - 3);
+        var recommendedCap = Math.Max(1, snapshot.MaxRefreshHzAtCurrentResolution - VariableRangeHeadroomFps);
         return $"{baseGuidance} Para manter o FPS dentro da faixa variável desta tecnologia neste monitor "
             + $"({snapshot.MaxRefreshHzAtCurrentResolution} Hz no modo atual), o fabricante recomenda limitar "
             + $"o FPS a alguns quadros abaixo do máximo (por exemplo, {recommendedCap} FPS) -- use o "
@@ -363,26 +313,16 @@ public sealed class GSyncGuidanceDiagnosisAction : WindowsOptimizationAction
     private static string DescribeControlPanel(GpuVendorSnapshot gpuSnapshot)
     {
         var vendors = gpuSnapshot.DriverDescriptions
-            .Select(description => description.Contains("AMD", StringComparison.OrdinalIgnoreCase)
-                || description.Contains("Radeon", StringComparison.OrdinalIgnoreCase)
-                ? "AMD"
-                : description.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase)
-                    ? "NVIDIA"
-                    : "Outro")
+            .Select(GpuVendorClassifier.VendorOf)
             .Distinct()
             .ToArray();
 
-        if (vendors is ["NVIDIA"])
+        return vendors switch
         {
-            return "NVIDIA Control Panel (Configurar G-SYNC)";
-        }
-
-        if (vendors is ["AMD"])
-        {
-            return "AMD Software: Adrenalin Edition (FreeSync)";
-        }
-
-        return "painel de controle oficial da sua GPU";
+            ["NVIDIA"] => "NVIDIA Control Panel (Configurar G-SYNC)",
+            ["AMD"] => "AMD Software: Adrenalin Edition (FreeSync)",
+            _ => "painel de controle oficial da sua GPU"
+        };
     }
 }
 
@@ -396,32 +336,23 @@ public sealed class GSyncGuidanceDiagnosisAction : WindowsOptimizationAction
 /// exactly the kind of irreversible, high-blast-radius risk this product's
 /// safety model (docs/safety.md) exists to avoid.
 /// </summary>
-public sealed class GuidedDriverReinstallAction : WindowsOptimizationAction
+public sealed class GuidedDriverReinstallAction : ReadOnlyDiagnosticAction
 {
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.GuideDriverReinstall);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(
-            "Reinstalação limpa guiada (nenhum arquivo foi tocado): 1) baixe o Display Driver Uninstaller "
-                + "(DDU) e o instalador de driver mais recente do site oficial do fabricante da GPU antes de "
-                + "começar; 2) reinicie o Windows em Modo de Segurança; 3) rode o DDU e remova apenas o "
-                + "driver de vídeo; 4) reinicie normalmente e instale o driver baixado no passo 1. Válido "
-                + "tanto para GPUs NVIDIA quanto AMD (Adrenalin). Este aplicativo não baixa, instala nem "
-                + "remove nenhum driver automaticamente."));
+        return "Reinstalação limpa guiada (nenhum arquivo foi tocado): 1) baixe o Display Driver Uninstaller "
+            + "(DDU) e o instalador de driver mais recente do site oficial do fabricante da GPU antes de "
+            + "começar; 2) reinicie o Windows em Modo de Segurança; 3) rode o DDU e remova apenas o "
+            + "driver de vídeo; 4) reinicie normalmente e instale o driver baixado no passo 1. Válido "
+            + "tanto para GPUs NVIDIA quanto AMD (Adrenalin). Este aplicativo não baixa, instala nem "
+            + "remove nenhum driver automaticamente.";
     }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
 }
 
-public sealed class DisplayConfigurationDiagnosisAction : WindowsOptimizationAction
+public sealed class DisplayConfigurationDiagnosisAction : ReadOnlyDiagnosticAction
 {
     private readonly IDisplayConfigurationInspector inspector;
 
@@ -433,18 +364,7 @@ public sealed class DisplayConfigurationDiagnosisAction : WindowsOptimizationAct
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseDisplayConfiguration);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(inspector.GetSnapshot())));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override string Describe() => Classify(inspector.GetSnapshot());
 
     internal static string Classify(DisplayConfigurationSnapshot? snapshot)
     {
@@ -470,15 +390,21 @@ public sealed class DisplayConfigurationDiagnosisAction : WindowsOptimizationAct
     }
 }
 
+/// <summary>
+/// Reads the session-relevant Windows settings. Unlike the other diagnostics
+/// here it queries the active power plan asynchronously, so it implements
+/// <see cref="WindowsOptimizationAction"/> directly instead of deriving from
+/// <see cref="ReadOnlyDiagnosticAction"/>; it is still strictly read-only.
+/// </summary>
 public sealed class SessionSettingsDiagnosisAction : WindowsOptimizationAction
 {
     private static readonly RegistryAddress GameModeAddress = new(
-        Microsoft.Win32.RegistryHive.CurrentUser,
+        RegistryHive.CurrentUser,
         @"Software\Microsoft\GameBar",
         "AutoGameModeEnabled");
 
     private static readonly RegistryAddress FullscreenOptimizationsAddress = new(
-        Microsoft.Win32.RegistryHive.CurrentUser,
+        RegistryHive.CurrentUser,
         @"System\GameConfigStore",
         "GameDVR_FSEBehaviorMode");
 
@@ -546,9 +472,15 @@ public sealed class SessionSettingsDiagnosisAction : WindowsOptimizationAction
     }
 }
 
-public sealed class ThrottlingSignalDiagnosisAction : WindowsOptimizationAction
+public sealed class ThrottlingSignalDiagnosisAction : ReadOnlyDiagnosticAction
 {
-    private const double ElevatedTemperatureCelsius = 85d;
+    /// <summary>
+    /// Frequency below this fraction of the maximum, while the CPU is busy,
+    /// is what this product calls a clock drop under load.
+    /// </summary>
+    private const double ClockDropRatio = 0.6d;
+    private const double BusyCpuPercent = 50d;
+
     private readonly ICpuInspector cpu;
     private readonly IResourceUsageInspector usage;
     private readonly IHardwareStabilityInspector stability;
@@ -569,23 +501,14 @@ public sealed class ThrottlingSignalDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseThrottlingSignal);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        var cpuSnapshot = cpu.GetSnapshot();
-        var usageSnapshot = usage.GetSnapshot();
-        var stabilitySnapshot = stability.GetSnapshot();
-        var thermalSnapshot = thermal.GetSnapshot();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(
-            Classify(cpuSnapshot, usageSnapshot, stabilitySnapshot, thermalSnapshot)));
+        return Classify(
+            cpu.GetSnapshot(),
+            usage.GetSnapshot(),
+            stability.GetSnapshot(),
+            thermal.GetSnapshot());
     }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
 
     internal static string Classify(
         CpuSnapshot? cpuSnapshot,
@@ -595,10 +518,10 @@ public sealed class ThrottlingSignalDiagnosisAction : WindowsOptimizationAction
     {
         var clockDropUnderLoad = cpuSnapshot is not null
             && cpuSnapshot.MaxClockMhz > 0
-            && cpuSnapshot.CurrentClockMhz < cpuSnapshot.MaxClockMhz * 0.6
-            && usageSnapshot.CpuPercent is > 50;
+            && cpuSnapshot.CurrentClockMhz < cpuSnapshot.MaxClockMhz * ClockDropRatio
+            && usageSnapshot.CpuPercent > BusyCpuPercent;
         var wheaSignal = stabilitySnapshot.RecentWheaEventCount > 0;
-        var thermalSignal = thermalSnapshot is { IsAvailable: true, HighestCelsius: >= ElevatedTemperatureCelsius };
+        var thermalSignal = DiagnosticSignals.IsTemperatureElevated(thermalSnapshot);
 
         if (clockDropUnderLoad && (thermalSignal || wheaSignal))
         {
@@ -623,7 +546,7 @@ public sealed class ThrottlingSignalDiagnosisAction : WindowsOptimizationAction
     }
 }
 
-public sealed class ResourceUsageDiagnosisAction : WindowsOptimizationAction
+public sealed class ResourceUsageDiagnosisAction : ReadOnlyDiagnosticAction
 {
     private readonly IResourceUsageInspector inspector;
 
@@ -635,32 +558,25 @@ public sealed class ResourceUsageDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseResourceUsage);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(inspector.GetSnapshot())));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override string Describe() => Classify(inspector.GetSnapshot());
 
     internal static string Classify(ResourceUsageSnapshot snapshot)
     {
-        var culture = System.Globalization.CultureInfo.InvariantCulture;
-        var cpu = snapshot.CpuPercent is { } cpuValue ? cpuValue.ToString("0", culture) + "%" : "não disponível";
-        var disk = snapshot.DiskPercent is { } diskValue ? diskValue.ToString("0", culture) + "%" : "não disponível";
-        var gpu = snapshot.GpuPercent is { } gpuValue ? gpuValue.ToString("0", culture) + "%" : "não disponível";
-        var network = snapshot.NetworkThroughputMBps.ToString("0.##", culture);
-        return $"Uso no momento da leitura — CPU: {cpu}, disco: {disk}, GPU: {gpu}, "
+        var network = snapshot.NetworkThroughputMBps.ToString("0.##", CultureInfo.InvariantCulture);
+        return $"Uso no momento da leitura — CPU: {FormatPercent(snapshot.CpuPercent)}, "
+            + $"disco: {FormatPercent(snapshot.DiskPercent)}, GPU: {FormatPercent(snapshot.GpuPercent)}, "
             + $"rede: {network} MB/s. Amostra instantânea, não uma média.";
+    }
+
+    private static string FormatPercent(double? value)
+    {
+        return value is { } percent
+            ? percent.ToString("0", CultureInfo.InvariantCulture) + "%"
+            : "não disponível";
     }
 }
 
-public sealed class PciLinkDiagnosisAction : WindowsOptimizationAction
+public sealed class PciLinkDiagnosisAction : ReadOnlyDiagnosticAction
 {
     private readonly IPciLinkInspector inspector;
 
@@ -672,18 +588,7 @@ public sealed class PciLinkDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnosePciLink);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(inspector.GetSnapshot())));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override string Describe() => Classify(inspector.GetSnapshot());
 
     internal static string Classify(IReadOnlyList<PciLinkSnapshot> adapters)
     {
@@ -714,9 +619,10 @@ public sealed class PciLinkDiagnosisAction : WindowsOptimizationAction
     }
 }
 
-public sealed class HardwareStabilityDiagnosisAction : WindowsOptimizationAction
+public sealed class HardwareStabilityDiagnosisAction : ReadOnlyDiagnosticAction
 {
     private const int OldBiosThresholdYears = 3;
+
     private readonly IHardwareStabilityInspector inspector;
 
     public HardwareStabilityDiagnosisAction(IHardwareStabilityInspector inspector)
@@ -727,19 +633,7 @@ public sealed class HardwareStabilityDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseHardwareStability);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(
-            Classify(inspector.GetSnapshot(), DateTimeOffset.UtcNow)));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override string Describe() => Classify(inspector.GetSnapshot(), DateTimeOffset.UtcNow);
 
     internal static string Classify(HardwareStabilitySnapshot snapshot, DateTimeOffset nowUtc)
     {
@@ -776,12 +670,12 @@ public sealed class HardwareStabilityDiagnosisAction : WindowsOptimizationAction
 /// "Servidor limitado" is a conclusion by elimination (no local signal
 /// stood out), never a direct measurement of the FiveM server.
 /// </summary>
-public sealed class BottleneckClassificationAction : WindowsOptimizationAction
+public sealed class BottleneckClassificationAction : ReadOnlyDiagnosticAction
 {
-    private const double ElevatedTemperatureCelsius = 85d;
     private const double HighUtilizationPercent = 90d;
     private const double ModerateUtilizationPercent = 85d;
     private const double BackgroundProcessCpuThresholdPercent = 20d;
+    private const long SmallVramBytes = 4L * DiagnosticSignals.GiB;
 
     private static readonly IReadOnlyCollection<string> ExcludedProcessNames =
     [
@@ -815,32 +709,23 @@ public sealed class BottleneckClassificationAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.ClassifyBottleneck);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        var input = new BottleneckClassificationInput(
+        return Classify(new BottleneckClassificationInput(
             systemResources.GetSnapshot(),
             resourceUsage.GetSnapshot(),
             thermal.GetSnapshot(),
             networkHealth.GetSnapshot(),
             gpuDetails.GetSnapshot(),
-            backgroundProcess.GetTopConsumer(ExcludedProcessNames));
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(input)));
+            backgroundProcess.GetTopConsumer(ExcludedProcessNames)));
     }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
 
     internal static string Classify(BottleneckClassificationInput input)
     {
         var logicalProcessors = Math.Max(1, input.SystemResources.LogicalProcessorCount);
 
         // 1. Térmico: alta temperatura disponível é o sinal mais direto que temos.
-        if (input.Thermal is { IsAvailable: true, HighestCelsius: >= ElevatedTemperatureCelsius })
+        if (DiagnosticSignals.IsTemperatureElevated(input.Thermal))
         {
             return $"Gargalo provável: térmico. Temperatura em ~{input.Thermal.HighestCelsius:0}°C, "
                 + "o que pode causar throttling e queda de desempenho sob carga.";
@@ -863,17 +748,14 @@ public sealed class BottleneckClassificationAction : WindowsOptimizationAction
         }
 
         // 4. Disco: tempo ativo elevado.
-        if (input.ResourceUsage.DiskPercent is >= HighUtilizationPercent)
+        if (input.ResourceUsage.DiskPercent >= HighUtilizationPercent)
         {
             return "Gargalo provável: disco. A unidade está com tempo ativo elevado, "
                 + "o que pode causar travamentos ao carregar texturas/streaming.";
         }
 
         // 5. RAM: pouca memória disponível.
-        var availableRatio = input.SystemResources.TotalMemoryBytes > 0
-            ? (double)input.SystemResources.AvailableMemoryBytes / input.SystemResources.TotalMemoryBytes
-            : 1d;
-        if (availableRatio < 0.10 || input.SystemResources.AvailableMemoryBytes < 1536L * 1024 * 1024)
+        if (DiagnosticSignals.IsMemoryUnderPressure(input.SystemResources))
         {
             return "Gargalo provável: memória RAM. A memória disponível está baixa, "
                 + "o que pode causar paginação e engasgos.";
@@ -885,24 +767,24 @@ public sealed class BottleneckClassificationAction : WindowsOptimizationAction
             .Select(gpu => gpu.VramBytes!.Value)
             .DefaultIfEmpty(0)
             .Min();
-        if (input.ResourceUsage.GpuPercent is >= HighUtilizationPercent
-            && lowestVram is > 0 and <= 4L * 1024 * 1024 * 1024)
+        if (input.ResourceUsage.GpuPercent >= HighUtilizationPercent
+            && lowestVram is > 0 and <= SmallVramBytes)
         {
             return "Gargalo provável: VRAM. A GPU detectada tem pouca memória de vídeo (4 GB ou menos) "
                 + "e está com uso alto; texturas em qualidade mais alta podem causar stutter.";
         }
 
         // 7. GPU: GPU saturada com CPU folgada.
-        if (input.ResourceUsage.GpuPercent is >= HighUtilizationPercent
-            && input.ResourceUsage.CpuPercent is < ModerateUtilizationPercent)
+        if (input.ResourceUsage.GpuPercent >= HighUtilizationPercent
+            && input.ResourceUsage.CpuPercent < ModerateUtilizationPercent)
         {
             return "Gargalo provável: GPU. A GPU está próxima do limite enquanto a CPU ainda tem folga; "
                 + "reduzir opções gráficas tende a ajudar mais que ajustes de CPU.";
         }
 
         // 8. CPU: CPU saturada com GPU não saturada.
-        if (input.ResourceUsage.CpuPercent is >= ModerateUtilizationPercent
-            && input.ResourceUsage.GpuPercent is < HighUtilizationPercent)
+        if (input.ResourceUsage.CpuPercent >= ModerateUtilizationPercent
+            && input.ResourceUsage.GpuPercent < HighUtilizationPercent)
         {
             return "Gargalo provável: CPU. A CPU está com uso alto enquanto a GPU tem folga; "
                 + "reduzir opções gráficas tende a ajudar pouco nesse caso.";

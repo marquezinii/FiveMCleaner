@@ -26,6 +26,8 @@ public sealed class WindowsThermalInspector : IThermalInspector
     private const double MinPlausibleCelsius = -40d;
     private const double MaxPlausibleCelsius = 130d;
 
+    private static readonly ThermalSnapshot Unavailable = new(false, null);
+
     public ThermalSnapshot GetSnapshot()
     {
         try
@@ -42,16 +44,12 @@ public sealed class WindowsThermalInspector : IThermalInspector
                 .ToArray();
 
             return readings.Length == 0
-                ? new ThermalSnapshot(false, null)
+                ? Unavailable
                 : new ThermalSnapshot(true, readings.Max());
         }
-        catch (ManagementException)
+        catch (Exception exception) when (exception is ManagementException or UnauthorizedAccessException)
         {
-            return new ThermalSnapshot(false, null);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return new ThermalSnapshot(false, null);
+            return Unavailable;
         }
     }
 }

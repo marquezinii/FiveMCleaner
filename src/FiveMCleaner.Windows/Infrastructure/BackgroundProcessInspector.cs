@@ -71,11 +71,7 @@ public sealed class WindowsBackgroundProcessInspector : IBackgroundProcessInspec
 
             return topName is null ? null : new BackgroundProcessUsage(topName, topCpu);
         }
-        catch (ManagementException)
-        {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
+        catch (Exception exception) when (exception is ManagementException or UnauthorizedAccessException)
         {
             return null;
         }
