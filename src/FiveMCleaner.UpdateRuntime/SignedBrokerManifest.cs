@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace FiveMCleaner.UpdateRuntime;
@@ -50,33 +49,10 @@ public static class BrokerTrustPolicy
             throw new InvalidDataException("Manifesto de integridade do componente administrativo inválido.");
         }
 
-        byte[] signature;
-        try
-        {
-            signature = Convert.FromBase64String(manifest.SignatureBase64);
-        }
-        catch (FormatException)
-        {
-            throw new InvalidDataException("Assinatura do componente administrativo inválida.");
-        }
-
-        using var verifier = ECDsa.Create();
-        try
-        {
-            verifier.ImportSubjectPublicKeyInfo(publicKey, out var bytesRead);
-            if (bytesRead != publicKey.Length)
-            {
-                throw new CryptographicException("Chave pública contém dados extras.");
-            }
-        }
-        catch (CryptographicException)
-        {
-            throw new CryptographicException("Chave pública do componente administrativo inválida.");
-        }
-
-        if (!verifier.VerifyData(manifest.CanonicalPayload(), signature, HashAlgorithmName.SHA256))
-        {
-            throw new CryptographicException("Assinatura do componente administrativo não confere.");
-        }
+        SignatureVerification.Verify(
+            manifest.CanonicalPayload(), publicKey, manifest.SignatureBase64,
+            "Assinatura do componente administrativo inválida.",
+            "Chave pública do componente administrativo inválida.",
+            "Assinatura do componente administrativo não confere.");
     }
 }
