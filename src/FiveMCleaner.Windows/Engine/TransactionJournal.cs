@@ -83,13 +83,6 @@ public sealed class JsonWindowsTransactionJournalStore : IWindowsTransactionJour
         };
     }
 
-    public static JsonWindowsTransactionJournalStore CreateDefault()
-    {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var path = Path.Combine(localAppData, "FiveMCleaner", "Transactions");
-        return new JsonWindowsTransactionJournalStore(path);
-    }
-
     public async Task SaveAsync(
         WindowsTransactionJournal journal,
         CancellationToken cancellationToken)

@@ -693,8 +693,9 @@ public sealed class WindowsTransactionEngine
             if (aborted)
             {
                 completedWeight += weight;
-                await SkipRemainingAfterAbortAsync(
-                    journal, item, context, step, totalSteps, completedWeight, totalWeight)
+                await RecordSkippedActionAsync(
+                    journal, item, context, step, totalSteps, completedWeight, totalWeight,
+                    ActionExecutionOutcome.NotRun, "Ignorada após uma falha crítica anterior.")
                     .ConfigureAwait(false);
                 continue;
             }
@@ -703,8 +704,9 @@ public sealed class WindowsTransactionEngine
             if (unmet is not null)
             {
                 completedWeight += weight;
-                await SkipDueToUnmetPrerequisiteAsync(
-                    journal, item, context, step, totalSteps, completedWeight, totalWeight, unmet)
+                await RecordSkippedActionAsync(
+                    journal, item, context, step, totalSteps, completedWeight, totalWeight,
+                    ActionExecutionOutcome.Skipped, $"Pré-requisito não atendido: {unmet}.")
                     .ConfigureAwait(false);
                 continue;
             }
@@ -742,23 +744,7 @@ public sealed class WindowsTransactionEngine
         return CreateResult(journal, applied, GetDeferredAdministratorIds(journal), journal.Error);
     }
 
-    private async Task SkipRemainingAfterAbortAsync(
-        WindowsTransactionJournal journal,
-        (IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry) item,
-        WindowsActionContext context,
-        int step,
-        int totalSteps,
-        int completedWeight,
-        int totalWeight)
-    {
-        MarkTerminal(item.Entry, ActionJournalState.Skipped,
-            ActionExecutionOutcome.NotRun, "Ignorada após uma falha crítica anterior.");
-        await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
-        ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
-            ActionExecutionOutcome.NotRun);
-    }
-
-    private async Task SkipDueToUnmetPrerequisiteAsync(
+    private async Task RecordSkippedActionAsync(
         WindowsTransactionJournal journal,
         (IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry) item,
         WindowsActionContext context,
@@ -766,13 +752,12 @@ public sealed class WindowsTransactionEngine
         int totalSteps,
         int completedWeight,
         int totalWeight,
-        string unmet)
+        ActionExecutionOutcome outcome,
+        string reason)
     {
-        MarkTerminal(item.Entry, ActionJournalState.Skipped,
-            ActionExecutionOutcome.Skipped, $"Pré-requisito não atendido: {unmet}.");
+        MarkTerminal(item.Entry, ActionJournalState.Skipped, outcome, reason);
         await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
-        ReportStep(context, item, step, totalSteps, completedWeight, totalWeight,
-            ActionExecutionOutcome.Skipped);
+        ReportStep(context, item, step, totalSteps, completedWeight, totalWeight, outcome);
     }
 
     private async Task BeginItemApplicationAsync(
