@@ -47,11 +47,17 @@ public enum ActionReversibility
     /// <summary>A snapshot restores the previous value exactly.</summary>
     FullyReversible = 1,
 
+    /// <summary>
+    /// Reserved legacy value kept for transaction-journal compatibility.
+    /// New actions should model session lifecycle explicitly instead.
+    /// </summary>
+    SessionScoped = 2,
+
     /// <summary>Removed data the system rebuilds on demand, such as a cache.</summary>
-    RebuildableData = 2,
+    RebuildableData = 3,
 
     /// <summary>Data is removed for good; the plan must warn before running it.</summary>
-    Irreversible = 3
+    Irreversible = 4
 }
 
 /// <summary>Privilege an action needs in order to run.</summary>

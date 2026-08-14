@@ -129,8 +129,9 @@ public sealed class PersistedEnumContractTests
         {
             ["ReadOnly"] = 0,
             ["FullyReversible"] = 1,
-            ["RebuildableData"] = 2,
-            ["Irreversible"] = 3
+            ["SessionScoped"] = 2,
+            ["RebuildableData"] = 3,
+            ["Irreversible"] = 4
         });
     }
 
@@ -139,6 +140,7 @@ public sealed class PersistedEnumContractTests
     {
         AssertSerializesAs(ActionReversibility.ReadOnly, "readOnly");
         AssertSerializesAs(ActionReversibility.FullyReversible, "fullyReversible");
+        AssertSerializesAs(ActionReversibility.SessionScoped, "sessionScoped");
         AssertSerializesAs(ActionReversibility.RebuildableData, "rebuildableData");
         AssertSerializesAs(ActionReversibility.Irreversible, "irreversible");
     }
