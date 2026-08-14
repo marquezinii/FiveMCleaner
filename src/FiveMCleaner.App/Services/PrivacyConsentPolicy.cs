@@ -18,10 +18,9 @@ public static class PrivacyConsentPolicy
 {
     /// <summary>
     /// The current privacy consent version. Bump this whenever a material
-    /// change happens to what is collected or where it is sent (for example,
-    /// adding crash reporting, or switching the telemetry transport from
-    /// FormSubmit to another destination) — every user, including those who
-    /// already accepted an older version, will be asked to confirm again.
+    /// change happens to what is collected or where it is sent — every user,
+    /// including those who already accepted an older version, will be asked
+    /// to confirm again.
     /// </summary>
     public const int CurrentVersion = 4;
 
