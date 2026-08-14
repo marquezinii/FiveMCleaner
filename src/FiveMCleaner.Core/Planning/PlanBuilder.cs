@@ -132,20 +132,10 @@ public static class PlanBuilder
         OptimizationPlanRequestDto request,
         IReadOnlyList<OptimizationActionDefinition> actions)
     {
-        return [.. CreateRemovalNotices(request, actions),
-            .. CreatePowerAndProcessNotices(actions),
-            .. CreateRepairNotices(actions),
-            .. CreateGraphicsNotices(actions),
-            .. CreateProfileNotices(request)];
-    }
-
-    private static IReadOnlyList<PlanNoticeDto> CreateRemovalNotices(
-        OptimizationPlanRequestDto request,
-        IReadOnlyList<OptimizationActionDefinition> actions)
-    {
         var notices = new List<PlanNoticeDto>();
+        var hasAction = new HashSet<string>(actions.Select(a => a.Id), StringComparer.Ordinal);
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.PruneLegacyCrashDumps))
+        if (hasAction.Contains(OptimizationActionIds.PruneLegacyCrashDumps))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -156,7 +146,7 @@ public static class PlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.RepairLegacyServerCache))
+        if (hasAction.Contains(OptimizationActionIds.RepairLegacyServerCache))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -167,15 +157,7 @@ public static class PlanBuilder
             });
         }
 
-        return notices;
-    }
-
-    private static IReadOnlyList<PlanNoticeDto> CreatePowerAndProcessNotices(
-        IReadOnlyList<OptimizationActionDefinition> actions)
-    {
-        var notices = new List<PlanNoticeDto>();
-
-        if (actions.Any(action => action.Id == OptimizationActionIds.EnableSessionPerformancePowerPlan))
+        if (hasAction.Contains(OptimizationActionIds.EnableSessionPerformancePowerPlan))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -186,7 +168,7 @@ public static class PlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.TerminateStuckFiveMProcess))
+        if (hasAction.Contains(OptimizationActionIds.TerminateStuckFiveMProcess))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -197,15 +179,7 @@ public static class PlanBuilder
             });
         }
 
-        return notices;
-    }
-
-    private static IReadOnlyList<PlanNoticeDto> CreateRepairNotices(
-        IReadOnlyList<OptimizationActionDefinition> actions)
-    {
-        var notices = new List<PlanNoticeDto>();
-
-        if (actions.Any(action => action.Id == OptimizationActionIds.RecreateFiveMLocalData))
+        if (hasAction.Contains(OptimizationActionIds.RecreateFiveMLocalData))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -216,7 +190,7 @@ public static class PlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.RepairStaleAuthData))
+        if (hasAction.Contains(OptimizationActionIds.RepairStaleAuthData))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -227,16 +201,8 @@ public static class PlanBuilder
             });
         }
 
-        return notices;
-    }
-
-    private static IReadOnlyList<PlanNoticeDto> CreateGraphicsNotices(
-        IReadOnlyList<OptimizationActionDefinition> actions)
-    {
-        var notices = new List<PlanNoticeDto>();
-
-        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyQualityLegacyGraphics
-            || action.Id == OptimizationActionIds.ApplyQualityGtaVGraphics))
+        if (hasAction.Contains(OptimizationActionIds.ApplyQualityLegacyGraphics)
+            || hasAction.Contains(OptimizationActionIds.ApplyQualityGtaVGraphics))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -246,8 +212,8 @@ public static class PlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyLegacyDisplayPreferences
-            || action.Id == OptimizationActionIds.ApplyGtaVDisplayPreferences))
+        if (hasAction.Contains(OptimizationActionIds.ApplyLegacyDisplayPreferences)
+            || hasAction.Contains(OptimizationActionIds.ApplyGtaVDisplayPreferences))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -257,7 +223,7 @@ public static class PlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyGtaVRepairLaunchParameters))
+        if (hasAction.Contains(OptimizationActionIds.ApplyGtaVRepairLaunchParameters))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -268,9 +234,9 @@ public static class PlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters
-            || action.Id == OptimizationActionIds.ApplyGtaVDisplayLaunchParameters
-            || action.Id == OptimizationActionIds.ApplyGtaVRepairLaunchParameters))
+        if (hasAction.Contains(OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters)
+            || hasAction.Contains(OptimizationActionIds.ApplyGtaVDisplayLaunchParameters)
+            || hasAction.Contains(OptimizationActionIds.ApplyGtaVRepairLaunchParameters))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -280,25 +246,17 @@ public static class PlanBuilder
             });
         }
 
-        return notices;
-    }
-
-    private static IReadOnlyList<PlanNoticeDto> CreateProfileNotices(OptimizationPlanRequestDto request)
-    {
-        if (request.Profile != OptimizationProfile.Aggressive)
+        if (request.Profile == OptimizationProfile.Aggressive)
         {
-            return [];
-        }
-
-        return
-        [
-            new PlanNoticeDto
+            notices.Add(new PlanNoticeDto
             {
                 Code = "aggressive-prioritizes-performance",
                 Severity = PlanNoticeSeverity.Warning,
                 Message = "O perfil agressivo prioriza FPS e responsividade, reduzindo a qualidade visual."
-            }
-        ];
+            });
+        }
+
+        return notices;
     }
 
     private static bool IsEnabled(ActionOptionGate gate, OptimizationOptionsDto options)
