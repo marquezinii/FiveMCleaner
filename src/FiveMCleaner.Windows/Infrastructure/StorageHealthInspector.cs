@@ -1,5 +1,4 @@
 using System.Management;
-using System.Threading;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
@@ -25,41 +24,15 @@ public interface IStorageHealthInspector
 /// installation, since mapping a drive letter to a physical disk reliably
 /// would require a fragile multi-class WMI join across storage pools,
 /// dynamic disks and virtual disks.
-///
-/// Caches results for 30 seconds to avoid repeated WMI queries during a single session.
 /// </summary>
 public sealed class WindowsStorageHealthInspector : IStorageHealthInspector
 {
-    private static readonly object CacheLock = new();
-    private static StorageHealthSnapshot? cachedSnapshot;
-    private static DateTimeOffset? cachedAt;
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(30);
+    private static readonly StorageHealthSnapshot Empty = new([]);
+    private static readonly TimedSnapshotCache<StorageHealthSnapshot> Cache = new();
 
-    public StorageHealthSnapshot GetSnapshot()
-    {
-        // Check cache first
-        lock (CacheLock)
-        {
-            if (cachedSnapshot is not null && cachedAt is not null &&
-                DateTimeOffset.UtcNow - cachedAt.Value < CacheTtl)
-            {
-                return cachedSnapshot;
-            }
-        }
+    public StorageHealthSnapshot GetSnapshot() => Cache.GetOrRead(Read);
 
-        var snapshot = GetSnapshotInternal();
-
-        // Update cache
-        lock (CacheLock)
-        {
-            cachedSnapshot = snapshot;
-            cachedAt = DateTimeOffset.UtcNow;
-        }
-
-        return snapshot;
-    }
-
-    private static StorageHealthSnapshot GetSnapshotInternal()
+    private static StorageHealthSnapshot Read()
     {
         var disks = new List<PhysicalDiskInfo>();
         try
@@ -88,13 +61,9 @@ public sealed class WindowsStorageHealthInspector : IStorageHealthInspector
                 }
             }
         }
-        catch (ManagementException)
+        catch (Exception exception) when (exception is ManagementException or UnauthorizedAccessException)
         {
-            return new StorageHealthSnapshot([]);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return new StorageHealthSnapshot([]);
+            return Empty;
         }
 
         return new StorageHealthSnapshot(disks);

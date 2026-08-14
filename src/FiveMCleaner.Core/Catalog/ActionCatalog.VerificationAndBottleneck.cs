@@ -1,0 +1,100 @@
+using FiveMCleaner.Contracts;
+
+namespace FiveMCleaner.Core.Catalog;
+
+public sealed partial class ActionCatalog
+{
+    private static IReadOnlyList<OptimizationActionDefinition> CreateVerificationAndBottleneckActions()
+    {
+        return
+        [
+            Define(
+                OptimizationActionIds.VerifyFiveMIsStopped,
+                "Verificar estado do FiveM",
+                "Confirma que os processos do FiveM estão encerrados antes de qualquer alteração em cache ou gráficos.",
+                ActionCategory.Safety,
+                ActionRisk.Informational,
+                ActionReversibility.ReadOnly,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 2,
+                expectedImpact: "Protege a integridade dos arquivos do FiveM.",
+                ActionOptionGate.Always,
+                isCritical: true,
+                detectionSummary: "Inspeciona os processos ativos cuja imagem pertence à pasta do FiveM.",
+                confirmationSummary: "A verificação passa quando nenhum processo do FiveM está em execução.",
+                undoSummary: "Somente leitura: não há nada para desfazer.",
+                riskLimitations: "Se o FiveM estiver aberto, as ações dependentes são ignoradas com segurança."),
+            Define(
+                OptimizationActionIds.VerifyGtaVIsStopped,
+                "Verificar estado do GTA V",
+                "Confirma que o GTA V Legacy está fechado antes de qualquer alteração no settings.xml dele.",
+                ActionCategory.Safety,
+                ActionRisk.Informational,
+                ActionReversibility.ReadOnly,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 2,
+                expectedImpact: "Evita uma execução parcial quando a otimização do GTA V está habilitada.",
+                ActionOptionGate.ApplyGtaVGraphicsPreset,
+                isCritical: true,
+                detectionSummary: "Inspeciona os processos ativos cuja imagem pertence à pasta do GTA V.",
+                confirmationSummary: "A verificação passa quando o GTA V não está em execução.",
+                undoSummary: "Somente leitura: não há nada para desfazer.",
+                riskLimitations: "Se o GTA V estiver aberto, os ajustes gráficos do GTA V são ignorados com segurança."),
+            Define(
+                OptimizationActionIds.DiagnoseBottleneck,
+                "Diagnosticar gargalo provável",
+                "Analisa memória disponível, processadores lógicos e espaço livre em disco para apontar o recurso mais limitante, sem alterar nada.",
+                ActionCategory.Safety,
+                ActionRisk.Informational,
+                ActionReversibility.ReadOnly,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 3,
+                expectedImpact: "Ajuda a entender onde o computador está limitado; não mede FPS nem promete ganho.",
+                ActionOptionGate.Always,
+                detectionSummary: "Lê memória total/disponível, contagem de processadores lógicos e espaço livre no disco do sistema.",
+                confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
+                undoSummary: "Somente leitura: não há nada para desfazer.",
+                riskLimitations: "É uma heurística local, não um benchmark; resultados variam conforme a carga no momento da leitura."),
+            Define(
+                OptimizationActionIds.DetectOverlaysAndCaptureSoftware,
+                "Detectar overlays e captura em segundo plano",
+                "Verifica a presença de overlays e softwares de captura de terceiros conhecidos (NVIDIA, RTSS, Discord, Xbox Game Bar) em execução, sem fechá-los.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Informational,
+                ActionReversibility.ReadOnly,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 3,
+                expectedImpact: "Informa quais overlays conhecidos estão ativos para você decidir se quer fechá-los manualmente.",
+                ActionOptionGate.Always,
+                detectionSummary: "Compara os processos em execução com uma lista pequena e conhecida de overlays/capturadores.",
+                confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
+                undoSummary: "Somente leitura: não fecha nem altera nenhum processo.",
+                riskLimitations: "Detecção heurística por nome de processo; presença não significa necessariamente problema."),
+            Define(
+                OptimizationActionIds.ReadFiveMLegacyLogs,
+                "Ler log recente do FiveM",
+                "Localiza o log mais recente do FiveM Legacy e resume sua idade e ocorrências de possíveis erros, sem modificar nada.",
+                ActionCategory.Storage,
+                ActionRisk.Informational,
+                ActionReversibility.ReadOnly,
+                RequiredPrivilege.StandardUser,
+                AllProfiles,
+                requiresFiveMStopped: false,
+                progressWeight: 3,
+                expectedImpact: "Dá um sinal rápido de problemas recentes sem precisar abrir o arquivo manualmente.",
+                ActionOptionGate.Always,
+                detectionSummary: "Abre o log mais recente da pasta logs do FiveM com acesso compartilhado, mesmo com o FiveM aberto.",
+                confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
+                undoSummary: "Somente leitura: não altera nem remove nenhum log.",
+                riskLimitations: "Contagem de possíveis erros é aproximada (busca textual); não substitui um diagnóstico completo.")
+        ];
+    }
+}

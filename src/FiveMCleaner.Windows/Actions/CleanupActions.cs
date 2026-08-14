@@ -212,7 +212,6 @@ public sealed class LegacyServerCacheRepairAction : QuarantineCleanupAction
     private readonly CacheRepairPolicy policy;
     private readonly long thresholdBytes;
     private readonly IFiveMProcessInspector processInspector;
-    private readonly SafeFileTree fileTree;
 
     public LegacyServerCacheRepairAction(
         string fiveMAppRoot,
@@ -240,7 +239,7 @@ public sealed class LegacyServerCacheRepairAction : QuarantineCleanupAction
         this.thresholdBytes = thresholdBytes;
         this.processInspector = processInspector
             ?? throw new ArgumentNullException(nameof(processInspector));
-        this.fileTree = fileTree ?? new SafeFileTree();
+
     }
 
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
@@ -287,11 +286,12 @@ public sealed class LegacyServerCacheRepairAction : QuarantineCleanupAction
 public abstract class QuarantineCleanupAction : WindowsOptimizationAction
 {
     private const string QuarantineDirectoryName = ".fivemcleaner-quarantine";
-    private readonly SafeFileTree fileTree;
+    protected readonly SafeFileTree fileTree;
 
     protected QuarantineCleanupAction(SafeFileTree? fileTree)
     {
         this.fileTree = fileTree ?? new SafeFileTree();
+
     }
 
     protected abstract IReadOnlyList<CleanupScope> GetScopes(WindowsActionContext context);

@@ -61,7 +61,7 @@ public sealed class HardwareDiagnosticActionsTests
     {
         var snapshot = new RamDetailsSnapshot(
         [
-            new RamModuleInfo(16L * 1024 * 1024 * 1024, 3200, 3200, "DIMM0")
+            new RamModuleInfo(16L * 1024 * 1024 * 1024, 3200, 3200)
         ]);
 
         var message = RamDetailsDiagnosisAction.Classify(snapshot);
@@ -74,8 +74,8 @@ public sealed class HardwareDiagnosticActionsTests
     {
         var snapshot = new RamDetailsSnapshot(
         [
-            new RamModuleInfo(16L * 1024 * 1024 * 1024, 2133, 3600, "DIMM0"),
-            new RamModuleInfo(16L * 1024 * 1024 * 1024, 2133, 3600, "DIMM1")
+            new RamModuleInfo(16L * 1024 * 1024 * 1024, 2133, 3600),
+            new RamModuleInfo(16L * 1024 * 1024 * 1024, 2133, 3600)
         ]);
 
         var message = RamDetailsDiagnosisAction.Classify(snapshot);
@@ -89,8 +89,8 @@ public sealed class HardwareDiagnosticActionsTests
     {
         var snapshot = new RamDetailsSnapshot(
         [
-            new RamModuleInfo(16L * 1024 * 1024 * 1024, 3600, 3600, "DIMM0"),
-            new RamModuleInfo(16L * 1024 * 1024 * 1024, 3600, 3600, "DIMM1")
+            new RamModuleInfo(16L * 1024 * 1024 * 1024, 3600, 3600),
+            new RamModuleInfo(16L * 1024 * 1024 * 1024, 3600, 3600)
         ]);
 
         var message = RamDetailsDiagnosisAction.Classify(snapshot);
@@ -448,6 +448,79 @@ public sealed class BottleneckClassificationActionTests
         var message = BottleneckClassificationAction.Classify(input);
 
         Assert.Contains("servidor FiveM", message, StringComparison.Ordinal);
+    }
+}
+
+/// <summary>
+/// Locks the single GPU name heuristic now shared by the vendor diagnosis, the
+/// dual-GPU preference check, the G-SYNC panel hint and the VRAM/kind reading,
+/// so the same adapter can no longer be integrated for one of them and unknown
+/// for another.
+/// </summary>
+public sealed class GpuVendorClassifierTests
+{
+    [Theory]
+    [InlineData("NVIDIA GeForce RTX 4070", "NVIDIA")]
+    [InlineData("AMD Radeon RX 7800 XT", "AMD")]
+    [InlineData("Radeon(TM) Vega 8 Graphics", "AMD")]
+    [InlineData("Intel(R) UHD Graphics 620", "Intel")]
+    [InlineData("Some Unlisted Display Adapter", GpuVendorClassifier.UnknownVendor)]
+    public void VendorOf_RecognizesTheVendorOrAdmitsItDoesNot(string description, string expected)
+    {
+        Assert.Equal(expected, GpuVendorClassifier.VendorOf(description));
+    }
+
+    [Theory]
+    [InlineData("Intel(R) UHD Graphics 770", GpuKindGuess.LikelyIntegrated)]
+    [InlineData("Intel UHD Graphics", GpuKindGuess.LikelyIntegrated)]
+    [InlineData("Intel(R) HD Graphics 4000", GpuKindGuess.LikelyIntegrated)]
+    [InlineData("AMD Radeon(TM) Graphics", GpuKindGuess.LikelyIntegrated)]
+    [InlineData("NVIDIA GeForce GTX 1650", GpuKindGuess.LikelyDiscrete)]
+    [InlineData("AMD Radeon RX 7800 XT", GpuKindGuess.LikelyDiscrete)]
+    [InlineData("Some Unlisted Display Adapter", GpuKindGuess.Unknown)]
+    public void GuessKind_ClassifiesIntegratedBeforeDiscreteAndNeverInvents(
+        string description,
+        GpuKindGuess expected)
+    {
+        Assert.Equal(expected, GpuVendorClassifier.GuessKind(description));
+        Assert.Equal(expected == GpuKindGuess.LikelyIntegrated, GpuVendorClassifier.IsIntegrated(description));
+    }
+}
+
+/// <summary>
+/// The inventory cache must not remember a failed read: a WMI query that fails
+/// once would otherwise report "not available" for a whole TTL.
+/// </summary>
+public sealed class TimedSnapshotCacheTests
+{
+    [Fact]
+    public void GetOrRead_ReadsOnceWhileTheEntryIsFresh()
+    {
+        var cache = new TimedSnapshotCache<string>();
+        var reads = 0;
+
+        Assert.Equal("value", cache.GetOrRead(Read));
+        Assert.Equal("value", cache.GetOrRead(Read));
+        Assert.Equal(1, reads);
+
+        string Read()
+        {
+            reads++;
+            return "value";
+        }
+    }
+
+    [Fact]
+    public void GetOrReadOptional_RetriesAfterAFailedRead()
+    {
+        var cache = new TimedSnapshotCache<string>();
+        var reads = 0;
+
+        Assert.Null(cache.GetOrReadOptional(Read));
+        Assert.Equal("recovered", cache.GetOrReadOptional(Read));
+        Assert.Equal(2, reads);
+
+        string? Read() => ++reads == 1 ? null : "recovered";
     }
 }
 

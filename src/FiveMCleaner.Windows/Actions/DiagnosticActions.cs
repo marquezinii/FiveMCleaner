@@ -6,14 +6,11 @@ using Microsoft.Win32;
 namespace FiveMCleaner.Windows.Actions;
 
 /// <summary>
-/// Read-only actions that never change the machine. They always resolve to
-/// <see cref="WindowsActionApplyResult.NoChange"/> with an informative
-/// message and are never critical: a failure to read a signal degrades to a
-/// generic message instead of aborting the run.
+/// Read-only diagnostic that never changes the machine. A failure to read a
+/// signal degrades to a generic message instead of aborting the run.
 /// </summary>
-public sealed class BottleneckDiagnosisAction : WindowsOptimizationAction
+public sealed class BottleneckDiagnosisAction : ReadOnlyDiagnosticAction
 {
-    private const long GiB = 1024L * 1024L * 1024L;
     private readonly ISystemResourceInspector inspector;
 
     public BottleneckDiagnosisAction(ISystemResourceInspector inspector)
@@ -24,39 +21,22 @@ public sealed class BottleneckDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseBottleneck);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var snapshot = inspector.GetSnapshot();
-            return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(snapshot)));
+            return Classify(inspector.GetSnapshot());
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException)
         {
-            return Task.FromResult(WindowsActionApplyResult.NoChange(
-                $"Não foi possível ler os sinais de hardware para o diagnóstico de gargalo ({exception.Message})."));
+            return "Não foi possível ler os sinais de hardware para o diagnóstico de gargalo "
+                + $"({exception.Message}).";
         }
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
     }
 
     internal static string Classify(SystemResourceSnapshot snapshot)
     {
-        var availableRatio = snapshot.TotalMemoryBytes > 0
-            ? (double)snapshot.AvailableMemoryBytes / snapshot.TotalMemoryBytes
-            : 1d;
-        var freeDiskGiB = snapshot.SystemDriveFreeBytes / (double)GiB;
-
-        if (availableRatio < 0.10 || snapshot.AvailableMemoryBytes < 1536L * 1024 * 1024)
+        if (DiagnosticSignals.IsMemoryUnderPressure(snapshot))
         {
             return "Gargalo provável: memória RAM sob pressão. Feche outros programas antes de jogar.";
         }
@@ -66,7 +46,7 @@ public sealed class BottleneckDiagnosisAction : WindowsOptimizationAction
             return "Gargalo provável: poucos processadores lógicos, o que pode limitar servidores com muitos recursos/scripts.";
         }
 
-        if (freeDiskGiB < 8)
+        if (snapshot.SystemDriveFreeBytes / (double)DiagnosticSignals.GiB < 8)
         {
             return "Gargalo provável: pouco espaço livre em disco, o que pode atrasar carregamento de texturas e streaming de conteúdo.";
         }
@@ -75,7 +55,7 @@ public sealed class BottleneckDiagnosisAction : WindowsOptimizationAction
     }
 }
 
-public sealed class OverlaySoftwareDetectionAction : WindowsOptimizationAction
+public sealed class OverlaySoftwareDetectionAction : ReadOnlyDiagnosticAction
 {
     private readonly IOverlaySoftwareInspector inspector;
 
@@ -87,15 +67,16 @@ public sealed class OverlaySoftwareDetectionAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DetectOverlaysAndCaptureSoftware);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
         var found = inspector.DetectRunningOverlayNames();
-        var message = found.Count == 0
-            ? "Nenhum overlay ou software de captura conhecido foi detectado em execução."
-            : $"Overlay(s) detectado(s): {string.Join(", ", found)}. Nenhum deles foi fechado; feche manualmente se notar instabilidade.";
+        if (found.Count == 0)
+        {
+            return "Nenhum overlay ou software de captura conhecido foi detectado em execução.";
+        }
+
+        var message = $"Overlay(s) detectado(s): {string.Join(", ", found)}. Nenhum deles foi fechado; "
+            + "feche manualmente se notar instabilidade.";
         if (found.Any(name => name.Contains("ShadowPlay", StringComparison.OrdinalIgnoreCase)))
         {
             // "NVIDIA Share" is the actual process behind Instant Replay; its
@@ -107,21 +88,15 @@ public sealed class OverlaySoftwareDetectionAction : WindowsOptimizationAction
                 + "se filtros do Freestyle estiverem configurados, também podem estar em uso -- confira no NVIDIA App.";
         }
 
-        return Task.FromResult(WindowsActionApplyResult.NoChange(message));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
+        return message;
     }
 }
 
-public sealed class FiveMLegacyLogReaderAction : WindowsOptimizationAction
+public sealed class FiveMLegacyLogReaderAction : ReadOnlyDiagnosticAction
 {
     private const long MaxTailBytes = 512 * 1024;
+    private const string NoLogsMessage = "Nenhum log recente do FiveM foi encontrado; nada a analisar.";
+
     private readonly string fiveMAppRoot;
 
     public FiveMLegacyLogReaderAction(string fiveMAppRoot)
@@ -132,19 +107,15 @@ public sealed class FiveMLegacyLogReaderAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.ReadFiveMLegacyLogs);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
         var logsDirectory = Path.Combine(fiveMAppRoot, "logs");
         if (!Directory.Exists(logsDirectory))
         {
-            return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Nenhum log recente do FiveM foi encontrado; nada a analisar."));
+            return NoLogsMessage;
         }
 
-        FileInfo? latest = null;
+        FileInfo? latest;
         try
         {
             latest = new DirectoryInfo(logsDirectory)
@@ -154,44 +125,27 @@ public sealed class FiveMLegacyLogReaderAction : WindowsOptimizationAction
         }
         catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
         {
-            return Task.FromResult(WindowsActionApplyResult.NoChange(
-                $"Não foi possível listar os logs do FiveM ({exception.Message})."));
+            return $"Não foi possível listar os logs do FiveM ({exception.Message}).";
         }
 
         if (latest is null)
         {
-            return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Nenhum log recente do FiveM foi encontrado; nada a analisar."));
+            return NoLogsMessage;
         }
 
-        var errorHits = 0;
+        var header = $"Log mais recente: {latest.Name}, modificado há "
+            + $"{FormatAge(DateTimeOffset.UtcNow - latest.LastWriteTimeUtc)}.";
         try
         {
-            errorHits = CountPossibleErrors(latest.FullName);
+            var errorHits = CountPossibleErrors(latest.FullName);
+            return errorHits > 0
+                ? $"{header} {errorHits} linha(s) com possíveis erros; não é um diagnóstico definitivo."
+                : $"{header} Nenhuma linha com possível erro foi encontrada.";
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            var ageInaccessible = DateTimeOffset.UtcNow - latest.LastWriteTimeUtc;
-            return Task.FromResult(WindowsActionApplyResult.NoChange(
-                $"Log mais recente: {latest.Name}, modificado há {FormatAge(ageInaccessible)}. "
-                    + $"Não foi possível ler o conteúdo agora ({exception.Message})."));
+            return $"{header} Não foi possível ler o conteúdo agora ({exception.Message}).";
         }
-
-        var age = DateTimeOffset.UtcNow - latest.LastWriteTimeUtc;
-        var message = errorHits > 0
-            ? $"Log mais recente: {latest.Name}, modificado há {FormatAge(age)}. "
-                + $"{errorHits} linha(s) com possíveis erros; não é um diagnóstico definitivo."
-            : $"Log mais recente: {latest.Name}, modificado há {FormatAge(age)}. "
-                + "Nenhuma linha com possível erro foi encontrada.";
-        return Task.FromResult(WindowsActionApplyResult.NoChange(message));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
     }
 
     private static int CountPossibleErrors(string path)
@@ -235,33 +189,21 @@ public sealed class FiveMLegacyLogReaderAction : WindowsOptimizationAction
     }
 }
 
-public sealed class PerformanceDiagnosticsGuideAction : WindowsOptimizationAction
+public sealed class PerformanceDiagnosticsGuideAction : ReadOnlyDiagnosticAction
 {
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.GuidePerformanceDiagnostics);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(
-            "Use os comandos oficiais do FiveM no console (F8) para medir o desempenho real: "
-                + "cl_drawfps true (FPS), cl_drawperf true (FPS/ping/CPU/GPU), netgraph true (rede) e, "
-                + "com o modo de desenvolvimento disponível, resmon true (CPU/memória por recurso do servidor). "
-                + "O painel de prontidão para streaming do próprio FiveMCleaner mostra sinais adicionais de sessão."));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
+        return "Use os comandos oficiais do FiveM no console (F8) para medir o desempenho real: "
+            + "cl_drawfps true (FPS), cl_drawperf true (FPS/ping/CPU/GPU), netgraph true (rede) e, "
+            + "com o modo de desenvolvimento disponível, resmon true (CPU/memória por recurso do servidor). "
+            + "O painel de prontidão para streaming do próprio FiveMCleaner mostra sinais adicionais de sessão.";
     }
 }
 
-public sealed class NetworkHealthDiagnosisAction : WindowsOptimizationAction
+public sealed class NetworkHealthDiagnosisAction : ReadOnlyDiagnosticAction
 {
     private readonly INetworkHealthInspector inspector;
 
@@ -273,29 +215,16 @@ public sealed class NetworkHealthDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseNetworkHealth);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var snapshot = inspector.GetSnapshot();
-            return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(snapshot)));
+            return Classify(inspector.GetSnapshot());
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException)
         {
-            return Task.FromResult(WindowsActionApplyResult.NoChange(
-                $"Não foi possível ler as estatísticas de rede ({exception.Message})."));
+            return $"Não foi possível ler as estatísticas de rede ({exception.Message}).";
         }
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
     }
 
     internal static string Classify(NetworkHealthSnapshot snapshot)
@@ -316,9 +245,8 @@ public sealed class NetworkHealthDiagnosisAction : WindowsOptimizationAction
     }
 }
 
-public sealed class ThermalDiagnosisAction : WindowsOptimizationAction
+public sealed class ThermalDiagnosisAction : ReadOnlyDiagnosticAction
 {
-    private const double ElevatedTemperatureCelsius = 85d;
     private readonly IThermalInspector inspector;
 
     public ThermalDiagnosisAction(IThermalInspector inspector)
@@ -329,22 +257,7 @@ public sealed class ThermalDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseThermalThrottling);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        var snapshot = inspector.GetSnapshot();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(snapshot)));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+    protected override string Describe() => Classify(inspector.GetSnapshot());
 
     internal static string Classify(ThermalSnapshot snapshot)
     {
@@ -355,15 +268,16 @@ public sealed class ThermalDiagnosisAction : WindowsOptimizationAction
                 + "verifique a temperatura com o utilitário oficial do fabricante.";
         }
 
-        return celsius >= ElevatedTemperatureCelsius
+        return DiagnosticSignals.IsTemperatureElevated(snapshot)
             ? $"Temperatura elevada detectada (~{celsius:0}°C); pode haver throttling térmico sob carga."
             : $"Temperatura dentro de uma faixa normal (~{celsius:0}°C) no momento da leitura.";
     }
 }
 
-public sealed class PagefileCommitDiagnosisAction : WindowsOptimizationAction
+public sealed class PagefileCommitDiagnosisAction : ReadOnlyDiagnosticAction
 {
-    private const long GiB = 1024L * 1024L * 1024L;
+    private const double LowAvailablePageFileRatio = 0.10d;
+
     private readonly ISystemResourceInspector inspector;
 
     public PagefileCommitDiagnosisAction(ISystemResourceInspector inspector)
@@ -374,29 +288,16 @@ public sealed class PagefileCommitDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnosePagefileCommit);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
         try
         {
-            var snapshot = inspector.GetSnapshot();
-            return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(snapshot)));
+            return Classify(inspector.GetSnapshot());
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException)
         {
-            return Task.FromResult(WindowsActionApplyResult.NoChange(
-                $"Não foi possível ler o estado do pagefile ({exception.Message})."));
+            return $"Não foi possível ler o estado do pagefile ({exception.Message}).";
         }
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
     }
 
     internal static string Classify(SystemResourceSnapshot snapshot)
@@ -407,16 +308,16 @@ public sealed class PagefileCommitDiagnosisAction : WindowsOptimizationAction
         }
 
         var availableRatio = (double)snapshot.AvailablePageFileBytes / snapshot.TotalPageFileBytes;
-        var totalGiB = snapshot.TotalPageFileBytes / (double)GiB;
+        var totalGiB = snapshot.TotalPageFileBytes / (double)DiagnosticSignals.GiB;
 
-        return availableRatio < 0.10
+        return availableRatio < LowAvailablePageFileRatio
             ? $"O commit de memória está próximo do limite do pagefile ({totalGiB:0.#} GB no total); "
                 + "risco de lentidão por paginação excessiva sob carga."
             : $"Há folga suficiente no pagefile ({totalGiB:0.#} GB no total) para a carga atual.";
     }
 }
 
-public sealed class CacheIndexIntegrityDiagnosisAction : WindowsOptimizationAction
+public sealed class CacheIndexIntegrityDiagnosisAction : ReadOnlyDiagnosticAction
 {
     private readonly string fiveMAppRoot;
 
@@ -428,57 +329,29 @@ public sealed class CacheIndexIntegrityDiagnosisAction : WindowsOptimizationActi
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseCacheIntegrity);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
         var dataRoot = Path.Combine(fiveMAppRoot, "data");
-        var candidates = new[]
+        var existing = new[]
         {
             Path.Combine(dataRoot, "server-cache", "content_index.xml"),
             Path.Combine(dataRoot, "server-cache-priv", "content_index.xml")
-        };
+        }.Where(File.Exists).ToArray();
 
-        var corrupted = new List<string>();
-        var checkedAny = false;
-        foreach (var path in candidates)
+        if (existing.Length == 0)
         {
-            if (!File.Exists(path))
-            {
-                continue;
-            }
-
-            checkedAny = true;
-            if (!IsWellFormedXml(path))
-            {
-                corrupted.Add(Path.GetFileName(Path.GetDirectoryName(path)) + "/" + Path.GetFileName(path));
-            }
+            return "Nenhum índice de cache foi encontrado (normal se o cache nunca foi usado ou já foi limpo).";
         }
 
-        if (!checkedAny)
-        {
-            return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Nenhum índice de cache foi encontrado (normal se o cache nunca foi usado ou já foi limpo)."));
-        }
+        var corrupted = existing
+            .Where(path => !IsWellFormedXml(path))
+            .Select(path => Path.GetFileName(Path.GetDirectoryName(path)) + "/" + Path.GetFileName(path))
+            .ToArray();
 
-        if (corrupted.Count > 0)
-        {
-            return Task.FromResult(WindowsActionApplyResult.NoChange(
-                $"Índice de cache aparentemente corrompido: {string.Join(", ", corrupted)}. "
-                    + "Recomendamos usar o reparo de cache (perfil Médio/Agressivo com reparo habilitado) para reconstruí-lo."));
-        }
-
-        return Task.FromResult(WindowsActionApplyResult.NoChange(
-            "O índice de cache do FiveM está bem formado; nenhuma corrupção conhecida foi encontrada."));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
+        return corrupted.Length > 0
+            ? $"Índice de cache aparentemente corrompido: {string.Join(", ", corrupted)}. "
+                + "Recomendamos usar o reparo de cache (perfil Médio/Agressivo com reparo habilitado) para reconstruí-lo."
+            : "O índice de cache do FiveM está bem formado; nenhuma corrupção conhecida foi encontrada.";
     }
 
     private static bool IsWellFormedXml(string path)
@@ -509,8 +382,15 @@ public sealed class CacheIndexIntegrityDiagnosisAction : WindowsOptimizationActi
     }
 }
 
-public sealed class GpuVendorDetectionAction : WindowsOptimizationAction
+public sealed class GpuVendorDetectionAction : ReadOnlyDiagnosticAction
 {
+    private static readonly (string Vendor, string Link)[] OfficialDriverLinks =
+    [
+        ("NVIDIA", "NVIDIA: nvidia.com/drivers"),
+        ("AMD", "AMD: drivers.amd.com"),
+        ("Intel", "Intel: intel.com/content/www/us/en/download-center/home.html")
+    ];
+
     private readonly IGpuVendorInspector inspector;
 
     public GpuVendorDetectionAction(IGpuVendorInspector inspector)
@@ -521,22 +401,7 @@ public sealed class GpuVendorDetectionAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DetectGpuVendor);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        var snapshot = inspector.GetSnapshot();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(snapshot)));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
+    protected override string Describe() => Classify(inspector.GetSnapshot());
 
     internal static string Classify(GpuVendorSnapshot snapshot)
     {
@@ -545,60 +410,21 @@ public sealed class GpuVendorDetectionAction : WindowsOptimizationAction
             return "Não foi possível identificar o fabricante da GPU neste momento.";
         }
 
-        var vendorNames = snapshot.DriverDescriptions
-            .Select(VendorOf)
-            .ToArray();
-        var vendors = snapshot.DriverDescriptions
-            .Select((description, index) => $"{vendorNames[index]} ({description})")
-            .ToArray();
+        var vendors = snapshot.DriverDescriptions.Select(GpuVendorClassifier.VendorOf).ToArray();
+        var described = snapshot.DriverDescriptions.Select(
+            (description, index) => $"{vendors[index]} ({description})");
 
-        var message = $"GPU(s) detectada(s): {string.Join(", ", vendors)}. Ajustes de perfil 3D devem ser feitos "
+        var message = $"GPU(s) detectada(s): {string.Join(", ", described)}. Ajustes de perfil 3D devem ser feitos "
             + "apenas pelo painel oficial do fabricante (NVIDIA Control Panel, AMD Software ou Intel "
             + "Graphics Command Center); o FiveMCleaner não escreve nem sobrescreve esses perfis.";
 
-        var links = new List<string>();
-        if (vendorNames.Contains("NVIDIA"))
-        {
-            links.Add("NVIDIA: nvidia.com/drivers");
-        }
-
-        if (vendorNames.Contains("AMD"))
-        {
-            links.Add("AMD: drivers.amd.com");
-        }
-
-        if (vendorNames.Contains("Intel"))
-        {
-            links.Add("Intel: intel.com/content/www/us/en/download-center/home.html");
-        }
-
-        if (links.Count > 0)
-        {
-            message += $" Baixe o driver mais recente direto do fabricante: {string.Join("; ", links)}.";
-        }
-
-        return message;
-    }
-
-    private static string VendorOf(string driverDescription)
-    {
-        if (driverDescription.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase))
-        {
-            return "NVIDIA";
-        }
-
-        if (driverDescription.Contains("AMD", StringComparison.OrdinalIgnoreCase)
-            || driverDescription.Contains("Radeon", StringComparison.OrdinalIgnoreCase))
-        {
-            return "AMD";
-        }
-
-        if (driverDescription.Contains("Intel", StringComparison.OrdinalIgnoreCase))
-        {
-            return "Intel";
-        }
-
-        return "Desconhecido";
+        var links = OfficialDriverLinks
+            .Where(entry => vendors.Contains(entry.Vendor, StringComparer.Ordinal))
+            .Select(entry => entry.Link)
+            .ToArray();
+        return links.Length > 0
+            ? message + $" Baixe o driver mais recente direto do fabricante: {string.Join("; ", links)}."
+            : message;
     }
 }
 
@@ -614,10 +440,9 @@ public sealed class GpuVendorDetectionAction : WindowsOptimizationAction
 /// without hooking the running game's actual DXGI adapter (which this
 /// product does not do), never alters anything.
 /// </summary>
-public sealed class GpuPreferenceMismatchDiagnosisAction : WindowsOptimizationAction
+public sealed class GpuPreferenceMismatchDiagnosisAction : ReadOnlyDiagnosticAction
 {
-    private static readonly string[] IntegratedMarkers =
-        ["Intel(R) UHD", "Intel(R) HD", "Intel(R) Iris", "Intel UHD", "Intel HD", "Intel Iris", "AMD Radeon(TM) Graphics", "AMD Radeon Graphics"];
+    private const string PreferencesSubKey = @"Software\Microsoft\DirectX\UserGpuPreferences";
 
     private readonly IGpuVendorInspector gpuVendor;
     private readonly IRegistryStore registry;
@@ -636,35 +461,18 @@ public sealed class GpuPreferenceMismatchDiagnosisAction : WindowsOptimizationAc
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseGpuPreferenceMismatch);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
-        var snapshot = gpuVendor.GetSnapshot();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(snapshot)));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken)
-    {
-        return Task.CompletedTask;
-    }
-
-    private string Classify(GpuVendorSnapshot snapshot)
-    {
-        var hasIntegrated = snapshot.DriverDescriptions.Any(IsIntegrated);
-        var hasDedicated = snapshot.DriverDescriptions.Any(description => !IsIntegrated(description));
+        var descriptions = gpuVendor.GetSnapshot().DriverDescriptions;
+        var hasIntegrated = descriptions.Any(GpuVendorClassifier.IsIntegrated);
+        var hasDedicated = descriptions.Any(description => !GpuVendorClassifier.IsIntegrated(description));
         if (!hasIntegrated || !hasDedicated)
         {
             return "Não foi detectado um par de GPU integrada + dedicada; esta verificação só se aplica a "
                 + "notebooks com duas GPUs.";
         }
 
-        var configured = IsHighPerformancePreferenceConfigured();
-        return configured
+        return IsHighPerformancePreferenceConfigured()
             ? "Duas GPUs detectadas e o FiveM já está configurado para preferir a GPU de alto desempenho."
             : "Duas GPUs detectadas (uma integrada e uma dedicada), mas o FiveM não está configurado para "
                 + "preferir a GPU de alto desempenho nas preferências gráficas do Windows -- ative a opção "
@@ -675,7 +483,7 @@ public sealed class GpuPreferenceMismatchDiagnosisAction : WindowsOptimizationAc
     {
         var value = registry.Read(new RegistryAddress(
             RegistryHive.CurrentUser,
-            @"Software\Microsoft\DirectX\UserGpuPreferences",
+            PreferencesSubKey,
             fiveMExecutable));
         if (!value.Exists || value.Kind != RegistryValueKind.String || string.IsNullOrWhiteSpace(value.StringValue))
         {
@@ -686,12 +494,6 @@ public sealed class GpuPreferenceMismatchDiagnosisAction : WindowsOptimizationAc
             .Split(';', StringSplitOptions.RemoveEmptyEntries)
             .Select(segment => segment.Trim())
             .Any(segment => segment.Equals("GpuPreference=2", StringComparison.OrdinalIgnoreCase));
-    }
-
-    private static bool IsIntegrated(string driverDescription)
-    {
-        return IntegratedMarkers.Any(marker =>
-            driverDescription.Contains(marker, StringComparison.OrdinalIgnoreCase));
     }
 }
 
@@ -708,7 +510,7 @@ public sealed class GpuPreferenceMismatchDiagnosisAction : WindowsOptimizationAc
 /// separate <c>safety.throttling-signal.diagnose</c> diagnostic; this
 /// action does not duplicate that.
 /// </summary>
-public sealed class HybridLaptopDiagnosisAction : WindowsOptimizationAction
+public sealed class HybridLaptopDiagnosisAction : ReadOnlyDiagnosticAction
 {
     private readonly IPowerStatusProvider powerStatus;
     private readonly IVendorLaptopSoftwareInspector vendorSoftware;
@@ -724,21 +526,14 @@ public sealed class HybridLaptopDiagnosisAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DiagnoseHybridLaptop);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
+    protected override string Describe()
     {
-        cancellationToken.ThrowIfCancellationRequested();
         var onAc = powerStatus.IsOnAcPower();
-        var batterySaver = !onAc && powerStatus.IsBatterySaverActive();
-        var tools = vendorSoftware.DetectInstalledToolNames();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(Classify(onAc, batterySaver, tools)));
+        return Classify(
+            onAc,
+            !onAc && powerStatus.IsBatterySaverActive(),
+            vendorSoftware.DetectInstalledToolNames());
     }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
 
     internal static string Classify(bool onAc, bool batterySaverActive, IReadOnlyList<string> detectedTools)
     {
@@ -779,7 +574,7 @@ public sealed class HybridLaptopDiagnosisAction : WindowsOptimizationAction
 /// text guidance tied to an existing, real signal (CPU load), never a
 /// claim of having detected the mouse or its actual polling rate.
 /// </summary>
-public sealed class MousePollingRateGuidanceAction : WindowsOptimizationAction
+public sealed class MousePollingRateGuidanceAction : ReadOnlyDiagnosticAction
 {
     private const double HighCpuLoadPercent = 85d;
 
@@ -793,19 +588,7 @@ public sealed class MousePollingRateGuidanceAction : WindowsOptimizationAction
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.GuideMousePollingRate);
 
-    public override Task<WindowsActionApplyResult> ApplyAsync(
-        WindowsActionContext context,
-        CancellationToken cancellationToken)
-    {
-        cancellationToken.ThrowIfCancellationRequested();
-        return Task.FromResult(WindowsActionApplyResult.NoChange(
-            Classify(resourceUsage.GetSnapshot().CpuPercent)));
-    }
-
-    public override Task RollbackAsync(
-        WindowsActionContext context,
-        string? snapshotJson,
-        CancellationToken cancellationToken) => Task.CompletedTask;
+    protected override string Describe() => Classify(resourceUsage.GetSnapshot().CpuPercent);
 
     internal static string Classify(double? cpuPercent)
     {
