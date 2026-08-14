@@ -303,15 +303,13 @@ internal sealed class ElevatedBrokerClient
         ILocalizationService localization,
         CancellationToken cancellationToken)
     {
-        BrokerEvent? terminal = null;
         long previousSequence = 0;
-        var read = 0;
-        for (; read < MaximumEvents; read++)
+        for (var read = 0; read < MaximumEvents; read++)
         {
             var line = await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
             if (line is null)
             {
-                break;
+                return null;
             }
 
             if (line.Length > MaximumEventCharacters)
@@ -348,18 +346,12 @@ internal sealed class ElevatedBrokerClient
             ReportBrokerProgress(brokerEvent, progress, localization);
             if (IsTerminalEvent(brokerEvent.Kind))
             {
-                terminal = brokerEvent;
-                break;
+                return brokerEvent;
             }
         }
 
-        if (terminal is null && read >= MaximumEvents)
-        {
-            throw new InvalidDataException(
-                "O broker produziu mais eventos do que o esperado sem confirmar a conclusão da transação.");
-        }
-
-        return terminal;
+        throw new InvalidDataException(
+            "O broker produziu mais eventos do que o esperado sem confirmar a conclusão da transação.");
     }
 
     private static bool IsTerminalEvent(BrokerEventKind kind) =>
