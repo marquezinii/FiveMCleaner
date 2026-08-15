@@ -49,7 +49,7 @@
                             <StackPanel Orientation="Horizontal" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}">
                                 <Ellipse Width="6" Height="6" Fill="{DynamicResource AccentBrush}" VerticalAlignment="Center" />
                                 <TextBlock Style="{StaticResource CaptionText}" Foreground="{DynamicResource AccentTextBrush}" Margin="7,0,0,0" VerticalAlignment="Center">
-                                    <Run Text="{Binding [Optimizer.Stage.Run], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding ProgressPercent, Mode=OneWay}" /><Run Text="%" />
+                                    <Run Text="{Binding [Optimizer.Stage.Run], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /><Run Text=" · " /><Run Text="{Binding ProgressPercent, Mode=OneWay}" FontFamily="{StaticResource AppFontMono}" /><Run Text="%" FontFamily="{StaticResource AppFontMono}" />
                                 </TextBlock>
                             </StackPanel>
                             <StackPanel Orientation="Horizontal" Visibility="{Binding IsUpdateBannerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -115,7 +115,7 @@
                         <StackPanel Margin="0,4,0,4" Visibility="{Binding IsPaneOpen, ElementName=RootNavigationView, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <TextBlock Text="{Binding [Safety.Active], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyText}" />
                             <TextBlock Style="{StaticResource CaptionText}" Margin="0,2,0,0">
-                                <Run Text="{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding AppVersion, Mode=OneWay}" />
+                                <Run Text="{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding AppVersion, Mode=OneWay}" FontFamily="{StaticResource AppFontMono}" />
                             </TextBlock>
                         </StackPanel>
                     </ui:NavigationViewItem.Content>

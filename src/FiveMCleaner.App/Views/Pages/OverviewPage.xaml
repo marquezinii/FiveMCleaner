@@ -28,17 +28,20 @@
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
         <StackPanel MaxWidth="1240" HorizontalAlignment="Stretch" Margin="32,24,32,40">
 
-            <!-- Cabeçalho: sem card, a página fala primeiro pela tipografia. -->
+            <!-- Cabeçalho: sem card, a página fala primeiro pela tipografia. Sem
+                 kicker acima do título — a saudação vira o subtítulo funcional
+                 (status + hora do último diagnóstico), não um rótulo decorativo. -->
             <Grid Margin="0,0,0,20">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel Margin="0,0,18,0">
-                    <TextBlock Text="{Binding GreetingTitle}" Style="{StaticResource SecondaryText}" />
-                    <TextBlock Text="{Binding [Dashboard.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding [Dashboard.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" />
                     <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                        <TextBlock Text="{Binding [Dashboard.Eyebrow], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Foreground="{DynamicResource AccentTextBrush}" />
+                        <TextBlock Text="{Binding GreetingTitle}" Style="{StaticResource CaptionText}" Foreground="{DynamicResource AccentTextBrush}" />
+                        <Ellipse Width="3" Height="3" Margin="8,0" Fill="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding [Dashboard.Eyebrow], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
                         <Ellipse Width="3" Height="3" Margin="8,0" Fill="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center" />
                         <TextBlock Text="{Binding LastScanLabel}" Style="{StaticResource CaptionText}" />
                     </StackPanel>
@@ -146,12 +149,12 @@
                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
                             <controls:ArcProgress Width="170" Height="170"
                                                   Value="{Binding ReadinessScore, Mode=OneWay}" Maximum="100"
-                                                  StrokeThickness="4" StartAngle="0" SweepAngle="360"
-                                                  TrackBrush="{DynamicResource BorderSubtleBrush}"
+                                                  StrokeThickness="5" StartAngle="0" SweepAngle="360"
+                                                  TrackBrush="{DynamicResource InstrumentBezelBrush}"
                                                   ProgressBrush="{DynamicResource AccentGradientBrush}" />
                         </Grid>
                         <TextBlock HorizontalAlignment="Center" TextAlignment="Center" Margin="0,14,0,0">
-                            <Run Text="{Binding ReadinessScore, Mode=OneWay}" FontFamily="{StaticResource AppFontDisplay}" FontSize="30" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" /><Run Text=" /100" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}" BaselineAlignment="TextTop" />
+                            <Run Text="{Binding ReadinessScore, Mode=OneWay}" FontFamily="{StaticResource AppFontMono}" FontSize="30" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" /><Run Text=" /100" FontFamily="{StaticResource AppFontMono}" FontSize="11" Foreground="{DynamicResource TextTertiaryBrush}" BaselineAlignment="TextTop" />
                         </TextBlock>
                         <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" HorizontalAlignment="Center" Margin="0,2,0,0" />
                         <TextBlock Text="{Binding ReadinessLevelLabel}" Style="{StaticResource BodyStrongText}" HorizontalAlignment="Center" Margin="0,3,0,0" />
@@ -211,19 +214,19 @@
                 <Border Grid.Column="1" Style="{StaticResource VerticalHairlineDivider}" Margin="0,4" />
                 <StackPanel Grid.Column="2" Style="{StaticResource InstrumentCellStyle}">
                     <TextBlock Text="{Binding [Dashboard.Kpi.Cores.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                    <TextBlock Text="{Binding LogicalProcessorLabel}" Style="{StaticResource MetricSmallText}" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding LogicalProcessorLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,0" />
                     <TextBlock Text="{Binding LogicalProcessorDetail}" Style="{StaticResource CaptionText}" Margin="0,3,0,0" TextWrapping="Wrap" />
                 </StackPanel>
                 <Border Grid.Column="3" Style="{StaticResource VerticalHairlineDivider}" Margin="0,4" />
                 <StackPanel Grid.Column="4" Style="{StaticResource InstrumentCellStyle}">
                     <TextBlock Text="{Binding [Dashboard.Kpi.Memory.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                    <TextBlock Text="{Binding AvailableMemoryLabel}" Style="{StaticResource MetricSmallText}" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding AvailableMemoryLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,0" />
                     <TextBlock Text="{Binding AvailableMemoryDetail}" Style="{StaticResource CaptionText}" Margin="0,3,0,0" TextWrapping="Wrap" />
                 </StackPanel>
                 <Border Grid.Column="5" Style="{StaticResource VerticalHairlineDivider}" Margin="0,4" />
                 <StackPanel Grid.Column="6" Style="{StaticResource InstrumentCellStyle}">
                         <TextBlock Text="{Binding [Dashboard.Kpi.Cache.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                        <TextBlock Text="{Binding LegacyCacheLabel}" Style="{StaticResource MetricSmallText}" Margin="0,4,0,0" />
+                        <TextBlock Text="{Binding LegacyCacheLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,0" />
                         <TextBlock Text="{Binding LegacyCacheDetail}" Style="{StaticResource CaptionText}" Margin="0,3,0,0" TextWrapping="Wrap" />
                     </StackPanel>
             </Grid>
@@ -301,27 +304,27 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel Grid.Column="0" Margin="0,0,16,0">
                     <TextBlock Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                    <TextBlock Text="{Binding CpuUsageLabel}" Style="{StaticResource MetricSmallText}" Margin="0,4,0,6" />
+                    <TextBlock Text="{Binding CpuUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,6" />
                     <ProgressBar Style="{StaticResource ProgressRailStyle}" Value="{Binding CpuUsagePercent, Mode=OneWay}" />
                 </StackPanel>
                 <StackPanel Grid.Column="1" Margin="0,0,16,0">
                     <TextBlock Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                    <TextBlock Text="{Binding GpuUsageLabel}" Style="{StaticResource MetricSmallText}" Margin="0,4,0,6" />
+                    <TextBlock Text="{Binding GpuUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,6" />
                     <ProgressBar Style="{StaticResource ProgressRailStyle}" Value="{Binding GpuUsagePercent, Mode=OneWay}" Foreground="{DynamicResource InfoBaseBrush}" />
                 </StackPanel>
                 <StackPanel Grid.Column="2" Margin="0,0,16,0" ToolTip="{Binding MemoryUsageDetailLabel}">
                     <TextBlock Text="{Binding [Dashboard.LivePerformance.Memory], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                    <TextBlock Text="{Binding MemoryUsageLabel}" Style="{StaticResource MetricSmallText}" Margin="0,4,0,6" />
+                    <TextBlock Text="{Binding MemoryUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,6" />
                     <ProgressBar Style="{StaticResource ProgressRailStyle}" Value="{Binding MemoryUsagePercent, Mode=OneWay}" />
                 </StackPanel>
                 <StackPanel Grid.Column="3" Margin="0,0,16,0">
                     <TextBlock Text="{Binding [Dashboard.LivePerformance.Disk], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                    <TextBlock Text="{Binding DiskUsageLabel}" Style="{StaticResource MetricSmallText}" Margin="0,4,0,6" />
+                    <TextBlock Text="{Binding DiskUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,6" />
                     <ProgressBar Style="{StaticResource ProgressRailStyle}" Value="{Binding DiskUsagePercent, Mode=OneWay}" />
                 </StackPanel>
                 <StackPanel Grid.Column="4">
                     <TextBlock Text="{Binding [Dashboard.LivePerformance.Network], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                    <TextBlock Text="{Binding NetworkUsageLabel}" Style="{StaticResource MetricSmallText}" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding NetworkUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,0" />
                 </StackPanel>
             </Grid>
 

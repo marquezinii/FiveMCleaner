@@ -5,15 +5,22 @@
         ThemeManager troca este dicionário por Colors.Light.xaml inteiro,
         nunca sobrescreve chave a chave. Nenhuma página deve referenciar um
         valor hexadecimal diretamente; sempre um destes DynamicResource.
+
+        Redesign "Bancada de tuning premium": grafite quase preto + laranja
+        de instrumento (mesmo #FF7A18 já usado no glow não-temável do
+        CoreVisual, ver Controls/CoreVisual.cs) como único acento de ignição,
+        mais uma família de metal escovado (Steel*/MetalEdgeBrush/
+        InstrumentBezelBrush) reservada a momentos de destaque — nunca
+        espalhada pela interface inteira.
     -->
 
-    <Color x:Key="CanvasBaseColor">#0C0D11</Color>
-    <Color x:Key="CanvasSunkenColor">#08090C</Color>
-    <Color x:Key="Surface1Color">#131519</Color>
-    <Color x:Key="Surface2Color">#191C21</Color>
-    <Color x:Key="Surface3Color">#21242B</Color>
-    <Color x:Key="SurfaceRailColor">#0E1014</Color>
-    <Color x:Key="SurfaceAccentWashColor">#1A1411</Color>
+    <Color x:Key="CanvasBaseColor">#0A0B0D</Color>
+    <Color x:Key="CanvasSunkenColor">#060708</Color>
+    <Color x:Key="Surface1Color">#121317</Color>
+    <Color x:Key="Surface2Color">#181A1F</Color>
+    <Color x:Key="Surface3Color">#1F2229</Color>
+    <Color x:Key="SurfaceRailColor">#0D0E11</Color>
+    <Color x:Key="SurfaceAccentWashColor">#1D140C</Color>
 
     <SolidColorBrush x:Key="CanvasBaseBrush" Color="{StaticResource CanvasBaseColor}" />
     <SolidColorBrush x:Key="CanvasSunkenBrush" Color="{StaticResource CanvasSunkenColor}" />
@@ -23,14 +30,31 @@
     <SolidColorBrush x:Key="SurfaceRailBrush" Color="{StaticResource SurfaceRailColor}" />
     <SolidColorBrush x:Key="SurfaceAccentWashBrush" Color="{StaticResource SurfaceAccentWashColor}" />
 
-    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#1E2128" />
-    <SolidColorBrush x:Key="BorderDefaultBrush" Color="#282C34" />
-    <SolidColorBrush x:Key="BorderStrongBrush" Color="#363B45" />
+    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#1D2025" />
+    <SolidColorBrush x:Key="BorderDefaultBrush" Color="#262A31" />
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="#343941" />
 
     <LinearGradientBrush x:Key="EdgeLightBrush" StartPoint="0,0" EndPoint="0,1">
         <GradientStop Color="#14FFFFFF" Offset="0" />
         <GradientStop Color="#00FFFFFF" Offset="0.38" />
         <GradientStop Color="#00FFFFFF" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Metal escovado: reservado a bordas de painéis-herói e ao bezel dos
+         instrumentos (ArcProgress). Nunca usado como cor de texto ou fundo
+         de superfície comum — é o segundo material da marca, não um cinza
+         genérico a mais. -->
+    <SolidColorBrush x:Key="SteelBrush" Color="#949CA8" />
+    <SolidColorBrush x:Key="SteelDeepBrush" Color="#4B515A" />
+    <LinearGradientBrush x:Key="MetalEdgeBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#2B2F35" Offset="0" />
+        <GradientStop Color="#7C8794" Offset="0.5" />
+        <GradientStop Color="#23262B" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="InstrumentBezelBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#2E323A" Offset="0" />
+        <GradientStop Color="#6B7480" Offset="0.5" />
+        <GradientStop Color="#262A31" Offset="1" />
     </LinearGradientBrush>
 
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#EEF0F4" />

@@ -13,7 +13,7 @@
         WindowBackdropType="Mica"
         ResizeMode="NoResize"
         ShowInTaskbar="False"
-        FontFamily="Segoe UI Variable Text, Segoe UI"
+        FontFamily="{StaticResource AppFontBody}"
         UseLayoutRounding="True"
         SnapsToDevicePixels="True"
         Background="{DynamicResource CanvasBaseBrush}">
@@ -21,7 +21,7 @@
     <Border Background="{DynamicResource Surface1Brush}"
             BorderBrush="{DynamicResource BorderStrongBrush}"
             BorderThickness="1"
-            CornerRadius="12">
+            CornerRadius="{StaticResource RadiusXl}">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="58" />
@@ -35,19 +35,13 @@
                    >
                 <ui:TitleBar.Header>
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
-                        <Border Width="32" Height="32" CornerRadius="9" Background="#24FF7A18">
-                            <TextBlock Text="&#xE7BA;"
-                                       FontFamily="Segoe MDL2 Assets"
-                                       FontSize="15"
-                                       Foreground="{DynamicResource AccentBrightBrush}"
-                                       HorizontalAlignment="Center"
-                                       VerticalAlignment="Center" />
+                        <Border Width="32" Height="32" CornerRadius="{StaticResource RadiusMd}" Background="{DynamicResource AccentWashBrush}">
+                            <Path Style="{StaticResource Icon16}" Data="{StaticResource IconAlertTriangle}" Stroke="{DynamicResource AccentBrightBrush}" />
                         </Border>
                         <TextBlock Text="{Binding TitleText}"
                                    Margin="11,0,0,0"
-                                   FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI"
+                                   Style="{StaticResource BodyStrongText}"
                                    FontSize="15"
-                                   FontWeight="SemiBold"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                 </ui:TitleBar.Header>
@@ -55,20 +49,14 @@
 
             <Grid Grid.Row="1" Margin="24,21,24,12">
                 <Grid.ColumnDefinitions><ColumnDefinition Width="38" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
-                <Border Width="32" Height="32" CornerRadius="9" Background="#1837C889" VerticalAlignment="Top">
-                    <TextBlock Text="&#xE7BA;"
-                               FontFamily="Segoe MDL2 Assets"
-                               FontSize="14"
-                               Foreground="{DynamicResource AccentBrightBrush}"
-                               HorizontalAlignment="Center"
-                               VerticalAlignment="Center" />
+                <Border Width="32" Height="32" CornerRadius="{StaticResource RadiusMd}" Background="{DynamicResource SuccessSurfaceBrush}" VerticalAlignment="Top">
+                    <Path Style="{StaticResource Icon16}" Data="{StaticResource IconShield}" Stroke="{DynamicResource SuccessBaseBrush}" />
                 </Border>
                 <TextBlock Grid.Column="1"
                            Text="{Binding MessageText}"
-                           Foreground="{DynamicResource TextSecondaryBrush}"
+                           Style="{StaticResource SecondaryText}"
                            FontSize="12"
                            LineHeight="18"
-                           TextWrapping="Wrap"
                            VerticalAlignment="Center" />
             </Grid>
 
@@ -76,7 +64,7 @@
                     Background="{DynamicResource SurfaceRailBrush}"
                     BorderBrush="{DynamicResource BorderSubtleBrush}"
                     BorderThickness="0,1,0,0"
-                    CornerRadius="0,0,12,12">
+                    CornerRadius="0,0,13,13">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="18,0">
                     <Button Content="{Binding KeepWorkingText}"
                             Style="{StaticResource SecondaryButtonStyle}"

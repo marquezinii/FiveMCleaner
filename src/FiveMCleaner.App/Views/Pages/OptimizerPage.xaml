@@ -19,29 +19,23 @@
 
         <Style x:Key="PlanActionRowTemplate_" TargetType="Border" />
 
+        <!-- Risco lido pela cor + texto do rótulo abaixo (RiskBrushKey/RiskLabel);
+             sem barra lateral decorativa duplicando o mesmo sinal. -->
         <DataTemplate x:Key="PlanActionTemplate">
             <Border Style="{StaticResource LedgerRowStyle}">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="*" />
-                    </Grid.ColumnDefinitions>
-                    <Border Grid.Column="0" Width="3" CornerRadius="{StaticResource RadiusXs}" Margin="0,1,12,1"
-                            Background="{Binding RiskBrushKey, Converter={StaticResource BrushKeyConverter}}" />
-                    <StackPanel Grid.Column="1">
-                        <TextBlock Text="{Binding Name}" Style="{StaticResource BodyStrongText}" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding Description}" Style="{StaticResource SecondaryText}" Margin="0,3,0,0" TextWrapping="Wrap" />
-                        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
-                            <TextBlock Text="{Binding RiskLabel}" Style="{StaticResource CaptionText}"
-                                       Foreground="{Binding RiskBrushKey, Converter={StaticResource BrushKeyConverter}}" />
-                            <Ellipse Width="3" Height="3" Margin="8,0" Fill="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center" />
-                            <Path Width="12" Height="12" Stretch="Uniform" StrokeThickness="1.4" Margin="0,0,4,0" VerticalAlignment="Center"
-                                  Data="{StaticResource IconShield}" Stroke="{DynamicResource TextTertiaryBrush}"
-                                  Visibility="{Binding RequiresElevation, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                            <TextBlock Text="{Binding PrivilegeLabel}" Style="{StaticResource CaptionText}" />
-                        </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="{Binding Name}" Style="{StaticResource BodyStrongText}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource SecondaryText}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <TextBlock Text="{Binding RiskLabel}" Style="{StaticResource CaptionText}"
+                                   Foreground="{Binding RiskBrushKey, Converter={StaticResource BrushKeyConverter}}" />
+                        <Ellipse Width="3" Height="3" Margin="8,0" Fill="{DynamicResource TextTertiaryBrush}" VerticalAlignment="Center" />
+                        <Path Width="12" Height="12" Stretch="Uniform" StrokeThickness="1.4" Margin="0,0,4,0" VerticalAlignment="Center"
+                              Data="{StaticResource IconShield}" Stroke="{DynamicResource TextTertiaryBrush}"
+                              Visibility="{Binding RequiresElevation, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <TextBlock Text="{Binding PrivilegeLabel}" Style="{StaticResource CaptionText}" />
                     </StackPanel>
-                </Grid>
+                </StackPanel>
             </Border>
         </DataTemplate>
 
@@ -184,7 +178,7 @@
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Style="{StaticResource InstrumentCellStyle}" Margin="0,0,12,0">
                                     <TextBlock Text="{Binding [Plan.VerifiedActions.Label], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                                    <TextBlock Text="{Binding SelectedActionCount}" Style="{StaticResource MetricSmallText}" Margin="0,4,0,0" />
+                                    <TextBlock Text="{Binding SelectedActionCount}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,0" />
                                     <TextBlock Text="{Binding ProfilePresentationCategories}" Style="{StaticResource CaptionText}" Margin="0,3,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <Border Grid.Column="1" Style="{StaticResource VerticalHairlineDivider}" Margin="0,4" />
@@ -228,7 +222,7 @@
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding ProgressPercent, StringFormat={}{0}%}" Style="{StaticResource MetricText}" />
+                                <TextBlock Grid.Column="0" Text="{Binding ProgressPercent, StringFormat={}{0}%}" Style="{StaticResource ReadoutText}" />
                                 <StackPanel Grid.Column="2" HorizontalAlignment="Right">
                                     <TextBlock Text="{Binding ElapsedTimeLabel}" Style="{StaticResource CaptionText}" HorizontalAlignment="Right" />
                                     <TextBlock Text="{Binding RemainingTimeLabel}" Style="{StaticResource CaptionText}" HorizontalAlignment="Right" Margin="0,2,0,0" />
