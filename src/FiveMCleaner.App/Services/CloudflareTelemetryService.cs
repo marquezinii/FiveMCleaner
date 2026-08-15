@@ -329,16 +329,8 @@ public sealed class CloudflareTelemetryTransport
         environment
     };
 
-    private static Uri ValidateEndpoint(Uri value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-        if (value.Scheme != Uri.UriSchemeHttps)
-        {
-            throw new ArgumentException("Endpoint de telemetria inválido.", nameof(value));
-        }
-
-        return value;
-    }
+    private static Uri ValidateEndpoint(Uri value) =>
+        CloudflareTransportDefaults.ValidateHttpsEndpoint(value, "Endpoint de telemetria inválido.");
 
     private static string ValidateEnvironment(string value)
     {
@@ -350,15 +342,7 @@ public sealed class CloudflareTelemetryTransport
         return value;
     }
 
-    private static HttpClient CreateClient()
-    {
-        var handler = new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-        };
-        return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(15) };
-    }
+    private static HttpClient CreateClient() => CloudflareTransportDefaults.CreateClient(TimeSpan.FromSeconds(15));
 }
 
 /// <summary>

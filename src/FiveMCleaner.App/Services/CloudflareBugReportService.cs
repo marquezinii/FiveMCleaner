@@ -1,7 +1,5 @@
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text.Json;
 
 namespace FiveMCleaner.App.Services;
 
@@ -167,24 +165,8 @@ public sealed class CloudflareBugReportService : IBugReportService
             System.Text.RegularExpressions.RegexOptions.None,
             TimeSpan.FromMilliseconds(100));
 
-    private static Uri ValidateEndpoint(Uri value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-        if (value.Scheme != Uri.UriSchemeHttps)
-        {
-            throw new ArgumentException("Endpoint de relato inválido.", nameof(value));
-        }
+    private static Uri ValidateEndpoint(Uri value) =>
+        CloudflareTransportDefaults.ValidateHttpsEndpoint(value, "Endpoint de relato inválido.");
 
-        return value;
-    }
-
-    private static HttpClient CreateClient()
-    {
-        var handler = new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-        };
-        return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
-    }
+    private static HttpClient CreateClient() => CloudflareTransportDefaults.CreateClient(TimeSpan.FromSeconds(30));
 }
