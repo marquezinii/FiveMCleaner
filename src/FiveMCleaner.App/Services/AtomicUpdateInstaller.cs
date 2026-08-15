@@ -9,13 +9,14 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
 {
     private readonly string runtimeRoot;
     private readonly string launcherPath;
+    private readonly string dataRoot;
     private readonly UpdaterDiagnostics diagnostics;
 
     public AtomicUpdateInstaller(string runtimeRoot, string launcherPath)
     {
         this.runtimeRoot = Path.GetFullPath(runtimeRoot);
         this.launcherPath = Path.GetFullPath(launcherPath);
-        var dataRoot = Path.Combine(
+        dataRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FiveMCleaner");
         diagnostics = new UpdaterDiagnostics(dataRoot);
     }
@@ -82,7 +83,7 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
                 Guid.NewGuid().ToString("N"), stage, "failed", code,
                 previous, update.Version.CoreVersion, "Production"),
             exception.ToString(),
-            telemetryAuthorized: true);
+            telemetryAuthorized: UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
 
     private static string Classify(Exception exception) => exception switch
     {
