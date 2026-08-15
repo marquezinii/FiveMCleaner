@@ -286,10 +286,67 @@ public sealed class InstallationHealthDiagnosisAction : WindowsOptimizationActio
     }
 }
 
+/// <summary>
+/// Reads the tail of the FiveM installation's most recent log file, shared by
+/// the actions that look for crash/entitlement error patterns without a full
+/// parse. Bounded to <see cref="MaxTailBytes"/> so a huge log never gets read
+/// in full.
+/// </summary>
+internal static class FiveMLogTailReader
+{
+    private const long MaxTailBytes = 512 * 1024;
+
+    public static string? ReadLatest(string fiveMAppRoot)
+    {
+        var logsDirectory = Path.Combine(fiveMAppRoot, "logs");
+        if (!Directory.Exists(logsDirectory))
+        {
+            return null;
+        }
+
+        FileInfo? latest;
+        try
+        {
+            latest = new DirectoryInfo(logsDirectory)
+                .EnumerateFiles("*", SearchOption.TopDirectoryOnly)
+                .OrderByDescending(file => file.LastWriteTimeUtc)
+                .FirstOrDefault();
+        }
+        catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
+        {
+            return null;
+        }
+
+        if (latest is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var stream = new FileStream(
+                latest.FullName,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            if (stream.Length > MaxTailBytes)
+            {
+                stream.Seek(-MaxTailBytes, SeekOrigin.End);
+            }
+
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+}
+
 public sealed class CrashPatternDiagnosisAction : WindowsOptimizationAction
 {
     private readonly string fiveMAppRoot;
-    private const long MaxTailBytes = 512 * 1024;
     private static readonly Regex CrashCodePattern = new(
         @"0x[0-9A-Fa-f]{8}",
         RegexOptions.Compiled);
@@ -341,7 +398,7 @@ public sealed class CrashPatternDiagnosisAction : WindowsOptimizationAction
             }
         }
 
-        var logTail = ReadLatestLogTail(fiveMAppRoot);
+        var logTail = FiveMLogTailReader.ReadLatest(fiveMAppRoot);
         if (logTail is not null)
         {
             var streamingKeywords = FindStreamingErrorKeywords(logTail);
@@ -363,53 +420,6 @@ public sealed class CrashPatternDiagnosisAction : WindowsOptimizationAction
         CancellationToken cancellationToken)
     {
         return Task.CompletedTask;
-    }
-
-    private static string? ReadLatestLogTail(string fiveMAppRoot)
-    {
-        var logsDirectory = Path.Combine(fiveMAppRoot, "logs");
-        if (!Directory.Exists(logsDirectory))
-        {
-            return null;
-        }
-
-        FileInfo? latest;
-        try
-        {
-            latest = new DirectoryInfo(logsDirectory)
-                .EnumerateFiles("*", SearchOption.TopDirectoryOnly)
-                .OrderByDescending(file => file.LastWriteTimeUtc)
-                .FirstOrDefault();
-        }
-        catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
-        {
-            return null;
-        }
-
-        if (latest is null)
-        {
-            return null;
-        }
-
-        try
-        {
-            using var stream = new FileStream(
-                latest.FullName,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite | FileShare.Delete);
-            if (stream.Length > MaxTailBytes)
-            {
-                stream.Seek(-MaxTailBytes, SeekOrigin.End);
-            }
-
-            using var reader = new StreamReader(stream);
-            return reader.ReadToEnd();
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            return null;
-        }
     }
 
     private static IReadOnlyDictionary<string, int> CountRecurringCrashCodes(
@@ -557,7 +567,6 @@ public sealed class StaleAuthDataRepairAction : WindowsOptimizationAction
     private readonly string quarantineRoot;
     private readonly string installationRoot;
     private readonly IFiveMProcessInspector processInspector;
-    private const long MaxTailBytes = 512 * 1024;
     private static readonly string[] EntitlementFailureKeywords =
     [
         "entitlement", "ros_id", "social club", "authentication failed", "digitalentitlements"
@@ -593,7 +602,7 @@ public sealed class StaleAuthDataRepairAction : WindowsOptimizationAction
             throw new InvalidOperationException("FiveM precisa estar fechado para reparar os dados de entitlement.");
         }
 
-        var logTail = ReadLatestLogTail(fiveMAppRoot);
+        var logTail = FiveMLogTailReader.ReadLatest(fiveMAppRoot);
         if (logTail is null || !ContainsEntitlementFailurePattern(logTail))
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
@@ -698,53 +707,6 @@ public sealed class StaleAuthDataRepairAction : WindowsOptimizationAction
             {
                 File.Move(item.QuarantinePath, item.OriginalPath);
             }
-        }
-    }
-
-    private static string? ReadLatestLogTail(string fiveMAppRoot)
-    {
-        var logsDirectory = Path.Combine(fiveMAppRoot, "logs");
-        if (!Directory.Exists(logsDirectory))
-        {
-            return null;
-        }
-
-        FileInfo? latest;
-        try
-        {
-            latest = new DirectoryInfo(logsDirectory)
-                .EnumerateFiles("*", SearchOption.TopDirectoryOnly)
-                .OrderByDescending(file => file.LastWriteTimeUtc)
-                .FirstOrDefault();
-        }
-        catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
-        {
-            return null;
-        }
-
-        if (latest is null)
-        {
-            return null;
-        }
-
-        try
-        {
-            using var stream = new FileStream(
-                latest.FullName,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite | FileShare.Delete);
-            if (stream.Length > MaxTailBytes)
-            {
-                stream.Seek(-MaxTailBytes, SeekOrigin.End);
-            }
-
-            using var reader = new StreamReader(stream);
-            return reader.ReadToEnd();
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            return null;
         }
     }
 
