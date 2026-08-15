@@ -11,7 +11,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void LocalizedXamlBindings_ResolveInEnglishAndPortuguese()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var sources = new[]
         {
             Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"),
@@ -63,7 +63,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void BugReportCodeBehind_LocalizationKeysResolve()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -93,7 +93,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void PrivacyConsentCodeBehind_LocalizationKeysResolve()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -123,7 +123,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void PrivacyConsentWindow_CanOnlyCloseAfterContinue()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var xaml = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -145,7 +145,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void Optimizer_SeparatesPreparationProgressAndResults()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var pageDirectory = Path.Combine(root, "src", "FiveMCleaner.App", "Views", "Pages");
         var optimizer = File.ReadAllText(Path.Combine(pageDirectory, "OptimizerPage.xaml"))
             + File.ReadAllText(Path.Combine(pageDirectory, "OptimizerPage.xaml.cs"));
@@ -178,7 +178,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void Dashboard_FocusesOnStatusInsteadOfDuplicatingOptimizerControls()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var dashboard = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -240,7 +240,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void FluentInteractionStyles_KeepListsStableAndKeyboardFocusVisible()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var styles = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -298,7 +298,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void ResxCatalogs_HaveNoDuplicateKeys()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         foreach (var fileName in new[] { "Strings.resx", "Strings.pt-BR.resx", "Strings.es.resx" })
         {
             var path = Path.Combine(
@@ -324,7 +324,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void GeneralSettings_ExposeOnlyAppBehaviorChoices()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var document = XDocument.Load(
             Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"));
         XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
@@ -355,7 +355,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void SettingsSelectors_UseThemedControlAndItemTemplates()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var document = XDocument.Load(Path.Combine(
             root,
             "src",
@@ -387,7 +387,7 @@ public sealed partial class LocalizedInterfaceContractTests
         // as duas informações agora moram em Configurações, perto de onde já
         // fazem sentido (Ferramentas e Sobre), e usam a mesma chave de
         // localização de antes.
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var mainWindowPath = Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml");
         var mainWindow = File.ReadAllText(mainWindowPath);
         var document = XDocument.Load(mainWindowPath);
@@ -411,7 +411,7 @@ public sealed partial class LocalizedInterfaceContractTests
         // bug already fixed once for the "Reportar um bug" link. Using the
         // shared LinkButtonStyle (a bare ContentPresenter template, no focus
         // visual) is what actually removes it.
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var document = XDocument.Load(
             Path.Combine(root, "src", "FiveMCleaner.App", "Views", "Pages", "OverviewPage.xaml"));
         XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
@@ -425,7 +425,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void MainWindow_MaximizesToTheCurrentMonitorWorkArea()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var markup = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -449,7 +449,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void LinkButtonStyle_UsesAStableCustomTemplate()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var document = XDocument.Load(Path.Combine(
             root,
             "src",
@@ -477,7 +477,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void SettingsAndWindowChrome_UseTheRefinedSpacingAndHoverContracts()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var mainWindow = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -504,7 +504,7 @@ public sealed partial class LocalizedInterfaceContractTests
     [Fact]
     public void SupportCard_AlignsItsStatusAndShowsTheInstalledVersion()
     {
-        var root = FindRepositoryRoot();
+        var root = TestHelpers.FindRepositoryRoot();
         var mainWindow = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -525,22 +525,6 @@ public sealed partial class LocalizedInterfaceContractTests
         // Caption/Body), não de um Foreground fixo por elemento.
         Assert.Contains("Style=\"{StaticResource CaptionText}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Padding=\"{TemplateBinding Padding}\"", controls, StringComparison.Ordinal);
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "FiveMCleaner.slnx")))
-            {
-                return directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException("FiveMCleaner repository root was not found.");
     }
 
     [GeneratedRegex(@"\[\s*(?<key>[A-Za-z0-9_.-]+)\s*\]", RegexOptions.CultureInvariant)]
