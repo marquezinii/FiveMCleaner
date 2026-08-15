@@ -26,7 +26,7 @@
     </UserControl.Resources>
 
     <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="0,0,8,0">
-        <StackPanel MaxWidth="1240" HorizontalAlignment="Stretch" Margin="32,24,32,40">
+        <StackPanel HorizontalAlignment="Stretch" Margin="32,24,32,40">
 
             <!-- Cabeçalho: sem card, a página fala primeiro pela tipografia. Sem
                  kicker acima do título — a saudação vira o subtítulo funcional
@@ -85,13 +85,13 @@
 
             <!-- Banda de estado: único hero da página. Detecção + recomendação
                  + prontidão, com o mesmo núcleo 3D usado no Otimizador. -->
-            <Border Style="{StaticResource HeroSurface}" Margin="0,0,0,24">
+            <Border Style="{StaticResource HeroSurface}" MaxWidth="1100" HorizontalAlignment="Left" Margin="0,0,0,24">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
                     </Grid.ColumnDefinitions>
-                    <StackPanel VerticalAlignment="Center" MaxWidth="640">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left" MaxWidth="640">
                         <StackPanel Orientation="Horizontal">
                             <Path Margin="0,0,6,0">
                                 <Path.Style>
@@ -167,7 +167,7 @@
             <!-- Última otimização: mais acionável que métricas ao vivo, então
                  fica logo após a banda de estado, como uma linha só. Sem
                  superfície própria: é parte do fluxo da página, não um cartão. -->
-            <Grid Margin="0,0,0,20">
+            <Grid MaxWidth="1100" HorizontalAlignment="Left" Margin="0,0,0,20">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -372,41 +372,56 @@
                 </StackPanel>
             </Grid>
 
-            <!-- Seu computador: lista de definição, não painel paralelo. -->
-            <TextBlock Text="{Binding [Dashboard.SystemOverview], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" Margin="0,0,0,4" />
-            <TextBlock Text="{Binding [Dashboard.SystemOverview.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,0,0,16" TextWrapping="Wrap" />
-            <Grid Margin="0,0,0,10">
+            <!-- Seu computador + Espaço seguro para criadores: lado a lado a
+                 partir daqui, para a largura extra da página virar conteúdo
+                 real (duas listas visíveis ao mesmo tempo), não vão vazio. -->
+            <Grid Margin="0,0,0,8">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="180" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,0,0,12" />
-                <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CpuName}" Style="{StaticResource BodyText}" Margin="0,0,0,12" TextWrapping="Wrap" ToolTip="{Binding CpuName}" />
-                <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,0,0,12" />
-                <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GpuDetail}" Style="{StaticResource BodyText}" Margin="0,0,0,12" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" />
-                <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,0,0,12" />
-                <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RamLabel}" Style="{StaticResource BodyText}" Margin="0,0,0,12" TextWrapping="Wrap" />
-                <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,0,0,12" />
-                <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding DiskLabel}" Style="{StaticResource BodyText}" Margin="0,0,0,12" TextWrapping="Wrap" />
-                <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding [Dashboard.Windows], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding WindowsLabel}" Style="{StaticResource BodyText}" TextWrapping="Wrap" ToolTip="{Binding WindowsLabel}" />
-            </Grid>
-            <TextBlock Text="{Binding ReadinessScoreExplanation}" Style="{StaticResource SecondaryText}" Margin="0,4,0,10" TextWrapping="Wrap" />
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,32">
-                <Path Style="{StaticResource Icon16}" Data="{StaticResource IconShield}" Stroke="{DynamicResource SuccessBaseBrush}" VerticalAlignment="Top" Margin="0,1,0,0" />
-                <TextBlock Text="{Binding [Dashboard.LivePerformance.LocalOnly], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="8,0,0,0" TextWrapping="Wrap" />
-            </StackPanel>
 
-            <!-- Espaço seguro para criadores: linhas, não sub-cards. -->
-            <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                <Path Style="{StaticResource Icon20}" Data="{StaticResource IconStream}" Stroke="{DynamicResource AccentTextBrush}" />
-                <TextBlock Text="{Binding StreamingReadinessTitle}" Style="{StaticResource SectionText}" Margin="10,0,0,0" TextWrapping="Wrap" />
-            </StackPanel>
-            <TextBlock Text="{Binding StreamingReadinessDetail}" Style="{StaticResource SecondaryText}" Margin="0,4,0,4" TextWrapping="Wrap" />
-            <ItemsControl ItemsSource="{Binding StreamingReadinessItems}" ItemTemplate="{StaticResource StreamingRowTemplate}" />
+                <StackPanel Grid.Column="0" Margin="0,0,28,0">
+                    <TextBlock Text="{Binding [Dashboard.SystemOverview], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" Margin="0,0,0,4" />
+                    <TextBlock Text="{Binding [Dashboard.SystemOverview.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,0,0,16" TextWrapping="Wrap" />
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="150" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Grid.Column="0" Text="{Binding [Dashboard.Processor], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,0,0,12" />
+                        <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding CpuName}" Style="{StaticResource BodyText}" Margin="0,0,0,12" TextWrapping="Wrap" ToolTip="{Binding CpuName}" />
+                        <TextBlock Grid.Row="1" Grid.Column="0" Text="{Binding [Dashboard.GraphicsCard], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,0,0,12" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding GpuDetail}" Style="{StaticResource BodyText}" Margin="0,0,0,12" TextWrapping="Wrap" ToolTip="{Binding GpuDetail}" />
+                        <TextBlock Grid.Row="2" Grid.Column="0" Text="{Binding [Dashboard.Memory], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,0,0,12" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding RamLabel}" Style="{StaticResource BodyText}" Margin="0,0,0,12" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="3" Grid.Column="0" Text="{Binding [Dashboard.Storage], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,0,0,12" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding DiskLabel}" Style="{StaticResource BodyText}" Margin="0,0,0,12" TextWrapping="Wrap" />
+                        <TextBlock Grid.Row="4" Grid.Column="0" Text="{Binding [Dashboard.Windows], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding WindowsLabel}" Style="{StaticResource BodyText}" TextWrapping="Wrap" ToolTip="{Binding WindowsLabel}" />
+                    </Grid>
+                    <TextBlock Text="{Binding ReadinessScoreExplanation}" Style="{StaticResource SecondaryText}" Margin="0,4,0,10" TextWrapping="Wrap" />
+                    <StackPanel Orientation="Horizontal">
+                        <Path Style="{StaticResource Icon16}" Data="{StaticResource IconShield}" Stroke="{DynamicResource SuccessBaseBrush}" VerticalAlignment="Top" Margin="0,1,0,0" />
+                        <TextBlock Text="{Binding [Dashboard.LivePerformance.LocalOnly], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="8,0,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                </StackPanel>
+
+                <Border Grid.Column="1" Style="{StaticResource VerticalHairlineDivider}" />
+
+                <StackPanel Grid.Column="2" Margin="28,0,0,0">
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <Path Style="{StaticResource Icon20}" Data="{StaticResource IconStream}" Stroke="{DynamicResource AccentTextBrush}" />
+                        <TextBlock Text="{Binding StreamingReadinessTitle}" Style="{StaticResource SectionText}" Margin="10,0,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+                    <TextBlock Text="{Binding StreamingReadinessDetail}" Style="{StaticResource SecondaryText}" Margin="0,4,0,4" TextWrapping="Wrap" />
+                    <ItemsControl ItemsSource="{Binding StreamingReadinessItems}" ItemTemplate="{StaticResource StreamingRowTemplate}" />
+                </StackPanel>
+            </Grid>
         </StackPanel>
     </ScrollViewer>
 </UserControl>

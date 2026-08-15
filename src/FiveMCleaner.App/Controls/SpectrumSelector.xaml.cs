@@ -4,22 +4,20 @@ using System.Windows.Media.Animation;
 using FiveMCleaner.App.Services;
 using UserControl = System.Windows.Controls.UserControl;
 using TextBlock = System.Windows.Controls.TextBlock;
-using Style = System.Windows.Style;
 using KeyEventArgs = System.Windows.Input.KeyEventArgs;
-using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using MouseButtonEventArgs = System.Windows.Input.MouseButtonEventArgs;
 using KeyboardFocusChangedEventArgs = System.Windows.Input.KeyboardFocusChangedEventArgs;
 using Key = System.Windows.Input.Key;
-using Brush = System.Windows.Media.Brush;
 
 namespace FiveMCleaner.App.Controls;
 
 /// <summary>
-/// Seletor único de perfil (Leve/Médio/Agressivo): um trilho com um polegar
-/// que desliza entre três paradas, mais a marca do perfil recomendado embaixo
-/// da parada correspondente. Substitui a combinação antiga de "hero com
-/// recomendação" + "três cards de nível" por um único sistema visual — a
-/// recomendação é uma posição neste controle, não uma afirmação separada.
+/// Seletor único de perfil (Leve/Médio/Agressivo): um segmentado de três
+/// paradas com um indicador que desliza para a selecionada, mais a marca do
+/// perfil recomendado embaixo da parada correspondente. Substitui a
+/// combinação antiga de "hero com recomendação" + "três cards de nível" por
+/// um único sistema visual — a recomendação é uma posição neste controle,
+/// não uma afirmação separada.
 /// </summary>
 public partial class SpectrumSelector : UserControl
 {
@@ -147,7 +145,11 @@ public partial class SpectrumSelector : UserControl
         }
 
         var segment = TrackHost.ActualWidth / 3;
-        var target = (segment * SelectedIndex) + (segment / 2);
+        var indicatorWidth = Math.Max(0, segment - 6);
+        var target = (segment * SelectedIndex) + ((segment - indicatorWidth) / 2);
+
+        SelectionIndicator.Width = indicatorWidth;
+        ThumbFocusRing.Width = indicatorWidth;
 
         if (animate && MotionPolicy.AnimationsEnabled)
         {
@@ -155,13 +157,13 @@ public partial class SpectrumSelector : UserControl
             {
                 EasingFunction = (System.Windows.Media.Animation.IEasingFunction)FindResource("EaseControl")
             };
-            ThumbTransform.BeginAnimation(TranslateTransform.XProperty, animation);
+            IndicatorTransform.BeginAnimation(TranslateTransform.XProperty, animation);
             ThumbFocusRingTransform.BeginAnimation(TranslateTransform.XProperty, animation);
         }
         else
         {
-            ThumbTransform.BeginAnimation(TranslateTransform.XProperty, null);
-            ThumbTransform.X = target;
+            IndicatorTransform.BeginAnimation(TranslateTransform.XProperty, null);
+            IndicatorTransform.X = target;
             ThumbFocusRingTransform.BeginAnimation(TranslateTransform.XProperty, null);
             ThumbFocusRingTransform.X = target;
         }
@@ -195,12 +197,6 @@ public partial class SpectrumSelector : UserControl
         }
     }
 
-    private void OnTrackMouseEnter(object sender, MouseEventArgs e) =>
-        Thumb.Background = (Brush)FindResource("AccentBrightBrush");
-
-    private void OnTrackMouseLeave(object sender, MouseEventArgs e) =>
-        Thumb.Background = (Brush)FindResource("AccentBrush");
-
     private void OnTrackGotFocus(object sender, KeyboardFocusChangedEventArgs e) => ThumbFocusRing.Opacity = 1;
 
     private void OnTrackLostFocus(object sender, KeyboardFocusChangedEventArgs e) => ThumbFocusRing.Opacity = 0;
@@ -219,8 +215,6 @@ public partial class SpectrumSelector : UserControl
         SetEmphasis(Option2Text, SelectedIndex == 2);
     }
 
-    private static void SetEmphasis(TextBlock text, bool selected)
-    {
-        text.Style = (Style)text.FindResource(selected ? "BodyStrongText" : "SecondaryText");
-    }
+    private static void SetEmphasis(TextBlock text, bool selected) =>
+        text.SetResourceReference(TextBlock.ForegroundProperty, selected ? "TextPrimaryBrush" : "TextSecondaryBrush");
 }

@@ -64,7 +64,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private string legacyCacheLabel = string.Empty;
     private string legacyCacheDetail = string.Empty;
     private string performancePressureLabel = string.Empty;
-    private string performancePressureBrushKey = "TextMutedBrush";
+    private string performancePressureBrushKey = "TextTertiaryBrush";
     private string lastScanLabel = string.Empty;
     private string greetingTitle = string.Empty;
     private string? accountFirstName;
@@ -1538,9 +1538,9 @@ public sealed class MainViewModel : BindableBase, IDisposable
         };
         PerformancePressureBrushKey = value.PerformancePressure switch
         {
-            PerformancePressureLevel.Low => "GreenBrush",
-            PerformancePressureLevel.High => "RedBrush",
-            _ => "YellowBrush"
+            PerformancePressureLevel.Low => "SuccessBaseBrush",
+            PerformancePressureLevel.High => "DangerBaseBrush",
+            _ => "WarningBaseBrush"
         };
         LastScanLabel = localization.Format(
             "Dashboard.LastScan",
@@ -1664,10 +1664,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
         };
         var tone = check.Tone switch
         {
-            StreamingReadinessTone.Protected => "GreenBrush",
-            StreamingReadinessTone.Ready => "GreenBrush",
-            StreamingReadinessTone.Caution => "YellowBrush",
-            _ => "TextSubtleBrush"
+            StreamingReadinessTone.Protected => "SuccessBaseBrush",
+            StreamingReadinessTone.Ready => "SuccessBaseBrush",
+            StreamingReadinessTone.Caution => "WarningBaseBrush",
+            _ => "TextTertiaryBrush"
         };
         var title = localization.GetString($"Streaming.Check.{check.Kind}.{suffix}.Title");
         var detail = check.Kind == StreamingReadinessCheckKind.Software
@@ -2388,7 +2388,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
             LegacyCacheLabel = analyzing;
             LegacyCacheDetail = localization.GetString("Dashboard.Kpi.Cache.Detail");
             PerformancePressureLabel = analyzing;
-            PerformancePressureBrushKey = "TextMutedBrush";
+            PerformancePressureBrushKey = "TextTertiaryBrush";
             LastScanLabel = localization.GetString("Dashboard.LastScan.Pending");
         }
 

@@ -62,7 +62,17 @@
         <Grid Grid.Row="1">
             <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
                           Visibility="{Binding HistoryItems.Count, Converter={StaticResource CollectionEmptyToVisibilityConverter}, ConverterParameter=invert}">
-                <ItemsControl ItemsSource="{Binding HistoryItems}" ItemTemplate="{StaticResource HistoryLedgerRowTemplate}" MaxWidth="1100" HorizontalAlignment="Stretch" />
+                <ItemsControl ItemsSource="{Binding HistoryItems}" ItemTemplate="{StaticResource HistoryLedgerRowTemplate}" HorizontalAlignment="Stretch">
+                    <!-- Sem isto, cada item usa só a largura intrínseca do
+                         conteúdo (o ContentPresenter padrão do ItemsControl
+                         não estica) — a linha e o hairline ficam curtos
+                         mesmo com o ItemsControl largo. -->
+                    <ItemsControl.ItemContainerStyle>
+                        <Style TargetType="ContentPresenter">
+                            <Setter Property="HorizontalAlignment" Value="Stretch" />
+                        </Style>
+                    </ItemsControl.ItemContainerStyle>
+                </ItemsControl>
             </ScrollViewer>
 
             <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360"

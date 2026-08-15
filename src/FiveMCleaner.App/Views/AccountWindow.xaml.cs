@@ -463,8 +463,8 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     {
         UsernameStatusPanel.Visibility = Visibility.Visible;
         UsernameStatusIcon.Data = (Geometry)FindResource("IconRefresh");
-        UsernameStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, "TextSubtleBrush");
-        UsernameStatusText.SetResourceReference(ForegroundProperty, "TextSubtleBrush");
+        UsernameStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, "TextTertiaryBrush");
+        UsernameStatusText.SetResourceReference(ForegroundProperty, "TextTertiaryBrush");
         UsernameStatusText.Text = T("Account.Username.Checking");
     }
 
@@ -481,8 +481,8 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         var available = availability == UsernameAvailability.Available;
         UsernameStatusPanel.Visibility = Visibility.Visible;
         UsernameStatusIcon.Data = (Geometry)FindResource(available ? "IconCheck" : "IconClose");
-        UsernameStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, available ? "GreenBrush" : "RedBrush");
-        UsernameStatusText.SetResourceReference(ForegroundProperty, available ? "GreenBrush" : "RedBrush");
+        UsernameStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, available ? "SuccessBaseBrush" : "DangerBaseBrush");
+        UsernameStatusText.SetResourceReference(ForegroundProperty, available ? "SuccessBaseBrush" : "DangerBaseBrush");
         UsernameStatusText.Text = available
             ? T("Account.Username.Available")
             : T("Account.Username.Taken");
@@ -503,7 +503,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
                 : T("Account.Password.PolicyMet");
         PasswordStrengthBar.SetResourceReference(
             ForegroundProperty,
-            length >= AccountPasswordPolicy.MinimumLength ? "GreenBrush" : length >= AccountPasswordPolicy.MinimumLength / 2 ? "YellowBrush" : "RedBrush");
+            length >= AccountPasswordPolicy.MinimumLength ? "SuccessBaseBrush" : length >= AccountPasswordPolicy.MinimumLength / 2 ? "WarningBaseBrush" : "DangerBaseBrush");
 
         UpdateConfirmFeedback();
     }
@@ -524,8 +524,8 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         var matches = PasswordField.Password == ConfirmPasswordField.Password;
         ConfirmStatusPanel.Visibility = Visibility.Visible;
         ConfirmStatusIcon.Data = (Geometry)FindResource(matches ? "IconCheck" : "IconClose");
-        ConfirmStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, matches ? "GreenBrush" : "RedBrush");
-        ConfirmStatusText.SetResourceReference(ForegroundProperty, matches ? "GreenBrush" : "RedBrush");
+        ConfirmStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, matches ? "SuccessBaseBrush" : "DangerBaseBrush");
+        ConfirmStatusText.SetResourceReference(ForegroundProperty, matches ? "SuccessBaseBrush" : "DangerBaseBrush");
         ConfirmStatusText.Text = matches ? T("Account.Password.ConfirmMatch") : T("Account.Password.ConfirmMismatch");
     }
 
@@ -600,10 +600,10 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
 
         StatusPanel.Visibility = Visibility.Visible;
         StatusText.Text = text;
-        StatusText.SetResourceReference(ForegroundProperty, error ? "RedBrush" : "GreenBrush");
+        StatusText.SetResourceReference(ForegroundProperty, error ? "DangerBaseBrush" : "SuccessBaseBrush");
         StatusIcon.Data = (Geometry)FindResource(error ? "IconInfo" : "IconCheck");
-        StatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, error ? "RedBrush" : "GreenBrush");
-        StatusPanel.SetResourceReference(System.Windows.Controls.Border.BorderBrushProperty, error ? "RedBrush" : "GreenBrush");
-        StatusPanel.SetResourceReference(BackgroundProperty, error ? "AccountStatusErrorBackgroundBrush" : "AccountStatusSuccessBackgroundBrush");
+        StatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, error ? "DangerBaseBrush" : "SuccessBaseBrush");
+        StatusPanel.SetResourceReference(System.Windows.Controls.Border.BorderBrushProperty, error ? "DangerBorderBrush" : "SuccessBorderBrush");
+        StatusPanel.SetResourceReference(BackgroundProperty, error ? "DangerSurfaceBrush" : "SuccessSurfaceBrush");
     }
 }

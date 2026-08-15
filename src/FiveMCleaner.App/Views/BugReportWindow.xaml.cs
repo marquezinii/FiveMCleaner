@@ -188,7 +188,7 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         StatusText.Text = message;
         StatusText.SetResourceReference(
             TextBlock.ForegroundProperty,
-            success ? "GreenBrush" : "RedBrush");
+            success ? "SuccessBaseBrush" : "DangerBaseBrush");
     }
 
     private void BugReportWindow_Closing(object? sender, CancelEventArgs e)
