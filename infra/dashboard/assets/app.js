@@ -133,63 +133,35 @@ async function main() {
     return requestJson(url);
   }
 
-  function renderRecentFailures(rows) {
-    recentFailuresBody.innerHTML = '';
+  function renderTableBody(tbody, rows, mapRow, colspan, cellClass) {
+    tbody.innerHTML = '';
     if (!rows || rows.length === 0) {
-      recentFailuresBody.innerHTML = '<tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-row">Sem dados ainda</td></tr>`;
       return;
     }
-
     for (const row of rows) {
-      const cells = toRecentFailureRow(row);
       const tr = document.createElement('tr');
-      cells.forEach((value, index) => {
+      for (const [index, value] of mapRow(row).entries()) {
         const td = document.createElement('td');
         td.textContent = value;
-        if (index === 1) {
-          td.classList.add('error-category');
-        }
-
+        if (cellClass) td.className = cellClass(index);
         tr.appendChild(td);
-      });
-      recentFailuresBody.appendChild(tr);
+      }
+      tbody.appendChild(tr);
     }
+  }
+
+  function renderRecentFailures(rows) {
+    renderTableBody(recentFailuresBody, rows, toRecentFailureRow, 8,
+      (i) => i === 1 ? 'error-category' : '');
   }
 
   function renderBugReports(rows) {
-    bugReportsBody.innerHTML = '';
-    if (!rows || rows.length === 0) {
-      bugReportsBody.innerHTML = '<tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr>';
-      return;
-    }
-
-    for (const row of rows) {
-      const cells = toBugReportRow(row);
-      const tr = document.createElement('tr');
-      cells.forEach((value) => {
-        const td = document.createElement('td');
-        td.textContent = value;
-        tr.appendChild(td);
-      });
-      bugReportsBody.appendChild(tr);
-    }
+    renderTableBody(bugReportsBody, rows, toBugReportRow, 8);
   }
 
   function renderUpdaterEvents(rows) {
-    updaterEventsBody.innerHTML = '';
-    if (!rows || rows.length === 0) {
-      updaterEventsBody.innerHTML = '<tr><td colspan="7" class="empty-row">Sem dados ainda</td></tr>';
-      return;
-    }
-    for (const row of rows) {
-      const tr = document.createElement('tr');
-      for (const value of toUpdaterEventRow(row)) {
-        const td = document.createElement('td');
-        td.textContent = value;
-        tr.appendChild(td);
-      }
-      updaterEventsBody.appendChild(tr);
-    }
+    renderTableBody(updaterEventsBody, rows, toUpdaterEventRow, 7);
   }
 
   function renderLegend(id, series) {

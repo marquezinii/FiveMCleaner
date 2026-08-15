@@ -1,4 +1,6 @@
-// Dependency-free canvas charts for the static dashboard.
+// Canvas charts for the static dashboard.
+
+import { truncate } from './charts.js';
 
 /** Shared 5-color palette for donut slices and the matching legend swatches. */
 export const DONUT_COLORS = ['#ff7a18', '#88a8dc', '#78d497', '#a67bd6', '#f4be55'];
@@ -48,4 +50,3 @@ function drawHorizontalBarChart(ctx, width, height, series, options) {
 }
 
 function drawEmptyState(ctx, width, height) { ctx.fillStyle = '#a9b7c5'; ctx.font = '12px "Segoe UI", sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Sem dados ainda', width / 2, height / 2); }
-function truncate(text, maxLength) { return text.length > maxLength ? `${text.slice(0, maxLength - 1)}…` : text; }
