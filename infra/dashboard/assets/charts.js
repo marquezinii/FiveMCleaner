@@ -20,8 +20,8 @@ export function formatAppVersion(value) {
 }
 
 /** Produces percentage rows for a compact chart legend from displayed data. */
-export function toDistributionRows(series, limit = 5) {
-  const items = topN(series, limit);
+export function toDistributionRows(series) {
+  const items = topN(series, 5);
   const total = items.reduce((sum, item) => sum + item.value, 0);
   return items.map((item) => ({ ...item, percent: total ? (item.value / total) * 100 : 0 }));
 }

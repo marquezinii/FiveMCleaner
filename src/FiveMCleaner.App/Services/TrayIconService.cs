@@ -1,4 +1,3 @@
-using System.Drawing;
 using Forms = System.Windows.Forms;
 
 namespace FiveMCleaner.App.Services;
@@ -40,8 +39,6 @@ public sealed class TrayIconService : IDisposable
     public event EventHandler? ShowRequested;
 
     public event EventHandler? ExitRequested;
-
-    public bool IsVisible => notifyIcon.Visible;
 
     public void Show(bool announce)
     {

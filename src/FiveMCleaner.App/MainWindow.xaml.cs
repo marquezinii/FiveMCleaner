@@ -216,10 +216,9 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         QueuedCloudflareTelemetryService? Queued);
 
     /// <summary>
-    /// Cloudflare is the sole telemetry transport (FormSubmit was
-    /// removed entirely). If the configured endpoint is ever missing or
-    /// malformed, telemetry safely does nothing rather than crash or
-    /// silently fall back to a different destination.
+    /// Creates the telemetry services based on the configured endpoint.
+    /// If the endpoint is missing or malformed, telemetry safely does
+    /// nothing rather than crash.
     /// </summary>
     private MainWindowTelemetry CreateTelemetryServices(
         bool demoMode,
@@ -500,8 +499,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     /// Retries sending whatever telemetry could not be delivered during a
     /// previous, possibly offline, run. A no-op unless the Cloudflare
     /// transport is the active one (<see cref="queuedCloudflareTelemetry"/>
-    /// is only set when a telemetry endpoint is configured); FormSubmit has
-    /// no queue to flush.
+    /// is only set when a telemetry endpoint is configured).
     /// </summary>
     private Task FlushPendingTelemetryIfAnyAsync() =>
         queuedCloudflareTelemetry?.FlushPendingAsync() ?? Task.CompletedTask;

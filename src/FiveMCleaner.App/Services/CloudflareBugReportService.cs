@@ -5,10 +5,9 @@ namespace FiveMCleaner.App.Services;
 
 /// <summary>
 /// Sends a bug report to the Cloudflare Worker's <c>/bugs</c> route (D1 only
-/// -- there is no attachment/screenshot support and no R2 dependency),
-/// replacing <c>FormSubmitBugReportService</c> entirely. Validation mirrors
-/// what the old service enforced client-side; the Worker re-validates
-/// everything server-side regardless (see
+/// -- there is no attachment/screenshot support and no R2 dependency).
+/// Validation mirrors what the old service enforced client-side; the Worker
+/// re-validates everything server-side regardless (see
 /// <c>infra/cloudflare-worker/src/bugReports/</c>).
 /// </summary>
 public sealed class CloudflareBugReportService : IBugReportService
@@ -16,7 +15,6 @@ public sealed class CloudflareBugReportService : IBugReportService
     private const int MaxCategoryLength = 60;
     private const int MaxTechnicalSummaryLength = 512;
     private const int MaxEmailLength = 254;
-    private const int MaxLogTextBytes = 100 * 1024;
 
     private static readonly HttpClient SharedClient = CreateClient();
     private readonly HttpClient httpClient;
@@ -146,13 +144,13 @@ public sealed class CloudflareBugReportService : IBugReportService
         }
 
         if (submission.Email is { Length: > 0 } email
-            && (email.Length > MaxEmailLength || !LooksLikeEmail(email)))
+            && (email.Length > MaxEmailLength || !AccountValidation.IsValidEmail(email)))
         {
             throw new ArgumentException("O e-mail informado é inválido.", nameof(submission));
         }
 
         if (submission.LogText is { } logText
-            && System.Text.Encoding.UTF8.GetByteCount(logText) > MaxLogTextBytes)
+            && System.Text.Encoding.UTF8.GetByteCount(logText) > BugReportSubmission.MaxLogTextBytes)
         {
             throw new ArgumentException("O log excede o limite de 100 KB.", nameof(submission));
         }

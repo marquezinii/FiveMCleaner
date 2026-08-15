@@ -69,17 +69,10 @@ public interface IRegistryStore
 
 public sealed class WindowsRegistryStore : IRegistryStore
 {
-    private readonly RegistryView view;
-
-    public WindowsRegistryStore(RegistryView view = RegistryView.Default)
-    {
-        this.view = view;
-    }
-
     public RegistryValueState Read(RegistryAddress address)
     {
         ArgumentNullException.ThrowIfNull(address);
-        using var baseKey = RegistryKey.OpenBaseKey(address.Hive, view);
+        using var baseKey = RegistryKey.OpenBaseKey(address.Hive, RegistryView.Default);
         using var key = baseKey.OpenSubKey(address.SubKey, writable: false);
         if (key is null || !key.GetValueNames().Contains(address.ValueName, StringComparer.Ordinal))
         {
@@ -101,7 +94,7 @@ public sealed class WindowsRegistryStore : IRegistryStore
             throw new ArgumentException("A missing registry value cannot be written.", nameof(state));
         }
 
-        using var baseKey = RegistryKey.OpenBaseKey(address.Hive, view);
+        using var baseKey = RegistryKey.OpenBaseKey(address.Hive, RegistryView.Default);
         using var key = baseKey.CreateSubKey(address.SubKey, writable: true)
             ?? throw new UnauthorizedAccessException($"Cannot create registry key '{address.SubKey}'.");
         key.SetValue(address.ValueName, ToRegistryValue(state), state.Kind.Value);
@@ -110,7 +103,7 @@ public sealed class WindowsRegistryStore : IRegistryStore
     public void Delete(RegistryAddress address)
     {
         ArgumentNullException.ThrowIfNull(address);
-        using var baseKey = RegistryKey.OpenBaseKey(address.Hive, view);
+        using var baseKey = RegistryKey.OpenBaseKey(address.Hive, RegistryView.Default);
         using var key = baseKey.OpenSubKey(address.SubKey, writable: true);
         key?.DeleteValue(address.ValueName, throwOnMissingValue: false);
     }

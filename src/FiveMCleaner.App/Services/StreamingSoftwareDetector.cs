@@ -132,7 +132,7 @@ public sealed class StreamingSoftwareDetector
 
     // Cache de resultados de registro para evitar varreduras repetidas
     private static readonly object RegistryCacheLock = new();
-    private static Dictionary<string, (IReadOnlyList<string> ProductNames, DateTimeOffset CachedAt)>? registryCache;
+    private static (IReadOnlyList<string> ProductNames, DateTimeOffset CachedAt)? registryCache;
     private static readonly TimeSpan RegistryCacheTtl = TimeSpan.FromMinutes(5);
 
     public Task<StreamingSoftwareSnapshot> DetectAsync(
@@ -245,17 +245,12 @@ public sealed class StreamingSoftwareDetector
         }
 
         var tasks = probes.Select((probe, index) => Task.Run(() =>
-        {
-            if (!CollectUninstallDisplayNames(
-                    probe.Hive,
-                    probe.View,
-                    perProbeResults[index],
-                    cancellationToken))
-            {
-                return false;
-            }
-            return true;
-        }, cancellationToken)).ToArray();
+            CollectUninstallDisplayNames(
+                probe.Hive,
+                probe.View,
+                perProbeResults[index],
+                cancellationToken),
+            cancellationToken)).ToArray();
 
         try
         {
@@ -343,25 +338,14 @@ public sealed class StreamingSoftwareDetector
     {
         lock (RegistryCacheLock)
         {
-            if (registryCache is null)
-            {
-                return null;
-            }
-
-            var now = DateTimeOffset.UtcNow;
-            var validEntries = registryCache
-                .Where(kvp => now - kvp.Value.CachedAt < RegistryCacheTtl)
-                .SelectMany(kvp => kvp.Value.ProductNames)
-                .Distinct(StringComparer.OrdinalIgnoreCase)
-                .ToList();
-
-            if (validEntries.Count == 0)
+            if (registryCache is not { } cached
+                || DateTimeOffset.UtcNow - cached.CachedAt >= RegistryCacheTtl)
             {
                 registryCache = null;
                 return null;
             }
 
-            return validEntries;
+            return cached.ProductNames;
         }
     }
 
@@ -369,11 +353,7 @@ public sealed class StreamingSoftwareDetector
     {
         lock (RegistryCacheLock)
         {
-            registryCache ??= new Dictionary<string, (IReadOnlyList<string>, DateTimeOffset)>();
-
-            // Store under a composite key (all hives combined)
-            var key = "all_hives";
-            registryCache[key] = (productNames.ToList(), DateTimeOffset.UtcNow);
+            registryCache = (productNames.ToList(), DateTimeOffset.UtcNow);
         }
     }
 
@@ -461,13 +441,6 @@ public sealed class StreamingSoftwareDetector
                     "bin",
                     "64bit",
                     "obs64.exe"));
-            yield return (
-                StreamingSoftwareKind.StreamlabsDesktop,
-                Path.Combine(
-                    localAppData,
-                    "Programs",
-                    "streamlabs-desktop",
-                    "Streamlabs Desktop.exe"));
             yield return (
                 StreamingSoftwareKind.TikTokLiveStudio,
                 Path.Combine(

@@ -9,10 +9,7 @@ namespace FiveMCleaner.App.Services;
 
 /// <summary>
 /// Validates the full (version-2-consent) telemetry event schema before it
-/// is queued for the Cloudflare transport. Separate from
-/// <see cref="FormSubmitAnonymousTelemetryService"/>'s own, narrower
-/// validation — that transport is untouched and keeps sending only its
-/// original four fields regardless of what else this event now carries.
+/// is queued for the Cloudflare transport.
 /// </summary>
 public static class TelemetryEventValidator
 {
@@ -348,10 +345,7 @@ public sealed class CloudflareTelemetryTransport
 /// <summary>
 /// The Cloudflare-backed <see cref="IAnonymousTelemetryService"/>: enqueues
 /// locally, then makes a best-effort attempt to flush the whole pending
-/// queue as one batch. Mutually exclusive with
-/// <see cref="FormSubmitAnonymousTelemetryService"/> by construction — the
-/// composition root in <c>MainWindow.xaml.cs</c> only ever instantiates one
-/// of the two, chosen by whether a telemetry endpoint is configured.
+/// queue as one batch.
 /// </summary>
 public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryService
 {

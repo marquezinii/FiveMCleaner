@@ -139,7 +139,7 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         }
 
         var email = EmailTextBox.Text.Trim();
-        if (email.Length > 0 && !IsValidEmail(email))
+        if (email.Length > 0 && !AccountValidation.IsValidEmail(email))
         {
             ShowStatus(T("BugReport.Validation.Email"), success: false);
             EmailTextBox.Focus();
@@ -147,7 +147,7 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         }
 
         var logText = LogTextBox.Text.Trim();
-        if (Encoding.UTF8.GetByteCount(logText) > MaxLogTextBytes)
+        if (Encoding.UTF8.GetByteCount(logText) > BugReportSubmission.MaxLogTextBytes)
         {
             ShowStatus(T("BugReport.Validation.Log"), success: false);
             LogTextBox.Focus();
@@ -170,15 +170,6 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         };
         return true;
     }
-
-    private const int MaxLogTextBytes = 100 * 1024;
-
-    private static bool IsValidEmail(string value) =>
-        value.Length <= 254 && System.Text.RegularExpressions.Regex.IsMatch(
-            value,
-            @"^[^@\s]+@[^@\s]+\.[^@\s]+$",
-            System.Text.RegularExpressions.RegexOptions.None,
-            TimeSpan.FromMilliseconds(100));
 
     private void SetFormEnabled(bool enabled)
     {

@@ -401,7 +401,7 @@ public abstract class QuarantineCleanupAction : WindowsOptimizationAction
                 var transactionDirectory = Path.GetDirectoryName(scope.QuarantineRoot);
                 if (transactionDirectory is not null && Directory.Exists(transactionDirectory))
                 {
-                    fileTree.DeleteEmptyDirectoriesBottomUp(transactionDirectory, deleteRoot: true);
+                    fileTree.DeleteEmptyDirectoriesBottomUp(transactionDirectory);
                 }
             }
 

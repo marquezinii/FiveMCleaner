@@ -2,7 +2,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-using System.Windows;
 using System.Windows.Threading;
 using FiveMCleaner.App.Services;
 using FiveMCleaner.Contracts;
@@ -2568,13 +2567,6 @@ public sealed class MainViewModel : BindableBase, IDisposable
             requiresElevation,
             categoryLabel);
     }
-
-    private string LocalizeBlock(PlanBlockDto block) => block.Code switch
-    {
-        PlanBlockCode.EditionNotDetected => localization.GetString("Plan.Notice.NoLegacy"),
-        PlanBlockCode.EnhancedNotSupported => localization.GetString("Plan.Notice.EnhancedUnsupported"),
-        _ => block.Message
-    };
 
     private string LocalizeNotice(PlanNoticeDto notice) => notice.Code switch
     {
