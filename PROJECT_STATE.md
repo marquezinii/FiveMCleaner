@@ -7,7 +7,7 @@
 
 - **Produto:** FiveMCleaner, aplicativo desktop Windows para otimização transparente, reversível e orientada por diagnóstico do FiveM para **GTAV Legacy**.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
-- **Último estado consolidado neste documento-fonte:** 13/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
+- **Último estado consolidado neste documento-fonte:** 14/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
 - **Versão pública:** `v1.3.2`, publicada em 07/08/2026 a partir de `main`. Confirme tags/releases antes de iniciar uma nova publicação.
 - **Atalho de desenvolvimento:** `FiveMCleaner - Desenvolvimento` deve representar somente o estado integrado de `dev/proxima-versao` e usar `scripts\Start-DevelopmentApp.ps1`. A reconstrução/validação do atalho pertence ao fluxo de integração, não a tarefas paralelas isoladas.
 
@@ -125,7 +125,7 @@ Somente itens ainda relevantes devem permanecer aqui. Quando resolvidos e integr
 
 Estes números são **referência histórica do último estado validado**, não substituem testes da branch atual.
 
-- **13/08/2026:** no estado integrado atual, restore e build .NET Release sem warnings, **842 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` foram aprovados. Site: audit sem vulnerabilidades, lint, typecheck, export estático e **3 testes** aprovados. Worker: audit sem vulnerabilidades e **165 testes**; dashboard: audit sem vulnerabilidades e **44 testes**. Os PRs integrados também passaram pelos gates oficiais de .NET, site, Worker, dashboard e SBOM.
+- **14/08/2026:** no estado integrado atual, restore e build .NET Release sem warnings, **843 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` foram aprovados. Site: audit sem vulnerabilidades, lint, typecheck, export estático e **3 testes** aprovados. Worker: audit sem vulnerabilidades e **161 testes** (redução de dead code de brute-force sem uso em produção, sem alteração de comportamento); dashboard: audit sem vulnerabilidades e **44 testes**. Os PRs integrados também passaram pelos gates oficiais de .NET, site, Worker, dashboard e SBOM.
 
 Ao alterar uma superfície, execute a validação aplicável novamente e use os resultados atuais no PR. Nunca use estes números para afirmar que código posterior foi testado.
 
