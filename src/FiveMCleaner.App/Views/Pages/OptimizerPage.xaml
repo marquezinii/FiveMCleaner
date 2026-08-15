@@ -167,14 +167,7 @@
                                                             Option2Label="{Binding [Profiles.Aggressive.Name], Source={StaticResource LocalizedStrings}}"
                                                             RecommendedLabel="{Binding [Profiles.RecommendedBadge], Source={StaticResource LocalizedStrings}}"
                                                             SelectionChanged="ProfileSpectrum_SelectionChanged" />
-                                <StackPanel Orientation="Horizontal" Margin="0,20,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding SelectedProfileName}" Style="{StaticResource PageTitleText}" VerticalAlignment="Center" />
-                                    <StackPanel Orientation="Horizontal" Margin="12,0,0,0" VerticalAlignment="Center"
-                                                Visibility="{Binding IsSelectedProfileRecommended, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                        <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding [Profiles.RecommendedBadge], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Foreground="{DynamicResource AccentTextBrush}" VerticalAlignment="Center" />
-                                    </StackPanel>
-                                </StackPanel>
+                                <TextBlock Text="{Binding SelectedProfileName}" Style="{StaticResource PageTitleText}" Margin="0,20,0,0" />
                                 <TextBlock Text="{Binding ProfilePresentationBenefits}" Style="{StaticResource SecondaryText}" Margin="0,8,0,0" TextWrapping="Wrap" />
 
                                 <Grid Margin="0,20,0,0">
