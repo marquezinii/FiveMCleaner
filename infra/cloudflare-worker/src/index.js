@@ -76,6 +76,29 @@ export function chunkStatements(statements, maxStatements = MAX_D1_BATCH_STATEME
   return chunks;
 }
 
+// Every route below answers with a JSON body -- this is the one shared shape
+// (Content-Type plus whatever status/extra headers a route needs). Cache-
+// Control is deliberately not set here: withCorsHeaders already defaults it
+// to 'no-store' on every response the fetch handler returns, so repeating it
+// per route would just be the same value twice.
+function jsonResponse(body, status = 200, extraHeaders = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
+  });
+}
+
+// Shared shape for the four routes backed by a `[[ratelimits]]` binding.
+// Returns the 429 Response to return immediately, or null when the caller is
+// within budget. `required` distinguishes the write routes (fail closed, see
+// withinRequiredRateLimit) from the advisory username lookup (fail open, see
+// withinRateLimit).
+async function rejectIfRateLimited(limiter, request, required = true) {
+  const withinLimit = required
+    ? await withinRequiredRateLimit(limiter, rateLimitKey(request))
+    : await withinRateLimit(limiter, rateLimitKey(request));
+  return withinLimit ? null : jsonResponse({ error: 'rate-limited' }, 429);
+}
 
 export default {
   async fetch(request, env) {
@@ -146,30 +169,23 @@ async function route(request, env, url) {
 function handleSignedReleaseManifest(env) {
   const manifest = env.RELEASE_MANIFEST_JSON;
   if (typeof manifest !== 'string' || manifest.length === 0) {
-    return new Response('Release manifest unavailable', {
-      status: 503,
-      headers: { 'Cache-Control': 'no-store' },
-    });
+    return new Response('Release manifest unavailable', { status: 503 });
   }
   if (parseReleaseManifest(manifest) === null) {
     return new Response('Release manifest invalid', { status: 500 });
   }
+  // No explicit Cache-Control here -- withCorsHeaders already defaults every
+  // response (including this signed manifest) to 'no-store'.
   return new Response(manifest, {
     status: 200,
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Cache-Control': 'no-store',
-    },
+    headers: { 'Content-Type': 'application/json; charset=utf-8' },
   });
 }
 
 async function handleUpdaterEventIngest(request, env) {
-  if (!await withinRequiredRateLimit(env.UPDATER_EVENT_LIMITER, rateLimitKey(request))) {
-    return new Response(JSON.stringify({ error: 'rate-limited' }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  const limited = await rejectIfRateLimited(env.UPDATER_EVENT_LIMITER, request);
+  if (limited) return limited;
+
   const payload = await readBoundedJson(request, MAX_UPDATER_EVENT_BODY_BYTES);
   if (payload === null) return new Response('Invalid JSON', { status: 400 });
   const event = validateUpdaterEvent(payload);
@@ -196,26 +212,16 @@ async function handleUpdaterEventIngest(request, env) {
 // Advisory, not authoritative: the UNIQUE index on account_profiles remains
 // the only real arbiter, and handleAccountProfileCreate still returns 409.
 async function handleUsernameAvailability(request, env, url) {
-  if (!await withinRateLimit(env.USERNAME_LOOKUP_LIMITER, rateLimitKey(request))) {
-    return new Response(JSON.stringify({ error: 'rate-limited' }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-    });
-  }
+  const limited = await rejectIfRateLimited(env.USERNAME_LOOKUP_LIMITER, request, false);
+  if (limited) return limited;
 
   const normalized = normalizeUsername(url.searchParams.get('u'));
   if (normalized === null) {
-    return new Response(JSON.stringify({ error: 'invalid-username' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-    });
+    return jsonResponse({ error: 'invalid-username' }, 400);
   }
 
   const available = await isUsernameAvailable(env.TELEMETRY_DB, normalized);
-  return new Response(JSON.stringify({ available }), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
-  });
+  return jsonResponse({ available });
 }
 
 // Completes the profile of a Firebase-authenticated account with the
@@ -232,25 +238,16 @@ async function handleAccountProfileCreate(request, env) {
 
   const profile = validateAccountProfile(payload);
   if (profile === null) {
-    return new Response(JSON.stringify({ error: 'invalid-profile' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'invalid-profile' }, 400);
   }
 
   const result = await createAccountProfile(env.TELEMETRY_DB, auth.uid, profile);
   if (!result.ok) {
     const status = result.code === 'username-taken' || result.code === 'uid-taken' ? 409 : 500;
-    return new Response(JSON.stringify({ error: result.code }), {
-      status,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: result.code }, status);
   }
 
-  return new Response(JSON.stringify({ success: true }), {
-    status: 201,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return jsonResponse({ success: true }, 201);
 }
 
 async function handleAccountProfileGet(request, env) {
@@ -259,16 +256,10 @@ async function handleAccountProfileGet(request, env) {
 
   const profile = await fetchAccountProfile(env.TELEMETRY_DB, auth.uid);
   if (profile === null) {
-    return new Response(JSON.stringify({ error: 'profile-not-found' }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'profile-not-found' }, 404);
   }
 
-  return new Response(JSON.stringify(profile), {
-    status: 200,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return jsonResponse(profile);
 }
 
 async function handleUpdaterEventsList(request, env, url) {
@@ -280,22 +271,16 @@ async function handleUpdaterEventsList(request, env, url) {
   }, url.searchParams.get('limit'));
   try {
     const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-    return new Response(JSON.stringify(results), { status: 200, headers: { 'Content-Type': 'application/json' } });
+    return jsonResponse(results);
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'Database query failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'Database query failed' }, 500);
   }
 }
 
 async function handleTelemetryIngest(request, env) {
-  if (!await withinRequiredRateLimit(env.TELEMETRY_LIMITER, rateLimitKey(request))) {
-    return new Response(JSON.stringify({ error: 'rate-limited' }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  const limited = await rejectIfRateLimited(env.TELEMETRY_LIMITER, request);
+  if (limited) return limited;
+
   const payload = await readBoundedJson(request, MAX_TELEMETRY_BODY_BYTES);
   if (payload === null) return new Response('Invalid JSON', { status: 400 });
 
@@ -362,10 +347,7 @@ async function handleTelemetryIngest(request, env) {
     try {
       await env.TELEMETRY_DB.batch(chunk);
     } catch (err) {
-      return new Response(JSON.stringify({ error: 'Database write failed for action links' }), {
-        status: 500,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return jsonResponse({ error: 'Database write failed for action links' }, 500);
     }
   }
 
@@ -407,25 +389,16 @@ async function handleStatsRequest(request, env, url) {
         },
       });
     }
-    return new Response(JSON.stringify(results), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse(results);
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'Database query failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'Database query failed' }, 500);
   }
 }
 
 async function handleBugReportIngest(request, env) {
-  if (!await withinRequiredRateLimit(env.BUG_REPORT_LIMITER, rateLimitKey(request))) {
-    return new Response(JSON.stringify({ error: 'rate-limited' }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
+  const limited = await rejectIfRateLimited(env.BUG_REPORT_LIMITER, request);
+  if (limited) return limited;
+
   const payload = await readBoundedJson(request, MAX_BUG_REPORT_BODY_BYTES);
   if (payload === null) return new Response('Invalid JSON', { status: 400 });
 
@@ -456,10 +429,7 @@ async function handleBugReportIngest(request, env) {
     )
     .run();
 
-  return new Response(JSON.stringify({ success: true }), {
-    status: 202,
-    headers: { 'Content-Type': 'application/json' },
-  });
+  return jsonResponse({ success: true }, 202);
 }
 
 async function handleBugReportsList(request, env, url) {
@@ -479,14 +449,8 @@ async function handleBugReportsList(request, env, url) {
   const { sql, params } = recentBugReports(filters, limit);
   try {
     const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-    return new Response(JSON.stringify(results), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse(results);
   } catch (err) {
-    return new Response(JSON.stringify({ error: 'Database query failed' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    return jsonResponse({ error: 'Database query failed' }, 500);
   }
 }

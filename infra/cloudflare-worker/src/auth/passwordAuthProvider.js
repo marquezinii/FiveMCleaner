@@ -31,6 +31,13 @@ import { readBoundedJson } from '../requestSecurity.js';
 const MAX_LOGIN_BODY_BYTES = 4 * 1024;
 const MAX_PASSWORD_CHARACTERS = 1024;
 
+function jsonResponse(body, status, extraHeaders = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
+  });
+}
+
 function clientIp(request) {
   // Cloudflare always sets this header at the edge; it cannot be spoofed by
   // the client because Cloudflare overwrites any client-supplied value.
@@ -136,19 +143,13 @@ export function createPasswordAuthProvider(env, now = () => new Date()) {
 
       const attemptRow = await getLoginAttempt(db, ipHash);
       if (isLockedOut(attemptRow, nowValue)) {
-        return new Response(
-          JSON.stringify({ error: 'too-many-attempts' }),
-          { status: 429, headers: { 'Content-Type': 'application/json' } },
-        );
+        return jsonResponse({ error: 'too-many-attempts' }, 429);
       }
 
       const body = await readBoundedJson(request, MAX_LOGIN_BODY_BYTES);
       const password = body?.password;
       if (body === null) {
-        return new Response(
-          JSON.stringify({ error: 'invalid-request' }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } },
-        );
+        return jsonResponse({ error: 'invalid-request' }, 400);
       }
 
       const isValid = typeof password === 'string'
@@ -156,22 +157,15 @@ export function createPasswordAuthProvider(env, now = () => new Date()) {
         && (await verifyPassword(password, env.ADMIN_PASSWORD_HASH));
       if (!isValid) {
         await recordFailedLoginAttempt(db, ipHash, nowValue);
-        return new Response(
-          JSON.stringify({ error: 'invalid-credentials' }),
-          { status: 401, headers: { 'Content-Type': 'application/json' } },
-        );
+        return jsonResponse({ error: 'invalid-credentials' }, 401);
       }
 
       await saveLoginAttempt(db, ipHash, stateAfterSuccess());
       const session = createSessionRow(nowValue);
       await saveSession(db, session);
 
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Set-Cookie': buildSessionCookie(session.id, session.expires_at),
-        },
+      return jsonResponse({ success: true }, 200, {
+        'Set-Cookie': buildSessionCookie(session.id, session.expires_at),
       });
     },
 
@@ -181,12 +175,8 @@ export function createPasswordAuthProvider(env, now = () => new Date()) {
         await revokeSession(db, sessionId, now());
       }
 
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Set-Cookie': buildExpiredSessionCookie(),
-        },
+      return jsonResponse({ success: true }, 200, {
+        'Set-Cookie': buildExpiredSessionCookie(),
       });
     },
 
@@ -201,13 +191,7 @@ export function createPasswordAuthProvider(env, now = () => new Date()) {
       const session = sessionId ? await getSession(db, sessionId) : null;
 
       if (!isSessionValid(session, now())) {
-        return {
-          authorized: false,
-          response: new Response(
-            JSON.stringify({ error: 'unauthorized' }),
-            { status: 401, headers: { 'Content-Type': 'application/json' } },
-          ),
-        };
+        return { authorized: false, response: jsonResponse({ error: 'unauthorized' }, 401) };
       }
 
       return { authorized: true };

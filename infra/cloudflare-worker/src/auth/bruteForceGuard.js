@@ -16,30 +16,6 @@ export function isLockedOut(row, now) {
   return new Date(row.locked_until).getTime() > now.getTime();
 }
 
-/**
- * Computes the next `login_attempts` row after a failed login. Resets the
- * counter if the previous failure window has expired, so an attacker cannot
- * accumulate failures indefinitely across unrelated days.
- */
-export function nextStateAfterFailure(row, now) {
-  const nowIso = now.toISOString();
-
-  if (!row) {
-    return { failed_count: 1, first_failed_at: nowIso, locked_until: null };
-  }
-
-  const windowExpired = now.getTime() - new Date(row.first_failed_at).getTime() > FAILURE_WINDOW_MS;
-  if (windowExpired) {
-    return { failed_count: 1, first_failed_at: nowIso, locked_until: null };
-  }
-
-  const failedCount = row.failed_count + 1;
-  const lockedUntil = failedCount >= MAX_FAILED_ATTEMPTS
-    ? new Date(now.getTime() + LOCKOUT_DURATION_MS).toISOString()
-    : null;
-  return { failed_count: failedCount, first_failed_at: row.first_failed_at, locked_until: lockedUntil };
-}
-
 /** The row to write after a successful login: attempts are cleared. */
 export function stateAfterSuccess() {
   return null;
