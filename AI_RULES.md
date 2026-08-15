@@ -323,11 +323,14 @@ No modo integrador, o agente deve:
     branches de tarefa já incorporadas quando isso for seguro. Branches remotas de
     PR já mergeadas podem ser removidas como limpeza normal.
 
-O atalho compartilhado `FiveMCleaner - Desenvolvimento` **não deve ser
-reconstruído por cada tarefa isolada**, pois agentes paralelos poderiam fazê-lo
-apontar alternadamente para estados diferentes. A reconstrução obrigatória ocorre
-na integração da `dev/proxima-versao` ou quando o usuário pedir explicitamente
-uma prévia de uma tarefa específica.
+Ao concluir qualquer tarefa — exceto tarefas que envolvam diretamente
+instalador/updater (`FiveMCleaner.Updater`, `FiveMCleaner.UpdateRuntime`,
+`FiveMCleaner.ReleaseTool`, `installer/`, fluxos de staging/ativação/rollback) —
+o agente deve **sempre** reconstruir o atalho `FiveMCleaner - Desenvolvimento`
+com `scripts\Install-DevelopmentShortcut.ps1 -Build`, para que ele reflita o
+app com as últimas mudanças implementadas na tarefa, pronto para o usuário
+testar quando quiser. Isso vale tanto para tarefas isoladas quanto para a
+integração da `dev/proxima-versao`.
 
 Se dois trabalhos conflitarem conceitualmente, não escolha um lado apenas porque
 o Git resolveu o texto. Compare os objetivos, contratos, testes e comportamento
@@ -628,6 +631,7 @@ Nova tarefa
 → criar branch pelo objetivo da mudança
 → criar/reutilizar worktree exclusivo
 → implementar e testar
+→ reconstruir FiveMCleaner - Desenvolvimento (exceto tarefas de instalador/updater)
 → commit(s) profissionais
 → push automático somente da branch da tarefa
 → criar/atualizar PR automático → dev/proxima-versao
