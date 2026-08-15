@@ -9,14 +9,13 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
 {
     private readonly string runtimeRoot;
     private readonly string launcherPath;
-    private readonly string dataRoot;
     private readonly UpdaterDiagnostics diagnostics;
 
     public AtomicUpdateInstaller(string runtimeRoot, string launcherPath)
     {
         this.runtimeRoot = Path.GetFullPath(runtimeRoot);
         this.launcherPath = Path.GetFullPath(launcherPath);
-        dataRoot = Path.Combine(
+        var dataRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "FiveMCleaner");
         diagnostics = new UpdaterDiagnostics(dataRoot);
     }

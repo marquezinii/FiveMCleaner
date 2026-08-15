@@ -21,7 +21,6 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
     private readonly byte[] publicKey;
     private readonly string updatesRoot;
     private readonly VersionFloorStore versionFloor;
-    private readonly string dataRoot;
     private readonly UpdaterDiagnostics diagnostics;
 
     public SignedManifestUpdateService()
@@ -46,7 +45,6 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
     {
         client = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(15) };
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("FiveMCleaner-Updater", "2.0"));
-        this.dataRoot = dataRoot;
         updatesRoot = Path.Combine(dataRoot, "Updates");
         versionFloor = new VersionFloorStore(dataRoot);
         diagnostics = new UpdaterDiagnostics(dataRoot);
