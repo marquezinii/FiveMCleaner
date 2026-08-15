@@ -101,7 +101,7 @@ public sealed class RegressionDetectionTests
         var before = Snapshot(thermalElevated: false);
         var after = Snapshot(thermalElevated: true);
 
-        var reasons = AppOptimizationService.ComputeRegressionReasonKeys(before, after);
+        var reasons = ResourceComparisonCapture.ComputeRegressionReasonKeys(before, after);
 
         Assert.Contains("Comparison.Reason.NewThermalSignal", reasons);
     }
@@ -112,7 +112,7 @@ public sealed class RegressionDetectionTests
         var before = Snapshot(thermalElevated: true);
         var after = Snapshot(thermalElevated: true);
 
-        var reasons = AppOptimizationService.ComputeRegressionReasonKeys(before, after);
+        var reasons = ResourceComparisonCapture.ComputeRegressionReasonKeys(before, after);
 
         Assert.DoesNotContain("Comparison.Reason.NewThermalSignal", reasons);
     }
@@ -123,7 +123,7 @@ public sealed class RegressionDetectionTests
         var before = Snapshot(availableMemoryGiB: 8);
         var after = Snapshot(availableMemoryGiB: 2);
 
-        var reasons = AppOptimizationService.ComputeRegressionReasonKeys(before, after);
+        var reasons = ResourceComparisonCapture.ComputeRegressionReasonKeys(before, after);
 
         Assert.Contains("Comparison.Reason.MemoryDropped", reasons);
     }
@@ -134,7 +134,7 @@ public sealed class RegressionDetectionTests
         var before = Snapshot(availableMemoryGiB: 8);
         var after = Snapshot(availableMemoryGiB: 7);
 
-        var reasons = AppOptimizationService.ComputeRegressionReasonKeys(before, after);
+        var reasons = ResourceComparisonCapture.ComputeRegressionReasonKeys(before, after);
 
         Assert.Empty(reasons);
     }
@@ -147,7 +147,7 @@ public sealed class RegressionDetectionTests
         var before = Snapshot(availableMemoryGiB: 0.5);
         var after = Snapshot(availableMemoryGiB: 0.1);
 
-        var reasons = AppOptimizationService.ComputeRegressionReasonKeys(before, after);
+        var reasons = ResourceComparisonCapture.ComputeRegressionReasonKeys(before, after);
 
         Assert.Empty(reasons);
     }
@@ -158,7 +158,7 @@ public sealed class RegressionDetectionTests
         var before = Snapshot();
         var after = Snapshot();
 
-        var reasons = AppOptimizationService.ComputeRegressionReasonKeys(before, after);
+        var reasons = ResourceComparisonCapture.ComputeRegressionReasonKeys(before, after);
 
         Assert.Empty(reasons);
     }
