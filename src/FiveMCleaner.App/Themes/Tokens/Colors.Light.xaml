@@ -33,6 +33,21 @@
         <GradientStop Color="#00FFFFFF" Offset="1" />
     </LinearGradientBrush>
 
+    <!-- Metal escovado (ver Colors.Dark.xaml): no claro, lê como alumínio
+         polido sobre papel — reservado às mesmas bordas de destaque. -->
+    <SolidColorBrush x:Key="SteelBrush" Color="#6B7280" />
+    <SolidColorBrush x:Key="SteelDeepBrush" Color="#454B54" />
+    <LinearGradientBrush x:Key="MetalEdgeBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#C7C3B8" Offset="0" />
+        <GradientStop Color="#FFFFFF" Offset="0.5" />
+        <GradientStop Color="#B9B5A9" Offset="1" />
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="InstrumentBezelBrush" StartPoint="0,0" EndPoint="1,1">
+        <GradientStop Color="#D8D5CC" Offset="0" />
+        <GradientStop Color="#FFFFFF" Offset="0.5" />
+        <GradientStop Color="#C7C3B8" Offset="1" />
+    </LinearGradientBrush>
+
     <SolidColorBrush x:Key="TextPrimaryBrush" Color="#17181B" />
     <SolidColorBrush x:Key="TextSecondaryBrush" Color="#5A5F68" />
     <SolidColorBrush x:Key="TextTertiaryBrush" Color="#6B7280" />

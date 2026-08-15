@@ -48,9 +48,9 @@
 
         <StackPanel Grid.Row="1" Margin="30,4,42,0">
             <TextBlock x:Name="TitleText"
-                       FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI"
+                       FontFamily="{StaticResource AppFontDisplay}"
                        FontSize="24"
-                       FontWeight="Bold"
+                       FontWeight="SemiBold"
                        Text="{Binding [Account.Welcome.Title], Source={StaticResource LocalizedStrings}}" />
             <TextBlock x:Name="SubtitleText"
                        Margin="0,7,0,0"
@@ -284,7 +284,7 @@
                         Visibility="Collapsed"
                         Margin="0,18,0,0"
                         Padding="13,11"
-                        CornerRadius="9"
+                        CornerRadius="{StaticResource RadiusMd}"
                         BorderThickness="1">
                     <StackPanel Orientation="Horizontal">
                         <Path x:Name="StatusIcon"

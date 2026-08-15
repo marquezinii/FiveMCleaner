@@ -201,7 +201,10 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("controls:CoreVisual", dashboard, StringComparison.Ordinal);
         Assert.Contains("Mode=\"Readiness\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding ReadinessScore, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
-        Assert.Contains("TrackBrush=\"{DynamicResource BorderSubtleBrush}\"", dashboard, StringComparison.Ordinal);
+        // Redesign "Bancada de tuning premium": o aro do medidor de prontidão
+        // usa o bezel de metal escovado (InstrumentBezelBrush), não mais a
+        // borda genérica de superfície.
+        Assert.Contains("TrackBrush=\"{DynamicResource InstrumentBezelBrush}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding CpuUsagePercent, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
         // A coleta pausada precisa pausar também a animação da cena.
         Assert.Contains("IsLive=\"{Binding IsLiveMetricsActive}\"", dashboard, StringComparison.Ordinal);

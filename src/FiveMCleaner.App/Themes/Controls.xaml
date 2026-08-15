@@ -493,7 +493,9 @@
 
     <!-- ================= Progresso ================= -->
 
-    <!-- Trilho linear do Otimizador em execução: sem easing, reflete o dado real. -->
+    <!-- Trilho linear do Otimizador em execução: sem easing, reflete o dado
+         real. Raio pequeno em vez de pill — lê como réguas de um instrumento,
+         não como barra de progresso de app de consumo. -->
     <Style x:Key="ProgressRailStyle" TargetType="ProgressBar">
         <Setter Property="Height" Value="6" />
         <Setter Property="Minimum" Value="0" />
@@ -502,9 +504,9 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ProgressBar">
-                    <Border CornerRadius="{StaticResource RadiusPill}" Background="{DynamicResource CanvasSunkenBrush}" ClipToBounds="True">
+                    <Border CornerRadius="{StaticResource RadiusXs}" Background="{DynamicResource CanvasSunkenBrush}" ClipToBounds="True">
                         <Grid x:Name="PART_Track" HorizontalAlignment="Stretch">
-                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="{StaticResource RadiusPill}" Background="{TemplateBinding Foreground}">
+                            <Border x:Name="PART_Indicator" HorizontalAlignment="Left" CornerRadius="{StaticResource RadiusXs}" Background="{TemplateBinding Foreground}">
                                 <Border.Width>
                                     <MultiBinding Converter="{StaticResource PercentWidthConverter}">
                                         <Binding Path="Value" RelativeSource="{RelativeSource TemplatedParent}" />
@@ -579,7 +581,7 @@
     </Style>
 
     <Style TargetType="ui:CardControl" BasedOn="{StaticResource {x:Type ui:CardControl}}">
-        <Setter Property="CornerRadius" Value="12" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusLg}" />
         <Setter Property="Background" Value="{DynamicResource Surface1Brush}" />
     </Style>
 

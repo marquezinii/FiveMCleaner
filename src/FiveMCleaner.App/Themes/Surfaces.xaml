@@ -39,8 +39,12 @@
         <Setter Property="CornerRadius" Value="{StaticResource RadiusLg}" />
     </Style>
 
+    <!-- Único painel por página com bezel de metal escovado: o momento de
+         instrumento, não um card a mais. Demais superfícies mantêm a aresta
+         de vidro discreta de PanelSurface. -->
     <Style x:Key="HeroSurface" TargetType="Border" BasedOn="{StaticResource PanelSurface}">
         <Setter Property="Background" Value="{DynamicResource SurfaceAccentWashBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource MetalEdgeBrush}" />
         <Setter Property="CornerRadius" Value="{StaticResource RadiusXl}" />
         <Setter Property="Padding" Value="32" />
     </Style>
