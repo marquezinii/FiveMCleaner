@@ -22,6 +22,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
     private readonly string updatesRoot;
     private readonly VersionFloorStore versionFloor;
     private readonly UpdaterDiagnostics diagnostics;
+    private readonly string dataRoot;
 
     public SignedManifestUpdateService()
         : this(
@@ -43,6 +44,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
 
     internal SignedManifestUpdateService(HttpMessageHandler handler, string dataRoot)
     {
+        this.dataRoot = dataRoot;
         client = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(15) };
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("FiveMCleaner-Updater", "2.0"));
         updatesRoot = Path.Combine(dataRoot, "Updates");
@@ -213,7 +215,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
                 Guid.NewGuid().ToString("N"), stage, "failed", Classify(exception),
                 previous, candidate, "Production"),
             exception.ToString(),
-            telemetryAuthorized: true);
+            telemetryAuthorized: UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
 
     private static string Classify(Exception exception) => exception switch
     {

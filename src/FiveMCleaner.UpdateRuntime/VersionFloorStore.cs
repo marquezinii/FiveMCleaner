@@ -32,8 +32,8 @@ public sealed class VersionFloorStore
     {
         if (!Version.TryParse(version, out var candidate))
             throw new ArgumentException("Versão inválida.", nameof(version));
-        var current = Version.Parse(Read(version));
-        if (candidate <= current && File.Exists(path)) return;
+        var current = Version.Parse(Read("0.0.0"));
+        if (candidate <= current) return;
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
         var encrypted = ProtectedData.Protect(
             Encoding.UTF8.GetBytes(version), Entropy, DataProtectionScope.CurrentUser);

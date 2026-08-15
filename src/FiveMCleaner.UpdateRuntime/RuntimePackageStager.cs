@@ -29,8 +29,20 @@ public sealed class RuntimePackageStager
         var destination = Path.Combine(activation.VersionsRoot, version);
         if (Directory.Exists(destination))
         {
-            VerifyFileManifest(destination);
-            return destination;
+            try
+            {
+                VerifyFileManifest(destination);
+                return destination;
+            }
+            catch (Exception exception) when (exception is InvalidDataException or IOException or UnauthorizedAccessException)
+            {
+                // Existing directory is corrupt or tampered; remove and re-extract from verified archive.
+                try { Directory.Delete(destination, recursive: true); }
+                catch (Exception cleanupException) when (cleanupException is IOException or UnauthorizedAccessException)
+                {
+                    throw new InvalidDataException("Diretório de versão existente está corrompido e não pôde ser removido.", cleanupException);
+                }
+            }
         }
         var staging = Path.Combine(runtimeRoot, "staging", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(staging);
