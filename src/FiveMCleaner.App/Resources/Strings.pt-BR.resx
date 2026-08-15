@@ -478,8 +478,6 @@
   <data name="Runtime.AdminRestorePendingDetail" xml:space="preserve"><value>Confirme o UAC pelo Histórico quando quiser concluir o rollback.</value></data>
   <data name="Runtime.BrokerApplying" xml:space="preserve"><value>Aplicando ajustes administrativos</value></data>
   <data name="Runtime.BrokerRestoring" xml:space="preserve"><value>Restaurando configurações administrativas</value></data>
-  <data name="Plan.Notice.NoLegacy" xml:space="preserve"><value>Nenhuma instalação compatível do FiveM Legacy foi detectada.</value></data>
-  <data name="Plan.Notice.EnhancedUnsupported" xml:space="preserve"><value>FiveM Enhanced ainda não é suportado. Nenhuma ação do Legacy será executada nessa edição.</value></data>
   <data name="Plan.Notice.DiagnosticsRetention" xml:space="preserve"><value>Diagnósticos com mais de {0} dias serão removidos permanentemente.</value></data>
   <data name="Plan.Notice.ServerCacheRepair" xml:space="preserve"><value>Os caches de servidores serão recriados e o primeiro carregamento poderá ficar mais lento; limpar server-cache-priv também pode tornar clipes antigos do Rockstar Editor indisponíveis.</value></data>
   <data name="Plan.Notice.AcPower" xml:space="preserve"><value>O modo de energia de desempenho só será aplicado com o computador ligado à tomada.</value></data>
