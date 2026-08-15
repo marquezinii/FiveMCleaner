@@ -123,10 +123,8 @@
             </ui:NavigationView.FooterMenuItems>
 
             <ui:NavigationView.ContentOverlay>
-                <Grid>
+                <Grid x:Name="PageContentHost">
                     <pages:OverviewPage x:Name="DashboardPage" />
-                    <pages:OptimizerPage x:Name="OptimizerPage" Visibility="Collapsed" />
-                    <pages:HistoryPage x:Name="HistoryPage" Visibility="Collapsed" />
 
                     <!-- ===================== Configurações ===================== -->
                     <!--

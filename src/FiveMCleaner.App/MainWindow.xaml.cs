@@ -10,6 +10,7 @@ using System.Windows.Media.Imaging;
 using FiveMCleaner.App.Services;
 using FiveMCleaner.App.ViewModels;
 using FiveMCleaner.App.Views;
+using FiveMCleaner.App.Views.Pages;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.UpdateRuntime;
 
@@ -34,6 +35,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly bool demoMode;
     private readonly RemoteServicesOptions remoteServicesOptions;
     private readonly QueuedCloudflareTelemetryService? queuedCloudflareTelemetry;
+    private OptimizerPage? optimizerPage;
+    private HistoryPage? historyPage;
     private readonly IFirebaseAuthService? accountService;
     private readonly IAccountProfileService profileService;
     private readonly IGoogleOAuthClient googleOAuth;
@@ -43,6 +46,17 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private bool trayAnnouncementShown;
     private bool systemSessionEnding;
     private bool syncingLanguageSelector;
+
+    // Keep the dashboard as the only non-deferred page during InitializeComponent. The optimizer and history views are heavier and are created only when first selected.
+    private OptimizerPage OptimizerPage => optimizerPage ??= CreateDeferredPage<OptimizerPage>();
+    private HistoryPage HistoryPage => historyPage ??= CreateDeferredPage<HistoryPage>();
+
+    private T CreateDeferredPage<T>() where T : UIElement, new()
+    {
+        var page = new T { Visibility = Visibility.Collapsed };
+        PageContentHost.Children.Add(page);
+        return page;
+    }
 
     public MainWindow()
     {
@@ -635,8 +649,14 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private void Navigate(UIElement page)
     {
         DashboardPage.Visibility = Visibility.Collapsed;
-        OptimizerPage.Visibility = Visibility.Collapsed;
-        HistoryPage.Visibility = Visibility.Collapsed;
+        if (optimizerPage is not null)
+        {
+            optimizerPage.Visibility = Visibility.Collapsed;
+        }
+        if (historyPage is not null)
+        {
+            historyPage.Visibility = Visibility.Collapsed;
+        }
         SettingsPage.Visibility = Visibility.Collapsed;
         page.Visibility = Visibility.Visible;
         viewModel.SetLiveMetricsEnabled(ReferenceEquals(page, DashboardPage));
