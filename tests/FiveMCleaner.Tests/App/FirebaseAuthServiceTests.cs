@@ -75,6 +75,40 @@ public sealed class FirebaseAuthServiceTests
         Assert.False(File.Exists(path));
     }
 
+    /// <summary>
+    /// Regression guard: a rejected/expired refresh token used to make
+    /// RefreshAsync clear the session by calling LogoutCoreAsync while still
+    /// holding its own session lock, which then tried to re-acquire that same
+    /// (non-reentrant) semaphore and hung forever. This must complete
+    /// promptly, sign the user out, and leave the lock usable for the next call.
+    /// </summary>
+    [Fact]
+    public async Task RestoreSessionAsync_RejectedRefreshToken_SignsOutInsteadOfHanging()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session");
+        var store = new SecureFirebaseSessionStore(path);
+        await store.WriteAsync("refresh-1", CancellationToken.None);
+        using var client = new HttpClient(new StubHandler(_ => Json("""{"error":"invalid_grant"}""", HttpStatusCode.BadRequest)));
+        using var service = new FirebaseAuthService(client, "test-firebase-api-key-1234567890", store);
+
+        var restoreTask = service.RestoreSessionAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        var completed = await Task.WhenAny(restoreTask, Task.Delay(TimeSpan.FromSeconds(10), global::Xunit.TestContext.Current.CancellationToken));
+
+        Assert.Same(restoreTask, completed);
+        var result = await restoreTask;
+        Assert.False(result.Succeeded);
+        Assert.Equal(AuthenticationState.SignedOut, result.State);
+        Assert.False(File.Exists(path));
+
+        // The lock must be free again for a follow-up call instead of stuck
+        // (permanently held, or over-released into a broken state).
+        await store.WriteAsync("refresh-2", CancellationToken.None);
+        var secondTask = service.RestoreSessionAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        var secondCompleted = await Task.WhenAny(secondTask, Task.Delay(TimeSpan.FromSeconds(10), global::Xunit.TestContext.Current.CancellationToken));
+        Assert.Same(secondTask, secondCompleted);
+        Assert.False((await secondTask).Succeeded);
+    }
+
     [Fact]
     public async Task SignInWithGoogleAsync_PostsTheAssertionToSignInWithIdpAndSkipsEmailVerification()
     {

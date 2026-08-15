@@ -270,12 +270,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     /// </summary>
     private bool ValidateRegistrationFields()
     {
-        if (!AccountValidation.IsValidPersonName(FirstNameBox.Text)) { return Reject(T("Account.Validation.FirstNameRequired"), FirstNameBox); }
-        if (!AccountValidation.IsValidPersonName(LastNameBox.Text)) { return Reject(T("Account.Validation.LastNameRequired"), LastNameBox); }
-        if (!AccountValidation.IsValidUsername(UsernameBox.Text))
-        {
-            return Reject(T("Account.Validation.UsernameFormat"), UsernameBox);
-        }
+        if (!ValidateProfileFields()) return false;
         if (!AccountValidation.IsValidEmail(EmailBox.Text)) { return Reject(T("Account.Validation.InvalidEmail"), EmailBox); }
         if (!AccountPasswordPolicy.IsValid(PasswordField.Password))
         {
@@ -301,15 +296,21 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         return false;
     }
 
-    private async Task SubmitProfileAsync()
+    /// <summary>Nome, sobrenome e nome de usuário — shared by registration (which also collects e-mail/senha) and the post-Google profile step (which only needs these).</summary>
+    private bool ValidateProfileFields()
     {
-        if (!AccountValidation.IsValidPersonName(FirstNameBox.Text)) { Reject(T("Account.Validation.FirstNameRequired"), FirstNameBox); return; }
-        if (!AccountValidation.IsValidPersonName(LastNameBox.Text)) { Reject(T("Account.Validation.LastNameRequired"), LastNameBox); return; }
+        if (!AccountValidation.IsValidPersonName(FirstNameBox.Text)) { return Reject(T("Account.Validation.FirstNameRequired"), FirstNameBox); }
+        if (!AccountValidation.IsValidPersonName(LastNameBox.Text)) { return Reject(T("Account.Validation.LastNameRequired"), LastNameBox); }
         if (!AccountValidation.IsValidUsername(UsernameBox.Text))
         {
-            Reject(T("Account.Validation.UsernameFormat"), UsernameBox);
-            return;
+            return Reject(T("Account.Validation.UsernameFormat"), UsernameBox);
         }
+        return true;
+    }
+
+    private async Task SubmitProfileAsync()
+    {
+        if (!ValidateProfileFields()) return;
 
         SetBusy(true);
         try { await SaveProfileAsync(); } finally { SetBusy(false); }
