@@ -327,10 +327,19 @@ Ao concluir qualquer tarefa — exceto tarefas que envolvam diretamente
 instalador/updater (`FiveMCleaner.Updater`, `FiveMCleaner.UpdateRuntime`,
 `FiveMCleaner.ReleaseTool`, `installer/`, fluxos de staging/ativação/rollback) —
 o agente deve **sempre** reconstruir o atalho `FiveMCleaner - Desenvolvimento`
-com `scripts\Install-DevelopmentShortcut.ps1 -Build`, para que ele reflita o
-app com as últimas mudanças implementadas na tarefa, pronto para o usuário
-testar quando quiser. Isso vale tanto para tarefas isoladas quanto para a
-integração da `dev/proxima-versao`.
+com `scripts\Install-DevelopmentShortcut.ps1 -Build`, executado a partir do
+próprio checkout/worktree da tarefa, para que ele reflita o app com as
+últimas mudanças implementadas, pronto para o usuário testar quando quiser.
+Isso vale tanto para tarefas isoladas quanto para a integração da
+`dev/proxima-versao`.
+
+O script não aponta o atalho para o worktree que o executou: ele espelha a
+árvore de trabalho atual (exceto `.git`, `bin`, `obj`, `artifacts`,
+`node_modules`) para uma pasta irmã fixa e permanente,
+`FiveMCleaner-dev-shortcut`, e aponta o atalho para essa cópia estável. Assim
+o atalho nunca fica órfão quando um worktree de tarefa é removido após o
+merge — a próxima tarefa ou integração que reconstruir o atalho simplesmente
+sobrescreve o espelho com o estado mais recente.
 
 Se dois trabalhos conflitarem conceitualmente, não escolha um lado apenas porque
 o Git resolveu o texto. Compare os objetivos, contratos, testes e comportamento

@@ -230,9 +230,4 @@ public sealed class AccountSignUpFlowTests
     private static string TempSessionPath() => Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session");
 
     private static HttpResponseMessage Json(string payload, HttpStatusCode status = HttpStatusCode.OK) => new(status) { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
-
-    private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> send) : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Task.FromResult(send(request));
-    }
 }
