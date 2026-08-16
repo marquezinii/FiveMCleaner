@@ -9,7 +9,7 @@
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
 - **Último estado consolidado neste documento-fonte:** 15/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
 - **Versão pública:** `v1.3.2`, publicada em 07/08/2026 a partir de `main`. Confirme tags/releases antes de iniciar uma nova publicação.
-- **Atalho de desenvolvimento:** `FiveMCleaner - Desenvolvimento` deve representar somente o estado integrado de `dev/proxima-versao` e usar `scripts\Start-DevelopmentApp.ps1`. A reconstrução/validação do atalho pertence ao fluxo de integração, não a tarefas paralelas isoladas.
+- **Atalho de desenvolvimento:** `FiveMCleaner - Desenvolvimento` usa `scripts\Start-DevelopmentApp.ps1`. Conforme `AI_RULES.md`, deve ser reconstruído com `scripts\Install-DevelopmentShortcut.ps1 -Build` ao final de toda tarefa que gerar mudanças no app — isolada ou de integração —, exceto tarefas de instalador/updater. Como o script aponta o atalho para o workspace de onde é executado, rode-o a partir do checkout/worktree da própria tarefa; a integração seguinte reconstrói novamente a partir de `dev/proxima-versao`, sem depender de worktrees temporários já removidos.
 
 ## 2. Objetivo e invariantes de segurança
 
