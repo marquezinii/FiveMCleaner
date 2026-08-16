@@ -232,9 +232,4 @@ public sealed class CloudflareAccountProfileServiceTests
         var client = new HttpClient(new StubHandler(send));
         return new CloudflareAccountProfileService(client, new Uri("https://example.com/account/profile"));
     }
-
-    private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> send) : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Task.FromResult(send(request));
-    }
 }
