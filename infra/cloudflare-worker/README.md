@@ -44,6 +44,10 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
   `POST /admin/logout`, `GET /api/stats/:name[.csv]` (protected), plus CORS
   handling (`src/cors.js`) for every response since the dashboard is served
   from a different origin than this Worker.
+- `src/liveAlert/` — the single-row admin broadcast the dashboard writes
+  (`POST /admin/live-alert`, session-protected) and the desktop app polls at
+  startup plus once an hour (`GET /live-alert`, public, rate limited). See
+  `docs/superpowers/specs/2026-08-17-live-alerts-design.md`.
 - `src/auth/` — the custom admin authentication (see below).
 - `src/stats/` — `queries.js` (pure SQL+params builders, one per dashboard
   chart) and `csv.js` (pure CSV serialization for the export feature).
@@ -169,6 +173,11 @@ the advisory username lookup, those routes fail closed when a binding is
 missing or unavailable so a deployment mistake cannot silently expose D1 to
 unbounded writes. Local handler tests must provide an explicit limiter stub
 when they exercise one of those routes.
+
+`GET /live-alert` follows the same advisory, fail-open trade as the username
+lookup (`LIVE_ALERT_LIMITER`, 30/60s per IP) — it is read-only, unauthenticated
+by necessity (every installed app reads it), and never exposes anything more
+sensitive than the one message an admin chose to broadcast.
 
 Legacy Worker product tables (`user_accounts` / sessions), if still present on
 remote D1 from the pre-Firebase system, are not migrated. There are no real

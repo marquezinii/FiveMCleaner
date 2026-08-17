@@ -18,11 +18,14 @@ import { toCsv } from './stats/csv.js';
 import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from './cors.js';
 import { readBoundedJson } from './requestSecurity.js';
 import { parseReleaseManifest } from './releaseManifest.js';
+import { validateLiveAlertUpdate } from './liveAlert/validateSubmission.js';
+import { buildLiveAlertUpsert, toLiveAlertResponse } from './liveAlert/store.js';
 
 const MAX_TELEMETRY_BODY_BYTES = 512 * 1024;
 const MAX_BUG_REPORT_BODY_BYTES = 128 * 1024;
 const MAX_UPDATER_EVENT_BODY_BYTES = 4 * 1024;
 const MAX_ACCOUNT_PROFILE_BODY_BYTES = 4 * 1024;
+const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 
 // FiveMCleaner anonymous telemetry + bug reports + admin dashboard API
 // Worker. See wrangler.toml and README.md for deployment status of each
@@ -40,6 +43,8 @@ const MAX_ACCOUNT_PROFILE_BODY_BYTES = 4 * 1024;
 //   GET     /api/stats/:name       -- one chart's data (requires a valid session)
 //   GET     /api/stats/:name.csv   -- same data as CSV (requires a valid session)
 //   GET     /api/bugs              -- recent bug reports, newest first (requires a valid session)
+//   GET     /live-alert            -- current admin-broadcast alert, { id, message, active } (no auth; rate limited per IP)
+//   POST    /admin/live-alert      -- { message?, active } -> upsert the single live alert row (requires a valid session)
 //   OPTIONS *                      -- CORS preflight for the routes above
 //
 // The dashboard is served from a different origin than this Worker (a
@@ -137,6 +142,12 @@ async function route(request, env, url) {
   if (request.method === 'GET' && url.pathname === '/account/username-available') {
     return handleUsernameAvailability(request, env, url);
   }
+  if (request.method === 'GET' && url.pathname === '/live-alert') {
+    return handleLiveAlertGet(request, env);
+  }
+  if (request.method === 'POST' && url.pathname === '/admin/live-alert') {
+    return handleLiveAlertUpdate(request, env);
+  }
 
   if (request.method === 'POST' && url.pathname === '/admin/login') {
     if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
@@ -222,6 +233,38 @@ async function handleUsernameAvailability(request, env, url) {
 
   const available = await isUsernameAvailable(env.TELEMETRY_DB, normalized);
   return jsonResponse({ available });
+}
+
+// Public broadcast the desktop app polls (startup + hourly) to show an
+// admin-authored banner -- see docs/superpowers/specs/2026-08-17-live-alerts-design.md.
+// Necessarily unauthenticated, same trade as the username lookup above: a
+// rate-limited, read-only, advisory GET.
+async function handleLiveAlertGet(request, env) {
+  const limited = await rejectIfRateLimited(env.LIVE_ALERT_LIMITER, request, false);
+  if (limited) return limited;
+
+  const row = await env.TELEMETRY_DB
+    .prepare('SELECT message, active, updated_at FROM live_alert WHERE id = 1')
+    .first();
+  return jsonResponse(toLiveAlertResponse(row));
+}
+
+// Admin-only write side of the same feature. `message` is optional so the
+// dashboard's "Desativar" button can turn the alert off without resending
+// the stored text -- see src/liveAlert/validateSubmission.js.
+async function handleLiveAlertUpdate(request, env) {
+  const auth = await createPasswordAuthProvider(env).requireSession(request);
+  if (!auth.authorized) return auth.response;
+
+  const payload = await readBoundedJson(request, MAX_LIVE_ALERT_BODY_BYTES);
+  if (payload === null) return new Response('Invalid JSON', { status: 400 });
+
+  const update = validateLiveAlertUpdate(payload);
+  if (update === null) return jsonResponse({ error: 'invalid-live-alert' }, 400);
+
+  const { sql, params } = buildLiveAlertUpsert(update, new Date().toISOString());
+  await env.TELEMETRY_DB.prepare(sql).bind(...params).run();
+  return jsonResponse({ success: true });
 }
 
 // Completes the profile of a Firebase-authenticated account with the
