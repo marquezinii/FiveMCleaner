@@ -756,4 +756,29 @@
   <data name="Account.PasswordReset.Sent" xml:space="preserve"><value>Se houver uma conta para este e-mail, enviamos as instruções de recuperação.</value></data>
   <data name="Account.Verification.ResentConfirmation" xml:space="preserve"><value>Reenviamos o e-mail de confirmação.</value></data>
   <data name="Account.Verification.PleaseConfirm" xml:space="preserve"><value>Confirme seu e-mail para continuar.</value></data>
+  <data name="Settings.Account.ChangePassword" xml:space="preserve"><value>Alterar senha</value></data>
+  <data name="Settings.Account.SignInButton" xml:space="preserve"><value>Entrar / Cadastre-se</value></data>
+  <data name="Settings.Account.NewEmailLabel" xml:space="preserve"><value>Novo e-mail</value></data>
+  <data name="History.Empty.Detail" xml:space="preserve"><value>Suas execuções, resultados e opções de desfazer aparecerão aqui após a primeira otimização.</value></data>
+  <data name="Settings.Tools.ReportIssue.Title" xml:space="preserve"><value>Relatar um problema</value></data>
+  <data name="Account.ViewTooltip" xml:space="preserve"><value>Ver minha conta</value></data>
+  <data name="Settings.Account.SignedOutDescription" xml:space="preserve"><value>Entre ou crie uma conta para sincronizar suas preferências.</value></data>
+  <data name="Settings.Tools.ReportIssue.Button" xml:space="preserve"><value>Relatar um bug</value></data>
+  <data name="Account.SignInButton" xml:space="preserve"><value>Entrar / Cadastre-se</value></data>
+  <data name="Account.SignInTooltip" xml:space="preserve"><value>Entrar ou criar conta</value></data>
+  <data name="History.Empty.Action" xml:space="preserve"><value>Abrir otimizador</value></data>
+  <data name="Settings.Account.ChangeEmail" xml:space="preserve"><value>Alterar e-mail</value></data>
+  <data name="Settings.Account.SignOut" xml:space="preserve"><value>Sair</value></data>
+  <data name="Settings.Account.NewPasswordLabel" xml:space="preserve"><value>Nova senha</value></data>
+  <data name="Settings.Account.Title" xml:space="preserve"><value>Conta</value></data>
+  <data name="Settings.Account.ChangePhoto" xml:space="preserve"><value>Trocar foto</value></data>
+  <data name="Settings.Account.Unavailable" xml:space="preserve"><value>O acesso à conta não está disponível nesta instalação.</value></data>
+  <data name="Report.ViewHistoryButton" xml:space="preserve"><value>Ver histórico</value></data>
+  <data name="Settings.Account.CurrentPasswordPlaceholder" xml:space="preserve"><value>Confirme para alterar sua senha, e-mail ou excluir a conta</value></data>
+  <data name="Settings.Account.Delete" xml:space="preserve"><value>Excluir conta</value></data>
+  <data name="Settings.Tools.Title" xml:space="preserve"><value>Ferramentas</value></data>
+  <data name="Settings.Account.CurrentPasswordLabel" xml:space="preserve"><value>Senha atual</value></data>
+  <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Remover</value></data>
+  <data name="Progress.CancelHelp" xml:space="preserve"><value>O cancelamento é solicitado com segurança após a ação atual.</value></data>
+  <data name="Settings.Account.NewPasswordPlaceholder" xml:space="preserve"><value>Mínimo de 8 caracteres</value></data>
 </root>

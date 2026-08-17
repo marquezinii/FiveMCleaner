@@ -756,4 +756,29 @@
   <data name="Account.PasswordReset.Sent" xml:space="preserve"><value>If there's an account for this e-mail, we sent the recovery instructions.</value></data>
   <data name="Account.Verification.ResentConfirmation" xml:space="preserve"><value>We resent the confirmation e-mail.</value></data>
   <data name="Account.Verification.PleaseConfirm" xml:space="preserve"><value>Confirm your e-mail to continue.</value></data>
+  <data name="Settings.Account.ChangePassword" xml:space="preserve"><value>Change password</value></data>
+  <data name="Settings.Account.SignInButton" xml:space="preserve"><value>Sign in / Create account</value></data>
+  <data name="Settings.Account.NewEmailLabel" xml:space="preserve"><value>New e-mail</value></data>
+  <data name="History.Empty.Detail" xml:space="preserve"><value>Your runs, results, and rollback options will appear here after the first optimization.</value></data>
+  <data name="Settings.Tools.ReportIssue.Title" xml:space="preserve"><value>Report a problem</value></data>
+  <data name="Account.ViewTooltip" xml:space="preserve"><value>View my account</value></data>
+  <data name="Settings.Account.SignedOutDescription" xml:space="preserve"><value>Sign in or create an account to sync your preferences.</value></data>
+  <data name="Settings.Tools.ReportIssue.Button" xml:space="preserve"><value>Report a bug</value></data>
+  <data name="Account.SignInButton" xml:space="preserve"><value>Sign in / Create account</value></data>
+  <data name="Account.SignInTooltip" xml:space="preserve"><value>Sign in or create an account</value></data>
+  <data name="History.Empty.Action" xml:space="preserve"><value>Open optimizer</value></data>
+  <data name="Settings.Account.ChangeEmail" xml:space="preserve"><value>Change e-mail</value></data>
+  <data name="Settings.Account.SignOut" xml:space="preserve"><value>Sign out</value></data>
+  <data name="Settings.Account.NewPasswordLabel" xml:space="preserve"><value>New password</value></data>
+  <data name="Settings.Account.Title" xml:space="preserve"><value>Account</value></data>
+  <data name="Settings.Account.ChangePhoto" xml:space="preserve"><value>Change photo</value></data>
+  <data name="Settings.Account.Unavailable" xml:space="preserve"><value>Account access is not available in this installation.</value></data>
+  <data name="Report.ViewHistoryButton" xml:space="preserve"><value>View history</value></data>
+  <data name="Settings.Account.CurrentPasswordPlaceholder" xml:space="preserve"><value>Confirm to change your password, e-mail, or delete your account</value></data>
+  <data name="Settings.Account.Delete" xml:space="preserve"><value>Delete account</value></data>
+  <data name="Settings.Tools.Title" xml:space="preserve"><value>Tools</value></data>
+  <data name="Settings.Account.CurrentPasswordLabel" xml:space="preserve"><value>Current password</value></data>
+  <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Remove</value></data>
+  <data name="Progress.CancelHelp" xml:space="preserve"><value>Cancellation is requested safely after the current action.</value></data>
+  <data name="Settings.Account.NewPasswordPlaceholder" xml:space="preserve"><value>At least 8 characters</value></data>
 </root>
