@@ -18,6 +18,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private readonly IReleaseUpdateService? releaseUpdateService;
     private readonly ISilentUpdateInstaller? silentUpdateInstaller;
     private readonly IAnonymousTelemetryService telemetry;
+    private readonly ILiveAlertService? liveAlertService;
     private readonly ILiveSystemMetricsProvider liveSystemMetricsProvider;
     private readonly ProgressTimingEstimator progressTimingEstimator = new();
     private readonly SemaphoreSlim settingsSaveGate = new(1, 1);
@@ -27,6 +28,10 @@ public sealed class MainViewModel : BindableBase, IDisposable
     // então cadências menores só se sobrepõem sem acrescentar informação.
     private static readonly TimeSpan LiveMetricsInterval = TimeSpan.FromSeconds(1);
     private const int LiveMetricsHistoryCapacity = 60;
+    // Startup check plus this cadence is "almost instant" without polling the
+    // free-tier Worker unnecessarily -- see
+    // docs/superpowers/specs/2026-08-17-live-alerts-design.md.
+    private static readonly TimeSpan LiveAlertPollInterval = TimeSpan.FromHours(1);
     private DispatcherTimer? headlineDwellTimer;
     private DateTime headlineShownAtUtc;
     private CancellationTokenSource? operationCancellation;
@@ -132,6 +137,12 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private string comparisonHardwareProfileLabel = string.Empty;
     private bool isGtaVBenchmarkRunning;
     private string gtaVBenchmarkStatusLabel = string.Empty;
+    private DispatcherTimer? liveAlertTimer;
+    private string? liveAlertId;
+    private string? dismissedLiveAlertId;
+    private bool isLiveAlertBannerVisible;
+    private bool isLiveAlertIconVisible;
+    private string liveAlertMessage = string.Empty;
 
     public MainViewModel(
         IAppOptimizationService service,
@@ -140,7 +151,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         IReleaseUpdateService? releaseUpdateService = null,
         IAnonymousTelemetryService? telemetry = null,
         ISilentUpdateInstaller? silentUpdateInstaller = null,
-        ILiveSystemMetricsProvider? liveSystemMetricsProvider = null)
+        ILiveSystemMetricsProvider? liveSystemMetricsProvider = null,
+        ILiveAlertService? liveAlertService = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
         this.localization = localization ?? LocalizationService.Current;
@@ -148,6 +160,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         this.releaseUpdateService = releaseUpdateService;
         this.silentUpdateInstaller = silentUpdateInstaller;
         this.telemetry = telemetry ?? DisabledAnonymousTelemetryService.Instance;
+        this.liveAlertService = liveAlertService;
         this.liveSystemMetricsProvider = liveSystemMetricsProvider ?? new WindowsLiveSystemMetricsProvider();
         StepLedger.CollectionChanged += (_, _) => OnPropertyChanged(nameof(HasStepLedgerItems));
         ResetLocalizedPlaceholders();
@@ -569,6 +582,35 @@ public sealed class MainViewModel : BindableBase, IDisposable
         || updatePresentationState == UpdatePresentationState.Failed
         || JustUpdatedToVersion is not null;
 
+    /// <summary>
+    /// The dismissible title-bar banner for an admin-broadcast live alert.
+    /// False once the user closes it for this specific alert id (persisted
+    /// in <see cref="AppSettings.DismissedLiveAlertId"/>), even though the
+    /// alert may still be active -- see <see cref="IsLiveAlertIconVisible"/>.
+    /// </summary>
+    public bool IsLiveAlertBannerVisible
+    {
+        get => isLiveAlertBannerVisible;
+        private set => SetProperty(ref isLiveAlertBannerVisible, value);
+    }
+
+    /// <summary>
+    /// The persistent warning-triangle icon. Stays visible for as long as
+    /// the alert is active on the server, independent of whether the banner
+    /// was dismissed.
+    /// </summary>
+    public bool IsLiveAlertIconVisible
+    {
+        get => isLiveAlertIconVisible;
+        private set => SetProperty(ref isLiveAlertIconVisible, value);
+    }
+
+    public string LiveAlertMessage
+    {
+        get => liveAlertMessage;
+        private set => SetProperty(ref liveAlertMessage, value);
+    }
+
     public bool IsUpdateDownloading
     {
         get => isUpdateDownloading;
@@ -770,6 +812,19 @@ public sealed class MainViewModel : BindableBase, IDisposable
                     CancellationToken.None,
                     TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
                     TaskScheduler.Default);
+            }
+
+            if (liveAlertService is not null)
+            {
+                _ = CheckLiveAlertAsync().ContinueWith(
+                    static t => { _ = t.Exception; },
+                    CancellationToken.None,
+                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                    TaskScheduler.Default);
+
+                liveAlertTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = LiveAlertPollInterval };
+                liveAlertTimer.Tick += (_, _) => _ = CheckLiveAlertAsync();
+                liveAlertTimer.Start();
             }
         }
         catch (Exception exception)
@@ -1007,6 +1062,62 @@ public sealed class MainViewModel : BindableBase, IDisposable
         {
             // Falha de rede na inicialização não interrompe diagnóstico nem otimização.
         }
+    }
+
+    /// <summary>
+    /// Polls the current admin-broadcast live alert. Called at startup and
+    /// then hourly by <see cref="liveAlertTimer"/> -- see
+    /// docs/superpowers/specs/2026-08-17-live-alerts-design.md. A network
+    /// failure or malformed response leaves the current banner/icon state
+    /// untouched instead of flickering it away.
+    /// </summary>
+    public async Task CheckLiveAlertAsync()
+    {
+        if (liveAlertService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var snapshot = await liveAlertService.GetCurrentAsync();
+            if (snapshot is not null)
+            {
+                ApplyLiveAlert(snapshot);
+            }
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            // Aviso ao vivo é best-effort; uma falha de rede não altera o estado atual.
+        }
+    }
+
+    private void ApplyLiveAlert(LiveAlertSnapshot snapshot)
+    {
+        liveAlertId = snapshot.Active ? snapshot.Id : null;
+        LiveAlertMessage = snapshot.Active ? snapshot.Message : string.Empty;
+        IsLiveAlertIconVisible = snapshot.Active;
+        IsLiveAlertBannerVisible = snapshot.Active
+            && !string.IsNullOrEmpty(liveAlertId)
+            && !string.Equals(liveAlertId, dismissedLiveAlertId, StringComparison.Ordinal);
+    }
+
+    /// <summary>
+    /// Closes the live-alert banner for the currently shown alert only; the
+    /// warning icon keeps showing while the alert stays active on the
+    /// server. Persisted so the banner does not reappear on the next launch.
+    /// </summary>
+    public void DismissLiveAlert()
+    {
+        if (!IsLiveAlertBannerVisible)
+        {
+            return;
+        }
+
+        IsLiveAlertBannerVisible = false;
+        dismissedLiveAlertId = liveAlertId;
+        SettingsChanged(refreshPlan: false);
     }
 
     /// <summary>
@@ -1695,6 +1806,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         telemetry.SetEnabled(shareAnonymousTelemetry);
         shareCrashReports = settings.ShareCrashReports;
         privacyConsentVersion = settings.PrivacyConsentVersion;
+        dismissedLiveAlertId = settings.DismissedLiveAlertId;
         try
         {
             launchAtStartup = startupRegistration.IsEnabled();
@@ -1879,7 +1991,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         CheckForUpdates = CheckForUpdates,
         ShareAnonymousTelemetry = ShareAnonymousTelemetry,
         ShareCrashReports = ShareCrashReports,
-        PrivacyConsentVersion = privacyConsentVersion
+        PrivacyConsentVersion = privacyConsentVersion,
+        DismissedLiveAlertId = dismissedLiveAlertId
     };
 
     private void SettingsChanged(bool refreshPlan = true)
@@ -2458,6 +2571,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         liveMetricsEnabled = false;
         liveMetricsTimer?.Stop();
         liveMetricsTimer = null;
+        liveAlertTimer?.Stop();
+        liveAlertTimer = null;
         (liveSystemMetricsProvider as IDisposable)?.Dispose();
     }
 

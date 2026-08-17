@@ -39,6 +39,14 @@ public sealed record RemoteServicesOptions
     /// </summary>
     public string? AccountProfileEndpoint { get; init; }
 
+    /// <summary>
+    /// HTTPS endpoint of the public, unauthenticated live-alert Cloudflare
+    /// Worker route (the admin-broadcast banner). Same fail-safe rule as
+    /// <see cref="TelemetryEndpoint"/>: absent or malformed means the app
+    /// simply never polls for a live alert instead of crashing.
+    /// </summary>
+    public string? LiveAlertEndpoint { get; init; }
+
     /// <summary>Public Firebase Web API key. It identifies the project but is not an administrative credential.</summary>
     public string? FirebaseApiKey { get; init; }
 
@@ -148,6 +156,7 @@ public static class RemoteServicesOptionsLoader
                 TelemetryEndpoint = overlay.TelemetryEndpoint ?? options.TelemetryEndpoint,
                 BugReportEndpoint = overlay.BugReportEndpoint ?? options.BugReportEndpoint,
                 AccountProfileEndpoint = overlay.AccountProfileEndpoint ?? options.AccountProfileEndpoint,
+                LiveAlertEndpoint = overlay.LiveAlertEndpoint ?? options.LiveAlertEndpoint,
                 FirebaseApiKey = overlay.FirebaseApiKey ?? options.FirebaseApiKey,
                 GoogleOAuthClientId = overlay.GoogleOAuthClientId ?? options.GoogleOAuthClientId,
                 GoogleOAuthClientSecret = overlay.GoogleOAuthClientSecret ?? options.GoogleOAuthClientSecret,
@@ -166,6 +175,7 @@ public static class RemoteServicesOptionsLoader
         public string? TelemetryEndpoint { get; init; }
         public string? BugReportEndpoint { get; init; }
         public string? AccountProfileEndpoint { get; init; }
+        public string? LiveAlertEndpoint { get; init; }
         public string? FirebaseApiKey { get; init; }
         public string? GoogleOAuthClientId { get; init; }
         public string? GoogleOAuthClientSecret { get; init; }

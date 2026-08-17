@@ -250,4 +250,13 @@ public sealed record AppSettings
     /// do valor dos booleanos acima. Ver <see cref="PrivacyConsentPolicy"/>.
     /// </summary>
     public int? PrivacyConsentVersion { get; init; }
+
+    /// <summary>
+    /// Id (o <c>updated_at</c> do servidor) do último aviso ao vivo que o
+    /// usuário fechou explicitamente. <see langword="null"/> significa que
+    /// nenhum aviso foi dispensado ainda. Usado só para não reexibir o
+    /// banner de um aviso já lido; o ícone de alerta no canto continua
+    /// visível enquanto o aviso seguir ativo no servidor.
+    /// </summary>
+    public string? DismissedLiveAlertId { get; init; }
 }

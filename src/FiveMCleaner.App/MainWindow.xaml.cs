@@ -87,6 +87,12 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             ? new CloudflareAccountProfileService(profileEndpoint)
             : new DisabledAccountProfileService();
 
+        // Demo runs never poll the live alert -- same trade as telemetry below.
+        ILiveAlertService? liveAlertService = !demoMode
+            && TryCreateHttpsEndpoint(remoteServicesOptions.LiveAlertEndpoint, out var liveAlertEndpoint)
+                ? new CloudflareLiveAlertService(liveAlertEndpoint)
+                : null;
+
         // Demo runs never talk to Google: an unconfigured client reports
         // IsConfigured=false and the account window hides the button.
         googleOAuth = new GoogleOAuthClient(
@@ -116,7 +122,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             startupRegistration: startupRegistration,
             releaseUpdateService: releaseUpdateService,
             telemetry: telemetry.Service,
-            silentUpdateInstaller: silentUpdateInstaller);
+            silentUpdateInstaller: silentUpdateInstaller,
+            liveAlertService: liveAlertService);
         if (!string.IsNullOrWhiteSpace(commandLine.JustUpdatedVersion))
         {
             viewModel.ReportCompletedUpdate(commandLine.JustUpdatedVersion);
@@ -859,6 +866,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             UseShellExecute = true
         }));
     }
+
+    private void LiveAlertDismiss_Click(object sender, RoutedEventArgs e) => viewModel.DismissLiveAlert();
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
