@@ -130,20 +130,7 @@ internal static class Program
         if (pidText is null && startText is null) return;
         if (!int.TryParse(pidText, out var pid) || pid <= 0 || !long.TryParse(startText, out var expectedStart) || expectedStart <= 0)
             throw new InvalidDataException("Identidade do processo anterior inválida.");
-        try
-        {
-            using var parent = Process.GetProcessById(pid);
-            if (parent.StartTime.ToUniversalTime().ToFileTimeUtc() == expectedStart
-                && !parent.WaitForExit(30_000))
-                throw new TimeoutException("O FiveMCleaner anterior não encerrou a tempo.");
-        }
-        // O processo anterior pode sair entre GetProcessById e a leitura de
-        // StartTime: o Windows recusa o acesso ao processo já encerrado
-        // (Win32Exception) ou nega a propriedade (InvalidOperationException),
-        // o mesmo caso "já se foi" que ArgumentException já tratava.
-        catch (ArgumentException) { }
-        catch (Win32Exception) { }
-        catch (InvalidOperationException) { }
+        ParentProcessWait.WaitForExit(pid, expectedStart, 30_000, "O FiveMCleaner anterior não encerrou a tempo.");
     }
 
     private static Task RecordAsync(

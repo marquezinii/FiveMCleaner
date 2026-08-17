@@ -37,7 +37,16 @@ public sealed class RecoveryCoordinator
         {
             return RecoveryDecision.Pending;
         }
-        if (activeVersion != transaction.CandidateVersion) return RecoveryDecision.Pending;
+        if (activeVersion != transaction.CandidateVersion)
+        {
+            // O ponteiro ativo já foi movido por outro caminho (ex.: correção
+            // de piso anti-downgrade em Launcher/Program.cs) sem passar por
+            // este journal. Esta transação nunca mais vai casar com o ativo,
+            // então mantê-la pendente para sempre a deixaria órfã -- completar
+            // aqui é o mesmo tratamento que Abandon já dá a esse caso.
+            journal.Complete();
+            return RecoveryDecision.Pending;
+        }
         if (transaction.CandidateLaunchedAtUtc is null
             || nowUtc - transaction.CandidateLaunchedAtUtc < healthTimeout) return RecoveryDecision.Pending;
         activation.Activate(transaction.PreviousVersion);
