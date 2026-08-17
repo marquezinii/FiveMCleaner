@@ -318,6 +318,10 @@
   <data name="BugReport.Send.NotConfirmed" xml:space="preserve"><value>El servicio de entrega no confirmó la recepción. Copia el reporte e intenta de nuevo más tarde.</value></data>
   <data name="BugReport.Send.UnexpectedResponse" xml:space="preserve"><value>El servicio devolvió una respuesta inesperada. Copia el reporte e intenta de nuevo más tarde.</value></data>
   <data name="BugReport.Send.Accepted" xml:space="preserve"><value>El servicio de entrega recibió el reporte.</value></data>
+  <data name="BugReport.BugCode.Label" xml:space="preserve"><value>Código del error *</value></data>
+  <data name="BugReport.BugCode.Tooltip" xml:space="preserve"><value>Selecciona la categoría de error que mejor coincida con el problema</value></data>
+  <data name="BugReport.Validation.BugCode" xml:space="preserve"><value>Selecciona un código de error.</value></data>
+  <data name="BugReport.Clipboard.BugCode" xml:space="preserve"><value>Código del error: {0}</value></data>
   <data name="Streaming.Readiness.Protected.Title" xml:space="preserve"><value>La protección de streaming está activa</value></data>
   <data name="Streaming.Readiness.Protected.Detail" xml:space="preserve"><value>Hay una app de streaming abierta. FiveMCleaner la preserva; confirma tu estado de transmisión antes de optimizar.</value></data>
   <data name="Streaming.Readiness.Attention.Title" xml:space="preserve"><value>Haz una prueba antes de salir en vivo</value></data>

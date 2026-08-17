@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using FiveMCleaner.App.Services;
+using FiveMCleaner.Contracts;
 using FiveMCleaner.UpdateRuntime;
 
 namespace FiveMCleaner.Launcher;
@@ -151,7 +153,7 @@ internal static class Program
         string outcome, string code, string? detail, string dataRoot, bool telemetryAuthorized) =>
         diagnostics.RecordAsync(
             new UpdaterEvent(transaction.Id, stage, outcome, code, transaction.PreviousVersion,
-                transaction.CandidateVersion, "Production"),
+                transaction.CandidateVersion, "Production", BugCodeClassifier.ClassifyUpdaterException(new Exception(code), stage)),
             detail,
             telemetryAuthorized);
 

@@ -318,6 +318,10 @@
   <data name="BugReport.Send.NotConfirmed" xml:space="preserve"><value>O serviço de entrega não confirmou o recebimento. Copie o relato e tente novamente depois.</value></data>
   <data name="BugReport.Send.UnexpectedResponse" xml:space="preserve"><value>O serviço respondeu em um formato inesperado. Copie o relato e tente novamente depois.</value></data>
   <data name="BugReport.Send.Accepted" xml:space="preserve"><value>O serviço de entrega recebeu o relato.</value></data>
+  <data name="BugReport.BugCode.Label" xml:space="preserve"><value>Código do bug *</value></data>
+  <data name="BugReport.BugCode.Tooltip" xml:space="preserve"><value>Selecione a categoria do bug que melhor corresponde ao problema</value></data>
+  <data name="BugReport.Validation.BugCode" xml:space="preserve"><value>Selecione um código de bug.</value></data>
+  <data name="BugReport.Clipboard.BugCode" xml:space="preserve"><value>Código do bug: {0}</value></data>
   <data name="Streaming.Readiness.Protected.Title" xml:space="preserve"><value>Proteção para transmissão ativa</value></data>
   <data name="Streaming.Readiness.Protected.Detail" xml:space="preserve"><value>Um aplicativo de transmissão está aberto. O FiveMCleaner o preserva; confirme o estado da sua live antes de otimizar.</value></data>
   <data name="Streaming.Readiness.Attention.Title" xml:space="preserve"><value>Faça um teste antes de entrar ao vivo</value></data>

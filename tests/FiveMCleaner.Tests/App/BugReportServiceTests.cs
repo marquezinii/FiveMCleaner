@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Text.Json;
 using FiveMCleaner.App.Services;
+using FiveMCleaner.Contracts;
 using Xunit;
 
 namespace FiveMCleaner.Tests.App;
@@ -137,6 +138,7 @@ public sealed class CloudflareBugReportServiceTests
     {
         ReportId = Guid.NewGuid(),
         Category = "Falha na otimização",
+        BugCode = BugCode.APP_OPT_ACTION_EXECUTION,
         Summary = "O preset não terminou",
         Description = "Ao aplicar o perfil médio, a operação parou antes da conclusão.",
         AppVersion = "1.0.0",
@@ -155,6 +157,7 @@ public sealed class DisabledBugReportServiceTests
         {
             ReportId = Guid.NewGuid(),
             Category = "x",
+            BugCode = BugCode.Unknown,
             Summary = "x",
             Description = "x",
             AppVersion = "1.0.0",
