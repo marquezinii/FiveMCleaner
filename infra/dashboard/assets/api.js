@@ -64,6 +64,21 @@ export function buildUpdaterEventsUrl(baseUrl, filters = {}) {
   return url.toString();
 }
 
+/** Reads the current live alert: `{ id, message, active }`. Public, no auth. */
+export async function getLiveAlert(baseUrl, fetchImpl = fetch) {
+  return requestJson(new URL('/live-alert', baseUrl).toString(), {}, fetchImpl);
+}
+
+/** Publishes or clears the live alert. `message` is optional (omit to only flip `active`). */
+export async function setLiveAlert(baseUrl, { message, active }, fetchImpl = fetch) {
+  const body = message === undefined ? { active } : { message, active };
+  return requestJson(new URL('/admin/live-alert', baseUrl).toString(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }, fetchImpl);
+}
+
 function applyFilters(url, filters) {
   if (filters.from) {
     url.searchParams.set('from', filters.from);
