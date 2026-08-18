@@ -54,7 +54,10 @@ public sealed class UpdaterDiagnostics
         {
             Directory.CreateDirectory(pendingRoot);
             var pendingPath = Path.Combine(pendingRoot, $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid():N}.json");
-            await File.WriteAllTextAsync(pendingPath, JsonSerializer.Serialize(value)).ConfigureAwait(false);
+            // Escrita atômica (temp + replace): o App e o Launcher podem ler/
+            // esvaziar este mesmo diretório concorrentemente, e um leitor não
+            // pode observar um JSON parcialmente escrito.
+            AtomicFile.WriteText(pendingPath, JsonSerializer.Serialize(value));
             PrunePending();
             await FlushPendingAsync(true).ConfigureAwait(false);
         }

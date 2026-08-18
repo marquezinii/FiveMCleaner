@@ -9,4 +9,7 @@
     <AssemblyName>FiveMCleaner.Updater</AssemblyName>
     <RootNamespace>FiveMCleaner.Updater</RootNamespace>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../FiveMCleaner.UpdateRuntime/FiveMCleaner.UpdateRuntime.csproj" />
+  </ItemGroup>
 </Project>
