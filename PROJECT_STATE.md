@@ -7,7 +7,7 @@
 
 - **Produto:** FiveMCleaner, aplicativo desktop Windows para otimização transparente, reversível e orientada por diagnóstico do FiveM para **GTAV Legacy**.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
-- **Último estado consolidado neste documento-fonte:** 15/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
+- **Último estado consolidado neste documento-fonte:** 18/08/2026. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
 - **Versão pública:** `v1.3.2`, publicada em 07/08/2026 a partir de `main`. Confirme tags/releases antes de iniciar uma nova publicação.
 - **Atalho de desenvolvimento:** `FiveMCleaner - Desenvolvimento` usa `scripts\Start-DevelopmentApp.ps1`. Conforme `AI_RULES.md`, deve ser reconstruído com `scripts\Install-DevelopmentShortcut.ps1 -Build` (executado a partir do checkout/worktree da própria tarefa) ao final de toda tarefa que gerar mudanças no app — isolada ou de integração —, exceto tarefas de instalador/updater. O script espelha a árvore de trabalho atual para a pasta irmã fixa `FiveMCleaner-dev-shortcut` e aponta o atalho para essa cópia estável, então ele nunca fica órfão quando um worktree de tarefa é removido após o merge.
 
@@ -71,6 +71,9 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 - Aba **Otimizador** foi reconstruída em 07/08: trilha Preparar → Executar → Resultado, cena `OptimizerCore3D`, seleção Leve/Médio/Agressivo, resumo do computador, execução/progresso e resultado redesenhados.
 - Animações novas do Otimizador evitam `ScaleTransform` em elementos interativos, seguindo a regra já adotada para impedir deslocamento de listas no hover.
 - Smoke de captura aceita seleção de página via `--capture-page=Optimizer|History|Settings|Dashboard`.
+- Painel de **Notas da Versão** (`ReleaseNotesWindow`) é exibido automaticamente após um update bem-sucedido, controlado por `ReleaseNotesEvaluator`/`ReleaseNotesCatalog` e pelo campo `LastSeenReleaseNotesVersion` das configurações (mostra de novo só quando existem notas mais recentes que a última vista).
+- Aviso ao vivo: ícone/banner no app consultam `GET /live-alert` (Worker) e mostram mensagem publicada pelo dashboard; dispensa é lembrada por `DismissedLiveAlertId` até o próximo aviso.
+- Rodada de polish de UI (17/08): responsividade, foco de teclado, indicadores de progresso, Histórico e strings de localização revisados em `MainWindow`, `HistoryPage` e `OptimizerPage`.
 
 ### Motor de otimização e diagnóstico
 
@@ -78,6 +81,7 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 - Diagnósticos cobrem FiveM/GTA, CPU, GPU, RAM, armazenamento, cache, processos, rede, pagefile/commit, drivers, monitor, HAGS, energia, WHEA, sinais de throttling e outros dados obtidos por APIs nativas/best-effort.
 - Existem diagnósticos somente leitura para gargalo provável, overlays/captura, logs do FiveM e orientação de medição pelas ferramentas oficiais do FiveM.
 - Relatório estruturado e relatório técnico sanitizado podem ser copiados/salvos explicitamente pelo usuário.
+- Relatos de bug são classificados automaticamente por `BugCodeClassifier`/`BugCode` (enum de códigos estáveis) antes do envio, para agrupar causas semelhantes no dashboard sem exigir triagem manual de texto livre.
 - Journal, snapshots e rollback preservam rastreabilidade das ações; a revalidação de planos compara integralmente os metadados de ações e usa a reconstrução canônica da requisição.
 - Ações XML de gráficos usam uma transação segura compartilhada; inspeção de processos e adaptadores de GPU têm primitivas de leitura separadas das mutações.
 - Diagnóstico de criadores reconhece OBS, Streamlabs Desktop e TikTok LIVE Studio sem fechar processos nem inferir que uma live está ativa.
@@ -97,13 +101,14 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 - FormSubmit foi removido do código de desenvolvimento. O transporte atual usa Cloudflare Worker/D1.
 - Infraestrutura registrada como ativa: `/telemetry`, `POST /bugs`, `GET /api/bugs` e `GET /live-alert`/`POST /admin/live-alert` (aviso ao vivo do dashboard para o app, painel dedicado no dashboard); relatos de bug são texto, e-mail opcional e trecho de log opcional. **Não há anexo/R2**.
 - Telemetria e crash reporting obedecem consentimento e allowlists; falhas de envio nunca devem bloquear ou alterar o resultado da otimização.
+- Serviço de telemetria anônima expõe contadores de saúde (`SuccessfulSends`, `FailedSends`, `IsHealthy`) e grava falhas best-effort em `telemetry_failures.log` na pasta local da fila, sem nunca lançar para o chamador.
 - Sentry é usado para crash reporting do aplicativo, com sanitização/configuração centralizada e sem transformar o SDK em dependência das camadas Core/Windows/Broker.
 - Dashboard administrativo possui filtros, visão de telemetria e bugs e tratamento defensivo de falhas de rede/respostas inválidas.
 
 ### Atualização e distribuição
 
 - Cadeia de atualização é independente/transacional, com staging, validações de origem/integridade, estado durável, health receipt, recuperação/rollback e proteção contra downgrade conforme documentação específica.
-- Launcher/Updater tratam locks transitórios e corridas de processo; broker e fluxos elevados possuem timeouts para evitar bloqueio indefinido.
+- Launcher/Updater tratam locks transitórios e corridas de processo; broker e fluxos elevados possuem timeouts para evitar bloqueio indefinido. Espera pelo processo pai é compartilhada entre Launcher e Updater via `ParentProcessWait` (UpdateRuntime); hashing/extração/verificação de pacote roda fora da UI thread com `CancellationToken` propagado; comparação de hash do manifesto é em tempo constante; `RecoveryCoordinator` completa journals órfãos quando o piso anti-downgrade já avançou por outro caminho.
 - Instalador Inno Setup 7 é self-contained `win-x64`, usa setup x64 e mantém tarefas como atalho e startup configuráveis no modo interativo.
 - Site público, README, instalador, manifesto/checksums e release devem permanecer coerentes com a versão realmente publicada.
 
@@ -111,23 +116,23 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 
 Somente itens ainda relevantes devem permanecer aqui. Quando resolvidos e integrados, remova-os em vez de criar uma cronologia.
 
-1. **Deploy do Worker após mudanças de conta de 06/08** — a rota `GET /account/username-available` e seu rate limit foram implementados/testados, mas o último registro informa que `wrangler deploy` dessa revisão ainda dependia de autorização remota.
-2. **Migração de contas legadas** — a migração para Firebase removeu o fluxo antigo de contas do Worker. Se existirem usuários/dados reais do sistema legado que precisem ser preservados, definir migração ou recriação/redefinição antes de uma release que dependa disso.
-3. **Avatar remoto** — avatar permanece local; backend/armazenamento remoto não foi implementado.
-4. **Validação real do Otimizador redesenhado** — estados de execução e resultado do redesign de 07/08 foram verificados visualmente com `--demo-synthetic`; uma execução real completa ainda é a prova final registrada para esses estados.
-5. **Watcher de sessão FiveM/GTA** — ajustes que precisariam ser aplicados/restaurados durante o ciclo de vida do jogo (prioridade, afinidade, core parking, timer resolution e semelhantes) continuam fora do catálogo até existir uma arquitetura segura de monitoramento e reversão mesmo se o FiveMCleaner for encerrado. Ver `docs/graphics-optimizations-backlog.md`.
-6. **GTAV Enhanced** — sem suporte operacional; requer adaptador/projeto específico antes de habilitar qualquer ação.
-7. **Branding opcional do repositório** — social preview/banner não foi definido por depender de decisão de marca; não é bloqueador técnico.
-8. **Authenticode público** — executáveis e instalador ainda não possuem assinatura de publisher confiável; a implementação depende de certificado/conta externa e deve assinar antes dos hashes e manifestos finais.
-9. **Próximas majors do frontend** — TypeScript 7 ainda excede o peer range suportado pelo `typescript-eslint` vigente, e ESLint 10 ainda não é aceito por plugins do stack Next. O estado suportado permanece TypeScript 6 e ESLint 9 até os peers oficiais convergirem.
-10. **Telemetria v5 (campos expandidos de diagnóstico) não integrada** — branch experimental `ai/telemetry/v5-expanded-fields` (worktree em `C:/Projetos/FiveMCleaner-telemetry-v5`) adiciona colunas ao `schema.sql` do D1 e as lê em `infra/cloudflare-worker/src/stats/queries.js`, mas o `INSERT INTO telemetry_events` em `infra/cloudflare-worker/src/index.js` nunca foi atualizado para gravar os novos campos, e não existe migration em `infra/cloudflare-worker/migrations/` para aplicar as colunas ao D1 já em produção. Antes de integrar: completar o caminho de ingestão, adicionar migration aditiva e validar compatibilidade com o D1 em produção.
-11. **Dívida técnica — arquivos/classes grandes sem divisão estrutural** — levantamento de 15/08/2026 identificou três candidatos a split (sem mudança de comportamento), deixados para uma sessão dedicada por serem diffs grandes/arriscados: `src/FiveMCleaner.App/ViewModels/MainViewModel.cs` (~2600 linhas, ~130 campos, sem `partial`/regions, mistura métricas ao vivo, update, conta e configurações); `src/FiveMCleaner.App/MainWindow.xaml.cs` (~1000 linhas de code-behind cobrindo navegação, conta, tema, bandeja, privacidade e ciclo de vida); `website/app/page.tsx` (~950 linhas, landing page inteira sem componentização por seção). A duplicação de `StubHandler` nos testes de conta, encontrada no mesmo levantamento, já foi consolidada em `SharedTestDoubles.cs`.
+1. **Migração de contas legadas** — a migração para Firebase removeu o fluxo antigo de contas do Worker. Se existirem usuários/dados reais do sistema legado que precisem ser preservados, definir migração ou recriação/redefinição antes de uma release que dependa disso.
+2. **Avatar remoto** — avatar permanece local; backend/armazenamento remoto não foi implementado.
+3. **Validação real do Otimizador redesenhado** — estados de execução e resultado do redesign de 07/08 foram verificados visualmente com `--demo-synthetic`; uma execução real completa ainda é a prova final registrada para esses estados.
+4. **Watcher de sessão FiveM/GTA** — ajustes que precisariam ser aplicados/restaurados durante o ciclo de vida do jogo (prioridade, afinidade, core parking, timer resolution e semelhantes) continuam fora do catálogo até existir uma arquitetura segura de monitoramento e reversão mesmo se o FiveMCleaner for encerrado. Ver `docs/graphics-optimizations-backlog.md`.
+5. **GTAV Enhanced** — sem suporte operacional; requer adaptador/projeto específico antes de habilitar qualquer ação.
+6. **Branding opcional do repositório** — social preview/banner não foi definido por depender de decisão de marca; não é bloqueador técnico.
+7. **Authenticode público** — executáveis e instalador ainda não possuem assinatura de publisher confiável; a implementação depende de certificado/conta externa e deve assinar antes dos hashes e manifestos finais.
+8. **Próximas majors do frontend** — TypeScript 7 ainda excede o peer range suportado pelo `typescript-eslint` vigente, e ESLint 10 ainda não é aceito por plugins do stack Next. O estado suportado permanece TypeScript 6 e ESLint 9 até os peers oficiais convergirem.
+9. **Telemetria v5 (campos expandidos de diagnóstico) não integrada** — branch experimental `ai/telemetry/v5-expanded-fields` (worktree em `C:/Projetos/FiveMCleaner-telemetry-v5`) adiciona colunas ao `schema.sql` do D1 e as lê em `infra/cloudflare-worker/src/stats/queries.js`, mas o `INSERT INTO telemetry_events` em `infra/cloudflare-worker/src/index.js` nunca foi atualizado para gravar os novos campos, e não existe migration em `infra/cloudflare-worker/migrations/` para aplicar as colunas ao D1 já em produção. Antes de integrar: completar o caminho de ingestão, adicionar migration aditiva e validar compatibilidade com o D1 em produção.
+10. **Dívida técnica — arquivos/classes grandes sem divisão estrutural** — levantamento de 15/08/2026 identificou três candidatos a split (sem mudança de comportamento), deixados para uma sessão dedicada por serem diffs grandes/arriscados: `src/FiveMCleaner.App/ViewModels/MainViewModel.cs` (~2800 linhas, cresceu com métricas de telemetria, notas de versão e aviso ao vivo), `src/FiveMCleaner.App/MainWindow.xaml.cs` (~1100 linhas de code-behind cobrindo navegação, conta, tema, bandeja, privacidade, ciclo de vida, notas de versão e aviso ao vivo); `website/app/page.tsx` (~950 linhas, landing page inteira sem componentização por seção).
+11. **Vulnerabilidades reportadas pelo Dependabot no repositório** — o GitHub reporta 11 alertas (3 high, 8 moderate) na branch padrão; nenhuma foi triada nesta rodada de integração. Ver `https://github.com/marquezinii/FiveMCleaner/security/dependabot` antes da próxima publicação.
 
 ## 6. Baseline de validação registrada
 
 Estes números são **referência histórica do último estado validado**, não substituem testes da branch atual.
 
-- **15/08/2026:** no estado integrado atual (`dev/proxima-versao`), restore e build .NET Release sem warnings, **848 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` foram aprovados. Integração desta rodada: redesenho de interface e correções visuais da Visão Geral/Otimizador/Histórico, correção de bugs críticos do updater (telemetria de falha respeitando consentimento real, recuperação de manifesto corrompido/adulterado no `RuntimePackageStager`, correção da proteção anti-downgrade do `VersionFloorStore`) e lazy-load das páginas pesadas de inicialização. Site/Worker/dashboard não foram tocados nesta rodada; último baseline registrado dessas superfícies: site com audit sem vulnerabilidades, lint, typecheck, export estático e 3 testes; Worker com audit sem vulnerabilidades e 161 testes; dashboard com audit sem vulnerabilidades e 44 testes. Os PRs integrados também passaram pelos gates oficiais de CI (.NET, site, Worker, dashboard e SBOM).
+- **18/08/2026:** integração de 6 PRs em `dev/proxima-versao` (updater: extração de `ParentProcessWait`, hashing/verificação fora da UI thread, comparação de hash em tempo constante, reconciliação de journal órfão; métricas de saúde de telemetria com log local de falhas; classificação automática de relatos de bug por `BugCode`; painel de Notas da Versão pós-update; aviso ao vivo dashboard→app; polish de responsividade/foco/progresso/Histórico/localização; remoção de campo morto). Duas PRs paralelas do updater eram diffs idênticos (uma continha a outra); a redundante foi fechada sem merge, sem perda de conteúdo. Após integração: restore e build .NET Release sem warnings, **888 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` aprovados; Worker com **175 testes**; dashboard com **47 testes**; site não tocado nesta rodada (último baseline: audit sem vulnerabilidades, lint, typecheck, export estático e 3 testes). CI oficial (.NET, site, Worker, dashboard, SBOM) passou em `dev/proxima-versao` após o push final.
 
 Ao alterar uma superfície, execute a validação aplicável novamente e use os resultados atuais no PR. Nunca use estes números para afirmar que código posterior foi testado.
 
