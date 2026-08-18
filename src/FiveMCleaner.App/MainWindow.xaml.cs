@@ -314,6 +314,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         if (!demoMode)
         {
             await ShowPrivacyConsentIfNeededAsync();
+            await ShowReleaseNotesIfNeededAsync();
             InitializeCrashReportingIfAuthorized();
             await FlushPendingTelemetryIfAnyAsync();
         }
@@ -487,6 +488,43 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         };
         consentWindow.ShowDialog();
         await viewModel.ConfirmPrivacyConsentAsync(consentWindow.AcceptedAnonymousTelemetry);
+    }
+
+    /// <summary>
+    /// Shows the informational, non-blocking "What's New" panel when
+    /// <see cref="MainViewModel.PendingReleaseNotes"/> (computed once, right
+    /// after settings finish loading in
+    /// <see cref="MainViewModel.InitializeAsync"/>) says this version has
+    /// notes the user has not seen yet. Persistence only happens after the
+    /// panel is actually closed, so a crash before that point leaves the
+    /// notes unseen and they are shown again next launch. When there is
+    /// nothing to show but the evaluator still wants the current version
+    /// recorded as a baseline (brand-new installation, or a version with no
+    /// catalog entry), that happens immediately instead. Demo mode never
+    /// shows this screen, for the same reason it never shows the privacy
+    /// consent screen: it never persists settings, and smoke tests must not
+    /// hang on a modal.
+    /// </summary>
+    private async Task ShowReleaseNotesIfNeededAsync()
+    {
+        var decision = viewModel.PendingReleaseNotes;
+        if (decision is null)
+        {
+            return;
+        }
+
+        if (decision.ShouldShow && decision.Entry is not null)
+        {
+            var releaseNotesWindow = new ReleaseNotesWindow(decision.Entry) { Owner = this };
+            releaseNotesWindow.ShowDialog();
+            await viewModel.ConfirmReleaseNotesSeenAsync(decision.Entry.Version);
+            return;
+        }
+
+        if (decision.ShouldRecordSilently)
+        {
+            await viewModel.ConfirmReleaseNotesSeenAsync(viewModel.AppVersion);
+        }
     }
 
     /// <summary>

@@ -16,7 +16,8 @@ public sealed partial class LocalizedInterfaceContractTests
         {
             Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"),
             Path.Combine(root, "src", "FiveMCleaner.App", "Views", "BugReportWindow.xaml"),
-            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "PrivacyConsentWindow.xaml")
+            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "PrivacyConsentWindow.xaml"),
+            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "ReleaseNotesWindow.xaml")
         };
         var keys = sources
             .SelectMany(path => LocalizedKeyPattern().Matches(File.ReadAllText(path)))
@@ -100,6 +101,36 @@ public sealed partial class LocalizedInterfaceContractTests
             "FiveMCleaner.App",
             "Views",
             "PrivacyConsentWindow.xaml.cs"));
+        var keys = LocalizedCodeKeyPattern()
+            .Matches(source)
+            .Select(match => match.Groups["key"].Value)
+            .ToSortedSet(StringComparer.Ordinal);
+        var english = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+        var portuguese = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+        var spanish = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo("es"));
+
+        Assert.NotEmpty(keys);
+        foreach (var key in keys)
+        {
+            Assert.NotEqual(key, english.GetString(key));
+            Assert.NotEqual(key, portuguese.GetString(key));
+            Assert.NotEqual(key, spanish.GetString(key));
+        }
+    }
+
+    [Fact]
+    public void ReleaseNotesCodeBehind_LocalizationKeysResolve()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Views",
+            "ReleaseNotesWindow.xaml.cs"));
         var keys = LocalizedCodeKeyPattern()
             .Matches(source)
             .Select(match => match.Groups["key"].Value)

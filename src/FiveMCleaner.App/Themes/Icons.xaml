@@ -34,6 +34,8 @@
 
     <Geometry x:Key="IconTrend">M 3.4,16.6 L 9,11 L 13,15 L 20.6,7.4 M 20.6,7.4 H 15.4 M 20.6,7.4 V 12.6</Geometry>
 
+    <Geometry x:Key="IconMinus">M 5,12 H 19</Geometry>
+
     <!--
         Logomarca oficial do Discord (traçado simplificado, mesmo usado no
         site público). Ao contrário dos demais ícones deste dicionário, este
