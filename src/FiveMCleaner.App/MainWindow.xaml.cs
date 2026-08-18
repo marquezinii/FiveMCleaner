@@ -279,7 +279,25 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             ConfirmUpdateHealthIfRequested();
         }
 
-        await viewModel.InitializeAsync();
+        try
+        {
+            await viewModel.InitializeAsync();
+        }
+        catch
+        {
+            // O recibo já foi confirmado acima (por desenho, antes da
+            // inicialização terminar). Se a própria inicialização falhar
+            // logo em seguida, invalidar o recibo garante que o launcher
+            // ainda enxergue esta versão como não confirmada e possa
+            // reverter dentro da janela de saúde, em vez de confiar num
+            // recibo escrito antes da falha.
+            if (!demoMode)
+            {
+                InvalidateUpdateHealthReceiptIfRequested();
+            }
+
+            throw;
+        }
         if (accountService is not null)
         {
             _ = RestoreAccountSessionQuietlyAsync();
@@ -458,6 +476,18 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         {
             // A falha preserva o app ativo; a próxima consulta de update falha
             // fechada ao não conseguir validar o piso DPAPI.
+        }
+    }
+
+    private static void InvalidateUpdateHealthReceiptIfRequested()
+    {
+        var runtimeRoot = RuntimeLayout.Resolve(AppContext.BaseDirectory).RuntimeRoot;
+        if (runtimeRoot is null) return;
+        try { new UpdateHealthReceiptStore(runtimeRoot).Invalidate(); }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
+        {
+            // Melhor esforço: se não for possível invalidar aqui, a
+            // reverificação do launcher na próxima abertura é o fallback.
         }
     }
 
