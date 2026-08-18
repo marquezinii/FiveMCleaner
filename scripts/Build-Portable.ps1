@@ -4,7 +4,14 @@ param(
     [string]$Runtime = 'win-x64',
 
     [ValidateSet('Debug', 'Release')]
-    [string]$Configuration = 'Release'
+    [string]$Configuration = 'Release',
+
+    # Public release hardening. When set, the internal-logic assemblies
+    # (FiveMCleaner.Core / FiveMCleaner.Windows) are obfuscated in the published
+    # output BEFORE any checksum, so the runtime ZIP, broker SHA256SUMS, release
+    # manifest and signed update manifest all cover the hardened binaries.
+    # Off by default: development and CI test builds stay un-obfuscated.
+    [switch]$Harden
 )
 
 Set-StrictMode -Version Latest
@@ -67,6 +74,20 @@ try {
         )
         & dotnet @publishArguments
         if ($LASTEXITCODE -ne 0) { throw "$($target.Name) publish failed." }
+    }
+
+    if ($Harden) {
+        # Harden the loose assemblies now, while they are still the raw publish
+        # output. Everything downstream (broker copy, both SHA256SUMS files, the
+        # runtime/portable ZIPs and every hash the release workflow signs)
+        # derives from these files, so obfuscating here is what makes the signed,
+        # shipped runtime the obfuscated one. The Launcher single-file bundle is
+        # intentionally not hardened here (see docs/release-hardening.md).
+        $mappingRoot = Join-Path $artifactsRoot 'obfuscation-maps'
+        & (Join-Path $PSScriptRoot 'Invoke-Obfuscation.ps1') -PublishDirectory $brokerOutput -MappingOutputDirectory $mappingRoot
+        if ($LASTEXITCODE -ne 0) { throw 'Broker obfuscation failed.' }
+        & (Join-Path $PSScriptRoot 'Invoke-Obfuscation.ps1') -PublishDirectory $appOutput -MappingOutputDirectory $mappingRoot
+        if ($LASTEXITCODE -ne 0) { throw 'App obfuscation failed.' }
     }
 
     $copiedBroker = Join-Path $appOutput 'broker'
