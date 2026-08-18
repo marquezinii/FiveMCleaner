@@ -24,6 +24,23 @@ export const ALLOWED_PROFILES = new Set(['Light', 'Balanced', 'Aggressive']);
 
 export const ALLOWED_RAM_BUCKETS_GIB = new Set([2, 4, 8, 16, 32, 64, 128, 256]);
 
+// v5: expanded diagnostic fields. No client sends these yet -- this is
+// forward-compatible plumbing (validation, storage, migration) for a future
+// client change, kept optional/nullable so today's client keeps working
+// unmodified. See PROJECT_STATE.md item 9.
+export const ALLOWED_GTA_EDITIONS = new Set(['Legacy', 'Enhanced', 'Unknown']);
+
+export const ALLOWED_DISK_TYPES = new Set(['HDD', 'SSD', 'NVMe', 'Unknown']);
+
+export const ALLOWED_FREE_SPACE_GIB_BUCKETS = new Set([0, 10, 50, 100, 250]);
+
+export const ALLOWED_DAYS_SINCE_LAST_RUN_BUCKETS = new Set([0, 2, 8, 30]);
+
+export const ALLOWED_PROCESS_COUNT_BUCKETS = new Set([0, 1, 4]);
+
+export const MAX_OPTIMIZATION_TARGET_COUNT = 100_000;
+export const MAX_WINDOWS_BUILD = 99_999;
+
 export const MAX_APP_VERSION_LENGTH = 32;
 export const MAX_SHORT_FIELD_LENGTH = 128;
 export const MAX_ACTION_IDS = 30;
@@ -76,6 +93,18 @@ export function validateEvent(event) {
     ramBucketGiB,
     profile,
     actionIds,
+    fiveMInstallDetected,
+    gtaEdition,
+    optimizationTargetCount,
+    windowsBuild,
+    diskType,
+    freeSpaceGiBBucket,
+    runTimestamp,
+    daysSinceLastRunBucket,
+    backupCreated,
+    backupRestored,
+    elevationUsed,
+    processCountAtStart,
   } = event;
 
   if (typeof eventName !== 'string' || !ALLOWED_EVENT_NAMES.has(eventName)) {
@@ -153,6 +182,67 @@ export function validateEvent(event) {
     normalizedActionIds = actionIds;
   }
 
+  if (fiveMInstallDetected !== undefined && fiveMInstallDetected !== null &&
+      typeof fiveMInstallDetected !== 'boolean') {
+    return null;
+  }
+
+  if (gtaEdition !== undefined && gtaEdition !== null &&
+      (typeof gtaEdition !== 'string' || !ALLOWED_GTA_EDITIONS.has(gtaEdition))) {
+    return null;
+  }
+
+  if (optimizationTargetCount !== undefined && optimizationTargetCount !== null) {
+    if (typeof optimizationTargetCount !== 'number' || !Number.isInteger(optimizationTargetCount) ||
+        optimizationTargetCount < 0 || optimizationTargetCount > MAX_OPTIMIZATION_TARGET_COUNT) {
+      return null;
+    }
+  }
+
+  if (windowsBuild !== undefined && windowsBuild !== null) {
+    if (typeof windowsBuild !== 'number' || !Number.isInteger(windowsBuild) ||
+        windowsBuild < 0 || windowsBuild > MAX_WINDOWS_BUILD) {
+      return null;
+    }
+  }
+
+  if (diskType !== undefined && diskType !== null &&
+      (typeof diskType !== 'string' || !ALLOWED_DISK_TYPES.has(diskType))) {
+    return null;
+  }
+
+  if (freeSpaceGiBBucket !== undefined && freeSpaceGiBBucket !== null &&
+      !ALLOWED_FREE_SPACE_GIB_BUCKETS.has(freeSpaceGiBBucket)) {
+    return null;
+  }
+
+  if (runTimestamp !== undefined && runTimestamp !== null &&
+      (typeof runTimestamp !== 'string' || !Number.isFinite(Date.parse(runTimestamp)))) {
+    return null;
+  }
+
+  if (daysSinceLastRunBucket !== undefined && daysSinceLastRunBucket !== null &&
+      !ALLOWED_DAYS_SINCE_LAST_RUN_BUCKETS.has(daysSinceLastRunBucket)) {
+    return null;
+  }
+
+  if (backupCreated !== undefined && backupCreated !== null && typeof backupCreated !== 'boolean') {
+    return null;
+  }
+
+  if (backupRestored !== undefined && backupRestored !== null && typeof backupRestored !== 'boolean') {
+    return null;
+  }
+
+  if (elevationUsed !== undefined && elevationUsed !== null && typeof elevationUsed !== 'boolean') {
+    return null;
+  }
+
+  if (processCountAtStart !== undefined && processCountAtStart !== null &&
+      !ALLOWED_PROCESS_COUNT_BUCKETS.has(processCountAtStart)) {
+    return null;
+  }
+
   return {
     eventName,
     executionTimeMs: Math.trunc(executionTimeMs),
@@ -166,6 +256,18 @@ export function validateEvent(event) {
     ramBucketGiB: ramBucketGiB ?? null,
     profile: profile ?? null,
     actionIds: normalizedActionIds,
+    fiveMInstallDetected: fiveMInstallDetected ?? null,
+    gtaEdition: gtaEdition ?? null,
+    optimizationTargetCount: optimizationTargetCount ?? null,
+    windowsBuild: windowsBuild ?? null,
+    diskType: diskType ?? null,
+    freeSpaceGiBBucket: freeSpaceGiBBucket ?? null,
+    runTimestamp: runTimestamp ?? null,
+    daysSinceLastRunBucket: daysSinceLastRunBucket ?? null,
+    backupCreated: backupCreated ?? null,
+    backupRestored: backupRestored ?? null,
+    elevationUsed: elevationUsed ?? null,
+    processCountAtStart: processCountAtStart ?? null,
   };
 }
 
