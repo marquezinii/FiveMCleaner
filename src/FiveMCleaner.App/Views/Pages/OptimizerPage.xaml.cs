@@ -108,6 +108,14 @@ public partial class OptimizerPage : UserControl
         (Window.GetWindow(this) as MainWindow)?.RequestCancelOptimization();
     }
 
+    private void OpenHistory_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow shell)
+        {
+            shell.RequestNavigateToHistory();
+        }
+    }
+
     private void CopyTechnicalReport_Click(object sender, RoutedEventArgs e)
     {
         ViewModel?.CopyTechnicalReport();

@@ -79,8 +79,10 @@
                         Visibility="{Binding HistoryItems.Count, Converter={StaticResource CollectionEmptyToVisibilityConverter}}">
                 <Path Width="48" Height="48" Data="{StaticResource IconCoreSilhouette}" Stroke="{DynamicResource TextTertiaryBrush}" StrokeThickness="1.5"
                       HorizontalAlignment="Center" Opacity="0.5" />
-                <TextBlock Text="{Binding [History.LocalRuns], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" HorizontalAlignment="Center" Margin="0,16,0,0" TextAlignment="Center" />
+                <TextBlock Text="{Binding [History.Empty.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" HorizontalAlignment="Center" Margin="0,16,0,0" TextAlignment="Center" />
                 <TextBlock Text="{Binding [History.Empty.Summary], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" HorizontalAlignment="Center" Margin="0,6,0,0" TextAlignment="Center" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding [History.Empty.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,8,0,0" TextAlignment="Center" TextWrapping="Wrap" />
+                <Button Content="{Binding [History.Empty.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Center" Margin="0,16,0,0" Click="OpenOptimizer_Click" />
             </StackPanel>
         </Grid>
     </Grid>

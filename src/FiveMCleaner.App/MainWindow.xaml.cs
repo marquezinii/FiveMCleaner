@@ -359,7 +359,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         if (accountService is null)
         {
-            System.Windows.MessageBox.Show("O acesso à conta não está disponível nesta instalação.", "Conta", MessageBoxButton.OK, MessageBoxImage.Information);
+            System.Windows.MessageBox.Show(LocalizationService.Current.GetString("Settings.Account.Unavailable"), LocalizationService.Current.GetString("Settings.Account.Title"), MessageBoxButton.OK, MessageBoxImage.Information);
             return;
         }
 
@@ -387,8 +387,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private void UpdateAccountButton()
     {
         var profile = accountService?.Current.User;
-        AccountLabel.Text = profile?.DisplayName ?? "Entrar / Cadastre-se";
-        AccountButton.ToolTip = profile is null ? "Entrar ou criar conta" : "Ver minha conta";
+        AccountLabel.Text = profile?.DisplayName ?? LocalizationService.Current.GetString("Account.SignInButton");
+        AccountButton.ToolTip = profile is null ? LocalizationService.Current.GetString("Account.SignInTooltip") : LocalizationService.Current.GetString("Account.ViewTooltip");
         // Also sets AccountInitials/avatar for both the header and the
         // Settings card, so a direct assignment here would just be
         // immediately overwritten.

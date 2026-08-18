@@ -106,7 +106,7 @@
             <StackPanel>
                 <TextBlock Text="{Binding [Optimizer.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" />
                 <TextBlock Text="{Binding PlanHeader}" Style="{StaticResource CaptionText}" Margin="0,6,0,0" />
-                <TextBlock Text="{Binding [Optimizer.Subtitle], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left" />
+                <TextBlock Text="{Binding [Optimizer.Subtitle], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" TextWrapping="Wrap" MaxWidth="460" HorizontalAlignment="Left" />
             </StackPanel>
             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
                 <StackPanel Margin="0,0,20,0" HorizontalAlignment="Center">
@@ -158,7 +158,7 @@
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="240" />
+                                <ColumnDefinition Width="200" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                                 <controls:SpectrumSelector x:Name="ProfileSpectrum"
@@ -200,7 +200,7 @@
                             </StackPanel>
 
                             <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <controls:CoreVisual Width="220" Height="220" Style="{StaticResource EngineCoreStyle}" IsLive="True" />
+                                <controls:CoreVisual Width="196" Height="196" Style="{StaticResource EngineCoreStyle}" IsLive="True" />
                             </Grid>
                         </Grid>
                     </Border>
@@ -210,7 +210,7 @@
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="240" />
+                                <ColumnDefinition Width="200" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0" VerticalAlignment="Center" Margin="0,0,20,0">
                                 <TextBlock Text="{Binding SelectedProfileLabel}" Style="{StaticResource SubsectionText}" />
@@ -220,24 +220,31 @@
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="Auto" />
                                     </Grid.ColumnDefinitions>
-                                    <TextBlock Grid.Column="0" Text="{Binding ProgressPercent, StringFormat={}{0}%}" Style="{StaticResource ReadoutText}" />
+                                    <TextBlock Grid.Column="0" Text="{Binding ProgressPercentLabel}" Style="{StaticResource ReadoutText}" />
                                     <StackPanel Grid.Column="2" HorizontalAlignment="Right">
                                         <TextBlock Text="{Binding ElapsedTimeLabel}" Style="{StaticResource CaptionText}" HorizontalAlignment="Right" />
                                         <TextBlock Text="{Binding RemainingTimeLabel}" Style="{StaticResource CaptionText}" HorizontalAlignment="Right" Margin="0,2,0,0" />
                                     </StackPanel>
                                 </Grid>
-                                <ProgressBar Style="{StaticResource ProgressRailStyle}" Value="{Binding ProgressPercent, Mode=OneWay}" Margin="0,10,0,0" />
+                                <ProgressBar Style="{StaticResource ProgressRailStyle}" Value="{Binding ProgressPercent, Mode=OneWay}" Margin="0,10,0,0" AutomationProperties.Name="{Binding ProgressPercentLabel}" />
 
-                                <TextBlock Text="{Binding ProgressHeadline, Mode=OneWay}" Style="{StaticResource BodyStrongText}" Margin="0,18,0,0" TextWrapping="Wrap" />
-                                <TextBlock Text="{Binding PreviousProgressHeadline, Mode=OneWay}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" TextWrapping="Wrap"
-                                           Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                <StackPanel Margin="0,18,0,0">
+                                    <TextBlock Text="{Binding [Progress.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding ProgressHeadline, Mode=OneWay}" Style="{StaticResource BodyStrongText}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding PreviousProgressHeadline, Mode=OneWay}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" TextWrapping="Wrap"
+                                               Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                                </StackPanel>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,20,0,0">
                                     <Button Style="{StaticResource DangerGhostButtonStyle}" Content="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}"
-                                            Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}" />
+                                            Click="CancelOptimization_Click" IsEnabled="{Binding CanCancel}"
+                                            AutomationProperties.Name="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}"
+                                            AutomationProperties.HelpText="{Binding [Progress.CancelHelp], Source={StaticResource LocalizedStrings}}" />
                                     <Button Style="{StaticResource LinkButtonStyle}" Content="{Binding [Optimizer.ShowDetails], Source={StaticResource LocalizedStrings}}"
-                                            Margin="10,0,0,0" Click="ToggleStepLedger_Click" />
+                                            Margin="10,0,0,0" Click="ToggleStepLedger_Click"
+                                            AutomationProperties.Name="{Binding [Optimizer.ShowDetails], Source={StaticResource LocalizedStrings}}" />
                                 </StackPanel>
+                                <TextBlock Text="{Binding [Progress.CancelHelp], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,6,0,0" TextWrapping="Wrap" />
 
                                 <ItemsControl x:Name="StepLedgerList" ItemsSource="{Binding StepLedger}" ItemTemplate="{StaticResource StepLedgerRowTemplate}"
                                               Margin="0,14,0,0" Visibility="Collapsed" MaxHeight="220">
@@ -250,7 +257,7 @@
                             </StackPanel>
 
                             <Grid Grid.Column="1" HorizontalAlignment="Center" VerticalAlignment="Center">
-                                <controls:CoreVisual Width="220" Height="220" Style="{StaticResource EngineCoreStyle}" IsLive="True" />
+                                <controls:CoreVisual Width="148" Height="148" Style="{StaticResource EngineCoreStyle}" IsLive="True" />
                             </Grid>
                         </Grid>
                     </Border>
@@ -326,6 +333,8 @@
                             <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
                                 <Button Style="{StaticResource SecondaryButtonStyle}" Content="{Binding [Report.CopyButton], Source={StaticResource LocalizedStrings}}" Click="CopyTechnicalReport_Click" />
                                 <Button Style="{StaticResource SecondaryButtonStyle}" Content="{Binding [Report.SaveButton], Source={StaticResource LocalizedStrings}}" Margin="10,0,0,0" Click="SaveTechnicalReport_Click" IsEnabled="{Binding CanShareReport}" />
+                                <Button Style="{StaticResource LinkButtonStyle}" Content="{Binding [Report.ViewHistoryButton], Source={StaticResource LocalizedStrings}}" Margin="10,0,0,0" Click="OpenHistory_Click" />
+                                <Button Style="{StaticResource LinkButtonStyle}" Content="{Binding [Report.ViewHistoryButton], Source={StaticResource LocalizedStrings}}" Margin="10,0,0,0" Click="OpenHistory_Click" />
                             </StackPanel>
 
                             <!-- Falhas primeiro, sempre — nunca ler como sucesso quando há falha real. -->

@@ -770,4 +770,29 @@
   <data name="Account.PasswordReset.Sent" xml:space="preserve"><value>Si existe una cuenta para este correo, enviamos las instrucciones de recuperación.</value></data>
   <data name="Account.Verification.ResentConfirmation" xml:space="preserve"><value>Reenviamos el correo de confirmación.</value></data>
   <data name="Account.Verification.PleaseConfirm" xml:space="preserve"><value>Confirma tu correo para continuar.</value></data>
+  <data name="Settings.Account.ChangePassword" xml:space="preserve"><value>Cambiar contraseña</value></data>
+  <data name="Settings.Account.SignInButton" xml:space="preserve"><value>Iniciar sesión / Crear cuenta</value></data>
+  <data name="Settings.Account.NewEmailLabel" xml:space="preserve"><value>Nuevo correo</value></data>
+  <data name="History.Empty.Detail" xml:space="preserve"><value>Tus ejecuciones, resultados y opciones para deshacer aparecerán aquí después de la primera optimización.</value></data>
+  <data name="Settings.Tools.ReportIssue.Title" xml:space="preserve"><value>Informar un problema</value></data>
+  <data name="Account.ViewTooltip" xml:space="preserve"><value>Ver mi cuenta</value></data>
+  <data name="Settings.Account.SignedOutDescription" xml:space="preserve"><value>Inicia sesión o crea una cuenta para sincronizar tus preferencias.</value></data>
+  <data name="Settings.Tools.ReportIssue.Button" xml:space="preserve"><value>Informar un error</value></data>
+  <data name="Account.SignInButton" xml:space="preserve"><value>Iniciar sesión / Crear cuenta</value></data>
+  <data name="Account.SignInTooltip" xml:space="preserve"><value>Iniciar sesión o crear una cuenta</value></data>
+  <data name="History.Empty.Action" xml:space="preserve"><value>Abrir optimizador</value></data>
+  <data name="Settings.Account.ChangeEmail" xml:space="preserve"><value>Cambiar correo</value></data>
+  <data name="Settings.Account.SignOut" xml:space="preserve"><value>Cerrar sesión</value></data>
+  <data name="Settings.Account.NewPasswordLabel" xml:space="preserve"><value>Nueva contraseña</value></data>
+  <data name="Settings.Account.Title" xml:space="preserve"><value>Cuenta</value></data>
+  <data name="Settings.Account.ChangePhoto" xml:space="preserve"><value>Cambiar foto</value></data>
+  <data name="Settings.Account.Unavailable" xml:space="preserve"><value>El acceso a la cuenta no está disponible en esta instalación.</value></data>
+  <data name="Report.ViewHistoryButton" xml:space="preserve"><value>Ver historial</value></data>
+  <data name="Settings.Account.CurrentPasswordPlaceholder" xml:space="preserve"><value>Confirma para cambiar tu contraseña, correo o eliminar la cuenta</value></data>
+  <data name="Settings.Account.Delete" xml:space="preserve"><value>Eliminar cuenta</value></data>
+  <data name="Settings.Tools.Title" xml:space="preserve"><value>Herramientas</value></data>
+  <data name="Settings.Account.CurrentPasswordLabel" xml:space="preserve"><value>Contraseña actual</value></data>
+  <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Quitar</value></data>
+  <data name="Progress.CancelHelp" xml:space="preserve"><value>La cancelación se solicita de forma segura después de la acción actual.</value></data>
+  <data name="Settings.Account.NewPasswordPlaceholder" xml:space="preserve"><value>Mínimo de 8 caracteres</value></data>
 </root>

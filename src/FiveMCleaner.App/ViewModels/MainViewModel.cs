@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Globalization;
 using System.Windows.Threading;
 using FiveMCleaner.App.Services;
 using FiveMCleaner.Contracts;
@@ -332,6 +333,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
             if (SetProperty(ref progressPercent, value))
             {
                 OnPropertyChanged(nameof(ProgressIntensity));
+                OnPropertyChanged(nameof(ProgressPercentLabel));
             }
         }
     }
@@ -342,6 +344,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
     /// mesmo <see cref="ProgressPercent"/>, com um piso para que o núcleo nunca
     /// pareça parado nos primeiros segundos de uma execução que já começou.
     /// </summary>
+    public string ProgressPercentLabel => $"{Math.Round(ProgressPercent, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.CurrentCulture)}%";
+
     public double ProgressIntensity => 0.3 + (Math.Clamp(ProgressPercent / 100d, 0, 1) * 0.7);
 
     public string ProgressHeadline

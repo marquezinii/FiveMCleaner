@@ -22,6 +22,15 @@ public partial class HistoryPage : UserControl
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
 
+    private void OpenOptimizer_Click(object sender, RoutedEventArgs e)
+    {
+        if (Window.GetWindow(this) is MainWindow shell)
+        {
+            shell.RequestNavigateToOptimizer();
+        }
+    }
+
+
     private void OpenLogs_Click(object sender, RoutedEventArgs e)
     {
         if (ViewModel is not { } vm)
