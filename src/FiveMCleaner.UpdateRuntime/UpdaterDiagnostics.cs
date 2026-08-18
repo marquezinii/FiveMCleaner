@@ -4,11 +4,14 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
+using FiveMCleaner.Contracts;
+
 namespace FiveMCleaner.UpdateRuntime;
 
 public sealed record UpdaterEvent(
     string EventId, string Stage, string Outcome, string ErrorCode,
-    string? PreviousVersion, string CandidateVersion, string Environment);
+    string? PreviousVersion, string CandidateVersion, string Environment,
+    BugCode? BugCode = null);
 
 public sealed class UpdaterDiagnostics
 {

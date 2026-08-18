@@ -1,5 +1,7 @@
 using System.IO;
 
+using FiveMCleaner.Contracts;
+
 namespace FiveMCleaner.App.Services;
 
 /// <summary>
@@ -26,7 +28,8 @@ public sealed record AnonymousTelemetryEvent(
     string? GpuModel = null,
     int? RamBucketGiB = null,
     string? Profile = null,
-    IReadOnlyList<string>? ActionIds = null);
+    IReadOnlyList<string>? ActionIds = null,
+    BugCode? BugCode = null);
 
 public interface IAnonymousTelemetryService
 {

@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
+using FiveMCleaner.App.Services;
+using FiveMCleaner.Contracts;
 using FiveMCleaner.UpdateRuntime;
 
 namespace FiveMCleaner.App.Services;
@@ -88,7 +90,8 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
         diagnostics.RecordAsync(
             new UpdaterEvent(
                 Guid.NewGuid().ToString("N"), stage, "failed", code,
-                previous, update.Version.CoreVersion, "Production"),
+                previous, update.Version.CoreVersion, "Production",
+                BugCodeClassifier.ClassifyUpdaterException(exception, stage)),
             exception.ToString(),
             telemetryAuthorized: UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
 

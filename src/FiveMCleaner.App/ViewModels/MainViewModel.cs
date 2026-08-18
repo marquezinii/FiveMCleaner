@@ -1288,6 +1288,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         var completedSuccessfully = false;
         var telemetryEventName = "optimization-failed";
         string? telemetryErrorCategory = null;
+        BugCode? telemetryBugCode = null;
         try
         {
             // currentPlan é garantido não-nulo aqui: TryPrepareOptimizationRun
@@ -1295,23 +1296,37 @@ public sealed class MainViewModel : BindableBase, IDisposable
             var result = await service.ExecuteAsync(currentPlan!, progress, operationCancellation.Token);
             completedSuccessfully = result.Succeeded;
             telemetryEventName = result.Succeeded ? "optimization-completed" : "optimization-failed";
+            if (!result.Succeeded && result.Report is not null)
+            {
+                // Use the first failed action's ID for bug classification
+                var failedActionId = result.Report.Lines
+                    .Where(l => l.Outcome is ActionExecutionOutcome.Failed or ActionExecutionOutcome.RollbackFailed)
+                    .Select(l => l.ActionId)
+                    .FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(failedActionId))
+                {
+                    telemetryBugCode = BugCodeClassifier.ClassifyOptimizationException(new InvalidOperationException(), failedActionId);
+                }
+            }
             await HandleOptimizationResultAsync(result);
         }
         catch (OperationCanceledException)
         {
             telemetryEventName = "optimization-cancelled";
             telemetryErrorCategory = "cancelled";
+            telemetryBugCode = BugCode.APP_OPT_CANCELLED;
             HandleOptimizationCancelled();
         }
         catch (Exception exception)
         {
             telemetryEventName = "optimization-failed";
             telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
+            telemetryBugCode = BugCodeClassifier.ClassifyException(exception, "optimization");
             HandleOptimizationFailed();
         }
         finally
         {
-            FinalizeOptimizationRun(completedSuccessfully, telemetryEventName, telemetryErrorCategory);
+            FinalizeOptimizationRun(completedSuccessfully, telemetryEventName, telemetryErrorCategory, telemetryBugCode);
         }
     }
 
@@ -1366,11 +1381,12 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private void FinalizeOptimizationRun(
         bool completedSuccessfully,
         string telemetryEventName,
-        string? telemetryErrorCategory)
+        string? telemetryErrorCategory,
+        BugCode? bugCode = null)
     {
         var executionTime = operationStopwatch?.Elapsed ?? TimeSpan.Zero;
         StopOperationTiming(completedSuccessfully);
-        TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory);
+        TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory, bugCode);
         // operationCancellation foi atribuído antes do try em StartOptimizationAsync.
         operationCancellation!.Dispose();
         operationCancellation = null;
@@ -1926,7 +1942,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private void TrackOptimizationTelemetry(
         string eventName,
         TimeSpan executionTime,
-        string? errorCategory)
+        string? errorCategory,
+        BugCode? bugCode = null)
     {
         if (!telemetry.IsEnabled)
         {
@@ -1947,7 +1964,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
             ActionIds: ShareAnonymousTelemetry ? currentPlan?.Actions
                 .Select(action => action.Metadata.Id)
                 .Take(TelemetryEventValidator.MaxActionIds)
-                .ToArray() : null);
+                .ToArray() : null,
+            BugCode: bugCode);
         _ = TrackOptimizationTelemetryAsync(telemetryEvent);
     }
 

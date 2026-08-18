@@ -1,3 +1,5 @@
+using FiveMCleaner.Contracts;
+
 namespace FiveMCleaner.App.Services;
 
 public sealed record BugReportSubmission
@@ -8,6 +10,9 @@ public sealed record BugReportSubmission
     public required Guid ReportId { get; init; }
 
     public required string Category { get; init; }
+
+    /// <summary>Stable bug classification code for tracking and dashboard grouping.</summary>
+    public required BugCode BugCode { get; init; }
 
     public required string Summary { get; init; }
 

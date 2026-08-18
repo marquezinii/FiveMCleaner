@@ -1,5 +1,6 @@
 using System.Net.Http;
 using System.Net.Http.Json;
+using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.App.Services;
 
@@ -50,6 +51,7 @@ public sealed class CloudflareBugReportService : IBugReportService
         {
             reportId = submission.ReportId.ToString("D"),
             category = submission.Category,
+            bugCode = submission.BugCode.ToString(),
             summary = submission.Summary.Trim(),
             description = submission.Description.Trim(),
             appVersion = submission.AppVersion,
@@ -136,6 +138,11 @@ public sealed class CloudflareBugReportService : IBugReportService
         if (string.IsNullOrWhiteSpace(submission.Profile) || submission.Profile.Length > 32)
         {
             throw new ArgumentException("O perfil do relato é inválido.", nameof(submission));
+        }
+
+        if (!Enum.IsDefined(typeof(BugCode), submission.BugCode))
+        {
+            throw new ArgumentException("O código do bug é inválido.", nameof(submission));
         }
 
         if (submission.TechnicalSummary?.Length > MaxTechnicalSummaryLength)
