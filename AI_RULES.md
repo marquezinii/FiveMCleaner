@@ -403,6 +403,41 @@ Um push autorizado não permite ocultar falhas: build, testes, lint, typecheck,
 empacotamento e validação de versão devem passar, ou o bloqueio deve ser
 informado claramente.
 
+### Levantamento das mudanças integradas
+
+O passo 3 ("calcular a próxima versão... usando todas as mudanças
+efetivamente integradas desde a última tag") e o passo 4 ("atualizar...
+`CHANGELOG.md`, notas de release...") exigem um levantamento real, não uma
+lembrança aproximada do que foi feito. Antes de escrever qualquer changelog,
+nota de release ou classificar a versão, a IA que publica deve:
+
+1. determinar o intervalo exato: da última tag publicada (`git describe
+   --tags --abbrev=0` a partir de `main`, ou a versão registrada em
+   `PROJECT_STATE.md`) até o `HEAD` atual de `dev/proxima-versao`;
+2. listar **todos** os commits desse intervalo (`git log <última-tag>..HEAD
+   --oneline` em `dev/proxima-versao`) e, quando existirem, os Pull Requests
+   correspondentes — não confiar apenas na memória da sessão ou em um
+   resumo parcial de integração anterior;
+3. para cada commit/PR, identificar a mudança real por trás da mensagem
+   crua (`git show`/diff quando o resumo do commit não for autoexplicativo)
+   e classificá-la como pertencente ao produto publicado — nunca incluir
+   trabalho que ficou só em branch de tarefa não integrada, PR fechado sem
+   merge, ou revertido antes da publicação;
+4. cruzar essa lista com o que já existe em `CHANGELOG.md` para essa faixa
+   de commits, preenchendo lacunas e removendo qualquer entrada que não
+   corresponda a uma mudança realmente integrada;
+5. só então compor as entradas do `CHANGELOG.md` (histórico técnico
+   completo) e, a partir delas, o corpo da GitHub Release seguindo o
+   [Padrão das GitHub Releases](#padrão-das-github-releases-release-notes) —
+   a Release nunca é escrita "de memória" sem essa varredura, e nunca
+   contradiz o `CHANGELOG.md` correspondente.
+
+Se o histórico for grande ou abranger muitas integrações, é aceitável (e
+recomendado) delegar esse levantamento a um agente dedicado só para
+sumarizar o intervalo de commits/PRs antes de redigir o texto final —
+contanto que a IA responsável pela publicação revise e confirme o resultado
+antes de publicar, em vez de copiá-lo sem verificação.
+
 ### Sincronização após a publicação
 
 Depois de uma publicação oficial bem-sucedida, `main` e

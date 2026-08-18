@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using FiveMCleaner.App.Services;
+using FiveMCleaner.Contracts;
 using Microsoft.Win32;
 
 namespace FiveMCleaner.App.Views;
@@ -20,6 +21,7 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
     private readonly ILocalizationService localization;
     private CancellationTokenSource? sendCancellation;
     private string? category;
+    private BugCode selectedBugCode = BugCode.Unknown;
     private bool sending;
     private bool delivered;
 
@@ -35,6 +37,7 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         this.edition = edition;
         localization = LocalizationService.Current;
         InitializeComponent();
+        PopulateBugCodeComboBox();
         ConstrainToWorkArea();
         Closing += BugReportWindow_Closing;
     }
@@ -44,6 +47,26 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
     private void Category_Checked(object sender, RoutedEventArgs e)
     {
         category = (sender as FrameworkElement)?.Tag as string;
+    }
+
+    private void PopulateBugCodeComboBox()
+    {
+        var codes = Enum.GetValues<BugCode>()
+            .Where(c => c != BugCode.Unknown)
+            .OrderBy(c => c.ToString())
+            .ToList();
+
+        BugCodeComboBox.ItemsSource = codes;
+        BugCodeComboBox.DisplayMemberPath = nameof(BugCode.ToString);
+        BugCodeComboBox.SelectedIndex = 0;
+    }
+
+    private void BugCode_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (BugCodeComboBox.SelectedItem is BugCode code)
+        {
+            selectedBugCode = code;
+        }
     }
 
     private void Copy_Click(object sender, RoutedEventArgs e)
@@ -146,6 +169,13 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
             return false;
         }
 
+        if (selectedBugCode == BugCode.Unknown)
+        {
+            ShowStatus(T("BugReport.Validation.BugCode"), success: false);
+            BugCodeComboBox.Focus();
+            return false;
+        }
+
         var logText = LogTextBox.Text.Trim();
         if (Encoding.UTF8.GetByteCount(logText) > BugReportSubmission.MaxLogTextBytes)
         {
@@ -158,6 +188,7 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         {
             ReportId = Guid.NewGuid(),
             Category = category,
+            BugCode = selectedBugCode,
             Summary = summary,
             Description = description,
             AppVersion = appVersion,
@@ -232,6 +263,7 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         builder.AppendLine(T("BugReport.Clipboard.Title"));
         builder.AppendLine(F("BugReport.Clipboard.Id", submission.ReportId.ToString("D")));
         builder.AppendLine(F("BugReport.Clipboard.Category", submission.Category));
+        builder.AppendLine(F("BugReport.Clipboard.BugCode", submission.BugCode.ToString()));
         builder.AppendLine(F("BugReport.Clipboard.Summary", submission.Summary.Trim()));
         builder.AppendLine(F("BugReport.Clipboard.Version", submission.AppVersion));
         builder.AppendLine(F("BugReport.Clipboard.Profile", submission.Profile));

@@ -1,8 +1,10 @@
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading;
 using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.App.Services;
@@ -100,6 +102,8 @@ public sealed class LocalTelemetryQueue
 {
     private readonly string queueDirectory;
     private readonly JsonSerializerOptions jsonOptions;
+
+    public string QueueDirectory => queueDirectory;
 
     public LocalTelemetryQueue(string queueDirectory)
     {
@@ -356,17 +360,25 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
     private readonly LocalTelemetryQueue queue;
     private readonly CloudflareTelemetryTransport transport;
     private readonly SemaphoreSlim flushLock = new(1, 1);
+    private readonly string logDirectory;
     private volatile bool enabled;
+    private long successfulSends;
+    private long failedSends;
 
     public QueuedCloudflareTelemetryService(LocalTelemetryQueue queue, CloudflareTelemetryTransport transport)
     {
         this.queue = queue ?? throw new ArgumentNullException(nameof(queue));
         this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
+        logDirectory = queue.QueueDirectory;
     }
 
     public bool IsEnabled => enabled;
 
     public void SetEnabled(bool value) => enabled = value;
+
+    public long SuccessfulSends => Interlocked.Read(ref successfulSends);
+    public long FailedSends => Interlocked.Read(ref failedSends);
+    public bool IsHealthy => FailedSends == 0 || SuccessfulSends > FailedSends;
 
     public async Task TrackAsync(AnonymousTelemetryEvent telemetryEvent, CancellationToken cancellationToken = default)
     {
@@ -422,16 +434,39 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
                 {
                     queue.Remove(item.FilePath);
                 }
+                Interlocked.Add(ref successfulSends, pending.Count);
+            }
+            else
+            {
+                Interlocked.Add(ref failedSends, pending.Count);
+                LogFailure($"Telemetry flush failed with outcome: {outcome}. {pending.Count} events retained in queue.");
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Interlocked.Add(ref failedSends, 1);
+            LogFailure($"Telemetry flush threw: {ex.GetType().Name}: {ex.Message}");
             // A flush failure must never affect the optimization flow or
             // startup sequence that triggered it.
         }
         finally
         {
             flushLock.Release();
+        }
+    }
+
+    private void LogFailure(string message)
+    {
+        try
+        {
+            Directory.CreateDirectory(logDirectory);
+            var logPath = Path.Combine(logDirectory, "telemetry_failures.log");
+            var line = $"{DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss.fff} UTC - {message}{Environment.NewLine}";
+            File.AppendAllText(logPath, line);
+        }
+        catch
+        {
+            // Best-effort logging; never throw from telemetry.
         }
     }
 }

@@ -103,4 +103,8 @@ public sealed class RecordingTelemetryService : IAnonymousTelemetryService
         TrackCallCount++;
         return Task.CompletedTask;
     }
+
+    public long SuccessfulSends => 0;
+    public long FailedSends => 0;
+    public bool IsHealthy => true;
 }

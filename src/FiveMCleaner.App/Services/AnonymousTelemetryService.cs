@@ -1,5 +1,7 @@
 using System.IO;
 
+using FiveMCleaner.Contracts;
+
 namespace FiveMCleaner.App.Services;
 
 /// <summary>
@@ -26,7 +28,8 @@ public sealed record AnonymousTelemetryEvent(
     string? GpuModel = null,
     int? RamBucketGiB = null,
     string? Profile = null,
-    IReadOnlyList<string>? ActionIds = null);
+    IReadOnlyList<string>? ActionIds = null,
+    BugCode? BugCode = null);
 
 public interface IAnonymousTelemetryService
 {
@@ -35,6 +38,10 @@ public interface IAnonymousTelemetryService
     void SetEnabled(bool enabled);
 
     Task TrackAsync(AnonymousTelemetryEvent telemetryEvent, CancellationToken cancellationToken = default);
+
+    long SuccessfulSends { get; }
+    long FailedSends { get; }
+    bool IsHealthy => FailedSends == 0 || SuccessfulSends > FailedSends;
 }
 
 public sealed class DisabledAnonymousTelemetryService : IAnonymousTelemetryService
@@ -53,6 +60,10 @@ public sealed class DisabledAnonymousTelemetryService : IAnonymousTelemetryServi
 
     public Task TrackAsync(AnonymousTelemetryEvent telemetryEvent, CancellationToken cancellationToken = default) =>
         Task.CompletedTask;
+
+    public long SuccessfulSends => 0;
+    public long FailedSends => 0;
+    public bool IsHealthy => true;
 }
 
 /// <summary>

@@ -1,0 +1,150 @@
+<ui:FluentWindow x:Class="FiveMCleaner.App.Views.ReleaseNotesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="{Binding WindowTitleText}"
+        Icon="/FiveMCleaner;component/Assets/FiveMCleaner.png"
+        Width="520"
+        MinWidth="520"
+        MaxHeight="640"
+        SizeToContent="Height"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None"
+        ExtendsContentIntoTitleBar="True"
+        WindowBackdropType="Mica"
+        ResizeMode="NoResize"
+        ShowInTaskbar="False"
+        FontFamily="{StaticResource AppFontBody}"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        KeyboardNavigation.TabNavigation="Cycle"
+        Background="{DynamicResource CanvasBaseBrush}">
+
+    <ui:FluentWindow.InputBindings>
+        <KeyBinding Key="Escape" Command="{x:Static SystemCommands.CloseWindowCommand}" />
+    </ui:FluentWindow.InputBindings>
+
+    <ui:FluentWindow.CommandBindings>
+        <CommandBinding Command="{x:Static SystemCommands.CloseWindowCommand}" Executed="CloseWindowCommandBinding_Executed" />
+    </ui:FluentWindow.CommandBindings>
+
+    <ui:FluentWindow.Resources>
+        <!--
+            Categoria = ícone (forma) + cor semântica já existente no tema,
+            nunca uma cor nova. As duas propriedades variam juntas por
+            categoria para que a diferença não dependa só da cor (ver
+            convenção de IconMark* em Themes/Icons.xaml).
+        -->
+        <Style x:Key="ReleaseNoteCategoryIconStyle" TargetType="Path" BasedOn="{StaticResource Icon16}">
+            <Setter Property="Width" Value="14" />
+            <Setter Property="Height" Value="14" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Category}" Value="Added">
+                    <Setter Property="Data" Value="{StaticResource IconBolt}" />
+                    <Setter Property="Stroke" Value="{DynamicResource SuccessBaseBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Improved">
+                    <Setter Property="Data" Value="{StaticResource IconTrend}" />
+                    <Setter Property="Stroke" Value="{DynamicResource InfoBaseBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Fixed">
+                    <Setter Property="Data" Value="{StaticResource IconCheck}" />
+                    <Setter Property="Stroke" Value="{DynamicResource WarningBaseBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Removed">
+                    <Setter Property="Data" Value="{StaticResource IconMinus}" />
+                    <Setter Property="Stroke" Value="{DynamicResource TextSecondaryBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Security">
+                    <Setter Property="Data" Value="{StaticResource IconShield}" />
+                    <Setter Property="Stroke" Value="{DynamicResource DangerBaseBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="ReleaseNoteCategoryLabelStyle" TargetType="TextBlock" BasedOn="{StaticResource OverlineText}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Category}" Value="Added">
+                    <Setter Property="Foreground" Value="{DynamicResource SuccessBaseBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Improved">
+                    <Setter Property="Foreground" Value="{DynamicResource InfoBaseBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Fixed">
+                    <Setter Property="Foreground" Value="{DynamicResource WarningBaseBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Removed">
+                    <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Category}" Value="Security">
+                    <Setter Property="Foreground" Value="{DynamicResource DangerBaseBrush}" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </ui:FluentWindow.Resources>
+
+    <Border Background="{DynamicResource CanvasBaseBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusXl}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="54" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="66" />
+            </Grid.RowDefinitions>
+
+            <Border Background="{DynamicResource SurfaceRailBrush}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,0,0,1" CornerRadius="13,13,0,0">
+                <Grid Margin="18,0,10,0">
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Width="30" Height="30" CornerRadius="{StaticResource RadiusMd}" Background="{DynamicResource AccentWashBrush}">
+                            <Path Style="{StaticResource Icon16}" Data="{StaticResource IconHistory}" Stroke="{DynamicResource AccentBrightBrush}" />
+                        </Border>
+                        <StackPanel Margin="10,0,0,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding [ReleaseNotes.Heading], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" FontSize="14" />
+                            <TextBlock Text="{Binding VersionLabel}" Style="{StaticResource CaptionText}" Margin="0,1,0,0" />
+                        </StackPanel>
+                    </StackPanel>
+                    <Button x:Name="CloseIconButton"
+                            Style="{StaticResource IconButtonStyle}"
+                            Width="32"
+                            Height="32"
+                            HorizontalAlignment="Right"
+                            AutomationProperties.Name="{Binding [ReleaseNotes.Close], Source={StaticResource LocalizedStrings}}"
+                            Click="Close_Click">
+                        <Path Style="{StaticResource Icon16}" Data="{StaticResource IconClose}" Width="12" Height="12" />
+                    </Button>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1" MaxHeight="480" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <ItemsControl ItemsSource="{Binding Sections}" Margin="28,22,28,4" Focusable="False">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Margin="0,0,0,18">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
+                                    <Path Style="{StaticResource ReleaseNoteCategoryIconStyle}" Margin="0,0,7,0" />
+                                    <TextBlock Text="{Binding Label}" Style="{StaticResource ReleaseNoteCategoryLabelStyle}" VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Text="{Binding BulletsText}" Style="{StaticResource SecondaryText}" LineHeight="18" />
+                                <Border Style="{StaticResource HairlineDivider}" Margin="0,18,0,0" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <Border Grid.Row="2" Background="{DynamicResource SurfaceRailBrush}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,1,0,0" CornerRadius="0,0,13,13">
+                <Grid Margin="20,0">
+                    <Button x:Name="CloseButton"
+                            Content="{Binding [ReleaseNotes.Close], Source={StaticResource LocalizedStrings}}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            HorizontalAlignment="Right"
+                            Height="40"
+                            Padding="22,0"
+                            IsDefault="True"
+                            Click="Close_Click" />
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</ui:FluentWindow>
