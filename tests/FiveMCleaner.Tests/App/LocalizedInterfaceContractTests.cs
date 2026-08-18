@@ -465,11 +465,7 @@ public sealed partial class LocalizedInterfaceContractTests
             "src",
             "FiveMCleaner.App",
             "MainWindow.xaml"));
-        var source = File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "FiveMCleaner.App",
-            "MainWindow.xaml.cs"));
+        var source = TestHelpers.ReadMainWindowSource();
 
         Assert.Contains("WindowState=\"Maximized\"", markup, StringComparison.Ordinal);
         Assert.Contains("WmGetMinMaxInfo", source, StringComparison.Ordinal);
