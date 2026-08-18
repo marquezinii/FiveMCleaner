@@ -295,6 +295,16 @@
 • File contents
 • Full list of processes or programs
 • Personal paths without sanitization</value></data>
+  <data name="ReleaseNotes.WindowTitle" xml:space="preserve"><value>What's new - FiveMCleaner</value></data>
+  <data name="ReleaseNotes.Heading" xml:space="preserve"><value>What's new</value></data>
+  <data name="ReleaseNotes.VersionLabel" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="ReleaseNotes.VersionLabelWithDate" xml:space="preserve"><value>Version {0} • {1}</value></data>
+  <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Added</value></data>
+  <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Improved</value></data>
+  <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Fixed</value></data>
+  <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Removed</value></data>
+  <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Security</value></data>
+  <data name="ReleaseNotes.Close" xml:space="preserve"><value>Close</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>FiveMCleaner encountered an unexpected error. No new change will be applied.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>VERIFIED ACTIONS</value></data>
@@ -318,6 +328,10 @@
   <data name="BugReport.Send.NotConfirmed" xml:space="preserve"><value>The delivery service did not confirm receipt. Copy the report and try again later.</value></data>
   <data name="BugReport.Send.UnexpectedResponse" xml:space="preserve"><value>The service returned an unexpected response. Copy the report and try again later.</value></data>
   <data name="BugReport.Send.Accepted" xml:space="preserve"><value>The delivery service received the report.</value></data>
+  <data name="BugReport.BugCode.Label" xml:space="preserve"><value>Bug code *</value></data>
+  <data name="BugReport.BugCode.Tooltip" xml:space="preserve"><value>Select the bug category that best matches the issue</value></data>
+  <data name="BugReport.Validation.BugCode" xml:space="preserve"><value>Select a bug code.</value></data>
+  <data name="BugReport.Clipboard.BugCode" xml:space="preserve"><value>Bug code: {0}</value></data>
   <data name="Streaming.Readiness.Protected.Title" xml:space="preserve"><value>Streaming protection is active</value></data>
   <data name="Streaming.Readiness.Protected.Detail" xml:space="preserve"><value>A streaming app is open. FiveMCleaner preserves it; confirm your broadcast state before optimizing.</value></data>
   <data name="Streaming.Readiness.Attention.Title" xml:space="preserve"><value>Run a test before going live</value></data>

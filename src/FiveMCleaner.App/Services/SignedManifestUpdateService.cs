@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using FiveMCleaner.App.Services;
+using FiveMCleaner.Contracts;
 using FiveMCleaner.UpdateRuntime;
 
 namespace FiveMCleaner.App.Services;
@@ -213,7 +215,8 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
         diagnostics.RecordAsync(
             new UpdaterEvent(
                 Guid.NewGuid().ToString("N"), stage, "failed", Classify(exception),
-                previous, candidate, "Production"),
+                previous, candidate, "Production",
+                BugCodeClassifier.ClassifyUpdaterException(exception, stage)),
             exception.ToString(),
             telemetryAuthorized: UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
 

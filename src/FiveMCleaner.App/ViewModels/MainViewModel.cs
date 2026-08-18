@@ -104,6 +104,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private bool shareAnonymousTelemetry;
     private bool shareCrashReports;
     private int? privacyConsentVersion;
+    private string? lastSeenReleaseNotesVersion;
     private ReleaseUpdate? availableUpdate;
     private UpdatePresentationState updatePresentationState;
     private string? updateFailureMessage;
@@ -569,6 +570,14 @@ public sealed class MainViewModel : BindableBase, IDisposable
     /// </summary>
     public PrivacyConsentDecision? PrivacyConsentDecision { get; private set; }
 
+    /// <summary>
+    /// Decision computed by <see cref="ReleaseNotesEvaluator"/> from the
+    /// settings just loaded in <see cref="InitializeAsync"/>, analogous to
+    /// <see cref="PrivacyConsentDecision"/>. The window (view responsibility)
+    /// decides whether and what to show from this value alone.
+    /// </summary>
+    public ReleaseNotesDecision? PendingReleaseNotes { get; private set; }
+
     public bool IsUpdateBannerVisible => availableUpdate is not null
         || updatePresentationState == UpdatePresentationState.Failed
         || JustUpdatedToVersion is not null;
@@ -765,6 +774,11 @@ public sealed class MainViewModel : BindableBase, IDisposable
             PrivacyConsentDecision = PrivacyConsentEvaluator.Evaluate(
                 loadedSettings,
                 service.SettingsFileExists());
+            PendingReleaseNotes = ReleaseNotesEvaluator.Evaluate(
+                loadedSettings,
+                service.SettingsFileExists(),
+                AppVersion,
+                ReleaseNotesCatalog.Versions);
             ApplyDiagnostic(await diagnosticTask);
             ApplyHistory(await historyTask);
             if (checkForUpdates && releaseUpdateService is not null)
@@ -1292,6 +1306,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         var completedSuccessfully = false;
         var telemetryEventName = "optimization-failed";
         string? telemetryErrorCategory = null;
+        BugCode? telemetryBugCode = null;
         try
         {
             // currentPlan é garantido não-nulo aqui: TryPrepareOptimizationRun
@@ -1299,23 +1314,37 @@ public sealed class MainViewModel : BindableBase, IDisposable
             var result = await service.ExecuteAsync(currentPlan!, progress, operationCancellation.Token);
             completedSuccessfully = result.Succeeded;
             telemetryEventName = result.Succeeded ? "optimization-completed" : "optimization-failed";
+            if (!result.Succeeded && result.Report is not null)
+            {
+                // Use the first failed action's ID for bug classification
+                var failedActionId = result.Report.Lines
+                    .Where(l => l.Outcome is ActionExecutionOutcome.Failed or ActionExecutionOutcome.RollbackFailed)
+                    .Select(l => l.ActionId)
+                    .FirstOrDefault();
+                if (!string.IsNullOrWhiteSpace(failedActionId))
+                {
+                    telemetryBugCode = BugCodeClassifier.ClassifyOptimizationException(new InvalidOperationException(), failedActionId);
+                }
+            }
             await HandleOptimizationResultAsync(result);
         }
         catch (OperationCanceledException)
         {
             telemetryEventName = "optimization-cancelled";
             telemetryErrorCategory = "cancelled";
+            telemetryBugCode = BugCode.APP_OPT_CANCELLED;
             HandleOptimizationCancelled();
         }
         catch (Exception exception)
         {
             telemetryEventName = "optimization-failed";
             telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
+            telemetryBugCode = BugCodeClassifier.ClassifyException(exception, "optimization");
             HandleOptimizationFailed();
         }
         finally
         {
-            FinalizeOptimizationRun(completedSuccessfully, telemetryEventName, telemetryErrorCategory);
+            FinalizeOptimizationRun(completedSuccessfully, telemetryEventName, telemetryErrorCategory, telemetryBugCode);
         }
     }
 
@@ -1370,11 +1399,12 @@ public sealed class MainViewModel : BindableBase, IDisposable
     private void FinalizeOptimizationRun(
         bool completedSuccessfully,
         string telemetryEventName,
-        string? telemetryErrorCategory)
+        string? telemetryErrorCategory,
+        BugCode? bugCode = null)
     {
         var executionTime = operationStopwatch?.Elapsed ?? TimeSpan.Zero;
         StopOperationTiming(completedSuccessfully);
-        TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory);
+        TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory, bugCode);
         // operationCancellation foi atribuído antes do try em StartOptimizationAsync.
         operationCancellation!.Dispose();
         operationCancellation = null;
@@ -1699,6 +1729,7 @@ public sealed class MainViewModel : BindableBase, IDisposable
         telemetry.SetEnabled(shareAnonymousTelemetry);
         shareCrashReports = settings.ShareCrashReports;
         privacyConsentVersion = settings.PrivacyConsentVersion;
+        lastSeenReleaseNotesVersion = settings.LastSeenReleaseNotesVersion;
         try
         {
             launchAtStartup = startupRegistration.IsEnabled();
@@ -1883,7 +1914,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
         CheckForUpdates = CheckForUpdates,
         ShareAnonymousTelemetry = ShareAnonymousTelemetry,
         ShareCrashReports = ShareCrashReports,
-        PrivacyConsentVersion = privacyConsentVersion
+        PrivacyConsentVersion = privacyConsentVersion,
+        LastSeenReleaseNotesVersion = lastSeenReleaseNotesVersion
     };
 
     private void SettingsChanged(bool refreshPlan = true)
@@ -1927,10 +1959,30 @@ public sealed class MainViewModel : BindableBase, IDisposable
         await SaveSettingsRevisionAsync(snapshot, revision).ConfigureAwait(false);
     }
 
+    /// <summary>
+    /// Records <paramref name="version"/> as the last release notes version
+    /// the user has seen (or silently acknowledged — see
+    /// <see cref="ReleaseNotesDecision.ShouldRecordSilently"/>), through the
+    /// same settings persistence path as every other preference. The caller
+    /// (<c>MainWindow</c>) only invokes this after the "What's New" panel
+    /// has actually been closed, or immediately for the silent cases, so a
+    /// crash before the panel is dismissed does not mark unseen notes as
+    /// seen.
+    /// </summary>
+    public async Task ConfirmReleaseNotesSeenAsync(string version)
+    {
+        lastSeenReleaseNotesVersion = version;
+        PendingReleaseNotes = null;
+
+        var revision = Interlocked.Increment(ref settingsRevision);
+        await SaveSettingsRevisionAsync(BuildSettingsSnapshot(), revision).ConfigureAwait(false);
+    }
+
     private void TrackOptimizationTelemetry(
         string eventName,
         TimeSpan executionTime,
-        string? errorCategory)
+        string? errorCategory,
+        BugCode? bugCode = null)
     {
         if (!telemetry.IsEnabled)
         {
@@ -1951,7 +2003,8 @@ public sealed class MainViewModel : BindableBase, IDisposable
             ActionIds: ShareAnonymousTelemetry ? currentPlan?.Actions
                 .Select(action => action.Metadata.Id)
                 .Take(TelemetryEventValidator.MaxActionIds)
-                .ToArray() : null);
+                .ToArray() : null,
+            BugCode: bugCode);
         _ = TrackOptimizationTelemetryAsync(telemetryEvent);
     }
 

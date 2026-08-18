@@ -279,7 +279,25 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             ConfirmUpdateHealthIfRequested();
         }
 
-        await viewModel.InitializeAsync();
+        try
+        {
+            await viewModel.InitializeAsync();
+        }
+        catch
+        {
+            // O recibo já foi confirmado acima (por desenho, antes da
+            // inicialização terminar). Se a própria inicialização falhar
+            // logo em seguida, invalidar o recibo garante que o launcher
+            // ainda enxergue esta versão como não confirmada e possa
+            // reverter dentro da janela de saúde, em vez de confiar num
+            // recibo escrito antes da falha.
+            if (!demoMode)
+            {
+                InvalidateUpdateHealthReceiptIfRequested();
+            }
+
+            throw;
+        }
         if (accountService is not null)
         {
             _ = RestoreAccountSessionQuietlyAsync();
@@ -314,6 +332,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         if (!demoMode)
         {
             await ShowPrivacyConsentIfNeededAsync();
+            await ShowReleaseNotesIfNeededAsync();
             InitializeCrashReportingIfAuthorized();
             await FlushPendingTelemetryIfAnyAsync();
         }
@@ -460,6 +479,18 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
     }
 
+    private static void InvalidateUpdateHealthReceiptIfRequested()
+    {
+        var runtimeRoot = RuntimeLayout.Resolve(AppContext.BaseDirectory).RuntimeRoot;
+        if (runtimeRoot is null) return;
+        try { new UpdateHealthReceiptStore(runtimeRoot).Invalidate(); }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or System.Security.Cryptography.CryptographicException)
+        {
+            // Melhor esforço: se não for possível invalidar aqui, a
+            // reverificação do launcher na próxima abertura é o fallback.
+        }
+    }
+
     /// <summary>
     /// Shows the blocking privacy consent screen when
     /// <see cref="MainViewModel.PrivacyConsentDecision"/> (computed once,
@@ -487,6 +518,43 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         };
         consentWindow.ShowDialog();
         await viewModel.ConfirmPrivacyConsentAsync(consentWindow.AcceptedAnonymousTelemetry);
+    }
+
+    /// <summary>
+    /// Shows the informational, non-blocking "What's New" panel when
+    /// <see cref="MainViewModel.PendingReleaseNotes"/> (computed once, right
+    /// after settings finish loading in
+    /// <see cref="MainViewModel.InitializeAsync"/>) says this version has
+    /// notes the user has not seen yet. Persistence only happens after the
+    /// panel is actually closed, so a crash before that point leaves the
+    /// notes unseen and they are shown again next launch. When there is
+    /// nothing to show but the evaluator still wants the current version
+    /// recorded as a baseline (brand-new installation, or a version with no
+    /// catalog entry), that happens immediately instead. Demo mode never
+    /// shows this screen, for the same reason it never shows the privacy
+    /// consent screen: it never persists settings, and smoke tests must not
+    /// hang on a modal.
+    /// </summary>
+    private async Task ShowReleaseNotesIfNeededAsync()
+    {
+        var decision = viewModel.PendingReleaseNotes;
+        if (decision is null)
+        {
+            return;
+        }
+
+        if (decision.ShouldShow && decision.Entry is not null)
+        {
+            var releaseNotesWindow = new ReleaseNotesWindow(decision.Entry) { Owner = this };
+            releaseNotesWindow.ShowDialog();
+            await viewModel.ConfirmReleaseNotesSeenAsync(decision.Entry.Version);
+            return;
+        }
+
+        if (decision.ShouldRecordSilently)
+        {
+            await viewModel.ConfirmReleaseNotesSeenAsync(viewModel.AppVersion);
+        }
     }
 
     /// <summary>

@@ -11,5 +11,7 @@
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="../FiveMCleaner.UpdateRuntime/FiveMCleaner.UpdateRuntime.csproj" />
+    <ProjectReference Include="../FiveMCleaner.App/FiveMCleaner.App.csproj" />
+    <ProjectReference Include="../FiveMCleaner.Contracts/FiveMCleaner.Contracts.csproj" />
   </ItemGroup>
 </Project>

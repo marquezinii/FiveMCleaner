@@ -65,6 +65,9 @@
                         <RadioButton GroupName="BugCategory" Style="{StaticResource SegmentedOptionStyle}" Tag="{Binding [BugReport.Category.Other], Source={StaticResource LocalizedStrings}}" Content="{Binding [BugReport.Category.Other], Source={StaticResource LocalizedStrings}}" Checked="Category_Checked" />
                     </WrapPanel>
 
+                    <TextBlock Text="{Binding [BugReport.BugCode.Label], Source={StaticResource LocalizedStrings}}" Style="{StaticResource FieldLabelStyle}" Margin="0,0,0,8" />
+                    <ComboBox x:Name="BugCodeComboBox" Style="{StaticResource FormComboBoxStyle}" Margin="0,0,0,15" SelectionChanged="BugCode_SelectionChanged" />
+
                     <TextBlock Text="{Binding [BugReport.Summary.Label], Source={StaticResource LocalizedStrings}}" Style="{StaticResource FieldLabelStyle}" />
                     <TextBox x:Name="SummaryTextBox" Style="{StaticResource FormTextBoxStyle}" MaxLength="120" ToolTip="{Binding [BugReport.Summary.Tooltip], Source={StaticResource LocalizedStrings}}" />
                     <TextBlock Text="{Binding [BugReport.Summary.Example], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="2,5,0,15" />

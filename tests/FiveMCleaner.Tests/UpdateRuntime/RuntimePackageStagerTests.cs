@@ -23,7 +23,8 @@ public sealed class RuntimePackageStagerTests : IDisposable
         ZipFile.CreateFromDirectory(source, zip);
         var zipHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(zip)));
 
-        var result = new RuntimePackageStager(Path.Combine(root, "runtime")).Stage(zip, "2.0.0", zipHash, new FileInfo(zip).Length);
+        var result = new RuntimePackageStager(Path.Combine(root, "runtime")).Stage(
+            zip, "2.0.0", zipHash, new FileInfo(zip).Length, TestContext.Current.CancellationToken);
 
         Assert.True(File.Exists(Path.Combine(result, "FiveMCleaner.exe")));
     }
@@ -44,7 +45,7 @@ public sealed class RuntimePackageStagerTests : IDisposable
 
         Assert.Throws<InvalidDataException>(() =>
             new RuntimePackageStager(Path.Combine(root, "runtime")).Stage(
-                zip, "2.0.0", zipHash, new FileInfo(zip).Length));
+                zip, "2.0.0", zipHash, new FileInfo(zip).Length, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -63,14 +64,14 @@ public sealed class RuntimePackageStagerTests : IDisposable
         ZipFile.CreateFromDirectory(source, zip);
         var zipHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(zip)));
 
-        var result = stager.Stage(zip, "2.0.0", zipHash, new FileInfo(zip).Length);
+        var result = stager.Stage(zip, "2.0.0", zipHash, new FileInfo(zip).Length, TestContext.Current.CancellationToken);
         Assert.True(File.Exists(Path.Combine(result, "FiveMCleaner.exe")));
 
         // Corrupt the existing version directory by removing the manifest
         File.Delete(Path.Combine(result, "SHA256SUMS.txt"));
 
         // Re-staging should re-extract and succeed
-        var result2 = stager.Stage(zip, "2.0.0", zipHash, new FileInfo(zip).Length);
+        var result2 = stager.Stage(zip, "2.0.0", zipHash, new FileInfo(zip).Length, TestContext.Current.CancellationToken);
         Assert.True(File.Exists(Path.Combine(result2, "FiveMCleaner.exe")));
         Assert.True(File.Exists(Path.Combine(result2, "SHA256SUMS.txt")));
     }
@@ -91,7 +92,7 @@ public sealed class RuntimePackageStagerTests : IDisposable
         ZipFile.CreateFromDirectory(source, zip);
         var zipHash = Convert.ToHexString(SHA256.HashData(File.ReadAllBytes(zip)));
 
-        var result = stager.Stage(zip, "2.0.0", zipHash, new FileInfo(zip).Length);
+        var result = stager.Stage(zip, "2.0.0", zipHash, new FileInfo(zip).Length, TestContext.Current.CancellationToken);
         Assert.True(File.Exists(Path.Combine(result, "FiveMCleaner.exe")));
 
         // Tamper with the manifest (wrong hash)
@@ -99,7 +100,7 @@ public sealed class RuntimePackageStagerTests : IDisposable
         File.WriteAllText(Path.Combine(result, "SHA256SUMS.txt"), $"{tamperedHash}  FiveMCleaner.exe");
 
         // Re-staging should re-extract and succeed
-        var result2 = stager.Stage(zip, "2.0.0", zipHash, new FileInfo(zip).Length);
+        var result2 = stager.Stage(zip, "2.0.0", zipHash, new FileInfo(zip).Length, TestContext.Current.CancellationToken);
         Assert.True(File.Exists(Path.Combine(result2, "FiveMCleaner.exe")));
         Assert.True(File.Exists(Path.Combine(result2, "SHA256SUMS.txt")));
     }

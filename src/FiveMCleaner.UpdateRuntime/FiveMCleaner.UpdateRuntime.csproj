@@ -7,5 +7,6 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="System.Security.Cryptography.ProtectedData" />
+    <ProjectReference Include="..\FiveMCleaner.Contracts\FiveMCleaner.Contracts.csproj" />
   </ItemGroup>
 </Project>
