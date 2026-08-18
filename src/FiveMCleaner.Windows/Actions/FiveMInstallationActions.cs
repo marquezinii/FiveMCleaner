@@ -356,11 +356,6 @@ public sealed class CrashPatternDiagnosisAction : WindowsOptimizationAction
         "streaming", "ymap", "ytd", "ydr", "ybn", "resource start error", "failed to load"
     ];
 
-    private static readonly string[] EntitlementFailureKeywords =
-    [
-        "entitlement", "ros_id", "social club", "authentication failed", "digitalentitlements"
-    ];
-
     public CrashPatternDiagnosisAction(string fiveMAppRoot)
     {
         this.fiveMAppRoot = SafePath.Normalize(fiveMAppRoot);
