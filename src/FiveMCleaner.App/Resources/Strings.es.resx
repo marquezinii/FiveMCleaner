@@ -295,6 +295,16 @@
 • Contenido de archivos
 • Lista completa de procesos o programas
 • Rutas personales sin depurar</value></data>
+  <data name="ReleaseNotes.WindowTitle" xml:space="preserve"><value>Novedades - FiveMCleaner</value></data>
+  <data name="ReleaseNotes.Heading" xml:space="preserve"><value>Novedades</value></data>
+  <data name="ReleaseNotes.VersionLabel" xml:space="preserve"><value>Versión {0}</value></data>
+  <data name="ReleaseNotes.VersionLabelWithDate" xml:space="preserve"><value>Versión {0} • {1}</value></data>
+  <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Añadido</value></data>
+  <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Mejorado</value></data>
+  <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Corregido</value></data>
+  <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Eliminado</value></data>
+  <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Seguridad</value></data>
+  <data name="ReleaseNotes.Close" xml:space="preserve"><value>Cerrar</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>FiveMCleaner encontró un error inesperado. No se aplicará ningún cambio nuevo.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>ACCIONES VERIFICADAS</value></data>

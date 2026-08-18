@@ -295,6 +295,16 @@
 • File contents
 • Full list of processes or programs
 • Personal paths without sanitization</value></data>
+  <data name="ReleaseNotes.WindowTitle" xml:space="preserve"><value>What's new - FiveMCleaner</value></data>
+  <data name="ReleaseNotes.Heading" xml:space="preserve"><value>What's new</value></data>
+  <data name="ReleaseNotes.VersionLabel" xml:space="preserve"><value>Version {0}</value></data>
+  <data name="ReleaseNotes.VersionLabelWithDate" xml:space="preserve"><value>Version {0} • {1}</value></data>
+  <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Added</value></data>
+  <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Improved</value></data>
+  <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Fixed</value></data>
+  <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Removed</value></data>
+  <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Security</value></data>
+  <data name="ReleaseNotes.Close" xml:space="preserve"><value>Close</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>FiveMCleaner encountered an unexpected error. No new change will be applied.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>VERIFIED ACTIONS</value></data>

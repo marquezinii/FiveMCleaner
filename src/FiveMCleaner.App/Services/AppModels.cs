@@ -250,4 +250,15 @@ public sealed record AppSettings
     /// do valor dos booleanos acima. Ver <see cref="PrivacyConsentPolicy"/>.
     /// </summary>
     public int? PrivacyConsentVersion { get; init; }
+
+    /// <summary>
+    /// App version (for example "1.3.2") whose "What's New" panel was last
+    /// shown to (or silently acknowledged by) the user. <see langword="null"/>
+    /// means no version has been recorded yet — either a brand-new
+    /// installation or an installation from before this field existed. See
+    /// <see cref="ReleaseNotesEvaluator"/>; deliberately not a boolean flag,
+    /// so a future version with new notes shows the panel again instead of
+    /// staying silenced forever.
+    /// </summary>
+    public string? LastSeenReleaseNotesVersion { get; init; }
 }
