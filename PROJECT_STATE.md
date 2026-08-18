@@ -95,7 +95,7 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 ### Telemetria, bugs e backend
 
 - FormSubmit foi removido do código de desenvolvimento. O transporte atual usa Cloudflare Worker/D1.
-- Infraestrutura registrada como ativa: `/telemetry`, `POST /bugs` e `GET /api/bugs`; relatos de bug são texto, e-mail opcional e trecho de log opcional. **Não há anexo/R2**.
+- Infraestrutura registrada como ativa: `/telemetry`, `POST /bugs`, `GET /api/bugs` e `GET /live-alert`/`POST /admin/live-alert` (aviso ao vivo do dashboard para o app, painel dedicado no dashboard); relatos de bug são texto, e-mail opcional e trecho de log opcional. **Não há anexo/R2**.
 - Telemetria e crash reporting obedecem consentimento e allowlists; falhas de envio nunca devem bloquear ou alterar o resultado da otimização.
 - Sentry é usado para crash reporting do aplicativo, com sanitização/configuração centralizada e sem transformar o SDK em dependência das camadas Core/Windows/Broker.
 - Dashboard administrativo possui filtros, visão de telemetria e bugs e tratamento defensivo de falhas de rede/respostas inválidas.

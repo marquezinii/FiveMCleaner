@@ -252,6 +252,15 @@ public sealed record AppSettings
     public int? PrivacyConsentVersion { get; init; }
 
     /// <summary>
+    /// Id (o <c>updated_at</c> do servidor) do último aviso ao vivo que o
+    /// usuário fechou explicitamente. <see langword="null"/> significa que
+    /// nenhum aviso foi dispensado ainda. Usado só para não reexibir o
+    /// banner de um aviso já lido; o ícone de alerta no canto continua
+    /// visível enquanto o aviso seguir ativo no servidor.
+    /// </summary>
+    public string? DismissedLiveAlertId { get; init; }
+
+    /// <summary>
     /// App version (for example "1.3.2") whose "What's New" panel was last
     /// shown to (or silently acknowledged by) the user. <see langword="null"/>
     /// means no version has been recorded yet — either a brand-new

@@ -64,12 +64,36 @@
                                 <Ellipse Width="6" Height="6" Fill="{DynamicResource InfoBaseBrush}" VerticalAlignment="Center" />
                                 <TextBlock Text="{Binding UpdateBannerTitle}" Style="{StaticResource CaptionText}" Foreground="{DynamicResource InfoBaseBrush}" Margin="7,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
+                            <StackPanel Orientation="Horizontal" Visibility="{Binding IsLiveAlertBannerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsBusy}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <Ellipse Width="6" Height="6" Fill="{DynamicResource WarningBaseBrush}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding LiveAlertMessage}" Style="{StaticResource CaptionText}" Foreground="{DynamicResource WarningBaseBrush}" Margin="7,0,0,0" VerticalAlignment="Center" MaxWidth="360" TextTrimming="CharacterEllipsis" />
+                                <Button Width="18" Height="18" Margin="6,0,0,0" Padding="0" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="LiveAlertDismiss_Click"
+                                        ToolTip="{Binding [LiveAlert.Dismiss], Source={StaticResource LocalizedStrings}}"
+                                        AutomationProperties.Name="{Binding [LiveAlert.Dismiss], Source={StaticResource LocalizedStrings}}">
+                                    <Path Width="10" Height="10" Stretch="Uniform" StrokeThickness="1.5" Data="{StaticResource IconClose}" Stroke="{DynamicResource TextSecondaryBrush}" />
+                                </Button>
+                            </StackPanel>
                         </StackPanel>
                     </Border>
                 </StackPanel>
             </ui:TitleBar.Header>
             <ui:TitleBar.TrailingContent>
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button x:Name="LiveAlertIconButton"
+                            Style="{StaticResource IconButtonStyle}"
+                            Visibility="{Binding IsLiveAlertIconVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            ToolTip="{Binding LiveAlertMessage}"
+                            AutomationProperties.Name="{Binding LiveAlertMessage}">
+                        <Path Style="{StaticResource Icon20}" Data="{StaticResource IconAlertTriangle}" Stroke="{DynamicResource WarningBaseBrush}" />
+                    </Button>
                     <Button x:Name="DiscordButton"
                             Style="{StaticResource IconButtonStyle}"
                             Click="Discord_Click"

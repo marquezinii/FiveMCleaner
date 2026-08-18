@@ -82,3 +82,12 @@ simple = { limit = 5, period = 60 }
 name = "UPDATER_EVENT_LIMITER"
 namespace_id = "1004"
 simple = { limit = 60, period = 60 }
+
+## Advisory per-IP budget for GET /live-alert, the same fail-open trade as
+## USERNAME_LOOKUP_LIMITER above: read-only, no auth, and every installed app
+## polls it at startup plus once an hour, so this only guards against abuse,
+## not normal traffic.
+[[ratelimits]]
+name = "LIVE_ALERT_LIMITER"
+namespace_id = "1005"
+simple = { limit = 30, period = 60 }

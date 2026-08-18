@@ -31,6 +31,7 @@
   <data name="Settings.About.Discord.Detail" xml:space="preserve"><value>Resuelve dudas, sigue las novedades y habla con otros usuarios de FiveMCleaner.</value></data>
   <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Abrir Discord</value></data>
   <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Únete a nuestro Discord oficial</value></data>
+  <data name="LiveAlert.Dismiss" xml:space="preserve"><value>Cerrar</value></data>
   <data name="Account.TitleBar.SignInPrompt" xml:space="preserve"><value>Iniciar sesión / Registrarse</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Escanear PC de nuevo</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Abrir optimizador</value></data>

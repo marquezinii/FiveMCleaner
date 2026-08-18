@@ -7,6 +7,8 @@ import {
   buildUpdaterEventsUrl,
   requestJson,
   resolveApiBase,
+  getLiveAlert,
+  setLiveAlert,
 } from '../assets/api.js';
 
 const BASE = 'https://telemetry.example.workers.dev';
@@ -165,4 +167,48 @@ test('resolveApiBase never honors ?api= on a production host', () => {
 test('resolveApiBase falls back to the default without an override', () => {
   assert.equal(resolveApiBase(BASE, 'localhost', new URLSearchParams()), BASE);
   assert.equal(resolveApiBase(BASE, 'localhost', new URLSearchParams({ other: 'x' })), BASE);
+});
+
+test('getLiveAlert requests the public /live-alert endpoint with credentials', async () => {
+  let capturedUrl;
+  let capturedOptions;
+  const fakeFetch = async (url, options) => {
+    capturedUrl = url;
+    capturedOptions = options;
+    return new Response(JSON.stringify({ id: '2026-08-17T12:00:00.000Z', message: 'oi', active: true }), { status: 200 });
+  };
+
+  const result = await getLiveAlert(BASE, fakeFetch);
+
+  assert.equal(capturedUrl, `${BASE}/live-alert`);
+  assert.equal(capturedOptions.credentials, 'include');
+  assert.deepEqual(result.data, { id: '2026-08-17T12:00:00.000Z', message: 'oi', active: true });
+});
+
+test('setLiveAlert posts message and active to /admin/live-alert', async () => {
+  let capturedUrl;
+  let capturedOptions;
+  const fakeFetch = async (url, options) => {
+    capturedUrl = url;
+    capturedOptions = options;
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
+  };
+
+  await setLiveAlert(BASE, { message: 'oi', active: true }, fakeFetch);
+
+  assert.equal(capturedUrl, `${BASE}/admin/live-alert`);
+  assert.equal(capturedOptions.method, 'POST');
+  assert.deepEqual(JSON.parse(capturedOptions.body), { message: 'oi', active: true });
+});
+
+test('setLiveAlert omits message from the body when deactivating without resending text', async () => {
+  let capturedOptions;
+  const fakeFetch = async (_url, options) => {
+    capturedOptions = options;
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
+  };
+
+  await setLiveAlert(BASE, { active: false }, fakeFetch);
+
+  assert.deepEqual(JSON.parse(capturedOptions.body), { active: false });
 });
