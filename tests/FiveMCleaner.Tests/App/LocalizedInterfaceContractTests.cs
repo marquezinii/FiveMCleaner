@@ -227,18 +227,15 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("CpuValues=\"{Binding CpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("GpuValues=\"{Binding GpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("NetworkUsageLabel", dashboard, StringComparison.Ordinal);
-        // HoloCore3D e OptimizerCore3D se fundiram num único CoreVisual
-        // (Mode=Readiness|Engine) — o mesmo objeto em toda a interface.
-        Assert.Contains("controls:CoreVisual", dashboard, StringComparison.Ordinal);
-        Assert.Contains("Mode=\"Readiness\"", dashboard, StringComparison.Ordinal);
+        // Redesign "prancheta técnica": a geometria 3D (CoreVisual) e o anel
+        // ArcProgress foram removidos do produto por decisão de design — a
+        // profundidade passou a vir de camadas, traço e material. A prontidão
+        // é lida numa escala graduada, não num medidor decorativo, e o teste
+        // trava essa decisão para que nenhum controle 3D volte por descuido.
+        Assert.DoesNotContain("controls:CoreVisual", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("controls:ArcProgress", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding ReadinessScore, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
-        // Redesign "Bancada de tuning premium": o aro do medidor de prontidão
-        // usa o bezel de metal escovado (InstrumentBezelBrush), não mais a
-        // borda genérica de superfície.
-        Assert.Contains("TrackBrush=\"{DynamicResource InstrumentBezelBrush}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding CpuUsagePercent, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
-        // A coleta pausada precisa pausar também a animação da cena.
-        Assert.Contains("IsLive=\"{Binding IsLiveMetricsActive}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.OpenOptimizer", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.SystemOverview", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("GroupName=\"Profile\"", dashboard, StringComparison.Ordinal);

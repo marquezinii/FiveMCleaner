@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -75,6 +75,10 @@
   <data name="Optimizer.Result.PartialTitle" xml:space="preserve"><value>Completed with failures</value></data>
   <data name="Optimizer.NextStep" xml:space="preserve"><value>NEXT RECOMMENDED STEP</value></data>
   <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Optimization plan</value></data>
+  <data name="Optimizer.Table.Action" xml:space="preserve"><value>ACTION</value></data>
+  <data name="Optimizer.Table.Description" xml:space="preserve"><value>WHAT IT DOES</value></data>
+  <data name="Optimizer.Table.Risk" xml:space="preserve"><value>RISK</value></data>
+  <data name="Optimizer.Table.Privilege" xml:space="preserve"><value>EXECUTION</value></data>
   <data name="Optimizer.CurrentPlan" xml:space="preserve"><value>Current plan</value></data>
   <data name="Optimizer.RunPlan" xml:space="preserve"><value>Run plan</value></data>
   <data name="Progress.Title" xml:space="preserve"><value>Progress</value></data>
@@ -87,6 +91,14 @@
   <data name="History.OpenLogs" xml:space="preserve"><value>Open logs folder</value></data>
   <data name="History.LocalRuns" xml:space="preserve"><value>Local runs</value></data>
   <data name="History.Undo" xml:space="preserve"><value>Undo</value></data>
+  <data name="History.Table.Date" xml:space="preserve"><value>DATE</value></data>
+  <data name="History.Table.Run" xml:space="preserve"><value>RUN</value></data>
+  <data name="History.Table.Summary" xml:space="preserve"><value>RESULT</value></data>
+  <data name="History.Table.Action" xml:space="preserve"><value>ROLLBACK</value></data>
+  <data name="History.Notes.Title" xml:space="preserve"><value>What each run records</value></data>
+  <data name="History.Notes.Recorded" xml:space="preserve"><value>Applied actions, typed result of each one, and the snapshot needed to undo it.</value></data>
+  <data name="History.Notes.Rollback" xml:space="preserve"><value>Rollback restores only what this run changed and preserves anything you changed afterwards.</value></data>
+  <data name="History.Notes.Local" xml:space="preserve"><value>Everything stays on this computer, under your local FiveMCleaner folder.</value></data>
   <data name="Settings.Title" xml:space="preserve"><value>Settings</value></data>
   <data name="Settings.Subtitle" xml:space="preserve"><value>Customize the app without weakening the selected optimization profile.</value></data>
   <data name="Settings.General.Title" xml:space="preserve"><value>General</value></data>

@@ -1,4 +1,4 @@
-# Design System: FiveMCleaner
+﻿# Design System: FiveMCleaner
 
 <!--
 Adaptado do formato DESIGN.md (Google Labs) para um app WPF nativo: sem
@@ -10,133 +10,168 @@ construído, não o substitui.
 
 ## Overview
 
-**Direção: "Bancada de tuning premium"**
+**Direção: "Prancheta técnica"**
 
-FiveMCleaner é uma ferramenta de diagnóstico e tuning de PC para FiveM/GTA V
-Legacy — não um dashboard SaaS genérico nem um software de periférico gamer.
-A interface lê como uma bancada de instrumentação de precisão: grafite quase
-preto, laranja como luz de instrumento (não decoração), metal escovado como
-segundo material reservado a momentos de destaque (o bezel dos medidores, a
-borda do painel-herói). O logo do produto já usa exatamente esses dois
-materiais — laranja + metal sobre grafite — então a interface não inventa uma
-identidade nova, ela a estende para cada superfície.
+A interface é uma prancha de desenho técnico. Cada página é uma **folha** que
+ocupa a área de conteúdo inteira: bloco de legenda no topo, vista principal e
+coluna de notas. A separação entre regiões é feita por **traço**, nunca por
+cartão flutuando sobre cartão, e o fundo da folha carrega uma retícula de
+papel milimetrado quase imperceptível — é o que impede uma área sem dado de
+ler como vazio morto.
 
-A arquitetura de tokens (ResourceDictionary com troca de dicionário inteiro
-por tema, nunca chave a chave) já era sólida antes deste redesign e foi
-preservada; o que mudou são os valores dentro dela e a composição de cada
-página. Contido, não gritado: sem gauges decorativos, sem glow em excesso,
-sem clichê de "RGB gamer".
+A metáfora não é decorativa: o produto revisa um **plano** antes de executá-lo,
+registra **revisões** datadas e permite voltar ao estado anterior. Prancha,
+quadro de ações e tabela de revisões são exatamente essas três coisas.
+
+Este redesign **substituiu** a direção anterior ("Bancada de tuning premium":
+grafite quase preto, laranja de instrumento, metal escovado). Aquele visual foi
+tratado como anti-referência: nenhum de seus materiais sobreviveu.
 
 **Key Characteristics:**
-- Grafite quase preto como base; laranja como único acento de ignição (estratégia "Committed", não "Drenched")
-- Metal escovado (`SteelBrush`/`MetalEdgeBrush`/`InstrumentBezelBrush`) reservado ao painel-herói e ao bezel dos medidores — nunca espalhado
-- Leituras numéricas em monoespaçado tabular; frases e rótulos em fonte de display proporcional — nunca os dois papéis na mesma face
-- Raio de canto contido ("usinado", não "bolha de vidro")
-- Sem barra colorida lateral decorativa em linhas de lista; risco/estado se lê por cor de texto + forma de ícone
+- Grafite azulado frio como base — nunca preto puro, que cansa a vista e apaga as hairlines
+- Um único acento saturado: o ciano de tinta técnica, reservado a interação
+- Estratégia de cor "Restrained": neutros cobrem quase toda a superfície
+- Raio de canto quase reto (2–8px); `RadiusPill` só existe no interruptor e no avatar
+- Sem geometria 3D, sem glow, sem gauge decorativo: profundidade vem de camada, traço e material
+- Nenhuma página tem largura máxima travada — a folha é a janela
 
 ## Colors
 
-Paleta "Committed": neutros de grafite/metal cobrindo quase toda a superfície, laranja como único acento saturado, reservado a CTA, foco, estado ativo e leitura de instrumento.
-
 ### Primary
-- **Laranja de ignição** (`AccentBrush` #FF7A18 escuro / #C85300 claro): CTA primário, foco, seleção ativa, progresso, glow não-temável do `CoreVisual` (`Controls/CoreVisual.cs`, hardcoded pois materiais 3D não aceitam `DynamicResource`). Nunca fundo de superfície grande.
+- **Tinta técnica** (`AccentBrush` #3E9FBA escuro / #17708A claro): CTA primário, foco, seleção, estado ativo, progresso e filete da vista principal. Nunca preenche superfície grande.
+- `AccentTextBrush` para o acento aplicado a texto; `AccentBrightBrush` em hover; `AccentDeepBrush` em press.
 
-### Secondary
-- **Metal escovado** (`SteelBrush`/`MetalEdgeBrush`/`InstrumentBezelBrush`): segundo material da marca, não um cinza a mais. Usado só em: borda do `HeroSurface` (painel-herói de cada página) e no `TrackBrush` do `ArcProgress` (bezel do medidor de prontidão/otimizador). Se um componente novo quiser "parecer premium", este é o recurso — não mais laranja.
+### Brand
+- **Laranja da marca** (`BrandInkBrush` #FF7A18 escuro / #D95E00 claro): vem do logotipo e continua sendo compromisso de marca. **Só pode aparecer no logotipo da barra de título.** Saiu da interface porque laranja saturado sobre fundo escuro lê como alerta permanente — era a fonte real do cansaço visual relatado no visual anterior. Um teste (`ThemeTokenContractTests.BrandInk_StaysOutOfTheInterfacePalette`) trava essa restrição.
 
 ### Neutral
-- **Canvas** (`CanvasBaseBrush`/`CanvasSunkenBrush`): fundo da janela e poços (campos de texto, trilhos de progresso).
-- **Surface 1/2/3** (`Surface1Brush`→`Surface3Brush`): degraus de elevação, do painel mais raso ao mais alto (popover/dropdown).
-- **Texto** (`TextPrimaryBrush`/`TextSecondaryBrush`/`TextTertiaryBrush`): hierarquia de leitura; nunca cinza fora dessas três chaves.
-- **Bordas** (`BorderSubtleBrush`→`BorderStrongBrush`): hairlines e contornos de campo.
+- **Mesa** (`CanvasBaseBrush`): fundo da janela, fora da folha.
+- **Poço** (`CanvasSunkenBrush`): campos de texto, trilhos, cabeçalho de tabela, coluna de notas.
+- **Folha e degraus** (`Surface1Brush` → `Surface3Brush`): a folha, campos sobre ela, e superfícies flutuantes.
+- **Texto** (`TextPrimaryBrush`/`TextSecondaryBrush`/`TextTertiaryBrush`): nunca um cinza fora dessas três chaves.
+- **Traço** (`BorderSubtleBrush` → `BorderStrongBrush`): pesos de linha na lógica de desenho técnico — fina divide, média contorna, grossa delimita o operável.
+- **Retícula** (`SheetGridBrush`, `GridLineBrush`, `TickMarkBrush`): papel milimetrado e marcações de margem.
 
-Semânticas (`SuccessBaseBrush`, `WarningBaseBrush`, `DangerBaseBrush`, `InfoBaseBrush`, cada uma com par `*SurfaceBrush`/`*BorderBrush`) inalteradas neste redesign — já eram corretas e não competiam com o laranja.
+### Semantic
+`SuccessBaseBrush`, `WarningBaseBrush`, `DangerBaseBrush`, `InfoBaseBrush` e `RevertBaseBrush`, cada uma com par `*SurfaceBrush`/`*BorderBrush` quando aplicável. `InfoBaseBrush` é azul-aço, deliberadamente mais escuro e menos ciano que o acento, para os dois nunca se confundirem no gráfico ao vivo.
 
 ### Named Rules
-**The One Accent Rule.** Laranja aparece em CTA, foco, ativo e leitura de progresso — nunca como preenchimento de superfície além do botão primário e do wash do painel-herói (`SurfaceAccentWashBrush`, uma tinta âmbar quase imperceptível, não um fundo laranja).
+**The One Ink Rule.** Ciano é a única cor saturada da interface e significa interação. Um dado que não é acionável nem é leitura de instrumento não recebe acento.
 
-**The Metal-Is-Earned Rule.** `MetalEdgeBrush`/`InstrumentBezelBrush` só aparecem no painel-herói e no bezel dos medidores de cada página — no máximo um por tela. Um terceiro uso na mesma tela é ruído, não reforço de marca.
+**The Brand-Stays-On-The-Logo Rule.** Laranja é marca, não interface. Qualquer uso de `BrandInkBrush` fora de `MainWindow.xaml` é regressão e falha em teste.
+
+**The Contrast Floor.** Todo par (texto, fundo) realmente composto pela interface tem contraste ≥ 4.5:1 nos dois temas, verificado por teste — as escalas pequenas do app (Overline/Caption, 11–12px) não se qualificam como "texto grande".
 
 ## Typography
 
-**Display/Body Font:** Segoe UI Variable (Display/Text) — face nativa do Windows 11, correta para um app "Operate"; nenhuma face custom foi introduzida.
-**Readout Font:** Cascadia Mono (fallback Consolas) — ambas já acompanham o Windows, nenhuma dependência nova.
-
-**Character:** Segoe UI Variable carrega toda frase, rótulo e título — legível, neutro, correto para uma ferramenta técnica. Cascadia Mono é reservado exclusivamente a leituras numéricas ao vivo (a diferença é deliberada: ver Named Rule abaixo).
+**Display/Body:** Segoe UI Variable (Display/Text) — face nativa do Windows 11.
+**Readout:** Cascadia Mono (fallback Consolas). Ambas acompanham o Windows; nenhuma dependência nova.
 
 ### Hierarchy
-- **Display** (`DisplayText`, SemiBold, 34/40): recomendação do diagnóstico na Visão Geral.
-- **PageTitle** (`PageTitleText`, SemiBold, 24/30): título de cada página.
-- **Section/Subsection** (`SectionText` 16/22, `SubsectionText` 14/20, SemiBold): cabeçalhos de bloco dentro de uma página.
-- **Body/BodyStrong** (`BodyText`/`BodyStrongText`, 14/20): texto corrido e nome de item de lista.
-- **Secondary/Caption** (`SecondaryText` 12/17, `CaptionText` 11/15): descrição de apoio e metadado.
-- **Overline** (`OverlineText`, SemiBold, 11/14, `TextTertiaryBrush`): rótulo de campo/instrumento acima de um valor — nunca kicker decorativo acima de um título.
-- **Metric** (`MetricText` 30/34, `MetricSmallText` 20/24, `AppFontDisplay`): um VALOR EM TEXTO em destaque ("Moderada", "UAC somente ao executar").
-- **Readout** (`ReadoutText` 28/34, `ReadoutSmallText` 19/24, `AppFontMono`, tabular): uma LEITURA NUMÉRICA ao vivo ("88", "43", "8,0 GB", "62%").
+- **Display** (34/40, SemiBold): recomendação do diagnóstico.
+- **PageTitle** (24/30): título de cada folha, dentro do bloco de legenda.
+- **Section/Subsection** (16/22, 14/20, SemiBold): cabeçalhos de bloco.
+- **Body/BodyStrong** (14/20): texto corrido e nome de item.
+- **Secondary/Caption** (12/17, 11/15): apoio e metadado.
+- **Overline** (11/14, SemiBold, `TextTertiaryBrush`): rótulo de campo e **cabeçalho de coluna de tabela**.
+- **Metric** (30/34, 20/24, display): um VALOR EM PALAVRAS ("Moderada", "Impacto moderado").
+- **Readout** (28/34, 19/24, mono tabular): uma LEITURA NUMÉRICA ("88", "8,0 GB", "62%").
+- **TickLabel** (mono, tabular, tertiary): graduação de escala, timestamp, marcação de margem.
 
 ### Named Rules
-**The Number-vs-Word Rule.** `Readout*` é só para o que é literalmente um número lido de um instrumento (score, contagem, percentual, GB). `Metric*` é para tudo que é um valor em palavras. Aplicar mono a uma frase quebra a linha e lê como bug, não como precisão técnica — este é o erro mais fácil de reintroduzir ao adicionar uma tela nova.
+**The Number-vs-Word Rule.** `Readout*`/`TickLabel` só para o que é literalmente número lido de um instrumento. Aplicar mono a uma frase quebra a linha e lê como bug.
 
 ## Layout
 
-Grade de página única (`StackPanel`/`Grid` com `MaxWidth` 1100–1240, margens 32/24), sem breakpoints — janela desktop redimensionável com mínimo definido por página (`MainWindow` 960×580). Densidade alta mas hierárquica: cada bloco separado por `HairlineDivider`/`VerticalHairlineDivider`, nunca por card aninhado. Uma página tem no máximo um painel-herói (`HeroSurface`/`PanelSurfaceElevated`); o resto é conteúdo direto no fluxo da página.
+**A folha é a janela.** Cada página é um `SheetSurface` esticado, com:
+
+1. **Bloco de legenda** (`TitleBlockSurface`, largura total): título, contexto e a ação primária da página.
+2. **Corpo**, dividido em faixas verticais que somam a largura inteira.
+
+| Página | Faixas |
+|---|---|
+| Visão geral | vista principal (`*`) · notas (360) |
+| Otimizador | controle (440) · plano (`*`) · registro (420, colapsa quando não há execução) |
+| Histórico | tabela de revisões (`*`) · notas (340) |
+| Configurações | categorias (200) · formulário (`*`, conteúdo 880 centralizado) · notas (400) |
+
+Nenhuma página usa `MaxWidth` no nível da página. Regiões cujo conteúdo cresce
+com o tempo (gráfico ao vivo, tabelas) ficam em linha `*` e consomem a altura
+restante, então a folha termina exatamente na borda da janela.
+
+`MainWindow` mantém mínimo 960×580 e abre maximizada.
 
 ## Elevation & Depth
 
-Sistema híbrido: camadas tonais (`Surface1`→`Surface3`) fazem a maior parte do trabalho de profundidade; sombra (`Elevation2Shadow`/`Elevation3Shadow`, `DropShadowEffect` suave com offset vertical) só aparece em superfícies elevadas/flutuantes (popover, painel elevado do Otimizador), nunca em conteúdo em repouso no fluxo da página.
-
-### Shadow Vocabulary
-- **Elevation2Shadow** (`Opacity 0.26/0.08` escuro/claro, `BlurRadius 24`, `ShadowDepth 6`): painéis elevados (`PanelSurfaceElevated`).
-- **Elevation3Shadow** (`Opacity 0.40/0.14`, `BlurRadius 48`, `ShadowDepth 14`): superfícies flutuantes (popup de combobox, `FloatingSurface`).
+Camadas tonais fazem quase todo o trabalho. Sombra (`Elevation2Shadow`,
+`Elevation3Shadow`) só aparece em superfície que realmente flutua — popup de
+combobox, `FloatingSurface`. Conteúdo em repouso na folha **nunca** tem sombra.
 
 ### Named Rules
-**The Bezel-Not-Shadow Rule.** O painel-herói e os medidores usam borda de metal (`MetalEdgeBrush`/`InstrumentBezelBrush`), não sombra, para se destacar — o efeito é de peça usinada encaixada, não de cartão flutuando.
+**The Rule-Not-Card Rule.** Dentro da folha, separação é traço. Cartão dentro de
+cartão foi o defeito estrutural do visual anterior e não deve voltar.
 
 ## Shapes
 
-Escala de raio contida e "usinada", não a bolha de app de consumo: `RadiusXs 3`, `RadiusSm 5`, `RadiusMd 6`, `RadiusLg 10`, `RadiusXl 13`, `RadiusPill 999` (só para toggle, thumb de slider e badges/pills reais). Trilhos de progresso lineares (`ProgressRailStyle`) usam `RadiusXs`, não pill — leem como régua de instrumento, não como barra de app.
+`RadiusXs 2`, `RadiusSm 3`, `RadiusMd 4`, `RadiusLg 6`, `RadiusXl 8`, `RadiusPill 999`.
+
+`RadiusPill` é permitido **apenas** no trilho/thumb do interruptor e no avatar
+circular. Card, campo, botão, trilho de progresso e etiqueta usam a escala
+contida.
 
 ## Components
 
 ### Buttons
-- **Shape:** `RadiusMd` (6px).
-- **Primary** (`PrimaryButtonStyle`): fundo `AccentBrush`, texto `TextOnAccentBrush`, sem borda; press dá `scale 0.98`.
+- **Primary** (`PrimaryButtonStyle`): altura 36, `RadiusMd`, preenchido com `AccentBrush`, texto `TextOnAccentBrush`; press aplica `scale 0.98`.
 - **Secondary** (`SecondaryButtonStyle`): fantasma com borda `BorderDefaultBrush`, hover preenche `Surface2Brush`.
-- **Danger ghost / Link / Icon:** variantes do fantasma para ação destrutiva, ação terciária e botão de ícone (title bar).
+- **Danger ghost / Link / Icon**: variantes do fantasma.
 
-### Progress & Instruments
-- **ArcProgress** (anel): `TrackBrush="InstrumentBezelBrush"` (bezel de metal), `ProgressBrush="AccentGradientBrush"`. É o componente-assinatura do redesign — usado no medidor de prontidão (Visão Geral) e no "motor" do Otimizador.
-- **ProgressRailStyle** (trilho linear): `RadiusXs`, fundo `CanvasSunkenBrush`, preenchimento na cor semântica do dado (CPU=laranja, GPU=azul info).
-- **CoreVisual**: icosaedro 3D facetado, grafite difuso com emissivo laranja (`#FF7A18` hardcoded — ver nota em Colors). Não recebeu mudança de geometria/material neste redesign, só herda o novo bezel ao redor via `ArcProgress`.
+### Toggle
+`ToggleSwitchStyle` segue o padrão Fluent do Windows 11: trilho 40×20 vazado com
+borda quando desligado, preenchido com o acento quando ligado, thumb de 12px que
+**desliza** (`MotionControl` + `EaseControl`) e cresce para 14px em hover.
+Substituiu a cápsula 42×24 com bolinha de 18px do visual anterior.
 
-### Cards / Panels
-- **PanelSurface** (`RadiusLg`, borda `EdgeLightBrush`): superfície padrão.
-- **HeroSurface** (`RadiusXl`, fundo `SurfaceAccentWashBrush`, borda `MetalEdgeBrush`): um por página, o único momento com bezel de metal.
-- **InsetSurface**: poço para conteúdo denso (gráfico ao vivo).
+### Tables
+`TableHeaderRowStyle` + `TableHeaderCellText` + `TableRowStyle`. Cabeçalho e
+linha declaram **as mesmas larguras de coluna**, então alinham sem
+`SharedSizeScope`. Sem listra zebrada, sem cartão por linha, sem barra lateral
+colorida: risco e estado se leem por cor de texto + forma de ícone.
 
-### Ledger rows (listas)
-- `LedgerRowStyle`: linha com hairline inferior, sem card aninhado, sem barra lateral colorida — risco/estado se lê pela cor do texto/ícone, nunca por uma faixa de 2–3px do lado.
+### Instruments
+- **ProgressRailStyle**: trilho linear, `RadiusXs`, sem easing — reflete o dado real.
+- **Escala graduada**: readout tabular grande + trilho + marcações 0/25/50/75/100. É o medidor de prontidão; substituiu o anel `ArcProgress` sobre o núcleo 3D `CoreVisual`, ambos **removidos do produto**.
+- **LivePerformanceChart**: gráfico 2D leve, dentro de um poço com retícula, em linha `*`.
 
-### Inputs / Fields
-- **Style** (`FormTextBoxStyle`): poço `CanvasSunkenBrush`, borda `BorderStrongBrush`, `RadiusMd`.
-- **Focus:** borda vira `AccentBrush` (sem glow).
-- **Error:** borda `DangerBaseBrush` via `Validation.HasError`.
+### Surfaces
+`SheetSurface` (a folha) · `TitleBlockSurface` (bloco de legenda) · `HeroSurface` + `HeroAccentRule` (vista principal, marcada por filete de acento à esquerda) · `FieldSurface`/`PanelSurface` (região delimitada) · `InsetSurface` (poço) · `NotesColumnSurface` (coluna de notas) · `FloatingSurface` (popup).
 
 ### Navigation
-- Rail esquerdo (`ui:NavigationView`, WPF-UI nativo) sobre `SurfaceRailBrush`; item selecionado usa o accent neutro do WPF-UI (não laranja) — o laranja fica reservado para dentro do conteúdo, não para o chrome de navegação.
+Rail esquerdo (`ui:NavigationView`, WPF-UI nativo) sobre `SurfaceRailBrush`. O
+chrome da janela usa acento neutro (`#232B37` escuro / `#CBD1DB` claro): o ciano
+fica reservado ao conteúdo.
+
+## Motion
+
+Durações e curvas vivem em `Themes/Tokens/Motion.xaml` e nenhuma Storyboard nova
+deve usar valor fora dali. `App.ApplyMotionPolicyToDurationTokens` zera essas
+durações na inicialização quando o Windows pede menos animação — Storyboards
+declaradas dentro de `ControlTemplate` são congeladas e não conseguem consultar
+`MotionPolicy` em tempo de execução, então a política é aplicada na fonte.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** reservar `Readout*`/`AppFontMono` só a números lidos de um instrumento (score, %, GB, contagem).
-- **Do** usar `MetalEdgeBrush`/`InstrumentBezelBrush` no máximo uma vez por página (painel-herói OU bezel de medidor).
-- **Do** ler risco/estado por cor do texto + forma do ícone, nunca por barra lateral colorida em linha de lista.
-- **Do** manter FluentWindow/Mica/TitleBar/NavigationView do WPF-UI para o chrome nativo da janela — não recriar chrome de janela do zero.
-- **Do** referenciar sempre um `DynamicResource`/`StaticResource` de `Themes/`, nunca um hex ou `CornerRadius` literal numa página nova.
+- **Do** deixar a folha ocupar a janela inteira e dar linha `*` ao que cresce com o tempo.
+- **Do** separar regiões por traço e cabeçalho, não por cartão aninhado.
+- **Do** usar `Grid` com coluna `*` quando um `TextBlock` precisa quebrar ao lado de um ícone — `StackPanel Orientation="Horizontal"` dá largura infinita ao filho e `TextWrapping` nunca dispara.
+- **Do** declarar as mesmas larguras no cabeçalho e na linha de uma tabela.
+- **Do** referenciar sempre um recurso de `Themes/`, nunca um hex ou `CornerRadius` literal.
 
 ### Don't:
-- **Don't** aplicar `Readout*` a uma frase ou palavra — quebra layout e lê como bug (era o defeito real encontrado e corrigido durante a verificação visual deste redesign).
-- **Don't** adicionar um segundo painel-herói ou um segundo uso de metal escovado na mesma página — dilui o momento.
-- **Don't** usar `RadiusPill` fora de toggle/thumb/badge — trilhos e cards usam a escala contida.
-- **Don't** introduzir glow decorativo, gauge sem dado real por trás, ou paleta "gamer RGB" genérica — a marca é bancada de precisão, não periférico.
-- **Don't** trocar o laranja por outra cor de acento: é compromisso de marca do logo, preservado em qualquer expansão futura do sistema.
+- **Don't** usar laranja em qualquer lugar da interface — é marca, e há teste travando isso.
+- **Don't** aplicar `Readout*`/`TickLabel` a uma frase.
+- **Don't** usar `RadiusPill` fora do interruptor e do avatar.
+- **Don't** reintroduzir geometria 3D, anel decorativo, glow ou gauge sem dado real por trás.
+- **Don't** travar a largura de uma página com `MaxWidth` no nível da página: era exatamente o que deixava metade da janela vazia.
+- **Don't** preencher espaço com conteúdo inventado. Uma coluna de notas só existe quando carrega informação real do produto.

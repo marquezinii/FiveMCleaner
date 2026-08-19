@@ -1,4 +1,4 @@
-<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                     xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                     xmlns:local="clr-namespace:FiveMCleaner.App">
@@ -30,8 +30,8 @@
     <!-- ================= Botões ================= -->
 
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
-        <Setter Property="Height" Value="40" />
-        <Setter Property="Padding" Value="20,0" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Padding" Value="18,0" />
         <Setter Property="Foreground" Value="{DynamicResource TextOnAccentBrush}" />
         <Setter Property="Background" Value="{DynamicResource AccentBrush}" />
         <Setter Property="BorderThickness" Value="0" />
@@ -78,7 +78,7 @@
                                         <Setter Property="Control.Template">
                                             <Setter.Value>
                                                 <ControlTemplate>
-                                                    <Border BorderBrush="{DynamicResource FocusRingBrush}" BorderThickness="2" CornerRadius="10" Margin="-2" />
+                                                    <Border BorderBrush="{DynamicResource FocusRingBrush}" BorderThickness="1.5" CornerRadius="6" Margin="-3" />
                                                 </ControlTemplate>
                                             </Setter.Value>
                                         </Setter>
@@ -98,8 +98,8 @@
 
     <!-- Botão "fantasma": sem preenchimento, usado para ações secundárias. -->
     <Style x:Key="SecondaryButtonStyle" TargetType="Button">
-        <Setter Property="Height" Value="40" />
-        <Setter Property="Padding" Value="18,0" />
+        <Setter Property="Height" Value="36" />
+        <Setter Property="Padding" Value="16,0" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}" />
@@ -207,13 +207,13 @@
 
     <!-- Provedor externo (Google): neutro por exigência de marca do provedor. -->
     <Style x:Key="ProviderButtonStyle" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-        <Setter Property="Height" Value="44" />
+        <Setter Property="Height" Value="40" />
     </Style>
 
     <!-- ================= Campos ================= -->
 
     <Style x:Key="FormTextBoxStyle" TargetType="TextBox">
-        <Setter Property="Height" Value="40" />
+        <Setter Property="Height" Value="36" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="Background" Value="{DynamicResource CanvasSunkenBrush}" />
         <Setter Property="BorderBrush" Value="{DynamicResource BorderStrongBrush}" />
@@ -317,35 +317,112 @@
         </Setter>
     </Style>
 
-    <!-- Interruptor: usado em toda linha de Configurações que liga/desliga algo. -->
+    <!--
+        Interruptor. Padrão de mercado do Windows 11 (Fluent): trilho de
+        40x20 vazado com borda quando desligado, preenchido com o acento
+        quando ligado, e um thumb pequeno de 12px que DESLIZA entre as duas
+        posições em vez de saltar.
+
+        Substitui a cápsula de 42x24 com bolinha de 18px do visual anterior,
+        que lia como um controle gordo e ovalado. Aqui a proporção é a mesma
+        que o usuário já conhece do próprio sistema operacional: o formato
+        continua sendo de interruptor (pill), mas com o peso correto.
+
+        O trilho é o único lugar do app, junto do avatar, onde RadiusPill é
+        permitido — ver Themes/Tokens/Radii.xaml.
+    -->
     <Style x:Key="ToggleSwitchStyle" TargetType="CheckBox">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
-                    <Grid>
+                    <Grid Background="Transparent">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <ContentPresenter VerticalAlignment="Center" />
-                        <Border x:Name="Track" Grid.Column="1" Width="42" Height="24" Margin="18,0,0,0" CornerRadius="{StaticResource RadiusPill}" Background="{DynamicResource ToggleTrackOffBrush}" BorderBrush="{DynamicResource BorderStrongBrush}" BorderThickness="1">
-                            <Ellipse x:Name="Thumb" Width="18" Height="18" Margin="2" HorizontalAlignment="Left" Fill="{DynamicResource ToggleThumbBrush}" />
-                        </Border>
+                        <Grid Grid.Column="1" Margin="18,0,0,0" VerticalAlignment="Center">
+                            <Border x:Name="FocusRing"
+                                    Width="48" Height="28"
+                                    CornerRadius="{StaticResource RadiusPill}"
+                                    BorderBrush="{DynamicResource FocusRingBrush}"
+                                    BorderThickness="1.5"
+                                    Opacity="0" />
+                            <Border x:Name="Track"
+                                    Width="40" Height="20"
+                                    CornerRadius="{StaticResource RadiusPill}"
+                                    Background="{DynamicResource ToggleTrackOffBrush}"
+                                    BorderBrush="{DynamicResource TextTertiaryBrush}"
+                                    BorderThickness="1">
+                                <Ellipse x:Name="Thumb"
+                                         Width="12" Height="12"
+                                         Margin="3,0,0,0"
+                                         HorizontalAlignment="Left"
+                                         VerticalAlignment="Center"
+                                         Fill="{DynamicResource ToggleThumbBrush}">
+                                    <Ellipse.RenderTransform>
+                                        <TranslateTransform x:Name="ThumbShift" X="0" />
+                                    </Ellipse.RenderTransform>
+                                </Ellipse>
+                            </Border>
+                        </Grid>
                     </Grid>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrush}" />
                             <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
-                            <Setter TargetName="Thumb" Property="HorizontalAlignment" Value="Right" />
+                            <Setter TargetName="Thumb" Property="Fill" Value="{DynamicResource ToggleThumbOnBrush}" />
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ThumbShift"
+                                                         Storyboard.TargetProperty="X"
+                                                         To="20"
+                                                         Duration="{StaticResource MotionControl}"
+                                                         EasingFunction="{StaticResource EaseControl}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                            <Trigger.ExitActions>
+                                <BeginStoryboard>
+                                    <Storyboard>
+                                        <DoubleAnimation Storyboard.TargetName="ThumbShift"
+                                                         Storyboard.TargetProperty="X"
+                                                         To="0"
+                                                         Duration="{StaticResource MotionControl}"
+                                                         EasingFunction="{StaticResource EaseControl}" />
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.ExitActions>
                         </Trigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="IsChecked" Value="False" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Track" Property="Background" Value="{DynamicResource ToggleTrackOffHoverBrush}" />
+                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource TextSecondaryBrush}" />
+                            <Setter TargetName="Thumb" Property="Width" Value="14" />
+                            <Setter TargetName="Thumb" Property="Height" Value="14" />
+                            <Setter TargetName="Thumb" Property="Margin" Value="2,0,0,0" />
+                        </MultiTrigger>
+                        <MultiTrigger>
+                            <MultiTrigger.Conditions>
+                                <Condition Property="IsMouseOver" Value="True" />
+                                <Condition Property="IsChecked" Value="True" />
+                            </MultiTrigger.Conditions>
+                            <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrightBrush}" />
+                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrightBrush}" />
+                        </MultiTrigger>
                         <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource FocusRingBrush}" />
-                            <Setter TargetName="Track" Property="BorderThickness" Value="2" />
+                            <Setter TargetName="FocusRing" Property="Opacity" Value="1" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.45" />
+                            <Setter Property="Cursor" Value="Arrow" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -584,13 +661,13 @@
     <!-- ================= Wpf.Ui ================= -->
 
     <Style TargetType="ui:Card" BasedOn="{StaticResource {x:Type ui:Card}}">
-        <Setter Property="Background" Value="{DynamicResource Surface1Brush}" />
-        <Setter Property="BorderBrush" Value="{DynamicResource EdgeLightBrush}" />
+        <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
     </Style>
 
     <Style TargetType="ui:CardControl" BasedOn="{StaticResource {x:Type ui:CardControl}}">
-        <Setter Property="CornerRadius" Value="{StaticResource RadiusLg}" />
-        <Setter Property="Background" Value="{DynamicResource Surface1Brush}" />
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}" />
+        <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
     </Style>
 
     <!-- ================= Composição ================= -->
@@ -662,5 +739,66 @@
     <Style x:Key="InstrumentCellStyle" TargetType="StackPanel">
         <Setter Property="Margin" Value="24,12" />
         <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+    <!-- ================= Tabela ================= -->
+
+    <!--
+        Tabela de dados. O plano do Otimizador e o Histórico deixaram de ser
+        listas empilhadas numa coluna estreita e passaram a ser tabelas reais
+        com colunas nomeadas — é o que preenche a largura da folha com
+        conteúdo verdadeiro em vez de vazio. Separação por traço fino, sem
+        listra zebrada e sem cartão por linha.
+    -->
+    <Style x:Key="TableHeaderRowStyle" TargetType="Border">
+        <Setter Property="Background" Value="{DynamicResource CanvasSunkenBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding" Value="16,9" />
+    </Style>
+
+    <Style x:Key="TableHeaderCellText" TargetType="TextBlock" BasedOn="{StaticResource OverlineText}">
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="TextTrimming" Value="CharacterEllipsis" />
+    </Style>
+
+    <Style x:Key="TableRowStyle" TargetType="Border">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
+        <Setter Property="BorderThickness" Value="0,0,0,1" />
+        <Setter Property="Padding" Value="16,11" />
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!--
+        Etiqueta de legenda: categoria, risco, reversibilidade. Retangular e
+        pequena, no vocabulário de carimbo de prancha — nunca a pílula colorida
+        genérica. A cor vem de quem usa, pelo Foreground/BorderBrush.
+    -->
+    <Style x:Key="TagChipStyle" TargetType="Border">
+        <Setter Property="CornerRadius" Value="{StaticResource RadiusXs}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource BorderDefaultBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="6,2" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+    </Style>
+
+    <Style x:Key="TagChipText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontBody}" />
+        <Setter Property="FontSize" Value="10" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="LineHeight" Value="13" />
+        <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+    </Style>
+
+    <!-- Rótulo de eixo/marcação de margem da folha. -->
+    <Style x:Key="TickLabelText" TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
+        <Setter Property="FontFamily" Value="{StaticResource AppFontMono}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}" />
+        <Setter Property="Typography.NumeralAlignment" Value="Tabular" />
     </Style>
 </ResourceDictionary>

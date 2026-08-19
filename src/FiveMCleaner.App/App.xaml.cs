@@ -11,9 +11,36 @@ public partial class App : System.Windows.Application
     private static int isHandlingFatalError;
     private SingleInstanceGuard? singleInstanceGuard;
 
+    /// <summary>
+    /// Zera as durações de <c>Themes/Tokens/Motion.xaml</c> quando o Windows
+    /// pede menos animação. Storyboards declarados dentro de ControlTemplate
+    /// são congelados e não conseguem consultar <see cref="MotionPolicy"/> em
+    /// tempo de execução, então a política é aplicada uma única vez na fonte:
+    /// o token de duração. Assim todo controle do app — interruptor, segmentado,
+    /// navegação — respeita a preferência de acessibilidade sem que cada
+    /// template precise repetir a decisão.
+    /// </summary>
+    private void ApplyMotionPolicyToDurationTokens()
+    {
+        if (MotionPolicy.AnimationsEnabled)
+        {
+            return;
+        }
+
+        var instant = new Duration(TimeSpan.Zero);
+        foreach (var key in new[] { "MotionMicro", "MotionControl", "MotionNav", "MotionEnter", "MotionStructural", "MotionExit" })
+        {
+            if (Resources.Contains(key))
+            {
+                Resources[key] = instant;
+            }
+        }
+    }
+
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
+        ApplyMotionPolicyToDurationTokens();
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
