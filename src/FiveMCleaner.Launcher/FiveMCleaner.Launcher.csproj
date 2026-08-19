@@ -14,4 +14,47 @@
     <ProjectReference Include="../FiveMCleaner.App/FiveMCleaner.App.csproj" />
     <ProjectReference Include="../FiveMCleaner.Contracts/FiveMCleaner.Contracts.csproj" />
   </ItemGroup>
+  <!--
+    Single-file publish (PublishSingleFile=true, used only for this project)
+    bundles every managed dependency directly from its build output path -
+    including FiveMCleaner.Core/.Windows - bypassing the loose $(PublishDir)
+    entirely (see Microsoft.NET.Publish.targets: "When publishing to a single
+    file, ... files are directly written to the bundle file"). Hardening those
+    two assemblies AFTER this publish, the way scripts/Build-Portable.ps1
+    hardens the Broker/App loose output, is too late: the bundle is already
+    written. Hardening them BEFORE this publish doesn't stick either: any
+    subsequent `dotnet build`/`publish` recompiles Core/Windows from source
+    into that same canonical path regardless of the (newer) hardened bytes
+    already sitting there.
+    The only point where hardening reliably survives is INSIDE this exact
+    publish's own MSBuild execution, between the moment the file list is
+    computed (Core/Windows's canonical build output path is now fixed as
+    their bundle source) and the moment GenerateSingleFileBundle actually
+    reads bytes from that path - nothing recompiles them again in between.
+  -->
+  <Target Name="HardenBundledAssemblies"
+          Condition="'$(FiveMCleanerHarden)' == 'true'"
+          AfterTargets="ComputeFilesToPublish"
+          BeforeTargets="GenerateSingleFileBundle">
+    <PropertyGroup>
+      <!--
+        No trailing backslash: a path ending in \ immediately before the
+        closing " in the Exec command below would escape that quote instead
+        of closing it (a CommandLineToArgvW quirk), corrupting the argument.
+      -->
+      <_FiveMCleanerWindowsCanonicalOutput>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\FiveMCleaner.Windows\bin\$(Configuration)\$(FiveMCleanerWindowsTargetFramework)'))</_FiveMCleanerWindowsCanonicalOutput>
+      <_FiveMCleanerCoreCanonicalOutput>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\FiveMCleaner.Core\bin\$(Configuration)\$(FiveMCleanerTargetFramework)'))</_FiveMCleanerCoreCanonicalOutput>
+    </PropertyGroup>
+    <!--
+      Obfuscar needs both assemblies together to keep cross-assembly renaming
+      consistent, and FiveMCleaner.Windows's own build output already holds a
+      local copy of FiveMCleaner.Core.dll alongside its own Windows.dll - so
+      hardening in place there covers Windows.dll at its true canonical path
+      directly. Core.dll's own canonical path is a separate folder (Core has
+      no reference to Windows), so its hardened bytes are propagated there by
+      a plain copy, not a second Obfuscar run.
+    -->
+    <Exec Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\Invoke-Obfuscation.ps1&quot; -PublishDirectory &quot;$(_FiveMCleanerWindowsCanonicalOutput)&quot; -MappingOutputDirectory &quot;$(MSBuildThisFileDirectory)..\..\artifacts\obfuscation-maps&quot;" />
+    <Copy SourceFiles="$(_FiveMCleanerWindowsCanonicalOutput)\FiveMCleaner.Core.dll" DestinationFolder="$(_FiveMCleanerCoreCanonicalOutput)" />
+  </Target>
 </Project>

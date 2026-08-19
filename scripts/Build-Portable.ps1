@@ -72,17 +72,27 @@ try {
             "-p:PathMap=$pathMap",
             '--output', $target.Output
         )
+        if ($Harden) {
+            # For Broker/App this is unused (harmless) - only the Launcher
+            # project defines the HardenBundledAssemblies target this
+            # property gates. See FiveMCleaner.Launcher.csproj for why the
+            # single-file bundle needs its own in-MSBuild hardening hook
+            # instead of the publish-then-harden-in-place used below.
+            $publishArguments += '-p:FiveMCleanerHarden=true'
+        }
         & dotnet @publishArguments
         if ($LASTEXITCODE -ne 0) { throw "$($target.Name) publish failed." }
     }
 
     if ($Harden) {
-        # Harden the loose assemblies now, while they are still the raw publish
-        # output. Everything downstream (broker copy, both SHA256SUMS files, the
-        # runtime/portable ZIPs and every hash the release workflow signs)
-        # derives from these files, so obfuscating here is what makes the signed,
-        # shipped runtime the obfuscated one. The Launcher single-file bundle is
-        # intentionally not hardened here (see docs/release-hardening.md).
+        # Harden the loose Broker/App assemblies now, while they are still the
+        # raw publish output. Everything downstream (broker copy, both
+        # SHA256SUMS files, the runtime/portable ZIPs and every hash the
+        # release workflow signs) derives from these files, so obfuscating
+        # here is what makes the signed, shipped runtime the obfuscated one.
+        # The Launcher's single-file bundle was already hardened during its
+        # own publish above, via FiveMCleaner.Launcher.csproj's
+        # HardenBundledAssemblies target.
         $mappingRoot = Join-Path $artifactsRoot 'obfuscation-maps'
         & (Join-Path $PSScriptRoot 'Invoke-Obfuscation.ps1') -PublishDirectory $brokerOutput -MappingOutputDirectory $mappingRoot
         if ($LASTEXITCODE -ne 0) { throw 'Broker obfuscation failed.' }

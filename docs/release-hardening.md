@@ -31,9 +31,13 @@ silently:
   member breaks persisted data and the elevated broker contract.
 - `FiveMCleaner.App` — WPF. XAML/BAML binds to view-model members and resolves
   types by string; the obfuscator does not read XAML.
-- `FiveMCleaner.Launcher` / `FiveMCleaner.Broker` — entry-point hosts.
+- `FiveMCleaner.Broker` — entry-point host (its own `Core`/`Windows` copy is
+  hardened like the App's, see below — the project itself isn't touched).
 - `FiveMCleaner.UpdateRuntime` — the update/rollback state machine is
   safety-critical and low IP value; kept clean deliberately.
+
+`FiveMCleaner.Launcher` is a host too, but its `Core`/`Windows` *dependency
+copies* need special handling — see "The Launcher's single-file bundle" below.
 
 ### Why `KeepPublicApi` is the correctness guarantee
 
@@ -62,17 +66,59 @@ The public release workflow (`.github/workflows/release.yml`) always builds with
 `-Harden`. Development builds, the dev shortcut and CI test builds do not, so
 day-to-day debugging is unaffected.
 
+### The Launcher's single-file bundle
+
+`FiveMCleaner.Launcher` publishes as a self-contained single file
+(`PublishSingleFile=true`). The .NET SDK's single-file bundler does not read
+its managed dependencies from the loose publish output — per
+`Microsoft.NET.Publish.targets`, "when publishing to a single file, ... files
+are directly written to the bundle file", reading each assembly straight from
+its own project's canonical build output path
+(`%(ResolvedFileToPublish.Identity)`) at the moment `GenerateSingleFileBundle`
+runs. Two consequences that shaped this design:
+
+- Hardening `Core`/`Windows` **after** the Launcher's publish (the way
+  Broker/App are hardened above) is too late: the bundle is already written.
+- Hardening them **before** a separate `dotnet build`/`publish` invocation
+  doesn't stick either: any later build recompiles `Core`/`Windows` from
+  source into that same canonical path, discarding the externally-hardened
+  bytes regardless of their (newer) timestamp — MSBuild's copy-to-output step
+  for referenced assemblies re-derives from its own intermediate (`obj`)
+  cache, not from whatever happens to already sit at the output path.
+
+The only point where hardening reliably survives is **inside the Launcher's
+own MSBuild execution**, between the moment `ComputeFilesToPublish` fixes
+`Core`/`Windows`'s canonical path as the bundle's source and the moment
+`GenerateSingleFileBundle` actually reads bytes from that path — nothing
+recompiles them again in between. `src/FiveMCleaner.Launcher/FiveMCleaner.Launcher.csproj`
+defines a `HardenBundledAssemblies` target (`AfterTargets="ComputeFilesToPublish"`,
+`BeforeTargets="GenerateSingleFileBundle"`, gated on `-p:FiveMCleanerHarden=true`)
+that runs `Invoke-Obfuscation.ps1` against `FiveMCleaner.Windows`'s own build
+output at exactly that point, then copies the hardened `Core.dll` bytes over
+to `FiveMCleaner.Core`'s own canonical output (a separate folder, since `Core`
+has no reference to `Windows`). `scripts/Build-Portable.ps1` passes that
+property to every `-Harden` publish target; it's a no-op for Broker/App, which
+don't define the target.
+
 ## Post-obfuscation verification
 
 Two gates run against the hardened output:
 
 1. **Structural** (`scripts/Invoke-Obfuscation.ps1`): each rewritten assembly
    must be a valid .NET PE and must differ from its pre-obfuscation bytes, or
-   the build fails before anything is hashed or signed.
+   the build fails before anything is hashed or signed. This applies equally
+   to Broker's/App's loose copies and to the assemblies the Launcher's
+   `HardenBundledAssemblies` target hardens before bundling.
 2. **Runtime smoke** (`scripts/Test-HardenedRuntime.ps1`): the hardened app is
    launched in `--demo-synthetic --capture` mode and must render its pages and
    exit cleanly. This proves the obfuscated `Core`/`Windows` load and execute —
    renamed members dispatch and encrypted strings decrypt at runtime.
+
+No public artifact ships an un-hardened `Core`/`Windows` copy: this was
+verified by byte-scanning the final `FiveMCleaner.Launcher.exe` (and the
+Broker/App loose copies) for literals that only exist in the un-obfuscated
+source (e.g. exception messages from `PlanBuilder`/`ProfilePresentationProvider`)
+— present in a plain build, absent everywhere once `-Harden` is used.
 
 ## De-obfuscating crash reports
 
@@ -96,12 +142,3 @@ the original symbols. The map is never attached to the public release.
 
 The pinned obfuscator (`obfuscar.globaltool`) lives in
 `.config/dotnet-tools.json`; `Invoke-Obfuscation.ps1` restores it automatically.
-
-## Known limitation
-
-The `FiveMCleaner.Launcher` is published as a single-file executable that
-bundles copies of its referenced assemblies (including `Core`/`Windows`). Those
-bundled copies are **not** hardened — only the loose assemblies in
-`Runtime\versions\<version>\`, which are what the app actually runs, are. Closing
-this gap would require obfuscating the referenced assemblies before the Launcher
-is bundled (a build-order change) and is left as a deliberate follow-up.
