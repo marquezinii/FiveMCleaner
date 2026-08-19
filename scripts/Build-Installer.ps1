@@ -328,6 +328,17 @@ try {
         -PublishDirectory $publishDirectory `
         -ExpectedVersion $Version
 
+    if ($Harden) {
+        # Build-Portable.ps1 already fail-closed-checked $publishDirectory and
+        # both ZIPs; this closes the loop on the compiled installer itself -
+        # the artifact users actually download and run.
+        & (Join-Path $PSScriptRoot 'Test-NoUnobfuscatedAssemblies.ps1') `
+            -RuntimeDirectory $publishDirectory `
+            -Version $Version `
+            -InstallerPath $stagedInstaller
+        if ($LASTEXITCODE -ne 0) { throw 'Fail-closed hardening verification failed for the installer.' }
+    }
+
     foreach ($path in @($finalInstaller, $finalContents, $finalHash, $releaseManifest)) {
         if (Test-Path -LiteralPath $path) {
             Remove-Item -LiteralPath $path -Force

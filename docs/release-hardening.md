@@ -90,35 +90,74 @@ The only point where hardening reliably survives is **inside the Launcher's
 own MSBuild execution**, between the moment `ComputeFilesToPublish` fixes
 `Core`/`Windows`'s canonical path as the bundle's source and the moment
 `GenerateSingleFileBundle` actually reads bytes from that path — nothing
-recompiles them again in between. `src/FiveMCleaner.Launcher/FiveMCleaner.Launcher.csproj`
-defines a `HardenBundledAssemblies` target (`AfterTargets="ComputeFilesToPublish"`,
-`BeforeTargets="GenerateSingleFileBundle"`, gated on `-p:FiveMCleanerHarden=true`)
-that runs `Invoke-Obfuscation.ps1` against `FiveMCleaner.Windows`'s own build
-output at exactly that point, then copies the hardened `Core.dll` bytes over
-to `FiveMCleaner.Core`'s own canonical output (a separate folder, since `Core`
-has no reference to `Windows`). `scripts/Build-Portable.ps1` passes that
-property to every `-Harden` publish target; it's a no-op for Broker/App, which
-don't define the target.
+recompiles them again in between, and this ordering is an explicit MSBuild
+target-graph guarantee (`AfterTargets`/`BeforeTargets`), not a side effect of
+incremental build caching or of which target happens to run first or last.
+`src/FiveMCleaner.Launcher/FiveMCleaner.Launcher.csproj` defines two targets,
+gated on `-p:FiveMCleanerHarden=true`:
+
+- `HardenBundledAssemblies` (`AfterTargets="ComputeFilesToPublish"`,
+  `BeforeTargets="GenerateSingleFileBundle"`) backs up the current
+  `Core.dll`/`Windows.dll` bytes, runs `Invoke-Obfuscation.ps1` against
+  `FiveMCleaner.Windows`'s own build output in place, then copies the
+  hardened `Core.dll` over to `FiveMCleaner.Core`'s own canonical output (a
+  separate folder, since `Core` has no reference to `Windows`).
+- `RestoreCanonicalAssembliesAfterBundling` (`AfterTargets="GenerateSingleFileBundle"`)
+  restores both canonical outputs from that backup, unconditionally, right
+  after the bundle has been written.
+
+This backup/restore pair matters because the target above mutates a *shared*
+project build output — the same folder every other project reference to
+`Core`/`Windows` resolves from. Restoring it turns the hardening into a
+transient effect scoped to this one publish, instead of a lasting mutation
+that a later `dotnet build`/debug session (or the Broker/App targets, if the
+publish order ever changes) could pick up by accident. This was verified by
+publishing the Launcher completely in isolation — no Broker/App target
+before or after it — with `-p:FiveMCleanerHarden=true`: the resulting bundle
+is hardened, and the canonical `Core`/`Windows` build output is back to its
+clean, pre-hardening bytes immediately afterward, with nothing else in the
+build graph involved.
+
+`scripts/Build-Portable.ps1` passes `-p:FiveMCleanerHarden=true` to every
+`-Harden` publish target; it's a no-op for Broker/App, which don't define
+these targets.
 
 ## Post-obfuscation verification
 
-Two gates run against the hardened output:
+Three gates run against the hardened output, and none of them trust that the
+steps above worked — each one proves it on the actual output bytes:
 
 1. **Structural** (`scripts/Invoke-Obfuscation.ps1`): each rewritten assembly
    must be a valid .NET PE and must differ from its pre-obfuscation bytes, or
    the build fails before anything is hashed or signed. This applies equally
    to Broker's/App's loose copies and to the assemblies the Launcher's
    `HardenBundledAssemblies` target hardens before bundling.
-2. **Runtime smoke** (`scripts/Test-HardenedRuntime.ps1`): the hardened app is
+2. **Fail-closed artifact scan** (`scripts/Test-NoUnobfuscatedAssemblies.ps1`):
+   run automatically by `Build-Portable.ps1 -Harden` (against the assembled
+   runtime tree and both ZIPs) and by `Build-Installer.ps1 -Harden` (against
+   the compiled installer). It byte-scans every public artifact — the loose
+   App/Broker `Core.dll`/`Windows.dll`, the `Launcher.exe` bundle, both ZIPs'
+   contents and (when 7-Zip can parse the installer's format) the installer's
+   own extracted payload — for a curated set of **private/internal** member
+   names from `Core`/`Windows` source (e.g. `GraphicsTargetProcessGuard`, a
+   fully-internal class Obfuscar renames in its entirety). Their original
+   UTF-8 name bytes live verbatim in a compiled assembly's `#Strings`
+   metadata heap (ECMA-335) and, since single-file bundling isn't compressed
+   here, in the raw bytes of a bundled `.exe` too — so their presence
+   anywhere in a public artifact means hardening did not apply, and the build
+   throws instead of shipping it. The same script also fails the build if any
+   `.pdb` or `Mapping-*.txt` (obfuscation symbol map) file is found under the
+   public runtime tree — neither is meant to leave the build machine; symbol
+   maps are uploaded separately as a private workflow artifact (see below).
+3. **Runtime smoke** (`scripts/Test-HardenedRuntime.ps1`): the hardened app is
    launched in `--demo-synthetic --capture` mode and must render its pages and
    exit cleanly. This proves the obfuscated `Core`/`Windows` load and execute —
    renamed members dispatch and encrypted strings decrypt at runtime.
 
-No public artifact ships an un-hardened `Core`/`Windows` copy: this was
-verified by byte-scanning the final `FiveMCleaner.Launcher.exe` (and the
-Broker/App loose copies) for literals that only exist in the un-obfuscated
-source (e.g. exception messages from `PlanBuilder`/`ProfilePresentationProvider`)
-— present in a plain build, absent everywhere once `-Harden` is used.
+Gate 2 is deliberately structural (metadata identifier names), not a
+one-off manual check: it was validated both positively (a correctly hardened
+build passes) and negatively (a build with `-Harden` omitted fails loudly,
+listing every un-hardened location) before being wired into the pipeline.
 
 ## De-obfuscating crash reports
 
@@ -138,6 +177,11 @@ the original symbols. The map is never attached to the public release.
 
 # Smoke a hardened runtime tree
 .\scripts\Test-HardenedRuntime.ps1 -RuntimeDirectory .\artifacts\FiveMCleaner-win-x64 -Version <version>
+
+# Fail-closed scan for un-hardened Core/Windows copies or leaked debug/map files
+# (Build-Portable.ps1/Build-Installer.ps1 already run this under -Harden)
+.\scripts\Test-NoUnobfuscatedAssemblies.ps1 -RuntimeDirectory .\artifacts\FiveMCleaner-win-x64 -Version <version> `
+    -PortableZipPath .\artifacts\FiveMCleaner-win-x64.zip -RuntimeZipPath .\artifacts\FiveMCleaner-Runtime-win-x64.zip
 ```
 
 The pinned obfuscator (`obfuscar.globaltool`) lives in

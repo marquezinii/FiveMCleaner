@@ -180,6 +180,20 @@ try {
     $archiveHash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
     Set-Content -LiteralPath $archiveHashPath -Value "$archiveHash  $([System.IO.Path]::GetFileName($archivePath))" -Encoding ascii
 
+    if ($Harden) {
+        # Fail-closed gate: don't trust that the steps above hardened
+        # everything correctly - prove it, on the exact bytes about to ship
+        # (the assembled tree and both ZIPs), and abort the build rather than
+        # produce a release asset if any un-hardened Core/Windows copy or
+        # leaked debug/obfuscation-map file is found.
+        & (Join-Path $PSScriptRoot 'Test-NoUnobfuscatedAssemblies.ps1') `
+            -RuntimeDirectory $finalRoot `
+            -Version $version `
+            -PortableZipPath $archivePath `
+            -RuntimeZipPath $runtimeArchivePath
+        if ($LASTEXITCODE -ne 0) { throw 'Fail-closed hardening verification failed.' }
+    }
+
     Write-Host "Portable build ready: $finalRoot" -ForegroundColor Green
     Write-Host "Portable archive ready: $archivePath" -ForegroundColor Green
     Write-Host "Atomic runtime archive ready: $runtimeArchivePath" -ForegroundColor Green

@@ -31,30 +31,63 @@
     computed (Core/Windows's canonical build output path is now fixed as
     their bundle source) and the moment GenerateSingleFileBundle actually
     reads bytes from that path - nothing recompiles them again in between.
+
+    This mutates FiveMCleaner.Core/.Windows's own shared project build output
+    in place, which every other project reference resolves from too - so it
+    must not be a lasting side effect. Backing up the pre-hardening bytes
+    here and restoring them in RestoreCanonicalAssembliesAfterBundling below
+    (AfterTargets="GenerateSingleFileBundle") keeps the canonical output
+    clean once bundling is done, regardless of what publishes next, in what
+    order, or whether anything else republishes at all - a plain `dotnet
+    build`/debug session right after `-Harden` never risks picking up
+    hardened bytes by accident.
   -->
+  <PropertyGroup>
+    <_FiveMCleanerWindowsCanonicalOutput>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\FiveMCleaner.Windows\bin\$(Configuration)\$(FiveMCleanerWindowsTargetFramework)'))</_FiveMCleanerWindowsCanonicalOutput>
+    <_FiveMCleanerCoreCanonicalOutput>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\FiveMCleaner.Core\bin\$(Configuration)\$(FiveMCleanerTargetFramework)'))</_FiveMCleanerCoreCanonicalOutput>
+    <_FiveMCleanerHardenBackupDir>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)fivemcleaner-harden-backup'))</_FiveMCleanerHardenBackupDir>
+  </PropertyGroup>
   <Target Name="HardenBundledAssemblies"
           Condition="'$(FiveMCleanerHarden)' == 'true'"
           AfterTargets="ComputeFilesToPublish"
           BeforeTargets="GenerateSingleFileBundle">
-    <PropertyGroup>
-      <!--
-        No trailing backslash: a path ending in \ immediately before the
-        closing " in the Exec command below would escape that quote instead
-        of closing it (a CommandLineToArgvW quirk), corrupting the argument.
-      -->
-      <_FiveMCleanerWindowsCanonicalOutput>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\FiveMCleaner.Windows\bin\$(Configuration)\$(FiveMCleanerWindowsTargetFramework)'))</_FiveMCleanerWindowsCanonicalOutput>
-      <_FiveMCleanerCoreCanonicalOutput>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..\FiveMCleaner.Core\bin\$(Configuration)\$(FiveMCleanerTargetFramework)'))</_FiveMCleanerCoreCanonicalOutput>
-    </PropertyGroup>
+    <!--
+      Back up the pre-hardening bytes before touching anything. One copy of
+      Core.dll suffices for restoring both locations: Windows's own build
+      output holds a local copy of it alongside Windows.dll, and Core's own
+      canonical output is a separate folder (Core has no reference to
+      Windows) - both are byte-identical, deterministic compiles of the same
+      unchanged source at this point.
+    -->
+    <RemoveDir Directories="$(_FiveMCleanerHardenBackupDir)" Condition="Exists('$(_FiveMCleanerHardenBackupDir)')" />
+    <MakeDir Directories="$(_FiveMCleanerHardenBackupDir)" />
+    <Copy SourceFiles="$(_FiveMCleanerWindowsCanonicalOutput)\FiveMCleaner.Windows.dll" DestinationFolder="$(_FiveMCleanerHardenBackupDir)" />
+    <Copy SourceFiles="$(_FiveMCleanerWindowsCanonicalOutput)\FiveMCleaner.Core.dll" DestinationFolder="$(_FiveMCleanerHardenBackupDir)" />
     <!--
       Obfuscar needs both assemblies together to keep cross-assembly renaming
       consistent, and FiveMCleaner.Windows's own build output already holds a
       local copy of FiveMCleaner.Core.dll alongside its own Windows.dll - so
       hardening in place there covers Windows.dll at its true canonical path
-      directly. Core.dll's own canonical path is a separate folder (Core has
-      no reference to Windows), so its hardened bytes are propagated there by
-      a plain copy, not a second Obfuscar run.
+      directly. Core.dll's own canonical path is a separate folder, so its
+      hardened bytes are propagated there by a plain copy, not a second
+      Obfuscar run.
     -->
     <Exec Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\Invoke-Obfuscation.ps1&quot; -PublishDirectory &quot;$(_FiveMCleanerWindowsCanonicalOutput)&quot; -MappingOutputDirectory &quot;$(MSBuildThisFileDirectory)..\..\artifacts\obfuscation-maps&quot;" />
     <Copy SourceFiles="$(_FiveMCleanerWindowsCanonicalOutput)\FiveMCleaner.Core.dll" DestinationFolder="$(_FiveMCleanerCoreCanonicalOutput)" />
+  </Target>
+  <Target Name="RestoreCanonicalAssembliesAfterBundling"
+          Condition="'$(FiveMCleanerHarden)' == 'true'"
+          AfterTargets="GenerateSingleFileBundle">
+    <!--
+      GenerateBundle already read and embedded the hardened bytes by this
+      point (this target only runs after GenerateSingleFileBundle completes).
+      Restoring the backup here, unconditionally, is what makes the
+      hardening a transient effect scoped to this one publish instead of a
+      standing mutation of shared build state.
+    -->
+    <Copy SourceFiles="$(_FiveMCleanerHardenBackupDir)\FiveMCleaner.Windows.dll" DestinationFolder="$(_FiveMCleanerWindowsCanonicalOutput)" />
+    <Copy SourceFiles="$(_FiveMCleanerHardenBackupDir)\FiveMCleaner.Core.dll" DestinationFolder="$(_FiveMCleanerWindowsCanonicalOutput)" />
+    <Copy SourceFiles="$(_FiveMCleanerHardenBackupDir)\FiveMCleaner.Core.dll" DestinationFolder="$(_FiveMCleanerCoreCanonicalOutput)" />
+    <RemoveDir Directories="$(_FiveMCleanerHardenBackupDir)" />
   </Target>
 </Project>
