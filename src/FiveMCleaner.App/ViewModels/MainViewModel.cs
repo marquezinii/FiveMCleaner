@@ -37,6 +37,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private DateTime headlineShownAtUtc;
     private CancellationTokenSource? operationCancellation;
     private AppDiagnostic? diagnostic;
+    private bool diagnosticFailed;
     private IReadOnlyList<AppHistoryRecord> historyRecords = [];
     private OptimizationPlanDto? currentPlan;
     private OptimizationProfile selectedProfile = OptimizationProfile.Balanced;
@@ -260,6 +261,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
         }
         catch (Exception exception)
         {
+            diagnosticFailed = true;
             RecommendationTitle = localization.GetString("Diagnosis.Partial");
             RecommendationText = localization.DescribeException(exception);
         }
@@ -267,6 +269,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
         {
             isInitializing = false;
             RefreshPlan();
+            OnPropertyChanged(nameof(EmptyPlanMessage));
             RaiseCommandState();
         }
     }
@@ -286,6 +289,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
         }
         catch (Exception exception)
         {
+            diagnosticFailed = true;
             RecommendationTitle = localization.GetString("Diagnosis.CouldNotScanAgain");
             RecommendationText = localization.DescribeException(exception);
         }
@@ -293,6 +297,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
         {
             isInitializing = false;
             RefreshPlan();
+            OnPropertyChanged(nameof(EmptyPlanMessage));
             RaiseCommandState();
         }
     }
