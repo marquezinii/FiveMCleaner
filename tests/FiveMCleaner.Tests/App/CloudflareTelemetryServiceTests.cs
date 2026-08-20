@@ -95,6 +95,183 @@ public sealed class TelemetryEventValidatorTests
 
         Assert.Null(exception);
     }
+
+    // --- v5: testes para os novos campos ---
+
+    [Fact]
+    public void Validate_WellFormedEventWithV5Fields_DoesNotThrow()
+    {
+        var v5Event = ValidEvent() with
+        {
+            FiveMInstallDetected = true,
+            GtaEdition = "Legacy",
+            OptimizationTargetCount = 150,
+            WindowsBuild = 22621,
+            DiskType = "SSD",
+            FreeSpaceGiBBucket = 100,
+            RunTimestamp = DateTimeOffset.UtcNow,
+            DaysSinceLastRunBucket = 2,
+            BackupCreated = true,
+            BackupRestored = false,
+            ElevationUsed = false,
+            ProcessCountAtStart = 1
+        };
+
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(v5Event));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("Legacy")]
+    [InlineData("Enhanced")]
+    [InlineData("Unknown")]
+    public void Validate_AllowedGtaEditions_DoesNotThrow(string edition)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { GtaEdition = edition }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("Steam")]
+    [InlineData("Epic")]
+    [InlineData("")]
+    public void Validate_InvalidGtaEdition_Throws(string edition)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { GtaEdition = edition }));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(50_000)]
+    [InlineData(100_000)]
+    public void Validate_AllowedOptimizationTargetCount_DoesNotThrow(int count)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { OptimizationTargetCount = count }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(100_001)]
+    public void Validate_InvalidOptimizationTargetCount_Throws(int count)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { OptimizationTargetCount = count }));
+    }
+
+    [Theory]
+    [InlineData("HDD")]
+    [InlineData("SSD")]
+    [InlineData("NVMe")]
+    [InlineData("Unknown")]
+    public void Validate_AllowedDiskTypes_DoesNotThrow(string diskType)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { DiskType = diskType }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("SATA")]
+    [InlineData("")]
+    public void Validate_InvalidDiskType_Throws(string diskType)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { DiskType = diskType }));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(10)]
+    [InlineData(50)]
+    [InlineData(100)]
+    [InlineData(250)]
+    public void Validate_AllowedFreeSpaceGiBBuckets_DoesNotThrow(int bucket)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { FreeSpaceGiBBucket = bucket }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(25)]
+    [InlineData(75)]
+    [InlineData(500)]
+    public void Validate_InvalidFreeSpaceGiBBucket_Throws(int bucket)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { FreeSpaceGiBBucket = bucket }));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    [InlineData(8)]
+    [InlineData(30)]
+    public void Validate_AllowedDaysSinceLastRunBuckets_DoesNotThrow(int days)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { DaysSinceLastRunBucket = days }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(15)]
+    [InlineData(60)]
+    public void Validate_InvalidDaysSinceLastRunBucket_Throws(int days)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { DaysSinceLastRunBucket = days }));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(4)]
+    public void Validate_AllowedProcessCountBuckets_DoesNotThrow(int count)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { ProcessCountAtStart = count }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(10)]
+    public void Validate_InvalidProcessCountBucket_Throws(int count)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { ProcessCountAtStart = count }));
+    }
+
+    [Fact]
+    public void Validate_WindowsBuildOutOfRange_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { WindowsBuild = 100_000 }));
+    }
+
+    [Fact]
+    public void Validate_WindowsBuildInValidRange_DoesNotThrow()
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { WindowsBuild = 22621 }));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Validate_AllBooleanFieldsAcceptTrueAndFalse_DoesNotThrow()
+    {
+        var exception1 = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with
+        {
+            FiveMInstallDetected = true,
+            BackupCreated = true,
+            BackupRestored = false,
+            ElevationUsed = true
+        }));
+
+        Assert.Null(exception1);
+    }
 }
 
 public sealed class LocalTelemetryQueueTests : IDisposable
@@ -121,7 +298,7 @@ public sealed class LocalTelemetryQueueTests : IDisposable
     {
         var queue = new LocalTelemetryQueue(tempDirectory);
 
-        await queue.EnqueueAsync(SampleEvent());
+        await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         var pending = queue.ReadPending(10);
 
         var item = Assert.Single(pending);
@@ -133,9 +310,9 @@ public sealed class LocalTelemetryQueueTests : IDisposable
     {
         var queue = new LocalTelemetryQueue(tempDirectory);
 
-        await queue.EnqueueAsync(SampleEvent("1.0.1"));
-        await queue.EnqueueAsync(SampleEvent("1.0.2"));
-        await queue.EnqueueAsync(SampleEvent("1.0.3"));
+        await queue.EnqueueAsync(SampleEvent("1.0.1"), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        await queue.EnqueueAsync(SampleEvent("1.0.2"), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        await queue.EnqueueAsync(SampleEvent("1.0.3"), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         var pending = queue.ReadPending(10);
 
@@ -148,7 +325,7 @@ public sealed class LocalTelemetryQueueTests : IDisposable
         var queue = new LocalTelemetryQueue(tempDirectory);
         for (var i = 0; i < 5; i++)
         {
-            await queue.EnqueueAsync(SampleEvent());
+            await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         }
 
         Assert.Equal(2, queue.ReadPending(2).Count);
@@ -171,10 +348,10 @@ public sealed class LocalTelemetryQueueTests : IDisposable
     public async Task ReadPending_DropsACorruptFileInsteadOfBlockingForever()
     {
         var queue = new LocalTelemetryQueue(tempDirectory);
-        await queue.EnqueueAsync(SampleEvent());
+        await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         Directory.CreateDirectory(tempDirectory);
         var corruptFile = Path.Combine(tempDirectory, "0_corrupt.json");
-        await File.WriteAllTextAsync(corruptFile, "{ not valid json");
+        await File.WriteAllTextAsync(corruptFile, "{ not valid json", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         var pending = queue.ReadPending(10);
 
@@ -199,7 +376,7 @@ public sealed class LocalTelemetryQueueTests : IDisposable
         var queue = new LocalTelemetryQueue(tempDirectory);
         for (var index = 0; index < 8; index++)
         {
-            await queue.EnqueueAsync(SampleEvent());
+            await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         }
 
         var oldest = Directory.GetFiles(tempDirectory, "*.json")
@@ -217,8 +394,8 @@ public sealed class LocalTelemetryQueueTests : IDisposable
     public async Task Prune_KeepsEverythingWhenTheQueueIsWithinBothBounds()
     {
         var queue = new LocalTelemetryQueue(tempDirectory);
-        await queue.EnqueueAsync(SampleEvent());
-        await queue.EnqueueAsync(SampleEvent());
+        await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         queue.Prune(TimeSpan.FromDays(14), maxFiles: 200);
 
@@ -233,7 +410,7 @@ public sealed class LocalTelemetryQueueTests : IDisposable
         // *successful* send, so letting that escape resurfaced the very same
         // event on every later flush.
         var queue = new LocalTelemetryQueue(tempDirectory);
-        await queue.EnqueueAsync(SampleEvent());
+        await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         var filePath = Directory.GetFiles(tempDirectory, "*.json").Single();
         File.SetAttributes(filePath, FileAttributes.ReadOnly);
 
@@ -266,7 +443,7 @@ public sealed class CloudflareTelemetryTransportTests
         using var client = new HttpClient(handler);
         var transport = new CloudflareTelemetryTransport(client, TestEndpoint);
 
-        var result = await transport.SendBatchAsync([]);
+        var result = await transport.SendBatchAsync([], cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result);
         Assert.Equal(0, handler.CallCount);
@@ -279,7 +456,7 @@ public sealed class CloudflareTelemetryTransportTests
         using var client = new HttpClient(handler);
         var transport = new CloudflareTelemetryTransport(client, TestEndpoint);
 
-        var result = await transport.SendBatchAsync([SampleEvent(), SampleEvent() with { AppVersion = "1.0.5" }]);
+        var result = await transport.SendBatchAsync([SampleEvent(), SampleEvent() with { AppVersion = "1.0.5" }], cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result);
         Assert.Equal(1, handler.CallCount);
@@ -299,7 +476,7 @@ public sealed class CloudflareTelemetryTransportTests
         using var client = new HttpClient(handler);
         var transport = new CloudflareTelemetryTransport(client, TestEndpoint, environment);
 
-        await transport.SendBatchAsync([SampleEvent()]);
+        await transport.SendBatchAsync([SampleEvent()], cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Contains($"\"environment\":\"{environment}\"", handler.Body, StringComparison.Ordinal);
     }
@@ -319,7 +496,7 @@ public sealed class CloudflareTelemetryTransportTests
         using var client = new HttpClient(handler);
         var transport = new CloudflareTelemetryTransport(client, TestEndpoint);
 
-        var result = await transport.SendBatchAsync([SampleEvent()]);
+        var result = await transport.SendBatchAsync([SampleEvent()], cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result);
     }
@@ -331,7 +508,7 @@ public sealed class CloudflareTelemetryTransportTests
         using var client = new HttpClient(handler);
         var transport = new CloudflareTelemetryTransport(client, TestEndpoint);
 
-        var result = await transport.SendBatchAsync([SampleEvent()]);
+        var result = await transport.SendBatchAsync([SampleEvent()], cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result);
     }
@@ -343,7 +520,7 @@ public sealed class CloudflareTelemetryTransportTests
         using var client = new HttpClient(handler);
         var transport = new CloudflareTelemetryTransport(client, TestEndpoint);
 
-        var result = await transport.SendBatchAsync([SampleEvent()]);
+        var result = await transport.SendBatchAsync([SampleEvent()], cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result);
     }
@@ -386,8 +563,8 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
             new LocalTelemetryQueue(tempDirectory),
             new CloudflareTelemetryTransport(client, TestEndpoint));
 
-        await service.TrackAsync(SampleEvent());
-        await Task.Delay(50); // let the fire-and-forget flush attempt (if any) settle
+        await service.TrackAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        await Task.Delay(50, cancellationToken: global::Xunit.TestContext.Current.CancellationToken); // let the fire-and-forget flush attempt (if any) settle
 
         Assert.Equal(0, handler.CallCount);
     }
@@ -401,8 +578,8 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
         service.SetEnabled(true);
 
-        await service.TrackAsync(SampleEvent());
-        await service.FlushPendingAsync();
+        await service.TrackAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        await service.FlushPendingAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(handler.CallCount >= 1);
         Assert.Empty(queue.ReadPending(10));
@@ -417,8 +594,8 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
         service.SetEnabled(true);
 
-        await queue.EnqueueAsync(SampleEvent());
-        await service.FlushPendingAsync();
+        await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        await service.FlushPendingAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Single(queue.ReadPending(10));
     }
@@ -431,9 +608,9 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         var queue = new LocalTelemetryQueue(tempDirectory);
         var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
         service.SetEnabled(true);
-        await queue.EnqueueAsync(SampleEvent());
+        await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
-        await service.FlushPendingAsync();
+        await service.FlushPendingAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Empty(queue.ReadPending(10));
     }
@@ -448,7 +625,7 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
             new CloudflareTelemetryTransport(client, TestEndpoint));
         service.SetEnabled(true);
 
-        await service.FlushPendingAsync();
+        await service.FlushPendingAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(0, handler.CallCount);
     }
@@ -460,9 +637,9 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         using var client = new HttpClient(handler);
         var queue = new LocalTelemetryQueue(tempDirectory);
         var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
-        await queue.EnqueueAsync(SampleEvent());
+        await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
-        await service.FlushPendingAsync();
+        await service.FlushPendingAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(0, handler.CallCount);
         Assert.Single(queue.ReadPending(10));
@@ -477,7 +654,7 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
         service.SetEnabled(true);
 
-        await Assert.ThrowsAsync<ArgumentException>(() => service.TrackAsync(SampleEvent() with { EventName = "not-allowed" }));
+        await Assert.ThrowsAsync<ArgumentException>(() => service.TrackAsync(SampleEvent() with { EventName = "not-allowed" }, cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
 
         Assert.Empty(queue.ReadPending(10));
     }
@@ -490,11 +667,11 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         var queue = new LocalTelemetryQueue(tempDirectory);
         var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
         service.SetEnabled(true);
-        await queue.EnqueueAsync(SampleEvent());
+        await queue.EnqueueAsync(SampleEvent(), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
-        var firstFlush = service.FlushPendingAsync();
+        var firstFlush = service.FlushPendingAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         await handler.Started.Task;
-        var secondFlush = service.FlushPendingAsync();
+        var secondFlush = service.FlushPendingAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         handler.Release();
         await Task.WhenAll(firstFlush, secondFlush);
 

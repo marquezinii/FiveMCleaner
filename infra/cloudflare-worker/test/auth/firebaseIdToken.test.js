@@ -210,6 +210,7 @@ test('verifyFirebaseIdToken refreshes JWKS when kid is unknown in cache', async 
   const kidB = 'kid-b';
   const jwkA = await publicJwk(first.publicKey, kidA);
   const jwkB = await publicJwk(second.publicKey, kidB);
+  const baseTime = Date.now();
 
   let calls = 0;
   const fetchImpl = async (url) => {
@@ -220,17 +221,77 @@ test('verifyFirebaseIdToken refreshes JWKS when kid is unknown in cache', async 
   };
 
   const tokenA = await signToken(first.privateKey, { alg: 'RS256', kid: kidA }, validPayload());
-  await verifyFirebaseIdToken(tokenA, { fetch: fetchImpl });
+  await verifyFirebaseIdToken(tokenA, { fetch: fetchImpl, nowMs: baseTime });
 
   const tokenB = await signToken(
     second.privateKey,
     { alg: 'RS256', kid: kidB },
     validPayload({ sub: 'uid-b' }),
   );
-  const result = await verifyFirebaseIdToken(tokenB, { fetch: fetchImpl });
+  const result = await verifyFirebaseIdToken(tokenB, {
+    fetch: fetchImpl,
+    nowMs: baseTime + 31_000,
+  });
 
   assert.equal(result.uid, 'uid-b');
   assert.equal(calls, 2);
+});
+
+test('verifyFirebaseIdToken rate-limits and negatively caches unknown kid refreshes', async () => {
+  const { privateKey, publicKey } = await generateRsaKeyPair();
+  const knownKid = 'known-kid';
+  const jwk = await publicJwk(publicKey, knownKid);
+  let calls = 0;
+  const fetchImpl = mockJwksFetch(
+    { [knownKid]: jwk },
+    { onCall() { calls += 1; } },
+  );
+  const baseTime = Date.now();
+  const knownToken = await signToken(privateKey, { alg: 'RS256', kid: knownKid }, validPayload());
+  await verifyFirebaseIdToken(knownToken, { fetch: fetchImpl, nowMs: baseTime });
+
+  const unknownToken = await signToken(privateKey, { alg: 'RS256', kid: 'unknown-a' }, validPayload());
+  await assert.rejects(
+    () => verifyFirebaseIdToken(unknownToken, { fetch: fetchImpl, nowMs: baseTime + 31_000 }),
+    /unknown-kid/,
+  );
+  const otherUnknownToken = await signToken(
+    privateKey,
+    { alg: 'RS256', kid: 'unknown-b' },
+    validPayload(),
+  );
+  await assert.rejects(
+    () => verifyFirebaseIdToken(otherUnknownToken, { fetch: fetchImpl, nowMs: baseTime + 32_000 }),
+    /unknown-kid/,
+  );
+  await assert.rejects(
+    () => verifyFirebaseIdToken(unknownToken, { fetch: fetchImpl, nowMs: baseTime + 61_000 }),
+    /unknown-kid/,
+  );
+
+  assert.equal(calls, 2);
+});
+
+test('verifyFirebaseIdToken coalesces concurrent JWKS fetches', async () => {
+  const { privateKey, publicKey } = await generateRsaKeyPair();
+  const kid = 'coalesced-kid';
+  const jwk = await publicJwk(publicKey, kid);
+  let calls = 0;
+  const fetchImpl = async (url) => {
+    calls += 1;
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    return mockJwksFetch({ [kid]: jwk })(url);
+  };
+  const token = await signToken(privateKey, { alg: 'RS256', kid }, validPayload());
+
+  const results = await Promise.all([
+    verifyFirebaseIdToken(token, { fetch: fetchImpl }),
+    verifyFirebaseIdToken(token, { fetch: fetchImpl }),
+    verifyFirebaseIdToken(token, { fetch: fetchImpl }),
+  ]);
+
+  assert.equal(results.length, 3);
+  assert.equal(calls, 1);
 });
 
 test('verifyFirebaseIdToken reuses cached JWKS for the same kid', async () => {

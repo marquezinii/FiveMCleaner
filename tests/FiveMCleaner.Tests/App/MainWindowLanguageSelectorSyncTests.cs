@@ -53,29 +53,5 @@ public sealed class MainWindowLanguageSelectorSyncTests
             StringComparison.Ordinal);
     }
 
-    private static string ReadMainWindowSource()
-    {
-        var root = FindRepositoryRoot();
-        return File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "FiveMCleaner.App",
-            "MainWindow.xaml.cs"));
-    }
-
-    private static string FindRepositoryRoot()
-    {
-        var directory = new DirectoryInfo(AppContext.BaseDirectory);
-        while (directory is not null)
-        {
-            if (File.Exists(Path.Combine(directory.FullName, "FiveMCleaner.slnx")))
-            {
-                return directory.FullName;
-            }
-
-            directory = directory.Parent;
-        }
-
-        throw new DirectoryNotFoundException("Raiz do repositório não encontrada.");
-    }
+    private static string ReadMainWindowSource() => TestHelpers.ReadMainWindowSource();
 }

@@ -78,7 +78,7 @@ public sealed class AccountSignUpFlowTests
             _ => new HttpResponseMessage(HttpStatusCode.NotFound)
         });
 
-        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true);
+        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         Assert.Equal(AuthenticationState.EmailVerificationRequired, result.State);
@@ -100,7 +100,7 @@ public sealed class AccountSignUpFlowTests
             _ => new HttpResponseMessage(HttpStatusCode.NotFound)
         }, path);
 
-        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: false);
+        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: false, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         Assert.False(File.Exists(path));
@@ -116,7 +116,7 @@ public sealed class AccountSignUpFlowTests
     {
         using var service = CreateService([], _ => Json($"{{\"error\":{{\"message\":\"{firebaseCode}\"}}}}", HttpStatusCode.BadRequest));
 
-        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true);
+        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Equal(AuthenticationState.SigningIn, result.State);
@@ -128,7 +128,7 @@ public sealed class AccountSignUpFlowTests
     {
         using var service = CreateService([], _ => throw new HttpRequestException("boom"));
 
-        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true);
+        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Contains("Não foi possível conectar", result.Error!);
@@ -139,7 +139,7 @@ public sealed class AccountSignUpFlowTests
     {
         using var service = CreateService([], _ => throw new TaskCanceledException("timeout", new TimeoutException()));
 
-        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true);
+        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Contains("Não foi possível conectar", result.Error!);
@@ -157,7 +157,7 @@ public sealed class AccountSignUpFlowTests
             _ => new HttpResponseMessage(HttpStatusCode.NotFound)
         });
 
-        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true);
+        var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         Assert.Equal(AuthenticationState.EmailVerificationRequired, result.State);
@@ -176,8 +176,8 @@ public sealed class AccountSignUpFlowTests
             _ => new HttpResponseMessage(HttpStatusCode.NotFound)
         });
 
-        var first = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true);
-        var retry = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true);
+        var first = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        var retry = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(first.Succeeded);
         Assert.Contains("Não foi possível conectar", first.Error!);
@@ -190,7 +190,7 @@ public sealed class AccountSignUpFlowTests
     {
         using var service = CreateService([], _ => throw new TaskCanceledException("timeout", new TimeoutException()));
 
-        var result = await service.SignInAsync("person@example.com", "abcdefghijkl", keepSignedIn: false);
+        var result = await service.SignInAsync("person@example.com", "abcdefghijkl", keepSignedIn: false, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.Contains("Não foi possível conectar", result.Error!);
@@ -230,9 +230,4 @@ public sealed class AccountSignUpFlowTests
     private static string TempSessionPath() => Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session");
 
     private static HttpResponseMessage Json(string payload, HttpStatusCode status = HttpStatusCode.OK) => new(status) { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
-
-    private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> send) : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Task.FromResult(send(request));
-    }
 }

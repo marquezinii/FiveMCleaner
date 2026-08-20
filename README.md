@@ -44,6 +44,9 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 > [!IMPORTANT]
 > O escopo atual é **FiveM para GTAV Legacy**. O cliente para GTAV Enhanced, anunciado em early access para 21 de julho de 2026, usa launcher e gerenciamento de cache diferentes. O FiveMCleaner detecta essa edição e bloqueia alterações até existir uma integração específica validada.
 
+> [!NOTE]
+> **Windows 11 é o sistema recomendado.** O aplicativo preserva compatibilidade legada com Windows 10 x64 build 19041 ou mais recente enquanto isso continuar tecnicamente viável, mas as edições comuns do Windows 10 já encerraram seu ciclo regular de suporte.
+
 > [!WARNING]
 > Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
 
@@ -123,13 +126,13 @@ Os perfis são composições de ações independentes. O usuário pode revisar c
 
 ### Atalho de simulação
 
-No checkout do repositório, desenvolvedores podem criar um atalho vivo na Área de Trabalho para o build `Release` atual. O script não acompanha o ZIP portátil. O atalho abre diretamente o executável WPF com `--demo`, usa o ícone oficial e não cria janela de console:
+No checkout do repositório, desenvolvedores podem criar um atalho vivo na Área de Trabalho para o build `Release` atual. O script não acompanha o ZIP portátil. O atalho chama o inicializador de desenvolvimento, que abre o executável WPF em simulação sintética, usa o ícone oficial e não deixa uma janela de console aberta:
 
 ```powershell
 .\scripts\Install-DevelopmentShortcut.ps1 -Build
 ```
 
-O atalho não copia um executável congelado: novas builds Release continuam usando o mesmo destino. O modo demo não aplica otimizações nem salva suas opções; um envio de bug só acessa a rede após clique explícito. Detalhes e limitações estão em [docs/release-preview.md](docs/release-preview.md).
+O atalho não copia um executável congelado: novas builds Release continuam usando o mesmo destino. A simulação mostra um ambiente FiveM Legacy/GTA V plausível e percorre o plano de otimização sem tocar em arquivos do jogo, salvar opções, abrir UAC ou acessar o histórico real. Builds públicas não recebem esse argumento: nelas FiveM Legacy e GTA V devem ser detectados de verdade antes das ações compatíveis. Um envio de bug só acessa a rede após clique explícito. Detalhes e limitações estão em [docs/release-preview.md](docs/release-preview.md).
 
 ## Cache inteligente
 
@@ -169,7 +172,8 @@ O FiveMCleaner não:
 ## Requisitos para desenvolver
 
 - Windows 10 ou 11 x64;
-- [.NET SDK 10.0.302](https://dotnet.microsoft.com/download/dotnet/10.0) ou patch compatível definido em `global.json`;
+- [.NET SDK 10.0.303](https://dotnet.microsoft.com/download/dotnet/10.0) ou patch compatível definido em `global.json`;
+- [Node.js 24.19.0 LTS](https://nodejs.org/) para desenvolver e validar o site, o Worker e o dashboard;
 - PowerShell 7 é opcional para tarefas locais, não para o funcionamento da aplicação;
 - cópia legítima e atualizada do GTAV Legacy e FiveM para testes de integração.
 
@@ -208,8 +212,13 @@ docs/
 ├── safety.md                   # matriz de risco, reversibilidade e dados protegidos por ação
 ├── research.md                 # fontes e fundamentação técnica das otimizações
 ├── release-preview.md          # integridade de release, simulação e atalho de desenvolvimento
+├── installer.md                # instalador Inno Setup e fluxo de instalação
+├── updater-next-generation.md  # cadeia Launcher/Updater/UpdateRuntime
 ├── telemetry.md                # o que a telemetria opcional envia e como desativar
+├── telemetry-operations.md     # operação e manutenção do backend de telemetria
 ├── bug-reports.md              # o que um relato de bug envia e como é tratado
+├── streaming-safety.md         # cuidados com software de captura e transmissão
+├── graphics-optimizations-backlog.md # decisões e backlog técnico de otimizações gráficas
 └── brand/                      # identidade visual oficial (ícone, paleta, uso da marca)
 ```
 

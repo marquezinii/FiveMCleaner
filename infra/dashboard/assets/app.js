@@ -1,4 +1,4 @@
-import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildUpdaterEventsUrl, requestJson, resolveApiBase } from './api.js';
+import { buildStatsUrl, buildCsvUrl, buildBugsUrl, buildUpdaterEventsUrl, requestJson, resolveApiBase, getLiveAlert, setLiveAlert } from './api.js';
 import {
   toBarSeries,
   toCombinedBarSeries,
@@ -59,6 +59,12 @@ async function main() {
   const bugReportsBody = document.getElementById('bug-reports-body');
   const updaterEventsBody = document.getElementById('updater-events-body');
   const refreshStatus = document.getElementById('refresh-status');
+  const liveAlertForm = document.getElementById('live-alert-form');
+  const liveAlertMessage = document.getElementById('live-alert-message');
+  const liveAlertCounter = document.getElementById('live-alert-counter');
+  const liveAlertStatus = document.getElementById('live-alert-status');
+  const liveAlertError = document.getElementById('live-alert-error');
+  const liveAlertDeactivate = document.getElementById('live-alert-deactivate');
 
   function showLogin() {
     loginView.classList.remove('hidden');
@@ -99,7 +105,7 @@ async function main() {
     }
 
     showDashboard();
-    await refreshAll();
+    await Promise.all([refreshAll(), loadLiveAlertStatus()]);
   });
 
   logoutButton.addEventListener('click', async () => {
@@ -118,6 +124,73 @@ async function main() {
     });
   });
 
+  const LIVE_ALERT_MAX_LENGTH = 300;
+
+  function updateLiveAlertCounter() {
+    liveAlertCounter.textContent = `${liveAlertMessage.value.length}/${LIVE_ALERT_MAX_LENGTH}`;
+  }
+
+  liveAlertMessage.addEventListener('input', updateLiveAlertCounter);
+
+  liveAlertForm.querySelectorAll('.chip').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      liveAlertMessage.value = chip.dataset.template;
+      updateLiveAlertCounter();
+      liveAlertMessage.focus();
+    });
+  });
+
+  function formatLiveAlertStatus(active, id) {
+    if (!active) return 'Inativo';
+    const when = id ? new Date(id) : null;
+    const stamp = when && !Number.isNaN(when.getTime()) ? ` desde ${when.toLocaleString('pt-BR')}` : '';
+    return `Ativo${stamp}`;
+  }
+
+  async function loadLiveAlertStatus() {
+    const result = await getLiveAlert(API_BASE);
+    if (result.error || result.unauthorized) {
+      liveAlertStatus.textContent = 'Não foi possível carregar o status';
+      liveAlertStatus.classList.remove('live-alert-status-active');
+      return;
+    }
+
+    const { message, active, id } = result.data;
+    liveAlertMessage.value = message || '';
+    updateLiveAlertCounter();
+    liveAlertStatus.textContent = formatLiveAlertStatus(active, id);
+    liveAlertStatus.classList.toggle('live-alert-status-active', active);
+  }
+
+  liveAlertForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    liveAlertError.textContent = '';
+    const message = liveAlertMessage.value.trim();
+    if (!message) {
+      liveAlertError.textContent = 'Escreva uma mensagem antes de enviar.';
+      return;
+    }
+
+    const result = await setLiveAlert(API_BASE, { message, active: true });
+    if (result.error || result.unauthorized) {
+      liveAlertError.textContent = 'Erro ao enviar o aviso.';
+      return;
+    }
+
+    await loadLiveAlertStatus();
+  });
+
+  liveAlertDeactivate.addEventListener('click', async () => {
+    liveAlertError.textContent = '';
+    const result = await setLiveAlert(API_BASE, { active: false });
+    if (result.error || result.unauthorized) {
+      liveAlertError.textContent = 'Erro ao desativar o aviso.';
+      return;
+    }
+
+    await loadLiveAlertStatus();
+  });
+
   function currentFilters() {
     const data = new FormData(filterForm);
     return {
@@ -133,63 +206,35 @@ async function main() {
     return requestJson(url);
   }
 
-  function renderRecentFailures(rows) {
-    recentFailuresBody.innerHTML = '';
+  function renderTableBody(tbody, rows, mapRow, colspan, cellClass) {
+    tbody.innerHTML = '';
     if (!rows || rows.length === 0) {
-      recentFailuresBody.innerHTML = '<tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr>';
+      tbody.innerHTML = `<tr><td colspan="${colspan}" class="empty-row">Sem dados ainda</td></tr>`;
       return;
     }
-
     for (const row of rows) {
-      const cells = toRecentFailureRow(row);
       const tr = document.createElement('tr');
-      cells.forEach((value, index) => {
+      for (const [index, value] of mapRow(row).entries()) {
         const td = document.createElement('td');
         td.textContent = value;
-        if (index === 1) {
-          td.classList.add('error-category');
-        }
-
+        if (cellClass) td.className = cellClass(index);
         tr.appendChild(td);
-      });
-      recentFailuresBody.appendChild(tr);
+      }
+      tbody.appendChild(tr);
     }
+  }
+
+  function renderRecentFailures(rows) {
+    renderTableBody(recentFailuresBody, rows, toRecentFailureRow, 8,
+      (i) => i === 1 ? 'error-category' : '');
   }
 
   function renderBugReports(rows) {
-    bugReportsBody.innerHTML = '';
-    if (!rows || rows.length === 0) {
-      bugReportsBody.innerHTML = '<tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr>';
-      return;
-    }
-
-    for (const row of rows) {
-      const cells = toBugReportRow(row);
-      const tr = document.createElement('tr');
-      cells.forEach((value) => {
-        const td = document.createElement('td');
-        td.textContent = value;
-        tr.appendChild(td);
-      });
-      bugReportsBody.appendChild(tr);
-    }
+    renderTableBody(bugReportsBody, rows, toBugReportRow, 8);
   }
 
   function renderUpdaterEvents(rows) {
-    updaterEventsBody.innerHTML = '';
-    if (!rows || rows.length === 0) {
-      updaterEventsBody.innerHTML = '<tr><td colspan="7" class="empty-row">Sem dados ainda</td></tr>';
-      return;
-    }
-    for (const row of rows) {
-      const tr = document.createElement('tr');
-      for (const value of toUpdaterEventRow(row)) {
-        const td = document.createElement('td');
-        td.textContent = value;
-        tr.appendChild(td);
-      }
-      updaterEventsBody.appendChild(tr);
-    }
+    renderTableBody(updaterEventsBody, rows, toUpdaterEventRow, 7);
   }
 
   function renderLegend(id, series) {
@@ -291,7 +336,7 @@ async function main() {
     loginError.textContent = 'Não foi possível conectar à telemetria. Verifique se o Worker está no ar.';
   } else {
     showDashboard();
-    await refreshAll();
+    await Promise.all([refreshAll(), loadLiveAlertStatus()]);
   }
 }
 

@@ -24,6 +24,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
     private readonly JsonSerializerOptions indentedJson;
     private readonly ElevatedBrokerClient brokerClient;
     private readonly ILocalizationService localization;
+    private readonly DemoModeSimulator demoSimulator;
+    private readonly ResourceComparisonCapture resourceComparison;
     private readonly bool demoMode;
     private readonly bool useSyntheticDiagnostic;
     private string? detectedLegacyRoot;
@@ -44,6 +46,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
         settingsPath = Path.Combine(appDataDirectory, "settings.json");
         indentedJson = new JsonSerializerOptions(FiveMCleanerJson.Options) { WriteIndented = true };
         brokerClient = new ElevatedBrokerClient(appDataDirectory, localization);
+        demoSimulator = new DemoModeSimulator(this.localization);
+        resourceComparison = new ResourceComparisonCapture(this.localization);
     }
 
     public string LogsDirectory => logsDirectory;
@@ -82,7 +86,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
         if (demoMode && useSyntheticDiagnostic)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return CreateDemoDiagnostic();
+            return demoSimulator.CreateDiagnostic();
         }
 
         return await Task.Run(async () =>
@@ -91,9 +95,9 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
             // Run independent I/O-bound operations concurrently to reduce total diagnosis time
             var installationTask = Task.Run(() => DetectFiveMInstallation(), cancellationToken);
-            var memoryStatusTask = Task.Run(GetMemoryStatus, cancellationToken);
-            var gpuNamesTask = Task.Run(GetGpuNames, cancellationToken);
-            var cpuNameTask = Task.Run(GetCpuName, cancellationToken);
+            var memoryStatusTask = Task.Run(() => NativeMemoryStatus.Query(), cancellationToken);
+            var gpuNamesTask = Task.Run(() => ResourceComparisonCapture.GetGpuNames(), cancellationToken);
+            var cpuNameTask = Task.Run(() => ResourceComparisonCapture.GetCpuName(localization), cancellationToken);
             var memoryLayoutTask = Task.Run(GetMemoryModuleLayout, cancellationToken);
             var osLabelTask = Task.Run(GetOperatingSystemLabel, cancellationToken);
             var archLabelTask = Task.Run(GetArchitectureLabel, cancellationToken);
@@ -283,74 +287,10 @@ public sealed class AppOptimizationService : IAppOptimizationService
         ArgumentNullException.ThrowIfNull(progress);
         if (demoMode)
         {
-            return SimulatePlanAsync(plan, progress, cancellationToken);
+            return demoSimulator.SimulatePlanAsync(plan, progress, cancellationToken);
         }
 
         return ExecutePlanCoreAsync(plan, progress, cancellationToken);
-    }
-
-    private async Task<AppOptimizationResult> SimulatePlanAsync(
-        OptimizationPlanDto plan,
-        IProgress<AppProgressUpdate> progress,
-        CancellationToken cancellationToken)
-    {
-        progress.Report(new AppProgressUpdate
-        {
-            Timestamp = DateTimeOffset.UtcNow,
-            Kind = AppProgressKind.Preparing,
-            Percent = 2,
-            Headline = localization.GetString("Runtime.PreparingSimulation"),
-            Detail = localization.GetString("Runtime.SimulationSafe")
-        });
-
-        await Task.Delay(180, cancellationToken).ConfigureAwait(false);
-        var actions = plan.Actions.OrderBy(action => action.Sequence).ToArray();
-        for (var index = 0; index < actions.Length; index++)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var action = actions[index];
-            progress.Report(new AppProgressUpdate
-            {
-                Timestamp = DateTimeOffset.UtcNow,
-                Kind = AppProgressKind.Applying,
-                Percent = 5d + (85d * (index + 1) / Math.Max(1, actions.Length)),
-                Headline = localization.GetString("Runtime.SimulatingPlan"),
-                Detail = localization.Format(
-                                "Runtime.SimulationAction",
-                                GetLocalizedActionName(action.Metadata)),
-                ActionId = action.Metadata.Id
-            });
-            await Task.Delay(180, cancellationToken).ConfigureAwait(false);
-        }
-
-        progress.Report(new AppProgressUpdate
-        {
-            Timestamp = DateTimeOffset.UtcNow,
-            Kind = AppProgressKind.Verifying,
-            Percent = 96,
-            Headline = localization.GetString("Runtime.ValidatingSimulation"),
-            Detail = localization.GetString("Runtime.SimulationNoWrites")
-        });
-        await Task.Delay(220, cancellationToken).ConfigureAwait(false);
-        progress.Report(new AppProgressUpdate
-        {
-            Timestamp = DateTimeOffset.UtcNow,
-            Kind = AppProgressKind.Completed,
-            Percent = 100,
-            Headline = localization.GetString("Runtime.SimulationCompleted"),
-            Detail = localization.GetString("Runtime.NoChangesApplied")
-        });
-
-        return new AppOptimizationResult
-        {
-            TransactionId = plan.PlanId,
-            Succeeded = true,
-            WasCancelled = false,
-            Summary = $"{localization.GetString("Runtime.SimulationCompleted")}. "
-                + localization.GetString("Runtime.NoChangesApplied"),
-            CompletedActions = actions.Length,
-            BytesFreed = 0
-        };
     }
 
     public async Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(
@@ -389,7 +329,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 var changed = journal.Actions.Count(action => action.Changed);
                 var canRollback = journal.Actions.Any(action =>
                     action.Changed
-                    && action.State == WindowsActionJournalState.Committed
+                    && action.State == ActionJournalState.Committed
                     && action.Reversibility is not (
                         ActionReversibility.Irreversible
                         or ActionReversibility.RebuildableData));
@@ -401,9 +341,9 @@ public sealed class AppOptimizationService : IAppOptimizationService
                     State = TranslateState(journal.State),
                     ChangedActions = changed,
                     CanRollback = canRollback && journal.State is
-                        WindowsTransactionState.Committed
-                        or WindowsTransactionState.AwaitingElevationRollback
-                        or WindowsTransactionState.AwaitingStandardRollback
+                        TransactionState.Committed
+                        or TransactionState.AwaitingElevationRollback
+                        or TransactionState.AwaitingStandardRollback
                 });
             }
             catch (Exception exception) when (exception is JsonException
@@ -501,40 +441,6 @@ public sealed class AppOptimizationService : IAppOptimizationService
             iteration.SampleCount);
     }
 
-    private AppDiagnostic CreateDemoDiagnostic()
-    {
-        return new AppDiagnostic
-        {
-            Edition = FiveMEdition.Legacy,
-            IsFiveMRunning = false,
-            FiveMRoot = null,
-            GtaVDetected = true,
-            GtaVIsRunning = false,
-            GtaVExecutablePath = @"C:\Jogos\Grand Theft Auto V\GTA5.exe",
-            GtaVGraphicsSettingsPath = @"C:\User\Documents\Rockstar Games\GTA V\settings.xml",
-            CpuName = localization.GetString("Demo.Cpu"),
-            GpuName = localization.GetString("Demo.Gpu"),
-            GpuNames = [localization.GetString("Demo.Gpu")],
-            TotalMemoryGiB = 16,
-            AvailableMemoryGiB = 8,
-            MemoryModuleLayout = "2×8 GB",
-            LogicalProcessorCount = 12,
-            FreeDiskGiB = 128,
-            LegacyCacheBytes = 3L * 1024 * 1024 * 1024,
-            OsLabel = "Windows 11",
-            SystemArchitecture = "x64",
-            ReadinessScore = 88,
-            RecommendedProfile = OptimizationProfile.Balanced,
-            PerformancePressure = PerformancePressureLevel.Moderate,
-            StreamingSoftware = StreamingSoftwareClassifier.CreateSnapshot(
-                [],
-                [],
-                [],
-                DateTimeOffset.UtcNow),
-            Notices = [localization.GetString("Demo.Notice")]
-        };
-    }
-
     private static StreamingSoftwareSnapshot DetectStreamingSoftware(
         CancellationToken cancellationToken)
     {
@@ -567,7 +473,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
         cancellationToken.ThrowIfCancellationRequested();
         ReportPreparing(progress);
 
-        var beforeSnapshot = TryCaptureResourceComparisonSnapshot();
+        var beforeSnapshot = resourceComparison.TryCaptureSnapshot();
         var runtime = CreateRuntimeForDetectedInstallation();
         var localResult = await ExecuteLocalPhaseAsync(
             runtime,
@@ -576,9 +482,9 @@ public sealed class AppOptimizationService : IAppOptimizationService
             cancellationToken).ConfigureAwait(false);
 
         if (localResult.State is not (
-            WindowsTransactionState.Committed
-            or WindowsTransactionState.CommittedWithErrors
-            or WindowsTransactionState.AwaitingElevation))
+            TransactionState.Committed
+            or TransactionState.CommittedWithErrors
+            or TransactionState.AwaitingElevation))
         {
             return await CreateResultFromJournalAsync(
                 plan.PlanId,
@@ -608,7 +514,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
         ReportCompletion(progress, runSucceeded);
 
-        var comparison = await CaptureComparisonAsync(beforeSnapshot).ConfigureAwait(false);
+        var comparison = await resourceComparison.CaptureComparisonAsync(beforeSnapshot).ConfigureAwait(false);
 
         var result = await CreateResultFromJournalAsync(
             plan.PlanId,
@@ -795,114 +701,6 @@ public sealed class AppOptimizationService : IAppOptimizationService
         });
     }
 
-    private async Task<OptimizationComparisonResult?> CaptureComparisonAsync(
-        ResourceComparisonSnapshot? beforeSnapshot)
-    {
-        if (beforeSnapshot is null)
-        {
-            return null;
-        }
-
-        // A curta espera deixa a atividade de disco/CPU da própria otimização
-        // assentar antes de medir "depois", evitando comparar o trabalho da
-        // otimização em si com o estado real pós-otimização.
-        await Task.Delay(TimeSpan.FromSeconds(1), CancellationToken.None).ConfigureAwait(false);
-        var afterSnapshot = TryCaptureResourceComparisonSnapshot();
-        if (afterSnapshot is null)
-        {
-            return null;
-        }
-
-        return BuildComparison(beforeSnapshot, afterSnapshot);
-    }
-
-    private ResourceComparisonSnapshot? TryCaptureResourceComparisonSnapshot()
-    {
-        try
-        {
-            var resources = new WindowsResourceUsageInspector().GetSnapshot();
-            var thermal = new WindowsThermalInspector().GetSnapshot();
-            var network = new WindowsNetworkHealthInspector().GetSnapshot();
-            var system = new WindowsSystemResourceInspector().GetSnapshot();
-            return new ResourceComparisonSnapshot
-            {
-                CapturedAtUtc = DateTimeOffset.UtcNow,
-                CpuPercent = resources.CpuPercent,
-                GpuPercent = resources.GpuPercent,
-                DiskPercent = resources.DiskPercent,
-                AvailableMemoryGiB = system.AvailableMemoryBytes / 1024d / 1024d / 1024d,
-                ThermalElevated = thermal is { IsAvailable: true, HighestCelsius: >= 85 },
-                NetworkIssuesDetected = network.DiscardedPackets > 0 || network.ErrorPackets > 0
-            };
-        }
-        catch (Exception exception) when (exception is not (
-            OutOfMemoryException or StackOverflowException or AccessViolationException))
-        {
-            // A comparação antes/depois é um extra informativo; nunca deve
-            // interromper nem fazer a otimização real falhar.
-            return null;
-        }
-    }
-
-    private OptimizationComparisonResult BuildComparison(
-        ResourceComparisonSnapshot before,
-        ResourceComparisonSnapshot after)
-    {
-        var reasonKeys = ComputeRegressionReasonKeys(before, after);
-        var cpuName = GetCpuNameSafe();
-        var gpuNames = GetGpuNames();
-        var totalMemoryGiB = new WindowsSystemResourceInspector().GetSnapshot().TotalMemoryBytes
-            / 1024d / 1024d / 1024d;
-
-        return new OptimizationComparisonResult
-        {
-            HardwareProfileSignature = HardwareProfileSignature.Compute(cpuName, gpuNames, totalMemoryGiB),
-            Before = before,
-            After = after,
-            RegressionSuspected = reasonKeys.Count > 0,
-            RegressionReasons = reasonKeys.Select(localization.GetString).ToArray()
-        };
-    }
-
-    /// <summary>
-    /// Pure regression-detection rule set, kept intentionally conservative:
-    /// only signals this product can attribute with reasonable confidence to
-    /// something having gotten worse (never derived from FPS, which this
-    /// product does not measure live). Returns localization keys so this can
-    /// be tested without a real <see cref="ILocalizationService"/>.
-    /// </summary>
-    internal static IReadOnlyList<string> ComputeRegressionReasonKeys(
-        ResourceComparisonSnapshot before,
-        ResourceComparisonSnapshot after)
-    {
-        var reasons = new List<string>();
-        if (!before.ThermalElevated && after.ThermalElevated)
-        {
-            reasons.Add("Comparison.Reason.NewThermalSignal");
-        }
-
-        if (before.AvailableMemoryGiB > 1
-            && after.AvailableMemoryGiB < before.AvailableMemoryGiB * 0.5)
-        {
-            reasons.Add("Comparison.Reason.MemoryDropped");
-        }
-
-        return reasons;
-    }
-
-    private string GetCpuNameSafe()
-    {
-        try
-        {
-            return GetCpuName();
-        }
-        catch (Exception exception) when (exception is not (
-            OutOfMemoryException or StackOverflowException or AccessViolationException))
-        {
-            return "unknown-cpu";
-        }
-    }
-
     private static string DetailKeyFor(ActionExecutionOutcome outcome) => outcome switch
     {
         ActionExecutionOutcome.Verified => "Runtime.ActionVerified",
@@ -938,12 +736,12 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 IncludeAdministratorActions = false
             },
             cancellationToken).ConfigureAwait(false);
-        if (localResult.State == WindowsTransactionState.RollbackFailed)
+        if (localResult.State == TransactionState.RollbackFailed)
         {
             throw new InvalidOperationException(localization.GetString("Runtime.RollbackConflict"));
         }
 
-        if (localResult.State == WindowsTransactionState.AwaitingElevationRollback)
+        if (localResult.State == TransactionState.AwaitingElevationRollback)
         {
             var elevated = await ExecuteElevatedRollbackAsync(
                 transactionId,
@@ -1067,11 +865,11 @@ public sealed class AppOptimizationService : IAppOptimizationService
     {
         return rollback?.State switch
         {
-            WindowsTransactionState.RolledBack =>
+            TransactionState.RolledBack =>
                 localization.Format("Runtime.Interrupted.RolledBack", reason),
-            WindowsTransactionState.AwaitingElevationRollback =>
+            TransactionState.AwaitingElevationRollback =>
                 localization.Format("Runtime.Interrupted.AdminPending", reason),
-            WindowsTransactionState.RollbackFailed =>
+            TransactionState.RollbackFailed =>
                 localization.Format("Runtime.Interrupted.RollbackFailed", reason),
             null =>
                 localization.Format("Runtime.Interrupted.Unconfirmed", reason),
@@ -1096,7 +894,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
             WasCancelled = wasCancelled,
             Summary = summary,
             CompletedActions = journal?.Actions.Count(action =>
-                action.State == WindowsActionJournalState.Committed) ?? 0,
+                action.State == ActionJournalState.Committed) ?? 0,
             BytesFreed = journal is null ? 0 : SumCommittedCleanupBytes(journal),
             Report = journal is null ? null : OptimizationReportBuilder.Build(journal, profile)
         };
@@ -1136,7 +934,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
         };
 
         foreach (var entry in journal.Actions.Where(entry =>
-                     entry.State == WindowsActionJournalState.Committed
+                     entry.State == ActionJournalState.Committed
                      && cleanupIds.Contains(entry.ActionId)
                      && !string.IsNullOrWhiteSpace(entry.SnapshotJson)))
         {
@@ -1342,54 +1140,6 @@ public sealed class AppOptimizationService : IAppOptimizationService
         return value == key ? fallback : value;
     }
 
-    private string GetCpuName()
-    {
-        using var key = Registry.LocalMachine.OpenSubKey(@"HARDWARE\DESCRIPTION\System\CentralProcessor\0");
-        return (key?.GetValue("ProcessorNameString") as string)?.Trim()
-            ?? localization.GetString("Diagnosis.CpuUnknown");
-    }
-
-    private IReadOnlyList<string> GetGpuNames()
-    {
-        var names = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        try
-        {
-            using var video = Registry.LocalMachine.OpenSubKey(
-                @"SYSTEM\CurrentControlSet\Control\Video");
-            if (video is null)
-            {
-                return [];
-            }
-
-            foreach (var deviceKeyName in video.GetSubKeyNames())
-            {
-                using var device = video.OpenSubKey(deviceKeyName);
-                if (device is null)
-                {
-                    continue;
-                }
-
-                foreach (var adapterKeyName in device.GetSubKeyNames()
-                             .Where(name => name.Length == 4 && name.All(char.IsDigit)))
-                {
-                    using var adapter = device.OpenSubKey(adapterKeyName);
-                    var name = (adapter?.GetValue("DriverDesc") as string)?.Trim();
-                    if (!string.IsNullOrWhiteSpace(name)
-                        && !name.Contains("Basic Render", StringComparison.OrdinalIgnoreCase))
-                    {
-                        names.Add(name);
-                    }
-                }
-            }
-        }
-        catch
-        {
-            // O diagnóstico continua sem iniciar PowerShell, WMI ou ferramentas externas.
-        }
-
-        return names.Order(StringComparer.OrdinalIgnoreCase).ToArray();
-    }
-
     private static string GetArchitectureLabel() => RuntimeInformation.OSArchitecture switch
     {
         Architecture.X64 => "x64",
@@ -1399,17 +1149,6 @@ public sealed class AppOptimizationService : IAppOptimizationService
         _ => RuntimeInformation.OSArchitecture.ToString()
     };
 
-    private MemoryStatusEx GetMemoryStatus()
-    {
-        var status = new MemoryStatusEx();
-        if (!GlobalMemoryStatusEx(status))
-        {
-            throw new InvalidOperationException(localization.GetString("Diagnosis.MemoryUnavailable"));
-        }
-
-        return status;
-    }
-
     private static string GetOperatingSystemLabel()
     {
         if (!OperatingSystem.IsWindows())
@@ -1417,8 +1156,6 @@ public sealed class AppOptimizationService : IAppOptimizationService
             return RuntimeInformation.OSDescription;
         }
 
-        // Windows 11 mantém a versão interna 10.0 por compatibilidade. O build
-        // 22000 ou superior é a forma suportada pelo Windows para identificá-lo.
         return Environment.OSVersion.Version.Build >= 22000
             ? "Microsoft Windows 11"
             : "Microsoft Windows 10";
@@ -1465,15 +1202,15 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 : OptimizationProfile.Light;
     }
 
-    private string TranslateState(WindowsTransactionState state) => localization.GetString(state switch
+    private string TranslateState(TransactionState state) => localization.GetString(state switch
     {
-        WindowsTransactionState.Committed => "History.State.Committed",
-        WindowsTransactionState.AwaitingElevation => "History.State.AwaitingUac",
-        WindowsTransactionState.AwaitingElevationRollback => "History.State.AdminRollbackPending",
-        WindowsTransactionState.AwaitingStandardRollback => "History.State.LocalRollbackPending",
-        WindowsTransactionState.RolledBack => "History.State.RolledBack",
-        WindowsTransactionState.RollbackFailed => "History.State.RollbackFailed",
-        WindowsTransactionState.Failed => "History.State.FailedSafely",
+        TransactionState.Committed => "History.State.Committed",
+        TransactionState.AwaitingElevation => "History.State.AwaitingUac",
+        TransactionState.AwaitingElevationRollback => "History.State.AdminRollbackPending",
+        TransactionState.AwaitingStandardRollback => "History.State.LocalRollbackPending",
+        TransactionState.RolledBack => "History.State.RolledBack",
+        TransactionState.RollbackFailed => "History.State.RollbackFailed",
+        TransactionState.Failed => "History.State.FailedSafely",
         _ => "History.State.Interrupted"
     });
 
@@ -1487,23 +1224,5 @@ public sealed class AppOptimizationService : IAppOptimizationService
         }
 
         public void Report(T value) => callback(value);
-    }
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool GlobalMemoryStatusEx([In, Out] MemoryStatusEx buffer);
-
-    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-    private sealed class MemoryStatusEx
-    {
-        public uint Length = (uint)Marshal.SizeOf<MemoryStatusEx>();
-        public uint MemoryLoad;
-        public ulong TotalPhysical;
-        public ulong AvailablePhysical;
-        public ulong TotalPageFile;
-        public ulong AvailablePageFile;
-        public ulong TotalVirtual;
-        public ulong AvailableVirtual;
-        public ulong AvailableExtendedVirtual;
     }
 }

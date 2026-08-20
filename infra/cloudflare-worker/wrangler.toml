@@ -30,6 +30,8 @@
 ##   ADMIN_PASSWORD_HASH -- output of `npm run hash-admin-password`
 ##   IP_HASH_SECRET      -- a long random string, used only to keep
 ##                          brute-force tracking from storing a raw IP
+##   RELEASE_MANIFEST_JSON -- signed stable feed generated and published by
+##                            the official stable-release workflow
 ##
 ## DASHBOARD_ORIGIN below is a plain, non-secret var -- the exact origin the
 ## dashboard is served from, so CORS headers are only ever sent back to that
@@ -41,7 +43,7 @@
 
 name = "fivemcleaner-telemetry"
 main = "src/index.js"
-compatibility_date = "2025-01-01"
+compatibility_date = "2026-08-11"
 
 [vars]
 DASHBOARD_ORIGIN = "https://fivemcleaner-dashboard.pages.dev"
@@ -62,3 +64,30 @@ database_id = "fe276121-a71a-4ba4-ab62-81cccdf601c6"
 name = "USERNAME_LOOKUP_LIMITER"
 namespace_id = "1001"
 simple = { limit = 20, period = 60 }
+
+## Public write routes use required fail-closed bindings. If a binding is
+## missing or unavailable, the Worker rejects the write instead of silently
+## exposing D1 to an unbounded request stream.
+[[ratelimits]]
+name = "TELEMETRY_LIMITER"
+namespace_id = "1002"
+simple = { limit = 60, period = 60 }
+
+[[ratelimits]]
+name = "BUG_REPORT_LIMITER"
+namespace_id = "1003"
+simple = { limit = 5, period = 60 }
+
+[[ratelimits]]
+name = "UPDATER_EVENT_LIMITER"
+namespace_id = "1004"
+simple = { limit = 60, period = 60 }
+
+## Advisory per-IP budget for GET /live-alert, the same fail-open trade as
+## USERNAME_LOOKUP_LIMITER above: read-only, no auth, and every installed app
+## polls it at startup plus once an hour, so this only guards against abuse,
+## not normal traffic.
+[[ratelimits]]
+name = "LIVE_ALERT_LIMITER"
+namespace_id = "1005"
+simple = { limit = 30, period = 60 }

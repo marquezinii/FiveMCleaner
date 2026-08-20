@@ -23,8 +23,12 @@ import { hashPassword } from '../src/auth/crypto.js';
 async function readPasswordHidden(prompt) {
   return new Promise((resolve) => {
     stdout.write(prompt);
-    const onData = (chunk) => {
+    let collected = '';
+    stdin.setRawMode?.(true);
+    stdin.resume();
+    stdin.on('data', function onData(chunk) {
       const text = chunk.toString('utf8');
+      collected += text;
       if (text.includes('\n') || text.includes('\r')) {
         stdin.setRawMode?.(false);
         stdin.pause();
@@ -32,15 +36,7 @@ async function readPasswordHidden(prompt) {
         stdout.write('\n');
         resolve(collected.replace(/[\r\n]+$/, ''));
       }
-    };
-
-    let collected = '';
-    stdin.setRawMode?.(true);
-    stdin.resume();
-    stdin.on('data', (chunk) => {
-      collected += chunk.toString('utf8');
     });
-    stdin.on('data', onData);
   });
 }
 

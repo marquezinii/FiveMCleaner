@@ -19,18 +19,13 @@ public static class SafePath
         return Path.TrimEndingDirectorySeparator(Path.GetFullPath(path));
     }
 
-    public static string EnsureDescendant(string root, string candidate, bool allowRoot = false)
+    public static string EnsureDescendant(string root, string candidate)
     {
         var normalizedRoot = Normalize(root);
         var normalizedCandidate = Normalize(candidate);
         if (string.Equals(normalizedRoot, normalizedCandidate, StringComparison.OrdinalIgnoreCase))
         {
-            if (!allowRoot)
-            {
-                throw new InvalidOperationException($"'{candidate}' must be below '{root}'.");
-            }
-
-            return normalizedCandidate;
+            throw new InvalidOperationException($"'{candidate}' must be below '{root}'.");
         }
 
         var rootPrefix = normalizedRoot + Path.DirectorySeparatorChar;
@@ -205,10 +200,10 @@ public sealed class SafeFileTree
             File.Delete(file.FullPath);
         }
 
-        DeleteEmptyDirectoriesBottomUp(normalizedRoot, deleteRoot: true);
+        DeleteEmptyDirectoriesBottomUp(normalizedRoot);
     }
 
-    public void DeleteEmptyDirectoriesBottomUp(string root, bool deleteRoot)
+    public void DeleteEmptyDirectoriesBottomUp(string root)
     {
         var normalizedRoot = SafePath.Normalize(root);
         if (!Directory.Exists(normalizedRoot))
@@ -241,11 +236,6 @@ public sealed class SafeFileTree
             .OrderByDescending(path => path.Length)
             .ThenByDescending(path => path, StringComparer.OrdinalIgnoreCase))
         {
-            if (!deleteRoot && string.Equals(directory, normalizedRoot, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
             if (!Directory.EnumerateFileSystemEntries(directory).Any())
             {
                 Directory.Delete(directory, recursive: false);

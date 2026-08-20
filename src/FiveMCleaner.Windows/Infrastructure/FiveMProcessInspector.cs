@@ -16,17 +16,7 @@ public sealed class WindowsFiveMProcessInspector : IFiveMProcessInspector
         {
             using (process)
             {
-                string processName;
-                try
-                {
-                    processName = process.ProcessName;
-                }
-                catch (Exception exception) when (exception is InvalidOperationException
-                    or System.ComponentModel.Win32Exception
-                    or NotSupportedException)
-                {
-                    processName = string.Empty;
-                }
+                var processName = ProcessInspection.GetNameOrEmpty(process);
 
                 // O nome continua disponível quando MainModule é negado por uma
                 // diferença de elevação. Nesse caso, bloquear é a decisão segura.
@@ -35,27 +25,9 @@ public sealed class WindowsFiveMProcessInspector : IFiveMProcessInspector
                     return true;
                 }
 
-                try
+                if (ProcessInspection.IsExecutableWithinRoot(process, normalizedRoot))
                 {
-                    var fileName = process.MainModule?.FileName;
-                    if (fileName is null)
-                    {
-                        continue;
-                    }
-
-                    var normalizedProcessPath = Path.GetFullPath(fileName);
-                    if (normalizedProcessPath.Equals(normalizedRoot, StringComparison.OrdinalIgnoreCase)
-                        || normalizedProcessPath.StartsWith(
-                            normalizedRoot + Path.DirectorySeparatorChar,
-                            StringComparison.OrdinalIgnoreCase))
-                    {
-                        return true;
-                    }
-                }
-                catch (Exception exception) when (exception is InvalidOperationException
-                    or System.ComponentModel.Win32Exception
-                    or NotSupportedException)
-                {
+                    return true;
                 }
             }
         }

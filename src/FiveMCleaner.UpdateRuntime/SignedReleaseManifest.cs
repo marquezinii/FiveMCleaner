@@ -1,5 +1,4 @@
 using System.Globalization;
-using System.Security.Cryptography;
 using System.Text;
 using System.Text.RegularExpressions;
 
@@ -54,17 +53,10 @@ public static class ReleaseTrustPolicy
             || highest < minimum || candidate < minimum || candidate < highest)
             throw new InvalidDataException("A política anti-downgrade rejeitou a release.");
 
-        byte[] signature;
-        try { signature = Convert.FromBase64String(manifest.SignatureBase64); }
-        catch (FormatException) { throw new InvalidDataException("Assinatura de release inválida."); }
-        using var verifier = ECDsa.Create();
-        try
-        {
-            verifier.ImportSubjectPublicKeyInfo(publicKey, out var bytesRead);
-            if (bytesRead != publicKey.Length) throw new CryptographicException("Chave pública contém dados extras.");
-        }
-        catch (CryptographicException) { throw new CryptographicException("Chave pública do manifesto é inválida."); }
-        if (!verifier.VerifyData(manifest.CanonicalPayload(), signature, HashAlgorithmName.SHA256))
-            throw new CryptographicException("Assinatura do manifesto não confere.");
+        SignatureVerification.Verify(
+            manifest.CanonicalPayload(), publicKey, manifest.SignatureBase64,
+            "Assinatura de release inválida.",
+            "Chave pública do manifesto é inválida.",
+            "Assinatura do manifesto não confere.");
     }
 }

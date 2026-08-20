@@ -20,6 +20,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     private readonly IFirebaseAuthService accounts;
     private readonly IAccountProfileService profiles;
     private readonly IGoogleOAuthClient googleOAuth;
+    private readonly ILocalizationService localization;
     private bool registering;
 
     /// <summary>Cancels the in-flight username probe when the user keeps typing.</summary>
@@ -36,11 +37,16 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     /// </summary>
     private bool requiresProfileSetup;
 
-    public AccountWindow(IFirebaseAuthService accounts, IAccountProfileService profiles, IGoogleOAuthClient googleOAuth)
+    public AccountWindow(
+        IFirebaseAuthService accounts,
+        IAccountProfileService profiles,
+        IGoogleOAuthClient googleOAuth,
+        ILocalizationService? localization = null)
     {
         this.accounts = accounts;
         this.profiles = profiles;
         this.googleOAuth = googleOAuth;
+        this.localization = localization ?? LocalizationService.Current;
         InitializeComponent();
         accounts.StateChanged += Accounts_StateChanged;
         Loaded += (_, _) => Render(accounts.Current);
@@ -128,21 +134,20 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         SubmitButton.Visibility = Show(collectingCredentials);
         SwitchButton.Visibility = Show(!hasUser && !requiresProfileSetup);
 
-        SubmitButton.Content = requiresProfileSetup ? "Concluir cadastro" : registering ? "Criar minha conta" : "Entrar";
+        SubmitButton.Content = requiresProfileSetup ? T("Account.Actions.FinishRegistration") : registering ? T("Account.Actions.CreateAccount") : T("Account.Actions.SignIn");
 
         if (requiresProfileSetup)
         {
-            TitleText.Text = "Falta pouco";
-            SubtitleText.Text = "Escolha um nome de usuário disponível para concluir seu cadastro.";
+            TitleText.Text = T("Account.ProfileSetup.Title");
+            SubtitleText.Text = T("Account.ProfileSetup.Subtitle");
             // Nothing to recover with when there is no password in this flow.
             ResetPasswordButton.Visibility = Visibility.Collapsed;
         }
         else if (verification)
         {
-            TitleText.Text = "Confirme seu e-mail";
-            SubtitleText.Text = "Só falta um clique no link que enviamos.";
-            VerificationDetailText.Text =
-                $"Enviamos um link de confirmação para {state.User!.Email}. Abra o e-mail e clique no link — se não chegar em alguns minutos, confira o spam ou reenvie abaixo.";
+            TitleText.Text = T("Account.Verification.Title");
+            SubtitleText.Text = T("Account.Verification.Subtitle");
+            VerificationDetailText.Text = F("Account.Verification.Detail", state.User!.Email);
         }
         else
         {
@@ -180,15 +185,15 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     /// </summary>
     private void ApplyModeCopy()
     {
-        TitleText.Text = registering ? "Crie sua conta" : "Bem-vindo de volta";
+        TitleText.Text = registering ? T("Account.Register.Title") : T("Account.Welcome.Title");
         SubtitleText.Text = registering
-            ? "Leva menos de um minuto. Depois é só confirmar seu e-mail."
-            : "Entre para sincronizar suas preferências entre instalações.";
-        SubmitButton.Content = registering ? "Criar minha conta" : "Entrar";
-        SwitchButton.Content = registering ? "Já tem uma conta? Entrar" : "Ainda não tem conta? Criar conta";
-        GoogleButtonText.Text = registering ? "Cadastrar-se com o Google" : "Continuar com o Google";
-        ProviderDividerText.Text = registering ? "OU CADASTRE-SE COM E-MAIL" : "OU USE SEU E-MAIL";
-        PasswordField.Placeholder = registering ? "Crie uma senha forte" : "Sua senha";
+            ? T("Account.Register.Subtitle")
+            : T("Account.Welcome.Subtitle");
+        SubmitButton.Content = registering ? T("Account.Actions.CreateAccount") : T("Account.Actions.SignIn");
+        SwitchButton.Content = registering ? T("Account.Switch.ToSignIn") : T("Account.Switch.ToRegister");
+        GoogleButtonText.Text = registering ? T("Account.Provider.SignUpWithGoogle") : T("Account.Provider.ContinueWithGoogle");
+        ProviderDividerText.Text = registering ? T("Account.Provider.DividerRegister") : T("Account.Provider.DividerSignIn");
+        PasswordField.Placeholder = registering ? T("Account.Credentials.PasswordPlaceholderRegister") : T("Account.Credentials.PasswordPlaceholder");
     }
 
     private void Switch_Click(object sender, RoutedEventArgs e)
@@ -218,14 +223,14 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     {
         if (!AccountValidation.IsValidEmail(EmailBox.Text))
         {
-            Status("Informe um endereço de e-mail válido.", true);
+            Status(T("Account.Validation.InvalidEmail"), true);
             EmailBox.Focus();
             return;
         }
 
         if (PasswordField.Password.Length == 0)
         {
-            Status("Digite sua senha para entrar.", true);
+            Status(T("Account.Validation.PasswordRequired"), true);
             PasswordField.Focus();
             return;
         }
@@ -265,24 +270,19 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     /// </summary>
     private bool ValidateRegistrationFields()
     {
-        if (!AccountValidation.IsValidPersonName(FirstNameBox.Text)) { return Reject("Informe seu nome.", FirstNameBox); }
-        if (!AccountValidation.IsValidPersonName(LastNameBox.Text)) { return Reject("Informe seu sobrenome.", LastNameBox); }
-        if (!AccountValidation.IsValidUsername(UsernameBox.Text))
-        {
-            return Reject("O nome de usuário deve ter de 3 a 24 caracteres, começar com uma letra e usar apenas letras, números e \"_\".", UsernameBox);
-        }
-        if (!AccountValidation.IsValidEmail(EmailBox.Text)) { return Reject("Informe um endereço de e-mail válido.", EmailBox); }
+        if (!ValidateProfileFields()) return false;
+        if (!AccountValidation.IsValidEmail(EmailBox.Text)) { return Reject(T("Account.Validation.InvalidEmail"), EmailBox); }
         if (!AccountPasswordPolicy.IsValid(PasswordField.Password))
         {
-            return Reject("Sua senha precisa de pelo menos 12 caracteres.", PasswordField);
+            return Reject(T("Account.Validation.PasswordMinLength"), PasswordField);
         }
         if (PasswordField.Password != ConfirmPasswordField.Password)
         {
-            return Reject("As duas senhas precisam ser iguais.", ConfirmPasswordField);
+            return Reject(T("Account.Validation.PasswordsMustMatch"), ConfirmPasswordField);
         }
         if (TermsCheckBox.IsChecked != true)
         {
-            Status("Aceite os Termos de Uso para criar sua conta.", true);
+            Status(T("Account.Validation.TermsRequired"), true);
             TermsCheckBox.Focus();
             return false;
         }
@@ -296,15 +296,21 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         return false;
     }
 
-    private async Task SubmitProfileAsync()
+    /// <summary>Nome, sobrenome e nome de usuário — shared by registration (which also collects e-mail/senha) and the post-Google profile step (which only needs these).</summary>
+    private bool ValidateProfileFields()
     {
-        if (!AccountValidation.IsValidPersonName(FirstNameBox.Text)) { Reject("Informe seu nome.", FirstNameBox); return; }
-        if (!AccountValidation.IsValidPersonName(LastNameBox.Text)) { Reject("Informe seu sobrenome.", LastNameBox); return; }
+        if (!AccountValidation.IsValidPersonName(FirstNameBox.Text)) { return Reject(T("Account.Validation.FirstNameRequired"), FirstNameBox); }
+        if (!AccountValidation.IsValidPersonName(LastNameBox.Text)) { return Reject(T("Account.Validation.LastNameRequired"), LastNameBox); }
         if (!AccountValidation.IsValidUsername(UsernameBox.Text))
         {
-            Reject("O nome de usuário deve ter de 3 a 24 caracteres, começar com uma letra e usar apenas letras, números e \"_\".", UsernameBox);
-            return;
+            return Reject(T("Account.Validation.UsernameFormat"), UsernameBox);
         }
+        return true;
+    }
+
+    private async Task SubmitProfileAsync()
+    {
+        if (!ValidateProfileFields()) return;
 
         SetBusy(true);
         try { await SaveProfileAsync(); } finally { SetBusy(false); }
@@ -316,7 +322,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         if (token is null)
         {
             requiresProfileSetup = true;
-            Status("Sua sessão expirou. Entre novamente para concluir seu cadastro.", true);
+            Status(T("Account.Session.Expired"), true);
             Render(accounts.Current);
             return;
         }
@@ -332,7 +338,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
 
         if (requiresProfileSetup)
         {
-            Status(result.Message ?? "Não foi possível salvar seu perfil.", true);
+            Status(result.Message ?? T("Account.Profile.SaveFailed"), true);
             if (result.Outcome == AccountProfileOutcome.UsernameTaken)
             {
                 ShowUsernameStatus(UsernameAvailability.Taken);
@@ -356,14 +362,14 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         SetBusy(true);
         try
         {
-            Status("Concluindo o login na janela do seu navegador…", false);
+            Status(T("Account.Google.SigningIn"), false);
             var ticket = await googleOAuth.AuthenticateAsync();
-            if (ticket.IdToken is null) { Status(ticket.Error ?? "Não foi possível entrar com o Google.", true); return; }
+            if (ticket.IdToken is null) { Status(ticket.Error ?? T("Account.Google.Failed"), true); return; }
 
             var federated = await accounts.SignInWithGoogleAsync(ticket.IdToken, KeepSignedInBox.IsChecked == true);
             if (!federated.Result.Succeeded)
             {
-                Status(federated.Result.Error ?? "Não foi possível entrar com o Google.", true);
+                Status(federated.Result.Error ?? T("Account.Google.Failed"), true);
                 return;
             }
 
@@ -457,9 +463,9 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     {
         UsernameStatusPanel.Visibility = Visibility.Visible;
         UsernameStatusIcon.Data = (Geometry)FindResource("IconRefresh");
-        UsernameStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, "TextSubtleBrush");
-        UsernameStatusText.SetResourceReference(ForegroundProperty, "TextSubtleBrush");
-        UsernameStatusText.Text = "Verificando disponibilidade…";
+        UsernameStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, "TextTertiaryBrush");
+        UsernameStatusText.SetResourceReference(ForegroundProperty, "TextTertiaryBrush");
+        UsernameStatusText.Text = T("Account.Username.Checking");
     }
 
     private void ShowUsernameStatus(UsernameAvailability availability)
@@ -475,11 +481,11 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         var available = availability == UsernameAvailability.Available;
         UsernameStatusPanel.Visibility = Visibility.Visible;
         UsernameStatusIcon.Data = (Geometry)FindResource(available ? "IconCheck" : "IconClose");
-        UsernameStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, available ? "GreenBrush" : "RedBrush");
-        UsernameStatusText.SetResourceReference(ForegroundProperty, available ? "GreenBrush" : "RedBrush");
+        UsernameStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, available ? "SuccessBaseBrush" : "DangerBaseBrush");
+        UsernameStatusText.SetResourceReference(ForegroundProperty, available ? "SuccessBaseBrush" : "DangerBaseBrush");
         UsernameStatusText.Text = available
-            ? "Este nome de usuário está disponível."
-            : "Este nome de usuário já está em uso.";
+            ? T("Account.Username.Available")
+            : T("Account.Username.Taken");
     }
 
     // ===================== Senha =====================
@@ -491,13 +497,13 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         var length = PasswordField.Password.Length;
         PasswordStrengthBar.Value = Math.Min(length, AccountPasswordPolicy.MinimumLength);
         PasswordPolicyText.Text = length == 0
-            ? $"Use pelo menos {AccountPasswordPolicy.MinimumLength} caracteres."
+            ? F("Account.Password.PolicyMinimum", AccountPasswordPolicy.MinimumLength)
             : length < AccountPasswordPolicy.MinimumLength
-                ? $"Faltam {AccountPasswordPolicy.MinimumLength - length} caractere(s) para o mínimo de {AccountPasswordPolicy.MinimumLength}."
-                : "Boa! Sua senha atende ao mínimo exigido.";
+                ? F("Account.Password.PolicyRemaining", AccountPasswordPolicy.MinimumLength - length, AccountPasswordPolicy.MinimumLength)
+                : T("Account.Password.PolicyMet");
         PasswordStrengthBar.SetResourceReference(
             ForegroundProperty,
-            length >= AccountPasswordPolicy.MinimumLength ? "GreenBrush" : length >= AccountPasswordPolicy.MinimumLength / 2 ? "YellowBrush" : "RedBrush");
+            length >= AccountPasswordPolicy.MinimumLength ? "SuccessBaseBrush" : length >= AccountPasswordPolicy.MinimumLength / 2 ? "WarningBaseBrush" : "DangerBaseBrush");
 
         UpdateConfirmFeedback();
     }
@@ -518,9 +524,9 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         var matches = PasswordField.Password == ConfirmPasswordField.Password;
         ConfirmStatusPanel.Visibility = Visibility.Visible;
         ConfirmStatusIcon.Data = (Geometry)FindResource(matches ? "IconCheck" : "IconClose");
-        ConfirmStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, matches ? "GreenBrush" : "RedBrush");
-        ConfirmStatusText.SetResourceReference(ForegroundProperty, matches ? "GreenBrush" : "RedBrush");
-        ConfirmStatusText.Text = matches ? "As senhas coincidem." : "As senhas não coincidem.";
+        ConfirmStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, matches ? "SuccessBaseBrush" : "DangerBaseBrush");
+        ConfirmStatusText.SetResourceReference(ForegroundProperty, matches ? "SuccessBaseBrush" : "DangerBaseBrush");
+        ConfirmStatusText.Text = matches ? T("Account.Password.ConfirmMatch") : T("Account.Password.ConfirmMismatch");
     }
 
     // ===================== Demais ações =====================
@@ -529,7 +535,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     {
         if (!AccountValidation.IsValidEmail(EmailBox.Text))
         {
-            Reject("Informe seu e-mail para receber as instruções de recuperação.", EmailBox);
+            Reject(T("Account.Validation.EmailRequiredForReset"), EmailBox);
             return;
         }
 
@@ -538,14 +544,14 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         {
             var result = await accounts.SendPasswordResetEmailAsync(EmailBox.Text.Trim());
             Status(
-                result.Error ?? "Se houver uma conta para este e-mail, enviamos as instruções de recuperação.",
+                result.Error ?? T("Account.PasswordReset.Sent"),
                 result.Error is not null);
         }
         finally { SetBusy(false); }
     }
 
     private async void ResendVerification_Click(object sender, RoutedEventArgs e) =>
-        await RunAsync(() => accounts.ResendVerificationEmailAsync(), "Reenviamos o e-mail de confirmação.");
+        await RunAsync(() => accounts.ResendVerificationEmailAsync(), T("Account.Verification.ResentConfirmation"));
 
     private async void RefreshVerification_Click(object sender, RoutedEventArgs e) =>
         await RunAsync(() => accounts.RefreshEmailVerificationAsync());
@@ -565,7 +571,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
             Status(
                 result.Error
                     ?? success
-                    ?? (result.State == AuthenticationState.EmailVerificationRequired ? "Confirme seu e-mail para continuar." : string.Empty),
+                    ?? (result.State == AuthenticationState.EmailVerificationRequired ? T("Account.Verification.PleaseConfirm") : string.Empty),
                 result.Error is not null);
             return result;
         }
@@ -582,6 +588,10 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
 
     private void Terms_Click(object sender, RoutedEventArgs e) => new TermsOfUseWindow { Owner = this }.ShowDialog();
 
+    private string T(string key) => localization.GetString(key);
+
+    private string F(string key, params object?[] arguments) => localization.Format(key, arguments);
+
     private void ClearStatus() => StatusPanel.Visibility = Visibility.Collapsed;
 
     private void Status(string text, bool error)
@@ -590,10 +600,10 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
 
         StatusPanel.Visibility = Visibility.Visible;
         StatusText.Text = text;
-        StatusText.SetResourceReference(ForegroundProperty, error ? "RedBrush" : "GreenBrush");
+        StatusText.SetResourceReference(ForegroundProperty, error ? "DangerBaseBrush" : "SuccessBaseBrush");
         StatusIcon.Data = (Geometry)FindResource(error ? "IconInfo" : "IconCheck");
-        StatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, error ? "RedBrush" : "GreenBrush");
-        StatusPanel.SetResourceReference(System.Windows.Controls.Border.BorderBrushProperty, error ? "RedBrush" : "GreenBrush");
-        StatusPanel.SetResourceReference(BackgroundProperty, error ? "AccountStatusErrorBackgroundBrush" : "AccountStatusSuccessBackgroundBrush");
+        StatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, error ? "DangerBaseBrush" : "SuccessBaseBrush");
+        StatusPanel.SetResourceReference(System.Windows.Controls.Border.BorderBrushProperty, error ? "DangerBorderBrush" : "SuccessBorderBrush");
+        StatusPanel.SetResourceReference(BackgroundProperty, error ? "DangerSurfaceBrush" : "SuccessSurfaceBrush");
     }
 }

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Obfuscar project used ONLY by the public release hardening pipeline
+  (scripts/Invoke-Obfuscation.ps1). Development and CI test builds never run
+  it: the clean source stays the source of truth and the app is debugged
+  un-obfuscated.
+
+  Scope is deliberately narrow. Only the internal-logic assemblies are
+  obfuscated:
+
+    * FiveMCleaner.Core    - action catalog, profiles, planning (the "how it
+                             works" IP the release should not hand to a casual
+                             decompiler).
+    * FiveMCleaner.Windows - Windows/FiveM adapters and diagnostics.
+
+  Assemblies intentionally NOT listed here, and why touching them is unsafe:
+
+    * FiveMCleaner.Contracts   - DTOs/enums are serialized BY NAME across four
+                                 durable boundaries (broker IPC, broker events,
+                                 transaction journal, local settings) with
+                                 JsonSerializerOptions.UnmappedMemberHandling =
+                                 Disallow. Renaming a member breaks persisted
+                                 data and the elevated broker contract.
+    * FiveMCleaner.App         - WPF. XAML/BAML resolves types and binds to
+                                 view-model members by string; Obfuscar does not
+                                 read XAML, so renaming would break bindings
+                                 silently ("but it compiled").
+    * Launcher / Broker / *    - entry-point hosts and the release tool.
+
+  KeepPublicApi=true is the correctness guarantee: the public surface of Core
+  and Windows is consumed by the NON-obfuscated App/Broker and by JSON, so only
+  private/internal members are renamed. The app keeps working exactly as built;
+  only the internal implementation is mangled.
+
+  The InPath / OutPath placeholders below are replaced per run by
+  Invoke-Obfuscation.ps1.
+-->
+<Obfuscator>
+  <Var name="InPath" value="__INPATH__" />
+  <Var name="OutPath" value="__OUTPATH__" />
+
+  <!-- Keep everything a caller or serializer resolves by name. -->
+  <Var name="KeepPublicApi" value="true" />
+  <Var name="HidePrivateApi" value="true" />
+
+  <!-- Rename only the members KeepPublicApi already leaves eligible. -->
+  <Var name="RenameProperties" value="true" />
+  <Var name="RenameEvents" value="true" />
+  <Var name="RenameFields" value="true" />
+  <Var name="ReuseNames" value="true" />
+
+  <!-- ASCII identifiers keep stack traces/tooling readable and avoid AV heuristics. -->
+  <Var name="UseUnicodeNames" value="false" />
+
+  <!-- Encrypt in-IL string literals (registry paths, WMI queries, log text). -->
+  <Var name="HideStrings" value="true" />
+
+  <Var name="OptimizeMethods" value="true" />
+
+  <!-- Emit the symbol map so obfuscated crash reports can be de-obfuscated. -->
+  <Var name="SuppressIldasm" value="true" />
+  <Var name="XmlMapping" value="false" />
+
+  <Module file="$(InPath)\FiveMCleaner.Core.dll" />
+  <Module file="$(InPath)\FiveMCleaner.Windows.dll" />
+</Obfuscator>

@@ -14,7 +14,9 @@ public sealed class RuntimePackageStager
         activation = new RuntimeActivationStore(runtimeRoot);
     }
 
-    public string Stage(string archivePath, string version, string expectedSha256, long expectedSize)
+    public string Stage(
+        string archivePath, string version, string expectedSha256, long expectedSize,
+        CancellationToken cancellationToken = default)
     {
         if (!Version.TryParse(version, out _)) throw new ArgumentException("Versão inválida.", nameof(version));
         if (new FileInfo(archivePath).Length != expectedSize) throw new InvalidDataException("Tamanho do pacote não confere.");
@@ -29,9 +31,22 @@ public sealed class RuntimePackageStager
         var destination = Path.Combine(activation.VersionsRoot, version);
         if (Directory.Exists(destination))
         {
-            VerifyFileManifest(destination);
-            return destination;
+            try
+            {
+                VerifyFileManifest(destination, cancellationToken);
+                return destination;
+            }
+            catch (Exception exception) when (exception is InvalidDataException or IOException or UnauthorizedAccessException)
+            {
+                // Existing directory is corrupt or tampered; remove and re-extract from verified archive.
+                try { Directory.Delete(destination, recursive: true); }
+                catch (Exception cleanupException) when (cleanupException is IOException or UnauthorizedAccessException)
+                {
+                    throw new InvalidDataException("Diretório de versão existente está corrompido e não pôde ser removido.", cleanupException);
+                }
+            }
         }
+        cancellationToken.ThrowIfCancellationRequested();
         var staging = Path.Combine(runtimeRoot, "staging", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(staging);
         try
@@ -42,6 +57,7 @@ public sealed class RuntimePackageStager
                 throw new InvalidDataException("Pacote excede os limites de extração.");
             foreach (var entry in archive.Entries)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 if (string.IsNullOrEmpty(entry.Name)) continue;
                 var output = Path.GetFullPath(Path.Combine(staging, entry.FullName.Replace('/', Path.DirectorySeparatorChar)));
                 if (!output.StartsWith(Path.TrimEndingDirectorySeparator(staging) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
@@ -49,7 +65,7 @@ public sealed class RuntimePackageStager
                 Directory.CreateDirectory(Path.GetDirectoryName(output)!);
                 entry.ExtractToFile(output, overwrite: false);
             }
-            VerifyFileManifest(staging);
+            VerifyFileManifest(staging, cancellationToken);
             Directory.Move(staging, destination);
             return destination;
         }
@@ -60,23 +76,29 @@ public sealed class RuntimePackageStager
         }
     }
 
-    private static void VerifyFileManifest(string root)
+    private static void VerifyFileManifest(string root, CancellationToken cancellationToken = default)
     {
         var manifest = Path.Combine(root, "SHA256SUMS.txt");
         if (!File.Exists(manifest)) throw new InvalidDataException("Pacote não contém manifesto de arquivos.");
         var declared = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var line in File.ReadLines(manifest).Where(line => !string.IsNullOrWhiteSpace(line)))
         {
+            cancellationToken.ThrowIfCancellationRequested();
             var separator = line.IndexOf("  ", StringComparison.Ordinal);
             if (separator != 64) throw new InvalidDataException("Manifesto de arquivos inválido.");
             var expected = line[..separator];
+            if (!expected.All(char.IsAsciiHexDigit)) throw new InvalidDataException("Manifesto de arquivos inválido.");
             var relative = line[(separator + 2)..].Replace('/', Path.DirectorySeparatorChar);
             if (!declared.Add(relative)) throw new InvalidDataException("Manifesto declara arquivo duplicado.");
             var file = Path.GetFullPath(Path.Combine(root, relative));
             if (!file.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
                 || !File.Exists(file)) throw new InvalidDataException("Arquivo declarado ausente.");
             using var stream = File.OpenRead(file);
-            if (!Convert.ToHexString(SHA256.HashData(stream)).Equals(expected, StringComparison.OrdinalIgnoreCase))
+            var actualHash = SHA256.HashData(stream);
+            // Constant-time compare, igual ao restante do pipeline de update
+            // (GitHubReleaseUpdateService, BrokerIntegrityVerifier) -- este
+            // era o único verificador de manifesto ainda usando Equals.
+            if (!CryptographicOperations.FixedTimeEquals(actualHash, Convert.FromHexString(expected)))
                 throw new InvalidDataException("Integridade de arquivo extraído falhou.");
         }
         var actual = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)

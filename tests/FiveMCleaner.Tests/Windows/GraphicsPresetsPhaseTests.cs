@@ -196,7 +196,7 @@ public sealed class GraphicsPresetRecommendationTests
     {
         var gpus = new[] { new GpuAdapterDetails("Intel(R) UHD Graphics", 1L * 1024 * 1024 * 1024, GpuKindGuess.LikelyIntegrated) };
         var cpu = new CpuSnapshot(2, 4, 3000, 3500);
-        var ram = new RamDetailsSnapshot([new RamModuleInfo(8L * 1024 * 1024 * 1024, 2666, 2666, "DIMM0")]);
+        var ram = new RamDetailsSnapshot([new RamModuleInfo(8L * 1024 * 1024 * 1024, 2666, 2666)]);
 
         var message = GraphicsPresetRecommendationAction.Recommend(gpus, cpu, ram, display: null);
 
@@ -208,7 +208,7 @@ public sealed class GraphicsPresetRecommendationTests
     {
         var gpus = new[] { new GpuAdapterDetails("NVIDIA GeForce RTX 4070", 12L * 1024 * 1024 * 1024, GpuKindGuess.LikelyDiscrete) };
         var cpu = new CpuSnapshot(8, 16, 4200, 5000);
-        var ram = new RamDetailsSnapshot([new RamModuleInfo(32L * 1024 * 1024 * 1024, 3200, 3200, "DIMM0")]);
+        var ram = new RamDetailsSnapshot([new RamModuleInfo(32L * 1024 * 1024 * 1024, 3200, 3200)]);
         var display = new DisplayConfigurationSnapshot(1920, 1080, 60, 60, HardwareGpuSchedulingState.NotSupportedOrUnknown);
 
         var message = GraphicsPresetRecommendationAction.Recommend(gpus, cpu, ram, display);
@@ -221,7 +221,7 @@ public sealed class GraphicsPresetRecommendationTests
     {
         var gpus = new[] { new GpuAdapterDetails("NVIDIA GeForce GTX 1660", 6L * 1024 * 1024 * 1024, GpuKindGuess.LikelyDiscrete) };
         var cpu = new CpuSnapshot(6, 12, 3600, 4200);
-        var ram = new RamDetailsSnapshot([new RamModuleInfo(16L * 1024 * 1024 * 1024, 3000, 3000, "DIMM0")]);
+        var ram = new RamDetailsSnapshot([new RamModuleInfo(16L * 1024 * 1024 * 1024, 3000, 3000)]);
 
         var message = GraphicsPresetRecommendationAction.Recommend(gpus, cpu, ram, display: null);
 

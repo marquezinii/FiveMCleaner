@@ -11,7 +11,12 @@ param(
 
     [switch]$NoCompilerBootstrap,
 
-    [switch]$AllowDirtySource
+    [switch]$AllowDirtySource,
+
+    # Forwarded to Build-Portable: obfuscate the internal-logic assemblies in
+    # the published runtime before it is packaged, hashed and signed. Used by
+    # the public release workflow; ignored when -SkipPortableBuild is set.
+    [switch]$Harden
 )
 
 Set-StrictMode -Version Latest
@@ -25,11 +30,11 @@ $installerOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'inst
 $installerArtworkLight = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-artwork\FiveMCleaner-wizard-side-light.png'))
 $installerArtworkDark = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-artwork\FiveMCleaner-wizard-side-dark.png'))
 $stagingOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot ".installer-staging-$([Guid]::NewGuid().ToString('N'))"))
-$innoVersion = '6.7.3'
-$innoAssetName = "innosetup-$innoVersion.exe"
-$innoDownloadUrl = "https://github.com/jrsoftware/issrc/releases/download/is-6_7_3/$innoAssetName"
-$innoSha256 = '9c73c3bae7ed48d44112a0f48e66742c00090bdb5bef71d9d3c056c66e97b732'
-$innoCompilerSha256 = '0a8757031b33777e4c9cbffee40f11a5062b36d25cbe144c1db73b6102b80ad7'
+$innoVersion = '7.0.2'
+$innoAssetName = "innosetup-$innoVersion-x64.exe"
+$innoDownloadUrl = "https://github.com/jrsoftware/issrc/releases/download/is-7_0_2/$innoAssetName"
+$innoSha256 = '5ad54ca3def786f8f4212552e54cc6d8d61329e2d24a1cfee0571d42c2684ff1'
+$innoCompilerSha256 = '0ff6140d641f84b64204a2c4d52207c6fc437c9f4db8779c83083d84f7e3d70d'
 
 . (Join-Path $PSScriptRoot 'Installer.Common.ps1')
 
@@ -56,7 +61,7 @@ function Resolve-InnoCompiler {
             throw "Inno Setup compiler not found: $explicit"
         }
         if (-not (Test-InnoCompilerTrust -Path $explicit)) {
-            throw 'The explicit Inno Setup compiler does not match the pinned 6.7.3 compiler or its Pyrsys B.V. signature is invalid.'
+            throw "The explicit Inno Setup compiler does not match the pinned $innoVersion x64 compiler or its Pyrsys B.V. signature is invalid."
         }
         return $explicit
     }
@@ -67,8 +72,8 @@ function Resolve-InnoCompiler {
     }
     $candidates += @(
         (Join-Path $artifactsRoot ".tools\inno-$innoVersion\ISCC.exe"),
-        'C:\Program Files (x86)\Inno Setup 6\ISCC.exe',
-        'C:\Program Files\Inno Setup 6\ISCC.exe'
+        'C:\Program Files\Inno Setup 7\ISCC.exe',
+        'C:\Program Files (x86)\Inno Setup 7\ISCC.exe'
     )
     $command = Get-Command ISCC.exe -ErrorAction SilentlyContinue
     if ($command) {
@@ -83,7 +88,7 @@ function Resolve-InnoCompiler {
     }
 
     if ($NoCompilerBootstrap) {
-        throw 'Inno Setup 6 compiler was not found and bootstrap is disabled.'
+        throw "Inno Setup $innoVersion x64 compiler was not found and bootstrap is disabled."
     }
 
     $downloads = Join-Path $artifactsRoot '.tools\downloads'
@@ -181,10 +186,15 @@ try {
     }
 
     if (-not $SkipPortableBuild) {
-        & (Join-Path $PSScriptRoot 'Build-Portable.ps1') -Runtime win-x64 -Configuration $Configuration
+        $portableArguments = @{ Runtime = 'win-x64'; Configuration = $Configuration }
+        if ($Harden) { $portableArguments['Harden'] = $true }
+        & (Join-Path $PSScriptRoot 'Build-Portable.ps1') @portableArguments
         if ($LASTEXITCODE -ne 0) {
             throw 'Portable self-contained publish failed.'
         }
+    }
+    elseif ($Harden) {
+        throw 'Cannot honor -Harden together with -SkipPortableBuild: hardening happens during the portable publish.'
     }
 
     foreach ($requiredPayload in @(
@@ -317,6 +327,17 @@ try {
         -InstallerPath $stagedInstaller `
         -PublishDirectory $publishDirectory `
         -ExpectedVersion $Version
+
+    if ($Harden) {
+        # Build-Portable.ps1 already fail-closed-checked $publishDirectory and
+        # both ZIPs; this closes the loop on the compiled installer itself -
+        # the artifact users actually download and run.
+        & (Join-Path $PSScriptRoot 'Test-NoUnobfuscatedAssemblies.ps1') `
+            -RuntimeDirectory $publishDirectory `
+            -Version $Version `
+            -InstallerPath $stagedInstaller
+        if ($LASTEXITCODE -ne 0) { throw 'Fail-closed hardening verification failed for the installer.' }
+    }
 
     foreach ($path in @($finalInstaller, $finalContents, $finalHash, $releaseManifest)) {
         if (Test-Path -LiteralPath $path) {

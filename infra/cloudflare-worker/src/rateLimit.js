@@ -39,3 +39,22 @@ export async function withinRateLimit(limiter, key) {
     return true;
   }
 }
+
+/**
+ * Write routes must never become unbounded because a deployment omitted a
+ * binding or Cloudflare temporarily failed to evaluate it. Returning false
+ * preserves the existing handler contract while making those routes fail
+ * closed.
+ */
+export async function withinRequiredRateLimit(limiter, key) {
+  if (!limiter || typeof limiter.limit !== 'function') {
+    return false;
+  }
+
+  try {
+    const outcome = await limiter.limit({ key });
+    return outcome?.success === true;
+  } catch {
+    return false;
+  }
+}

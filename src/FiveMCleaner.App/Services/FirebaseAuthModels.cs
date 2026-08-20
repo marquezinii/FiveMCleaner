@@ -67,10 +67,9 @@ public interface IFirebaseAuthService : IDisposable
     Task LogoutAsync(CancellationToken cancellationToken = default);
 }
 
-internal sealed record FirebaseTokenResponse(string? localId, string? email, string? idToken, string? refreshToken, string? expiresIn);
+internal sealed record FirebaseTokenResponse(string? localId, string? idToken, string? refreshToken, string? expiresIn);
 internal sealed record FirebaseIdpResponse(
     string? localId,
-    string? email,
     string? idToken,
     string? refreshToken,
     string? expiresIn,
@@ -78,7 +77,7 @@ internal sealed record FirebaseIdpResponse(
     string? lastName,
     bool isNewUser)
 {
-    public FirebaseTokenResponse ToTokens() => new(localId, email, idToken, refreshToken, expiresIn);
+    public FirebaseTokenResponse ToTokens() => new(localId, idToken, refreshToken, expiresIn);
 }
 internal sealed record FirebaseLookupResponse(FirebaseLookupUser[]? users);
 internal sealed record FirebaseLookupUser(string? localId, string? email, bool emailVerified);

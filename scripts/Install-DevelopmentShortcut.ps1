@@ -4,7 +4,42 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
-$workspace = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
+$taskWorkspace = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
+
+# The shortcut must keep working after the checkout that built it is removed
+# (task worktrees are deleted once their PR merges, per AI_RULES.md). Instead
+# of pointing at $taskWorkspace directly, mirror its current source tree into
+# a fixed, permanent sibling folder and point the shortcut there. Every task
+# or integration that reinstalls the shortcut re-mirrors this folder, so it
+# always reflects whichever checkout ran the install script most recently.
+$git = Get-Command git -ErrorAction SilentlyContinue
+if ($null -eq $git) {
+    throw 'Git is required to install the FiveMCleaner development shortcut.'
+}
+
+$gitCommonDir = (& $git.Source -C $taskWorkspace rev-parse --git-common-dir 2>&1)
+if ($LASTEXITCODE -ne 0) {
+    throw "Could not resolve the Git repository for $taskWorkspace`:`n$gitCommonDir"
+}
+$gitCommonDir = [string]$gitCommonDir
+if (-not [System.IO.Path]::IsPathRooted($gitCommonDir)) {
+    $gitCommonDir = Join-Path $taskWorkspace $gitCommonDir
+}
+$gitCommonDir = [System.IO.Path]::GetFullPath($gitCommonDir)
+$repositoryRoot = Split-Path -Parent $gitCommonDir
+$stableWorkspace = Join-Path (Split-Path -Parent $repositoryRoot) 'FiveMCleaner-dev-shortcut'
+
+if ($taskWorkspace -ne $stableWorkspace) {
+    New-Item -ItemType Directory -Path $stableWorkspace -Force | Out-Null
+    $robocopyOutput = & robocopy $taskWorkspace $stableWorkspace /MIR `
+        /XD '.git' 'bin' 'obj' 'artifacts' 'node_modules' '.vs' `
+        /XF '.git' '*.user' /NFL /NDL /NJH /NJS /NP
+    if ($LASTEXITCODE -ge 8) {
+        throw "Failed to mirror $taskWorkspace into the permanent shortcut workspace $stableWorkspace (robocopy exit code $LASTEXITCODE):`n$($robocopyOutput -join "`n")"
+    }
+}
+
+$workspace = $stableWorkspace
 $projectPath = Join-Path $workspace 'src\FiveMCleaner.App\FiveMCleaner.App.csproj'
 $iconPath = Join-Path $workspace 'src\FiveMCleaner.App\Assets\FiveMCleaner.ico'
 $launcherPath = Join-Path $workspace 'scripts\Start-DevelopmentApp.ps1'
@@ -13,21 +48,34 @@ if (-not (Test-Path -LiteralPath $projectPath -PathType Leaf)) {
     throw "FiveMCleaner.App.csproj was not found under the expected workspace: $workspace"
 }
 
-[xml]$project = Get-Content -LiteralPath $projectPath -Raw -Encoding utf8
-$propertyGroups = @($project.Project.PropertyGroup)
-$targetFramework = $propertyGroups.TargetFramework |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-    Select-Object -First 1
-$assemblyName = $propertyGroups.AssemblyName |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-    Select-Object -First 1
-$outputType = $propertyGroups.OutputType |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-    Select-Object -First 1
+$dotnet = Get-Command dotnet -ErrorAction SilentlyContinue
+if ($null -eq $dotnet) {
+    throw 'The .NET SDK is required to install the FiveMCleaner development shortcut.'
+}
+
+$propertyOutput = @(& $dotnet.Source msbuild $projectPath -nologo `
+        -property:Configuration=Release `
+        -getProperty:TargetFramework `
+        -getProperty:AssemblyName `
+        -getProperty:OutputType 2>&1)
+if ($LASTEXITCODE -ne 0) {
+    throw "MSBuild could not resolve the app project properties:`n$($propertyOutput -join "`n")"
+}
+
+try {
+    $projectProperties = (($propertyOutput -join "`n") | ConvertFrom-Json -ErrorAction Stop).Properties
+}
+catch {
+    throw "MSBuild returned invalid app project properties: $($propertyOutput -join "`n")"
+}
+
+$targetFramework = [string]$projectProperties.TargetFramework
+$assemblyName = [string]$projectProperties.AssemblyName
+$outputType = [string]$projectProperties.OutputType
 
 if ([string]::IsNullOrWhiteSpace($targetFramework) -or
     [string]::IsNullOrWhiteSpace($assemblyName)) {
-    throw 'The app project does not declare TargetFramework and AssemblyName.'
+    throw 'MSBuild did not resolve TargetFramework and AssemblyName for the app.'
 }
 
 if ($outputType -ne 'WinExe') {

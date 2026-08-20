@@ -95,13 +95,13 @@ public sealed class ProcessCommandRunner : ICommandRunner
         catch (OperationCanceledException) when (timeoutSource.IsCancellationRequested
             && !cancellationToken.IsCancellationRequested)
         {
-            TryKill(process);
+            ProcessTermination.TryKill(process);
             await ObserveAsync(outputTask, errorTask).ConfigureAwait(false);
             throw new TimeoutException($"'{executable}' exceeded the {timeout} timeout.");
         }
         catch
         {
-            TryKill(process);
+            ProcessTermination.TryKill(process);
             await ObserveAsync(outputTask, errorTask).ConfigureAwait(false);
             throw;
         }
@@ -127,20 +127,4 @@ public sealed class ProcessCommandRunner : ICommandRunner
         }
     }
 
-    private static void TryKill(Process process)
-    {
-        try
-        {
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree: true);
-            }
-        }
-        catch (InvalidOperationException)
-        {
-        }
-        catch (System.ComponentModel.Win32Exception)
-        {
-        }
-    }
 }

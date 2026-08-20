@@ -25,7 +25,7 @@ public sealed class CloudflareAccountProfileServiceTests
             return new HttpResponseMessage(HttpStatusCode.Created);
         });
 
-        var result = await service.CreateAsync("id-token-1", Submission);
+        var result = await service.CreateAsync("id-token-1", Submission, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(AccountProfileOutcome.Created, result.Outcome);
         Assert.Null(result.Message);
@@ -38,7 +38,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => new HttpResponseMessage(HttpStatusCode.Conflict));
 
-        var result = await service.CreateAsync("id-token-1", Submission);
+        var result = await service.CreateAsync("id-token-1", Submission, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(AccountProfileOutcome.UsernameTaken, result.Outcome);
         Assert.False(string.IsNullOrWhiteSpace(result.Message));
@@ -49,7 +49,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => new HttpResponseMessage(HttpStatusCode.InternalServerError));
 
-        var result = await service.CreateAsync("id-token-1", Submission);
+        var result = await service.CreateAsync("id-token-1", Submission, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(AccountProfileOutcome.Failed, result.Outcome);
         Assert.False(string.IsNullOrWhiteSpace(result.Message));
@@ -60,7 +60,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => throw new HttpRequestException("network down"));
 
-        var result = await service.CreateAsync("id-token-1", Submission);
+        var result = await service.CreateAsync("id-token-1", Submission, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(AccountProfileOutcome.Failed, result.Outcome);
         Assert.False(string.IsNullOrWhiteSpace(result.Message));
@@ -82,7 +82,7 @@ public sealed class CloudflareAccountProfileServiceTests
             };
         });
 
-        var result = await service.FetchAsync("id-token-1");
+        var result = await service.FetchAsync("id-token-1", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(AccountProfileFetchOutcome.Found, result.Outcome);
         Assert.Equal("joao_silva", result.Username);
@@ -98,7 +98,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => new HttpResponseMessage(HttpStatusCode.NotFound));
 
-        var result = await service.FetchAsync("id-token-1");
+        var result = await service.FetchAsync("id-token-1", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(AccountProfileFetchOutcome.NotFound, result.Outcome);
     }
@@ -108,7 +108,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => new HttpResponseMessage(HttpStatusCode.InternalServerError));
 
-        var result = await service.FetchAsync("id-token-1");
+        var result = await service.FetchAsync("id-token-1", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(AccountProfileFetchOutcome.Failed, result.Outcome);
     }
@@ -118,7 +118,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => throw new HttpRequestException("network down"));
 
-        var result = await service.FetchAsync("id-token-1");
+        var result = await service.FetchAsync("id-token-1", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(AccountProfileFetchOutcome.Failed, result.Outcome);
     }
@@ -133,7 +133,7 @@ public sealed class CloudflareAccountProfileServiceTests
             return Json(HttpStatusCode.OK, """{"available":true}""");
         });
 
-        var result = await service.CheckUsernameAsync("joao_silva");
+        var result = await service.CheckUsernameAsync("joao_silva", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(UsernameAvailability.Available, result);
         Assert.Equal(HttpMethod.Get, captured!.Method);
@@ -146,7 +146,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => Json(HttpStatusCode.OK, """{"available":false}"""));
 
-        Assert.Equal(UsernameAvailability.Taken, await service.CheckUsernameAsync("joao_silva"));
+        Assert.Equal(UsernameAvailability.Taken, await service.CheckUsernameAsync("joao_silva", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -162,7 +162,7 @@ public sealed class CloudflareAccountProfileServiceTests
             return Json(HttpStatusCode.OK, """{"available":true}""");
         });
 
-        Assert.Equal(UsernameAvailability.Invalid, await service.CheckUsernameAsync(username));
+        Assert.Equal(UsernameAvailability.Invalid, await service.CheckUsernameAsync(username, cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
         Assert.False(called);
     }
 
@@ -171,7 +171,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => Json(HttpStatusCode.BadRequest, """{"error":"invalid-username"}"""));
 
-        Assert.Equal(UsernameAvailability.Invalid, await service.CheckUsernameAsync("joao_silva"));
+        Assert.Equal(UsernameAvailability.Invalid, await service.CheckUsernameAsync("joao_silva", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     /// <summary>
@@ -184,7 +184,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => Json(HttpStatusCode.TooManyRequests, """{"error":"rate-limited"}"""));
 
-        Assert.Equal(UsernameAvailability.Unknown, await service.CheckUsernameAsync("joao_silva"));
+        Assert.Equal(UsernameAvailability.Unknown, await service.CheckUsernameAsync("joao_silva", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -192,7 +192,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => new HttpResponseMessage(HttpStatusCode.InternalServerError));
 
-        Assert.Equal(UsernameAvailability.Unknown, await service.CheckUsernameAsync("joao_silva"));
+        Assert.Equal(UsernameAvailability.Unknown, await service.CheckUsernameAsync("joao_silva", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -200,7 +200,7 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => Json(HttpStatusCode.OK, "not json at all"));
 
-        Assert.Equal(UsernameAvailability.Unknown, await service.CheckUsernameAsync("joao_silva"));
+        Assert.Equal(UsernameAvailability.Unknown, await service.CheckUsernameAsync("joao_silva", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -208,13 +208,13 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var service = CreateService(_ => throw new HttpRequestException("network down"));
 
-        Assert.Equal(UsernameAvailability.Unknown, await service.CheckUsernameAsync("joao_silva"));
+        Assert.Equal(UsernameAvailability.Unknown, await service.CheckUsernameAsync("joao_silva", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Fact]
     public async Task DisabledAccountProfileService_NeverClaimsANameIsAvailable()
     {
-        Assert.Equal(UsernameAvailability.Unknown, await new DisabledAccountProfileService().CheckUsernameAsync("joao_silva"));
+        Assert.Equal(UsernameAvailability.Unknown, await new DisabledAccountProfileService().CheckUsernameAsync("joao_silva", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     private static HttpResponseMessage Json(HttpStatusCode status, string body) =>
@@ -231,10 +231,5 @@ public sealed class CloudflareAccountProfileServiceTests
     {
         var client = new HttpClient(new StubHandler(send));
         return new CloudflareAccountProfileService(client, new Uri("https://example.com/account/profile"));
-    }
-
-    private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> send) : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Task.FromResult(send(request));
     }
 }

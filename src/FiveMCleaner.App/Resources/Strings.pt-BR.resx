@@ -1,13 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
   <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms</value></resheader>
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
-  <data name="Window.Minimize" xml:space="preserve"><value>Minimizar</value></data>
-  <data name="Window.Maximize" xml:space="preserve"><value>Maximizar</value></data>
-  <data name="Window.Restore" xml:space="preserve"><value>Restaurar</value></data>
-  <data name="Window.Close" xml:space="preserve"><value>Fechar</value></data>
   <data name="Navigation.Section" xml:space="preserve"><value>NAVEGAÇÃO</value></data>
   <data name="Navigation.Overview" xml:space="preserve"><value>Visão geral</value></data>
   <data name="Navigation.Optimizer" xml:space="preserve"><value>Otimizador</value></data>
@@ -35,6 +31,8 @@
   <data name="Settings.About.Discord.Detail" xml:space="preserve"><value>Tire dúvidas, acompanhe novidades e converse com outros usuários do FiveMCleaner.</value></data>
   <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Abrir Discord</value></data>
   <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Entre no nosso Discord oficial</value></data>
+  <data name="LiveAlert.Dismiss" xml:space="preserve"><value>Fechar</value></data>
+  <data name="Account.TitleBar.SignInPrompt" xml:space="preserve"><value>Entrar / Cadastre-se</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Reanalisar PC</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Abrir Otimizador</value></data>
   <data name="Dashboard.SystemOverview" xml:space="preserve"><value>Seu computador</value></data>
@@ -67,14 +65,20 @@
   <data name="Optimizer.SystemReady" xml:space="preserve"><value>Sistema pronto</value></data>
   <data name="Optimizer.Recommended" xml:space="preserve"><value>OTIMIZAÇÃO RECOMENDADA</value></data>
   <data name="Optimizer.Computer" xml:space="preserve"><value>Seu computador</value></data>
-  <data name="Optimizer.Impact" xml:space="preserve"><value>Impacto esperado</value></data>
-  <data name="Optimizer.Execution" xml:space="preserve"><value>Execução</value></data>
+  <data name="Optimizer.Impact" xml:space="preserve"><value>IMPACTO ESPERADO</value></data>
+  <data name="Optimizer.Execution" xml:space="preserve"><value>EXECUÇÃO</value></data>
   <data name="Optimizer.ChangeMode" xml:space="preserve"><value>Alterar modo</value></data>
   <data name="Optimizer.RunningTitle" xml:space="preserve"><value>Otimizando seu computador</value></data>
   <data name="Optimizer.ShowDetails" xml:space="preserve"><value>Mostrar detalhes</value></data>
   <data name="Optimizer.CompletedTitle" xml:space="preserve"><value>Otimização concluída</value></data>
+  <data name="Optimizer.Result.Failed" xml:space="preserve"><value>A otimização não foi concluída</value></data>
+  <data name="Optimizer.Result.PartialTitle" xml:space="preserve"><value>Concluído com falhas</value></data>
   <data name="Optimizer.NextStep" xml:space="preserve"><value>PRÓXIMO PASSO RECOMENDADO</value></data>
   <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Plano de otimização</value></data>
+  <data name="Optimizer.Table.Action" xml:space="preserve"><value>AÇÃO</value></data>
+  <data name="Optimizer.Table.Description" xml:space="preserve"><value>O QUE FAZ</value></data>
+  <data name="Optimizer.Table.Risk" xml:space="preserve"><value>RISCO</value></data>
+  <data name="Optimizer.Table.Privilege" xml:space="preserve"><value>EXECUÇÃO</value></data>
   <data name="Optimizer.CurrentPlan" xml:space="preserve"><value>Plano atual</value></data>
   <data name="Optimizer.RunPlan" xml:space="preserve"><value>Executar plano</value></data>
   <data name="Progress.Title" xml:space="preserve"><value>Progresso</value></data>
@@ -87,6 +91,14 @@
   <data name="History.OpenLogs" xml:space="preserve"><value>Abrir pasta de logs</value></data>
   <data name="History.LocalRuns" xml:space="preserve"><value>Execuções locais</value></data>
   <data name="History.Undo" xml:space="preserve"><value>Desfazer</value></data>
+  <data name="History.Table.Date" xml:space="preserve"><value>DATA</value></data>
+  <data name="History.Table.Run" xml:space="preserve"><value>EXECUÇÃO</value></data>
+  <data name="History.Table.Summary" xml:space="preserve"><value>RESULTADO</value></data>
+  <data name="History.Table.Action" xml:space="preserve"><value>ROLLBACK</value></data>
+  <data name="History.Notes.Title" xml:space="preserve"><value>O que cada execução registra</value></data>
+  <data name="History.Notes.Recorded" xml:space="preserve"><value>As ações aplicadas, o resultado tipado de cada uma e o snapshot necessário para desfazer.</value></data>
+  <data name="History.Notes.Rollback" xml:space="preserve"><value>O rollback restaura apenas o que aquela execução mudou e preserva o que você alterou depois.</value></data>
+  <data name="History.Notes.Local" xml:space="preserve"><value>Tudo permanece neste computador, na pasta local do FiveMCleaner.</value></data>
   <data name="Settings.Title" xml:space="preserve"><value>Configurações</value></data>
   <data name="Settings.Subtitle" xml:space="preserve"><value>Personalize o aplicativo sem enfraquecer o perfil de otimização escolhido.</value></data>
   <data name="Settings.General.Title" xml:space="preserve"><value>Geral</value></data>
@@ -151,12 +163,9 @@
   <data name="BugReport.Validation.Description" xml:space="preserve"><value>A descrição deve ter entre 20 e 8.000 caracteres.</value></data>
   <data name="BugReport.Validation.Email" xml:space="preserve"><value>Informe um e-mail válido ou deixe em branco.</value></data>
   <data name="BugReport.Validation.Log" xml:space="preserve"><value>O trecho de log excede o limite de 100 KB.</value></data>
-  <data name="Common.Cancel" xml:space="preserve"><value>Cancelar</value></data>
-  <data name="Common.Continue" xml:space="preserve"><value>Continuar</value></data>
   <data name="Common.Retry" xml:space="preserve"><value>Tentar novamente</value></data>
   <data name="Common.Unknown" xml:space="preserve"><value>Desconhecido</value></data>
   <data name="Status.Ready.Headline" xml:space="preserve"><value>Pronto para otimizar</value></data>
-  <data name="Status.Ready.Detail" xml:space="preserve"><value>Revise o plano e escolha Executar plano quando estiver pronto.</value></data>
   <data name="Status.Waiting" xml:space="preserve"><value>AGUARDANDO</value></data>
   <data name="Status.Analyzing" xml:space="preserve"><value>Analisando…</value></data>
   <data name="Status.SearchingFiveM" xml:space="preserve"><value>PROCURANDO FIVEM</value></data>
@@ -169,14 +178,11 @@
   <data name="Status.Restoring" xml:space="preserve"><value>RESTAURANDO</value></data>
   <data name="Status.Completed" xml:space="preserve"><value>CONCLUÍDO</value></data>
   <data name="Status.Cancelled" xml:space="preserve"><value>CANCELADO</value></data>
-  <data name="Status.Cancelling" xml:space="preserve"><value>CANCELANDO</value></data>
   <data name="Status.Warning" xml:space="preserve"><value>ATENÇÃO</value></data>
   <data name="Status.SafeFailure" xml:space="preserve"><value>FALHA SEGURA</value></data>
   <data name="Status.InProgress" xml:space="preserve"><value>EM ANDAMENTO</value></data>
   <data name="Status.OptimizationCompleted" xml:space="preserve"><value>Otimização concluída</value></data>
   <data name="Status.SafeCancellation.Headline" xml:space="preserve"><value>Operação cancelada com segurança</value></data>
-  <data name="Status.SafeCancellation.Detail" xml:space="preserve"><value>O cancelamento ocorreu entre ações. Alterações incompletas foram revertidas.</value></data>
-  <data name="Status.CancellationPending" xml:space="preserve"><value>A etapa atual terminará antes do cancelamento.</value></data>
   <data name="Status.CouldNotComplete" xml:space="preserve"><value>Não foi possível concluir</value></data>
   <data name="Status.CouldNotRestore" xml:space="preserve"><value>Não foi possível restaurar</value></data>
   <data name="Plan.CloseFiveM" xml:space="preserve"><value>Feche o FiveM primeiro</value></data>
@@ -191,7 +197,6 @@
   <data name="Plan.Safety.Reversible" xml:space="preserve"><value>Todas as mudanças deste plano podem ser desfeitas.</value></data>
   <data name="Plan.NoAdditionalWarnings" xml:space="preserve"><value>Nenhum aviso adicional para este plano.</value></data>
   <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} ações • catálogo v{1}</value></data>
-  <data name="Plan.ActionsCompletedFreed" xml:space="preserve"><value>{0} ações concluídas • {1} liberados.</value></data>
   <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>{0} ações concluídas. {1}</value></data>
   <data name="Diagnosis.Partial" xml:space="preserve"><value>Diagnóstico parcial</value></data>
   <data name="Diagnosis.CouldNotScanAgain" xml:space="preserve"><value>Não foi possível reanalisar agora</value></data>
@@ -260,21 +265,6 @@
   <data name="Tray.Message" xml:space="preserve"><value>Clique duas vezes no ícone da bandeja para voltar.</value></data>
   <data name="Notification.UpdateAvailable.Title" xml:space="preserve"><value>Atualização do FiveMCleaner disponível</value></data>
   <data name="Notification.UpdateAvailable.Message" xml:space="preserve"><value>A versão {0} já está disponível. Clique para abrir o FiveMCleaner.</value></data>
-  <data name="Log.StartedStandardUser" xml:space="preserve"><value>FiveMCleaner iniciado sem privilégios elevados.</value></data>
-  <data name="Log.StartupSettingFailed" xml:space="preserve"><value>Não foi possível atualizar a inicialização: {0}</value></data>
-  <data name="Log.StartupReadFailed" xml:space="preserve"><value>Não foi possível ler a inicialização: {0}</value></data>
-  <data name="Log.DiagnosisCompleted" xml:space="preserve"><value>Diagnóstico local concluído.</value></data>
-  <data name="Log.ComputerScannedAgain" xml:space="preserve"><value>PC reanalisado.</value></data>
-  <data name="Log.RescanFailed" xml:space="preserve"><value>Falha segura na reanálise: {0}</value></data>
-  <data name="Log.StartingProfile" xml:space="preserve"><value>Iniciando perfil {0}.</value></data>
-  <data name="Log.Warning" xml:space="preserve"><value>Atenção: {0}</value></data>
-  <data name="Log.Error" xml:space="preserve"><value>Erro: {0}</value></data>
-  <data name="Log.CancellationConfirmed" xml:space="preserve"><value>Cancelamento confirmado.</value></data>
-  <data name="Log.RollbackCompleted" xml:space="preserve"><value>Rollback concluído.</value></data>
-  <data name="Log.NoReversibleChanges" xml:space="preserve"><value>Nenhuma alteração reversível encontrada.</value></data>
-  <data name="Log.RollbackCancelled" xml:space="preserve"><value>Rollback cancelado entre etapas.</value></data>
-  <data name="Log.RollbackFailed" xml:space="preserve"><value>Falha segura no rollback: {0}</value></data>
-  <data name="Log.SettingsSaveFailed" xml:space="preserve"><value>Não foi possível salvar as configurações agora.</value></data>
   <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Ao clicar no X, o FiveMCleaner passará a ser minimizado para a bandeja do sistema em vez de ser fechado.</value></data>
   <data name="Settings.Telemetry.Title" xml:space="preserve"><value>Ajude a melhorar o FiveMCleaner</value></data>
   <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Envie telemetria técnica anonimizada, somente se você quiser.</value></data>
@@ -297,7 +287,7 @@
   <data name="PrivacyConsent.CrashReports.Title" xml:space="preserve"><value>Enviar relatórios automáticos de erros e falhas</value></data>
   <data name="PrivacyConsent.CrashReports.Description" xml:space="preserve"><value>Stack traces sanitizados e versão do aplicativo quando o FiveMCleaner travar ou encontrar um erro inesperado.</value></data>
   <data name="PrivacyConsent.Continue" xml:space="preserve"><value>Continuar</value></data>
-  <data name="Privacy.Collects.Title" xml:space="preserve"><value>Coletamos</value></data>
+  <data name="Privacy.Collects.Title" xml:space="preserve"><value>COLETAMOS</value></data>
   <data name="Privacy.Collects.Items" xml:space="preserve"><value>• Versão do FiveMCleaner
 • Versão geral do Windows e arquitetura
 • Duração e resultado das otimizações
@@ -307,7 +297,7 @@
 • Códigos de erro sanitizados
 • Stack traces sanitizados em relatórios de falhas
 • Versão do aplicativo em que o erro ocorreu</value></data>
-  <data name="Privacy.DoesNotCollect.Title" xml:space="preserve"><value>Não coletamos</value></data>
+  <data name="Privacy.DoesNotCollect.Title" xml:space="preserve"><value>NÃO COLETAMOS</value></data>
   <data name="Privacy.DoesNotCollect.Items" xml:space="preserve"><value>• Nome do usuário
 • Nome do computador
 • Arquivos pessoais
@@ -318,9 +308,19 @@
 • Conteúdo de arquivos
 • Lista completa de processos ou programas
 • Caminhos pessoais sem sanitização</value></data>
+  <data name="ReleaseNotes.WindowTitle" xml:space="preserve"><value>Novidades - FiveMCleaner</value></data>
+  <data name="ReleaseNotes.Heading" xml:space="preserve"><value>Novidades</value></data>
+  <data name="ReleaseNotes.VersionLabel" xml:space="preserve"><value>Versão {0}</value></data>
+  <data name="ReleaseNotes.VersionLabelWithDate" xml:space="preserve"><value>Versão {0} • {1}</value></data>
+  <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Adicionado</value></data>
+  <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Melhorado</value></data>
+  <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Corrigido</value></data>
+  <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Removido</value></data>
+  <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Segurança</value></data>
+  <data name="ReleaseNotes.Close" xml:space="preserve"><value>Fechar</value></data>
   <data name="Dialog.FatalError.Message" xml:space="preserve"><value>O FiveMCleaner encontrou um erro inesperado. Nenhuma nova alteração será aplicada.\n\n{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
-  <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>ações verificadas</value></data>
+  <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>AÇÕES VERIFICADAS</value></data>
   <data name="Progress.ElapsedFormat" xml:space="preserve"><value>Decorrido {0}</value></data>
   <data name="Progress.RemainingFormat" xml:space="preserve"><value>Cerca de {0} restantes</value></data>
   <data name="Progress.Finishing" xml:space="preserve"><value>Finalizando...</value></data>
@@ -341,6 +341,10 @@
   <data name="BugReport.Send.NotConfirmed" xml:space="preserve"><value>O serviço de entrega não confirmou o recebimento. Copie o relato e tente novamente depois.</value></data>
   <data name="BugReport.Send.UnexpectedResponse" xml:space="preserve"><value>O serviço respondeu em um formato inesperado. Copie o relato e tente novamente depois.</value></data>
   <data name="BugReport.Send.Accepted" xml:space="preserve"><value>O serviço de entrega recebeu o relato.</value></data>
+  <data name="BugReport.BugCode.Label" xml:space="preserve"><value>Código do bug *</value></data>
+  <data name="BugReport.BugCode.Tooltip" xml:space="preserve"><value>Selecione a categoria do bug que melhor corresponde ao problema</value></data>
+  <data name="BugReport.Validation.BugCode" xml:space="preserve"><value>Selecione um código de bug.</value></data>
+  <data name="BugReport.Clipboard.BugCode" xml:space="preserve"><value>Código do bug: {0}</value></data>
   <data name="Streaming.Readiness.Protected.Title" xml:space="preserve"><value>Proteção para transmissão ativa</value></data>
   <data name="Streaming.Readiness.Protected.Detail" xml:space="preserve"><value>Um aplicativo de transmissão está aberto. O FiveMCleaner o preserva; confirme o estado da sua live antes de otimizar.</value></data>
   <data name="Streaming.Readiness.Attention.Title" xml:space="preserve"><value>Faça um teste antes de entrar ao vivo</value></data>
@@ -501,8 +505,6 @@
   <data name="Runtime.AdminRestorePendingDetail" xml:space="preserve"><value>Confirme o UAC pelo Histórico quando quiser concluir o rollback.</value></data>
   <data name="Runtime.BrokerApplying" xml:space="preserve"><value>Aplicando ajustes administrativos</value></data>
   <data name="Runtime.BrokerRestoring" xml:space="preserve"><value>Restaurando configurações administrativas</value></data>
-  <data name="Plan.Notice.NoLegacy" xml:space="preserve"><value>Nenhuma instalação compatível do FiveM Legacy foi detectada.</value></data>
-  <data name="Plan.Notice.EnhancedUnsupported" xml:space="preserve"><value>FiveM Enhanced ainda não é suportado. Nenhuma ação do Legacy será executada nessa edição.</value></data>
   <data name="Plan.Notice.DiagnosticsRetention" xml:space="preserve"><value>Diagnósticos com mais de {0} dias serão removidos permanentemente.</value></data>
   <data name="Plan.Notice.ServerCacheRepair" xml:space="preserve"><value>Os caches de servidores serão recriados e o primeiro carregamento poderá ficar mais lento; limpar server-cache-priv também pode tornar clipes antigos do Rockstar Editor indisponíveis.</value></data>
   <data name="Plan.Notice.AcPower" xml:space="preserve"><value>O modo de energia de desempenho só será aplicado com o computador ligado à tomada.</value></data>
@@ -544,27 +546,10 @@
   <data name="Dialog.UpdateInstall.Failed" xml:space="preserve"><value>Não foi possível instalar a atualização verificada: {0}</value></data>
   <data name="Dialog.OpenExternal.Title" xml:space="preserve"><value>Não foi possível abrir</value></data>
   <data name="Dialog.OpenExternal.Message" xml:space="preserve"><value>O Windows não conseguiu abrir este item: {0}</value></data>
-  <data name="Log.UpdateAvailable" xml:space="preserve"><value>A atualização {0} está disponível na release oficial do GitHub.</value></data>
-  <data name="Log.UpdateCheckFailed" xml:space="preserve"><value>Não foi possível verificar atualizações: {0}</value></data>
-  <data name="Log.UpdateVerified" xml:space="preserve"><value>Atualização baixada e verificada com SHA-256.</value></data>
-  <data name="Log.UpdateInstallStarted" xml:space="preserve"><value>Instalando a atualização {0} em segundo plano; o FiveMCleaner vai reabrir sozinho.</value></data>
-  <data name="Log.UpdateInstallFailed" xml:space="preserve"><value>A atualização não foi instalada: {0}</value></data>
-  <data name="Log.UpdateCompleted" xml:space="preserve"><value>O FiveMCleaner foi atualizado para a versão {0}.</value></data>
-  <data name="Log.UpdateDownloadFailed" xml:space="preserve"><value>Falha segura ao baixar a atualização: {0}</value></data>
   <data name="Diagnosis.MemoryAvailable" xml:space="preserve"><value>{0:0.#} GB • {1:0.#} GB disponíveis</value></data>
   <data name="Diagnosis.MemoryTotal" xml:space="preserve"><value>{0:0} GB</value></data>
   <data name="Diagnosis.MemoryModules" xml:space="preserve"><value>{0:0} GB · {1}</value></data>
   <data name="Diagnosis.DiskCapacity" xml:space="preserve"><value>{0:0} GB</value></data>
-  <data name="Profiles.Impact.Pending" xml:space="preserve"><value>Potencial calculado após o diagnóstico local</value></data>
-  <data name="Profiles.Impact.Light.Low" xml:space="preserve"><value>Potencial baixo • FPS não medido</value></data>
-  <data name="Profiles.Impact.Light.Moderate" xml:space="preserve"><value>Potencial moderado • FPS não medido</value></data>
-  <data name="Profiles.Impact.Light.High" xml:space="preserve"><value>Potencial limitado neste PC • FPS não medido</value></data>
-  <data name="Profiles.Impact.Balanced.Low" xml:space="preserve"><value>Potencial baixo • FPS não medido</value></data>
-  <data name="Profiles.Impact.Balanced.Moderate" xml:space="preserve"><value>Potencial moderado • FPS não medido</value></data>
-  <data name="Profiles.Impact.Balanced.High" xml:space="preserve"><value>Potencial alto • FPS não medido</value></data>
-  <data name="Profiles.Impact.Aggressive.Low" xml:space="preserve"><value>Potencial baixo • forte redução visual • FPS não medido</value></data>
-  <data name="Profiles.Impact.Aggressive.Moderate" xml:space="preserve"><value>Potencial alto • forte redução visual • FPS não medido</value></data>
-  <data name="Profiles.Impact.Aggressive.High" xml:space="preserve"><value>Maior potencial • forte redução visual • FPS não medido</value></data>
   <data name="Demo.Cpu" xml:space="preserve"><value>Processador de 6 núcleos</value></data>
   <data name="Demo.Gpu" xml:space="preserve"><value>GPU dedicada • 8 GB</value></data>
   <data name="Demo.Notice" xml:space="preserve"><value>Configuração equilibrada; o perfil recomendado preserva qualidade e prioriza consistência.</value></data>
@@ -606,7 +591,6 @@
   <data name="Runtime.ActionSkipped" xml:space="preserve"><value>Ignorada: {0}</value></data>
   <data name="Runtime.ActionFailed" xml:space="preserve"><value>Falhou: {0}</value></data>
   <data name="Runtime.ActionRolledBack" xml:space="preserve"><value>Revertida após falha: {0}</value></data>
-  <data name="Progress.StepCounter" xml:space="preserve"><value>Etapa {0} de {1}</value></data>
   <data name="Outcome.Verified" xml:space="preserve"><value>Verificado</value></data>
   <data name="Outcome.Applied" xml:space="preserve"><value>Alterado</value></data>
   <data name="Outcome.Skipped" xml:space="preserve"><value>Ignorado</value></data>
@@ -657,12 +641,8 @@
   <data name="GtaVBenchmark.Failure.Timeout" xml:space="preserve"><value>O GTA V não encerrou dentro do tempo esperado; o benchmark foi cancelado.</value></data>
   <data name="GtaVBenchmark.Failure.Generic" xml:space="preserve"><value>Não foi possível concluir o benchmark oficial.</value></data>
   <data name="Report.SaveButton" xml:space="preserve"><value>Salvar relatório em arquivo</value></data>
-  <data name="Log.ReportSaved" xml:space="preserve"><value>Relatório técnico salvo em {0}.</value></data>
-  <data name="Log.ReportSaveFailed" xml:space="preserve"><value>Não foi possível salvar o relatório: {0}</value></data>
   <data name="Common.Yes" xml:space="preserve"><value>Sim</value></data>
   <data name="Common.No" xml:space="preserve"><value>Não</value></data>
-  <data name="Log.ReportCopied" xml:space="preserve"><value>Relatório técnico copiado para a área de transferência.</value></data>
-  <data name="Log.ReportCopyFailed" xml:space="preserve"><value>Não foi possível copiar o relatório: {0}</value></data>
   <data name="Profiles.Presentation.Light.Benefits" xml:space="preserve"><value>Libera espaço e aplica ajustes leves de baixo impacto, preservando quase toda a qualidade visual.</value></data>
   <data name="Profiles.Presentation.Balanced.Benefits" xml:space="preserve"><value>Equilibra qualidade visual, uso de GPU e estabilidade de quadros com ajustes moderados e totalmente reversíveis.</value></data>
   <data name="Profiles.Presentation.Aggressive.Benefits" xml:space="preserve"><value>Prioriza FPS e responsividade em vez de qualidade visual, aplicando todos os ajustes seguros disponíveis.</value></data>
@@ -710,8 +690,6 @@
   <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Informados pelo Windows</value></data>
   <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>MEMÓRIA LIVRE</value></data>
   <data name="Dashboard.Kpi.Memory.Detail" xml:space="preserve"><value>de {0:0.0} GB no total</value></data>
-  <data name="Dashboard.Kpi.Disk.Title" xml:space="preserve"><value>ESPAÇO LIVRE</value></data>
-  <data name="Dashboard.Kpi.Disk.Detail" xml:space="preserve"><value>No disco do sistema</value></data>
   <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHE DO FIVEM</value></data>
   <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisado pelo otimizador</value></data>
   <data name="Dashboard.Kpi.Cache.None" xml:space="preserve"><value>Nenhum</value></data>
@@ -724,7 +702,7 @@
   <data name="Dashboard.LivePerformance.Trend" xml:space="preserve"><value>MÉDIA E PICO</value></data>
   <data name="Dashboard.LivePerformance.Window" xml:space="preserve"><value>Último minuto</value></data>
   <data name="Dashboard.LivePerformance.Now" xml:space="preserve"><value>agora</value></data>
-  <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>Última otimização</value></data>
+  <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>ÚLTIMA OTIMIZAÇÃO</value></data>
   <data name="Dashboard.LastRun.None.Title" xml:space="preserve"><value>Nenhuma otimização ainda</value></data>
   <data name="Dashboard.LastRun.None.Detail" xml:space="preserve"><value>Execute o otimizador para criar um ponto de restauração e um relatório que você poderá consultar aqui.</value></data>
   <data name="Dashboard.Detection.Title" xml:space="preserve"><value>DETECÇÃO</value></data>
@@ -735,4 +713,99 @@
   <data name="Error.SecurityCheck" xml:space="preserve"><value>A verificação de segurança não foi aprovada. Nada foi alterado.</value></data>
   <data name="Error.InvalidData" xml:space="preserve"><value>Não foi possível verificar as informações recebidas com segurança. Nada foi alterado.</value></data>
   <data name="Error.Unexpected" xml:space="preserve"><value>Ocorreu um problema inesperado. Tente novamente; se continuar, envie um relato de bug.</value></data>
+  <data name="Optimizer.Level" xml:space="preserve"><value>NÍVEL</value></data>
+  <data name="Optimizer.Safety" xml:space="preserve"><value>Segurança</value></data>
+  <data name="Optimizer.Detected" xml:space="preserve"><value>Detectado neste computador</value></data>
+  <data name="Optimizer.Stage.Prepare" xml:space="preserve"><value>PREPARAR</value></data>
+  <data name="Optimizer.Stage.Run" xml:space="preserve"><value>EXECUTAR</value></data>
+  <data name="Optimizer.Stage.Result" xml:space="preserve"><value>RESULTADO</value></data>
+  <data name="Account.WindowTitle" xml:space="preserve"><value>Sua conta</value></data>
+  <data name="Account.TitleBarHeader" xml:space="preserve"><value>CONTA FIVEMCLEANER</value></data>
+  <data name="Account.Welcome.Title" xml:space="preserve"><value>Bem-vindo de volta</value></data>
+  <data name="Account.Welcome.Subtitle" xml:space="preserve"><value>Entre para sincronizar suas preferências entre instalações.</value></data>
+  <data name="Account.Register.Title" xml:space="preserve"><value>Crie sua conta</value></data>
+  <data name="Account.Register.Subtitle" xml:space="preserve"><value>Leva menos de um minuto. Depois é só confirmar seu e-mail.</value></data>
+  <data name="Account.ProfileSetup.Title" xml:space="preserve"><value>Falta pouco</value></data>
+  <data name="Account.ProfileSetup.Subtitle" xml:space="preserve"><value>Escolha um nome de usuário disponível para concluir seu cadastro.</value></data>
+  <data name="Account.Verification.Title" xml:space="preserve"><value>Confirme seu e-mail</value></data>
+  <data name="Account.Verification.Subtitle" xml:space="preserve"><value>Só falta um clique no link que enviamos.</value></data>
+  <data name="Account.Verification.Detail" xml:space="preserve"><value>Enviamos um link de confirmação para {0}. Abra o e-mail e clique no link — se não chegar em alguns minutos, confira o spam ou reenvie abaixo.</value></data>
+  <data name="Account.Provider.ContinueWithGoogle" xml:space="preserve"><value>Continuar com o Google</value></data>
+  <data name="Account.Provider.SignUpWithGoogle" xml:space="preserve"><value>Cadastrar-se com o Google</value></data>
+  <data name="Account.Provider.DividerSignIn" xml:space="preserve"><value>OU USE SEU E-MAIL</value></data>
+  <data name="Account.Provider.DividerRegister" xml:space="preserve"><value>OU CADASTRE-SE COM E-MAIL</value></data>
+  <data name="Account.Profile.SectionLabel" xml:space="preserve"><value>QUEM É VOCÊ</value></data>
+  <data name="Account.Profile.FirstNameLabel" xml:space="preserve"><value>Nome</value></data>
+  <data name="Account.Profile.LastNameLabel" xml:space="preserve"><value>Sobrenome</value></data>
+  <data name="Account.Profile.UsernameLabel" xml:space="preserve"><value>Nome de usuário</value></data>
+  <data name="Account.Profile.UsernameHint" xml:space="preserve"><value>3 a 24 caracteres. Comece com uma letra e use apenas letras, números e “_”.</value></data>
+  <data name="Account.Credentials.SectionLabel" xml:space="preserve"><value>DADOS DE ACESSO</value></data>
+  <data name="Account.Credentials.EmailLabel" xml:space="preserve"><value>E-mail</value></data>
+  <data name="Account.Credentials.PasswordLabel" xml:space="preserve"><value>Senha</value></data>
+  <data name="Account.Credentials.PasswordPlaceholder" xml:space="preserve"><value>Sua senha</value></data>
+  <data name="Account.Credentials.PasswordPlaceholderRegister" xml:space="preserve"><value>Crie uma senha forte</value></data>
+  <data name="Account.Credentials.ConfirmPasswordLabel" xml:space="preserve"><value>Repetir senha</value></data>
+  <data name="Account.Credentials.ConfirmPasswordPlaceholder" xml:space="preserve"><value>Digite a senha novamente</value></data>
+  <data name="Account.Options.KeepSignedIn" xml:space="preserve"><value>Manter conectado neste computador</value></data>
+  <data name="Account.Actions.ForgotPassword" xml:space="preserve"><value>Esqueci minha senha</value></data>
+  <data name="Account.Terms.AgreementPrefix" xml:space="preserve"><value>Li e concordo com os</value></data>
+  <data name="Account.Terms.TermsOfUseLink" xml:space="preserve"><value>Termos de Uso</value></data>
+  <data name="Account.Terms.ReadLink" xml:space="preserve"><value>Ler os Termos de Uso</value></data>
+  <data name="Account.Actions.SignIn" xml:space="preserve"><value>Entrar</value></data>
+  <data name="Account.Actions.CreateAccount" xml:space="preserve"><value>Criar minha conta</value></data>
+  <data name="Account.Actions.FinishRegistration" xml:space="preserve"><value>Concluir cadastro</value></data>
+  <data name="Account.Switch.ToRegister" xml:space="preserve"><value>Ainda não tem conta? Criar conta</value></data>
+  <data name="Account.Switch.ToSignIn" xml:space="preserve"><value>Já tem uma conta? Entrar</value></data>
+  <data name="Account.Actions.SignOut" xml:space="preserve"><value>Sair da conta</value></data>
+  <data name="Account.Verification.Resend" xml:space="preserve"><value>Reenviar e-mail de verificação</value></data>
+  <data name="Account.Verification.Refresh" xml:space="preserve"><value>Já confirmei, verificar agora</value></data>
+  <data name="Account.Username.Checking" xml:space="preserve"><value>Verificando disponibilidade…</value></data>
+  <data name="Account.Username.Available" xml:space="preserve"><value>Este nome de usuário está disponível.</value></data>
+  <data name="Account.Username.Taken" xml:space="preserve"><value>Este nome de usuário já está em uso.</value></data>
+  <data name="Account.Password.PolicyMinimum" xml:space="preserve"><value>Use pelo menos {0} caracteres.</value></data>
+  <data name="Account.Password.PolicyRemaining" xml:space="preserve"><value>Faltam {0} caractere(s) para o mínimo de {1}.</value></data>
+  <data name="Account.Password.PolicyMet" xml:space="preserve"><value>Boa! Sua senha atende ao mínimo exigido.</value></data>
+  <data name="Account.Password.ConfirmMatch" xml:space="preserve"><value>As senhas coincidem.</value></data>
+  <data name="Account.Password.ConfirmMismatch" xml:space="preserve"><value>As senhas não coincidem.</value></data>
+  <data name="Account.Validation.InvalidEmail" xml:space="preserve"><value>Informe um endereço de e-mail válido.</value></data>
+  <data name="Account.Validation.PasswordRequired" xml:space="preserve"><value>Digite sua senha para entrar.</value></data>
+  <data name="Account.Validation.FirstNameRequired" xml:space="preserve"><value>Informe seu nome.</value></data>
+  <data name="Account.Validation.LastNameRequired" xml:space="preserve"><value>Informe seu sobrenome.</value></data>
+  <data name="Account.Validation.UsernameFormat" xml:space="preserve"><value>O nome de usuário deve ter de 3 a 24 caracteres, começar com uma letra e usar apenas letras, números e "_".</value></data>
+  <data name="Account.Validation.PasswordMinLength" xml:space="preserve"><value>Sua senha precisa de pelo menos 12 caracteres.</value></data>
+  <data name="Account.Validation.PasswordsMustMatch" xml:space="preserve"><value>As duas senhas precisam ser iguais.</value></data>
+  <data name="Account.Validation.TermsRequired" xml:space="preserve"><value>Aceite os Termos de Uso para criar sua conta.</value></data>
+  <data name="Account.Validation.EmailRequiredForReset" xml:space="preserve"><value>Informe seu e-mail para receber as instruções de recuperação.</value></data>
+  <data name="Account.Session.Expired" xml:space="preserve"><value>Sua sessão expirou. Entre novamente para concluir seu cadastro.</value></data>
+  <data name="Account.Profile.SaveFailed" xml:space="preserve"><value>Não foi possível salvar seu perfil.</value></data>
+  <data name="Account.Google.SigningIn" xml:space="preserve"><value>Concluindo o login na janela do seu navegador…</value></data>
+  <data name="Account.Google.Failed" xml:space="preserve"><value>Não foi possível entrar com o Google.</value></data>
+  <data name="Account.PasswordReset.Sent" xml:space="preserve"><value>Se houver uma conta para este e-mail, enviamos as instruções de recuperação.</value></data>
+  <data name="Account.Verification.ResentConfirmation" xml:space="preserve"><value>Reenviamos o e-mail de confirmação.</value></data>
+  <data name="Account.Verification.PleaseConfirm" xml:space="preserve"><value>Confirme seu e-mail para continuar.</value></data>
+  <data name="Settings.Account.ChangePassword" xml:space="preserve"><value>Alterar senha</value></data>
+  <data name="Settings.Account.SignInButton" xml:space="preserve"><value>Entrar / Cadastre-se</value></data>
+  <data name="Settings.Account.NewEmailLabel" xml:space="preserve"><value>Novo e-mail</value></data>
+  <data name="History.Empty.Detail" xml:space="preserve"><value>Suas execuções, resultados e opções de desfazer aparecerão aqui após a primeira otimização.</value></data>
+  <data name="Settings.Tools.ReportIssue.Title" xml:space="preserve"><value>Relatar um problema</value></data>
+  <data name="Account.ViewTooltip" xml:space="preserve"><value>Ver minha conta</value></data>
+  <data name="Settings.Account.SignedOutDescription" xml:space="preserve"><value>Entre ou crie uma conta para sincronizar suas preferências.</value></data>
+  <data name="Settings.Tools.ReportIssue.Button" xml:space="preserve"><value>Relatar um bug</value></data>
+  <data name="Account.SignInButton" xml:space="preserve"><value>Entrar / Cadastre-se</value></data>
+  <data name="Account.SignInTooltip" xml:space="preserve"><value>Entrar ou criar conta</value></data>
+  <data name="History.Empty.Action" xml:space="preserve"><value>Abrir otimizador</value></data>
+  <data name="Settings.Account.ChangeEmail" xml:space="preserve"><value>Alterar e-mail</value></data>
+  <data name="Settings.Account.SignOut" xml:space="preserve"><value>Sair</value></data>
+  <data name="Settings.Account.NewPasswordLabel" xml:space="preserve"><value>Nova senha</value></data>
+  <data name="Settings.Account.Title" xml:space="preserve"><value>Conta</value></data>
+  <data name="Settings.Account.ChangePhoto" xml:space="preserve"><value>Trocar foto</value></data>
+  <data name="Settings.Account.Unavailable" xml:space="preserve"><value>O acesso à conta não está disponível nesta instalação.</value></data>
+  <data name="Report.ViewHistoryButton" xml:space="preserve"><value>Ver histórico</value></data>
+  <data name="Settings.Account.CurrentPasswordPlaceholder" xml:space="preserve"><value>Confirme para alterar sua senha, e-mail ou excluir a conta</value></data>
+  <data name="Settings.Account.Delete" xml:space="preserve"><value>Excluir conta</value></data>
+  <data name="Settings.Tools.Title" xml:space="preserve"><value>Ferramentas</value></data>
+  <data name="Settings.Account.CurrentPasswordLabel" xml:space="preserve"><value>Senha atual</value></data>
+  <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Remover</value></data>
+  <data name="Progress.CancelHelp" xml:space="preserve"><value>O cancelamento é solicitado com segurança após a ação atual.</value></data>
+  <data name="Settings.Account.NewPasswordPlaceholder" xml:space="preserve"><value>Mínimo de 8 caracteres</value></data>
 </root>

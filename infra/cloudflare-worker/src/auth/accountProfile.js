@@ -80,17 +80,6 @@ export async function createAccountProfile(db, uid, profile) {
 }
 
 /**
- * Reads back the profile for `uid`, the Firebase UID from the verified ID
- * token -- never a client-supplied identifier, so one account can only ever
- * read its own profile. Used on login and session restore, when the client
- * needs the first name for the app's greeting but only has an ID token, not
- * the fields Firebase itself never stored.
- *
- * @param {D1Database} db
- * @param {string} uid
- * @returns {Promise<{ username: string, firstName: string, lastName: string } | null>}
- */
-/**
  * Validates a standalone username -- the availability probe carries only
  * that one field, not a whole profile -- and returns its normalized form,
  * or null when the value could never be accepted by createAccountProfile
@@ -127,6 +116,17 @@ export async function isUsernameAvailable(db, usernameNormalized) {
   return row === null;
 }
 
+/**
+ * Reads back the profile for `uid`, the Firebase UID from the verified ID
+ * token -- never a client-supplied identifier, so one account can only ever
+ * read its own profile. Used on login and session restore, when the client
+ * needs the first name for the app's greeting but only has an ID token, not
+ * the fields Firebase itself never stored.
+ *
+ * @param {D1Database} db
+ * @param {string} uid
+ * @returns {Promise<{ username: string, firstName: string, lastName: string } | null>}
+ */
 export async function fetchAccountProfile(db, uid) {
   const row = await db
     .prepare('SELECT username, first_name, last_name FROM account_profiles WHERE uid = ?')

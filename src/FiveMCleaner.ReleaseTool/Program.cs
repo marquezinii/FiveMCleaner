@@ -38,7 +38,55 @@ if (args.Length == 4 && args[0] == "verify")
     return 0;
 }
 
-Console.Error.WriteLine("Uso: generate-key <private.pem> <public.pem> | sign <package.zip> <channel> <version> <minimum> <url> <private.pem> <manifest.json> | verify <manifest.json> <public.pem> <highest-version>");
+if (args.Length == 5 && args[0] == "sign-broker")
+{
+    var brokerFileManifestPath = Path.GetFullPath(args[1]);
+    using var stream = File.OpenRead(brokerFileManifestPath);
+    var hash = Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
+    var unsigned = new SignedBrokerManifest(
+        1,
+        BrokerTrustPolicy.ExpectedProduct,
+        args[2],
+        BrokerTrustPolicy.ExpectedFileManifestRelativePath,
+        hash,
+        string.Empty);
+    using var key = ECDsa.Create();
+    key.ImportFromEncryptedPem(File.ReadAllText(args[3]), RequirePassword());
+    var signed = unsigned with
+    {
+        SignatureBase64 = Convert.ToBase64String(
+            key.SignData(unsigned.CanonicalPayload(), HashAlgorithmName.SHA256))
+    };
+    var output = Path.GetFullPath(args[4]);
+    Directory.CreateDirectory(Path.GetDirectoryName(output)!);
+    File.WriteAllText(
+        output,
+        JsonSerializer.Serialize(
+            signed,
+            new JsonSerializerOptions
+            {
+                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            }));
+    return 0;
+}
+
+if (args.Length == 3 && args[0] == "verify-broker")
+{
+    var manifest = JsonSerializer.Deserialize<SignedBrokerManifest>(
+        File.ReadAllText(args[1]),
+        new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+        ?? throw new InvalidDataException("Manifesto do componente administrativo inválido.");
+    using var key = ECDsa.Create();
+    key.ImportFromPem(File.ReadAllText(args[2]));
+    BrokerTrustPolicy.VerifySignature(
+        manifest,
+        key.ExportSubjectPublicKeyInfo(),
+        manifest.Version);
+    return 0;
+}
+
+Console.Error.WriteLine("Uso: generate-key <private.pem> <public.pem> | sign <package.zip> <channel> <version> <minimum> <url> <private.pem> <manifest.json> | verify <manifest.json> <public.pem> <highest-version> | sign-broker <broker-checksums.txt> <version> <private.pem> <manifest.json> | verify-broker <manifest.json> <public.pem>");
 return 2;
 
 static string RequirePassword() => Environment.GetEnvironmentVariable("FIVEMCLEANER_SIGNING_PASSWORD") is { Length: >= 16 } value

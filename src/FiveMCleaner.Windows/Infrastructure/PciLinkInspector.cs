@@ -15,12 +15,13 @@ public interface IPciLinkInspector
 }
 
 /// <summary>
-/// Best-effort read of the current and maximum PCIe link width/speed for
-/// display adapters, via the documented CM_Get_DevNode_Property device
-/// property API (cfgmgr32.dll) and the standard PCI device DEVPKEYs — no
-/// vendor SDK, no driver. A missing or mismatched property simply reports
-/// "not found" rather than returning unrelated data, so a wrong result here
-/// degrades to "unavailable", never to a plausible-looking wrong number.
+/// Best-effort read of the current and maximum PCIe link width/speed for the
+/// display adapters listed by <see cref="GpuAdapterRegistryReader"/>, via the
+/// documented CM_Get_DevNode_Property device property API (cfgmgr32.dll) and
+/// the standard PCI device DEVPKEYs — no vendor SDK, no driver. A missing or
+/// mismatched property simply reports "not found" rather than returning
+/// unrelated data, so a wrong result here degrades to "unavailable", never to a
+/// plausible-looking wrong number.
 /// </summary>
 public sealed class WindowsPciLinkInspector : IPciLinkInspector
 {
@@ -38,51 +39,10 @@ public sealed class WindowsPciLinkInspector : IPciLinkInspector
 
     public IReadOnlyList<PciLinkSnapshot> GetSnapshot()
     {
-        var results = new List<PciLinkSnapshot>();
-        try
-        {
-            using var video = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(
-                @"SYSTEM\CurrentControlSet\Control\Video");
-            if (video is null)
-            {
-                return results;
-            }
-
-            foreach (var deviceKeyName in video.GetSubKeyNames())
-            {
-                using var device = video.OpenSubKey(deviceKeyName);
-                if (device is null)
-                {
-                    continue;
-                }
-
-                foreach (var adapterKeyName in device.GetSubKeyNames()
-                             .Where(name => name.Length == 4 && name.All(char.IsDigit)))
-                {
-                    using var adapter = device.OpenSubKey(adapterKeyName);
-                    var name = (adapter?.GetValue("DriverDesc") as string)?.Trim();
-                    var matchingDeviceId = adapter?.GetValue("MatchingDeviceId") as string;
-                    if (string.IsNullOrWhiteSpace(name)
-                        || name.Contains("Basic Render", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    var snapshot = TryReadLinkInfo(name, matchingDeviceId);
-                    if (snapshot is not null)
-                    {
-                        results.Add(snapshot);
-                    }
-                }
-            }
-        }
-        catch (Exception exception) when (exception is System.Security.SecurityException
-            or UnauthorizedAccessException)
-        {
-            return [];
-        }
-
-        return results;
+        return GpuAdapterRegistryReader.ReadAll()
+            .Select(adapter => TryReadLinkInfo(adapter.DriverDescription, adapter.MatchingDeviceId))
+            .OfType<PciLinkSnapshot>()
+            .ToArray();
     }
 
     private static PciLinkSnapshot? TryReadLinkInfo(string adapterName, string? matchingDeviceId)

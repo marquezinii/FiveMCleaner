@@ -1,16 +1,14 @@
-using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
-using System.Text.Json;
+using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.App.Services;
 
 /// <summary>
 /// Sends a bug report to the Cloudflare Worker's <c>/bugs</c> route (D1 only
-/// -- there is no attachment/screenshot support and no R2 dependency),
-/// replacing <c>FormSubmitBugReportService</c> entirely. Validation mirrors
-/// what the old service enforced client-side; the Worker re-validates
-/// everything server-side regardless (see
+/// -- there is no attachment/screenshot support and no R2 dependency).
+/// Validation mirrors what the old service enforced client-side; the Worker
+/// re-validates everything server-side regardless (see
 /// <c>infra/cloudflare-worker/src/bugReports/</c>).
 /// </summary>
 public sealed class CloudflareBugReportService : IBugReportService
@@ -18,7 +16,6 @@ public sealed class CloudflareBugReportService : IBugReportService
     private const int MaxCategoryLength = 60;
     private const int MaxTechnicalSummaryLength = 512;
     private const int MaxEmailLength = 254;
-    private const int MaxLogTextBytes = 100 * 1024;
 
     private static readonly HttpClient SharedClient = CreateClient();
     private readonly HttpClient httpClient;
@@ -54,6 +51,7 @@ public sealed class CloudflareBugReportService : IBugReportService
         {
             reportId = submission.ReportId.ToString("D"),
             category = submission.Category,
+            bugCode = submission.BugCode.ToString(),
             summary = submission.Summary.Trim(),
             description = submission.Description.Trim(),
             appVersion = submission.AppVersion,
@@ -142,19 +140,24 @@ public sealed class CloudflareBugReportService : IBugReportService
             throw new ArgumentException("O perfil do relato é inválido.", nameof(submission));
         }
 
+        if (!Enum.IsDefined(typeof(BugCode), submission.BugCode))
+        {
+            throw new ArgumentException("O código do bug é inválido.", nameof(submission));
+        }
+
         if (submission.TechnicalSummary?.Length > MaxTechnicalSummaryLength)
         {
             throw new ArgumentException("As informações técnicas excedem o limite.", nameof(submission));
         }
 
         if (submission.Email is { Length: > 0 } email
-            && (email.Length > MaxEmailLength || !LooksLikeEmail(email)))
+            && (email.Length > MaxEmailLength || !AccountValidation.IsValidEmail(email)))
         {
             throw new ArgumentException("O e-mail informado é inválido.", nameof(submission));
         }
 
         if (submission.LogText is { } logText
-            && System.Text.Encoding.UTF8.GetByteCount(logText) > MaxLogTextBytes)
+            && System.Text.Encoding.UTF8.GetByteCount(logText) > BugReportSubmission.MaxLogTextBytes)
         {
             throw new ArgumentException("O log excede o limite de 100 KB.", nameof(submission));
         }
@@ -167,24 +170,8 @@ public sealed class CloudflareBugReportService : IBugReportService
             System.Text.RegularExpressions.RegexOptions.None,
             TimeSpan.FromMilliseconds(100));
 
-    private static Uri ValidateEndpoint(Uri value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-        if (value.Scheme != Uri.UriSchemeHttps)
-        {
-            throw new ArgumentException("Endpoint de relato inválido.", nameof(value));
-        }
+    private static Uri ValidateEndpoint(Uri value) =>
+        CloudflareTransportDefaults.ValidateHttpsEndpoint(value, "Endpoint de relato inválido.");
 
-        return value;
-    }
-
-    private static HttpClient CreateClient()
-    {
-        var handler = new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-        };
-        return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(30) };
-    }
+    private static HttpClient CreateClient() => CloudflareTransportDefaults.CreateClient(TimeSpan.FromSeconds(30));
 }

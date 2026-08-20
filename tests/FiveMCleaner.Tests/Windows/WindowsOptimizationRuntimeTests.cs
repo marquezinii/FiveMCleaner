@@ -124,6 +124,7 @@ public sealed class WindowsOptimizationRuntimeTests
             HardwareStability = new FakeHardwareStabilityInspector(),
             BackgroundProcess = new FakeBackgroundProcessInspector(),
             StuckProcess = new FakeStuckFiveMProcessInspector(),
+            StuckProcessTerminator = new FakeFiveMProcessTerminator(),
             VendorLaptopSoftware = new FakeVendorLaptopSoftwareInspector()
         };
 
@@ -146,15 +147,17 @@ public sealed class WindowsOptimizationRuntimeTests
 
     private static OptimizationPlanDto BuildPlan(OptimizationProfile profile)
     {
-        return new PlanBuilder().Build(new OptimizationPlanRequestDto
-        {
-            Profile = profile,
-            Edition = FiveMEdition.Legacy,
-            Options = new OptimizationOptionsDto
+        return PlanBuilder.Build(
+            new OptimizationPlanRequestDto
             {
-                ServerCacheRepair = CacheRepairPolicy.RepairNow,
-                ApplyGtaVGraphicsPreset = true
-            }
-        });
+                Profile = profile,
+                Edition = FiveMEdition.Legacy,
+                Options = new OptimizationOptionsDto
+                {
+                    ServerCacheRepair = CacheRepairPolicy.RepairNow,
+                    ApplyGtaVGraphicsPreset = true
+                }
+            },
+            PlanBuildContext.New(TimeProvider.System));
     }
 }

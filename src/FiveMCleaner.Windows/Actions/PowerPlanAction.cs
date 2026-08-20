@@ -24,24 +24,18 @@ public interface IPowerStatusProvider
 
 public sealed class WindowsPowerStatusProvider : IPowerStatusProvider
 {
-    public bool IsOnAcPower()
+    public bool IsOnAcPower() => GetStatus().AcLineStatus == 1;
+
+    public bool IsBatterySaverActive() => (GetStatus().SystemStatusFlag & 1) == 1;
+
+    private static SystemPowerStatus GetStatus()
     {
         if (!GetSystemPowerStatus(out var status))
         {
             throw new Win32Exception(Marshal.GetLastWin32Error());
         }
 
-        return status.AcLineStatus == 1;
-    }
-
-    public bool IsBatterySaverActive()
-    {
-        if (!GetSystemPowerStatus(out var status))
-        {
-            throw new Win32Exception(Marshal.GetLastWin32Error());
-        }
-
-        return (status.SystemStatusFlag & 1) == 1;
+        return status;
     }
 
     [StructLayout(LayoutKind.Sequential)]

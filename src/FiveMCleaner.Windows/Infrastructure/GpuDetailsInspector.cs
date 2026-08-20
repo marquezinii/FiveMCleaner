@@ -1,6 +1,3 @@
-using Microsoft.Win32;
-using System.Threading;
-
 namespace FiveMCleaner.Windows.Infrastructure;
 
 public enum GpuKindGuess
@@ -25,119 +22,23 @@ public interface IGpuDetailsInspector
 /// from the same registry location already used for GPU driver descriptions
 /// (SYSTEM\CurrentControlSet\Control\Video). VRAM comes from the
 /// HardwareInformation.qwMemorySize value most drivers publish; the
-/// integrated/discrete split is a name-based heuristic, not a hardware
-/// query, and is presented as a guess rather than a fact.
-///
-/// Caches results for 30 seconds to avoid repeated registry queries during a single session.
+/// integrated/discrete split is the name-based heuristic in
+/// <see cref="GpuVendorClassifier"/>, not a hardware query, and is presented as
+/// a guess rather than a fact.
 /// </summary>
 public sealed class WindowsGpuDetailsInspector : IGpuDetailsInspector
 {
-    private static readonly string[] IntegratedMarkers =
-    [
-        "Intel(R) UHD",
-        "Intel(R) HD Graphics",
-        "Intel(R) Iris",
-        "AMD Radeon(TM) Graphics",
-        "AMD Radeon Graphics",
-        "Radeon(TM) Vega"
-    ];
+    private static readonly TimedSnapshotCache<IReadOnlyList<GpuAdapterDetails>> Cache = new();
 
-    private static readonly object CacheLock = new();
-    private static IReadOnlyList<GpuAdapterDetails>? cachedSnapshot;
-    private static DateTimeOffset? cachedAt;
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(30);
+    public IReadOnlyList<GpuAdapterDetails> GetSnapshot() => Cache.GetOrRead(Read);
 
-    public IReadOnlyList<GpuAdapterDetails> GetSnapshot()
+    private static IReadOnlyList<GpuAdapterDetails> Read()
     {
-        // Check cache first
-        lock (CacheLock)
-        {
-            if (cachedSnapshot is not null && cachedAt is not null &&
-                DateTimeOffset.UtcNow - cachedAt.Value < CacheTtl)
-            {
-                return cachedSnapshot;
-            }
-        }
-
-        var snapshot = GetSnapshotInternal();
-
-        // Update cache
-        lock (CacheLock)
-        {
-            cachedSnapshot = snapshot;
-            cachedAt = DateTimeOffset.UtcNow;
-        }
-
-        return snapshot;
-    }
-
-    private static IReadOnlyList<GpuAdapterDetails> GetSnapshotInternal()
-    {
-        var results = new List<GpuAdapterDetails>();
-        try
-        {
-            using var video = Registry.LocalMachine.OpenSubKey(
-                @"SYSTEM\CurrentControlSet\Control\Video");
-            if (video is null)
-            {
-                return results;
-            }
-
-            foreach (var deviceKeyName in video.GetSubKeyNames())
-            {
-                using var device = video.OpenSubKey(deviceKeyName);
-                if (device is null)
-                {
-                    continue;
-                }
-
-                foreach (var adapterKeyName in device.GetSubKeyNames()
-                             .Where(name => name.Length == 4 && name.All(char.IsDigit)))
-                {
-                    using var adapter = device.OpenSubKey(adapterKeyName);
-                    var name = (adapter?.GetValue("DriverDesc") as string)?.Trim();
-                    if (string.IsNullOrWhiteSpace(name)
-                        || name.Contains("Basic Render", StringComparison.OrdinalIgnoreCase))
-                    {
-                        continue;
-                    }
-
-                    var vram = adapter?.GetValue("HardwareInformation.qwMemorySize") switch
-                    {
-                        long value and > 0 => value,
-                        int value and > 0 => (long)value,
-                        _ => (long?)null
-                    };
-
-                    results.Add(new GpuAdapterDetails(name, vram, GuessKind(name)));
-                }
-            }
-        }
-        catch (Exception exception) when (exception is System.Security.SecurityException
-            or UnauthorizedAccessException
-            or System.ComponentModel.Win32Exception)
-        {
-            return [];
-        }
-
-        return results;
-    }
-
-    private static GpuKindGuess GuessKind(string driverDescription)
-    {
-        if (IntegratedMarkers.Any(marker =>
-                driverDescription.Contains(marker, StringComparison.OrdinalIgnoreCase)))
-        {
-            return GpuKindGuess.LikelyIntegrated;
-        }
-
-        if (driverDescription.Contains("NVIDIA", StringComparison.OrdinalIgnoreCase)
-            || driverDescription.Contains("Radeon RX", StringComparison.OrdinalIgnoreCase)
-            || driverDescription.Contains("Arc", StringComparison.OrdinalIgnoreCase))
-        {
-            return GpuKindGuess.LikelyDiscrete;
-        }
-
-        return GpuKindGuess.Unknown;
+        return GpuAdapterRegistryReader.ReadAll()
+            .Select(adapter => new GpuAdapterDetails(
+                adapter.DriverDescription,
+                adapter.VramBytes,
+                GpuVendorClassifier.GuessKind(adapter.DriverDescription)))
+            .ToArray();
     }
 }

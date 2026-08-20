@@ -66,7 +66,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         });
         using var service = CreateService(handler, scope.Path);
 
-        var update = await service.CheckForUpdateAsync("1.2.2");
+        var update = await service.CheckForUpdateAsync("1.2.2", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.NotNull(update);
         Assert.Equal("1.2.3", update.Version.ToString());
@@ -91,7 +91,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         using var service = CreateService(ManifestOnlyHandler(manifest), scope.Path);
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -104,7 +104,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         var handler = ManifestOnlyHandler(CreateManifest("v1.2.3", installer));
         using var service = CreateService(handler, scope.Path);
 
-        var update = await service.CheckForUpdateAsync(currentVersion);
+        var update = await service.CheckForUpdateAsync(currentVersion, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Null(update);
     }
@@ -117,7 +117,7 @@ public sealed class GitHubReleaseUpdateServiceTests
             new HttpResponseMessage(HttpStatusCode.NotFound) { RequestMessage = request }));
         using var service = CreateService(handler, scope.Path);
 
-        Assert.Null(await service.CheckForUpdateAsync("1.0.0"));
+        Assert.Null(await service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -134,7 +134,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         using var service = CreateService(ManifestOnlyHandler(manifest), scope.Path);
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -151,7 +151,7 @@ public sealed class GitHubReleaseUpdateServiceTests
             scope.Path);
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -178,7 +178,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         using var service = CreateService(ManifestOnlyHandler(json), scope.Path);
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -198,7 +198,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         using var service = CreateService(ManifestOnlyHandler(json), scope.Path);
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -230,7 +230,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         using var service = CreateService(ManifestOnlyHandler(json), scope.Path);
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -265,7 +265,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         using var service = CreateService(ManifestOnlyHandler(json), scope.Path);
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -285,7 +285,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         using var service = CreateService(ManifestOnlyHandler(manifest), scope.Path);
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -297,7 +297,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         using var service = CreateService(handler, scope.Path);
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
         Assert.Single(handler.Requests);
     }
 
@@ -316,7 +316,7 @@ public sealed class GitHubReleaseUpdateServiceTests
             manifestTimeout: TimeSpan.FromMilliseconds(100));
 
         await Assert.ThrowsAsync<TimeoutException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
 
         using var cancellationSource = new CancellationTokenSource();
         cancellationSource.Cancel();
@@ -354,22 +354,22 @@ public sealed class GitHubReleaseUpdateServiceTests
             return Task.FromResult(BytesResponse(request, installer));
         });
         using var service = CreateService(handler, scope.Path);
-        var update = Assert.IsType<ReleaseUpdate>(await service.CheckForUpdateAsync("1.0.0"));
+        var update = Assert.IsType<ReleaseUpdate>(await service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
         var progressValues = new List<UpdateDownloadProgress>();
 
         var downloaded = await service.DownloadUpdateAsync(
             update,
-            new InlineProgress<UpdateDownloadProgress>(progressValues.Add));
+            new InlineProgress<UpdateDownloadProgress>(progressValues.Add), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(downloaded.WasAlreadyDownloaded);
         Assert.Equal(
             Path.Combine(scope.Path, "2.4.0", "FiveMCleaner-Setup-2.4.0-win-x64.exe"),
             downloaded.InstallerPath);
-        Assert.Equal(installer, await File.ReadAllBytesAsync(downloaded.InstallerPath));
+        Assert.Equal(installer, await File.ReadAllBytesAsync(downloaded.InstallerPath, cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
         Assert.Empty(Directory.GetFiles(scope.Path, "*.part", SearchOption.AllDirectories));
         Assert.Equal(100, progressValues[^1].Percentage);
 
-        var reused = await service.DownloadUpdateAsync(update);
+        var reused = await service.DownloadUpdateAsync(update, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         Assert.True(reused.WasAlreadyDownloaded);
         Assert.Equal(3, handler.Requests.Count);
     }
@@ -396,10 +396,10 @@ public sealed class GitHubReleaseUpdateServiceTests
             return Task.FromResult(RedirectResponse(request, redirectUrl));
         });
         using var service = CreateService(handler, scope.Path);
-        var update = Assert.IsType<ReleaseUpdate>(await service.CheckForUpdateAsync("1.0.0"));
+        var update = Assert.IsType<ReleaseUpdate>(await service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.DownloadUpdateAsync(update));
+            service.DownloadUpdateAsync(update, cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
         Assert.Empty(Directory.GetFiles(scope.Path, "*.part", SearchOption.AllDirectories));
     }
 
@@ -412,10 +412,10 @@ public sealed class GitHubReleaseUpdateServiceTests
         Assert.Equal(expected.Length, tampered.Length);
         var handler = ManifestAndDownloadHandler(CreateManifest("v2.0.0", expected), tampered);
         using var service = CreateService(handler, scope.Path);
-        var update = Assert.IsType<ReleaseUpdate>(await service.CheckForUpdateAsync("1.0.0"));
+        var update = Assert.IsType<ReleaseUpdate>(await service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.DownloadUpdateAsync(update));
+            service.DownloadUpdateAsync(update, cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
 
         Assert.False(File.Exists(Path.Combine(scope.Path, "2.0.0", "FiveMCleaner-Setup-2.0.0-win-x64.exe")));
         Assert.Empty(Directory.GetFiles(scope.Path, "*.part", SearchOption.AllDirectories));
@@ -430,10 +430,10 @@ public sealed class GitHubReleaseUpdateServiceTests
         using var service = CreateService(
             ManifestAndDownloadHandler(CreateManifest("v2.0.0", expected), tooLarge),
             scope.Path);
-        var update = Assert.IsType<ReleaseUpdate>(await service.CheckForUpdateAsync("1.0.0"));
+        var update = Assert.IsType<ReleaseUpdate>(await service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.DownloadUpdateAsync(update));
+            service.DownloadUpdateAsync(update, cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
         Assert.Empty(Directory.GetFiles(scope.Path, "*.part", SearchOption.AllDirectories));
     }
 
@@ -457,7 +457,7 @@ public sealed class GitHubReleaseUpdateServiceTests
             return Task.FromResult(response);
         });
         using var service = CreateService(handler, scope.Path);
-        var update = Assert.IsType<ReleaseUpdate>(await service.CheckForUpdateAsync("1.0.0"));
+        var update = Assert.IsType<ReleaseUpdate>(await service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
         using var cancellationSource = new CancellationTokenSource();
         var progress = new InlineProgress<UpdateDownloadProgress>(_ => cancellationSource.Cancel());
 
@@ -499,7 +499,7 @@ public sealed class GitHubReleaseUpdateServiceTests
             new string('a', 64));
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.DownloadUpdateAsync(forged));
+            service.DownloadUpdateAsync(forged, cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
         Assert.Empty(Directory.GetFileSystemEntries(scope.Path));
     }
 
@@ -520,7 +520,7 @@ public sealed class GitHubReleaseUpdateServiceTests
         using var service = CreateService(handler, scope.Path, maximumManifestSize: 1024);
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
-            service.CheckForUpdateAsync("1.0.0"));
+            service.CheckForUpdateAsync("1.0.0", cancellationToken: global::Xunit.TestContext.Current.CancellationToken));
     }
 
     private static GitHubReleaseUpdateService CreateService(

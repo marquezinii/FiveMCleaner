@@ -1,0 +1,183 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Tokens semânticos de cor — tema escuro. Fonte única de verdade:
+        ThemeManager troca este dicionário por Colors.Light.xaml inteiro,
+        nunca sobrescreve chave a chave. Nenhuma página referencia um valor
+        hexadecimal diretamente; sempre um destes DynamicResource.
+
+        DIREÇÃO "CÂMARA ÂMBAR"
+        ======================
+        A interface é uma câmara com UMA lâmpada âmbar baixa, no canto
+        inferior esquerdo. Tudo o que o usuário vê é essa sala e os números
+        reais da máquina dele acesos dentro dela.
+
+        Duas consequências que definem toda a paleta:
+
+        1. O grafite é QUENTE, não azulado. Um fundo frio sob uma luz âmbar
+           produz um cinza sujo esverdeado; um grafite quente absorve a luz e
+           fica material. É por isso que nenhum destes neutros tem hue frio.
+
+        2. O laranja da marca voltou para a interface — mas como LUZ, não como
+           etiqueta. Ele banha o fundo em `AmbientLightBrush` (uma lâmina de
+           gradiente, contraste baixíssimo) e acende os controles ativos. A
+           razão pela qual ele havia sido banido — "laranja saturado sobre
+           fundo escuro lê como alerta permanente" — só valia enquanto ele
+           aparecia em manchas chapadas sobre um fundo que não o esperava.
+           Aqui a sala inteira já está sob essa luz, então o acento pertence
+           à cena em vez de gritar contra ela.
+
+        Estratégia de cor: Restrained. Neutros cobrem a superfície inteira;
+        só o âmbar carrega interação (ação primária, foco, seleção, estado
+        ativo, leitura de progresso). Cor semântica é para desfecho, nunca
+        para decorar.
+    -->
+
+    <!-- Grafite quente: chão da câmara, poço, e os degraus acima dele. -->
+    <Color x:Key="CanvasBaseColor">#16151A</Color>
+    <Color x:Key="CanvasSunkenColor">#131318</Color>
+    <Color x:Key="Surface1Color">#1C1C22</Color>
+    <Color x:Key="Surface2Color">#26262E</Color>
+    <Color x:Key="Surface3Color">#31313A</Color>
+    <Color x:Key="SurfaceRailColor">#121116</Color>
+    <Color x:Key="SurfaceAccentWashColor">#241A10</Color>
+
+    <SolidColorBrush x:Key="CanvasBaseBrush" Color="{StaticResource CanvasBaseColor}" />
+    <SolidColorBrush x:Key="CanvasSunkenBrush" Color="{StaticResource CanvasSunkenColor}" />
+    <SolidColorBrush x:Key="Surface1Brush" Color="{StaticResource Surface1Color}" />
+    <SolidColorBrush x:Key="Surface2Brush" Color="{StaticResource Surface2Color}" />
+    <SolidColorBrush x:Key="Surface3Brush" Color="{StaticResource Surface3Color}" />
+    <SolidColorBrush x:Key="SurfaceRailBrush" Color="{StaticResource SurfaceRailColor}" />
+    <SolidColorBrush x:Key="SurfaceAccentWashBrush" Color="{StaticResource SurfaceAccentWashColor}" />
+
+    <!--
+        A LÂMPADA. Um único brush radial, estático e cacheado pela GPU,
+        pintado uma vez atrás de todo o conteúdo da janela. É o movimento
+        visual central da direção e custa um Rectangle.
+
+        A origem fica no canto inferior esquerdo porque é lá que o rail de
+        navegação e a ação primária de cada página vivem: a luz cai sobre o
+        que o usuário vai tocar. O alfa máximo é 0x1E (~12%) — qualquer
+        valor acima disso vira uma mancha laranja e a sala deixa de ser
+        neutra.
+    -->
+    <RadialGradientBrush x:Key="AmbientLightBrush"
+                         GradientOrigin="0.10,1.04"
+                         Center="0.10,1.04"
+                         RadiusX="1.00"
+                         RadiusY="1.20">
+        <GradientStop Color="#48E8720F" Offset="0" />
+        <GradientStop Color="#26E8720F" Offset="0.30" />
+        <GradientStop Color="#0EE8720F" Offset="0.58" />
+        <GradientStop Color="#00E8720F" Offset="1" />
+    </RadialGradientBrush>
+
+    <!--
+        Preenchimento dos painéis. Não é chapado: a luz vem de baixo à
+        esquerda, então o topo do painel recebe menos e a base recebe mais —
+        o gradiente é o que dá material a um painel que está momentaneamente
+        vazio, em vez de deixá-lo ler como um retângulo morto.
+        Ambos os extremos foram verificados contra os três níveis de texto e
+        contra AccentTextBrush; o mais apertado fica em 5.79:1.
+    -->
+    <LinearGradientBrush x:Key="PanelFillBrush" StartPoint="0.85,0" EndPoint="0.15,1">
+        <GradientStop Color="#1F1F27" Offset="0" />
+        <GradientStop Color="#1B1B21" Offset="0.55" />
+        <GradientStop Color="#18181E" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Traço. Fina separa dentro de um bloco, média contorna um bloco,
+         grossa delimita algo operável (campo, seletor). -->
+    <SolidColorBrush x:Key="BorderSubtleBrush" Color="#252530" />
+    <SolidColorBrush x:Key="BorderDefaultBrush" Color="#33333F" />
+    <SolidColorBrush x:Key="BorderStrongBrush" Color="#474756" />
+
+    <!-- Aresta de luz no topo de uma superfície elevada: como a lâmpada
+         encontra a quina de um painel. -->
+    <LinearGradientBrush x:Key="EdgeLightBrush" StartPoint="0,0" EndPoint="0,1">
+        <GradientStop Color="#14FFFFFF" Offset="0" />
+        <GradientStop Color="#00FFFFFF" Offset="0.30" />
+        <GradientStop Color="#00FFFFFF" Offset="1" />
+    </LinearGradientBrush>
+
+    <SolidColorBrush x:Key="GridLineBrush" Color="#22222C" />
+    <SolidColorBrush x:Key="TickMarkBrush" Color="#3A3A46" />
+
+    <!--
+        Fundo de uma região grande de conteúdo. Era a retícula de papel
+        milimetrado do visual anterior; virou a queda de luz vertical da
+        câmara — mais claro no alto (onde a parede recebe a lâmpada), mais
+        fundo embaixo. Substituir o DrawingBrush ladrilhado por um gradiente
+        também removeu o custo de tiling em janelas grandes.
+
+        Precisa viver em cada dicionário de tema: o pincel congela suas
+        cores no momento em que é criado, e o tema troca por dicionário.
+    -->
+    <LinearGradientBrush x:Key="SheetGridBrush" StartPoint="0,0" EndPoint="0.35,1">
+        <GradientStop Color="#00000000" Offset="0" />
+        <GradientStop Color="#14000000" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Texto. Branco quente, nunca puro: sob luz âmbar um branco frio
+         parece azul. -->
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#F3F1EE" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#B5B2BA" />
+    <SolidColorBrush x:Key="TextTertiaryBrush" Color="#9B9AA1" />
+    <SolidColorBrush x:Key="TextOnAccentBrush" Color="#180D04" />
+
+    <!-- A luz. Único acento saturado; é a cor da marca trazida de volta. -->
+    <SolidColorBrush x:Key="AccentBrush" Color="#E8720F" />
+    <SolidColorBrush x:Key="AccentTextBrush" Color="#FFA35C" />
+    <SolidColorBrush x:Key="AccentBrightBrush" Color="#FF8C2E" />
+    <SolidColorBrush x:Key="AccentDeepBrush" Color="#B4560A" />
+    <SolidColorBrush x:Key="AccentWashBrush" Color="#2EE8720F" />
+    <SolidColorBrush x:Key="AccentSoftBrush" Color="#16E8720F" />
+    <LinearGradientBrush x:Key="AccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#E8720F" Offset="0" />
+        <GradientStop Color="#FFA35C" Offset="1" />
+    </LinearGradientBrush>
+
+    <!-- Laranja puro do logotipo. Fica na barra de título; o resto da
+         interface usa a família Accent* acima, que é a mesma cor calibrada
+         para contraste sobre cada superfície. -->
+    <SolidColorBrush x:Key="BrandInkBrush" Color="#FF7A18" />
+
+    <SolidColorBrush x:Key="SuccessBaseBrush" Color="#4CBE8C" />
+    <SolidColorBrush x:Key="SuccessSurfaceBrush" Color="#14241D" />
+    <SolidColorBrush x:Key="SuccessBorderBrush" Color="#274A3B" />
+
+    <SolidColorBrush x:Key="WarningBaseBrush" Color="#E0AC3E" />
+    <SolidColorBrush x:Key="WarningSurfaceBrush" Color="#251E10" />
+    <SolidColorBrush x:Key="WarningBorderBrush" Color="#4E3E1B" />
+
+    <SolidColorBrush x:Key="DangerBaseBrush" Color="#EC6B72" />
+    <SolidColorBrush x:Key="DangerSurfaceBrush" Color="#261619" />
+    <SolidColorBrush x:Key="DangerBorderBrush" Color="#54292E" />
+
+    <SolidColorBrush x:Key="InfoBaseBrush" Color="#6C9EEB" />
+    <SolidColorBrush x:Key="InfoSurfaceBrush" Color="#151B26" />
+    <SolidColorBrush x:Key="InfoBorderBrush" Color="#2A3A55" />
+
+    <SolidColorBrush x:Key="RevertBaseBrush" Color="#A99BEB" />
+
+    <SolidColorBrush x:Key="NeutralBaseBrush" Color="#9B9AA1" />
+
+    <!-- Interruptor no padrão Fluent do Windows 11: trilho vazado quando
+         desligado, aceso pelo acento quando ligado. -->
+    <SolidColorBrush x:Key="ToggleTrackOffBrush" Color="#00000000" />
+    <SolidColorBrush x:Key="ToggleTrackOffHoverBrush" Color="#22222B" />
+    <SolidColorBrush x:Key="ToggleThumbBrush" Color="#BEBAC4" />
+    <SolidColorBrush x:Key="ToggleThumbOnBrush" Color="#FFF6EE" />
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#3A3A46" />
+    <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#585868" />
+    <SolidColorBrush x:Key="FocusRingBrush" Color="#FFA35C" />
+
+    <!--
+        Sombra tingida de marrom profundo, não preta: uma sombra neutra sob
+        luz quente lê como um buraco recortado. Todas carregam deslocamento
+        + desfoque — um halo colorido sem offset é decoração, não altura.
+    -->
+    <DropShadowEffect x:Key="Elevation1Shadow" Color="#0A0603" Opacity="0.34" BlurRadius="14" ShadowDepth="2" Direction="270" />
+    <DropShadowEffect x:Key="Elevation2Shadow" Color="#0A0603" Opacity="0.46" BlurRadius="28" ShadowDepth="6" Direction="270" />
+    <DropShadowEffect x:Key="Elevation3Shadow" Color="#0A0603" Opacity="0.60" BlurRadius="52" ShadowDepth="14" Direction="270" />
+</ResourceDictionary>

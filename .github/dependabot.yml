@@ -32,3 +32,48 @@ updates:
       github-actions:
         patterns:
           - "*"
+
+  - package-ecosystem: npm
+    directory: "/website"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "10:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: deps
+    groups:
+      website-npm:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: "/infra/cloudflare-worker"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "10:30"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: deps
+    groups:
+      worker-npm:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: "/infra/dashboard"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "11:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: deps
+    groups:
+      dashboard-npm:
+        patterns:
+          - "*"

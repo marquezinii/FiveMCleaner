@@ -1,3 +1,4 @@
+using FiveMCleaner.Contracts;
 using FiveMCleaner.Windows.Engine;
 
 namespace FiveMCleaner.Broker;
@@ -142,7 +143,7 @@ internal static class Program
         }
 
         BrokerDiagnosticsLog.Record("journal-saved", plan.PlanId);
-        if (result.State != WindowsTransactionState.Committed)
+        if (result.State != TransactionState.Committed)
         {
             BrokerDiagnosticsLog.Record("execution-failed", plan.PlanId);
             events.Publish(
@@ -205,7 +206,7 @@ internal static class Program
                 BrokerExitCode.RollbackFailed);
         }
 
-        if (result.State != WindowsTransactionState.RolledBack)
+        if (result.State != TransactionState.RolledBack)
         {
             BrokerDiagnosticsLog.Record("rollback-failed", transactionId);
             events.Publish(

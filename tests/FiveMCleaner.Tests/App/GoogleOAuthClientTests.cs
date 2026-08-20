@@ -35,7 +35,7 @@ public sealed class GoogleOAuthClientTests
         using var client = new HttpClient(new ThrowingHandler(() => called = true));
         var oauth = new GoogleOAuthClient(client, clientId: null, clientSecret: null);
 
-        var ticket = await oauth.AuthenticateAsync();
+        var ticket = await oauth.AuthenticateAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Null(ticket.IdToken);
         Assert.False(string.IsNullOrWhiteSpace(ticket.Error));

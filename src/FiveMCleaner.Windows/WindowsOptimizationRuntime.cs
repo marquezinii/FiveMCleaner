@@ -108,6 +108,8 @@ public sealed record WindowsOptimizationDependencies
 
     public required IStuckFiveMProcessInspector StuckProcess { get; init; }
 
+    public required IFiveMProcessTerminator StuckProcessTerminator { get; init; }
+
     public required IVendorLaptopSoftwareInspector VendorLaptopSoftware { get; init; }
 
     public static WindowsOptimizationDependencies CreateDefault(
@@ -141,6 +143,7 @@ public sealed record WindowsOptimizationDependencies
             HardwareStability = new WindowsHardwareStabilityInspector(),
             BackgroundProcess = new WindowsBackgroundProcessInspector(),
             StuckProcess = new WindowsStuckFiveMProcessInspector(),
+            StuckProcessTerminator = new WindowsFiveMProcessTerminator(),
             VendorLaptopSoftware = new WindowsVendorLaptopSoftwareInspector()
         };
     }
@@ -174,261 +177,131 @@ public sealed class WindowsOptimizationActionFactory
         ValidatePlan(plan);
         return plan.Actions
             .OrderBy(action => action.Sequence)
-            .Select(action => CreateAction(action.Metadata.Id, plan))
+            .Select(action => CreateAction(action.Metadata.Id, plan.Options))
             .ToArray();
     }
 
+    /// <summary>
+    /// Builds one canonical instance per catalog action id, used to seed
+    /// <see cref="WindowsActionCatalog"/>. Delegates to the same per-id
+    /// construction as <see cref="CreateAction"/> so the two never drift.
+    /// </summary>
     internal IReadOnlyList<IWindowsOptimizationAction> CreateCatalogActions()
     {
         var defaults = new OptimizationOptionsDto();
+
+        // LegacyServerCacheRepairAction rejects CacheRepairPolicy.Off (its
+        // default), so catalog registration substitutes a constructible
+        // policy; the plan-driven path below always uses the real option.
+        var cacheRepairDefaults = defaults with { ServerCacheRepair = CacheRepairPolicy.RepairNow };
         return
         [
-            .. CreateDiagnosticActions(),
-            .. CreateCleanupActions(defaults),
-            .. CreateRegistryAndPowerActions(),
+            .. CreateDiagnosticActions(defaults),
+            .. CreateCleanupActions(defaults, cacheRepairDefaults),
+            .. CreateRegistryAndPowerActions(defaults),
             .. CreateGraphicsPresetActions(defaults),
-            .. CreateVisualEffectsActions()
+            .. CreateVisualEffectsActions(defaults)
         ];
     }
 
-    private IReadOnlyList<IWindowsOptimizationAction> CreateDiagnosticActions()
+    private IReadOnlyList<IWindowsOptimizationAction> CreateDiagnosticActions(OptimizationOptionsDto options)
     {
         return
         [
-            new VerifyFiveMStoppedAction(
-                environment.FiveMInstallationRoot,
-                dependencies.ProcessInspector),
-            new VerifyGtaVStoppedAction(
-                environment.GtaVInstallationRoot,
-                dependencies.GtaVProcessInspector),
-            new BottleneckDiagnosisAction(dependencies.SystemResources),
-            new OverlaySoftwareDetectionAction(dependencies.OverlaySoftware),
-            new FiveMLegacyLogReaderAction(environment.FiveMAppRoot),
-            new PerformanceDiagnosticsGuideAction(),
-            new NetworkHealthDiagnosisAction(dependencies.NetworkHealth),
-            new ThermalDiagnosisAction(dependencies.Thermal),
-            new PagefileCommitDiagnosisAction(dependencies.SystemResources),
-            new CacheIndexIntegrityDiagnosisAction(environment.FiveMAppRoot),
-            new GpuVendorDetectionAction(dependencies.GpuVendor),
-            new CpuDetailsDiagnosisAction(dependencies.Cpu),
-            new GpuDetailsDiagnosisAction(dependencies.GpuDetails),
-            new RamDetailsDiagnosisAction(dependencies.RamDetails),
-            new StorageHealthDiagnosisAction(dependencies.StorageHealth),
-            new DriverVersionsDiagnosisAction(dependencies.DriverVersions),
-            new DisplayConfigurationDiagnosisAction(dependencies.DisplayConfiguration),
-            new GSyncGuidanceDiagnosisAction(dependencies.DisplayConfiguration, dependencies.GpuVendor),
-            new GuidedDriverReinstallAction(),
-            new HybridLaptopDiagnosisAction(dependencies.PowerStatus, dependencies.VendorLaptopSoftware),
-            new SessionSettingsDiagnosisAction(dependencies.Registry, dependencies.PowerPlans),
-            new ThrottlingSignalDiagnosisAction(
-                dependencies.Cpu,
-                dependencies.ResourceUsage,
-                dependencies.HardwareStability,
-                dependencies.Thermal),
-            new ResourceUsageDiagnosisAction(dependencies.ResourceUsage),
-            new PciLinkDiagnosisAction(dependencies.PciLink),
-            new HardwareStabilityDiagnosisAction(dependencies.HardwareStability),
-            new BottleneckClassificationAction(
-                dependencies.SystemResources,
-                dependencies.ResourceUsage,
-                dependencies.Thermal,
-                dependencies.NetworkHealth,
-                dependencies.GpuDetails,
-                dependencies.BackgroundProcess),
-            new GtaVLaunchParametersDiagnosisAction(environment.GtaVInstallationRoot),
-            new GraphicsPresetRecommendationAction(
-                dependencies.GpuDetails,
-                dependencies.Cpu,
-                dependencies.RamDetails,
-                dependencies.DisplayConfiguration),
-            new TextureVramFitDiagnosisAction(
-                environment.LegacyGraphicsSettingsPath,
-                dependencies.GpuDetails),
-            new CacheStorageDiagnosisAction(environment.FiveMAppRoot),
-            new InstallationHealthDiagnosisAction(
-                environment.FiveMInstallationRoot,
-                environment.FiveMAppRoot),
-            new CrashPatternDiagnosisAction(environment.FiveMAppRoot)
+            CreateAction(OptimizationActionIds.VerifyFiveMIsStopped, options),
+            CreateAction(OptimizationActionIds.VerifyGtaVIsStopped, options),
+            CreateAction(OptimizationActionIds.DiagnoseBottleneck, options),
+            CreateAction(OptimizationActionIds.DetectOverlaysAndCaptureSoftware, options),
+            CreateAction(OptimizationActionIds.ReadFiveMLegacyLogs, options),
+            CreateAction(OptimizationActionIds.GuidePerformanceDiagnostics, options),
+            CreateAction(OptimizationActionIds.DiagnoseNetworkHealth, options),
+            CreateAction(OptimizationActionIds.DiagnoseThermalThrottling, options),
+            CreateAction(OptimizationActionIds.DiagnosePagefileCommit, options),
+            CreateAction(OptimizationActionIds.DiagnoseCacheIntegrity, options),
+            CreateAction(OptimizationActionIds.DetectGpuVendor, options),
+            CreateAction(OptimizationActionIds.DiagnoseCpuDetails, options),
+            CreateAction(OptimizationActionIds.DiagnoseGpuDetails, options),
+            CreateAction(OptimizationActionIds.DiagnoseRamDetails, options),
+            CreateAction(OptimizationActionIds.DiagnoseStorageHealth, options),
+            CreateAction(OptimizationActionIds.DiagnoseDriverVersions, options),
+            CreateAction(OptimizationActionIds.DiagnoseDisplayConfiguration, options),
+            CreateAction(OptimizationActionIds.GuideGSync, options),
+            CreateAction(OptimizationActionIds.GuideDriverReinstall, options),
+            CreateAction(OptimizationActionIds.DiagnoseHybridLaptop, options),
+            CreateAction(OptimizationActionIds.DiagnoseSessionSettings, options),
+            CreateAction(OptimizationActionIds.DiagnoseThrottlingSignal, options),
+            CreateAction(OptimizationActionIds.DiagnoseResourceUsage, options),
+            CreateAction(OptimizationActionIds.DiagnosePciLink, options),
+            CreateAction(OptimizationActionIds.DiagnoseHardwareStability, options),
+            CreateAction(OptimizationActionIds.ClassifyBottleneck, options),
+            CreateAction(OptimizationActionIds.DiagnoseGtaVLaunchParameters, options),
+            CreateAction(OptimizationActionIds.RecommendGraphicsPreset, options),
+            CreateAction(OptimizationActionIds.DiagnoseTextureVramFit, options),
+            CreateAction(OptimizationActionIds.DiagnoseCacheStorage, options),
+            CreateAction(OptimizationActionIds.DiagnoseInstallationHealth, options),
+            CreateAction(OptimizationActionIds.DiagnoseCrashPatterns, options)
         ];
     }
 
-    private IReadOnlyList<IWindowsOptimizationAction> CreateCleanupActions(OptimizationOptionsDto defaults)
+    private IReadOnlyList<IWindowsOptimizationAction> CreateCleanupActions(
+        OptimizationOptionsDto options,
+        OptimizationOptionsDto cacheRepairOptions)
     {
         return
         [
-            new UserTemporaryFilesCleanupAction(
-                environment.UserTemporaryDirectory,
-                TimeSpan.FromDays(defaults.TemporaryFileMinimumAgeDays),
-                dependencies.FileTree),
-            new LegacyCrashDumpsPruneAction(
-                environment.FiveMAppRoot,
-                environment.FiveMInstallationRoot,
-                TimeSpan.FromDays(defaults.DiagnosticRetentionDays),
-                dependencies.ProcessInspector,
-                dependencies.FileTree),
-            new LegacyServerCacheRepairAction(
-                environment.FiveMAppRoot,
-                environment.FiveMInstallationRoot,
-                CacheRepairPolicy.RepairNow,
-                checked(defaults.ServerCacheThresholdGiB * GiB),
-                dependencies.ProcessInspector,
-                dependencies.FileTree),
-            new StuckProcessTerminationAction(
-                environment.FiveMInstallationRoot,
-                dependencies.StuckProcess),
-            new RecreateFiveMLocalDataAction(
-                environment.FiveMAppRoot,
-                environment.FiveMInstallationRoot,
-                dependencies.ProcessInspector,
-                dependencies.FileTree),
-            new StaleAuthDataRepairAction(
-                environment.FiveMAppRoot,
-                environment.FiveMInstallationRoot,
-                RosIdPath,
-                DigitalEntitlementsRoot,
-                AuthQuarantineRoot,
-                dependencies.ProcessInspector)
+            CreateAction(OptimizationActionIds.CleanUserTemporaryFiles, options),
+            CreateAction(OptimizationActionIds.PruneLegacyCrashDumps, options),
+            CreateAction(OptimizationActionIds.RepairLegacyServerCache, cacheRepairOptions),
+            CreateAction(OptimizationActionIds.TerminateStuckFiveMProcess, options),
+            CreateAction(OptimizationActionIds.RecreateFiveMLocalData, options),
+            CreateAction(OptimizationActionIds.RepairStaleAuthData, options)
         ];
     }
 
-    private IReadOnlyList<IWindowsOptimizationAction> CreateRegistryAndPowerActions()
+    private IReadOnlyList<IWindowsOptimizationAction> CreateRegistryAndPowerActions(OptimizationOptionsDto options)
     {
         return
         [
-            new GameModeRegistryAction(dependencies.Registry),
-            new GpuPreferenceRegistryAction(
-                dependencies.Registry,
-                environment.FiveMExecutablePath,
-                environment.FiveMInstallationRoot),
-            new GpuPreferenceMismatchDiagnosisAction(
-                dependencies.GpuVendor,
-                dependencies.Registry,
-                environment.FiveMExecutablePath),
-            new GameDvrRegistryAction(dependencies.Registry),
-            new FullscreenOptimizationsRegistryAction(
-                dependencies.Registry,
-                environment.FiveMExecutablePath,
-                environment.GtaVExecutablePath),
-            new HagsToggleAction(dependencies.Registry),
-            new SessionPerformancePowerPlanAction(
-                dependencies.PowerPlans,
-                dependencies.PowerStatus),
-            new PciExpressPowerManagementAction(dependencies.PowerPlans),
-            new MousePollingRateGuidanceAction(dependencies.ResourceUsage)
+            CreateAction(OptimizationActionIds.EnableGameMode, options),
+            CreateAction(OptimizationActionIds.PreferHighPerformanceGpu, options),
+            CreateAction(OptimizationActionIds.DiagnoseGpuPreferenceMismatch, options),
+            CreateAction(OptimizationActionIds.DisableBackgroundCapture, options),
+            CreateAction(OptimizationActionIds.ToggleFullscreenOptimizations, options),
+            CreateAction(OptimizationActionIds.ToggleHags, options),
+            CreateAction(OptimizationActionIds.EnableSessionPerformancePowerPlan, options),
+            CreateAction(OptimizationActionIds.AdjustPciExpressPowerManagement, options),
+            CreateAction(OptimizationActionIds.GuideMousePollingRate, options)
         ];
     }
 
-    private IReadOnlyList<IWindowsOptimizationAction> CreateGraphicsPresetActions(OptimizationOptionsDto defaults)
+    private IReadOnlyList<IWindowsOptimizationAction> CreateGraphicsPresetActions(OptimizationOptionsDto options)
     {
         return
         [
-            new LegacyGraphicsPresetAction(
-                environment.LegacyGraphicsSettingsPath,
-                environment.FiveMInstallationRoot,
-                OptimizationProfile.Light,
-                GraphicsSettingsTarget.FiveM,
-                dependencies.ProcessInspector,
-                dependencies.GtaVProcessInspector),
-            new LegacyGraphicsPresetAction(
-                environment.LegacyGraphicsSettingsPath,
-                environment.FiveMInstallationRoot,
-                OptimizationProfile.Balanced,
-                GraphicsSettingsTarget.FiveM,
-                dependencies.ProcessInspector,
-                dependencies.GtaVProcessInspector),
-            new LegacyGraphicsPresetAction(
-                environment.LegacyGraphicsSettingsPath,
-                environment.FiveMInstallationRoot,
-                OptimizationProfile.Aggressive,
-                GraphicsSettingsTarget.FiveM,
-                dependencies.ProcessInspector,
-                dependencies.GtaVProcessInspector),
-            new LegacyGraphicsPresetAction(
-                environment.GtaVGraphicsSettingsPath,
-                environment.GtaVInstallationRoot,
-                OptimizationProfile.Light,
-                GraphicsSettingsTarget.GtaV,
-                dependencies.ProcessInspector,
-                dependencies.GtaVProcessInspector),
-            new LegacyGraphicsPresetAction(
-                environment.GtaVGraphicsSettingsPath,
-                environment.GtaVInstallationRoot,
-                OptimizationProfile.Balanced,
-                GraphicsSettingsTarget.GtaV,
-                dependencies.ProcessInspector,
-                dependencies.GtaVProcessInspector),
-            new LegacyGraphicsPresetAction(
-                environment.GtaVGraphicsSettingsPath,
-                environment.GtaVInstallationRoot,
-                OptimizationProfile.Aggressive,
-                GraphicsSettingsTarget.GtaV,
-                dependencies.ProcessInspector,
-                dependencies.GtaVProcessInspector),
-            new LegacyGraphicsPresetAction(
-                environment.LegacyGraphicsSettingsPath,
-                environment.FiveMInstallationRoot,
-                GraphicsSettingsTarget.FiveM,
-                dependencies.ProcessInspector,
-                dependencies.GtaVProcessInspector,
-                OptimizationActionIds.ApplyQualityLegacyGraphics,
-                LegacyGraphicsPresets.Quality,
-                GraphicsPresetDirection.RaiseOnly),
-            new LegacyGraphicsPresetAction(
-                environment.GtaVGraphicsSettingsPath,
-                environment.GtaVInstallationRoot,
-                GraphicsSettingsTarget.GtaV,
-                dependencies.ProcessInspector,
-                dependencies.GtaVProcessInspector,
-                OptimizationActionIds.ApplyQualityGtaVGraphics,
-                LegacyGraphicsPresets.Quality,
-                GraphicsPresetDirection.RaiseOnly),
-            new DisplayPreferencesAction(
-                environment.LegacyGraphicsSettingsPath,
-                environment.FiveMInstallationRoot,
-                GraphicsSettingsTarget.FiveM,
-                defaults.PreferWindowedMode,
-                defaults.EnableVSync,
-                dependencies.ProcessInspector,
-                dependencies.GtaVProcessInspector),
-            new DisplayPreferencesAction(
-                environment.GtaVGraphicsSettingsPath,
-                environment.GtaVInstallationRoot,
-                GraphicsSettingsTarget.GtaV,
-                defaults.PreferWindowedMode,
-                defaults.EnableVSync,
-                dependencies.ProcessInspector,
-                dependencies.GtaVProcessInspector),
-            new GtaVGraphicsLaunchParametersAction(
-                environment.GtaVInstallationRoot,
-                dependencies.DisplayConfiguration,
-                dependencies.GtaVProcessInspector),
-            new GtaVDisplayLaunchParametersAction(
-                environment.GtaVInstallationRoot,
-                defaults.PreferWindowedMode,
-                defaults.PreferBorderlessWindow,
-                defaults.GtaVLaunchDirectXVersion,
-                dependencies.GtaVProcessInspector),
-            new GtaVRepairLaunchParametersAction(
-                environment.GtaVInstallationRoot,
-                defaults.UseGtaVSafeMode,
-                defaults.UseGtaVMinimumSettings,
-                defaults.UseGtaVAutoSettingsRebuild,
-                dependencies.GtaVProcessInspector)
+            CreateAction(OptimizationActionIds.ApplyLightLegacyGraphics, options),
+            CreateAction(OptimizationActionIds.ApplyBalancedLegacyGraphics, options),
+            CreateAction(OptimizationActionIds.ApplyAggressiveLegacyGraphics, options),
+            CreateAction(OptimizationActionIds.ApplyLightGtaVGraphics, options),
+            CreateAction(OptimizationActionIds.ApplyBalancedGtaVGraphics, options),
+            CreateAction(OptimizationActionIds.ApplyAggressiveGtaVGraphics, options),
+            CreateAction(OptimizationActionIds.ApplyQualityLegacyGraphics, options),
+            CreateAction(OptimizationActionIds.ApplyQualityGtaVGraphics, options),
+            CreateAction(OptimizationActionIds.ApplyLegacyDisplayPreferences, options),
+            CreateAction(OptimizationActionIds.ApplyGtaVDisplayPreferences, options),
+            CreateAction(OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters, options),
+            CreateAction(OptimizationActionIds.ApplyGtaVDisplayLaunchParameters, options),
+            CreateAction(OptimizationActionIds.ApplyGtaVRepairLaunchParameters, options)
         ];
     }
 
-    private IReadOnlyList<IWindowsOptimizationAction> CreateVisualEffectsActions()
+    private IReadOnlyList<IWindowsOptimizationAction> CreateVisualEffectsActions(OptimizationOptionsDto options)
     {
-        return
-        [
-            new VisualEffectsAction(dependencies.VisualEffects)
-        ];
+        return [CreateAction(OptimizationActionIds.ReduceWindowsVisualEffects, options)];
     }
-
 
     private IWindowsOptimizationAction CreateAction(
         string actionId,
-        OptimizationPlanDto plan)
+        OptimizationOptionsDto options)
     {
         return actionId switch
         {
@@ -514,7 +387,8 @@ public sealed class WindowsOptimizationActionFactory
                 environment.FiveMAppRoot),
             OptimizationActionIds.TerminateStuckFiveMProcess => new StuckProcessTerminationAction(
                 environment.FiveMInstallationRoot,
-                dependencies.StuckProcess),
+                dependencies.StuckProcess,
+                dependencies.StuckProcessTerminator),
             OptimizationActionIds.RecreateFiveMLocalData => new RecreateFiveMLocalDataAction(
                 environment.FiveMAppRoot,
                 environment.FiveMInstallationRoot,
@@ -529,19 +403,19 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.ProcessInspector),
             OptimizationActionIds.CleanUserTemporaryFiles => new UserTemporaryFilesCleanupAction(
                 environment.UserTemporaryDirectory,
-                TimeSpan.FromDays(plan.Options.TemporaryFileMinimumAgeDays),
+                TimeSpan.FromDays(options.TemporaryFileMinimumAgeDays),
                 dependencies.FileTree),
             OptimizationActionIds.PruneLegacyCrashDumps => new LegacyCrashDumpsPruneAction(
                 environment.FiveMAppRoot,
                 environment.FiveMInstallationRoot,
-                TimeSpan.FromDays(plan.Options.DiagnosticRetentionDays),
+                TimeSpan.FromDays(options.DiagnosticRetentionDays),
                 dependencies.ProcessInspector,
                 dependencies.FileTree),
             OptimizationActionIds.RepairLegacyServerCache => new LegacyServerCacheRepairAction(
                 environment.FiveMAppRoot,
                 environment.FiveMInstallationRoot,
-                plan.Options.ServerCacheRepair,
-                checked(plan.Options.ServerCacheThresholdGiB * GiB),
+                options.ServerCacheRepair,
+                checked(options.ServerCacheThresholdGiB * GiB),
                 dependencies.ProcessInspector,
                 dependencies.FileTree),
             OptimizationActionIds.EnableGameMode => new GameModeRegistryAction(
@@ -633,16 +507,16 @@ public sealed class WindowsOptimizationActionFactory
                 environment.LegacyGraphicsSettingsPath,
                 environment.FiveMInstallationRoot,
                 GraphicsSettingsTarget.FiveM,
-                plan.Options.PreferWindowedMode,
-                plan.Options.EnableVSync,
+                options.PreferWindowedMode,
+                options.EnableVSync,
                 dependencies.ProcessInspector,
                 dependencies.GtaVProcessInspector),
             OptimizationActionIds.ApplyGtaVDisplayPreferences => new DisplayPreferencesAction(
                 environment.GtaVGraphicsSettingsPath,
                 environment.GtaVInstallationRoot,
                 GraphicsSettingsTarget.GtaV,
-                plan.Options.PreferWindowedMode,
-                plan.Options.EnableVSync,
+                options.PreferWindowedMode,
+                options.EnableVSync,
                 dependencies.ProcessInspector,
                 dependencies.GtaVProcessInspector),
             OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters => new GtaVGraphicsLaunchParametersAction(
@@ -651,15 +525,15 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.GtaVProcessInspector),
             OptimizationActionIds.ApplyGtaVDisplayLaunchParameters => new GtaVDisplayLaunchParametersAction(
                 environment.GtaVInstallationRoot,
-                plan.Options.PreferWindowedMode,
-                plan.Options.PreferBorderlessWindow,
-                plan.Options.GtaVLaunchDirectXVersion,
+                options.PreferWindowedMode,
+                options.PreferBorderlessWindow,
+                options.GtaVLaunchDirectXVersion,
                 dependencies.GtaVProcessInspector),
             OptimizationActionIds.ApplyGtaVRepairLaunchParameters => new GtaVRepairLaunchParametersAction(
                 environment.GtaVInstallationRoot,
-                plan.Options.UseGtaVSafeMode,
-                plan.Options.UseGtaVMinimumSettings,
-                plan.Options.UseGtaVAutoSettingsRebuild,
+                options.UseGtaVSafeMode,
+                options.UseGtaVMinimumSettings,
+                options.UseGtaVAutoSettingsRebuild,
                 dependencies.GtaVProcessInspector),
             OptimizationActionIds.ReduceWindowsVisualEffects => new VisualEffectsAction(
                 dependencies.VisualEffects),
@@ -691,12 +565,9 @@ public sealed class WindowsOptimizationActionFactory
             throw new InvalidOperationException("Only an executable FiveM Legacy plan can be resolved.");
         }
 
-        var canonical = new PlanBuilder().Build(new OptimizationPlanRequestDto
-        {
-            Profile = plan.Profile,
-            Edition = plan.Edition,
-            Options = plan.Options with { }
-        });
+        var canonical = PlanBuilder.Build(
+            PlanBuilder.CanonicalRequestFor(plan),
+            PlanBuildContext.For(plan));
         if (!canonical.IsExecutable
             || canonical.Actions.Count != plan.Actions.Count
             || canonical.RequiresElevation != plan.RequiresElevation

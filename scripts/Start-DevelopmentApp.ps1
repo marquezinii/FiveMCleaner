@@ -23,20 +23,6 @@ if ($null -eq $dotnet) {
     throw 'The .NET SDK is required to run the FiveMCleaner development launcher.'
 }
 
-[xml]$project = Get-Content -LiteralPath $projectPath -Raw -Encoding utf8
-$propertyGroups = @($project.Project.PropertyGroup)
-$targetFramework = $propertyGroups.TargetFramework |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-    Select-Object -First 1
-$assemblyName = $propertyGroups.AssemblyName |
-    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
-    Select-Object -First 1
-
-if ([string]::IsNullOrWhiteSpace($targetFramework) -or
-    [string]::IsNullOrWhiteSpace($assemblyName)) {
-    throw 'The app project does not declare TargetFramework and AssemblyName.'
-}
-
 New-Item -ItemType Directory -Path $artifactsDirectory -Force | Out-Null
 $buildOutput = & $dotnet.Source build $solutionPath --configuration Release --nologo 2>&1
 $buildOutput | Set-Content -LiteralPath $buildLogPath -Encoding utf8
@@ -51,7 +37,31 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-$outputDirectory = Join-Path $workspace "src\FiveMCleaner.App\bin\Release\$targetFramework"
+$propertyOutput = @(& $dotnet.Source msbuild $projectPath -nologo `
+        -property:Configuration=Release `
+        -getProperty:TargetFramework `
+        -getProperty:AssemblyName `
+        -getProperty:TargetDir 2>&1)
+if ($LASTEXITCODE -ne 0) {
+    throw "MSBuild could not resolve the app output properties:`n$($propertyOutput -join "`n")"
+}
+
+try {
+    $projectProperties = (($propertyOutput -join "`n") | ConvertFrom-Json -ErrorAction Stop).Properties
+}
+catch {
+    throw "MSBuild returned invalid app output properties: $($propertyOutput -join "`n")"
+}
+
+$targetFramework = [string]$projectProperties.TargetFramework
+$assemblyName = [string]$projectProperties.AssemblyName
+$outputDirectory = [string]$projectProperties.TargetDir
+if ([string]::IsNullOrWhiteSpace($targetFramework) -or
+    [string]::IsNullOrWhiteSpace($assemblyName) -or
+    [string]::IsNullOrWhiteSpace($outputDirectory)) {
+    throw 'MSBuild did not resolve TargetFramework, AssemblyName and TargetDir for the app.'
+}
+
 $applicationPath = Join-Path $outputDirectory "$assemblyName.exe"
 if (-not (Test-Path -LiteralPath $applicationPath -PathType Leaf)) {
     throw "The Release build completed but the application executable was not found: $applicationPath"
@@ -66,4 +76,11 @@ if ($NoLaunch) {
 # never mixes with end-user errors reported by installed Production copies.
 # See FiveMCleaner.App/Services/AppEnvironment.cs.
 $env:FIVEMCLEANER_ENVIRONMENT = 'Development'
-Start-Process -FilePath $applicationPath -WorkingDirectory $outputDirectory
+
+# The development launcher must remain useful on a machine that does not have
+# FiveM or GTA V installed. The explicit demo switch supplies a realistic,
+# deterministic Legacy diagnostic and simulates the complete optimization
+# flow without reading or writing game files, invoking the broker, or showing
+# UAC. Production launchers never pass this switch, so they keep the real
+# installation detection and optimization preconditions.
+Start-Process -FilePath $applicationPath -ArgumentList '--demo-synthetic' -WorkingDirectory $outputDirectory

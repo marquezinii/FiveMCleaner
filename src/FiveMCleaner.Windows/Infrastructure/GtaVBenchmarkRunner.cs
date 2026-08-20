@@ -133,28 +133,13 @@ public sealed class WindowsGtaVBenchmarkRunner : IGtaVBenchmarkRunner
         catch (OperationCanceledException) when (
             timeoutSource.IsCancellationRequested && !cancellationToken.IsCancellationRequested)
         {
-            TryKill(process);
+            ProcessTermination.TryKill(process);
             return false;
         }
         catch (OperationCanceledException)
         {
-            TryKill(process);
+            ProcessTermination.TryKill(process);
             throw;
-        }
-    }
-
-    private static void TryKill(Process process)
-    {
-        try
-        {
-            if (!process.HasExited)
-            {
-                process.Kill(entireProcessTree: true);
-            }
-        }
-        catch (Exception exception) when (exception is InvalidOperationException
-            or System.ComponentModel.Win32Exception or NotSupportedException)
-        {
         }
     }
 

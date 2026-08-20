@@ -1,0 +1,39 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!--
+        Linguagem de movimento única do app. Nenhuma Storyboard nova deve
+        usar duração ou curva fora daqui. `App.ApplyMotionPolicyToDurationTokens`
+        zera estas durações na inicialização quando o Windows pede menos
+        animação — Storyboards declaradas dentro de um ControlTemplate são
+        congeladas e não conseguem consultar MotionPolicy em runtime, então a
+        política é aplicada na fonte.
+
+        As curvas mudaram na direção "Câmara Âmbar". As easings embutidas do
+        WPF (CubicEase) são fracas: elas gastam metade da duração perto do
+        estado final, e uma transição fraca lê como lentidão, não como
+        suavidade. Aqui todo movimento de entrada/reação usa PowerEase com
+        expoente alto — desacelera de forma acentuada, então o usuário vê
+        deslocamento imediato no instante em que está olhando.
+
+        Regra de easing:
+          entrando ou reagindo  → EaseOut forte  (resposta instantânea)
+          movendo-se na tela    → EaseInOut      (aceleração natural)
+          saindo                → EaseIn curto   (some sem chamar atenção)
+
+        Nunca use EaseIn em algo que ENTRA: começar devagar atrasa exatamente
+        o momento que o olho está observando.
+    -->
+    <Duration x:Key="MotionMicro">0:0:0.12</Duration>
+    <Duration x:Key="MotionControl">0:0:0.18</Duration>
+    <Duration x:Key="MotionNav">0:0:0.24</Duration>
+    <Duration x:Key="MotionEnter">0:0:0.30</Duration>
+    <Duration x:Key="MotionStructural">0:0:0.42</Duration>
+    <Duration x:Key="MotionExit">0:0:0.14</Duration>
+
+    <PowerEase x:Key="EaseMicro" EasingMode="EaseOut" Power="3" />
+    <PowerEase x:Key="EaseControl" EasingMode="EaseOut" Power="4" />
+    <PowerEase x:Key="EaseNav" EasingMode="EaseInOut" Power="3" />
+    <PowerEase x:Key="EaseEnter" EasingMode="EaseOut" Power="5" />
+    <PowerEase x:Key="EaseStructural" EasingMode="EaseOut" Power="5" />
+    <QuadraticEase x:Key="EaseExit" EasingMode="EaseIn" />
+</ResourceDictionary>

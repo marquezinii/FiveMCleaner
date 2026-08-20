@@ -3,7 +3,7 @@
                  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
                  xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
                  xmlns:controls="clr-namespace:FiveMCleaner.App.Controls"
-                 Title="Sua conta"
+                 Title="{Binding [Account.WindowTitle], Source={StaticResource LocalizedStrings}}"
                  Icon="/FiveMCleaner;component/Assets/FiveMCleaner.png"
                  Width="560"
                  Height="760"
@@ -16,7 +16,7 @@
                  TextOptions.TextRenderingMode="ClearType"
                  UseLayoutRounding="True"
                  SnapsToDevicePixels="True"
-                 Background="{DynamicResource BackgroundBrush}">
+                 Background="{DynamicResource CanvasBaseBrush}">
 
     <Grid>
         <Grid.RowDefinitions>
@@ -41,23 +41,23 @@
             <ui:TitleBar.Header>
                 <TextBlock Margin="20,0,0,0"
                            VerticalAlignment="Center"
-                           Style="{StaticResource SectionLabelStyle}"
-                           Text="CONTA FIVEMCLEANER" />
+                           Style="{StaticResource OverlineText}"
+                           Text="{Binding [Account.TitleBarHeader], Source={StaticResource LocalizedStrings}}" />
             </ui:TitleBar.Header>
         </ui:TitleBar>
 
         <StackPanel Grid.Row="1" Margin="30,4,42,0">
             <TextBlock x:Name="TitleText"
-                       FontFamily="Bahnschrift, Segoe UI Variable Display, Segoe UI"
+                       FontFamily="{StaticResource AppFontDisplay}"
                        FontSize="24"
-                       FontWeight="Bold"
-                       Text="Bem-vindo de volta" />
+                       FontWeight="SemiBold"
+                       Text="{Binding [Account.Welcome.Title], Source={StaticResource LocalizedStrings}}" />
             <TextBlock x:Name="SubtitleText"
                        Margin="0,7,0,0"
                        FontSize="12"
-                       Foreground="{DynamicResource TextMutedBrush}"
+                       Foreground="{DynamicResource TextSecondaryBrush}"
                        TextWrapping="Wrap"
-                       Text="Entre para sincronizar suas preferências entre instalações." />
+                       Text="{Binding [Account.Welcome.Subtitle], Source={StaticResource LocalizedStrings}}" />
         </StackPanel>
 
         <!--
@@ -78,7 +78,7 @@
                     <Button x:Name="GoogleButton"
                             Style="{StaticResource ProviderButtonStyle}"
                             Click="GoogleSignIn_Click"
-                            AutomationProperties.Name="Continuar com o Google">
+                            AutomationProperties.Name="{Binding [Account.Provider.ContinueWithGoogle], Source={StaticResource LocalizedStrings}}">
                         <StackPanel Orientation="Horizontal">
                             <Image Source="{StaticResource GoogleLogoImage}" Width="18" Height="18" />
                             <TextBlock x:Name="GoogleButtonText"
@@ -86,7 +86,7 @@
                                        VerticalAlignment="Center"
                                        FontSize="12.5"
                                        FontWeight="SemiBold"
-                                       Text="Continuar com o Google" />
+                                       Text="{Binding [Account.Provider.ContinueWithGoogle], Source={StaticResource LocalizedStrings}}" />
                         </StackPanel>
                     </Button>
 
@@ -96,13 +96,13 @@
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
-                        <Border Height="1" VerticalAlignment="Center" Background="{DynamicResource BorderSoftBrush}" />
+                        <Border Height="1" VerticalAlignment="Center" Background="{DynamicResource BorderSubtleBrush}" />
                         <TextBlock x:Name="ProviderDividerText"
                                    Grid.Column="1"
                                    Margin="12,0"
-                                   Style="{StaticResource SectionLabelStyle}"
-                                   Text="OU USE SEU E-MAIL" />
-                        <Border Grid.Column="2" Height="1" VerticalAlignment="Center" Background="{DynamicResource BorderSoftBrush}" />
+                                   Style="{StaticResource OverlineText}"
+                                   Text="{Binding [Account.Provider.DividerSignIn], Source={StaticResource LocalizedStrings}}" />
+                        <Border Grid.Column="2" Height="1" VerticalAlignment="Center" Background="{DynamicResource BorderSubtleBrush}" />
                     </Grid>
                 </StackPanel>
 
@@ -110,7 +110,7 @@
                 <StackPanel x:Name="AuthenticationPanel">
 
                     <StackPanel x:Name="ProfileFieldsPanel" Visibility="Collapsed">
-                        <TextBlock Style="{StaticResource SectionLabelStyle}" Margin="0,0,0,10" Text="QUEM É VOCÊ" />
+                        <TextBlock Style="{StaticResource OverlineText}" Margin="0,0,0,10" Text="{Binding [Account.Profile.SectionLabel], Source={StaticResource LocalizedStrings}}" />
 
                         <Grid>
                             <Grid.ColumnDefinitions>
@@ -119,30 +119,30 @@
                                 <ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
                             <StackPanel Grid.Column="0">
-                                <TextBlock Style="{StaticResource FormLabelStyle}" Text="Nome" />
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{Binding [Account.Profile.FirstNameLabel], Source={StaticResource LocalizedStrings}}" />
                                 <TextBox x:Name="FirstNameBox"
-                                         Style="{StaticResource AccountFieldStyle}"
+                                         Style="{StaticResource FormTextBoxStyle}"
                                          MaxLength="60"
-                                         AutomationProperties.Name="Nome" />
+                                         AutomationProperties.Name="{Binding [Account.Profile.FirstNameLabel], Source={StaticResource LocalizedStrings}}" />
                             </StackPanel>
                             <StackPanel Grid.Column="2">
-                                <TextBlock Style="{StaticResource FormLabelStyle}" Text="Sobrenome" />
+                                <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{Binding [Account.Profile.LastNameLabel], Source={StaticResource LocalizedStrings}}" />
                                 <TextBox x:Name="LastNameBox"
-                                         Style="{StaticResource AccountFieldStyle}"
+                                         Style="{StaticResource FormTextBoxStyle}"
                                          MaxLength="60"
-                                         AutomationProperties.Name="Sobrenome" />
+                                         AutomationProperties.Name="{Binding [Account.Profile.LastNameLabel], Source={StaticResource LocalizedStrings}}" />
                             </StackPanel>
                         </Grid>
 
-                        <TextBlock Style="{StaticResource FormLabelStyle}" Margin="0,16,0,6" Text="Nome de usuário" />
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,16,0,6" Text="{Binding [Account.Profile.UsernameLabel], Source={StaticResource LocalizedStrings}}" />
                         <TextBox x:Name="UsernameBox"
-                                 Style="{StaticResource AccountFieldStyle}"
+                                 Style="{StaticResource FormTextBoxStyle}"
                                  MaxLength="24"
                                  TextChanged="Username_TextChanged"
-                                 AutomationProperties.Name="Nome de usuário" />
+                                 AutomationProperties.Name="{Binding [Account.Profile.UsernameLabel], Source={StaticResource LocalizedStrings}}" />
                         <TextBlock x:Name="UsernameHintText"
-                                   Style="{StaticResource FormHintStyle}"
-                                   Text="3 a 24 caracteres. Comece com uma letra e use apenas letras, números e “_”." />
+                                   Style="{StaticResource CaptionText}"
+                                   Text="{Binding [Account.Profile.UsernameHint], Source={StaticResource LocalizedStrings}}" />
                         <StackPanel x:Name="UsernameStatusPanel"
                                     Orientation="Horizontal"
                                     Margin="1,6,0,0"
@@ -159,48 +159,47 @@
                                        AutomationProperties.LiveSetting="Polite" />
                         </StackPanel>
 
-                        <Border Height="1" Margin="0,20,0,20" Background="{DynamicResource BorderSoftBrush}" />
+                        <Border Height="1" Margin="0,20,0,20" Background="{DynamicResource BorderSubtleBrush}" />
                     </StackPanel>
 
                     <StackPanel x:Name="CredentialFieldsPanel">
                         <TextBlock x:Name="CredentialsSectionLabel"
-                                   Style="{StaticResource SectionLabelStyle}"
+                                   Style="{StaticResource OverlineText}"
                                    Margin="0,0,0,10"
                                    Visibility="Collapsed"
-                                   Text="DADOS DE ACESSO" />
+                                   Text="{Binding [Account.Credentials.SectionLabel], Source={StaticResource LocalizedStrings}}" />
 
-                        <TextBlock Style="{StaticResource FormLabelStyle}" Text="E-mail" />
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Text="{Binding [Account.Credentials.EmailLabel], Source={StaticResource LocalizedStrings}}" />
                         <TextBox x:Name="EmailBox"
-                                 Style="{StaticResource AccountFieldStyle}"
+                                 Style="{StaticResource FormTextBoxStyle}"
                                  MaxLength="254"
-                                 AutomationProperties.Name="E-mail" />
+                                 AutomationProperties.Name="{Binding [Account.Credentials.EmailLabel], Source={StaticResource LocalizedStrings}}" />
 
-                        <TextBlock Style="{StaticResource FormLabelStyle}" Margin="0,16,0,6" Text="Senha" />
+                        <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,16,0,6" Text="{Binding [Account.Credentials.PasswordLabel], Source={StaticResource LocalizedStrings}}" />
                         <controls:RevealPasswordBox x:Name="PasswordField"
                                                     MaxLength="128"
-                                                    Placeholder="Sua senha"
+                                                    Placeholder="{Binding [Account.Credentials.PasswordPlaceholder], Source={StaticResource LocalizedStrings}}"
                                                     PasswordChanged="Password_Changed"
-                                                    AutomationProperties.Name="Senha" />
+                                                    AutomationProperties.Name="{Binding [Account.Credentials.PasswordLabel], Source={StaticResource LocalizedStrings}}" />
                         <StackPanel x:Name="PasswordPolicyPanel" Visibility="Collapsed" Margin="1,7,0,0">
                             <ProgressBar x:Name="PasswordStrengthBar"
                                          Height="4"
                                          Minimum="0"
                                          Maximum="12"
                                          Value="0"
-                                         Foreground="{DynamicResource RedBrush}" />
+                                         Foreground="{DynamicResource DangerBaseBrush}" />
                             <TextBlock x:Name="PasswordPolicyText"
-                                       Style="{StaticResource FormHintStyle}"
-                                       Margin="0,6,0,0"
-                                       Text="Use pelo menos 12 caracteres." />
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="0,6,0,0" />
                         </StackPanel>
 
                         <StackPanel x:Name="ConfirmPanel" Visibility="Collapsed">
-                            <TextBlock Style="{StaticResource FormLabelStyle}" Margin="0,16,0,6" Text="Repetir senha" />
+                            <TextBlock Style="{StaticResource FieldLabelStyle}" Margin="0,16,0,6" Text="{Binding [Account.Credentials.ConfirmPasswordLabel], Source={StaticResource LocalizedStrings}}" />
                             <controls:RevealPasswordBox x:Name="ConfirmPasswordField"
                                                         MaxLength="128"
-                                                        Placeholder="Digite a senha novamente"
+                                                        Placeholder="{Binding [Account.Credentials.ConfirmPasswordPlaceholder], Source={StaticResource LocalizedStrings}}"
                                                         PasswordChanged="Password_Changed"
-                                                        AutomationProperties.Name="Repetir senha" />
+                                                        AutomationProperties.Name="{Binding [Account.Credentials.ConfirmPasswordLabel], Source={StaticResource LocalizedStrings}}" />
                             <StackPanel x:Name="ConfirmStatusPanel"
                                         Orientation="Horizontal"
                                         Margin="1,6,0,0"
@@ -225,7 +224,7 @@
                             </Grid.ColumnDefinitions>
                             <CheckBox x:Name="KeepSignedInBox"
                                       Style="{StaticResource FormCheckBoxStyle}"
-                                      Content="Manter conectado neste computador"
+                                      Content="{Binding [Account.Options.KeepSignedIn], Source={StaticResource LocalizedStrings}}"
                                       IsChecked="True" />
                             <!--
                                 "Esqueci minha senha" nasce oculto: só faz
@@ -238,7 +237,7 @@
                                     Visibility="Collapsed"
                                     Style="{StaticResource LinkButtonStyle}"
                                     FontSize="11.5"
-                                    Content="Esqueci minha senha"
+                                    Content="{Binding [Account.Actions.ForgotPassword], Source={StaticResource LocalizedStrings}}"
                                     Click="ResetPassword_Click" />
                         </Grid>
                     </StackPanel>
@@ -246,35 +245,35 @@
                     <StackPanel x:Name="TermsPanel" Visibility="Collapsed" Margin="0,14,0,0">
                         <CheckBox x:Name="TermsCheckBox" Style="{StaticResource FormCheckBoxStyle}">
                             <TextBlock TextWrapping="Wrap" FontSize="11.5">
-                                Li e concordo com os <Run Text="Termos de Uso" FontWeight="SemiBold" />
+                                <Run Text="{Binding [Account.Terms.AgreementPrefix], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /> <Run Text="{Binding [Account.Terms.TermsOfUseLink], Source={StaticResource LocalizedStrings}, Mode=OneWay}" FontWeight="SemiBold" />
                             </TextBlock>
                         </CheckBox>
                         <Button Margin="28,4,0,0"
                                 HorizontalAlignment="Left"
                                 Style="{StaticResource LinkButtonStyle}"
                                 FontSize="11"
-                                Content="Ler os Termos de Uso"
+                                Content="{Binding [Account.Terms.ReadLink], Source={StaticResource LocalizedStrings}}"
                                 Click="Terms_Click" />
                     </StackPanel>
                 </StackPanel>
 
                 <!-- ==================== Verificação de e-mail ==================== -->
                 <StackPanel x:Name="VerificationPanel" Visibility="Collapsed">
-                    <Border Style="{StaticResource CardStyle}">
+                    <Border Style="{StaticResource PanelSurface}">
                         <StackPanel>
                             <TextBlock x:Name="VerificationDetailText"
                                        FontSize="12"
                                        TextWrapping="Wrap"
-                                       Foreground="{DynamicResource TextMutedBrush}" />
+                                       Foreground="{DynamicResource TextSecondaryBrush}" />
                             <Button x:Name="ResendVerificationButton"
                                     Margin="0,16,0,0"
                                     Style="{StaticResource SecondaryButtonStyle}"
-                                    Content="Reenviar e-mail de verificação"
+                                    Content="{Binding [Account.Verification.Resend], Source={StaticResource LocalizedStrings}}"
                                     Click="ResendVerification_Click" />
                             <Button x:Name="RefreshVerificationButton"
                                     Margin="0,9,0,0"
                                     Style="{StaticResource SecondaryButtonStyle}"
-                                    Content="Já confirmei, verificar agora"
+                                    Content="{Binding [Account.Verification.Refresh], Source={StaticResource LocalizedStrings}}"
                                     Click="RefreshVerification_Click" />
                         </StackPanel>
                     </Border>
@@ -285,7 +284,7 @@
                         Visibility="Collapsed"
                         Margin="0,18,0,0"
                         Padding="13,11"
-                        CornerRadius="9"
+                        CornerRadius="{StaticResource RadiusMd}"
                         BorderThickness="1">
                     <StackPanel Orientation="Horizontal">
                         <Path x:Name="StatusIcon"
@@ -308,13 +307,13 @@
         <!-- ==================== Ações principais ==================== -->
         <Border Grid.Row="3"
                 Padding="30,16,30,22"
-                Background="{DynamicResource ChromeBrush}"
-                BorderBrush="{DynamicResource BorderSoftBrush}"
+                Background="{DynamicResource SurfaceRailBrush}"
+                BorderBrush="{DynamicResource BorderSubtleBrush}"
                 BorderThickness="0,1,0,0">
             <StackPanel>
                 <Button x:Name="SubmitButton"
                         Style="{StaticResource PrimaryButtonStyle}"
-                        Content="Entrar"
+                        Content="{Binding [Account.Actions.SignIn], Source={StaticResource LocalizedStrings}}"
                         Click="Submit_Click"
                         IsDefault="True" />
                 <Button x:Name="SwitchButton"
@@ -322,13 +321,13 @@
                         HorizontalAlignment="Center"
                         Style="{StaticResource LinkButtonStyle}"
                         FontSize="12"
-                        Content="Ainda não tem conta? Criar conta"
+                        Content="{Binding [Account.Switch.ToRegister], Source={StaticResource LocalizedStrings}}"
                         Click="Switch_Click" />
                 <Button x:Name="LogoutButton"
                         Visibility="Collapsed"
                         Margin="0,10,0,0"
                         Style="{StaticResource SecondaryButtonStyle}"
-                        Content="Sair da conta"
+                        Content="{Binding [Account.Actions.SignOut], Source={StaticResource LocalizedStrings}}"
                         Click="Logout_Click" />
             </StackPanel>
         </Border>

@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <TargetFramework>$(FiveMCleanerWindowsTargetFramework)</TargetFramework>
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <RootNamespace>FiveMCleaner.App</RootNamespace>
@@ -21,9 +21,9 @@
     <AssemblyName>FiveMCleaner</AssemblyName>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Management" Version="10.0.0" />
-    <PackageReference Include="Sentry" Version="6.7.0" />
-    <PackageReference Include="WPF-UI" Version="4.3.0" />
+    <PackageReference Include="System.Management" />
+    <PackageReference Include="Sentry" />
+    <PackageReference Include="WPF-UI" />
     <ProjectReference Include="../FiveMCleaner.Contracts/FiveMCleaner.Contracts.csproj" />
     <ProjectReference Include="../FiveMCleaner.Core/FiveMCleaner.Core.csproj" />
     <ProjectReference Include="../FiveMCleaner.Windows/FiveMCleaner.Windows.csproj" />
@@ -49,8 +49,19 @@
     </Content>
   </ItemGroup>
   <Target Name="CopyBroker" AfterTargets="Build">
+    <MSBuild
+      Projects="../FiveMCleaner.Broker/FiveMCleaner.Broker.csproj"
+      Targets="GetBrokerOutputDirectory"
+      BuildInParallel="$(BuildInParallel)"
+      Properties="Configuration=$(Configuration);TargetFramework=$(TargetFramework)">
+      <Output TaskParameter="TargetOutputs" ItemName="_BrokerOutputDirectory" />
+    </MSBuild>
+    <Error Condition="'@(_BrokerOutputDirectory)' == ''" Text="Unable to resolve the FiveMCleaner.Broker build output." />
+    <PropertyGroup>
+      <_BrokerOutputDirectoryPath>@(_BrokerOutputDirectory)</_BrokerOutputDirectoryPath>
+    </PropertyGroup>
     <ItemGroup>
-      <BrokerFiles Include="$(MSBuildThisFileDirectory)..\FiveMCleaner.Broker\bin\$(Configuration)\net10.0-windows10.0.19041.0\**\*" />
+      <BrokerFiles Include="$(_BrokerOutputDirectoryPath)**\*" />
     </ItemGroup>
     <Copy SourceFiles="@(BrokerFiles)" DestinationFiles="@(BrokerFiles->'$(OutDir)broker\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>

@@ -98,11 +98,6 @@ public sealed class GitHubReleaseUpdateService : IReleaseUpdateService, IDisposa
         CancellationToken cancellationToken = default) =>
         CheckForUpdateAsync(StableSemanticVersion.Parse(currentVersion), cancellationToken);
 
-    public Task<ReleaseUpdate?> CheckForUpdateAsync(
-        Version currentVersion,
-        CancellationToken cancellationToken = default) =>
-        CheckForUpdateAsync(StableSemanticVersion.FromVersion(currentVersion), cancellationToken);
-
     public async Task<ReleaseUpdate?> CheckForUpdateAsync(
         StableSemanticVersion currentVersion,
         CancellationToken cancellationToken = default)

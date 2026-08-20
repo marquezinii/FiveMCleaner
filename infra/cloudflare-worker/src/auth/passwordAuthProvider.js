@@ -12,8 +12,10 @@
 
 import { hashIp, verifyPassword } from './crypto.js';
 import {
+  FAILURE_WINDOW_MS,
+  LOCKOUT_DURATION_MS,
+  MAX_FAILED_ATTEMPTS,
   isLockedOut,
-  nextStateAfterFailure,
   stateAfterSuccess,
 } from './bruteForceGuard.js';
 import {
@@ -28,6 +30,13 @@ import { readBoundedJson } from '../requestSecurity.js';
 
 const MAX_LOGIN_BODY_BYTES = 4 * 1024;
 const MAX_PASSWORD_CHARACTERS = 1024;
+
+function jsonResponse(body, status, extraHeaders = {}) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json', ...extraHeaders },
+  });
+}
 
 function clientIp(request) {
   // Cloudflare always sets this header at the edge; it cannot be spoofed by
@@ -59,6 +68,44 @@ async function saveLoginAttempt(db, ipHash, row) {
     )
     .bind(ipHash, row.failed_count, row.first_failed_at, row.locked_until)
     .run();
+}
+
+export function buildFailedLoginMutation(ipHash, now) {
+  const nowIso = now.toISOString();
+  const windowStartIso = new Date(now.getTime() - FAILURE_WINDOW_MS).toISOString();
+  const lockoutUntilIso = new Date(now.getTime() + LOCKOUT_DURATION_MS).toISOString();
+  return {
+    sql: `INSERT INTO login_attempts (ip_hash, failed_count, first_failed_at, locked_until)
+          VALUES (?, 1, ?, NULL)
+          ON CONFLICT(ip_hash) DO UPDATE SET
+            failed_count = CASE
+              WHEN login_attempts.first_failed_at < ? THEN 1
+              ELSE login_attempts.failed_count + 1
+            END,
+            first_failed_at = CASE
+              WHEN login_attempts.first_failed_at < ? THEN excluded.first_failed_at
+              ELSE login_attempts.first_failed_at
+            END,
+            locked_until = CASE
+              WHEN login_attempts.first_failed_at < ? THEN NULL
+              WHEN login_attempts.failed_count + 1 >= ? THEN ?
+              ELSE NULL
+            END`,
+    bindings: [
+      ipHash,
+      nowIso,
+      windowStartIso,
+      windowStartIso,
+      windowStartIso,
+      MAX_FAILED_ATTEMPTS,
+      lockoutUntilIso,
+    ],
+  };
+}
+
+async function recordFailedLoginAttempt(db, ipHash, now) {
+  const mutation = buildFailedLoginMutation(ipHash, now);
+  await db.prepare(mutation.sql).bind(...mutation.bindings).run();
 }
 
 async function getSession(db, id) {
@@ -96,56 +143,29 @@ export function createPasswordAuthProvider(env, now = () => new Date()) {
 
       const attemptRow = await getLoginAttempt(db, ipHash);
       if (isLockedOut(attemptRow, nowValue)) {
-        return new Response(
-          JSON.stringify({ error: 'too-many-attempts' }),
-          { status: 429, headers: { 'Content-Type': 'application/json' } },
-        );
+        return jsonResponse({ error: 'too-many-attempts' }, 429);
       }
 
       const body = await readBoundedJson(request, MAX_LOGIN_BODY_BYTES);
       const password = body?.password;
       if (body === null) {
-        return new Response(
-          JSON.stringify({ error: 'invalid-request' }),
-          { status: 400, headers: { 'Content-Type': 'application/json' } },
-        );
+        return jsonResponse({ error: 'invalid-request' }, 400);
       }
 
       const isValid = typeof password === 'string'
         && password.length <= MAX_PASSWORD_CHARACTERS
         && (await verifyPassword(password, env.ADMIN_PASSWORD_HASH));
       if (!isValid) {
-        // Atomic increment instead of read-modify-write to close the
-        // race window where concurrent requests from the same IP could
-        // each see the old failed_count and bypass the lockout.
-        const next = nextStateAfterFailure(attemptRow, nowValue);
-        await db
-          .prepare(
-            `INSERT INTO login_attempts (ip_hash, failed_count, first_failed_at, locked_until)
-             VALUES (?, ?, ?, ?)
-             ON CONFLICT(ip_hash) DO UPDATE SET
-               failed_count = excluded.failed_count,
-               first_failed_at = excluded.first_failed_at,
-               locked_until = excluded.locked_until`,
-          )
-          .bind(ipHash, next.failed_count, next.first_failed_at, next.locked_until)
-          .run();
-        return new Response(
-          JSON.stringify({ error: 'invalid-credentials' }),
-          { status: 401, headers: { 'Content-Type': 'application/json' } },
-        );
+        await recordFailedLoginAttempt(db, ipHash, nowValue);
+        return jsonResponse({ error: 'invalid-credentials' }, 401);
       }
 
       await saveLoginAttempt(db, ipHash, stateAfterSuccess());
       const session = createSessionRow(nowValue);
       await saveSession(db, session);
 
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Set-Cookie': buildSessionCookie(session.id, session.expires_at),
-        },
+      return jsonResponse({ success: true }, 200, {
+        'Set-Cookie': buildSessionCookie(session.id, session.expires_at),
       });
     },
 
@@ -155,12 +175,8 @@ export function createPasswordAuthProvider(env, now = () => new Date()) {
         await revokeSession(db, sessionId, now());
       }
 
-      return new Response(JSON.stringify({ success: true }), {
-        status: 200,
-        headers: {
-          'Content-Type': 'application/json',
-          'Set-Cookie': buildExpiredSessionCookie(),
-        },
+      return jsonResponse({ success: true }, 200, {
+        'Set-Cookie': buildExpiredSessionCookie(),
       });
     },
 
@@ -175,13 +191,7 @@ export function createPasswordAuthProvider(env, now = () => new Date()) {
       const session = sessionId ? await getSession(db, sessionId) : null;
 
       if (!isSessionValid(session, now())) {
-        return {
-          authorized: false,
-          response: new Response(
-            JSON.stringify({ error: 'unauthorized' }),
-            { status: 401, headers: { 'Content-Type': 'application/json' } },
-          ),
-        };
+        return { authorized: false, response: jsonResponse({ error: 'unauthorized' }, 401) };
       }
 
       return { authorized: true };

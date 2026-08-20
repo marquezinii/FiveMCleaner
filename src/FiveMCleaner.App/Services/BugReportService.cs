@@ -1,10 +1,18 @@
+using FiveMCleaner.Contracts;
+
 namespace FiveMCleaner.App.Services;
 
 public sealed record BugReportSubmission
 {
+    /// <summary>Maximum size of the optional log text in bytes (100 KB).</summary>
+    public const int MaxLogTextBytes = 100 * 1024;
+
     public required Guid ReportId { get; init; }
 
     public required string Category { get; init; }
+
+    /// <summary>Stable bug classification code for tracking and dashboard grouping.</summary>
+    public required BugCode BugCode { get; init; }
 
     public required string Summary { get; init; }
 
@@ -20,8 +28,9 @@ public sealed record BugReportSubmission
     public string? Email { get; init; }
 
     /// <summary>
-    /// Optional plain-text log excerpt, capped at 100 KB (validated both by
-    /// the caller and again by <see cref="CloudflareBugReportService"/>).
+    /// Optional plain-text log excerpt, capped at <see cref="MaxLogTextBytes"/>
+    /// (validated both by the caller and again by
+    /// <see cref="CloudflareBugReportService"/>).
     /// </summary>
     public string? LogText { get; init; }
 }
@@ -37,9 +46,8 @@ public interface IBugReportService
 
 /// <summary>
 /// Used when <see cref="RemoteServicesOptions.BugReportEndpoint"/> is
-/// missing or malformed (e.g. before the Worker's <c>/bugs</c> route has
-/// been deployed) — reports a clear, honest failure instead of crashing or
-/// silently pretending to send. There is no FormSubmit fallback anymore.
+/// missing or malformed — reports a clear, honest failure instead of
+/// crashing or silently pretending to send.
 /// </summary>
 public sealed class DisabledBugReportService : IBugReportService
 {

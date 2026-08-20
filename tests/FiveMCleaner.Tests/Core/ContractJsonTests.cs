@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using FiveMCleaner.Contracts;
 using FiveMCleaner.Core.Planning;
 using Xunit;
@@ -33,11 +34,13 @@ public sealed class ContractJsonTests
     [Fact]
     public void Plan_RoundTripsWithActionMetadata()
     {
-        var original = new PlanBuilder().Build(new OptimizationPlanRequestDto
-        {
-            Profile = OptimizationProfile.Aggressive,
-            Edition = FiveMEdition.Legacy
-        });
+        var original = PlanBuilder.Build(
+            new OptimizationPlanRequestDto
+            {
+                Profile = OptimizationProfile.Aggressive,
+                Edition = FiveMEdition.Legacy
+            },
+            PlanBuildContext.New(TimeProvider.System));
 
         var json = FiveMCleanerJson.SerializePlan(original);
         var restored = FiveMCleanerJson.DeserializePlan(json);
@@ -52,6 +55,35 @@ public sealed class ContractJsonTests
         Assert.Equal(
             original.Actions.Select(action => action.Metadata.Id),
             restored.Actions.Select(action => action.Metadata.Id));
+        Assert.NotEmpty(original.Notices);
+        Assert.Equal(original.Notices, restored.Notices);
+        Assert.Equal(original.Options, restored.Options);
+    }
+
+    [Fact]
+    public void Plan_RoundTripsBlocksOfANonExecutablePlan()
+    {
+        var original = PlanBuilder.Build(
+            new OptimizationPlanRequestDto
+            {
+                Profile = OptimizationProfile.Light,
+                Edition = FiveMEdition.Enhanced
+            },
+            PlanBuildContext.New(TimeProvider.System));
+
+        var restored = FiveMCleanerJson.DeserializePlan(FiveMCleanerJson.SerializePlan(original));
+
+        Assert.False(restored.IsExecutable);
+        Assert.NotEmpty(original.Blocks);
+        Assert.Equal(original.Blocks, restored.Blocks);
+    }
+
+    [Fact]
+    public void SharedOptions_CannotBeMutatedByConsumers()
+    {
+        Assert.True(FiveMCleanerJson.Options.IsReadOnly);
+        Assert.Throws<InvalidOperationException>(() =>
+            FiveMCleanerJson.Options.Converters.Add(new JsonStringEnumConverter()));
     }
 
     [Fact]

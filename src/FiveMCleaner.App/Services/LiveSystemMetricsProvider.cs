@@ -1,7 +1,3 @@
-using System.ComponentModel;
-using System.Diagnostics;
-using System.Net.NetworkInformation;
-using System.Threading.Tasks;
 using FiveMCleaner.Windows.Infrastructure;
 
 namespace FiveMCleaner.App.Services;
@@ -25,25 +21,17 @@ public interface ILiveSystemMetricsProvider
 
 public sealed class WindowsLiveSystemMetricsProvider : ILiveSystemMetricsProvider, IDisposable
 {
-    private readonly object sync = new();
     private readonly ISystemResourceInspector systemInspector = new WindowsSystemResourceInspector();
     private readonly IResourceUsageInspector resourceInspector = new WindowsResourceUsageInspector();
-    private bool disposed;
 
     public Task<LiveSystemMetricsSnapshot> CaptureAsync(CancellationToken cancellationToken = default) =>
         Task.Run(() => Capture(cancellationToken), cancellationToken);
 
     private LiveSystemMetricsSnapshot Capture(CancellationToken cancellationToken)
     {
-        lock (sync)
-        {
-            ObjectDisposedException.ThrowIf(disposed, this);
-            cancellationToken.ThrowIfCancellationRequested();
-
-            // Use the unified resource inspector which now runs all measurements concurrently
-            var usage = resourceInspector.GetSnapshot();
-            return CreateSnapshot(usage, systemInspector.GetSnapshot(), DateTimeOffset.UtcNow);
-        }
+        cancellationToken.ThrowIfCancellationRequested();
+        var usage = resourceInspector.GetSnapshot();
+        return CreateSnapshot(usage, systemInspector.GetSnapshot(), DateTimeOffset.UtcNow);
     }
 
     internal static LiveSystemMetricsSnapshot CreateSnapshot(
@@ -76,15 +64,6 @@ public sealed class WindowsLiveSystemMetricsProvider : ILiveSystemMetricsProvide
 
     public void Dispose()
     {
-        lock (sync)
-        {
-            if (disposed)
-            {
-                return;
-            }
-
-            disposed = true;
-            // No PerformanceCounter instances to dispose since we use the unified inspector
-        }
+        // No unmanaged resources to release; kept for interface compatibility.
     }
 }

@@ -10,7 +10,10 @@ public sealed class PowerCfgControllerTests
     public async Task Controller_AlwaysUsesAbsoluteSystem32Executable()
     {
         var scheme = Guid.NewGuid();
-        var runner = new CapturingRunner(scheme);
+        var runner = new StubRunner(_ => new CommandResult(
+            0,
+            $"Power Scheme GUID: {scheme:D} (Balanced)",
+            string.Empty));
         var controller = new PowerCfgController(runner);
 
         var actual = await controller.GetActiveSchemeAsync(CancellationToken.None);
@@ -25,7 +28,7 @@ public sealed class PowerCfgControllerTests
     [Fact]
     public async Task GetPciExpressAspmPolicyAsync_ReturnsNullWhenActiveSchemeLookupFails()
     {
-        var runner = new ScriptedRunner(_ => new CommandResult(1, string.Empty, "error"));
+        var runner = new StubRunner(_ => new CommandResult(1, string.Empty, "error"));
         var controller = new PowerCfgController(runner);
 
         var value = await controller.GetPciExpressAspmPolicyAsync(CancellationToken.None);
@@ -37,7 +40,10 @@ public sealed class PowerCfgControllerTests
     public async Task GetPciExpressAspmPolicyAsync_ReturnsNullOrValidValueFromNativeApi()
     {
         var scheme = Guid.NewGuid();
-        var runner = new CapturingRunner(scheme);
+        var runner = new StubRunner(_ => new CommandResult(
+            0,
+            $"Power Scheme GUID: {scheme:D} (Balanced)",
+            string.Empty));
         var controller = new PowerCfgController(runner);
 
         var value = await controller.GetPciExpressAspmPolicyAsync(CancellationToken.None);
@@ -52,7 +58,7 @@ public sealed class PowerCfgControllerTests
     public async Task TrySetPciExpressAspmPolicyAsync_SetsBothAcAndDcThenAppliesTheScheme()
     {
         var calls = new List<IReadOnlyList<string>>();
-        var runner = new ScriptedRunner(arguments =>
+        var runner = new StubRunner(arguments =>
         {
             calls.Add(arguments);
             return new CommandResult(0, string.Empty, string.Empty);
@@ -71,7 +77,7 @@ public sealed class PowerCfgControllerTests
     [Fact]
     public async Task TrySetPciExpressAspmPolicyAsync_ReturnsFalseWhenPowercfgFails()
     {
-        var runner = new ScriptedRunner(_ => new CommandResult(1, string.Empty, "denied"));
+        var runner = new StubRunner(_ => new CommandResult(1, string.Empty, "denied"));
         var controller = new PowerCfgController(runner);
 
         var succeeded = await controller.TrySetPciExpressAspmPolicyAsync(0, CancellationToken.None);
@@ -82,22 +88,16 @@ public sealed class PowerCfgControllerTests
     [Fact]
     public async Task TrySetPciExpressAspmPolicyAsync_RejectsOutOfRangeValues()
     {
-        var runner = new ScriptedRunner(_ => new CommandResult(0, string.Empty, string.Empty));
+        var runner = new StubRunner(_ => new CommandResult(0, string.Empty, string.Empty));
         var controller = new PowerCfgController(runner);
 
         await Assert.ThrowsAsync<ArgumentOutOfRangeException>(
             () => controller.TrySetPciExpressAspmPolicyAsync(3, CancellationToken.None));
     }
 
-    private sealed class CapturingRunner : ICommandRunner
+    private sealed class StubRunner(
+        Func<IReadOnlyList<string>, CommandResult> respond) : ICommandRunner
     {
-        private readonly Guid scheme;
-
-        public CapturingRunner(Guid scheme)
-        {
-            this.scheme = scheme;
-        }
-
         public string Executable { get; private set; } = string.Empty;
 
         public Task<CommandResult> RunAsync(
@@ -107,28 +107,6 @@ public sealed class PowerCfgControllerTests
             CancellationToken cancellationToken)
         {
             Executable = executable;
-            return Task.FromResult(new CommandResult(
-                0,
-                $"Power Scheme GUID: {scheme:D} (Balanced)",
-                string.Empty));
-        }
-    }
-
-    private sealed class ScriptedRunner : ICommandRunner
-    {
-        private readonly Func<IReadOnlyList<string>, CommandResult> respond;
-
-        public ScriptedRunner(Func<IReadOnlyList<string>, CommandResult> respond)
-        {
-            this.respond = respond;
-        }
-
-        public Task<CommandResult> RunAsync(
-            string executable,
-            IReadOnlyList<string> arguments,
-            TimeSpan timeout,
-            CancellationToken cancellationToken)
-        {
             return Task.FromResult(respond(arguments));
         }
     }

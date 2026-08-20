@@ -11,15 +11,25 @@ export const FIREBASE_JWKS_URL =
 
 const DEFAULT_CLOCK_SKEW_SECONDS = 60;
 const DEFAULT_JWKS_TTL_MS = 60 * 60 * 1000;
+const JWKS_REFRESH_COOLDOWN_MS = 30 * 1000;
+const UNKNOWN_KID_TTL_MS = 60 * 1000;
+const MAX_NEGATIVE_KIDS = 128;
 const MAX_TOKEN_CHARS = 16 * 1024;
 
 const textEncoder = new TextEncoder();
 
-/** @type {{ url: string, expiresAt: number, keys: Map<string, JsonWebKey> } | null} */
-let defaultJwksCache = null;
+const defaultJwksState = {
+  current: null,
+  refreshPromise: null,
+  lastRefreshAt: 0,
+  unknownKids: new Map(),
+};
 
 export function clearFirebaseJwksCache() {
-  defaultJwksCache = null;
+  defaultJwksState.current = null;
+  defaultJwksState.refreshPromise = null;
+  defaultJwksState.lastRefreshAt = 0;
+  defaultJwksState.unknownKids.clear();
 }
 
 function unauthorizedResponse() {
@@ -129,31 +139,64 @@ async function resolveJwk(kid, options) {
   const url = options.jwksUrl ?? FIREBASE_JWKS_URL;
   const fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
   const nowMs = options.nowMs ?? Date.now();
-  const cacheHolder = options.cacheHolder ?? { current: defaultJwksCache };
-  const setDefault = options.cacheHolder == null;
+  const cacheHolder = options.cacheHolder ?? defaultJwksState;
+  cacheHolder.refreshPromise ??= null;
+  cacheHolder.lastRefreshAt ??= 0;
+  cacheHolder.unknownKids ??= new Map();
 
   const cached = cacheHolder.current;
   if (cached && cached.url === url && cached.expiresAt > nowMs && cached.keys.has(kid)) {
     return cached.keys.get(kid);
   }
 
-  const fresh = await fetchJwks(url, fetchImpl);
-  const nextCache = {
-    url,
-    expiresAt: nowMs + fresh.ttlMs,
-    keys: fresh.keys,
-  };
-  cacheHolder.current = nextCache;
-  if (setDefault) {
-    defaultJwksCache = nextCache;
+  for (const [unknownKid, expiresAt] of cacheHolder.unknownKids) {
+    if (expiresAt <= nowMs) {
+      cacheHolder.unknownKids.delete(unknownKid);
+    }
   }
+  if ((cacheHolder.unknownKids.get(kid) ?? 0) > nowMs) {
+    throw new Error('unknown-kid');
+  }
+
+  const cacheIsFresh = cached && cached.url === url && cached.expiresAt > nowMs;
+  if (cacheIsFresh && nowMs - cacheHolder.lastRefreshAt < JWKS_REFRESH_COOLDOWN_MS) {
+    rememberUnknownKid(cacheHolder.unknownKids, kid, nowMs);
+    throw new Error('unknown-kid');
+  }
+
+  if (!cacheHolder.refreshPromise) {
+    cacheHolder.refreshPromise = fetchJwks(url, fetchImpl)
+      .then((fresh) => {
+        const nextCache = {
+          url,
+          expiresAt: nowMs + fresh.ttlMs,
+          keys: fresh.keys,
+        };
+        cacheHolder.current = nextCache;
+        cacheHolder.lastRefreshAt = nowMs;
+        return nextCache;
+      })
+      .finally(() => {
+        cacheHolder.refreshPromise = null;
+      });
+  }
+
+  const nextCache = await cacheHolder.refreshPromise;
 
   const jwk = nextCache.keys.get(kid);
   if (!jwk) {
+    rememberUnknownKid(cacheHolder.unknownKids, kid, nowMs);
     throw new Error('unknown-kid');
   }
 
   return jwk;
+}
+
+function rememberUnknownKid(unknownKids, kid, nowMs) {
+  if (unknownKids.size >= MAX_NEGATIVE_KIDS && !unknownKids.has(kid)) {
+    unknownKids.delete(unknownKids.keys().next().value);
+  }
+  unknownKids.set(kid, nowMs + UNKNOWN_KID_TTL_MS);
 }
 
 async function importVerifyKey(jwk) {
@@ -182,7 +225,7 @@ async function importVerifyKey(jwk) {
  *   fetch?: typeof fetch,
  *   nowMs?: number,
  *   clockSkewSeconds?: number,
- *   cacheHolder?: { current: typeof defaultJwksCache },
+ *   cacheHolder?: { current: object | null, refreshPromise?: Promise<object> | null, lastRefreshAt?: number, unknownKids?: Map<string, number> },
  * }} [options]
  * @returns {Promise<{ uid: string, payload: Record<string, unknown> }>}
  */

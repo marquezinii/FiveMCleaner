@@ -7,12 +7,7 @@ public sealed class OptimizationInterruptionUiTests
     [Fact]
     public void MainWindow_ConfirmsBeforeCancellingOrClosingAnActiveOptimization()
     {
-        var root = FindRepositoryRoot();
-        var source = File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "FiveMCleaner.App",
-            "MainWindow.xaml.cs"));
+        var source = TestHelpers.ReadMainWindowSource();
 
         Assert.Contains("ConfirmOptimizationInterruption(closeApplication: false)", source, StringComparison.Ordinal);
         Assert.Contains("ConfirmOptimizationInterruption(closeApplication: true)", source, StringComparison.Ordinal);
@@ -28,7 +23,9 @@ public sealed class OptimizationInterruptionUiTests
             root,
             "src",
             "FiveMCleaner.App",
-            "MainWindow.xaml"));
+            "Views",
+            "Pages",
+            "OptimizerPage.xaml"));
 
         Assert.Contains("Text=\"{Binding Name}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding Description}\"", source, StringComparison.Ordinal);

@@ -5,108 +5,6 @@ using FiveMCleaner.Windows.Infrastructure;
 
 namespace FiveMCleaner.Windows.Actions;
 
-/// <summary>
-/// Shared, best-effort text helpers for the small set of known FiveM crash
-/// codes and log keywords used by the read-only diagnostics below. These are
-/// heuristics over already-local text, never a memory dump analyzer.
-/// </summary>
-internal static class FiveMLogPatterns
-{
-    private const long MaxTailBytes = 512 * 1024;
-    private static readonly Regex CrashCodePattern = new(
-        @"0x[0-9A-Fa-f]{8}",
-        RegexOptions.Compiled);
-
-    private static readonly string[] StreamingKeywords =
-    [
-        "streaming", "ymap", "ytd", "ydr", "ybn", "resource start error", "failed to load"
-    ];
-
-    private static readonly string[] EntitlementFailureKeywords =
-    [
-        "entitlement", "ros_id", "social club", "authentication failed", "digitalentitlements"
-    ];
-
-    public static string? ReadLatestLogTail(string fiveMAppRoot)
-    {
-        var logsDirectory = Path.Combine(fiveMAppRoot, "logs");
-        if (!Directory.Exists(logsDirectory))
-        {
-            return null;
-        }
-
-        FileInfo? latest;
-        try
-        {
-            latest = new DirectoryInfo(logsDirectory)
-                .EnumerateFiles("*", SearchOption.TopDirectoryOnly)
-                .OrderByDescending(file => file.LastWriteTimeUtc)
-                .FirstOrDefault();
-        }
-        catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
-        {
-            return null;
-        }
-
-        if (latest is null)
-        {
-            return null;
-        }
-
-        try
-        {
-            using var stream = new FileStream(
-                latest.FullName,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite | FileShare.Delete);
-            if (stream.Length > MaxTailBytes)
-            {
-                stream.Seek(-MaxTailBytes, SeekOrigin.End);
-            }
-
-            using var reader = new StreamReader(stream);
-            return reader.ReadToEnd();
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            return null;
-        }
-    }
-
-    public static IReadOnlyDictionary<string, int> CountRecurringCrashCodes(
-        IEnumerable<string> dumpFileNames)
-    {
-        var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        foreach (var fileName in dumpFileNames)
-        {
-            foreach (Match match in CrashCodePattern.Matches(fileName))
-            {
-                counts[match.Value] = counts.GetValueOrDefault(match.Value) + 1;
-            }
-        }
-
-        return counts
-            .Where(pair => pair.Value >= 2)
-            .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
-    }
-
-    public static IReadOnlyList<string> FindStreamingErrorKeywords(string logTail)
-    {
-        return StreamingKeywords
-            .Where(keyword => logTail.Contains(keyword, StringComparison.OrdinalIgnoreCase))
-            .ToArray();
-    }
-
-    public static bool ContainsEntitlementFailurePattern(string logTail)
-    {
-        return EntitlementFailureKeywords.Any(
-            keyword => logTail.Contains(keyword, StringComparison.OrdinalIgnoreCase))
-            && (logTail.Contains("error", StringComparison.OrdinalIgnoreCase)
-                || logTail.Contains("fail", StringComparison.OrdinalIgnoreCase));
-    }
-}
-
 public sealed class CacheStorageDiagnosisAction : WindowsOptimizationAction
 {
     private const int MaxLockCheckPerScope = 200;
@@ -388,9 +286,75 @@ public sealed class InstallationHealthDiagnosisAction : WindowsOptimizationActio
     }
 }
 
+/// <summary>
+/// Reads the tail of the FiveM installation's most recent log file, shared by
+/// the actions that look for crash/entitlement error patterns without a full
+/// parse. Bounded to <see cref="MaxTailBytes"/> so a huge log never gets read
+/// in full.
+/// </summary>
+internal static class FiveMLogTailReader
+{
+    private const long MaxTailBytes = 512 * 1024;
+
+    public static string? ReadLatest(string fiveMAppRoot)
+    {
+        var logsDirectory = Path.Combine(fiveMAppRoot, "logs");
+        if (!Directory.Exists(logsDirectory))
+        {
+            return null;
+        }
+
+        FileInfo? latest;
+        try
+        {
+            latest = new DirectoryInfo(logsDirectory)
+                .EnumerateFiles("*", SearchOption.TopDirectoryOnly)
+                .OrderByDescending(file => file.LastWriteTimeUtc)
+                .FirstOrDefault();
+        }
+        catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
+        {
+            return null;
+        }
+
+        if (latest is null)
+        {
+            return null;
+        }
+
+        try
+        {
+            using var stream = new FileStream(
+                latest.FullName,
+                FileMode.Open,
+                FileAccess.Read,
+                FileShare.ReadWrite | FileShare.Delete);
+            if (stream.Length > MaxTailBytes)
+            {
+                stream.Seek(-MaxTailBytes, SeekOrigin.End);
+            }
+
+            using var reader = new StreamReader(stream);
+            return reader.ReadToEnd();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return null;
+        }
+    }
+}
+
 public sealed class CrashPatternDiagnosisAction : WindowsOptimizationAction
 {
     private readonly string fiveMAppRoot;
+    private static readonly Regex CrashCodePattern = new(
+        @"0x[0-9A-Fa-f]{8}",
+        RegexOptions.Compiled);
+
+    private static readonly string[] StreamingKeywords =
+    [
+        "streaming", "ymap", "ytd", "ydr", "ybn", "resource start error", "failed to load"
+    ];
 
     public CrashPatternDiagnosisAction(string fiveMAppRoot)
     {
@@ -416,7 +380,7 @@ public sealed class CrashPatternDiagnosisAction : WindowsOptimizationAction
                     .Select(Path.GetFileName)
                     .OfType<string>()
                     .ToArray();
-                var recurring = FiveMLogPatterns.CountRecurringCrashCodes(fileNames);
+                var recurring = CountRecurringCrashCodes(fileNames);
                 if (recurring.Count > 0)
                 {
                     var codes = string.Join(", ", recurring.Select(pair => $"{pair.Key} ({pair.Value}x)"));
@@ -429,10 +393,10 @@ public sealed class CrashPatternDiagnosisAction : WindowsOptimizationAction
             }
         }
 
-        var logTail = FiveMLogPatterns.ReadLatestLogTail(fiveMAppRoot);
+        var logTail = FiveMLogTailReader.ReadLatest(fiveMAppRoot);
         if (logTail is not null)
         {
-            var streamingKeywords = FiveMLogPatterns.FindStreamingErrorKeywords(logTail);
+            var streamingKeywords = FindStreamingErrorKeywords(logTail);
             if (streamingKeywords.Count > 0)
             {
                 parts.Add($"Possíveis erros de streaming de conteúdo no log recente ({string.Join(", ", streamingKeywords)}).");
@@ -452,6 +416,30 @@ public sealed class CrashPatternDiagnosisAction : WindowsOptimizationAction
     {
         return Task.CompletedTask;
     }
+
+    private static IReadOnlyDictionary<string, int> CountRecurringCrashCodes(
+        IEnumerable<string> dumpFileNames)
+    {
+        var counts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var fileName in dumpFileNames)
+        {
+            foreach (Match match in CrashCodePattern.Matches(fileName))
+            {
+                counts[match.Value] = counts.GetValueOrDefault(match.Value) + 1;
+            }
+        }
+
+        return counts
+            .Where(pair => pair.Value >= 2)
+            .ToDictionary(pair => pair.Key, pair => pair.Value, StringComparer.OrdinalIgnoreCase);
+    }
+
+    private static IReadOnlyList<string> FindStreamingErrorKeywords(string logTail)
+    {
+        return StreamingKeywords
+            .Where(keyword => logTail.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+            .ToArray();
+    }
 }
 
 internal sealed record TerminatedProcessSnapshot(int ProcessId, string ProcessName);
@@ -460,13 +448,16 @@ public sealed class StuckProcessTerminationAction : WindowsOptimizationAction
 {
     private readonly string fiveMInstallationRoot;
     private readonly IStuckFiveMProcessInspector inspector;
+    private readonly IFiveMProcessTerminator terminator;
 
     public StuckProcessTerminationAction(
         string fiveMInstallationRoot,
-        IStuckFiveMProcessInspector inspector)
+        IStuckFiveMProcessInspector inspector,
+        IFiveMProcessTerminator terminator)
     {
         this.fiveMInstallationRoot = SafePath.Normalize(fiveMInstallationRoot);
         this.inspector = inspector ?? throw new ArgumentNullException(nameof(inspector));
+        this.terminator = terminator ?? throw new ArgumentNullException(nameof(terminator));
     }
 
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
@@ -484,7 +475,7 @@ public sealed class StuckProcessTerminationAction : WindowsOptimizationAction
                 "Nenhum processo travado do FiveM foi encontrado; nada para encerrar."));
         }
 
-        if (!inspector.TryTerminate(snapshot.ProcessId))
+        if (!terminator.TryTerminate(snapshot, fiveMInstallationRoot))
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
                 $"Processo travado '{snapshot.ProcessName}' (PID {snapshot.ProcessId}) foi encontrado, mas não foi possível encerrá-lo agora."));
@@ -571,6 +562,10 @@ public sealed class StaleAuthDataRepairAction : WindowsOptimizationAction
     private readonly string quarantineRoot;
     private readonly string installationRoot;
     private readonly IFiveMProcessInspector processInspector;
+    private static readonly string[] EntitlementFailureKeywords =
+    [
+        "entitlement", "ros_id", "social club", "authentication failed", "digitalentitlements"
+    ];
 
     public StaleAuthDataRepairAction(
         string fiveMAppRoot,
@@ -602,8 +597,8 @@ public sealed class StaleAuthDataRepairAction : WindowsOptimizationAction
             throw new InvalidOperationException("FiveM precisa estar fechado para reparar os dados de entitlement.");
         }
 
-        var logTail = FiveMLogPatterns.ReadLatestLogTail(fiveMAppRoot);
-        if (logTail is null || !FiveMLogPatterns.ContainsEntitlementFailurePattern(logTail))
+        var logTail = FiveMLogTailReader.ReadLatest(fiveMAppRoot);
+        if (logTail is null || !ContainsEntitlementFailurePattern(logTail))
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
                 "Nenhum padrão conhecido de erro de entitlement foi encontrado no log recente; nada foi removido."));
@@ -708,5 +703,13 @@ public sealed class StaleAuthDataRepairAction : WindowsOptimizationAction
                 File.Move(item.QuarantinePath, item.OriginalPath);
             }
         }
+    }
+
+    private static bool ContainsEntitlementFailurePattern(string logTail)
+    {
+        return EntitlementFailureKeywords.Any(
+            keyword => logTail.Contains(keyword, StringComparison.OrdinalIgnoreCase)
+                && (logTail.Contains("error", StringComparison.OrdinalIgnoreCase)
+                    || logTail.Contains("fail", StringComparison.OrdinalIgnoreCase)));
     }
 }

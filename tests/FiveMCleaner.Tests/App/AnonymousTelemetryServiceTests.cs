@@ -48,6 +48,6 @@ public sealed class DisabledAnonymousTelemetryServiceTests
     {
         var service = DisabledAnonymousTelemetryService.Instance;
 
-        await service.TrackAsync(new AnonymousTelemetryEvent("optimization-completed", TimeSpan.Zero, "1.0.0"));
+        await service.TrackAsync(new AnonymousTelemetryEvent("optimization-completed", TimeSpan.Zero, "1.0.0"), cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
     }
 }
