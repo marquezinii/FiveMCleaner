@@ -53,13 +53,5 @@ public sealed class MainWindowLanguageSelectorSyncTests
             StringComparison.Ordinal);
     }
 
-    private static string ReadMainWindowSource()
-    {
-        var root = TestHelpers.FindRepositoryRoot();
-        return File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "FiveMCleaner.App",
-            "MainWindow.xaml.cs"));
-    }
+    private static string ReadMainWindowSource() => TestHelpers.ReadMainWindowSource();
 }
