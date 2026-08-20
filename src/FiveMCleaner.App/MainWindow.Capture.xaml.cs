@@ -84,7 +84,10 @@ public partial class MainWindow
         {
             allowClose = true;
             trayIcon.Hide();
-            Close();
+            // Capture mode is a one-shot smoke harness. Explicit shutdown is
+            // required here because a headless WPF host may keep its dispatcher
+            // alive after the window closes, making the release gate hang.
+            System.Windows.Application.Current.Shutdown(0);
         }
     }
 }
