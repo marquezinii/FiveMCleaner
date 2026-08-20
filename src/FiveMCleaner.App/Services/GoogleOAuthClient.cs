@@ -1,9 +1,11 @@
 using System.Diagnostics;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -65,6 +67,7 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
     private const string AuthorizeEndpoint = "https://accounts.google.com/o/oauth2/v2/auth";
     private const string TokenEndpoint = "https://oauth2.googleapis.com/token";
     private const string Scope = "openid email profile";
+    private static readonly Lazy<string?> AppIconDataUri = new(TryCreateAppIconDataUri);
 
     /// <summary>
     /// How long the loopback listener waits for the browser round trip. Long
@@ -228,7 +231,11 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
                 {
                     // Not the redirect (favicon and friends): answer 404 and
                     // keep waiting for the real one.
-                    await WriteResponseAsync(connection, "404 Not Found", "<p>Nada aqui.</p>", timeoutToken).ConfigureAwait(false);
+                    await WriteResponseAsync(
+                        connection,
+                        "404 Not Found",
+                        "<section class=\"result result--neutral\"><h1>Nada aqui.</h1></section>",
+                        timeoutToken).ConfigureAwait(false);
                     continue;
                 }
 
@@ -237,8 +244,8 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
                     connection,
                     "200 OK",
                     succeeded
-                        ? "<h1>Tudo certo!</h1><p>Você já pode voltar para o FiveMCleaner.</p>"
-                        : "<h1>Login não concluído</h1><p>Volte ao FiveMCleaner e tente novamente.</p>",
+                        ? "<section class=\"result result--success\"><span class=\"status-mark\" aria-hidden=\"true\"></span><h1>Tudo certo!</h1><p>Você já pode voltar para o FiveMCleaner.</p></section>"
+                        : "<section class=\"result result--error\"><span class=\"status-mark\" aria-hidden=\"true\"></span><h1>Login não concluído</h1><p>Volte ao FiveMCleaner e tente novamente.</p></section>",
                     timeoutToken).ConfigureAwait(false);
 
                 return succeeded
@@ -270,11 +277,157 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
 
     private static async Task WriteResponseAsync(TcpClient connection, string status, string body, CancellationToken cancellationToken)
     {
+        var iconMarkup = AppIconDataUri.Value is { } icon
+            ? $"<img class=\"brand-mark\" src=\"{icon}\" alt=\"\">"
+            : string.Empty;
         var html = $$"""
-            <!doctype html><html lang="pt-BR"><head><meta charset="utf-8">
-            <title>FiveMCleaner</title>
-            <style>body{background:#0A0B0D;color:#F4F5F7;font-family:'Segoe UI',sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}h1{color:#FF7A18;font-size:22px}p{color:#9A9FA9}</style>
-            </head><body><div>{{body}}</div></body></html>
+            <!doctype html>
+            <html lang="pt-BR">
+            <head>
+              <meta charset="utf-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1">
+              <meta name="color-scheme" content="dark">
+              <title>FiveMCleaner</title>
+              <style>
+                :root {
+                  color-scheme: dark;
+                  --canvas: #16151A;
+                  --canvas-deep: #131318;
+                  --text: #F3F1EE;
+                  --text-muted: #B5B2BA;
+                  --accent: #E8720F;
+                  --success: #4CBE8C;
+                  --success-surface: #14241D;
+                  --danger: #EC6B72;
+                  --danger-surface: #261619;
+                }
+
+                * { box-sizing: border-box; }
+
+                html, body { min-height: 100%; }
+
+                body {
+                  min-height: 100svh;
+                  margin: 0;
+                  display: grid;
+                  place-items: center;
+                  padding: 32px 24px;
+                  overflow: hidden;
+                  background:
+                    radial-gradient(circle at 10% 100%, rgba(232, 114, 15, .22) 0, rgba(232, 114, 15, .10) 28%, transparent 58%),
+                    linear-gradient(145deg, var(--canvas) 0, var(--canvas-deep) 72%);
+                  color: var(--text);
+                  font-family: "Segoe UI Variable Text", "Segoe UI", sans-serif;
+                  text-align: center;
+                }
+
+                .brand {
+                  position: fixed;
+                  top: 32px;
+                  left: 32px;
+                  display: flex;
+                  align-items: center;
+                  gap: 11px;
+                  color: var(--text);
+                  font-size: 14px;
+                  font-weight: 600;
+                  letter-spacing: -.01em;
+                }
+
+                .brand-mark {
+                  width: 36px;
+                  height: 36px;
+                  border-radius: 10px;
+                  box-shadow: 0 8px 20px rgba(10, 6, 3, .34);
+                }
+
+                .brand-reg {
+                  position: relative;
+                  top: -.45em;
+                  margin-left: 2px;
+                  color: var(--text-muted);
+                  font-size: 8px;
+                  line-height: 1;
+                }
+
+                main { width: min(100%, 520px); }
+
+                .result { padding: 28px 12px; }
+
+                .status-mark {
+                  position: relative;
+                  display: block;
+                  width: 60px;
+                  height: 60px;
+                  margin: 0 auto 26px;
+                  border-radius: 16px;
+                }
+
+                .result--success .status-mark { background: var(--success-surface); }
+                .result--error .status-mark { background: var(--danger-surface); }
+
+                .result--success .status-mark::after {
+                  content: "";
+                  position: absolute;
+                  top: 21px;
+                  left: 18px;
+                  width: 24px;
+                  height: 18px;
+                  background: var(--success);
+                  clip-path: polygon(0 42%, 12% 31%, 40% 62%, 88% 9%, 100% 22%, 40% 100%);
+                }
+
+                .result--error .status-mark::before,
+                .result--error .status-mark::after {
+                  content: "";
+                  position: absolute;
+                  top: 28px;
+                  left: 18px;
+                  width: 24px;
+                  height: 3px;
+                  border-radius: 2px;
+                  background: var(--danger);
+                }
+
+                .result--error .status-mark::before { transform: rotate(45deg); }
+                .result--error .status-mark::after { transform: rotate(-45deg); }
+
+                h1 {
+                  margin: 0;
+                  font-size: clamp(28px, 4vw, 34px);
+                  line-height: 1.18;
+                  font-weight: 650;
+                  letter-spacing: -.03em;
+                }
+
+                p {
+                  max-width: 38ch;
+                  margin: 13px auto 0;
+                  color: var(--text-muted);
+                  font-size: 15px;
+                  line-height: 1.6;
+                }
+
+                ::selection {
+                  background: var(--accent);
+                  color: #180D04;
+                }
+
+                @media (max-width: 520px) {
+                  body { padding: 88px 20px 28px; }
+                  .brand { top: 24px; left: 24px; }
+                  .result { padding-inline: 0; }
+                }
+              </style>
+            </head>
+            <body>
+              <div class="brand" aria-label="FiveMCleaner">
+                {{iconMarkup}}
+                <span>FiveMCleaner<sup class="brand-reg" aria-hidden="true">®</sup></span>
+              </div>
+              <main>{{body}}</main>
+            </body>
+            </html>
             """;
         var payload = Encoding.UTF8.GetBytes(html);
         var header = Encoding.ASCII.GetBytes(
@@ -291,6 +444,27 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
         {
             // The browser closing first must not fail an otherwise complete
             // sign-in: the code is already in hand.
+        }
+    }
+
+    private static string? TryCreateAppIconDataUri()
+    {
+        try
+        {
+            if (Environment.ProcessPath is not { } executablePath) return null;
+
+            using var icon = Icon.ExtractAssociatedIcon(executablePath);
+            if (icon is null) return null;
+
+            using var bitmap = icon.ToBitmap();
+            using var stream = new MemoryStream();
+            bitmap.Save(stream, ImageFormat.Png);
+            return $"data:image/png;base64,{Convert.ToBase64String(stream.ToArray())}";
+        }
+        catch (Exception exception) when (exception is ArgumentException or ExternalException or IOException)
+        {
+            // Branding must never turn a successful OAuth callback into a failed sign-in.
+            return null;
         }
     }
 
