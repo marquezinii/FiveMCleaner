@@ -17,6 +17,11 @@ public static class TelemetryEventValidator
 {
     private static readonly HashSet<int> AllowedRamBucketsGiB = [2, 4, 8, 16, 32, 64, 128, 256];
     private static readonly HashSet<string> AllowedProfiles = new(StringComparer.Ordinal) { "Light", "Balanced", "Aggressive" };
+    private static readonly HashSet<string> AllowedGtaEditions = new(StringComparer.Ordinal) { "Legacy", "Enhanced", "Unknown" };
+    private static readonly HashSet<string> AllowedDiskTypes = new(StringComparer.Ordinal) { "HDD", "SSD", "NVMe", "Unknown" };
+    private static readonly HashSet<int> AllowedFreeSpaceGiBBuckets = [0, 10, 50, 100, 250];
+    private static readonly HashSet<int> AllowedDaysSinceLastRunBuckets = [0, 2, 8, 30];
+    private static readonly HashSet<int> AllowedProcessCountBuckets = [0, 1, 4];
     public const int MaxActionIds = 30;
     private const int MaxShortFieldLength = 128;
 
@@ -73,6 +78,43 @@ public static class TelemetryEventValidator
                     throw new ArgumentException("Identificador de ação de telemetria inválido.", nameof(telemetryEvent));
                 }
             }
+        }
+
+        // v5: diagnósticos essenciais expandidos
+        if (telemetryEvent.GtaEdition is not null && !AllowedGtaEditions.Contains(telemetryEvent.GtaEdition))
+        {
+            throw new ArgumentException("Edição do GTA V de telemetria não permitida.", nameof(telemetryEvent));
+        }
+
+        if (telemetryEvent.OptimizationTargetCount is { } targetCount && (targetCount < 0 || targetCount > 100_000))
+        {
+            throw new ArgumentException("Contagem de alvos de otimização fora do intervalo permitido.", nameof(telemetryEvent));
+        }
+
+        // v5: dados opcionais de contexto
+        if (telemetryEvent.WindowsBuild is { } windowsBuild && (windowsBuild < 0 || windowsBuild > 99999))
+        {
+            throw new ArgumentException("Build do Windows de telemetria fora do intervalo permitido.", nameof(telemetryEvent));
+        }
+
+        if (telemetryEvent.DiskType is not null && !AllowedDiskTypes.Contains(telemetryEvent.DiskType))
+        {
+            throw new ArgumentException("Tipo de disco de telemetria não permitido.", nameof(telemetryEvent));
+        }
+
+        if (telemetryEvent.FreeSpaceGiBBucket is { } freeSpaceBucket && !AllowedFreeSpaceGiBBuckets.Contains(freeSpaceBucket))
+        {
+            throw new ArgumentException("Faixa de espaço livre de telemetria não permitida.", nameof(telemetryEvent));
+        }
+
+        if (telemetryEvent.DaysSinceLastRunBucket is { } daysBucket && !AllowedDaysSinceLastRunBuckets.Contains(daysBucket))
+        {
+            throw new ArgumentException("Faixa de dias desde a última execução não permitida.", nameof(telemetryEvent));
+        }
+
+        if (telemetryEvent.ProcessCountAtStart is { } processCount && !AllowedProcessCountBuckets.Contains(processCount))
+        {
+            throw new ArgumentException("Faixa de contagem de processos não permitida.", nameof(telemetryEvent));
         }
     }
 
@@ -327,6 +369,18 @@ public sealed class CloudflareTelemetryTransport
         ramBucketGiB = telemetryEvent.RamBucketGiB,
         profile = telemetryEvent.Profile,
         actionIds = telemetryEvent.ActionIds,
+        fiveMInstallDetected = telemetryEvent.FiveMInstallDetected,
+        gtaEdition = telemetryEvent.GtaEdition,
+        optimizationTargetCount = telemetryEvent.OptimizationTargetCount,
+        windowsBuild = telemetryEvent.WindowsBuild,
+        diskType = telemetryEvent.DiskType,
+        freeSpaceGiBBucket = telemetryEvent.FreeSpaceGiBBucket,
+        runTimestamp = telemetryEvent.RunTimestamp?.ToString("O"),
+        daysSinceLastRunBucket = telemetryEvent.DaysSinceLastRunBucket,
+        backupCreated = telemetryEvent.BackupCreated,
+        backupRestored = telemetryEvent.BackupRestored,
+        elevationUsed = telemetryEvent.ElevationUsed,
+        processCountAtStart = telemetryEvent.ProcessCountAtStart,
         environment
     };
 

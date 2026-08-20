@@ -31,6 +31,28 @@ public sealed class PrivacyConsentPolicyTests
         var entry = Assert.Single(PrivacyConsentPolicy.History, e => e.Version == PrivacyConsentPolicy.CurrentVersion);
         Assert.False(string.IsNullOrWhiteSpace(entry.Summary));
     }
+
+    [Fact]
+    public void CurrentVersion_Is5()
+    {
+        Assert.Equal(5, PrivacyConsentPolicy.CurrentVersion);
+    }
+
+    [Fact]
+    public void History_ContainsAllVersions1ThroughCurrentVersion()
+    {
+        for (var version = 1; version <= PrivacyConsentPolicy.CurrentVersion; version++)
+        {
+            var entry = Assert.Single(PrivacyConsentPolicy.History, e => e.Version == version);
+            Assert.False(string.IsNullOrWhiteSpace(entry.Summary));
+        }
+    }
+
+    [Fact]
+    public void RequiresRenewal_Version4ToVersion5_ReturnsTrue()
+    {
+        Assert.True(PrivacyConsentPolicy.RequiresRenewal(4));
+    }
 }
 
 public sealed class PrivacyConsentEvaluatorTests

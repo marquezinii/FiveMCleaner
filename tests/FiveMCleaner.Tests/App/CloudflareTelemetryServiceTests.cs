@@ -95,6 +95,183 @@ public sealed class TelemetryEventValidatorTests
 
         Assert.Null(exception);
     }
+
+    // --- v5: testes para os novos campos ---
+
+    [Fact]
+    public void Validate_WellFormedEventWithV5Fields_DoesNotThrow()
+    {
+        var v5Event = ValidEvent() with
+        {
+            FiveMInstallDetected = true,
+            GtaEdition = "Legacy",
+            OptimizationTargetCount = 150,
+            WindowsBuild = 22621,
+            DiskType = "SSD",
+            FreeSpaceGiBBucket = 100,
+            RunTimestamp = DateTimeOffset.UtcNow,
+            DaysSinceLastRunBucket = 2,
+            BackupCreated = true,
+            BackupRestored = false,
+            ElevationUsed = false,
+            ProcessCountAtStart = 1
+        };
+
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(v5Event));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("Legacy")]
+    [InlineData("Enhanced")]
+    [InlineData("Unknown")]
+    public void Validate_AllowedGtaEditions_DoesNotThrow(string edition)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { GtaEdition = edition }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("Steam")]
+    [InlineData("Epic")]
+    [InlineData("")]
+    public void Validate_InvalidGtaEdition_Throws(string edition)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { GtaEdition = edition }));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(50_000)]
+    [InlineData(100_000)]
+    public void Validate_AllowedOptimizationTargetCount_DoesNotThrow(int count)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { OptimizationTargetCount = count }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData(-1)]
+    [InlineData(100_001)]
+    public void Validate_InvalidOptimizationTargetCount_Throws(int count)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { OptimizationTargetCount = count }));
+    }
+
+    [Theory]
+    [InlineData("HDD")]
+    [InlineData("SSD")]
+    [InlineData("NVMe")]
+    [InlineData("Unknown")]
+    public void Validate_AllowedDiskTypes_DoesNotThrow(string diskType)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { DiskType = diskType }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData("SATA")]
+    [InlineData("")]
+    public void Validate_InvalidDiskType_Throws(string diskType)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { DiskType = diskType }));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(10)]
+    [InlineData(50)]
+    [InlineData(100)]
+    [InlineData(250)]
+    public void Validate_AllowedFreeSpaceGiBBuckets_DoesNotThrow(int bucket)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { FreeSpaceGiBBucket = bucket }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(25)]
+    [InlineData(75)]
+    [InlineData(500)]
+    public void Validate_InvalidFreeSpaceGiBBucket_Throws(int bucket)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { FreeSpaceGiBBucket = bucket }));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(2)]
+    [InlineData(8)]
+    [InlineData(30)]
+    public void Validate_AllowedDaysSinceLastRunBuckets_DoesNotThrow(int days)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { DaysSinceLastRunBucket = days }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(15)]
+    [InlineData(60)]
+    public void Validate_InvalidDaysSinceLastRunBucket_Throws(int days)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { DaysSinceLastRunBucket = days }));
+    }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(4)]
+    public void Validate_AllowedProcessCountBuckets_DoesNotThrow(int count)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { ProcessCountAtStart = count }));
+
+        Assert.Null(exception);
+    }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(3)]
+    [InlineData(10)]
+    public void Validate_InvalidProcessCountBucket_Throws(int count)
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { ProcessCountAtStart = count }));
+    }
+
+    [Fact]
+    public void Validate_WindowsBuildOutOfRange_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { WindowsBuild = 100_000 }));
+    }
+
+    [Fact]
+    public void Validate_WindowsBuildInValidRange_DoesNotThrow()
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { WindowsBuild = 22621 }));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Validate_AllBooleanFieldsAcceptTrueAndFalse_DoesNotThrow()
+    {
+        var exception1 = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with
+        {
+            FiveMInstallDetected = true,
+            BackupCreated = true,
+            BackupRestored = false,
+            ElevationUsed = true
+        }));
+
+        Assert.Null(exception1);
+    }
 }
 
 public sealed class LocalTelemetryQueueTests : IDisposable
