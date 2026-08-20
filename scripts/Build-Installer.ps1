@@ -11,7 +11,12 @@ param(
 
     [switch]$NoCompilerBootstrap,
 
-    [switch]$AllowDirtySource
+    [switch]$AllowDirtySource,
+
+    # Forwarded to Build-Portable: obfuscate the internal-logic assemblies in
+    # the published runtime before it is packaged, hashed and signed. Used by
+    # the public release workflow; ignored when -SkipPortableBuild is set.
+    [switch]$Harden
 )
 
 Set-StrictMode -Version Latest
@@ -181,10 +186,15 @@ try {
     }
 
     if (-not $SkipPortableBuild) {
-        & (Join-Path $PSScriptRoot 'Build-Portable.ps1') -Runtime win-x64 -Configuration $Configuration
+        $portableArguments = @{ Runtime = 'win-x64'; Configuration = $Configuration }
+        if ($Harden) { $portableArguments['Harden'] = $true }
+        & (Join-Path $PSScriptRoot 'Build-Portable.ps1') @portableArguments
         if ($LASTEXITCODE -ne 0) {
             throw 'Portable self-contained publish failed.'
         }
+    }
+    elseif ($Harden) {
+        throw 'Cannot honor -Harden together with -SkipPortableBuild: hardening happens during the portable publish.'
     }
 
     foreach ($requiredPayload in @(
@@ -317,6 +327,17 @@ try {
         -InstallerPath $stagedInstaller `
         -PublishDirectory $publishDirectory `
         -ExpectedVersion $Version
+
+    if ($Harden) {
+        # Build-Portable.ps1 already fail-closed-checked $publishDirectory and
+        # both ZIPs; this closes the loop on the compiled installer itself -
+        # the artifact users actually download and run.
+        & (Join-Path $PSScriptRoot 'Test-NoUnobfuscatedAssemblies.ps1') `
+            -RuntimeDirectory $publishDirectory `
+            -Version $Version `
+            -InstallerPath $stagedInstaller
+        if ($LASTEXITCODE -ne 0) { throw 'Fail-closed hardening verification failed for the installer.' }
+    }
 
     foreach ($path in @($finalInstaller, $finalContents, $finalHash, $releaseManifest)) {
         if (Test-Path -LiteralPath $path) {
