@@ -95,7 +95,21 @@ public sealed partial class MainViewModel
                 .Select(action => action.Metadata.Id)
                 .Take(TelemetryEventValidator.MaxActionIds)
                 .ToArray() : null,
-            BugCode: bugCode);
+            BugCode: bugCode,
+            // v5: diagnósticos essenciais expandidos (sempre enviados)
+            FiveMInstallDetected: diagnostic?.FiveMRoot is not null,
+            GtaEdition: diagnostic?.Edition.ToString(),
+            OptimizationTargetCount: currentPlan?.Actions.Count,
+            // v5: dados opcionais de contexto (só com consentimento)
+            WindowsBuild: ShareAnonymousTelemetry ? GetWindowsBuild() : null,
+            DiskType: ShareAnonymousTelemetry ? GetDiskType() : null,
+            FreeSpaceGiBBucket: ShareAnonymousTelemetry && diagnostic is not null ? BucketFreeSpaceGiB(diagnostic.FreeDiskGiB) : null,
+            RunTimestamp: ShareAnonymousTelemetry ? DateTimeOffset.UtcNow : null,
+            DaysSinceLastRunBucket: ShareAnonymousTelemetry ? GetDaysSinceLastRunBucket() : null,
+            BackupCreated: null, // será preenchido pelo resultado da otimização quando disponível
+            BackupRestored: null, // será preenchido pelo resultado da otimização quando disponível
+            ElevationUsed: null, // será preenchido pelo resultado da otimização quando disponível
+            ProcessCountAtStart: ShareAnonymousTelemetry ? GetProcessCountBucket() : null);
         _ = TrackOptimizationTelemetryAsync(telemetryEvent);
     }
 
@@ -109,6 +123,104 @@ public sealed partial class MainViewModel
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             // Telemetria é opcional e não pode afetar a experiência nem gerar logs locais adicionais.
+        }
+    }
+
+    // --- v5: helpers para os novos campos de telemetria ---
+
+    private static int? GetWindowsBuild()
+    {
+        try
+        {
+            return Environment.OSVersion.Version.Build;
+        }
+        catch (InvalidOperationException)
+        {
+            return null;
+        }
+    }
+
+    private string? GetDiskType()
+    {
+        try
+        {
+            if (diagnostic?.GtaVExecutablePath is not { Length: > 0 } gtaPath)
+            {
+                return null;
+            }
+
+            var driveInfo = new DriveInfo(Path.GetPathRoot(gtaPath)!);
+            return driveInfo.DriveType switch
+            {
+                DriveType.Fixed => driveInfo.IsReady && driveInfo.Name.StartsWith("NVMe", StringComparison.OrdinalIgnoreCase) ? "NVMe" : "SSD",
+                DriveType.Removable => "HDD",
+                _ => "Unknown"
+            };
+        }
+        catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException))
+        {
+            return null;
+        }
+    }
+
+    private static int? BucketFreeSpaceGiB(double freeDiskGiB)
+    {
+        var freeGiB = (int)Math.Ceiling(freeDiskGiB);
+        return freeGiB switch
+        {
+            <= 0 => 0,
+            <= 10 => 10,
+            <= 50 => 50,
+            <= 100 => 100,
+            _ => 250
+        };
+    }
+
+    private static int? GetDaysSinceLastRunBucket()
+    {
+        try
+        {
+            var historyPath = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "FiveMCleaner", "history.json");
+            if (!File.Exists(historyPath))
+            {
+                return null;
+            }
+
+            var lastWrite = File.GetLastWriteTimeUtc(historyPath);
+            var daysSince = (int)(DateTime.UtcNow - lastWrite).TotalDays;
+            return daysSince switch
+            {
+                <= 1 => 0,
+                <= 7 => 2,
+                <= 29 => 8,
+                _ => 30
+            };
+        }
+        catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException))
+        {
+            return null;
+        }
+    }
+
+    private static int? GetProcessCountBucket()
+    {
+        try
+        {
+            var fiveMCount = Process.GetProcessesByName("FiveM").Length;
+            var gtaCount = Process.GetProcessesByName("GTA5").Length;
+            var total = fiveMCount + gtaCount;
+            return total switch
+            {
+                0 => 0,
+                <= 3 => 1,
+                _ => 4
+            };
+        }
+        catch (Exception ex) when (ex is not (OutOfMemoryException or StackOverflowException))
+        {
+            return null;
         }
     }
 

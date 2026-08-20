@@ -21,7 +21,7 @@ momento. Ela controla apenas hardware, perfil e recursos usados.
 ## Dados opcionais enviados com a opção ativada
 
 Ao término, falha ou cancelamento de uma otimização, o aplicativo monta um
-evento técnico com estes campos (versão 2 do consentimento de privacidade —
+evento técnico com estes campos (versão 5 do consentimento de privacidade —
 ver `PrivacyConsentPolicy`):
 
 | Campo | Exemplo | Finalidade |
@@ -35,6 +35,18 @@ ver `PrivacyConsentPolicy`):
 | Faixa de RAM | `32` GiB (arredondada para cima entre um conjunto fixo de faixas) | estatística agregada, nunca o valor exato do sistema |
 | Perfil escolhido | `Balanced` | popularidade de cada modo (Leve/Médio/Agressivo) |
 | Identificadores das ações aplicadas | `fivem.legacy.cache.repair` | funcionalidade mais usada, agregada |
+| FiveM detectado | `true` | saber se FiveM está instalado (sem revelar o caminho) |
+| Edição do GTA V | `Legacy` | se Enhanced está sendo usado (produto suporta apenas Legacy) |
+| Contagem de alvos | `150` | quantos itens a otimização processou |
+| Build do Windows | `22621` | build granular do SO para compatibilidade |
+| Tipo de disco | `SSD` | impacto no I/O e performance |
+| Espaço livre no disco | `100` GiB (bucket: 0/10/50/100/250) | espaço insuficiente pode causar falhas |
+| Timestamp da execução | `2026-08-15T10:30:00Z` | padrões de uso (horário do dia, dia da semana) |
+| Dias desde a última execução | `2` (bucket: 0/2/8/30) | frequência de uso |
+| Backup criado | `true` | se um backup foi criado antes da otimização |
+| Backup restaurado | `false` | se o backup foi restaurado (rollback) |
+| Elevação usada | `true` | se a otimização precisou de admin |
+| Processos FiveM/GTA no início | `1` (bucket: 0/1/4) | se o jogo estava rodando durante a otimização |
 
 As únicas categorias de erro possíveis são `cancelled`, `timeout`,
 `access-denied`, `io`, `invalid-data` e `unexpected`. Mensagens de exceção,
