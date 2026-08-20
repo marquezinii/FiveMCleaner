@@ -84,7 +84,12 @@
          texto sobre a superfície de trabalho. -->
     <SolidColorBrush x:Key="AccentBrush" Color="#C3540A" />
     <SolidColorBrush x:Key="AccentTextBrush" Color="#9E4407" />
-    <SolidColorBrush x:Key="AccentBrightBrush" Color="#D96410" />
+    <!-- Hover ESCURECE aqui, ao contrário do tema escuro: AccentBrush já
+         está na lightness máxima que ainda dá 4.5:1 para TextOnAccentBrush
+         branco, então clarear no hover (como fazia #D96410, 3.63:1) quebrava
+         o piso de contraste do botão primário no exato estado em que o
+         usuário está olhando para ele. #B84E08 mede 5.08:1. -->
+    <SolidColorBrush x:Key="AccentBrightBrush" Color="#B84E08" />
     <SolidColorBrush x:Key="AccentDeepBrush" Color="#8E3A05" />
     <SolidColorBrush x:Key="AccentWashBrush" Color="#F7E7D6" />
     <SolidColorBrush x:Key="AccentSoftBrush" Color="#FBF1E7" />

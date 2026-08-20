@@ -8,39 +8,69 @@ namespace FiveMCleaner.App;
 
 public partial class App : System.Windows.Application
 {
+    private static readonly string[] MotionDurationKeys =
+    {
+        "MotionMicro", "MotionControl", "MotionNav", "MotionEnter", "MotionStructural", "MotionExit"
+    };
+
     private static int isHandlingFatalError;
     private SingleInstanceGuard? singleInstanceGuard;
+    private Dictionary<string, Duration>? originalMotionDurations;
 
     /// <summary>
-    /// Zera as durações de <c>Themes/Tokens/Motion.xaml</c> quando o Windows
-    /// pede menos animação. Storyboards declarados dentro de ControlTemplate
-    /// são congelados e não conseguem consultar <see cref="MotionPolicy"/> em
-    /// tempo de execução, então a política é aplicada uma única vez na fonte:
-    /// o token de duração. Assim todo controle do app — interruptor, segmentado,
-    /// navegação — respeita a preferência de acessibilidade sem que cada
-    /// template precise repetir a decisão.
+    /// Zera (ou restaura) as durações de <c>Themes/Tokens/Motion.xaml</c>
+    /// conforme o Windows pede menos animação ou não. Storyboards declarados
+    /// dentro de ControlTemplate são congelados e não conseguem consultar
+    /// <see cref="MotionPolicy"/> em tempo de execução, então a política é
+    /// aplicada na fonte: o token de duração. Assim todo controle do app —
+    /// interruptor, segmentado, navegação — respeita a preferência de
+    /// acessibilidade sem que cada template precise repetir a decisão.
+    ///
+    /// Roda no startup e de novo sempre que o Windows notifica uma mudança de
+    /// <c>ClientAreaAnimation</c> (Efeitos de animação, em Configurações de
+    /// Acessibilidade) — trocar a preferência com o app aberto tinha efeito
+    /// só na próxima abertura, nunca na sessão corrente.
     /// </summary>
     private void ApplyMotionPolicyToDurationTokens()
     {
-        if (MotionPolicy.AnimationsEnabled)
-        {
-            return;
-        }
+        originalMotionDurations ??= CaptureMotionDurations();
 
         var instant = new Duration(TimeSpan.Zero);
-        foreach (var key in new[] { "MotionMicro", "MotionControl", "MotionNav", "MotionEnter", "MotionStructural", "MotionExit" })
+        foreach (var key in MotionDurationKeys)
         {
-            if (Resources.Contains(key))
+            if (!originalMotionDurations.TryGetValue(key, out var original))
             {
-                Resources[key] = instant;
+                continue;
+            }
+
+            Resources[key] = MotionPolicy.AnimationsEnabled ? original : instant;
+        }
+    }
+
+    private Dictionary<string, Duration> CaptureMotionDurations()
+    {
+        var captured = new Dictionary<string, Duration>();
+        foreach (var key in MotionDurationKeys)
+        {
+            if (Resources[key] is Duration duration)
+            {
+                captured[key] = duration;
             }
         }
+
+        return captured;
+    }
+
+    private void OnSystemParametersChangedForMotion(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        ApplyMotionPolicyToDurationTokens();
     }
 
     protected override void OnStartup(StartupEventArgs e)
     {
         base.OnStartup(e);
         ApplyMotionPolicyToDurationTokens();
+        SystemParameters.StaticPropertyChanged += OnSystemParametersChangedForMotion;
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;

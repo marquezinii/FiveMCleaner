@@ -45,8 +45,12 @@ public sealed class ThemeTokenContractTests
             data.Add(theme, "DangerBaseBrush", "Surface1Color", 4.5);
             data.Add(theme, "InfoBaseBrush", "Surface1Color", 4.5);
             data.Add(theme, "RevertBaseBrush", "Surface1Color", 4.5);
-            // Texto sobre o botão primário preenchido.
+            // Texto sobre o botão primário preenchido, em repouso e em hover
+            // (PrimaryButtonStyle troca o fundo para AccentBrightBrush sob o
+            // ponteiro — o estado em que o usuário está olhando para o botão
+            // não pode ser o único que fica ilegível).
             data.Add(theme, "TextOnAccentBrush", "AccentBrush", 4.5);
+            data.Add(theme, "TextOnAccentBrush", "AccentBrightBrush", 4.5);
             // Preenchimento do acento contra a folha: componente não textual.
             data.Add(theme, "AccentBrush", "Surface1Color", 3.0);
         }

@@ -236,8 +236,27 @@
             </Grid>
         </Border>
 
-        <!-- ===================== Corpo: controle | plano | registro ===================== -->
-        <Grid Grid.Row="1">
+        <!--
+            ===================== Corpo: controle | plano | registro =====================
+            As três colunas somadas (controle 416 + plano no mínimo 420 +
+            registro 396 + dois respiros de 20) passam de 1270px de largura
+            própria — mais do que a janela no tamanho mínimo tem disponível
+            depois do rail de navegação e das margens da página. Em vez de
+            deixar o conteúdo simplesmente cortar sem aviso, o corpo rola na
+            horizontal quando não cabe.
+
+            O Grid interno vincula sua largura à do viewport do ScrollViewer
+            (para que a coluna "*" do plano continue esticando e preenchendo
+            o espaço disponível na janela maximizada, o caso comum) mas nunca
+            fica menor que 1272 — a soma real das três colunas no pior caso
+            (registro visível). Sem esse piso, numa janela estreita o Grid
+            encolheria para o viewport, o registro de 396 fixos estouraria a
+            largura declarada mesmo assim, e o ScrollViewer não saberia que
+            precisa rolar até lá — reproduzindo o corte original só que
+            deslocado.
+        -->
+        <ScrollViewer x:Name="OptimizerBody" Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <Grid Width="{Binding ActualWidth, ElementName=OptimizerBody}" MinWidth="1272">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="20" />
@@ -539,5 +558,6 @@
                 </Grid>
             </Border>
         </Grid>
+        </ScrollViewer>
     </Grid>
 </UserControl>
