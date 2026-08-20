@@ -499,7 +499,7 @@
                                 </Style.Triggers>
                             </Style>
                         </TextBlock.Style>
-                        <Run Text="{Binding [Plan.Empty.Title], Source={StaticResource LocalizedStrings}}" FontWeight="SemiBold" />
+                        <Run Text="{Binding [Plan.Empty.Title], Source={StaticResource LocalizedStrings}, Mode=OneWay}" FontWeight="SemiBold" />
                         <LineBreak />
                         <Run Text="{Binding EmptyPlanMessage}" />
                     </TextBlock>
