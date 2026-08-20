@@ -1,247 +1,104 @@
-<p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:0d0f14,100:1a1f2b&height=160&section=header&text=FiveMCleaner&fontColor=f97316&fontSize=52&fontAlignY=45&animation=fadeIn&desc=Otimização%20transparente%20e%20reversível%20para%20FiveM%20Legacy&descAlignY=68&descSize=18&descColor=d6dbe5" alt="FiveMCleaner">
-</p>
+<p align="center"><img src="docs/assets/icon.png" alt="FiveMCleaner" width="112"></p>
 
-<p align="center">
-  <img src="docs/assets/icon.png" alt="Ícone oficial do FiveMCleaner" width="112">
-</p>
+<h1 align="center">FiveMCleaner</h1>
 
-<p align="center">
-  <a href="https://marquezinii.github.io/FiveMCleaner/">
-    <img src="https://readme-typing-svg.demolab.com?font=Segoe+UI&weight=600&size=20&pause=2500&color=F97316&center=true&vCenter=true&width=620&lines=Diagn%C3%B3stico+real+do+seu+PC+antes+de+qualquer+mudan%C3%A7a;Cada+a%C3%A7%C3%A3o+%C3%A9+revers%C3%ADvel+e+auditada;Sem+shell%2C+sem+comandos+ocultos%2C+sem+promessas+irreais" alt="FiveMCleaner — principais diferenciais">
-  </a>
-</p>
+<p align="center">Diagnóstico, manutenção e otimização transparente para <strong>FiveM sobre GTAV Legacy</strong> no Windows.</p>
 
-<p align="center">
-  <img src="docs/assets/hero.png" alt="FiveMCleaner — optimizer for FiveM" width="1280">
-</p>
+<p align="center"><a href="https://marquezinii.github.io/FiveMCleaner/"><strong>Baixar para Windows</strong></a> · <a href="https://github.com/marquezinii/FiveMCleaner/releases">Releases</a> · <a href="docs/safety.md">Segurança</a> · <a href="docs/architecture.md">Arquitetura</a></p>
 
-<p align="center">
-  <img alt="FiveM Legacy" src="https://img.shields.io/badge/FiveM-Legacy-f97316?style=flat-square">
-  <img alt="GTAV Enhanced bloqueado" src="https://img.shields.io/badge/GTAV_Enhanced-bloqueado-4b5563?style=flat-square">
-  <img alt="Windows 10 e 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb?style=flat-square">
-  <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10.0-7c3aed?style=flat-square">
-  <a href="LICENSE"><img alt="Licença Source-Available" src="https://img.shields.io/badge/licen%C3%A7a-Source--Available-ef6c00?style=flat-square"></a>
-</p>
+<p align="center"><a href="https://github.com/marquezinii/FiveMCleaner/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/marquezinii/FiveMCleaner/ci.yml?branch=main&style=flat-square&label=CI"></a> <a href="https://github.com/marquezinii/FiveMCleaner/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/marquezinii/FiveMCleaner?style=flat-square&color=f97316"></a> <img alt="Windows 10 e 11" src="https://img.shields.io/badge/Windows-10%20%7C%2011-2563eb?style=flat-square"> <img alt=".NET 10" src="https://img.shields.io/badge/.NET-10-512bd4?style=flat-square"></p>
 
-<p align="center">
-  <a href="https://github.com/marquezinii/FiveMCleaner/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/marquezinii/FiveMCleaner/ci.yml?branch=main&style=flat-square&label=CI"></a>
-  <a href="https://github.com/marquezinii/FiveMCleaner/releases/latest"><img alt="Última release" src="https://img.shields.io/github/v/release/marquezinii/FiveMCleaner?style=flat-square&color=f97316"></a>
-  <a href="https://github.com/marquezinii/FiveMCleaner/commits/main"><img alt="Último commit" src="https://img.shields.io/github/last-commit/marquezinii/FiveMCleaner?style=flat-square"></a>
-  <a href="https://github.com/marquezinii/FiveMCleaner/discussions"><img alt="Discussions" src="https://img.shields.io/github/discussions/marquezinii/FiveMCleaner?style=flat-square"></a>
-</p>
-
-<p align="center">
-  <a href="https://marquezinii.github.io/FiveMCleaner/"><strong><ins>DOWNLOAD</ins></strong></a>
-</p>
-
-<p align="center">
-  Página oficial com o instalador mais recente para Windows 10 e 11.
-</p>
-
-O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores e limpeza inteligente em uma experiência de um clique — sem esconder o que será alterado. A aplicação já oferece prévia, progresso real, journal local e rollback das configurações suportadas.
+![Visão do FiveMCleaner](docs/assets/hero.png)
 
 > [!IMPORTANT]
-> O escopo atual é **FiveM para GTAV Legacy**. O cliente para GTAV Enhanced, anunciado em early access para 21 de julho de 2026, usa launcher e gerenciamento de cache diferentes. O FiveMCleaner detecta essa edição e bloqueia alterações até existir uma integração específica validada.
+> O FiveMCleaner suporta somente **FiveM em GTAV Legacy**. GTAV Enhanced é identificado e bloqueado com segurança até existir um adaptador dedicado, pesquisado e testado.
 
-> [!NOTE]
-> **Windows 11 é o sistema recomendado.** O aplicativo preserva compatibilidade legada com Windows 10 x64 build 19041 ou mais recente enquanto isso continuar tecnicamente viável, mas as edições comuns do Windows 10 já encerraram seu ciclo regular de suporte.
+## Otimização explicável, não "tweak" oculto
+
+O FiveMCleaner começa pelo diagnóstico, monta um plano compreensível e mostra o que poderá ser alterado antes de executar. Cada ação tem escopo, pré-condições, risco, resultado e estratégia de rollback quando aplicável.
+
+- Diagnóstico de FiveM/GTA V, CPU, GPU, RAM, armazenamento, drivers, rede, energia, processos e gargalos prováveis.
+- Perfis **Leve**, **Médio** e **Agressivo** formados por ações conhecidas, nunca por scripts genéricos.
+- Execução transacional com snapshot, verificação, journal local e recuperação.
+- Manutenção somente opt-in de dados permitidos; caches protegidos, entitlements, plugins e autenticação nunca são tratados como lixo.
+- Histórico, relatório técnico sanitizado e comparação local antes/depois.
 
 > [!WARNING]
-> Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
+> Nenhum software pode prometer FPS, ping ou ausência de stutter em todo PC ou servidor. O FiveMCleaner não desativa Defender, Firewall, SmartScreen ou UAC; não injeta código; não modifica binários ou memória do jogo; e não usa prioridade Realtime, afinidade fixa ou debloat genérico.
+
+## Experiência atual
+
+| Área | Disponível |
+| --- | --- |
+| Otimizador | Prévia, perfis, progresso real, cancelamento seguro, resultado por ação e rollback. |
+| Conta | Cadastro, login, Google com OAuth 2.0 + PKCE, verificação de e-mail, recuperação, troca de senha/e-mail e exclusão. |
+| Privacidade | ID token apenas em memória; refresh token protegido por DPAPI; telemetria limitada por consentimento. |
+| Relatos de bug | Envio explícito, campos validados, e-mail e trecho de log opcionais; sem anexos automáticos. |
+| Atualizações | Feed assinado, validação de origem/tamanho/SHA-256, staging, ativação atômica, health-check e rollback. |
+| Dashboard | Métricas e bugs protegidos por autenticação, filtros defensivos e avisos ao vivo para o app. |
+
+## Segurança por projeto
+
+Uma alteração persistente passa por **descobrir → planejar → validar → aplicar → verificar → registrar**. O app principal não fica elevado: ações administrativas atravessam um broker efêmero, tipado e allowlisted.
+
+Dados como `game-storage`, `nui-storage`, `ipfs`, `CitizenFX.ini`, plugins, `ros_id.dat` e entitlements digitais são protegidos. O produto valida instalação, processos, caminhos e reparse points antes de alterar qualquer coisa.
+
+Leia [a política de segurança](docs/safety.md) e [as evidências técnicas](docs/research.md).
+
+## Instalação e atualização
+
+Baixe apenas pelas [Releases oficiais](https://github.com/marquezinii/FiveMCleaner/releases). Cada release `win-x64` inclui instalador, SHA-256, manifestos e pacotes gerados pelo mesmo workflow.
+
+Após a confirmação da pessoa usuária, a atualização verifica a origem e integridade, preserva a versão anterior e só confirma a candidata após ela sinalizar saúde.
 
 > [!NOTE]
-> A `v1.4.0` ainda não possui assinatura digital de uma autoridade pública. Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
+> Os binários ainda não têm assinatura Authenticode pública. SmartScreen pode pedir confirmação por reputação. Confira origem, tag e SHA-256; nunca desative proteções para instalar o aplicativo.
 
-## Últimas atualizações
+## Privacidade
 
-**Versão 1.4.0**
+O diagnóstico é local por padrão. Telemetria e crash reporting são sanitizados, allowlisted e nunca alteram o resultado de uma otimização. O dashboard não recebe arquivos pessoais, credenciais, tokens, cookies, clipboard, paths completos, dumps ou logs completos sem uma ação explícita.
 
-- Adicionado: avisos ao vivo do painel administrativo e notas da versão após uma atualização concluída.
-- Melhorado: Visão geral, Otimizador e Histórico receberam interface renovada, mais responsiva e com progresso real.
-- Atualizado: telemetria v5, dashboard e pipeline de distribuição endurecido com verificação fail-closed dos binários distribuídos.
+Veja [telemetria](docs/telemetry.md) e [relatos de bug](docs/bug-reports.md).
 
-**Versão 1.3.1**
+## Desenvolvimento
 
-- Corrigido: o login com Google não aparecia no instalador público; o pipeline de release agora empacota a credencial corretamente.
-
-**Versão 1.3.0**
-
-- Adicionado: contas de usuário com cadastro/login via Firebase Authentication, login com Google e gerenciamento de conta em Configurações.
-- Corrigido: hardening de segurança do Worker de telemetria (CORS, limite de requisições, hashing de sessão, injeção de fórmula em CSV) e diversas condições de corrida no atualizador e na inicialização.
-- Melhorado: Visão geral, Otimizador e dashboard privado redesenhados, com monitor de desempenho ao vivo.
-
-## Estado da v1.4.0
-
-- contas de usuário: cadastro, login e login com Google via Firebase
-  Authentication, com usuário único e gerenciamento (senha, e-mail, foto,
-  exclusão) em Configurações;
-- preferências gerais enxutas: idioma pt-BR/inglês, tema do sistema/claro/escuro,
-  comportamento do X e inicialização com Windows;
-- painel de hardware com CPU, GPUs (inclusive múltiplos adaptadores), memória,
-  armazenamento, versão do Windows e arquitetura, além de uma pontuação de
-  capacidade explicada e sem promessa de FPS;
-- interface WPF funcional com os modos **Leve**, **Médio** e **Agressivo**;
-- diagnóstico local de FiveM Legacy, CPU, GPU, memória, armazenamento e processo ativo;
-- executor transacional com cache allowlisted, temporários antigos, gráficos, Game Mode, captura, preferência de GPU, efeitos visuais e energia;
-- broker administrativo efêmero, sem shell ou comandos recebidos da interface;
-- journal por ação, rollback por privilégio e restauração que preserva mudanças posteriores do usuário;
-- instalador moderno e pacote portátil autossuficientes para `win-x64`, com
-  checksums SHA-256, manifesto e atestação de proveniência na release;
-- atualização estável de um clique pelo feed assinado, com validação de
-  assinatura, origem, versão, tamanho e SHA-256, ativação atômica e rollback
-  automático quando a nova versão não confirma saúde;
-- consentimento versionado, telemetria técnica opcional e relato de bug em
-  texto via Worker Cloudflare, com e-mail e trecho de log opcional;
-- GTAV Enhanced bloqueado até uma integração separada ser documentada e testada.
-
-## Download e integridade
-
-Os binários oficiais são publicados somente em [GitHub Releases](https://github.com/marquezinii/FiveMCleaner/releases). Baixe o instalador `FiveMCleaner-Setup-X.Y.Z-win-x64.exe` e o arquivo `.sha256` da mesma release. A instalação inclui o runtime .NET, não requer Node.js, Visual Studio, Git ou SDKs e oferece atalhos opcionais. Valide o arquivo antes de abrir:
-
-```powershell
-$installer = Resolve-Path .\FiveMCleaner-Setup-X.Y.Z-win-x64.exe
-$expected = ((Get-Content "$installer.sha256" -Raw).Trim() -split '\s+')[0].ToLowerInvariant()
-$actual = (Get-FileHash $installer -Algorithm SHA256).Hash.ToLowerInvariant()
-if ($actual -ne $expected) { throw "SHA-256 divergente. Não execute este arquivo." }
-```
-
-O hash detecta corrupção ou troca do pacote, mas não substitui assinatura de código. Se uma política de segurança bloquear a preview unsigned, a opção segura é não executá-la, revisar/compilar o código ou aguardar uma release assinada. Consulte [release, integridade e simulação](docs/release-preview.md).
-
-## Visão do produto
-
-| Perfil                  | Prioridade        | Estratégia                                                                                                               |
-| ----------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Leve**                | Fidelidade visual | Ajustes de baixo impacto, diagnóstico e manutenção de arquivos antigos. Mantém resolução e texturas sempre que possível. |
-| **Médio · recomendado** | Equilíbrio        | Reduz os custos gráficos mais relevantes, preserva legibilidade e evita ultrapassar a VRAM disponível.                   |
-| **Agressivo**           | Fluidez           | Aceita perda visual explícita, reduz distância, efeitos e escala de renderização para hardware limitado.                 |
-
-Os perfis são composições de ações independentes. O usuário pode revisar cada ação antes de aplicar e restaurar o snapshot anterior depois.
-
-## Dashboard
-
-<p align="center">
-  <img src="docs/assets/dashboard.png" alt="Dashboard do FiveMCleaner" width="960">
-</p>
-
-> A captura é gerada pelo próprio executável em modo de demonstração sem escrita. Ela não publica os modelos de hardware nem o histórico da máquina usada no desenvolvimento.
-
-### Atalho de simulação
-
-No checkout do repositório, desenvolvedores podem criar um atalho vivo na Área de Trabalho para o build `Release` atual. O script não acompanha o ZIP portátil. O atalho chama o inicializador de desenvolvimento, que abre o executável WPF em simulação sintética, usa o ícone oficial e não deixa uma janela de console aberta:
-
-```powershell
-.\scripts\Install-DevelopmentShortcut.ps1 -Build
-```
-
-O atalho não copia um executável congelado: novas builds Release continuam usando o mesmo destino. A simulação mostra um ambiente FiveM Legacy/GTA V plausível e percorre o plano de otimização sem tocar em arquivos do jogo, salvar opções, abrir UAC ou acessar o histórico real. Builds públicas não recebem esse argumento: nelas FiveM Legacy e GTA V devem ser detectados de verdade antes das ações compatíveis. Um envio de bug só acessa a rede após clique explícito. Detalhes e limitações estão em [docs/release-preview.md](docs/release-preview.md).
-
-## Cache inteligente
-
-“Limpar tudo” não é uma otimização. No FiveM Legacy, recursos baixados podem ocupar muitos gigabytes, mas o cache também evita downloads repetidos. A política do projeto é:
-
-- medir antes de remover;
-- limpar somente com todos os processos do FiveM encerrados;
-- tratar `server-cache` e `server-cache-priv` como manutenção de espaço ou reparo, não como ganho garantido de FPS;
-- alertar que remover `server-cache-priv` pode invalidar clipes antigos do Rockstar Editor;
-- proteger sempre `game-storage`, dados de login, configurações, plugins e armazenamento NUI;
-- manter limpeza ampla fora dos perfis automáticos.
-
-Veja a matriz completa em [Segurança](docs/safety.md) e a fundamentação em [Pesquisa](docs/research.md).
-
-## Como uma otimização acontece
-
-1. **Diagnóstico** — identifica edição, instalação, hardware, espaço livre e processos ativos.
-2. **Prévia** — mostra ações, risco, efeito esperado, necessidade de reinício e rollback.
-3. **Snapshot** — preserva configurações pequenas e registra o estado anterior.
-4. **Aplicação** — executa ações isoladas, com privilégio mínimo e progresso verificável.
-5. **Validação** — confirma que o estado final é válido e gera um relatório local.
-6. **Restauração** — reverte o que foi alterado quando solicitado ou em caso de falha.
-
-## Limites intencionais
-
-O FiveMCleaner não:
-
-- altera `commandline.txt`; o FiveM Legacy bloqueia seu carregamento;
-- define prioridade `Realtime`, afinidade fixa ou desativa SMT/Hyper-Threading;
-- sobrescreve perfis NVIDIA ou força limpeza de shader cache;
-- desativa Defender, firewall, serviços essenciais ou atualizações do Windows;
-- cria exclusões de antivírus automaticamente;
-- apaga `%LOCALAPPDATA%\FiveM\FiveM.app\data\game-storage`;
-- remove `ros_id.dat`, `DigitalEntitlements`, configurações ou plugins em um perfil de otimização;
-- aplica qualquer ação à edição GTAV Enhanced nesta fase.
-
-## Requisitos para desenvolver
-
-- Windows 10 ou 11 x64;
-- [.NET SDK 10.0.303](https://dotnet.microsoft.com/download/dotnet/10.0) ou patch compatível definido em `global.json`;
-- [Node.js 24.19.0 LTS](https://nodejs.org/) para desenvolver e validar o site, o Worker e o dashboard;
-- PowerShell 7 é opcional para tarefas locais, não para o funcionamento da aplicação;
-- cópia legítima e atualizada do GTAV Legacy e FiveM para testes de integração.
+Requisitos: Windows 10/11 x64, [.NET SDK 10.0.303](https://dotnet.microsoft.com/download/dotnet/10.0) e Node.js 24.19.0 LTS.
 
 ```powershell
 dotnet restore FiveMCleaner.slnx
 dotnet build FiveMCleaner.slnx --configuration Release --no-restore
 dotnet test FiveMCleaner.slnx --configuration Release --no-build
-dotnet run --project src/FiveMCleaner.App/FiveMCleaner.App.csproj
-./scripts/Build-Portable.ps1
-./scripts/Install-DevelopmentShortcut.ps1
+.\scripts\Verify-Safety.ps1
 ```
 
-## Estrutura
+Para abrir uma demonstração segura sem FiveM/GTA instalado:
+
+```powershell
+.\scripts\Install-DevelopmentShortcut.ps1 -Build
+```
+
+Ela usa dados sintéticos e não grava configurações nem executa ações do sistema.
+
+## Arquitetura
 
 ```text
-src/
-├── FiveMCleaner.App/           # aplicação WPF sem elevação permanente
-├── FiveMCleaner.Contracts/     # contratos de ações, progresso e resultados
-├── FiveMCleaner.Core/          # orquestração, políticas e rollback
-├── FiveMCleaner.Windows/       # descoberta e integrações Windows/FiveM
-├── FiveMCleaner.Broker/        # operações administrativas estritamente tipadas
-├── FiveMCleaner.Launcher/      # processo pai: inicia o app e supervisiona o health-check pós-update
-├── FiveMCleaner.Updater/       # aplica a atualização transacional (staging, ativação, rollback)
-├── FiveMCleaner.UpdateRuntime/ # primitivas compartilhadas do updater (arquivo atômico, manifesto assinado, journal)
-└── FiveMCleaner.ReleaseTool/   # empacotamento e assinatura dos artefatos de release
-tests/
-└── FiveMCleaner.Tests/         # testes de política, segurança e execução
-infra/
-├── cloudflare-worker/          # backend de telemetria, contas e relatos de bug (Cloudflare Workers + D1)
-└── dashboard/                  # painel privado estático de leitura da telemetria
-installer/                      # roteiro Inno Setup e textos do instalador Windows
-scripts/                        # automação local: build, empacotamento, atalho de desenvolvimento, verificações de segurança
-website/                        # site público de download (Next.js) publicado via GitHub Pages
-docs/
-├── architecture.md             # limites entre App/Core/Windows/Broker e fluxo de uma otimização
-├── safety.md                   # matriz de risco, reversibilidade e dados protegidos por ação
-├── research.md                 # fontes e fundamentação técnica das otimizações
-├── release-preview.md          # integridade de release, simulação e atalho de desenvolvimento
-├── installer.md                # instalador Inno Setup e fluxo de instalação
-├── updater-next-generation.md  # cadeia Launcher/Updater/UpdateRuntime
-├── telemetry.md                # o que a telemetria opcional envia e como desativar
-├── telemetry-operations.md     # operação e manutenção do backend de telemetria
-├── bug-reports.md              # o que um relato de bug envia e como é tratado
-├── streaming-safety.md         # cuidados com software de captura e transmissão
-├── graphics-optimizations-backlog.md # decisões e backlog técnico de otimizações gráficas
-└── brand/                      # identidade visual oficial (ícone, paleta, uso da marca)
+App             WPF, conta, configurações e serviços de aplicação
+Contracts       DTOs, IDs e contratos duráveis
+Core            políticas, catálogo, planos e rollback
+Windows         descoberta e integrações de Windows/FiveM
+Broker          operações administrativas tipadas e allowlisted
+Launcher/Updater atualização transacional e supervisão pós-update
+Worker/Dashboard backend de conta, telemetria, bugs e operação privada
+Website         site público estático
 ```
 
-Detalhes: [Arquitetura](docs/architecture.md).
+Consulte [docs/architecture.md](docs/architecture.md) para as fronteiras completas.
 
-## Transparência e fontes
+## Status da v1.4.0
 
-As decisões do projeto priorizam documentação do Cfx.re, suporte oficial, repositório `citizenfx/fivem`, suporte Rockstar e documentação de fabricantes. Fatos observados e inferências de engenharia são rotulados separadamente em [docs/research.md](docs/research.md).
+- Avisos ao vivo do dashboard para o aplicativo e notas pós-atualização.
+- Telemetria v5 mínima, consentida e acompanhada no painel.
+- Interface renovada em Visão geral, Otimizador e Histórico.
+- Cadeia de distribuição endurecida com validação fail-closed dos binários distribuídos.
 
-## Contribuindo e segurança
-
-- Bugs comuns podem ser enviados pelo app ou pelo GitHub; leia antes [Relatos de bug e privacidade](docs/bug-reports.md).
-- A telemetria técnica é opcional e vem habilitada apenas para instalações novas; ela pode ser desligada em **Configurações** e envia somente categorias de erro, duração de otimizações e versão — nunca arquivos, documentos, histórico ou dados pessoais no payload. Veja [Telemetria opcional](docs/telemetry.md).
-- Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de propor uma ação de sistema.
-- Vulnerabilidades devem seguir [SECURITY.md](SECURITY.md), sem issue pública.
-- Toda contribuição está sujeita ao [Código de Conduta](CODE_OF_CONDUCT.md).
-
-## Licença e não afiliação
-
-Código disponibilizado sob a [Licença Source-Available do FiveMCleaner](LICENSE).
-Consulte as permissões e restrições antes de compilar, fazer fork ou distribuir
-qualquer derivado.
-
-**FiveMCleaner é um projeto comunitário independente. Não é aprovado, patrocinado, endossado nem afiliado à Rockstar Games, Cfx.re ou FiveM.** FiveM, Grand Theft Auto V, Rockstar Games e marcas relacionadas pertencem aos respectivos titulares. A marca é usada apenas para indicar compatibilidade.
+FiveMCleaner é um projeto comunitário independente, sem afiliação, endosso ou patrocínio de Rockstar Games, Cfx.re ou FiveM.
