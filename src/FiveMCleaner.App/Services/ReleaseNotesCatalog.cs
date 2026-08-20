@@ -61,7 +61,7 @@ public sealed record ReleaseNoteVersion(
 /// </remarks>
 public static class ReleaseNotesCatalog
 {
-    public static readonly IReadOnlyList<ReleaseNoteVersion> Versions = [new ReleaseNoteVersion("1.4.2", new DateOnly(2026, 8, 20), [ReleaseNoteCategory.Fixed])];
+    public static readonly IReadOnlyList<ReleaseNoteVersion> Versions = [new ReleaseNoteVersion("1.4.3", new DateOnly(2026, 8, 20), [ReleaseNoteCategory.Fixed])];
 
     public static ReleaseNoteVersion? Find(string version) =>
         Versions.FirstOrDefault(entry => entry.Version == version);

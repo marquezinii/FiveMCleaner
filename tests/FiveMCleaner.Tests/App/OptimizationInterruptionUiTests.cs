@@ -35,6 +35,7 @@ public sealed class OptimizationInterruptionUiTests
         Assert.Contains("HasPlannedActions", source, StringComparison.Ordinal);
         Assert.Contains("EmptyPlanMessage", source, StringComparison.Ordinal);
         Assert.Contains("[Plan.Empty.Title], Source={StaticResource LocalizedStrings}, Mode=OneWay", source, StringComparison.Ordinal);
+        Assert.Contains("Text=\"{Binding EmptyPlanMessage, Mode=OneWay}\"", source, StringComparison.Ordinal);
     }
 
     private static string FindRepositoryRoot()

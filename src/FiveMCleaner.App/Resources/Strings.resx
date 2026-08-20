@@ -321,7 +321,7 @@
   <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Added</value></data>
   <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Improved</value></data>
   <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Fixed</value></data>
-  <data name="ReleaseNotes.1_4_2.Fixed" xml:space="preserve"><value>• The optimizer now explains when no safe action is available for the current diagnostic.
+  <data name="ReleaseNotes.1_4_3.Fixed" xml:space="preserve"><value>• The optimizer now explains when no safe action is available for the current diagnostic.
 • The bug-report form now opens correctly.</value></data>
   <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Removed</value></data>
   <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Security</value></data>
