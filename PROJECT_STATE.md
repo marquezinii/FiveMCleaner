@@ -171,7 +171,7 @@ Build/distribuição, quando aplicável:
 
 - `main` não recebe desenvolvimento normal. Integração ocorre em `dev/proxima-versao`; publicação oficial segue `AI_RULES.md`.
 - Não inferir autorização de push/deploy/release a partir de um commit local ou de uma validação bem-sucedida.
-- Antes de calcular versão ou publicar, confirme tags/releases reais e o diff desde `v1.3.2`, a versão pública confirmada neste snapshot.
+- Antes de calcular versão ou publicar, confirme tags/releases reais e o diff desde `v1.4.0`, a versão pública confirmada neste snapshot.
 - Deploy do Worker, Pages, release, tags, assets e demais operações remotas devem seguir as permissões e gatilhos definidos em `AI_RULES.md`.
 - Release pública exige coerência entre código, versão, `CHANGELOG.md`, GitHub Release, instalador, updater, site e artefatos.
 
