@@ -321,7 +321,7 @@
   <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Añadido</value></data>
   <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Mejorado</value></data>
   <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Corregido</value></data>
-  <data name="ReleaseNotes.1_4_1.Fixed" xml:space="preserve"><value>• El optimizador ahora explica cuando no hay una acción segura disponible para el diagnóstico actual.
+  <data name="ReleaseNotes.1_4_2.Fixed" xml:space="preserve"><value>• El optimizador ahora explica cuando no hay una acción segura disponible para el diagnóstico actual.
 • El formulario de informe de errores vuelve a abrirse correctamente.</value></data>
   <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Eliminado</value></data>
   <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Seguridad</value></data>
