@@ -196,6 +196,10 @@
   <data name="Plan.Safety.Mixed" xml:space="preserve"><value>Permanent cleanups are identified in the plan. Settings have rollback.</value></data>
   <data name="Plan.Safety.Reversible" xml:space="preserve"><value>Every change in this plan can be undone.</value></data>
   <data name="Plan.NoAdditionalWarnings" xml:space="preserve"><value>No additional warnings for this plan.</value></data>
+  <data name="Plan.Empty.Title" xml:space="preserve"><value>No actions available for this diagnostic</value></data>
+  <data name="Plan.Empty.Summary" xml:space="preserve"><value>No changes will be made until the diagnostic finds safe actions.</value></data>
+  <data name="Plan.Empty.LegacyRequired" xml:space="preserve"><value>Select a valid FiveM Legacy installation or install FiveM, then analyze your PC again to prepare safe actions.</value></data>
+  <data name="Plan.Empty.NoSafeActions" xml:space="preserve"><value>No safe action is required for the current diagnostic.</value></data>
   <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} actions • catalog v{1}</value></data>
   <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>{0} actions completed. {1}</value></data>
   <data name="Diagnosis.Partial" xml:space="preserve"><value>Partial diagnostics</value></data>

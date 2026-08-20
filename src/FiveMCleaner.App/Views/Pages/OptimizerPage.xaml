@@ -464,7 +464,16 @@
                     </StackPanel>
 
                     <!-- Cabeçalho da tabela: mesmas larguras do PlanActionTemplate. -->
-                    <Border Grid.Row="1" Style="{StaticResource TableHeaderRowStyle}" Padding="12,10">
+                    <Border Grid.Row="1" Padding="12,10">
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource TableHeaderRowStyle}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasPlannedActions}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2*" MinWidth="170" />
@@ -479,7 +488,32 @@
                         </Grid>
                     </Border>
 
+                    <TextBlock Grid.Row="2" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" MaxWidth="440">
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource SecondaryText}">
+                                <Setter Property="Visibility" Value="Collapsed" />
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasPlannedActions}" Value="False">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                        <Run Text="{Binding [Plan.Empty.Title], Source={StaticResource LocalizedStrings}}" FontWeight="SemiBold" />
+                        <LineBreak />
+                        <Run Text="{Binding EmptyPlanMessage}" />
+                    </TextBlock>
+
                     <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ScrollViewer.Style>
+                            <Style TargetType="ScrollViewer">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasPlannedActions}" Value="False">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </ScrollViewer.Style>
                         <ItemsControl ItemsSource="{Binding Source={StaticResource GroupedPlanActions}}" ItemTemplate="{StaticResource PlanActionTemplate}">
                             <ItemsControl.ItemContainerStyle>
                                 <Style TargetType="ContentPresenter">
