@@ -5,6 +5,13 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.4.1] - 2026-08-20
+
+### Corrigido
+
+- Corrigido o estado vazio do plano de otimização, que não exibia ações, avisos e botão de ação sem ações disponíveis no FiveM Legacy.
+- Corrigido erro de inicialização da tela de relato de bug causado por recurso de estilo inexistente no `BugReportWindow`.
+
 ## [1.4.0] - 2026-08-20
 
 ### Adicionado

@@ -196,6 +196,12 @@
   <data name="Plan.Safety.Mixed" xml:space="preserve"><value>Las limpiezas permanentes se identifican en el plan. Las configuraciones tienen reversión.</value></data>
   <data name="Plan.Safety.Reversible" xml:space="preserve"><value>Todos los cambios de este plan pueden deshacerse.</value></data>
   <data name="Plan.NoAdditionalWarnings" xml:space="preserve"><value>No hay advertencias adicionales para este plan.</value></data>
+  <data name="Plan.Empty.Title" xml:space="preserve"><value>No hay acciones disponibles para este diagnóstico</value></data>
+  <data name="Plan.Empty.Summary" xml:space="preserve"><value>No se realizará ningún cambio hasta que el diagnóstico encuentre acciones seguras.</value></data>
+  <data name="Plan.Empty.LegacyRequired" xml:space="preserve"><value>Selecciona una instalación válida de FiveM Legacy o instala FiveM y vuelve a analizar tu PC para preparar acciones seguras.</value></data>
+  <data name="Plan.Empty.NoSafeActions" xml:space="preserve"><value>No se requiere ninguna acción segura para el diagnóstico actual.</value></data>
+  <data name="Plan.Empty.DiagnosticInProgress" xml:space="preserve"><value>Espera a que termine el diagnóstico antes de preparar acciones.</value></data>
+  <data name="Plan.Empty.DiagnosticUnavailable" xml:space="preserve"><value>No se pudo completar el diagnóstico. Vuelve a analizar tu computadora antes de preparar acciones.</value></data>
   <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} acciones • catálogo v{1}</value></data>
   <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>{0} acciones completadas. {1}</value></data>
   <data name="Diagnosis.Partial" xml:space="preserve"><value>Diagnóstico parcial</value></data>
@@ -315,6 +321,8 @@
   <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Añadido</value></data>
   <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Mejorado</value></data>
   <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Corregido</value></data>
+  <data name="ReleaseNotes.1_4_1.Fixed" xml:space="preserve"><value>• El optimizador ahora explica cuando no hay una acción segura disponible para el diagnóstico actual.
+• El formulario de informe de errores vuelve a abrirse correctamente.</value></data>
   <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Eliminado</value></data>
   <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Seguridad</value></data>
   <data name="ReleaseNotes.Close" xml:space="preserve"><value>Cerrar</value></data>

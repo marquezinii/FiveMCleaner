@@ -196,6 +196,12 @@
   <data name="Plan.Safety.Mixed" xml:space="preserve"><value>Limpezas permanentes aparecem identificadas no plano. Configurações possuem rollback.</value></data>
   <data name="Plan.Safety.Reversible" xml:space="preserve"><value>Todas as mudanças deste plano podem ser desfeitas.</value></data>
   <data name="Plan.NoAdditionalWarnings" xml:space="preserve"><value>Nenhum aviso adicional para este plano.</value></data>
+  <data name="Plan.Empty.Title" xml:space="preserve"><value>Nenhuma ação disponível para este diagnóstico</value></data>
+  <data name="Plan.Empty.Summary" xml:space="preserve"><value>Nenhuma alteração será feita até que o diagnóstico encontre ações seguras.</value></data>
+  <data name="Plan.Empty.LegacyRequired" xml:space="preserve"><value>Selecione uma instalação FiveM Legacy válida ou instale o FiveM e reanalise o PC para preparar ações seguras.</value></data>
+  <data name="Plan.Empty.NoSafeActions" xml:space="preserve"><value>Nenhuma ação segura é necessária para o diagnóstico atual.</value></data>
+  <data name="Plan.Empty.DiagnosticInProgress" xml:space="preserve"><value>Aguarde o diagnóstico terminar antes de preparar ações.</value></data>
+  <data name="Plan.Empty.DiagnosticUnavailable" xml:space="preserve"><value>Não foi possível concluir o diagnóstico. Reanalise o PC antes de preparar ações.</value></data>
   <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} ações • catálogo v{1}</value></data>
   <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>{0} ações concluídas. {1}</value></data>
   <data name="Diagnosis.Partial" xml:space="preserve"><value>Diagnóstico parcial</value></data>
@@ -315,6 +321,8 @@
   <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Adicionado</value></data>
   <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Melhorado</value></data>
   <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Corrigido</value></data>
+  <data name="ReleaseNotes.1_4_1.Fixed" xml:space="preserve"><value>• O Otimizador agora explica quando não há ação segura disponível para o diagnóstico atual.
+• A tela de relato de bug volta a abrir corretamente.</value></data>
   <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Removido</value></data>
   <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Segurança</value></data>
   <data name="ReleaseNotes.Close" xml:space="preserve"><value>Fechar</value></data>

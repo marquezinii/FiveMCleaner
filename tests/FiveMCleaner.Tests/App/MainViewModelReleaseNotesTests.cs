@@ -10,12 +10,9 @@ namespace FiveMCleaner.Tests.App;
 /// <see cref="MainViewModel.InitializeAsync"/> produce a decision, and that
 /// <see cref="MainViewModel.ConfirmReleaseNotesSeenAsync"/> persists through
 /// the existing settings mechanism. <see cref="ReleaseNotesCatalog.Versions"/>
-/// is empty in this repository right now (see its own doc comment), so these
-/// tests cannot exercise "the panel actually shows" end to end without
-/// depending on the real, uncontrollable assembly version — that scenario is
-/// covered without that dependency by <see cref="ReleaseNotesEvaluatorTests"/>,
-/// which takes the app version as an explicit parameter instead of reading it
-/// from the running assembly.
+/// is versioned with the public release. Tests that need a particular version
+/// continue to use <see cref="ReleaseNotesEvaluatorTests"/>, which accepts it
+/// as an explicit parameter instead of reading the running assembly.
 /// </summary>
 public sealed class MainViewModelReleaseNotesTests
 {
@@ -34,7 +31,7 @@ public sealed class MainViewModelReleaseNotesTests
     }
 
     [Fact]
-    public async Task InitializeAsync_ExistingInstallationWithEmptyCatalog_NeverShowsButStillRecordsSilently()
+    public async Task InitializeAsync_ExistingInstallation_OffersCurrentReleaseNotes()
     {
         var settings = new AppSettings { LastSeenReleaseNotesVersion = "0.1.0" };
         var service = new FakeAppOptimizationService(settings, settingsFileExists: true);
@@ -44,11 +41,9 @@ public sealed class MainViewModelReleaseNotesTests
 
         var decision = viewModel.PendingReleaseNotes;
         Assert.NotNull(decision);
-        Assert.False(decision!.ShouldShow);
-        // The real catalog is empty, so whatever version is currently
-        // running has no entry — nothing to show, but still worth recording
-        // as the new baseline.
-        Assert.True(decision.ShouldRecordSilently);
+        Assert.True(decision!.ShouldShow);
+        Assert.False(decision.ShouldRecordSilently);
+        Assert.Equal("1.4.1", decision.Entry!.Version);
     }
 
     [Fact]

@@ -9,12 +9,12 @@ namespace FiveMCleaner.Tests.App;
 public sealed class ReleaseNotesCatalogTests
 {
     [Fact]
-    public void Versions_IsEmptyByDefault()
+    public void Versions_ContainsTheCurrentRelease()
     {
-        // This task ships the mechanism, not content for a version number
-        // this repository does not own yet (see AI_RULES.md, "Publicação
-        // oficial"). A future release adds one entry here.
-        Assert.Empty(ReleaseNotesCatalog.Versions);
+        var entry = Assert.Single(ReleaseNotesCatalog.Versions);
+
+        Assert.Equal("1.4.1", entry.Version);
+        Assert.Equal([ReleaseNoteCategory.Fixed], entry.Categories);
     }
 
     [Fact]
@@ -26,15 +26,10 @@ public sealed class ReleaseNotesCatalogTests
     [Fact]
     public void Find_KnownVersion_ReturnsTheMatchingEntry()
     {
-        var catalog = new[]
-        {
-            new ReleaseNoteVersion("1.4.0", null, [ReleaseNoteCategory.Added])
-        };
-
-        var entry = catalog.FirstOrDefault(candidate => candidate.Version == "1.4.0");
+        var entry = ReleaseNotesCatalog.Find("1.4.1");
 
         Assert.NotNull(entry);
-        Assert.Equal("1.4.0", entry!.Version);
+        Assert.Equal("1.4.1", entry!.Version);
     }
 }
 

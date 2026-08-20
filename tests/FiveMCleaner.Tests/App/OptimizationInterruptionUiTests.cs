@@ -32,6 +32,9 @@ public sealed class OptimizationInterruptionUiTests
         Assert.Contains("Text=\"{Binding RiskLabel}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding PrivilegeLabel}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding PlanHeader}\"", source, StringComparison.Ordinal);
+        Assert.Contains("HasPlannedActions", source, StringComparison.Ordinal);
+        Assert.Contains("EmptyPlanMessage", source, StringComparison.Ordinal);
+        Assert.Contains("[Plan.Empty.Title], Source={StaticResource LocalizedStrings}, Mode=OneWay", source, StringComparison.Ordinal);
     }
 
     private static string FindRepositoryRoot()

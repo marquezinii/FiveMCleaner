@@ -18,13 +18,16 @@ public sealed class FakeAppOptimizationService : IAppOptimizationService
     public AppSettings? SavedSettings { get; private set; }
     public int SaveCallCount { get; private set; }
 
-    public FakeAppOptimizationService(AppSettings initialSettings, bool settingsFileExists)
+    public FakeAppOptimizationService(AppSettings initialSettings, bool settingsFileExists, Exception? diagnosticException = null)
     {
         InitialSettings = initialSettings;
         this.settingsFileExists = settingsFileExists;
+        DiagnosticException = diagnosticException;
     }
 
     public AppSettings InitialSettings { get; }
+
+    public Exception? DiagnosticException { get; }
 
     public string LogsDirectory => throw new NotSupportedException();
 
@@ -41,7 +44,9 @@ public sealed class FakeAppOptimizationService : IAppOptimizationService
     }
 
     public Task<AppDiagnostic> DiagnoseAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(CreateMinimalDiagnostic());
+        DiagnosticException is null
+            ? Task.FromResult(CreateMinimalDiagnostic())
+            : Task.FromException<AppDiagnostic>(DiagnosticException);
 
     public Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(CancellationToken cancellationToken = default) =>
         Task.FromResult<IReadOnlyList<AppHistoryRecord>>([]);

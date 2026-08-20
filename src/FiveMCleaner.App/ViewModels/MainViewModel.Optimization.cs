@@ -59,12 +59,16 @@ public sealed partial class MainViewModel
 
     public int SelectedActionCount => currentPlan?.Actions.Count ?? 0;
 
+    public bool HasPlannedActions => SelectedActionCount > 0;
+
     public string ElevationLabel => localization.GetString(
         currentPlan?.RequiresElevation == true
             ? "Plan.Elevation.UacAtRun"
             : "Plan.Elevation.None");
 
-    public string PlanSummary => currentPlan?.ContainsNonReversibleActions == true
+    public string PlanSummary => !HasPlannedActions
+        ? localization.GetString("Plan.Empty.Summary")
+        : currentPlan?.ContainsNonReversibleActions == true
         ? localization.GetString("Plan.Safety.Mixed")
         : localization.GetString("Plan.Safety.Reversible");
 
@@ -73,9 +77,19 @@ public sealed partial class MainViewModel
         SelectedActionCount,
         currentPlan?.CatalogVersion ?? 1);
 
-    public string PlanNoticesText => currentPlan?.Notices.Count > 0
+    public string PlanNoticesText => !HasPlannedActions
+        ? string.Empty
+        : currentPlan?.Notices.Count > 0
         ? string.Join("  •  ", currentPlan.Notices.Select(LocalizeNotice))
         : localization.GetString("Plan.NoAdditionalWarnings");
+
+    public string EmptyPlanMessage => diagnostic is null
+        ? localization.GetString(diagnosticFailed
+            ? "Plan.Empty.DiagnosticUnavailable"
+            : "Plan.Empty.DiagnosticInProgress")
+        : diagnostic.Edition == FiveMEdition.Legacy
+            ? localization.GetString("Plan.Empty.NoSafeActions")
+            : localization.GetString("Plan.Empty.LegacyRequired");
 
     public string SelectedProfileLabel
     {
@@ -412,10 +426,12 @@ public sealed partial class MainViewModel
         }
 
         OnPropertyChanged(nameof(SelectedActionCount));
+        OnPropertyChanged(nameof(HasPlannedActions));
         OnPropertyChanged(nameof(ElevationLabel));
         OnPropertyChanged(nameof(PlanSummary));
         OnPropertyChanged(nameof(PlanHeader));
         OnPropertyChanged(nameof(PlanNoticesText));
+        OnPropertyChanged(nameof(EmptyPlanMessage));
         OnPropertyChanged(nameof(SafetySummary));
         OnPropertyChanged(nameof(AboutVersionDeveloper));
         RefreshProfilePresentation();

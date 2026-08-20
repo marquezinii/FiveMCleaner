@@ -18,7 +18,8 @@ public sealed partial class LocalizedInterfaceContractTests
             Path.Combine(root, "src", "FiveMCleaner.App", "MainWindow.xaml"),
             Path.Combine(root, "src", "FiveMCleaner.App", "Views", "BugReportWindow.xaml"),
             Path.Combine(root, "src", "FiveMCleaner.App", "Views", "PrivacyConsentWindow.xaml"),
-            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "ReleaseNotesWindow.xaml")
+            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "ReleaseNotesWindow.xaml"),
+            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "Pages", "OptimizerPage.xaml")
         };
         var keys = sources
             .SelectMany(path => LocalizedKeyPattern().Matches(File.ReadAllText(path)))
@@ -90,6 +91,28 @@ public sealed partial class LocalizedInterfaceContractTests
             Assert.NotEqual(key, portuguese.GetString(key));
             Assert.NotEqual(key, spanish.GetString(key));
         }
+    }
+
+    [Fact]
+    public void BugReportWindow_UsesTheDefinedComboBoxStyle()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var window = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Views",
+            "BugReportWindow.xaml"));
+        var controls = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "FiveMCleaner.App",
+            "Themes",
+            "Controls.xaml"));
+
+        Assert.Contains("Style=\"{StaticResource SettingsComboBoxStyle}\"", window, StringComparison.Ordinal);
+        Assert.Contains("x:Key=\"SettingsComboBoxStyle\"", controls, StringComparison.Ordinal);
+        Assert.DoesNotContain("FormComboBoxStyle", window, StringComparison.Ordinal);
     }
 
     [Fact]
