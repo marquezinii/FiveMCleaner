@@ -321,7 +321,7 @@
   <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Adicionado</value></data>
   <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Melhorado</value></data>
   <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Corrigido</value></data>
-  <data name="ReleaseNotes.1_4_1.Fixed" xml:space="preserve"><value>• O Otimizador agora explica quando não há ação segura disponível para o diagnóstico atual.
+  <data name="ReleaseNotes.1_4_2.Fixed" xml:space="preserve"><value>• O Otimizador agora explica quando não há ação segura disponível para o diagnóstico atual.
 • A tela de relato de bug volta a abrir corretamente.</value></data>
   <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Removido</value></data>
   <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Segurança</value></data>

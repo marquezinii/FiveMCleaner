@@ -5,7 +5,7 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
-## [1.4.1] - 2026-08-20
+## [1.4.2] - 2026-08-20
 
 ### Corrigido
 

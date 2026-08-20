@@ -8,7 +8,7 @@
 - **Produto:** FiveMCleaner, aplicativo desktop Windows para otimização transparente, reversível e orientada por diagnóstico do FiveM para **GTAV Legacy**.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
 - **Último estado consolidado neste documento-fonte:** 20/08/2026, após a publicação e integração da versão 1.4.0. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
-- **Versão pública:** `v1.4.0`, publicada em 20/08/2026 a partir do commit de release validado em `main`. O feed estável do updater aponta para o runtime assinado dessa versão.
+- **Próxima publicação:** `v1.4.2`, preparada em 20/08/2026 a partir do commit integrado e validado em `main`. O workflow de release estável publica o runtime assinado e atualiza o feed do updater.
 - **Atalho de desenvolvimento:** `FiveMCleaner - Desenvolvimento` usa `scripts\Start-DevelopmentApp.ps1`. Conforme `AI_RULES.md`, deve ser reconstruído com `scripts\Install-DevelopmentShortcut.ps1 -Build` (executado a partir do checkout/worktree da própria tarefa) ao final de toda tarefa que gerar mudanças no app — isolada ou de integração —, exceto tarefas de instalador/updater. O script espelha a árvore de trabalho atual para a pasta irmã fixa `FiveMCleaner-dev-shortcut` e aponta o atalho para essa cópia estável, então ele nunca fica órfão quando um worktree de tarefa é removido após o merge.
 
 ## 2. Objetivo e invariantes de segurança
@@ -130,7 +130,7 @@ Somente itens ainda relevantes devem permanecer aqui. Quando resolvidos e integr
 
 Estes números são **referência do último estado validado**, não substituem testes da branch atual.
 
-- **20/08/2026 — release v1.4.0:** `dotnet restore`, build Release sem warnings, **970 testes .NET**, `dotnet format --verify-no-changes`, verificação de segurança, auditoria NuGet, Worker (**196 testes**), dashboard (**47 testes**), site (lint, typecheck, build e testes), SBOM, smoke pós-ofuscação e smoke de instalação/desinstalação aprovados. Release pública, assets, hashes e manifesto assinado publicados; feed estável do updater verificado em produção.
+- **20/08/2026 — candidato v1.4.2:** `dotnet restore`, build Release sem warnings, **972 testes .NET**, `dotnet format --verify-no-changes`, verificação de segurança, smoke pós-ofuscação do Otimizador e da Visão geral e checks remotos de .NET, site, Worker, dashboard, SBOM e CodeQL aprovados. O workflow estável executa novamente o empacotamento, smoke de instalação/desinstalação, assinatura e publicação antes de atualizar o feed do updater.
 
 - **20/08/2026:** integração de 6 PRs em `dev/proxima-versao` (docs: revisão de pendências; refactor: split estrutural de `MainViewModel.cs`, `MainWindow.xaml.cs` e `website/app/page.tsx` em partial classes/componentes, sem mudança de comportamento; build: pipeline de endurecimento por ofuscação da release; feat: redesenho visual completo do app na direção "Câmara Âmbar"; fix: ingestão dos campos v5 de telemetria no Worker, schema+migration+INSERT; feat: lado do app da telemetria v5, diagnósticos essenciais/opcionais expandidos). A branch experimental `ai/telemetry/v5-expanded-fields` (nunca abriu PR, base desatualizada) foi reconciliada manualmente com o PR de ingestão do Worker — mesmos nomes de campo, sem mismatch — e seus campos de bug-report (não suportados pelo Worker) ficaram de fora, ver pendência 6. O conflito entre o redesenho visual e o split de `MainWindow.xaml.cs` (mesma região de código movida por ambas as branches) foi resolvido semanticamente realocando o método `CaptureIfRequestedAsync`/`--capture-theme=` para `MainWindow.Capture.xaml.cs`. Após integração: restore e build .NET Release sem warnings, **970 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` aprovados; Worker com **196 testes** e `npm audit` sem vulnerabilidades; site com `typecheck`, `lint`, build estático e **3 testes** aprovados; dashboard não tocado nesta rodada (último baseline: 47 testes). Atalho `FiveMCleaner - Desenvolvimento` reconstruído.
 
@@ -171,7 +171,7 @@ Build/distribuição, quando aplicável:
 
 - `main` não recebe desenvolvimento normal. Integração ocorre em `dev/proxima-versao`; publicação oficial segue `AI_RULES.md`.
 - Não inferir autorização de push/deploy/release a partir de um commit local ou de uma validação bem-sucedida.
-- Antes de calcular versão ou publicar, confirme tags/releases reais e o diff desde `v1.4.0`, a versão pública confirmada neste snapshot.
+- Antes de calcular versão ou publicar, confirme tags/releases reais e o diff desde a última tag pública confirmada neste snapshot.
 - Deploy do Worker, Pages, release, tags, assets e demais operações remotas devem seguir as permissões e gatilhos definidos em `AI_RULES.md`.
 - Release pública exige coerência entre código, versão, `CHANGELOG.md`, GitHub Release, instalador, updater, site e artefatos.
 

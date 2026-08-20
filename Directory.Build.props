@@ -13,6 +13,6 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/marquezinii/FiveMCleaner</RepositoryUrl>
     <Product>FiveMCleaner</Product>
-    <Version>1.4.1</Version>
+    <Version>1.4.2</Version>
   </PropertyGroup>
 </Project>

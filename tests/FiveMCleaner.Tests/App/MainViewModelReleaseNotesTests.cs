@@ -43,7 +43,7 @@ public sealed class MainViewModelReleaseNotesTests
         Assert.NotNull(decision);
         Assert.True(decision!.ShouldShow);
         Assert.False(decision.ShouldRecordSilently);
-        Assert.Equal("1.4.1", decision.Entry!.Version);
+        Assert.Equal("1.4.2", decision.Entry!.Version);
     }
 
     [Fact]
