@@ -1,16 +1,27 @@
-﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
     <!--
-        Redesign "prancheta técnica": a escala de raio é de desenho técnico,
-        não de app de consumo. Cantos quase retos, nunca oval nem "bolha".
-        RadiusPill sobrevive apenas para o trilho/thumb do interruptor e para
-        o avatar circular — nenhum card, campo, trilho de progresso ou botão
-        pode usá-lo.
+        Direção "Câmara Âmbar": a escala de raio subiu. O visual anterior
+        usava cantos quase retos (2–6px) porque era desenho técnico; esta
+        direção é uma sala com objetos moldados, e o raio maior é o que faz a
+        silhueta ler como outro aplicativo antes de qualquer cor aparecer.
+
+        A escala é multiplicativa, não linear: cada degrau serve a um tamanho
+        de objeto, então um chip e um painel nunca compartilham raio.
+
+          Xs  4  — chip, etiqueta, marca de tabulação
+          Sm  6  — campo, item de lista, opção segmentada
+          Md  10 — botão, seletor, linha de tabela
+          Lg  14 — painel, região de conteúdo
+          Xl  18 — superfície flutuante, diálogo
+
+        RadiusPill continua restrito ao trilho/thumb do interruptor e ao
+        avatar circular. Nenhum painel, campo ou botão pode usá-lo.
     -->
-    <CornerRadius x:Key="RadiusXs">2</CornerRadius>
-    <CornerRadius x:Key="RadiusSm">3</CornerRadius>
-    <CornerRadius x:Key="RadiusMd">4</CornerRadius>
-    <CornerRadius x:Key="RadiusLg">6</CornerRadius>
-    <CornerRadius x:Key="RadiusXl">8</CornerRadius>
+    <CornerRadius x:Key="RadiusXs">4</CornerRadius>
+    <CornerRadius x:Key="RadiusSm">6</CornerRadius>
+    <CornerRadius x:Key="RadiusMd">10</CornerRadius>
+    <CornerRadius x:Key="RadiusLg">14</CornerRadius>
+    <CornerRadius x:Key="RadiusXl">18</CornerRadius>
     <CornerRadius x:Key="RadiusPill">999</CornerRadius>
 </ResourceDictionary>
