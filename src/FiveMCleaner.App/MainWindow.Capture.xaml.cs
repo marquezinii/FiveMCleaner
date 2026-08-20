@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using FiveMCleaner.App.Services;
 
 namespace FiveMCleaner.App;
 
@@ -19,6 +20,23 @@ public partial class MainWindow
         try
         {
             var outputPath = Path.GetFullPath(argument["--capture=".Length..].Trim('"'));
+
+            // O modo demo devolve AppSettings padrão de propósito (nunca lê
+            // nem grava o arquivo do usuário), então o tema capturado sempre
+            // seguia o do Windows — o tema claro era, na prática, impossível
+            // de fotografar sem trocar a preferência do sistema inteiro da
+            // pessoa. --capture-theme= resolve isso pelo mesmo caminho que
+            // --capture-page= já usa para as páginas: só vale sob --capture=,
+            // não persiste nada, e não existe fora do smoke-test.
+            var theme = Environment.GetCommandLineArgs()
+                .FirstOrDefault(value => value.StartsWith("--capture-theme=", StringComparison.OrdinalIgnoreCase));
+            if (theme is not null)
+            {
+                var requested = theme["--capture-theme=".Length..].Trim('"');
+                themeManager.Apply(requested.Equals("light", StringComparison.OrdinalIgnoreCase)
+                    ? AppThemePreference.Light
+                    : AppThemePreference.Dark);
+            }
 
             // O smoke-test de captura sempre abriu na Visão geral. Com
             // --capture-page= ele consegue fotografar qualquer página, o que

@@ -96,13 +96,6 @@ public partial class OptimizerPage : UserControl
         }
     }
 
-    private void ToggleStepLedger_Click(object sender, RoutedEventArgs e)
-    {
-        StepLedgerList.Visibility = StepLedgerList.Visibility == Visibility.Visible
-            ? Visibility.Collapsed
-            : Visibility.Visible;
-    }
-
     private void CancelOptimization_Click(object sender, RoutedEventArgs e)
     {
         (Window.GetWindow(this) as MainWindow)?.RequestCancelOptimization();

@@ -45,11 +45,15 @@
                   MouseLeftButtonDown="OnTrackClick"
                   GotKeyboardFocus="OnTrackGotFocus" LostKeyboardFocus="OnTrackLostFocus"
                   KeyDown="OnTrackKeyDown">
+                <!-- Mesmo vocabulário do segmentado de Configurações: o
+                     selecionado é um bloco ERGUIDO (superfície mais alta +
+                     sombra curta), não um preenchimento igual ao do hover. -->
                 <Border x:Name="SelectionIndicator"
                         Background="{DynamicResource Surface3Brush}"
-                        BorderBrush="{DynamicResource BorderDefaultBrush}"
+                        BorderBrush="Transparent"
                         BorderThickness="1"
                         CornerRadius="{StaticResource RadiusSm}"
+                        Effect="{DynamicResource Elevation1Shadow}"
                         HorizontalAlignment="Left"
                         IsHitTestVisible="False">
                     <Border.RenderTransform>
@@ -58,7 +62,7 @@
                 </Border>
 
                 <Border x:Name="ThumbFocusRing"
-                        BorderBrush="{DynamicResource AccentBrush}"
+                        BorderBrush="{DynamicResource FocusRingBrush}"
                         BorderThickness="2"
                         CornerRadius="{StaticResource RadiusSm}"
                         Opacity="0"

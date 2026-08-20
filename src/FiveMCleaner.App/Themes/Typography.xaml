@@ -3,55 +3,82 @@
     <!--
         Escala tipográfica única do app. Nenhum FontSize literal deve existir
         fora deste arquivo — toda página usa um destes estilos nomeados.
+
+        DIREÇÃO "CÂMARA ÂMBAR"
+        ======================
+        Uma família só carrega tudo: título, rótulo, corpo, botão e dado.
+        Isto é deliberado e é o que uma interface de trabalho pede — o
+        pareamento display/corpo pertence a superfícies de marca, e aqui ele
+        só produziria ruído, porque esta tela tem muito mais elementos de
+        texto que uma landing page.
+
+        Três correções em relação ao visual anterior, todas relatadas como
+        problema:
+
+        1. A escala tinha cinco degraus espremidos entre 11 e 14px, então
+           metade da hierarquia era invisível. Agora cada degrau é ~1.15–1.2x
+           do anterior e nenhum tamanho aparece duas vezes com significados
+           diferentes.
+        2. O corpo respirava mal (14/20 = 1.43). Passou para 14/21 = 1.5, e o
+           texto secundário para 13/19, que é o que torna um painel denso
+           legível sem aumentar a página.
+        3. O rótulo (Overline) era 11px e ficava ilegível em telas de alta
+           densidade, apesar de estar em todo canto. Subiu para 12px e ganhou
+           peso — um rótulo pequeno demais não é discreto, é ruído.
+
+        Hierarquia vem de TAMANHO e PESO, nunca de cor sozinha; a cor só
+        confirma o que os dois já disseram.
     -->
 
     <FontFamily x:Key="AppFontBody">Segoe UI Variable Text, Segoe UI</FontFamily>
     <FontFamily x:Key="AppFontDisplay">Segoe UI Variable Display, Segoe UI</FontFamily>
-    <!-- Reservada a leituras numéricas de instrumento (Readout*): medição,
-         nunca decoração de "tecnicidade" sobre texto. Cascadia Mono acompanha
-         o Windows 11; Consolas é o fallback universal do SO. -->
+    <!-- Reservada a leituras numéricas de instrumento (Readout*, TickLabel):
+         medição, nunca decoração de "tecnicidade" sobre texto corrido.
+         Cascadia Mono acompanha o Windows 11; Consolas é o fallback do SO. -->
     <FontFamily x:Key="AppFontMono">Cascadia Mono, Consolas</FontFamily>
+
     <!-- Estilo implícito: todo TextBlock sem estilo explícito cai aqui. -->
     <Style TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFontBody}" />
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="Normal" />
-        <Setter Property="LineHeight" Value="20" />
+        <Setter Property="LineHeight" Value="21" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="TextTrimming" Value="None" />
     </Style>
 
+    <!-- A única voz grande da interface: a recomendação do diagnóstico. -->
     <Style x:Key="DisplayText" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFontDisplay}" />
-        <Setter Property="FontSize" Value="34" />
+        <Setter Property="FontSize" Value="32" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="LineHeight" Value="40" />
+        <Setter Property="LineHeight" Value="38" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
     </Style>
 
     <Style x:Key="PageTitleText" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFontDisplay}" />
-        <Setter Property="FontSize" Value="24" />
+        <Setter Property="FontSize" Value="22" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="LineHeight" Value="30" />
+        <Setter Property="LineHeight" Value="28" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
     </Style>
 
     <Style x:Key="SectionText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="16" />
+        <Setter Property="FontSize" Value="17" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="LineHeight" Value="22" />
+        <Setter Property="LineHeight" Value="24" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
     </Style>
 
     <Style x:Key="SubsectionText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontSize" Value="15" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="LineHeight" Value="20" />
+        <Setter Property="LineHeight" Value="21" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
     </Style>
@@ -59,37 +86,39 @@
     <Style x:Key="BodyStrongText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="14" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="LineHeight" Value="20" />
+        <Setter Property="LineHeight" Value="21" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
     </Style>
 
     <Style x:Key="BodyText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="14" />
-        <Setter Property="LineHeight" Value="20" />
+        <Setter Property="LineHeight" Value="21" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
     </Style>
 
     <Style x:Key="SecondaryText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="12" />
-        <Setter Property="LineHeight" Value="17" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="LineHeight" Value="19" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="TextWrapping" Value="Wrap" />
     </Style>
 
     <Style x:Key="CaptionText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11" />
-        <Setter Property="LineHeight" Value="15" />
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="LineHeight" Value="17" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}" />
     </Style>
 
+    <!-- Rótulo de campo, cabeçalho de coluna, nome de leitura. Não é um
+         "eyebrow" acima de um título: ele nomeia o dado logo abaixo dele. -->
     <Style x:Key="OverlineText" TargetType="TextBlock">
-        <Setter Property="FontSize" Value="11" />
+        <Setter Property="FontSize" Value="12" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="LineHeight" Value="14" />
+        <Setter Property="LineHeight" Value="16" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
         <Setter Property="Foreground" Value="{DynamicResource TextTertiaryBrush}" />
     </Style>
@@ -97,7 +126,7 @@
     <!--
         Duas famílias distintas de destaque, e a diferença importa:
 
-        Metric* é para um VALOR EM TEXTO ("Moderada", "UAC somente ao
+        Metric* é para um VALOR EM PALAVRAS ("Moderada", "UAC somente ao
         executar") — face de display, largura proporcional, quebra bem.
 
         Readout* é para uma LEITURA NUMÉRICA ("88", "43", "8,0 GB", "62%") —
@@ -107,7 +136,7 @@
     -->
     <Style x:Key="MetricText" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="{StaticResource AppFontDisplay}" />
-        <Setter Property="FontSize" Value="30" />
+        <Setter Property="FontSize" Value="28" />
         <Setter Property="FontWeight" Value="SemiBold" />
         <Setter Property="LineHeight" Value="34" />
         <Setter Property="LineStackingStrategy" Value="BlockLineHeight" />
@@ -117,16 +146,17 @@
 
     <Style x:Key="MetricSmallText" TargetType="TextBlock" BasedOn="{StaticResource MetricText}">
         <Setter Property="FontSize" Value="20" />
-        <Setter Property="LineHeight" Value="24" />
+        <Setter Property="LineHeight" Value="26" />
     </Style>
 
     <Style x:Key="ReadoutText" TargetType="TextBlock" BasedOn="{StaticResource MetricText}">
         <Setter Property="FontFamily" Value="{StaticResource AppFontMono}" />
-        <Setter Property="FontSize" Value="28" />
+        <Setter Property="FontSize" Value="26" />
+        <Setter Property="LineHeight" Value="32" />
     </Style>
 
     <Style x:Key="ReadoutSmallText" TargetType="TextBlock" BasedOn="{StaticResource ReadoutText}">
-        <Setter Property="FontSize" Value="19" />
+        <Setter Property="FontSize" Value="18" />
         <Setter Property="LineHeight" Value="24" />
     </Style>
 

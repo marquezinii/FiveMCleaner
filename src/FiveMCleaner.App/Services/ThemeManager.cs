@@ -123,12 +123,14 @@ public sealed class ThemeManager : IDisposable
             merged.Insert(0, replacement);
         }
 
-        CoreVisualPalette.IsLightTheme = useLightTheme;
-
-        // WPF UI usa o accent do app também para o chrome da FluentWindow.
-        // Mantemos a borda da janela neutra; laranja fica reservado a ações
-        // selecionadas.
-        var accent = useLightTheme ? ParseColor("#D5D2CB") : ParseColor("#282C34");
+        // WPF UI deriva sua própria família de acento (indicador do rail de
+        // navegação, realce de seleção, chrome da FluentWindow) desta cor.
+        // Na direção "Câmara Âmbar" ela precisa ser o mesmo âmbar de
+        // AccentBrush nos tokens: se os dois divergirem, o indicador da
+        // navegação acende numa cor que não existe em nenhum outro lugar da
+        // interface. Os valores abaixo são exatamente AccentBrush de
+        // Colors.Dark.xaml e Colors.Light.xaml.
+        var accent = useLightTheme ? ParseColor("#C3540A") : ParseColor("#E8720F");
         var wpfUiTheme = useLightTheme ? ApplicationTheme.Light : ApplicationTheme.Dark;
         ApplicationAccentColorManager.Apply(accent, wpfUiTheme, systemGlassColor: false, systemAccentColor: false);
         ApplicationThemeManager.Apply(wpfUiTheme, updateAccent: false);

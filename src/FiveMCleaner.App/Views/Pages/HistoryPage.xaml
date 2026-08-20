@@ -3,87 +3,174 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="900">
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="820">
+    <!--
+        HISTÓRICO — direção "Câmara Âmbar".
+
+        Cada execução é uma entrada datada com o que foi feito, o desfecho e
+        a possibilidade de voltar ao estado anterior. O cabeçalho da tabela
+        existe mesmo sem nenhuma execução, então a página está completa desde
+        a primeira abertura em vez de mostrar uma ilha de texto no meio do
+        vazio.
+
+        A coluna de notas ficou porque carrega a promessa central do produto
+        (o que é registrado, o que a reversão preserva, que nada sai da
+        máquina). O bloco de "limites de segurança" que estava repetido aqui
+        saiu: ele agora existe uma única vez, em Configurações › Sobre.
+    -->
     <UserControl.Resources>
-        <DataTemplate x:Key="HistoryLedgerRowTemplate">
-            <Grid Margin="0,0,0,4">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="24" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <!-- Rail da timeline: linha vertical + nó por entrada. -->
-                <Grid Grid.Column="0">
-                    <Border Width="1" Background="{DynamicResource BorderSubtleBrush}" HorizontalAlignment="Center" />
-                    <Ellipse Width="9" Height="9" Fill="{DynamicResource CanvasBaseBrush}" Stroke="{DynamicResource BorderStrongBrush}" StrokeThickness="1.5" VerticalAlignment="Top" Margin="0,20,0,0" />
+        <DataTemplate x:Key="HistoryRowTemplate">
+            <Border Style="{StaticResource TableRowStyle}" Padding="12,14">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="176" />
+                        <ColumnDefinition Width="2*" MinWidth="190" />
+                        <ColumnDefinition Width="3*" MinWidth="210" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding DateLabel}" Style="{StaticResource TickLabelText}" VerticalAlignment="Center" Margin="0,0,18,0" TextWrapping="Wrap" />
+                    <TextBlock Grid.Column="1" Text="{Binding Title}" Style="{StaticResource BodyStrongText}" VerticalAlignment="Center" Margin="0,0,18,0" TextWrapping="Wrap" />
+                    <TextBlock Grid.Column="2" Text="{Binding Summary}" Style="{StaticResource SecondaryText}" VerticalAlignment="Center" Margin="0,0,18,0" TextWrapping="Wrap" />
+                    <Button Grid.Column="3"
+                            Content="{Binding [History.Undo], Source={StaticResource LocalizedStrings}}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            Height="34" Padding="16,0" VerticalAlignment="Center"
+                            Tag="{Binding}" Click="RollbackHistory_Click"
+                            IsEnabled="{Binding CanRollback}" />
                 </Grid>
-
-                <Border Grid.Column="1" Style="{StaticResource LedgerRowStyle}" Margin="16,0,0,0">
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="{Binding DateLabel}" Style="{StaticResource OverlineText}" />
-                            <TextBlock Text="{Binding Title}" Style="{StaticResource BodyStrongText}" Margin="0,4,0,0" TextWrapping="Wrap" />
-                            <TextBlock Text="{Binding Summary}" Style="{StaticResource SecondaryText}" Margin="0,3,0,0" TextTrimming="CharacterEllipsis" />
-                        </StackPanel>
-                        <Button Grid.Column="1"
-                                Content="{Binding [History.Undo], Source={StaticResource LocalizedStrings}}"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                Height="34" Padding="14,0" VerticalAlignment="Center"
-                                Tag="{Binding}" Click="RollbackHistory_Click"
-                                IsEnabled="{Binding CanRollback}" />
-                    </Grid>
-                </Border>
-            </Grid>
+            </Border>
         </DataTemplate>
     </UserControl.Resources>
 
-    <Grid Margin="32,24,32,24">
+    <Grid Margin="28,24,28,28">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <Grid Margin="0,0,0,20">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-            <StackPanel>
-                <TextBlock Text="{Binding [History.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" />
-                <TextBlock Text="{Binding [History.Subtitle], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
-            </StackPanel>
-            <Button Grid.Column="1" Content="{Binding [History.OpenLogs], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Top" Click="OpenLogs_Click" />
-        </Grid>
+        <!-- ===================== Cabeçalho ===================== -->
+        <Border Grid.Row="0" Style="{StaticResource TitleBlockSurface}">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,32,0">
+                    <TextBlock Text="{Binding [History.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" />
+                    <Rectangle Style="{StaticResource TitleAccentRule}" Margin="0,10,0,0" />
+                </StackPanel>
+                <Button Grid.Column="1" Content="{Binding [History.OpenLogs], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="OpenLogs_Click" />
+            </Grid>
+        </Border>
 
+        <!-- ===================== Corpo ===================== -->
         <Grid Grid.Row="1">
-            <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
-                          Visibility="{Binding HistoryItems.Count, Converter={StaticResource CollectionEmptyToVisibilityConverter}, ConverterParameter=invert}">
-                <ItemsControl ItemsSource="{Binding HistoryItems}" ItemTemplate="{StaticResource HistoryLedgerRowTemplate}" HorizontalAlignment="Stretch">
-                    <!-- Sem isto, cada item usa só a largura intrínseca do
-                         conteúdo (o ContentPresenter padrão do ItemsControl
-                         não estica) — a linha e o hairline ficam curtos
-                         mesmo com o ItemsControl largo. -->
-                    <ItemsControl.ItemContainerStyle>
-                        <Style TargetType="ContentPresenter">
-                            <Setter Property="HorizontalAlignment" Value="Stretch" />
-                        </Style>
-                    </ItemsControl.ItemContainerStyle>
-                </ItemsControl>
-            </ScrollViewer>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" MinWidth="520" />
+                <ColumnDefinition Width="24" />
+                <ColumnDefinition Width="320" />
+            </Grid.ColumnDefinitions>
 
-            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="360"
-                        Visibility="{Binding HistoryItems.Count, Converter={StaticResource CollectionEmptyToVisibilityConverter}}">
-                <Path Width="48" Height="48" Data="{StaticResource IconCoreSilhouette}" Stroke="{DynamicResource TextTertiaryBrush}" StrokeThickness="1.5"
-                      HorizontalAlignment="Center" Opacity="0.5" />
-                <TextBlock Text="{Binding [History.Empty.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" HorizontalAlignment="Center" Margin="0,16,0,0" TextAlignment="Center" />
-                <TextBlock Text="{Binding [History.Empty.Summary], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" HorizontalAlignment="Center" Margin="0,6,0,0" TextAlignment="Center" TextWrapping="Wrap" />
-                <TextBlock Text="{Binding [History.Empty.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,8,0,0" TextAlignment="Center" TextWrapping="Wrap" />
-                <Button Content="{Binding [History.Empty.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Center" Margin="0,16,0,0" Click="OpenOptimizer_Click" />
-            </StackPanel>
+            <!-- ============ Tabela de execuções ============ -->
+            <Border Grid.Column="0" Style="{StaticResource PanelSurface}">
+                <Grid Margin="26,24,26,20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="0,0,0,18">
+                        <TextBlock Text="{Binding [History.LocalRuns], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" />
+                        <TextBlock Text="{Binding [History.Subtitle], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,7,0,0" TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <!-- Cabeçalho da tabela: mesmas larguras do
+                         HistoryRowTemplate. Permanece visível mesmo sem
+                         execuções, para que a página mostre desde o início o
+                         que vai ser registrado. -->
+                    <Border Grid.Row="1" Style="{StaticResource TableHeaderRowStyle}" Padding="12,10">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="176" />
+                                <ColumnDefinition Width="2*" MinWidth="190" />
+                                <ColumnDefinition Width="3*" MinWidth="210" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="0" Text="{Binding [History.Table.Date], Source={StaticResource LocalizedStrings}}" Style="{StaticResource TableHeaderCellText}" Margin="0,0,18,0" />
+                            <TextBlock Grid.Column="1" Text="{Binding [History.Table.Run], Source={StaticResource LocalizedStrings}}" Style="{StaticResource TableHeaderCellText}" Margin="0,0,18,0" />
+                            <TextBlock Grid.Column="2" Text="{Binding [History.Table.Summary], Source={StaticResource LocalizedStrings}}" Style="{StaticResource TableHeaderCellText}" Margin="0,0,18,0" />
+                            <TextBlock Grid.Column="3" Text="{Binding [History.Table.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource TableHeaderCellText}" MinWidth="92" />
+                        </Grid>
+                    </Border>
+
+                    <Grid Grid.Row="2">
+                        <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled"
+                                      Visibility="{Binding HistoryItems.Count, Converter={StaticResource CollectionEmptyToVisibilityConverter}, ConverterParameter=invert}">
+                            <ItemsControl ItemsSource="{Binding HistoryItems}" ItemTemplate="{StaticResource HistoryRowTemplate}" HorizontalAlignment="Stretch">
+                                <!-- Sem isto, cada item usa só a largura intrínseca do
+                                     conteúdo (o ContentPresenter padrão do ItemsControl
+                                     não estica) — as colunas não alinhariam com o
+                                     cabeçalho. -->
+                                <ItemsControl.ItemContainerStyle>
+                                    <Style TargetType="ContentPresenter">
+                                        <Setter Property="HorizontalAlignment" Value="Stretch" />
+                                    </Style>
+                                </ItemsControl.ItemContainerStyle>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <!-- Estado vazio: fica logo abaixo do cabeçalho da tabela,
+                             alinhado à esquerda como a primeira linha ausente —
+                             não uma ilha flutuando no centro da tela. -->
+                        <Border Style="{StaticResource FieldSurface}" Padding="28" HorizontalAlignment="Left" VerticalAlignment="Top" MaxWidth="600" Margin="0,28,0,0"
+                                Visibility="{Binding HistoryItems.Count, Converter={StaticResource CollectionEmptyToVisibilityConverter}}">
+                            <StackPanel>
+                                <TextBlock Text="{Binding [History.Empty.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SubsectionText}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding [History.Empty.Summary], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,8,0,0" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding [History.Empty.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,10,0,0" TextWrapping="Wrap" />
+                                <Button Content="{Binding [History.Empty.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Margin="0,22,0,0" Click="OpenOptimizer_Click" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Grid>
+            </Border>
+
+            <!-- ============ Painel de notas ============ -->
+            <Border Grid.Column="2" Style="{StaticResource NotesColumnSurface}">
+                <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <StackPanel>
+                        <TextBlock Text="{Binding [History.Notes.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SubsectionText}" TextWrapping="Wrap" />
+
+                        <Grid Margin="0,18,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Path Style="{StaticResource Icon16}" Data="{StaticResource IconHistory}" Stroke="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                            <TextBlock Grid.Column="1" Text="{Binding [History.Notes.Recorded], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="12,0,0,0" TextWrapping="Wrap" />
+                        </Grid>
+
+                        <Grid Margin="0,18,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Path Style="{StaticResource Icon16}" Data="{StaticResource IconRefresh}" Stroke="{DynamicResource AccentTextBrush}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                            <TextBlock Grid.Column="1" Text="{Binding [History.Notes.Rollback], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="12,0,0,0" TextWrapping="Wrap" />
+                        </Grid>
+
+                        <Grid Margin="0,18,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Path Style="{StaticResource Icon16}" Data="{StaticResource IconShield}" Stroke="{DynamicResource SuccessBaseBrush}" VerticalAlignment="Top" Margin="0,2,0,0" />
+                            <TextBlock Grid.Column="1" Text="{Binding [History.Notes.Local], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="12,0,0,0" TextWrapping="Wrap" />
+                        </Grid>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
         </Grid>
     </Grid>
 </UserControl>

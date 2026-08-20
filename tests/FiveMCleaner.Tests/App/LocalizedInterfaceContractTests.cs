@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using FiveMCleaner.App.Services;
@@ -227,18 +228,15 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("CpuValues=\"{Binding CpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("GpuValues=\"{Binding GpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("NetworkUsageLabel", dashboard, StringComparison.Ordinal);
-        // HoloCore3D e OptimizerCore3D se fundiram num único CoreVisual
-        // (Mode=Readiness|Engine) — o mesmo objeto em toda a interface.
-        Assert.Contains("controls:CoreVisual", dashboard, StringComparison.Ordinal);
-        Assert.Contains("Mode=\"Readiness\"", dashboard, StringComparison.Ordinal);
+        // Redesign "prancheta técnica": a geometria 3D (CoreVisual) e o anel
+        // ArcProgress foram removidos do produto por decisão de design — a
+        // profundidade passou a vir de camadas, traço e material. A prontidão
+        // é lida numa escala graduada, não num medidor decorativo, e o teste
+        // trava essa decisão para que nenhum controle 3D volte por descuido.
+        Assert.DoesNotContain("controls:CoreVisual", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("controls:ArcProgress", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding ReadinessScore, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
-        // Redesign "Bancada de tuning premium": o aro do medidor de prontidão
-        // usa o bezel de metal escovado (InstrumentBezelBrush), não mais a
-        // borda genérica de superfície.
-        Assert.Contains("TrackBrush=\"{DynamicResource InstrumentBezelBrush}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding CpuUsagePercent, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
-        // A coleta pausada precisa pausar também a animação da cena.
-        Assert.Contains("IsLive=\"{Binding IsLiveMetricsActive}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.OpenOptimizer", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.SystemOverview", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("GroupName=\"Profile\"", dashboard, StringComparison.Ordinal);
@@ -294,12 +292,18 @@ public sealed partial class LocalizedInterfaceContractTests
         // ScaleTransform é banido de listas (já causou itens se deslocando sob
         // o ponteiro), mas é uma exceção deliberada e isolada no press do
         // botão primário — nunca dentro de um estilo de linha/lista.
-        var primaryButtonStyle = styles[styles.IndexOf("x:Key=\"PrimaryButtonStyle\"", StringComparison.Ordinal)..styles.IndexOf("x:Key=\"SecondaryButtonStyle\"", StringComparison.Ordinal)];
-        var stylesOutsidePrimaryButton = styles.Replace(primaryButtonStyle, string.Empty, StringComparison.Ordinal);
+        //
+        // A verificação roda sobre a marcação SEM comentários: um comentário
+        // que explica por que a exceção existe não é uma ocorrência do
+        // recurso, e travar o texto dos comentários proibia justamente
+        // documentar a regra ao lado dela.
+        var styleMarkup = WithoutXmlComments(styles);
+        var primaryButtonStyle = styleMarkup[styleMarkup.IndexOf("x:Key=\"PrimaryButtonStyle\"", StringComparison.Ordinal)..styleMarkup.IndexOf("x:Key=\"SecondaryButtonStyle\"", StringComparison.Ordinal)];
+        var stylesOutsidePrimaryButton = styleMarkup.Replace(primaryButtonStyle, string.Empty, StringComparison.Ordinal);
         Assert.Contains("ScaleTransform", primaryButtonStyle, StringComparison.Ordinal);
         Assert.DoesNotContain("ScaleTransform", stylesOutsidePrimaryButton, StringComparison.Ordinal);
-        Assert.DoesNotContain("ScaleTransform", overview, StringComparison.Ordinal);
-        Assert.DoesNotContain("ScaleTransform", optimizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ScaleTransform", WithoutXmlComments(overview), StringComparison.Ordinal);
+        Assert.DoesNotContain("ScaleTransform", WithoutXmlComments(optimizer), StringComparison.Ordinal);
         Assert.True(Regex.Matches(styles, "Property=\"IsKeyboardFocused\"").Count >= 3);
         Assert.Contains("<Style TargetType=\"ScrollBar\">", styles, StringComparison.Ordinal);
         Assert.Contains("HorizontalAlignment=\"Right\"", styles, StringComparison.Ordinal);
@@ -524,7 +528,20 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("Text=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Text=\"{Binding [Settings.Subtitle]", mainWindow, StringComparison.Ordinal);
         Assert.Contains("<ui:TitleBar", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Padding\" Value=\"12,0,32,0\"", controls, StringComparison.Ordinal);
+
+        // O seletor reserva folga à direita para o chevron: sem ela o valor
+        // selecionado passa por baixo da seta em idiomas de rótulo longo. O
+        // teste trava a REGRA (folga direita > folga esquerda, e o suficiente
+        // para o glifo), não um valor de padding específico, que muda sempre
+        // que a altura do controle é reajustada.
+        var comboPadding = ThicknessOf(SettingsComboBoxPadding(controls));
+        Assert.True(
+            comboPadding.Right >= 30,
+            $"SettingsComboBoxStyle reserva apenas {comboPadding.Right}px à direita; o chevron precisa de pelo menos 30.");
+        Assert.True(
+            comboPadding.Right > comboPadding.Left,
+            "SettingsComboBoxStyle precisa de mais folga à direita que à esquerda: a seta mora naquele lado.");
+
         Assert.Contains("Content=\"{Binding SelectedValue, RelativeSource={RelativeSource AncestorType=ComboBox}}\"", controls, StringComparison.Ordinal);
         Assert.Contains("SelectedValuePath=\"Content\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
@@ -556,6 +573,53 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("Style=\"{StaticResource CaptionText}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Padding=\"{TemplateBinding Padding}\"", controls, StringComparison.Ordinal);
     }
+
+    /// <summary>
+    /// Remove comentários XML da marcação antes de uma verificação textual.
+    /// Sem isto, um comentário que explica por que uma regra existe conta
+    /// como violação dela — o que na prática proíbe documentar a decisão
+    /// junto do código que a implementa.
+    /// </summary>
+    private static string WithoutXmlComments(string markup)
+    {
+        return XmlCommentPattern().Replace(markup, string.Empty);
+    }
+
+    /// <summary>
+    /// Extrai o valor de <c>Padding</c> declarado por <c>SettingsComboBoxStyle</c>
+    /// em <c>Themes/Controls.xaml</c>.
+    /// </summary>
+    private static string SettingsComboBoxPadding(string controls)
+    {
+        var document = XDocument.Parse(controls);
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml";
+        var style = Assert.Single(
+            document.Descendants(presentation + "Style"),
+            element => (string?)element.Attribute(xaml + "Key") == "SettingsComboBoxStyle");
+        var padding = style
+            .Elements(presentation + "Setter")
+            .FirstOrDefault(setter => (string?)setter.Attribute("Property") == "Padding");
+
+        Assert.NotNull(padding);
+        var value = (string?)padding!.Attribute("Value");
+        Assert.NotNull(value);
+        return value!;
+    }
+
+    /// <summary>Interpreta um <c>Thickness</c> XAML de quatro componentes.</summary>
+    private static (double Left, double Top, double Right, double Bottom) ThicknessOf(string value)
+    {
+        var parts = value.Split(',', StringSplitOptions.TrimEntries);
+        Assert.Equal(4, parts.Length);
+        var numbers = parts
+            .Select(part => double.Parse(part, CultureInfo.InvariantCulture))
+            .ToArray();
+        return (numbers[0], numbers[1], numbers[2], numbers[3]);
+    }
+
+    [GeneratedRegex(@"<!--.*?-->", RegexOptions.Singleline | RegexOptions.CultureInvariant)]
+    private static partial Regex XmlCommentPattern();
 
     [GeneratedRegex(@"\[\s*(?<key>[A-Za-z0-9_.-]+)\s*\]", RegexOptions.CultureInvariant)]
     private static partial Regex LocalizedKeyPattern();

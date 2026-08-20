@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
   <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
   <resheader name="version"><value>2.0</value></resheader>
@@ -75,6 +75,10 @@
   <data name="Optimizer.Result.PartialTitle" xml:space="preserve"><value>Concluído com falhas</value></data>
   <data name="Optimizer.NextStep" xml:space="preserve"><value>PRÓXIMO PASSO RECOMENDADO</value></data>
   <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Plano de otimização</value></data>
+  <data name="Optimizer.Table.Action" xml:space="preserve"><value>AÇÃO</value></data>
+  <data name="Optimizer.Table.Description" xml:space="preserve"><value>O QUE FAZ</value></data>
+  <data name="Optimizer.Table.Risk" xml:space="preserve"><value>RISCO</value></data>
+  <data name="Optimizer.Table.Privilege" xml:space="preserve"><value>EXECUÇÃO</value></data>
   <data name="Optimizer.CurrentPlan" xml:space="preserve"><value>Plano atual</value></data>
   <data name="Optimizer.RunPlan" xml:space="preserve"><value>Executar plano</value></data>
   <data name="Progress.Title" xml:space="preserve"><value>Progresso</value></data>
@@ -87,6 +91,14 @@
   <data name="History.OpenLogs" xml:space="preserve"><value>Abrir pasta de logs</value></data>
   <data name="History.LocalRuns" xml:space="preserve"><value>Execuções locais</value></data>
   <data name="History.Undo" xml:space="preserve"><value>Desfazer</value></data>
+  <data name="History.Table.Date" xml:space="preserve"><value>DATA</value></data>
+  <data name="History.Table.Run" xml:space="preserve"><value>EXECUÇÃO</value></data>
+  <data name="History.Table.Summary" xml:space="preserve"><value>RESULTADO</value></data>
+  <data name="History.Table.Action" xml:space="preserve"><value>ROLLBACK</value></data>
+  <data name="History.Notes.Title" xml:space="preserve"><value>O que cada execução registra</value></data>
+  <data name="History.Notes.Recorded" xml:space="preserve"><value>As ações aplicadas, o resultado tipado de cada uma e o snapshot necessário para desfazer.</value></data>
+  <data name="History.Notes.Rollback" xml:space="preserve"><value>O rollback restaura apenas o que aquela execução mudou e preserva o que você alterou depois.</value></data>
+  <data name="History.Notes.Local" xml:space="preserve"><value>Tudo permanece neste computador, na pasta local do FiveMCleaner.</value></data>
   <data name="Settings.Title" xml:space="preserve"><value>Configurações</value></data>
   <data name="Settings.Subtitle" xml:space="preserve"><value>Personalize o aplicativo sem enfraquecer o perfil de otimização escolhido.</value></data>
   <data name="Settings.General.Title" xml:space="preserve"><value>Geral</value></data>
