@@ -5,6 +5,36 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.4.0] - 2026-08-20
+
+### Adicionado
+
+- Avisos ao vivo publicados pelo painel administrativo e exibidos no aplicativo,
+  com dispensa lembrada até a chegada de uma nova comunicação.
+- Notas da versão após uma atualização concluída, apresentadas somente quando
+  houver conteúdo novo para a versão instalada.
+- Campos de diagnóstico e telemetria v5, com coleta essencial e opcional
+  limitada pelo consentimento, suporte no Worker/D1 e novas métricas no painel.
+
+### Melhorado
+
+- Interface das telas Visão geral, Otimizador e Histórico renovada, com tema
+  consistente, melhor responsividade, foco e progresso baseado em etapas reais.
+- Fluxos de conta, relato de bugs, telemetria e atualização receberam cobertura
+  adicional de contratos, falhas e privacidade.
+
+### Corrigido
+
+- Corrigida a ingestão dos campos de telemetria v5 no Worker, incluindo schema,
+  migration aditiva e persistência dos dados validados.
+
+### Alterações técnicas
+
+- Endurecido o pipeline de distribuição: assemblies internas são ofuscadas antes
+  de hash, assinatura e empacotamento, com validação fail-closed e smoke do
+  runtime distribuído.
+- Atualizadas as actions de atestação de proveniência do GitHub.
+
 ## [1.3.2] - 2026-08-06
 
 ### Corrigido

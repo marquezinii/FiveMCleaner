@@ -264,9 +264,6 @@ jobs:
               -Destination ./artifacts/release/FiveMCleaner-Setup-latest-win-x64.exe
           }
 
-          $installerName = "FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe"
-          $downloadUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:RELEASE_TAG/$installerName"
-          $channelText = if ($env:RELEASE_CHANNEL -eq 'preview') { 'prévia / preview' } else { 'estável / stable' }
           $changelog = Get-Content -LiteralPath ./CHANGELOG.md -Raw -Encoding utf8
           $escapedVersion = [regex]::Escape($env:ASSET_VERSION)
           $releaseChanges = [regex]::Match(
@@ -275,29 +272,17 @@ jobs:
           if (-not $releaseChanges.Success) {
             throw "CHANGELOG.md does not contain an entry for $env:ASSET_VERSION."
           }
-          @"
-          ## FiveMCleaner $env:ASSET_VERSION ($channelText)
-
-          **[Download do instalador / Download installer]($downloadUrl)**
-
-          ## Últimas atualizações / Latest updates
-
-          $($releaseChanges.Value.Trim())
-
-          Consulte as alterações completas em
-          [CHANGELOG.md](https://github.com/$env:GITHUB_REPOSITORY/blob/$env:RELEASE_TAG/CHANGELOG.md).
-
-          O instalador inclui o runtime .NET e funciona sem baixar dependências durante a instalação.
-          The installer includes the .NET runtime and does not download dependencies during setup.
-
-          Confira o arquivo `.sha256` e o manifesto JSON antes de executar. Esta build ainda não possui
-          assinatura Authenticode; SmartScreen pode solicitar confirmação. Nunca desative o antivírus,
-          o UAC ou o SmartScreen para instalar o FiveMCleaner.
-
-          Verify the `.sha256` file and JSON manifest before running. This build is not Authenticode-signed
-          yet, so SmartScreen may request confirmation. Never disable antivirus, UAC, or SmartScreen to
-          install FiveMCleaner.
-          "@ | Set-Content -LiteralPath ./artifacts/release/RELEASE_NOTES.md -Encoding utf8
+          # O Discord consome o corpo da GitHub Release. Convertemos as seções
+          # técnicas do changelog no formato público estável, sem cabeçalhos,
+          # links ou avisos duplicados que a automação já fornece.
+          $notes = $releaseChanges.Value.Trim()
+          $notes = $notes -replace "(?m)^## \[$escapedVersion\].*\r?\n+", ''
+          $notes = $notes -replace '(?m)^### Adicionado$', '## ✨ Novidades'
+          $notes = $notes -replace '(?m)^### Melhorado$', '## 🔧 Melhorias'
+          $notes = $notes -replace '(?m)^### Corrigido$', '## 🐛 Correções'
+          $notes = $notes -replace '(?m)^### Segurança$', '## 🔒 Segurança'
+          $notes = $notes -replace '(?m)^### Alterações técnicas$', '## ⚙️ Alterações técnicas'
+          $notes.Trim() | Set-Content -LiteralPath ./artifacts/release/RELEASE_NOTES.md -Encoding utf8
 
       - name: Upload audited release candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7

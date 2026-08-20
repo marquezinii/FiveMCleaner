@@ -51,13 +51,15 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 > Nenhum software pode garantir mais FPS em todo PC ou servidor. Scripts, assets, rede, temperatura e limites do hardware também influenciam a experiência. O FiveMCleaner não desativa antivírus, não injeta código, não modifica binários do jogo e não promete resultados irreais.
 
 > [!NOTE]
-> A `v1.3.2` ainda não possui assinatura digital de uma autoridade pública. Mesmo com arquitetura transparente e sem ofuscação, Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
+> A `v1.4.0` ainda não possui assinatura digital de uma autoridade pública. Windows SmartScreen ou outro antivírus pode pedir confirmação enquanto o arquivo não acumula reputação. Verifique o SHA-256 e a origem, mas nunca desative proteções, crie exclusões, renomeie ou reempacote o app para escapar de uma detecção.
 
 ## Últimas atualizações
 
-**Versão 1.3.2**
+**Versão 1.4.0**
 
-- Corrigido: a atualização de um clique sempre falhava no download ("arquivo indisponível ou em uso"). Baixe o instalador direto do GitHub Releases se estiver em uma versão anterior.
+- Adicionado: avisos ao vivo do painel administrativo e notas da versão após uma atualização concluída.
+- Melhorado: Visão geral, Otimizador e Histórico receberam interface renovada, mais responsiva e com progresso real.
+- Atualizado: telemetria v5, dashboard e pipeline de distribuição endurecido com verificação fail-closed dos binários distribuídos.
 
 **Versão 1.3.1**
 
@@ -69,7 +71,7 @@ O FiveMCleaner reúne diagnóstico do computador, perfis gráficos conservadores
 - Corrigido: hardening de segurança do Worker de telemetria (CORS, limite de requisições, hashing de sessão, injeção de fórmula em CSV) e diversas condições de corrida no atualizador e na inicialização.
 - Melhorado: Visão geral, Otimizador e dashboard privado redesenhados, com monitor de desempenho ao vivo.
 
-## Estado da v1.3.2
+## Estado da v1.4.0
 
 - contas de usuário: cadastro, login e login com Google via Firebase
   Authentication, com usuário único e gerenciamento (senha, e-mail, foto,
