@@ -321,12 +321,14 @@
   <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Añadido</value></data>
   <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Mejorado</value></data>
   <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Corregido</value></data>
-  <data name="ReleaseNotes.1_4_2.Fixed" xml:space="preserve"><value>• El optimizador ahora explica cuando no hay una acción segura disponible para el diagnóstico actual.
-• El formulario de informe de errores vuelve a abrirse correctamente.</value></data>
+  <data name="ReleaseNotes.1_4_3.Fixed" xml:space="preserve"><value>• Se corrigió un error que podía impedir abrir el Optimizador cuando el plan no tiene acciones.
+• Se corrigió la representación de los saltos de línea en mensajes de error inesperado.</value></data>
   <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Eliminado</value></data>
   <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Seguridad</value></data>
   <data name="ReleaseNotes.Close" xml:space="preserve"><value>Cerrar</value></data>
-  <data name="Dialog.FatalError.Message" xml:space="preserve"><value>FiveMCleaner encontró un error inesperado. No se aplicará ningún cambio nuevo.\n\n{0}</value></data>
+  <data name="Dialog.FatalError.Message" xml:space="preserve"><value>FiveMCleaner encontró un error inesperado. No se aplicará ningún cambio nuevo.
+
+{0}</value></data>
   <data name="Brand.FooterCopyright" xml:space="preserve"><value>© 2026 Felipe Marquezini</value></data>
   <data name="Plan.VerifiedActions.Label" xml:space="preserve"><value>ACCIONES VERIFICADAS</value></data>
   <data name="Progress.ElapsedFormat" xml:space="preserve"><value>Transcurrido {0}</value></data>

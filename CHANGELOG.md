@@ -5,6 +5,13 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.4.3] - 2026-08-20
+
+### Corrigido
+
+- Corrigida a abertura do Otimizador quando o plano está vazio; a tela não exibe mais um erro inesperado nesse cenário.
+- Corrigida a formatação da mensagem de erro inesperado, que exibia marcadores de quebra de linha literalmente.
+
 ## [1.4.2] - 2026-08-20
 
 ### Corrigido

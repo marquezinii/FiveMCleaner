@@ -501,7 +501,7 @@
                         </TextBlock.Style>
                         <Run Text="{Binding [Plan.Empty.Title], Source={StaticResource LocalizedStrings}, Mode=OneWay}" FontWeight="SemiBold" />
                         <LineBreak />
-                        <Run Text="{Binding EmptyPlanMessage}" />
+                        <Run Text="{Binding EmptyPlanMessage, Mode=OneWay}" />
                     </TextBlock>
 
                     <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
