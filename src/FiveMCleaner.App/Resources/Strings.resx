@@ -200,6 +200,8 @@
   <data name="Plan.Empty.Summary" xml:space="preserve"><value>No changes will be made until the diagnostic finds safe actions.</value></data>
   <data name="Plan.Empty.LegacyRequired" xml:space="preserve"><value>Select a valid FiveM Legacy installation or install FiveM, then analyze your PC again to prepare safe actions.</value></data>
   <data name="Plan.Empty.NoSafeActions" xml:space="preserve"><value>No safe action is required for the current diagnostic.</value></data>
+  <data name="Plan.Empty.DiagnosticInProgress" xml:space="preserve"><value>Wait for the diagnostic to finish before preparing actions.</value></data>
+  <data name="Plan.Empty.DiagnosticUnavailable" xml:space="preserve"><value>The diagnostic could not be completed. Try scanning your PC again before preparing actions.</value></data>
   <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} actions • catalog v{1}</value></data>
   <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>{0} actions completed. {1}</value></data>
   <data name="Diagnosis.Partial" xml:space="preserve"><value>Partial diagnostics</value></data>
@@ -319,6 +321,8 @@
   <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Added</value></data>
   <data name="ReleaseNotes.Category.Improved" xml:space="preserve"><value>Improved</value></data>
   <data name="ReleaseNotes.Category.Fixed" xml:space="preserve"><value>Fixed</value></data>
+  <data name="ReleaseNotes.1_4_1.Fixed" xml:space="preserve"><value>• The optimizer now explains when no safe action is available for the current diagnostic.
+• The bug-report form now opens correctly.</value></data>
   <data name="ReleaseNotes.Category.Removed" xml:space="preserve"><value>Removed</value></data>
   <data name="ReleaseNotes.Category.Security" xml:space="preserve"><value>Security</value></data>
   <data name="ReleaseNotes.Close" xml:space="preserve"><value>Close</value></data>

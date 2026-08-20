@@ -83,9 +83,13 @@ public sealed partial class MainViewModel
         ? string.Join("  •  ", currentPlan.Notices.Select(LocalizeNotice))
         : localization.GetString("Plan.NoAdditionalWarnings");
 
-    public string EmptyPlanMessage => diagnostic?.Edition == FiveMEdition.Legacy
-        ? localization.GetString("Plan.Empty.NoSafeActions")
-        : localization.GetString("Plan.Empty.LegacyRequired");
+    public string EmptyPlanMessage => diagnostic is null
+        ? localization.GetString(diagnosticFailed
+            ? "Plan.Empty.DiagnosticUnavailable"
+            : "Plan.Empty.DiagnosticInProgress")
+        : diagnostic.Edition == FiveMEdition.Legacy
+            ? localization.GetString("Plan.Empty.NoSafeActions")
+            : localization.GetString("Plan.Empty.LegacyRequired");
 
     public string SelectedProfileLabel
     {

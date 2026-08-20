@@ -92,9 +92,11 @@ public sealed partial class MainViewModel
     private void ApplyDiagnostic(AppDiagnostic value)
     {
         diagnostic = value;
+        diagnosticFailed = false;
         OnPropertyChanged(nameof(IsLightRecommended));
         OnPropertyChanged(nameof(IsBalancedRecommended));
         OnPropertyChanged(nameof(IsAggressiveRecommended));
+        OnPropertyChanged(nameof(EmptyPlanMessage));
         OnPropertyChanged(nameof(SelectedProfileLabel));
         OnPropertyChanged(nameof(SelectedProfileName));
         OnPropertyChanged(nameof(IsSelectedProfileRecommended));
