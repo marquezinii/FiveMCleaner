@@ -263,7 +263,7 @@ public sealed partial class LocalizedInterfaceContractTests
         // fonte de glifos não é mais usada nesta página.
         Assert.DoesNotContain("Segoe MDL2 Assets", dashboard, StringComparison.Ordinal);
 
-        var viewModel = File.ReadAllText(Path.Combine(root, "src", "FiveMCleaner.App", "ViewModels", "MainViewModel.cs"));
+        var viewModel = File.ReadAllText(Path.Combine(root, "src", "FiveMCleaner.App", "ViewModels", "MainViewModel.Diagnostics.cs"));
         Assert.Contains("> 75 => localization.GetString(\"Dashboard.Readiness.Excellent\")", viewModel, StringComparison.Ordinal);
         Assert.Contains("> 50 => localization.GetString(\"Dashboard.Readiness.Good\")", viewModel, StringComparison.Ordinal);
         Assert.Contains("> 25 => localization.GetString(\"Dashboard.Readiness.Average\")", viewModel, StringComparison.Ordinal);
@@ -465,11 +465,7 @@ public sealed partial class LocalizedInterfaceContractTests
             "src",
             "FiveMCleaner.App",
             "MainWindow.xaml"));
-        var source = File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "FiveMCleaner.App",
-            "MainWindow.xaml.cs"));
+        var source = TestHelpers.ReadMainWindowSource();
 
         Assert.Contains("WindowState=\"Maximized\"", markup, StringComparison.Ordinal);
         Assert.Contains("WmGetMinMaxInfo", source, StringComparison.Ordinal);

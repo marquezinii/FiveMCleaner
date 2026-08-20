@@ -25,18 +25,22 @@ test("exports the Portuguese FiveMCleaner landing page", async () => {
 });
 
 test("uses native Next static export as the only website build", async () => {
-  const [page, layout, packageJson, nextConfig] = await Promise.all([
+  const [page, header, copy, layout, packageJson, nextConfig] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/SiteHeader.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/content/copy.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
     readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
   ]);
 
   assert.match(page, /^"use client";/);
-  assert.match(page, /setLanguage\("pt"\)/);
-  assert.match(page, /setLanguage\("en"\)/);
+  // The language toggle now lives in SiteHeader.tsx (see app/page.tsx, which
+  // renders <SiteHeader> and owns only the `language` state itself).
+  assert.match(header, /setLanguage\("pt"\)/);
+  assert.match(header, /setLanguage\("en"\)/);
   assert.match(
-    page,
+    copy,
     /https:\/\/github\.com\/marquezinii\/FiveMCleaner\/releases\/latest/,
   );
   assert.match(layout, /title: "FiveMCleaner/);
