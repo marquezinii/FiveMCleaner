@@ -3,34 +3,28 @@ using FiveMCleaner.Core.Catalog;
 
 namespace FiveMCleaner.Core.Planning;
 
-public sealed class PlanBuilder : IPlanBuilder
+/// <summary>
+/// Turns an optimization request into a plan. Pure: the same request and
+/// context always produce the same plan, and planning never reads the clock,
+/// the file system, the registry or any ambient state.
+/// </summary>
+public static class PlanBuilder
 {
-    private readonly ActionCatalog _catalog;
-    private readonly TimeProvider _timeProvider;
-
-    public PlanBuilder()
-        : this(ActionCatalog.Current, TimeProvider.System)
-    {
-    }
-
-    public PlanBuilder(ActionCatalog catalog, TimeProvider timeProvider)
-    {
-        _catalog = catalog ?? throw new ArgumentNullException(nameof(catalog));
-        _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
-    }
-
-    public OptimizationPlanDto Build(OptimizationPlanRequestDto request)
+    public static OptimizationPlanDto Build(
+        OptimizationPlanRequestDto request,
+        PlanBuildContext context)
     {
         ArgumentNullException.ThrowIfNull(request);
+        ArgumentNullException.ThrowIfNull(context);
         ValidateRequest(request);
 
         var blocks = CreateBlocks(request.Edition);
         if (blocks.Count > 0)
         {
-            return CreatePlan(request, [], blocks, []);
+            return CreatePlan(request, context, [], blocks, []);
         }
 
-        var selectedDefinitions = _catalog.Actions
+        var selectedDefinitions = context.Catalog.Actions
             .Where(action => action.Supports(request.Profile))
             .Where(action => action.SupportsWindows(request.DetectedWindows))
             .Where(action => IsEnabled(action.OptionGate, request.Options))
@@ -45,11 +39,40 @@ public sealed class PlanBuilder : IPlanBuilder
             .ToArray();
 
         var notices = CreateNotices(request, selectedDefinitions);
-        return CreatePlan(request, plannedActions, [], notices);
+        return CreatePlan(request, context, plannedActions, [], notices);
     }
 
-    private OptimizationPlanDto CreatePlan(
+    /// <summary>
+    /// Rebuilds the request that must reproduce <paramref name="plan"/>. Both
+    /// the elevated broker and the Windows runtime re-plan a submitted plan and
+    /// reject it when the result differs, so the reconstruction lives here
+    /// rather than being restated at each boundary.
+    /// </summary>
+    /// <remarks>
+    /// <see cref="OptimizationPlanRequestDto.DetectedWindows"/> is deliberately
+    /// left at its default: the plan does not carry the detected Windows
+    /// version, so a validator cannot know it. Every catalog action is
+    /// currently eligible on every supported version, which keeps the
+    /// reconstruction exact. If an action ever becomes version-gated, the
+    /// detected version has to travel with the plan or validation will reject
+    /// legitimate plans.
+    /// </remarks>
+    public static OptimizationPlanRequestDto CanonicalRequestFor(OptimizationPlanDto plan)
+    {
+        ArgumentNullException.ThrowIfNull(plan);
+        ArgumentNullException.ThrowIfNull(plan.Options);
+
+        return new OptimizationPlanRequestDto
+        {
+            Profile = plan.Profile,
+            Edition = plan.Edition,
+            Options = plan.Options with { }
+        };
+    }
+
+    private static OptimizationPlanDto CreatePlan(
         OptimizationPlanRequestDto request,
+        PlanBuildContext context,
         IReadOnlyList<PlannedActionDto> actions,
         IReadOnlyList<PlanBlockDto> blocks,
         IReadOnlyList<PlanNoticeDto> notices)
@@ -58,12 +81,12 @@ public sealed class PlanBuilder : IPlanBuilder
 
         return new OptimizationPlanDto
         {
-            PlanId = Guid.NewGuid(),
+            PlanId = context.PlanId,
             SchemaVersion = ProductIdentity.PlanSchemaVersion,
             CatalogVersion = ActionCatalog.CurrentVersion,
             ProductName = ProductIdentity.Name,
             ProductSubtitle = ProductIdentity.Subtitle,
-            CreatedAtUtc = _timeProvider.GetUtcNow(),
+            CreatedAtUtc = context.CreatedAtUtc,
             Profile = request.Profile,
             Edition = request.Edition,
             Options = request.Options with { },
@@ -109,20 +132,10 @@ public sealed class PlanBuilder : IPlanBuilder
         OptimizationPlanRequestDto request,
         IReadOnlyList<OptimizationActionDefinition> actions)
     {
-        return [.. CreateRemovalNotices(request, actions),
-            .. CreatePowerAndProcessNotices(actions),
-            .. CreateRepairNotices(actions),
-            .. CreateGraphicsNotices(actions),
-            .. CreateProfileNotices(request)];
-    }
-
-    private static IReadOnlyList<PlanNoticeDto> CreateRemovalNotices(
-        OptimizationPlanRequestDto request,
-        IReadOnlyList<OptimizationActionDefinition> actions)
-    {
         var notices = new List<PlanNoticeDto>();
+        var hasAction = new HashSet<string>(actions.Select(a => a.Id), StringComparer.Ordinal);
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.PruneLegacyCrashDumps))
+        if (hasAction.Contains(OptimizationActionIds.PruneLegacyCrashDumps))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -133,7 +146,7 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.RepairLegacyServerCache))
+        if (hasAction.Contains(OptimizationActionIds.RepairLegacyServerCache))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -144,15 +157,7 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        return notices;
-    }
-
-    private static IReadOnlyList<PlanNoticeDto> CreatePowerAndProcessNotices(
-        IReadOnlyList<OptimizationActionDefinition> actions)
-    {
-        var notices = new List<PlanNoticeDto>();
-
-        if (actions.Any(action => action.Id == OptimizationActionIds.EnableSessionPerformancePowerPlan))
+        if (hasAction.Contains(OptimizationActionIds.EnableSessionPerformancePowerPlan))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -163,7 +168,7 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.TerminateStuckFiveMProcess))
+        if (hasAction.Contains(OptimizationActionIds.TerminateStuckFiveMProcess))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -174,15 +179,7 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        return notices;
-    }
-
-    private static IReadOnlyList<PlanNoticeDto> CreateRepairNotices(
-        IReadOnlyList<OptimizationActionDefinition> actions)
-    {
-        var notices = new List<PlanNoticeDto>();
-
-        if (actions.Any(action => action.Id == OptimizationActionIds.RecreateFiveMLocalData))
+        if (hasAction.Contains(OptimizationActionIds.RecreateFiveMLocalData))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -193,7 +190,7 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.RepairStaleAuthData))
+        if (hasAction.Contains(OptimizationActionIds.RepairStaleAuthData))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -204,16 +201,8 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        return notices;
-    }
-
-    private static IReadOnlyList<PlanNoticeDto> CreateGraphicsNotices(
-        IReadOnlyList<OptimizationActionDefinition> actions)
-    {
-        var notices = new List<PlanNoticeDto>();
-
-        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyQualityLegacyGraphics
-            || action.Id == OptimizationActionIds.ApplyQualityGtaVGraphics))
+        if (hasAction.Contains(OptimizationActionIds.ApplyQualityLegacyGraphics)
+            || hasAction.Contains(OptimizationActionIds.ApplyQualityGtaVGraphics))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -223,8 +212,8 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyLegacyDisplayPreferences
-            || action.Id == OptimizationActionIds.ApplyGtaVDisplayPreferences))
+        if (hasAction.Contains(OptimizationActionIds.ApplyLegacyDisplayPreferences)
+            || hasAction.Contains(OptimizationActionIds.ApplyGtaVDisplayPreferences))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -234,7 +223,7 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyGtaVRepairLaunchParameters))
+        if (hasAction.Contains(OptimizationActionIds.ApplyGtaVRepairLaunchParameters))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -245,9 +234,9 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        if (actions.Any(action => action.Id == OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters
-            || action.Id == OptimizationActionIds.ApplyGtaVDisplayLaunchParameters
-            || action.Id == OptimizationActionIds.ApplyGtaVRepairLaunchParameters))
+        if (hasAction.Contains(OptimizationActionIds.ApplyGtaVGraphicsLaunchParameters)
+            || hasAction.Contains(OptimizationActionIds.ApplyGtaVDisplayLaunchParameters)
+            || hasAction.Contains(OptimizationActionIds.ApplyGtaVRepairLaunchParameters))
         {
             notices.Add(new PlanNoticeDto
             {
@@ -257,25 +246,17 @@ public sealed class PlanBuilder : IPlanBuilder
             });
         }
 
-        return notices;
-    }
-
-    private static IReadOnlyList<PlanNoticeDto> CreateProfileNotices(OptimizationPlanRequestDto request)
-    {
-        if (request.Profile != OptimizationProfile.Aggressive)
+        if (request.Profile == OptimizationProfile.Aggressive)
         {
-            return [];
-        }
-
-        return
-        [
-            new PlanNoticeDto
+            notices.Add(new PlanNoticeDto
             {
                 Code = "aggressive-prioritizes-performance",
                 Severity = PlanNoticeSeverity.Warning,
                 Message = "O perfil agressivo prioriza FPS e responsividade, reduzindo a qualidade visual."
-            }
-        ];
+            });
+        }
+
+        return notices;
     }
 
     private static bool IsEnabled(ActionOptionGate gate, OptimizationOptionsDto options)

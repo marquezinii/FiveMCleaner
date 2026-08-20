@@ -233,13 +233,3 @@ public sealed class LocalizationServiceTests
             .ToSortedSet(StringComparer.Ordinal);
     }
 }
-
-internal static class LocalizationTestEnumerableExtensions
-{
-    public static SortedSet<T> ToSortedSet<T>(
-        this IEnumerable<T> source,
-        IComparer<T>? comparer = null)
-    {
-        return new SortedSet<T>(source, comparer);
-    }
-}

@@ -3,249 +3,447 @@
 ## Princípio de operação
 
 Este projeto pode ser desenvolvido simultaneamente por pessoas e por múltiplos
-agentes de IA. O usuário não deve precisar administrar Git para o fluxo normal:
-ao receber uma tarefa de desenvolvimento, auditoria, correção, refatoração, UI,
-segurança ou equivalente, o agente descobre e executa automaticamente os passos
-mecânicos abaixo. Só peça orientação quando houver uma decisão real de produto,
-comportamento, segurança ou uma ambiguidade que não possa ser resolvida com
-segurança pelo estado do projeto.
+agentes de IA. O fluxo normal deve exigir o mínimo possível de administração Git
+pelo usuário: o agente é responsável por descobrir o estado do repositório,
+isolar sua tarefa, implementar, validar, versionar o trabalho e preparar a
+integração.
 
-Código-fonte e Git são a fonte principal da verdade; a documentação fornece
-contexto e pode estar defasada. Preserve sempre o contexto e o trabalho já
-existente, mesmo que não tenham sido produzidos pelo agente atual.
+Não peça ao usuário para escolher branch, nome de worktree, estratégia mecânica
+de Git ou outros detalhes que possam ser inferidos com segurança. Peça orientação
+somente quando existir uma decisão real de produto, comportamento, segurança,
+compatibilidade ou uma ambiguidade material que o repositório e sua documentação
+não resolvam.
 
-## Branches e isolamento
+Código-fonte, testes e histórico Git são a fonte principal da verdade. A
+documentação fornece contexto e regras de operação, mas pode estar defasada em
+relação ao código. Preserve sempre trabalho existente, inclusive alterações
+produzidas por outras pessoas ou agentes.
+
+## Fontes de contexto do projeto
+
+Ao iniciar uma tarefa de desenvolvimento, correção, refatoração, segurança, UI,
+documentação técnica ou auditoria com alterações, o agente deve carregar apenas
+o contexto necessário, nesta ordem:
+
+1. `AI_RULES.md`, que define governança, Git, PRs, integração e release;
+2. `PROJECT_STATE.md`, que descreve de forma compacta o estado **atual e já
+   integrado** da próxima versão;
+3. documentação diretamente relacionada à área afetada, especialmente
+   `docs/architecture.md` e `docs/safety.md` quando aplicáveis;
+4. código, testes e histórico Git recente das áreas que serão alteradas.
+
+A leitura obrigatória deve ser **seletiva**. Não percorra documentação histórica,
+PRs antigos ou arquivos sem relação com a tarefa apenas para “obter contexto”.
+Isso aumenta custo, reduz foco e pode introduzir decisões obsoletas no raciocínio.
+
+`PROJECT_HISTORY.md` **não é leitura padrão**. Consulte-o somente quando houver
+uma necessidade concreta de reconstruir uma decisão antiga, investigar regressão,
+compatibilidade legada, migração, release passada ou outro contexto histórico que
+não esteja suficientemente explicado pelo código, pelo Git recente ou pela
+documentação atual. Se a tarefa não exige arqueologia, não o leia.
+
+Código-fonte e testes vigentes prevalecem sobre documentação desatualizada. Entre
+os documentos de estado, `PROJECT_STATE.md` representa a visão canônica atual;
+`PROJECT_HISTORY.md` nunca deve sobrescrever uma decisão atual apenas por conter
+uma descrição antiga diferente.
+
+## Governança do estado e do histórico
+
+`PROJECT_STATE.md` é um **snapshot operacional**, não changelog, diário de agente,
+relatório de PR ou arquivo de auditoria. Deve permanecer curto o bastante para ser
+lido integralmente no início de toda tarefa sem desperdiçar contexto.
+
+### O que pertence ao `PROJECT_STATE.md`
+
+Mantenha apenas informação que altere a compreensão do estado atual integrado:
+
+- snapshot da próxima versão e branches oficiais;
+- arquitetura vigente e invariantes de segurança;
+- capacidades atualmente existentes que sejam relevantes para novos trabalhos;
+- contratos, limitações e decisões ainda válidas;
+- pendências e decisões realmente abertas;
+- baseline **mais recente e útil** de validação por superfície;
+- comandos e documentos canônicos necessários para operar o projeto.
+
+### O que não pertence ao `PROJECT_STATE.md`
+
+Não registrar nele:
+
+- uma seção por tarefa, PR, branch, agente, commit ou data;
+- narrativa de como uma correção foi implementada;
+- bugs já resolvidos sem efeito atual;
+- listas cumulativas de merges e integrações;
+- números antigos de testes quando já existe baseline posterior;
+- detalhes que pertencem a documentação especializada;
+- conteúdo que existe apenas para preservar memória histórica.
+
+Quando uma pendência for resolvida, **remova-a ou substitua o estado correspondente**;
+não acrescente uma entrada “resolvido em...”. Quando uma arquitetura mudar,
+atualize a descrição vigente em vez de manter lado a lado a arquitetura antiga.
+Quando um baseline novo substituir o anterior, mantenha somente os valores ainda
+úteis para comparação ou referência.
+
+### Limite operacional
+
+A meta é manter `PROJECT_STATE.md` em aproximadamente **200 linhas** e,
+preferencialmente, abaixo de **20 KB**. Esses valores são orçamento de contexto,
+não motivo para mutilar informação essencial. Se uma integração fizer o arquivo
+crescer de forma sustentada além disso, o próprio integrador deve compactá-lo,
+consolidar repetições e mover detalhes para o documento canônico adequado antes
+de concluir.
+
+### Papel do `PROJECT_HISTORY.md`
+
+`PROJECT_HISTORY.md` é um **arquivo histórico/legado**. Sua existência
+permite retirar cronologia do estado canônico sem destruir contexto antigo, mas ele
+não substitui Git, Pull Requests ou `CHANGELOG.md`.
+
+- tarefas normais não o leem nem o atualizam;
+- integrações normais não precisam acrescentar um resumo de cada PR;
+- só adicionar conteúdo quando houver valor histórico durável que não esteja
+  adequadamente preservado em Git/PR/CHANGELOG, ou quando o usuário pedir uma
+  manutenção/arquivamento histórico explícito;
+- fatos históricos nunca têm precedência automática sobre código e documentação
+  atuais.
+
+Tarefas isoladas não devem editar `PROJECT_STATE.md` nem `PROJECT_HISTORY.md` por
+padrão. A tarefa comunica suas mudanças pelo próprio código, commits e Pull
+Request; o integrador consolida no `PROJECT_STATE.md` apenas o que efetivamente
+se tornou estado oficial.
+
+## Branches, worktrees e isolamento
 
 - `main` contém exclusivamente versões públicas já publicadas e só é alterada
   durante uma **publicação oficial**.
 - `dev/proxima-versao` é a branch oficial de **integração** da próxima versão.
-  Agentes de tarefas normais não desenvolvem diretamente nela.
-- `ai/<agente>/<tarefa>` é uma branch temporária e exclusiva de uma tarefa.
-  O formato preferencial é, por exemplo, `ai/codex/backend-refactor` ou
-  `ai/claude/security-audit`. Use a identidade conhecida do agente; se ela não
-  puder ser determinada, use `ai/agent/<tarefa>`. Gere automaticamente um slug
-  curto e apropriado; se já existir, gere uma variante única sem perguntar.
+  Tarefas normais não desenvolvem diretamente nela.
+- Cada tarefa que produzir alterações deve usar uma branch temporária baseada em
+  `dev/proxima-versao`, nomeada pelo **objetivo da mudança**, não pela identidade
+  da IA.
 
-Para cada nova tarefa normal, o agente deve, automaticamente:
+Use, quando aplicável, os prefixos:
 
-1. identificar a raiz do repositório e ler integralmente `AI_RULES.md` e
-   `PROJECT_STATE.md`;
-2. verificar `git status`, histórico recente, branches e worktrees existentes;
-3. usar `dev/proxima-versao` como base, criando sua branch exclusiva;
-4. criar um Git worktree exclusivo em um diretório irmão do repositório
-   principal, com nome determinado automaticamente;
-5. executar alterações, testes e commits somente nesse worktree, sem trocar a
-   branch do checkout compartilhado.
+- `feat/<slug>` para nova funcionalidade;
+- `fix/<slug>` para correção;
+- `refactor/<slug>` para refatoração sem mudança funcional intencional;
+- `perf/<slug>` para desempenho;
+- `security/<slug>` para hardening ou correção de segurança;
+- `test/<slug>` para testes;
+- `docs/<slug>` para documentação;
+- `chore/<slug>` para manutenção;
+- `task/<slug>` quando nenhuma categoria anterior representar bem a tarefa.
 
-Se o agente já estiver em um worktree exclusivo da sua própria tarefa, deve
-reutilizá-lo. Caso um worktree não seja tecnicamente possível, o agente deve
-preservar o checkout compartilhado, evitar trocar sua branch e informar a
-limitação antes de prosseguir por uma alternativa segura.
+Exemplos: `feat/account-security`, `fix/updater-timeout`,
+`refactor/telemetry-pipeline`. Gere automaticamente um slug curto e descritivo;
+se o nome já existir, crie uma variante única sem interromper o usuário.
+
+### Preparação automática de uma tarefa
+
+Para cada nova tarefa normal, o agente deve:
+
+1. localizar a raiz do repositório e ler o contexto obrigatório;
+2. verificar `git status`, branch atual, histórico recente, branches e worktrees;
+3. quando houver acesso ao remoto, executar `git fetch` antes de definir a base;
+4. partir do estado mais recente e seguro de `dev/proxima-versao` ou
+   `origin/dev/proxima-versao`;
+5. criar a branch da tarefa automaticamente;
+6. criar ou reutilizar um **worktree exclusivo** para essa branch sempre que o
+   agente ainda não estiver em um checkout isolado da própria tarefa;
+7. executar alterações, testes e commits somente nesse checkout isolado.
+
+Nunca troque a branch de um checkout que possa estar sendo usado por outro agente
+ou processo. Se um worktree não for tecnicamente possível, preserve o checkout
+compartilhado e use a alternativa mais segura disponível, informando a limitação
+somente quando ela afetar a execução ou a segurança do trabalho.
 
 ## Segurança no trabalho concorrente
 
 Assuma sempre que outros agentes podem estar trabalhando simultaneamente.
 
-- Nunca apagar, resetar, descartar, sobrescrever ou sincronizar trabalho de
-  outra branch. Nunca usar `git reset --hard` em trabalho que possa pertencer a
-  outro agente, nem force push.
-- Nunca modificar arquivos sem relação com a tarefa por limpeza estética;
-  evite reformatações massivas e refatorações oportunistas não relacionadas.
+- Nunca apagar, resetar, descartar, sobrescrever ou sincronizar trabalho de outra
+  branch ou worktree.
+- Nunca usar `git reset --hard` em trabalho que possa não pertencer exclusivamente
+  à tarefa atual e nunca usar force push no fluxo normal.
+- Nunca alterar arquivos sem relação com a tarefa apenas por limpeza estética;
+  evite reformatações massivas e refatorações oportunistas.
 - Limite as mudanças ao escopo solicitado e preserve o comportamento existente
   fora dele.
-- Resolva conflitos conscientemente durante a integração; nunca os oculte com
-  `ours`, `theirs` ou sobrescrita indiscriminada.
-- Preserve os limites de segurança em `docs/safety.md` e a separação
-  arquitetural em `docs/architecture.md`.
-- Antes de alterar código ou documentação relacionada, inspecione os arquivos e
-  testes afetados. Nunca desfaça alterações anteriores sem compreender sua
-  motivação, impacto e autoria disponível no histórico.
+- Antes de editar, inspecione os arquivos, contratos e testes afetados. Não
+  reverta uma alteração anterior sem compreender sua motivação e impacto.
+- Preserve os limites de segurança em `docs/safety.md` e a separação arquitetural
+  em `docs/architecture.md`.
+- Conflitos devem ser resolvidos semanticamente. Nunca use `ours`, `theirs`,
+  sobrescrita integral ou qualquer atalho equivalente sem verificar qual
+  comportamento precisa sobreviver.
+- Um merge Git sem conflito textual **não prova compatibilidade**. Sempre avalie
+  também conflitos lógicos, contratos, dependências e comportamento combinado.
 
-## Relatório e conclusão da tarefa
+## Implementação e validação
 
-`PROJECT_STATE.md` é o estado **oficial** do projeto e não deve ser alterado
-por tarefas paralelas — nem mesmo para registrar o próprio progresso, uma
-descoberta ou um achado de auditoria. Um agente em tarefa isolada que editar
-`PROJECT_STATE.md` diretamente cometeu um erro de processo e deve ser
-corrigido antes da integração; o agente integrador não deve levar essa edição
-adiante, mesmo que o conteúdo em si seja válido — o conteúdo técnico deve ser
-reincorporado via `.ai/tasks/` e só chega a `PROJECT_STATE.md` pela mão do
-integrador. Durante uma tarefa isolada, crie ou atualize somente o
-relatório exclusivo `.ai/tasks/<identificador-da-tarefa>.md`, usando um
-identificador único derivado da tarefa. Ele deve registrar, de forma curta:
+O agente deve trabalhar de forma autônoma dentro do escopo da tarefa:
 
-- agente, branch, objetivo e status;
-- resumo das mudanças e arquivos/áreas principais alterados;
-- testes executados e resultados;
-- decisões relevantes, bugs ou limitações restantes;
-- commits criados e observações importantes para integração.
+- compreender o comportamento atual antes de modificá-lo;
+- preferir mudanças coesas e mínimas, sem sacrificar a correção arquitetural;
+- adicionar ou ajustar testes quando a mudança alterar comportamento relevante;
+- executar os testes mais específicos durante o desenvolvimento e a validação
+  aplicável ao final;
+- não remover, enfraquecer ou contornar testes apenas para obter uma execução
+  verde;
+- não afirmar que algo foi testado, validado ou corrigido sem evidência concreta.
 
-Uma tarefa concluída termina automaticamente, sem pedido adicional do usuário:
+Antes de concluir, revise o diff e confirme que não entraram segredos, dados
+locais, caches, builds, arquivos temporários ou mudanças acidentais.
 
-1. revise as mudanças e confirme que não há arquivos acidentais, segredos,
-   builds, caches ou dados locais no commit;
-2. execute testes, build, lint e typecheck disponíveis e aplicáveis;
-3. corrija os erros introduzidos pela própria tarefa;
-4. atualize o relatório exclusivo da tarefa;
-5. crie automaticamente um único commit Git local, claro e profissional;
-6. reconstrua o atalho `FiveMCleaner - Desenvolvimento` da área de trabalho
-   com `scripts\Install-DevelopmentShortcut.ps1 -Build`, para que o usuário
-   consiga abrir e ver imediatamente o resultado de qualquer alteração feita
-   por uma IA, em qualquer tarefa, branch ou worktree. Se o script falhar ou
-   não puder ser executado no ambiente atual, informe explicitamente que o
-   atalho não foi reconstruído e por quê, em vez de omitir o passo;
-7. deixe a branch pronta para integração e informe branch, commit, testes e o
-   status **pronto para integração**.
+## Commits
 
-Commits locais são obrigatórios e não exigem autorização remota. Não crie
-commits para experimentos, tentativas intermediárias ou trabalho incompleto.
-Não faça merge automático em `dev/proxima-versao` ao concluir uma tarefa.
+Commits locais são parte normal da tarefa e não exigem autorização adicional.
+Use um ou mais commits **coerentes e concluídos** quando isso melhorar a clareza;
+não crie commits de tentativa, `WIP` ou checkpoints sem valor histórico.
 
-### Padrão de mensagens de commit
-
-Toda mensagem de commit segue [Conventional Commits](https://www.conventionalcommits.org/pt-br/):
+Toda mensagem de commit segue
+[Conventional Commits](https://www.conventionalcommits.org/pt-br/):
 `tipo(escopo opcional): descrição curta no imperativo`, por exemplo
 `fix(worker): corrige rate limit da rota de telemetria` ou
-`docs: atualiza README com nova estrutura de pastas`. Tipos comuns: `feat`,
-`fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `perf`, `build`, `revert`.
+`docs: atualiza README com nova estrutura de pastas`.
 
-- Nunca gere mensagens genéricas ou de artefato de build (ex.: `Build
-  FiveMCleaner vX.Y MVP`, `WIP`, `update`, `fix stuff`) — cada commit deve
-  descrever a decisão real, não o processo que o produziu.
-- Não invente número de versão na mensagem; a versão só muda durante uma
-  publicação oficial (ver seção correspondente).
-- Corpo opcional em linhas adicionais quando o contexto não couber no título;
-  sem menção a nomes de agente de IA, prompt ou ferramenta interna.
-- Este padrão vale a partir de agora; commits antigos já publicados
-  (inclusive os de releases já publicadas) não são reescritos — reescrever
-  histórico publicado quebraria tags de release existentes e é proibido pela
-  seção "Segurança no trabalho concorrente" acima, salvo pedido explícito e
-  inequívoco do usuário ciente do risco.
+Tipos comuns: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`, `ci`, `perf`,
+`build`, `revert`.
 
-Exceção: uma tarefa explicitamente autorizada como integração, ou uma tarefa
-não concorrente explicitamente autorizada diretamente em `dev/proxima-versao`,
-pode atualizar `PROJECT_STATE.md`.
+- Não use mensagens genéricas como `WIP`, `update`, `fix stuff` ou nomes de
+  artefatos de build.
+- Não invente número de versão; a versão só muda em publicação oficial.
+- Não mencione nome de agente de IA, prompt ou ferramenta interna na mensagem.
+- Nunca reescreva histórico já publicado para adequá-lo a estas regras.
+
+## Pull Requests e conclusão automática da tarefa
+
+O **Pull Request é o handoff padrão** de uma tarefa concluída. Ele substitui a
+necessidade de manter um relatório `.ai/tasks/` para toda alteração rotineira.
+
+Ao terminar uma tarefa, o agente deve automaticamente:
+
+1. revisar o diff final e o escopo;
+2. executar build, testes, lint, typecheck e demais validações disponíveis e
+   aplicáveis;
+3. corrigir falhas introduzidas pela própria tarefa;
+4. criar os commits finais profissionais;
+5. quando houver remoto e autenticação disponíveis, enviar **somente a branch da
+   tarefa** para o remoto;
+6. criar ou atualizar um Pull Request dessa branch para `dev/proxima-versao`;
+7. deixar no PR um resumo objetivo das mudanças, validações executadas,
+   limitações/riscos conhecidos e dependências de outros PRs quando existirem;
+8. informar ao usuário o resultado da tarefa, incluindo branch, PR, testes e
+   qualquer limitação relevante.
+
+A criação e atualização desse PR são autorizadas por estas regras e não exigem
+confirmação adicional do usuário. O agente **não** deve fazer merge do próprio PR
+em `dev/proxima-versao` apenas porque terminou a tarefa.
+
+Se o remoto, GitHub CLI/API ou autenticação não estiverem disponíveis, mantenha a
+branch local pronta para integração e informe claramente o que não pôde ser feito.
+Nunca simule a existência de push ou PR.
+
+### Conteúdo do Pull Request
+
+Use título curto e orientado à mudança. O corpo deve conter, quando aplicável:
+
+- **Resumo**: o que mudou e por quê;
+- **Validação**: comandos/testes realmente executados e seus resultados;
+- **Riscos/limitações**: o que merece atenção na integração;
+- **Dependências**: outros PRs ou mudanças das quais este trabalho depende.
+
+Não inclua segredos, caminhos locais desnecessários, prompts ou detalhes internos
+da ferramenta/agente.
+
+O PR pode conter detalhes de implementação e validação que **não devem ser
+copiados integralmente para `PROJECT_STATE.md`**. O PR é o handoff detalhado; o
+estado canônico recebe apenas a consequência durável da mudança após o merge.
+
+### `.ai/tasks/` é excepcional
+
+Arquivos em `.ai/tasks/` deixam de ser obrigatórios no fluxo normal. Use-os
+somente quando houver necessidade real de estado persistente fora do PR, por
+exemplo:
+
+- tarefa longa que atravessa várias sessões antes de existir um PR;
+- trabalho interrompido que precisa de handoff detalhado;
+- auditoria extensa com achados que ainda não viraram mudanças;
+- ambiente sem remoto/PR em que um registro persistente seja necessário.
+
+Quando existir, o relatório deve ser curto e não duplicar desnecessariamente o
+conteúdo do PR. Tarefas isoladas continuam sem alterar `PROJECT_STATE.md` por
+padrão.
 
 ## Integração das tarefas
 
-Frases como “integrar trabalhos”, “integrar as IAs”, “integrar branches”,
-“integrar tarefas concluídas” ou “preparar a dev com os trabalhos concluídos”
-ativam o modo **agente integrador**. Nesse modo, o agente deve:
+Frases como “integrar trabalhos”, “integrar os PRs”, “integrar branches”,
+“integrar tarefas concluídas” ou “preparar a dev” ativam o modo **agente
+integrador**. Essa autorização permite integrar os trabalhos concluídos em
+`dev/proxima-versao`, inclusive atualizar o remoto dessa branch quando necessário
+para concluir a integração. Ela **não** autoriza alterar `main`, criar tag ou
+publicar release.
 
-1. analisar `dev/proxima-versao`, as branches `ai/*` relevantes e os relatórios
-   em `.ai/tasks/`;
-2. identificar quais tarefas estão efetivamente concluídas e prontas;
-3. determinar uma ordem lógica quando houver dependências;
-4. integrar uma branch por vez em `dev/proxima-versao`, examinando e resolvendo
-   conflitos para preservar mudanças válidas dos dois lados;
-5. testar após integrações relevantes, corrigir incompatibilidades e executar a
-   suíte completa aplicável ao final;
-6. atualizar `PROJECT_STATE.md` com o estado oficial já integrado, criar o
-   commit de integração quando necessário e marcar os relatórios integrados.
-7. atualizar a simulação local da próxima versão com
-   `scripts\Install-DevelopmentShortcut.ps1 -Build` e confirmar que o atalho
-   `FiveMCleaner - Desenvolvimento` aponta para
-   `scripts\Start-DevelopmentApp.ps1`. Esse atalho recompila o Release atual
-   antes de abrir o app; portanto ele deve ser usado para validar toda mudança
-   integrada, enquanto `FiveMCleaner.lnk` continua sendo a instalação pública.
+No modo integrador, o agente deve:
 
-Quando o usuário pedir que o agente integrador examine branches e worktrees
-além de `main` e `dev/proxima-versao`, valide os relatórios e integre todas as
-tarefas concluídas aplicáveis. Se o pedido disser para integrar em
-`origin/dev/proxima-versao` (ou usar expressão equivalente), ele também é uma
-autorização explícita para enviar somente `dev/proxima-versao` ao remoto, após
-os testes e a reconstrução obrigatória do atalho. Assim, o atalho
-`FiveMCleaner - Desenvolvimento` deve sempre ser reconstruído para refletir o
-estado final integrado de `dev/proxima-versao` antes desse push; nunca deve
-apontar para `main`, uma branch `ai/*` ou a instalação pública.
+1. atualizar referências remotas e analisar o estado atual de
+   `dev/proxima-versao`;
+2. descobrir os PRs abertos destinados a `dev/proxima-versao`; se não houver PR
+   para algum trabalho relevante, examinar também branches de tarefa e relatórios
+   excepcionais em `.ai/tasks/`;
+3. validar quais trabalhos estão realmente concluídos e quais ainda são draft,
+   incompletos, falhos ou dependentes de outro trabalho;
+4. determinar uma ordem de integração baseada em dependências, áreas
+   sobrepostas e risco;
+5. para cada PR, revisar o diff, testes, contratos afetados e possíveis conflitos
+   **textuais e lógicos** com a `dev` atual e com os demais PRs;
+6. atualizar a branch do PR com a base atual quando necessário e resolver
+   conflitos preservando a intenção válida dos dois lados;
+7. executar validações focadas antes do merge quando o risco justificar;
+8. integrar um PR por vez em `dev/proxima-versao`, usando preferencialmente
+   **squash merge** para tarefas comuns; preserve commits separados quando eles
+   tiverem valor histórico ou técnico claro;
+9. executar testes relevantes entre integrações que interagem entre si e a suíte
+   completa aplicável ao final;
+10. corrigir incompatibilidades de integração em uma branch/PR apropriada ou em
+    um commit de integração claramente identificado, sem esconder a causa;
+11. atualizar `PROJECT_STATE.md` como **snapshot do estado resultante**, e não
+    como registro dos PRs: incorporar somente mudanças que alterem arquitetura,
+    capacidade atual, invariantes, pendências, decisões abertas ou baseline útil;
+    remover informações substituídas/resolvidas e compactar o arquivo se o
+    orçamento de contexto estiver sendo ultrapassado;
+12. não atualizar `PROJECT_HISTORY.md` rotineiramente; use-o somente se a
+    integração produzir contexto histórico durável que realmente precise ser
+    preservado fora de Git/PR/CHANGELOG;
+13. reconstruir a simulação local da próxima versão com
+    `scripts\Install-DevelopmentShortcut.ps1 -Build` e confirmar que o atalho
+    `FiveMCleaner - Desenvolvimento` aponta para
+    `scripts\Start-DevelopmentApp.ps1`;
+14. garantir que `origin/dev/proxima-versao` reflita o estado integrado e validado;
+15. após confirmação de merge e validação, remover worktrees locais temporários e
+    branches de tarefa já incorporadas quando isso for seguro. Branches remotas de
+    PR já mergeadas podem ser removidas como limpeza normal.
 
-Se duas tarefas conflitarem conceitualmente, analise os dois objetivos e
-preserve ambos sempre que isso for seguro e coerente. Não descarte uma solução
-válida sem análise explícita.
+Ao concluir qualquer tarefa — exceto tarefas que envolvam diretamente
+instalador/updater (`FiveMCleaner.Updater`, `FiveMCleaner.UpdateRuntime`,
+`FiveMCleaner.ReleaseTool`, `installer/`, fluxos de staging/ativação/rollback) —
+o agente deve **sempre** reconstruir o atalho `FiveMCleaner - Desenvolvimento`
+com `scripts\Install-DevelopmentShortcut.ps1 -Build`, executado a partir do
+próprio checkout/worktree da tarefa, para que ele reflita o app com as
+últimas mudanças implementadas, pronto para o usuário testar quando quiser.
+Isso vale tanto para tarefas isoladas quanto para a integração da
+`dev/proxima-versao`.
 
-Após uma tarefa estar comprovadamente integrada e validada, seu worktree pode
-ser removido e sua branch local temporária pode ser removida se não for mais
-necessária. Nunca remova trabalho não integrado nem branch remota sem
-autorização explícita.
+O script não aponta o atalho para o worktree que o executou: ele espelha a
+árvore de trabalho atual (exceto `.git`, `bin`, `obj`, `artifacts`,
+`node_modules`) para uma pasta irmã fixa e permanente,
+`FiveMCleaner-dev-shortcut`, e aponta o atalho para essa cópia estável. Assim
+o atalho nunca fica órfão quando um worktree de tarefa é removido após o
+merge — a próxima tarefa ou integração que reconstruir o atalho simplesmente
+sobrescreve o espelho com o estado mais recente.
+
+Se dois trabalhos conflitarem conceitualmente, não escolha um lado apenas porque
+o Git resolveu o texto. Compare os objetivos, contratos, testes e comportamento
+esperado; preserve ambos quando forem compatíveis e documente qualquer decisão de
+precedência necessária.
 
 ## Operações remotas
 
-Um commit local nunca autoriza por si só push, release, publicação de site ou
-deploy. Toda operação remota exige autorização explícita do usuário nesta
-tarefa, exceto o push automático da branch exclusiva descrito abaixo.
+Estas regras já autorizam automaticamente, durante uma tarefa normal:
 
-### Push automático da branch exclusiva
+- push da **branch da tarefa atual**;
+- criação e atualização do PR dessa branch para `dev/proxima-versao`.
 
-Ao concluir uma tarefa em uma branch `ai/<agente>/<tarefa>`, o agente pode
-fazer push automático dessa branch para o remoto sem autorização explícita do
-usuário. Esse push é restrito exclusivamente à branch da tarefa atual; jamais
-é permitido fazer push automático para `main`, `dev/proxima-versao` ou
-qualquer outra branch sem permissão explícita do usuário.
+Durante uma **integração explicitamente solicitada**, também ficam autorizados:
 
-Condições para o push automático:
+- atualizar branches de PR quando necessário para resolver integração;
+- realizar os merges dos PRs aprovados em `dev/proxima-versao`;
+- atualizar `origin/dev/proxima-versao`;
+- remover branches remotas temporárias já mergeadas quando for seguro.
 
-- a branch deve seguir o padrão `ai/<agente>/<tarefa>` e ser de uso exclusivo
-  do agente atual;
-- o agente deve ter concluído todos os passos de conclusão da tarefa (testes,
-  lint, commit, relatório);
-- o push envia somente essa branch, sem alterar refs remotas de outras
-  branches;
-- se o push remoto falhar (conflito, rejeição, erro de rede), o agente deve
-  informar o usuário e não tentar forçar o push.
+Fora desses casos, uma operação remota exige autorização explícita do usuário.
+Em especial, tarefas e integrações normais nunca autorizam:
 
-### Push de desenvolvimento
+- push ou merge em `main`;
+- criação de tags ou GitHub Releases;
+- publicação de instalador, site ou outros artefatos públicos;
+- deploy público;
+- force push ou reescrita de histórico remoto.
 
-É disparado somente por “push de desenvolvimento” ou equivalente inequívoco,
-ou automaticamente ao concluir uma tarefa na branch exclusiva conforme
-descrito acima.
-
-- Se o agente estiver em `ai/*`, envie somente essa branch.
-- Se estiver no modo integrador em `dev/proxima-versao`, envie somente
-  `dev/proxima-versao`.
-- Nunca envie ou altere `main`, crie Pull Request, tag ou release.
-- Nunca altere versão, `CHANGELOG.md` público, instalador, site, artefatos de
-  distribuição ou updater nesse fluxo.
-- Preserve integralmente o histórico: não faça squash, reescreva commits ou
-  descarte trabalho já commitado sem pedido explícito e inequívoco do usuário.
-
-Esse push serve apenas para backup remoto, sincronização entre agentes e
-continuidade do desenvolvimento; nunca é publicação.
+Se um push, atualização ou merge remoto falhar, não force a operação. Preserve o
+trabalho, diagnostique a causa e relate a limitação real.
 
 ## Publicação oficial
 
 É disparada somente por frase como “publicar versão”, “lançar versão”, “criar
 release”, “publicar atualização” ou “fazer release oficial”. Ela sempre parte
-do estado já integrado e consistente de `dev/proxima-versao`; branches `ai/*`
-nunca são publicadas diretamente e tarefas paralelas incompletas não entram na
+do estado já integrado e consistente de `dev/proxima-versao`; branches
+temporárias de tarefa nunca são publicadas diretamente e tarefas paralelas incompletas não entram na
 publicação.
 
 Ao ser disparada, a IA deve:
 
 1. revisar completamente o projeto, o histórico integrado e a documentação
    relevante, validando build e testes e corrigindo falhas antes de prosseguir;
-2. calcular a próxima versão com [Semantic Versioning](https://semver.org/lang/pt-BR/),
+2. confirmar que `PROJECT_STATE.md` representa o estado integrado atual e continua
+   compacto; corrigir inconsistências de estado antes de gerar notas públicas;
+3. calcular a próxima versão com [Semantic Versioning](https://semver.org/lang/pt-BR/),
    usando todas as mudanças efetivamente integradas desde a última tag;
-3. atualizar todos os arquivos de versão, `CHANGELOG.md`, notas de release,
+4. atualizar todos os arquivos de versão, `CHANGELOG.md`, notas de release,
    instalador, site e demais artefatos de distribuição, sem divergências;
-4. fazer merge de `dev/proxima-versao` para `main`, salvo se uma comparação
+5. fazer merge de `dev/proxima-versao` para `main`, salvo se uma comparação
    explícita de histórico e conteúdo provar que ambas já são idênticas;
-5. criar a tag da versão, publicar `main`, a tag, os artefatos oficiais e a
+6. criar a tag da versão, publicar `main`, a tag, os artefatos oficiais e a
    GitHub Release, cujo corpo segue obrigatoriamente o
    [Padrão das GitHub Releases](#padrão-das-github-releases-release-notes)
    definido abaixo;
-6. validar o atualizador de ponta a ponta e sincronizar `dev/proxima-versao`
+7. validar o atualizador de ponta a ponta e sincronizar `dev/proxima-versao`
    com a `main` publicada para iniciar o próximo ciclo.
 
 Um push autorizado não permite ocultar falhas: build, testes, lint, typecheck,
 empacotamento e validação de versão devem passar, ou o bloqueio deve ser
 informado claramente.
 
+### Levantamento das mudanças integradas
+
+O passo 3 ("calcular a próxima versão... usando todas as mudanças
+efetivamente integradas desde a última tag") e o passo 4 ("atualizar...
+`CHANGELOG.md`, notas de release...") exigem um levantamento real, não uma
+lembrança aproximada do que foi feito. Antes de escrever qualquer changelog,
+nota de release ou classificar a versão, a IA que publica deve:
+
+1. determinar o intervalo exato: da última tag publicada (`git describe
+   --tags --abbrev=0` a partir de `main`, ou a versão registrada em
+   `PROJECT_STATE.md`) até o `HEAD` atual de `dev/proxima-versao`;
+2. listar **todos** os commits desse intervalo (`git log <última-tag>..HEAD
+   --oneline` em `dev/proxima-versao`) e, quando existirem, os Pull Requests
+   correspondentes — não confiar apenas na memória da sessão ou em um
+   resumo parcial de integração anterior;
+3. para cada commit/PR, identificar a mudança real por trás da mensagem
+   crua (`git show`/diff quando o resumo do commit não for autoexplicativo)
+   e classificá-la como pertencente ao produto publicado — nunca incluir
+   trabalho que ficou só em branch de tarefa não integrada, PR fechado sem
+   merge, ou revertido antes da publicação;
+4. cruzar essa lista com o que já existe em `CHANGELOG.md` para essa faixa
+   de commits, preenchendo lacunas e removendo qualquer entrada que não
+   corresponda a uma mudança realmente integrada;
+5. só então compor as entradas do `CHANGELOG.md` (histórico técnico
+   completo) e, a partir delas, o corpo da GitHub Release seguindo o
+   [Padrão das GitHub Releases](#padrão-das-github-releases-release-notes) —
+   a Release nunca é escrita "de memória" sem essa varredura, e nunca
+   contradiz o `CHANGELOG.md` correspondente.
+
+Se o histórico for grande ou abranger muitas integrações, é aceitável (e
+recomendado) delegar esse levantamento a um agente dedicado só para
+sumarizar o intervalo de commits/PRs antes de redigir o texto final —
+contanto que a IA responsável pela publicação revise e confirme o resultado
+antes de publicar, em vez de copiá-lo sem verificação.
+
 ### Sincronização após a publicação
 
 Depois de uma publicação oficial bem-sucedida, `main` e
 `dev/proxima-versao` devem apontar para o mesmo conteúdo e histórico. A branch
 de integração fica preparada como base das próximas tarefas, que voltarão a
-nascer em branches `ai/*` isoladas.
+nascer em branches temporárias de tarefa isoladas.
 
 ### Validação do atualizador
 
@@ -279,7 +477,8 @@ obrigatório.
 
 Enquanto o projeto usar somente o canal estável: toda release oficial é uma
 release normal/stable — nunca marcada como `pre-release`, nunca deixada como
-`draft` ao final da publicação. Branches `ai/*` jamais geram release pública
+`draft` ao final da publicação. Branches temporárias de tarefa jamais geram
+release pública
 (já coberto em "Publicação oficial" acima).
 
 **Estrutura obrigatória do corpo**
@@ -332,7 +531,7 @@ seção inteira — nunca escreva algo como "Nenhuma alteração"):
 3. Nunca invente funcionalidades, melhorias, correções, resultados de teste,
    ganhos de desempenho ou melhorias de segurança; não prometa recursos
    futuros.
-4. Não inclua trabalho que ficou só em branches `ai/*` sem integrar, nem
+4. Não inclua trabalho que ficou só em branches temporárias de tarefa sem integrar, nem
    tarefas canceladas ou experimentais.
 5. Escreva sempre em português do Brasil, para o usuário final: claro,
    profissional, objetivo, curto, compreensível, sem jargão interno
@@ -450,36 +649,49 @@ não substitui a estrutura de seções (`Novidades`/`Melhorias`/`Correções`/
 [Padrão das GitHub Releases](#padrão-das-github-releases-release-notes).
 
 Alterações exclusivamente em `AI_RULES.md` ou em outra documentação de
-governança podem receber push de desenvolvimento autorizado, sem criar versão
-pública; nunca devem ser apresentadas como mudança do aplicativo.
+governança podem seguir o fluxo normal de branch + PR para
+`dev/proxima-versao`, sem criar versão pública; nunca devem ser apresentadas
+como mudança do aplicativo.
 
 ## Fluxo de trabalho
 
 ```text
 main
-→ versão pública
+→ versão pública estável
+
+        ↑ somente publicação oficial
 
 dev/proxima-versao
 → integração oficial da próxima versão
 
-ai/<agente>/<tarefa>
-→ trabalho isolado
+        ↑ PRs revisados e validados
+
+feat/* | fix/* | refactor/* | perf/* | security/* | test/* | docs/* | chore/* | task/*
+→ branches temporárias por tarefa
 
 Nova tarefa
-→ leitura de AI_RULES + PROJECT_STATE
-→ branch automática da tarefa baseada em dev/proxima-versao
-→ worktree exclusivo criado ou reutilizado automaticamente
-→ implementação e testes
-→ relatório .ai/tasks/
-→ commit local automático
-→ push automático da branch exclusiva (sem permissão explícita)
+→ ler AI_RULES + PROJECT_STATE + documentação relevante
+→ inspecionar Git e atualizar referências remotas
+→ criar branch pelo objetivo da mudança
+→ criar/reutilizar worktree exclusivo
+→ implementar e testar
+→ reconstruir FiveMCleaner - Desenvolvimento (exceto tarefas de instalador/updater)
+→ commit(s) profissionais
+→ push automático somente da branch da tarefa
+→ criar/atualizar PR automático → dev/proxima-versao
 → pronta para integração
 
 Integração solicitada
-→ integrar tarefas concluídas em dev/proxima-versao
-→ resolver conflitos conscientemente
-→ testes completos
-→ atualizar PROJECT_STATE
+→ descobrir PRs destinados à dev
+→ avaliar dependências e conflitos textuais/lógicos
+→ atualizar branches quando necessário
+→ integrar um PR por vez
+→ validar estado combinado
+→ consolidar PROJECT_STATE como snapshot curto, sem cronologia
+→ não atualizar PROJECT_HISTORY rotineiramente
+→ reconstruir FiveMCleaner - Desenvolvimento
+→ atualizar origin/dev/proxima-versao
+→ limpar worktrees/branches temporários já mergeados
 → dev pronta
 
 Publicação oficial solicitada

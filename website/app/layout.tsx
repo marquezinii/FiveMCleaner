@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+const assetPrefix = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const socialImagePath = `${assetPrefix || "/FiveMCleaner"}/og.png`;
+
 export const metadata: Metadata = {
+  metadataBase: new URL("https://marquezinii.github.io/"),
   title: "FiveMCleaner — Otimização transparente para FiveM",
   description:
-    "Otimize Windows, FiveM e GTA V com perfis automáticos, progresso claro e rollback. Runtime incluído para Windows 10 e 11 x64.",
+    "Otimize Windows, FiveM e GTA V com perfis automáticos, progresso claro e rollback. Windows 11 recomendado, com compatibilidade legada para Windows 10 x64.",
   applicationName: "FiveMCleaner",
   keywords: [
     "FiveMCleaner",
@@ -24,16 +28,18 @@ export const metadata: Metadata = {
     description:
       "Perfis automáticos, mudanças transparentes e rollback para Windows, FiveM e GTA V.",
     siteName: "FiveMCleaner",
+    images: [{ url: socialImagePath, width: 1200, height: 630 }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "FiveMCleaner",
     description: "Otimização transparente para FiveM no Windows.",
+    images: [socialImagePath],
   },
   icons: {
-    icon: [{ url: "/icon.png", type: "image/png", sizes: "512x512" }],
-    shortcut: "/icon.png",
-    apple: "/icon.png",
+    icon: [{ url: `${assetPrefix}/icon.png`, type: "image/png", sizes: "512x512" }],
+    shortcut: `${assetPrefix}/icon.png`,
+    apple: `${assetPrefix}/icon.png`,
   },
 };
 

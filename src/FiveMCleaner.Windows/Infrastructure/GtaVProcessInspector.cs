@@ -18,17 +18,9 @@ public sealed class WindowsGtaVProcessInspector : IGtaVProcessInspector
         {
             using (process)
             {
-                try
+                if (LooksLikeGtaVProcessName(ProcessInspection.GetNameOrEmpty(process)))
                 {
-                    if (LooksLikeGtaVProcessName(process.ProcessName))
-                    {
-                        return true;
-                    }
-                }
-                catch (Exception exception) when (exception is InvalidOperationException
-                    or System.ComponentModel.Win32Exception
-                    or NotSupportedException)
-                {
+                    return true;
                 }
 
                 if (normalizedRoot is null)
@@ -36,26 +28,9 @@ public sealed class WindowsGtaVProcessInspector : IGtaVProcessInspector
                     continue;
                 }
 
-                try
+                if (ProcessInspection.IsExecutableWithinRoot(process, normalizedRoot))
                 {
-                    var fileName = process.MainModule?.FileName;
-                    if (fileName is null)
-                    {
-                        continue;
-                    }
-
-                    var processPath = Path.GetFullPath(fileName);
-                    if (processPath.StartsWith(
-                            normalizedRoot + Path.DirectorySeparatorChar,
-                            StringComparison.OrdinalIgnoreCase))
-                    {
-                        return true;
-                    }
-                }
-                catch (Exception exception) when (exception is InvalidOperationException
-                    or System.ComponentModel.Win32Exception
-                    or NotSupportedException)
-                {
+                    return true;
                 }
             }
         }

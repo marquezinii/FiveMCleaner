@@ -44,6 +44,10 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
   `POST /admin/logout`, `GET /api/stats/:name[.csv]` (protected), plus CORS
   handling (`src/cors.js`) for every response since the dashboard is served
   from a different origin than this Worker.
+- `src/liveAlert/` — the single-row admin broadcast the dashboard writes
+  (`POST /admin/live-alert`, session-protected) and the desktop app polls at
+  startup plus once an hour (`GET /live-alert`, public, rate limited). See
+  `docs/superpowers/specs/2026-08-17-live-alerts-design.md`.
 - `src/auth/` — the custom admin authentication (see below).
 - `src/stats/` — `queries.js` (pure SQL+params builders, one per dashboard
   chart) and `csv.js` (pure CSV serialization for the export feature).
@@ -163,6 +167,18 @@ registration, and `POST /account/profile` still returns 409. The desktop
 client treats a rate-limited, failed or unreadable answer as "unknown" and
 never as "available".
 
+The public write routes use separate required `[[ratelimits]]` bindings:
+`TELEMETRY_LIMITER`, `BUG_REPORT_LIMITER`, and `UPDATER_EVENT_LIMITER`. Unlike
+the advisory username lookup, those routes fail closed when a binding is
+missing or unavailable so a deployment mistake cannot silently expose D1 to
+unbounded writes. Local handler tests must provide an explicit limiter stub
+when they exercise one of those routes.
+
+`GET /live-alert` follows the same advisory, fail-open trade as the username
+lookup (`LIVE_ALERT_LIMITER`, 30/60s per IP) — it is read-only, unauthenticated
+by necessity (every installed app reads it), and never exposes anything more
+sensitive than the one message an admin chose to broadcast.
+
 Legacy Worker product tables (`user_accounts` / sessions), if still present on
 remote D1 from the pre-Firebase system, are not migrated. There are no real
 users to preserve; cleanup is a separate authorized deploy/migration task.
@@ -189,6 +205,15 @@ wrangler secret put IP_HASH_SECRET   # any long random string
 wrangler d1 migrations apply fivemcleaner-telemetry --remote   # touches the real database — ask first
 wrangler deploy   # touches Cloudflare — ask first
 ```
+
+`RELEASE_MANIFEST_JSON` is the complete signed stable update manifest served by
+`GET /update/manifest`. The official stable-release workflow validates the
+manifest against the embedded public key and publishes it automatically with
+`wrangler secret put RELEASE_MANIFEST_JSON` immediately before deploying this
+Worker. Do not hand-author, truncate, or commit that value. A manual repair is
+part of the authorized release procedure only and must pipe the generated
+`release/FiveMCleaner-signed-update-manifest.json` file unchanged into the same
+Wrangler command. Preview releases do not update this stable feed.
 
 The real deployment uses plain `wrangler deploy`/`npm run deploy` with no
 `--env` — the old `deploy:development`/`deploy:production` scripts targeted

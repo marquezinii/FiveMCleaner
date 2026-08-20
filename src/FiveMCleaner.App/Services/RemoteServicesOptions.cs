@@ -18,8 +18,7 @@ public sealed record RemoteServicesOptions
 
     /// <summary>
     /// HTTPS endpoint of the anonymous telemetry Cloudflare Worker. Absent,
-    /// empty, or non-HTTPS means telemetry safely sends nothing at all —
-    /// FormSubmit was removed as a transport entirely, there is no fallback.
+    /// empty, or non-HTTPS means telemetry safely sends nothing at all.
     /// </summary>
     public string? TelemetryEndpoint { get; init; }
 
@@ -27,7 +26,7 @@ public sealed record RemoteServicesOptions
     /// HTTPS endpoint of the bug-report Cloudflare Worker route. Same
     /// fail-safe rule as <see cref="TelemetryEndpoint"/>: absent, empty, or
     /// non-HTTPS means the "Reportar um bug" flow reports a clear failure
-    /// instead of silently falling back to FormSubmit, which was removed.
+    /// instead of silently doing nothing.
     /// </summary>
     public string? BugReportEndpoint { get; init; }
 
@@ -39,6 +38,14 @@ public sealed record RemoteServicesOptions
     /// completion reports a clear failure instead of silently doing nothing.
     /// </summary>
     public string? AccountProfileEndpoint { get; init; }
+
+    /// <summary>
+    /// HTTPS endpoint of the public, unauthenticated live-alert Cloudflare
+    /// Worker route (the admin-broadcast banner). Same fail-safe rule as
+    /// <see cref="TelemetryEndpoint"/>: absent or malformed means the app
+    /// simply never polls for a live alert instead of crashing.
+    /// </summary>
+    public string? LiveAlertEndpoint { get; init; }
 
     /// <summary>Public Firebase Web API key. It identifies the project but is not an administrative credential.</summary>
     public string? FirebaseApiKey { get; init; }
@@ -149,6 +156,7 @@ public static class RemoteServicesOptionsLoader
                 TelemetryEndpoint = overlay.TelemetryEndpoint ?? options.TelemetryEndpoint,
                 BugReportEndpoint = overlay.BugReportEndpoint ?? options.BugReportEndpoint,
                 AccountProfileEndpoint = overlay.AccountProfileEndpoint ?? options.AccountProfileEndpoint,
+                LiveAlertEndpoint = overlay.LiveAlertEndpoint ?? options.LiveAlertEndpoint,
                 FirebaseApiKey = overlay.FirebaseApiKey ?? options.FirebaseApiKey,
                 GoogleOAuthClientId = overlay.GoogleOAuthClientId ?? options.GoogleOAuthClientId,
                 GoogleOAuthClientSecret = overlay.GoogleOAuthClientSecret ?? options.GoogleOAuthClientSecret,
@@ -167,6 +175,7 @@ public static class RemoteServicesOptionsLoader
         public string? TelemetryEndpoint { get; init; }
         public string? BugReportEndpoint { get; init; }
         public string? AccountProfileEndpoint { get; init; }
+        public string? LiveAlertEndpoint { get; init; }
         public string? FirebaseApiKey { get; init; }
         public string? GoogleOAuthClientId { get; init; }
         public string? GoogleOAuthClientSecret { get; init; }

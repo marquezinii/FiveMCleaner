@@ -18,12 +18,11 @@ public static class PrivacyConsentPolicy
 {
     /// <summary>
     /// The current privacy consent version. Bump this whenever a material
-    /// change happens to what is collected or where it is sent (for example,
-    /// adding crash reporting, or switching the telemetry transport from
-    /// FormSubmit to another destination) — every user, including those who
-    /// already accepted an older version, will be asked to confirm again.
+    /// change happens to what is collected or where it is sent — every user,
+    /// including those who already accepted an older version, will be asked
+    /// to confirm again.
     /// </summary>
-    public const int CurrentVersion = 4;
+    public const int CurrentVersion = 5;
 
     /// <summary>
     /// Full history of consent versions, oldest first, each with a short
@@ -54,7 +53,13 @@ public static class PrivacyConsentPolicy
         new PrivacyConsentVersionEntry(
             4,
             "Separa diagnósticos essenciais de dados opcionais: estabilidade, atualizações e o resultado técnico das " +
-            "operações permanecem ativos; hardware, perfil e ações usadas só são compartilhados com a opção ativada.")
+            "operações permanecem ativos; hardware, perfil e ações usadas só são compartilhados com a opção ativada."),
+        new PrivacyConsentVersionEntry(
+            5,
+            "Expande diagnósticos essenciais com detecção do FiveM/GTA V, edição do GTA V e contagem de alvos processados. " +
+            "Adiciona dados opcionais de contexto: build do Windows, tipo de disco, espaço livre, timestamp da execução, " +
+            "frequência de uso, criação/restauração de backup, uso de elevação e contagem de processos no início. " +
+            "Continua sem identificador único de máquina, caminho ou texto livre.")
     ];
 
     /// <summary>

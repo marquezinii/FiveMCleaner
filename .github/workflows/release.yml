@@ -43,7 +43,7 @@ jobs:
 
     steps:
       - name: Checkout exact tag
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.release_tag }}
           fetch-depth: 0
@@ -81,6 +81,21 @@ jobs:
           if ($tagCommit -ne $headCommit) {
             throw 'Checked out commit does not match the requested tag.'
           }
+          if ($env:RELEASE_CHANNEL -eq 'stable') {
+            # Secret-bearing signing and deployment steps must never execute
+            # source selected only by an arbitrary tag. Resolve main from the
+            # remote inside this trusted workflow and require the stable tag
+            # to identify that exact reviewed commit before any secrets are
+            # made available to later steps.
+            git fetch --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
+            if ($LASTEXITCODE -ne 0) {
+              throw 'Could not resolve the trusted origin/main release commit.'
+            }
+            $trustedMainCommit = (git rev-parse refs/remotes/origin/main).Trim()
+            if ($tagCommit -ne $trustedMainCommit) {
+              throw 'Stable release tag must point to the current origin/main commit.'
+            }
+          }
           if (git status --porcelain=v1 --untracked-files=all) {
             throw 'Release checkout is not clean.'
           }
@@ -116,11 +131,74 @@ jobs:
           }
           $overlay | ConvertTo-Json | Set-Content -LiteralPath ./src/FiveMCleaner.App/Config/appsettings.Production.local.json -Encoding utf8
 
-      - name: Build self-contained package and installer
+      - name: Build hardened self-contained package and installer
         shell: pwsh
         env:
           ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
-        run: ./scripts/Build-Installer.ps1 -Version $env:ASSET_VERSION
+        # -Harden obfuscates FiveMCleaner.Core / FiveMCleaner.Windows inside the
+        # published runtime before it is hashed and signed, so every public
+        # release asset ships the hardened binaries. See docs/release-hardening.md.
+        run: ./scripts/Build-Installer.ps1 -Version $env:ASSET_VERSION -Harden
+
+      - name: Sign broker integrity manifest
+        shell: pwsh
+        env:
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
+          FIVEMCLEANER_SIGNING_PASSWORD: ${{ secrets.FIVEMCLEANER_SIGNING_PASSWORD }}
+          RELEASE_SIGNING_PRIVATE_KEY: ${{ secrets.RELEASE_SIGNING_PRIVATE_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_SIGNING_PRIVATE_KEY) -or
+              [string]::IsNullOrWhiteSpace($env:FIVEMCLEANER_SIGNING_PASSWORD)) {
+            throw 'Public builds require the offline release signing secrets for broker integrity.'
+          }
+          $privateKey = Join-Path $env:RUNNER_TEMP 'fivemcleaner-broker-private.pem'
+          try {
+            [IO.File]::WriteAllText(
+              $privateKey,
+              $env:RELEASE_SIGNING_PRIVATE_KEY,
+              [Text.UTF8Encoding]::new($false))
+            $versionRoot = "./artifacts/FiveMCleaner-win-x64/Runtime/versions/$env:ASSET_VERSION"
+            dotnet run --project ./src/FiveMCleaner.ReleaseTool/FiveMCleaner.ReleaseTool.csproj `
+              --configuration Release --no-build -- `
+              sign-broker "$versionRoot/broker/SHA256SUMS.txt" $env:ASSET_VERSION `
+              $privateKey "$versionRoot/broker-integrity.json"
+            if ($LASTEXITCODE -ne 0) { throw 'Signing the broker integrity manifest failed.' }
+            dotnet run --project ./src/FiveMCleaner.ReleaseTool/FiveMCleaner.ReleaseTool.csproj `
+              --configuration Release --no-build -- `
+              verify-broker "$versionRoot/broker-integrity.json" `
+              ./src/FiveMCleaner.App/Assets/release-public-key.pem
+            if ($LASTEXITCODE -ne 0) { throw 'The broker manifest does not match the embedded public key.' }
+          }
+          finally {
+            if (Test-Path -LiteralPath $privateKey) { Remove-Item -LiteralPath $privateKey -Force }
+          }
+
+      - name: Repackage signed broker
+        shell: pwsh
+        env:
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
+        run: ./scripts/Finalize-BrokerIntegrity.ps1 -Version $env:ASSET_VERSION
+
+      - name: Post-obfuscation runtime smoke
+        shell: pwsh
+        env:
+          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
+        # Runs the hardened app in synthetic-demo capture mode. Rendering the
+        # pages proves the obfuscated Core/Windows assemblies load and execute
+        # (renamed members and encrypted strings resolve) before the release is
+        # allowed to proceed.
+        run: |
+          ./scripts/Test-HardenedRuntime.ps1 `
+            -RuntimeDirectory ./artifacts/FiveMCleaner-win-x64 `
+            -Version $env:ASSET_VERSION
+
+      - name: Upload obfuscation symbol maps
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: obfuscation-maps-${{ steps.release.outputs.asset_version }}
+          path: artifacts/obfuscation-maps/**
+          if-no-files-found: error
+          retention-days: 90
 
       - name: Install and uninstall smoke test
         shell: pwsh
@@ -186,9 +264,6 @@ jobs:
               -Destination ./artifacts/release/FiveMCleaner-Setup-latest-win-x64.exe
           }
 
-          $installerName = "FiveMCleaner-Setup-$env:ASSET_VERSION-win-x64.exe"
-          $downloadUrl = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:RELEASE_TAG/$installerName"
-          $channelText = if ($env:RELEASE_CHANNEL -eq 'preview') { 'prévia / preview' } else { 'estável / stable' }
           $changelog = Get-Content -LiteralPath ./CHANGELOG.md -Raw -Encoding utf8
           $escapedVersion = [regex]::Escape($env:ASSET_VERSION)
           $releaseChanges = [regex]::Match(
@@ -197,29 +272,17 @@ jobs:
           if (-not $releaseChanges.Success) {
             throw "CHANGELOG.md does not contain an entry for $env:ASSET_VERSION."
           }
-          @"
-          ## FiveMCleaner $env:ASSET_VERSION ($channelText)
-
-          **[Download do instalador / Download installer]($downloadUrl)**
-
-          ## Últimas atualizações / Latest updates
-
-          $($releaseChanges.Value.Trim())
-
-          Consulte as alterações completas em
-          [CHANGELOG.md](https://github.com/$env:GITHUB_REPOSITORY/blob/$env:RELEASE_TAG/CHANGELOG.md).
-
-          O instalador inclui o runtime .NET e funciona sem baixar dependências durante a instalação.
-          The installer includes the .NET runtime and does not download dependencies during setup.
-
-          Confira o arquivo `.sha256` e o manifesto JSON antes de executar. Esta build ainda não possui
-          assinatura Authenticode; SmartScreen pode solicitar confirmação. Nunca desative o antivírus,
-          o UAC ou o SmartScreen para instalar o FiveMCleaner.
-
-          Verify the `.sha256` file and JSON manifest before running. This build is not Authenticode-signed
-          yet, so SmartScreen may request confirmation. Never disable antivirus, UAC, or SmartScreen to
-          install FiveMCleaner.
-          "@ | Set-Content -LiteralPath ./artifacts/release/RELEASE_NOTES.md -Encoding utf8
+          # O Discord consome o corpo da GitHub Release. Convertemos as seções
+          # técnicas do changelog no formato público estável, sem cabeçalhos,
+          # links ou avisos duplicados que a automação já fornece.
+          $notes = $releaseChanges.Value.Trim()
+          $notes = $notes -replace "(?m)^## \[$escapedVersion\].*\r?\n+", ''
+          $notes = $notes -replace '(?m)^### Adicionado$', '## ✨ Novidades'
+          $notes = $notes -replace '(?m)^### Melhorado$', '## 🔧 Melhorias'
+          $notes = $notes -replace '(?m)^### Corrigido$', '## 🐛 Correções'
+          $notes = $notes -replace '(?m)^### Segurança$', '## 🔒 Segurança'
+          $notes = $notes -replace '(?m)^### Alterações técnicas$', '## ⚙️ Alterações técnicas'
+          $notes.Trim() | Set-Content -LiteralPath ./artifacts/release/RELEASE_NOTES.md -Encoding utf8
 
       - name: Upload audited release candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -242,7 +305,7 @@ jobs:
 
     steps:
       - name: Checkout release infrastructure
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: ${{ inputs.release_tag }}
 
@@ -253,7 +316,7 @@ jobs:
           path: release
 
       - name: Attest installer provenance
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: release/FiveMCleaner-Setup-*-win-x64.exe
 

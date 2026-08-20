@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
+using FiveMCleaner.App.Services;
+using FiveMCleaner.Contracts;
 using FiveMCleaner.UpdateRuntime;
 
 namespace FiveMCleaner.App.Services;
@@ -33,8 +35,15 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
             cancellationToken.ThrowIfCancellationRequested();
             if (!File.Exists(launcherPath)) throw new FileNotFoundException("O launcher transacional não foi encontrado.", launcherPath);
             previous = activation.ReadActiveVersion();
-            new RuntimePackageStager(runtimeRoot).Stage(
-                update.InstallerPath, update.Version.CoreVersion, update.Sha256Hex, update.SizeBytes);
+            // Hash do pacote inteiro + extração do ZIP + reverificação de
+            // manifesto podem levar centenas de milissegundos a segundos;
+            // isto é chamado direto da UI (MainViewModel.InstallDownloadedUpdateAsync),
+            // então roda fora da thread de UI.
+            await Task.Run(
+                () => new RuntimePackageStager(runtimeRoot).Stage(
+                    update.InstallerPath, update.Version.CoreVersion, update.Sha256Hex, update.SizeBytes,
+                    cancellationToken),
+                cancellationToken).ConfigureAwait(false);
             journal.Begin(previous, update.Version.CoreVersion);
             journalStarted = true;
             activation.Activate(update.Version.CoreVersion);
@@ -81,9 +90,10 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
         diagnostics.RecordAsync(
             new UpdaterEvent(
                 Guid.NewGuid().ToString("N"), stage, "failed", code,
-                previous, update.Version.CoreVersion, "Production"),
+                previous, update.Version.CoreVersion, "Production",
+                BugCodeClassifier.ClassifyUpdaterException(exception, stage)),
             exception.ToString(),
-            telemetryAuthorized: true);
+            telemetryAuthorized: UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
 
     private static string Classify(Exception exception) => exception switch
     {

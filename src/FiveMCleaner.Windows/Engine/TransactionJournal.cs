@@ -1,40 +1,7 @@
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.Windows.Engine;
-
-public enum WindowsTransactionState
-{
-    Created,
-    Applying,
-    Committing,
-    Committed,
-    CommittedWithErrors,
-    AwaitingElevation,
-    AwaitingElevationRollback,
-    AwaitingStandardRollback,
-    RollingBack,
-    RolledBack,
-    Failed,
-    RollbackFailed
-}
-
-public enum WindowsActionJournalState
-{
-    Pending,
-    SkippedPrivilege,
-    DeferredPrivilege,
-    Applying,
-    Applied,
-    Committing,
-    Committed,
-    Skipped,
-    RollingBack,
-    RolledBack,
-    Failed,
-    RollbackFailed
-}
 
 public sealed record WindowsActionJournalEntry
 {
@@ -48,7 +15,7 @@ public sealed record WindowsActionJournalEntry
 
     public required ActionReversibility Reversibility { get; init; }
 
-    public required WindowsActionJournalState State { get; set; }
+    public required ActionJournalState State { get; set; }
 
     /// <summary>
     /// Semantic outcome for reporting. Independent from <see cref="State"/>,
@@ -84,7 +51,7 @@ public sealed record WindowsTransactionJournal
 
     public required bool WasElevated { get; set; }
 
-    public required WindowsTransactionState State { get; set; }
+    public required TransactionState State { get; set; }
 
     public string? Error { get; set; }
 
@@ -109,19 +76,11 @@ public sealed class JsonWindowsTransactionJournalStore : IWindowsTransactionJour
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(rootDirectory);
         this.rootDirectory = Path.GetFullPath(rootDirectory);
+        // The copy already carries the shared string-enum converter.
         serializerOptions = new JsonSerializerOptions(FiveMCleanerJson.Options)
         {
             WriteIndented = true
         };
-        serializerOptions.Converters.Add(
-            new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false));
-    }
-
-    public static JsonWindowsTransactionJournalStore CreateDefault()
-    {
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        var path = Path.Combine(localAppData, "FiveMCleaner", "Transactions");
-        return new JsonWindowsTransactionJournalStore(path);
     }
 
     public async Task SaveAsync(

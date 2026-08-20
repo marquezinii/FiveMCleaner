@@ -17,7 +17,21 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
     ram_bucket_gib INTEGER,
     profile TEXT,
     environment TEXT NOT NULL,
-    received_at TEXT NOT NULL
+    received_at TEXT NOT NULL,
+    -- v5: expanded diagnostic fields, optional -- see migrations/0004_telemetry_v5_fields.sql
+    -- and PROJECT_STATE.md item 9. No client sends these yet.
+    five_m_install_detected INTEGER,
+    gta_edition TEXT,
+    optimization_target_count INTEGER,
+    windows_build INTEGER,
+    disk_type TEXT,
+    free_space_gib_bucket INTEGER,
+    run_timestamp TEXT,
+    days_since_last_run_bucket INTEGER,
+    backup_created INTEGER,
+    backup_restored INTEGER,
+    elevation_used INTEGER,
+    process_count_at_start INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_telemetry_events_received_at
@@ -70,13 +84,8 @@ CREATE TABLE IF NOT EXISTS admin_sessions (
 CREATE INDEX IF NOT EXISTS idx_admin_sessions_expires_at
     ON admin_sessions (expires_at);
 
--- Bug reports, replacing the previous FormSubmit-based flow. `attachment_key`
--- is the R2 object key for the optional sanitized screenshot (never the
--- image bytes themselves, which never touch D1) -- null when no screenshot
--- was attached. No identity fields (name/e-mail) exist here, matching the
--- opt-in, no-identity-requested design already documented in
--- docs/bug-reports.md.
--- Text-only: no attachment/screenshot support, no R2 dependency.
+-- Text-only bug reports, replacing the previous FormSubmit-based flow. There
+-- is no attachment/screenshot support and no R2 dependency.
 CREATE TABLE IF NOT EXISTS bug_reports (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     report_id TEXT NOT NULL UNIQUE,
@@ -131,3 +140,17 @@ CREATE TABLE IF NOT EXISTS account_profiles (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_account_profiles_username_normalized
     ON account_profiles (username_normalized);
+
+-- Single-row broadcast the admin dashboard writes to and the desktop app
+-- polls (startup + hourly) -- see
+-- docs/superpowers/specs/2026-08-17-live-alerts-design.md. There is only
+-- ever one active alert at a time; id is always 1, seeded below.
+CREATE TABLE IF NOT EXISTS live_alert (
+    id INTEGER PRIMARY KEY,
+    message TEXT NOT NULL DEFAULT '',
+    active INTEGER NOT NULL DEFAULT 0,
+    updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+INSERT OR IGNORE INTO live_alert (id, message, active, updated_at)
+    VALUES (1, '', 0, datetime('now'));

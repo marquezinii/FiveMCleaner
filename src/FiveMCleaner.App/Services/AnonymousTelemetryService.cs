@@ -1,5 +1,7 @@
 using System.IO;
 
+using FiveMCleaner.Contracts;
+
 namespace FiveMCleaner.App.Services;
 
 /// <summary>
@@ -12,21 +14,42 @@ namespace FiveMCleaner.App.Services;
 /// 2 do consentimento de privacidade (<see cref="PrivacyConsentPolicy"/>):
 /// perfil de hardware (CPU/GPU/RAM, sem identificar a máquina — os mesmos
 /// nomes de modelo já mostrados no diagnóstico local) e os identificadores
-/// técnicos de ação já listados na tela de consentimento. Continuam sem
-/// texto livre, caminhos ou qualquer identificador único de máquina.
+/// técnicos de ação já listados na tela de consentimento.
+///
+/// Os campos a partir de <see cref="FiveMInstallDetected"/> foram adicionados
+/// na versão 5 do consentimento de privacidade: diagnósticos essenciais
+/// adicionais (detecção do FiveM/GTA V, contagem de alvos) e dados
+/// opcionais de contexto (disco, timestamp, backup, elevação, processos).
+/// Continua sem texto livre, caminhos ou qualquer identificador único de máquina.
 /// </remarks>
 public sealed record AnonymousTelemetryEvent(
     string EventName,
     TimeSpan ExecutionTime,
     string AppVersion,
     string? ErrorCategory = null,
+    // --- v2: perfil de hardware (opcional) ---
     string? OsVersion = null,
     string? SystemArchitecture = null,
     string? CpuModel = null,
     string? GpuModel = null,
     int? RamBucketGiB = null,
     string? Profile = null,
-    IReadOnlyList<string>? ActionIds = null);
+    IReadOnlyList<string>? ActionIds = null,
+    BugCode? BugCode = null,
+    // --- v5: diagnósticos essenciais expandidos ---
+    bool? FiveMInstallDetected = null,
+    string? GtaEdition = null,
+    int? OptimizationTargetCount = null,
+    // --- v5: dados opcionais de contexto ---
+    int? WindowsBuild = null,
+    string? DiskType = null,
+    int? FreeSpaceGiBBucket = null,
+    DateTimeOffset? RunTimestamp = null,
+    int? DaysSinceLastRunBucket = null,
+    bool? BackupCreated = null,
+    bool? BackupRestored = null,
+    bool? ElevationUsed = null,
+    int? ProcessCountAtStart = null);
 
 public interface IAnonymousTelemetryService
 {
@@ -35,6 +58,10 @@ public interface IAnonymousTelemetryService
     void SetEnabled(bool enabled);
 
     Task TrackAsync(AnonymousTelemetryEvent telemetryEvent, CancellationToken cancellationToken = default);
+
+    long SuccessfulSends { get; }
+    long FailedSends { get; }
+    bool IsHealthy => FailedSends == 0 || SuccessfulSends > FailedSends;
 }
 
 public sealed class DisabledAnonymousTelemetryService : IAnonymousTelemetryService
@@ -53,6 +80,10 @@ public sealed class DisabledAnonymousTelemetryService : IAnonymousTelemetryServi
 
     public Task TrackAsync(AnonymousTelemetryEvent telemetryEvent, CancellationToken cancellationToken = default) =>
         Task.CompletedTask;
+
+    public long SuccessfulSends => 0;
+    public long FailedSends => 0;
+    public bool IsHealthy => true;
 }
 
 /// <summary>

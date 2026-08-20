@@ -1,37 +1,12 @@
 import assert from "node:assert/strict";
-import { access, readFile, readdir } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
-const templateRoot = new URL("../", import.meta.url);
-const previewRoot = new URL("../app/_sites-preview/", import.meta.url);
+const outputRoot = new URL("../out/", import.meta.url);
 
-async function render() {
-  const workerUrl = new URL("../dist/server/index.js", import.meta.url);
-  workerUrl.searchParams.set("test", `${process.pid}-${Date.now()}`);
-  const { default: worker } = await import(workerUrl.href);
+test("exports the Portuguese FiveMCleaner landing page", async () => {
+  const html = await readFile(new URL("index.html", outputRoot), "utf8");
 
-  return worker.fetch(
-    new Request("http://localhost/", {
-      headers: { accept: "text/html" },
-    }),
-    {
-      ASSETS: {
-        fetch: async () => new Response("Not found", { status: 404 }),
-      },
-    },
-    {
-      waitUntil() {},
-      passThroughOnException() {},
-    },
-  );
-}
-
-test("server-renders the Portuguese FiveMCleaner landing page", async () => {
-  const response = await render();
-  assert.equal(response.status, 200);
-  assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
-
-  const html = await response.text();
   assert.match(
     html,
     /<title>FiveMCleaner — Otimização transparente para FiveM<\/title>/i,
@@ -49,67 +24,52 @@ test("server-renders the Portuguese FiveMCleaner landing page", async () => {
   assert.doesNotMatch(html, /codex-preview|react-loading-skeleton/i);
 });
 
-test("removes starter artifacts and keeps the Sites build cross-platform", async () => {
-  const [page, layout, packageJson, files] = await Promise.all([
+test("uses native Next static export as the only website build", async () => {
+  const [page, header, copy, layout, packageJson, nextConfig] = await Promise.all([
     readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/components/SiteHeader.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../app/content/copy.ts", import.meta.url), "utf8"),
     readFile(new URL("../app/layout.tsx", import.meta.url), "utf8"),
     readFile(new URL("../package.json", import.meta.url), "utf8"),
-    readdir(previewRoot).catch((error) => {
-      if (error && error.code === "ENOENT") {
-        return [];
-      }
-
-      throw error;
-    }),
+    readFile(new URL("../next.config.ts", import.meta.url), "utf8"),
   ]);
 
-  assert.deepEqual(files, []);
   assert.match(page, /^"use client";/);
-  assert.match(page, /setLanguage\("pt"\)/);
-  assert.match(page, /setLanguage\("en"\)/);
+  // The language toggle now lives in SiteHeader.tsx (see app/page.tsx, which
+  // renders <SiteHeader> and owns only the `language` state itself).
+  assert.match(header, /setLanguage\("pt"\)/);
+  assert.match(header, /setLanguage\("en"\)/);
   assert.match(
-    page,
+    copy,
     /https:\/\/github\.com\/marquezinii\/FiveMCleaner\/releases\/latest/,
   );
   assert.match(layout, /title: "FiveMCleaner/);
-  assert.doesNotMatch(layout, /codex-preview|Starter Project|_sites-preview/);
-  assert.match(packageJson, /"cross-env":/);
-  assert.doesNotMatch(packageJson, /react-loading-skeleton/);
+  assert.match(nextConfig, /output: "export"/);
+  assert.match(nextConfig, /basePath/);
+  assert.doesNotMatch(packageJson, /vinext|vite|wrangler|cloudflare/i);
 
-  await access(new URL("../public/icon.png", import.meta.url));
-  await assert.rejects(access(new URL("public/_sites-preview", templateRoot)));
+  await access(new URL("icon.png", outputRoot));
+  await access(new URL("og.png", outputRoot));
+  await assert.rejects(
+    access(new URL("../public-site/index.html", import.meta.url)),
+  );
 });
 
-test("keeps the public download page aligned with the latest published release", async () => {
-  const [page, styles, script, props] = await Promise.all([
-    readFile(new URL("../public-site/index.html", import.meta.url), "utf8"),
-    readFile(new URL("../public-site/styles.css", import.meta.url), "utf8"),
-    readFile(new URL("../public-site/site.js", import.meta.url), "utf8"),
-    readFile(new URL("../../Directory.Build.props", import.meta.url), "utf8"),
+test("keeps the exported download page aligned with the official release channel", async () => {
+  const [html, styles] = await Promise.all([
+    readFile(new URL("index.html", outputRoot), "utf8"),
+    readFile(new URL("../app/globals.css", import.meta.url), "utf8"),
   ]);
-  const version = props.match(/<Version>(\d+\.\d+\.\d+)<\/Version>/)?.[1];
 
-  assert.ok(version, "Directory.Build.props must declare the public version");
-
-  assert.match(page, /id="atualizacoes"/i);
-  assert.match(page, /ÚLTIMA VERSÃO PÚBLICA/i);
-  assert.match(page, /class="windows-icon"/i);
-  assert.match(page, /class="windows-icon" viewBox="0 0 88 88"/i);
-  assert.match(page, /src="site\.js" defer/i);
-  assert.match(page, /class="hero-stage reveal" data-tilt/i);
-  assert.match(page, /class="bento-grid"/i);
-  assert.match(page, /property="og:image"/i);
-  assert.ok(
-    page.indexOf('ATUALIZAÇÕES SEGURAS') < page.indexOf('id="atualizacoes"'),
-    'A seção de atualizações deve vir imediatamente após os três pilares.'
+  assert.match(
+    html,
+    /https:\/\/github\.com\/marquezinii\/FiveMCleaner\/releases\/latest\/download\/FiveMCleaner-Setup-latest-win-x64\.exe/i,
   );
-  assert.ok(page.includes(`<strong id="updates-version">${version}</strong>`));
-  assert.match(page, /CHANGELOG\.md/i);
-  assert.match(styles, /\.release-section\s*\{/i);
-  assert.match(styles, /\.release-card\s*\{/i);
-  assert.match(styles, /\.hero-stage\s*\{[\s\S]*perspective:\s*1200px/i);
+  assert.match(html, /GitHub Releases · sem cadastro/i);
+  assert.match(html, /Rollback disponível/i);
+  assert.match(
+    html,
+    /property="og:image" content="https:\/\/marquezinii\.github\.io\/FiveMCleaner\/og\.png"/i,
+  );
   assert.match(styles, /@media \(prefers-reduced-motion: reduce\)/i);
-  assert.match(script, /IntersectionObserver/i);
-  assert.match(script, /pointermove/i);
-  assert.doesNotMatch(page, /site-polish\.css/i);
 });

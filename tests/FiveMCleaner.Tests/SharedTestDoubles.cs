@@ -77,3 +77,9 @@ internal sealed class ThrowingHandler : HttpMessageHandler
         CancellationToken cancellationToken) =>
         throw new HttpRequestException("simulated network failure");
 }
+
+internal sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> send) : HttpMessageHandler
+{
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+        Task.FromResult(send(request));
+}

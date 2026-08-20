@@ -8,9 +8,10 @@ public sealed record ActionDisplayItem(
     string Description,
     string IconGlyph,
     string RiskLabel,
-    string PrivilegeLabel);
-
-public sealed record ActivityLogItem(string Time, string Message);
+    string RiskBrushKey,
+    string PrivilegeLabel,
+    bool RequiresElevation,
+    string CategoryLabel);
 
 public sealed record HistoryDisplayItem(
     Guid TransactionId,

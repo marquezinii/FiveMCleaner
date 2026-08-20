@@ -35,6 +35,18 @@ test('validateEvent accepts a well-formed completed event with the full hardware
     ramBucketGiB: 32,
     profile: 'Balanced',
     actionIds: ['fivem.legacy.cache.repair', 'windows.power-plan.session'],
+    fiveMInstallDetected: null,
+    gtaEdition: null,
+    optimizationTargetCount: null,
+    windowsBuild: null,
+    diskType: null,
+    freeSpaceGiBBucket: null,
+    runTimestamp: null,
+    daysSinceLastRunBucket: null,
+    backupCreated: null,
+    backupRestored: null,
+    elevationUsed: null,
+    processCountAtStart: null,
   });
 });
 
@@ -167,4 +179,101 @@ test('validateBatch rejects a batch larger than the maximum size', () => {
 test('validateBatch rejects the whole batch when any single event is invalid', () => {
   const events = [validEvent(), validEvent({ eventName: 'not-allowed' })];
   assert.equal(validateBatch(events), null);
+});
+
+// --- v5: expanded diagnostic fields ---
+
+test('validateEvent accepts v5 fields with valid values', () => {
+  const result = validateEvent(validEvent({
+    fiveMInstallDetected: true,
+    gtaEdition: 'Legacy',
+    optimizationTargetCount: 150,
+    windowsBuild: 22621,
+    diskType: 'SSD',
+    freeSpaceGiBBucket: 100,
+    runTimestamp: '2026-08-15T10:30:00Z',
+    daysSinceLastRunBucket: 2,
+    backupCreated: true,
+    backupRestored: false,
+    elevationUsed: false,
+    processCountAtStart: 1,
+  }));
+
+  assert.ok(result);
+  assert.equal(result.fiveMInstallDetected, true);
+  assert.equal(result.gtaEdition, 'Legacy');
+  assert.equal(result.optimizationTargetCount, 150);
+  assert.equal(result.windowsBuild, 22621);
+  assert.equal(result.diskType, 'SSD');
+  assert.equal(result.freeSpaceGiBBucket, 100);
+  assert.equal(result.runTimestamp, '2026-08-15T10:30:00Z');
+  assert.equal(result.daysSinceLastRunBucket, 2);
+  assert.equal(result.backupCreated, true);
+  assert.equal(result.backupRestored, false);
+  assert.equal(result.elevationUsed, false);
+  assert.equal(result.processCountAtStart, 1);
+});
+
+test('validateEvent accepts null/omitted v5 fields for backward compatibility with older clients', () => {
+  const result = validateEvent(validEvent());
+  assert.equal(result.fiveMInstallDetected, null);
+  assert.equal(result.gtaEdition, null);
+  assert.equal(result.optimizationTargetCount, null);
+  assert.equal(result.windowsBuild, null);
+  assert.equal(result.diskType, null);
+  assert.equal(result.freeSpaceGiBBucket, null);
+  assert.equal(result.runTimestamp, null);
+  assert.equal(result.daysSinceLastRunBucket, null);
+  assert.equal(result.backupCreated, null);
+  assert.equal(result.backupRestored, null);
+  assert.equal(result.elevationUsed, null);
+  assert.equal(result.processCountAtStart, null);
+});
+
+test('validateEvent rejects an invalid gtaEdition', () => {
+  assert.equal(validateEvent(validEvent({ gtaEdition: 'Steam' })), null);
+});
+
+test('validateEvent rejects an invalid diskType', () => {
+  assert.equal(validateEvent(validEvent({ diskType: 'SATA' })), null);
+});
+
+test('validateEvent rejects freeSpaceGiBBucket outside the allowed bucket set', () => {
+  assert.equal(validateEvent(validEvent({ freeSpaceGiBBucket: 25 })), null);
+});
+
+test('validateEvent rejects daysSinceLastRunBucket outside the allowed bucket set', () => {
+  assert.equal(validateEvent(validEvent({ daysSinceLastRunBucket: 15 })), null);
+});
+
+test('validateEvent rejects processCountAtStart outside the allowed bucket set', () => {
+  assert.equal(validateEvent(validEvent({ processCountAtStart: 2 })), null);
+});
+
+test('validateEvent rejects optimizationTargetCount over the maximum', () => {
+  assert.equal(validateEvent(validEvent({ optimizationTargetCount: 100_001 })), null);
+});
+
+test('validateEvent rejects a non-integer optimizationTargetCount', () => {
+  assert.equal(validateEvent(validEvent({ optimizationTargetCount: 1.5 })), null);
+});
+
+test('validateEvent rejects windowsBuild over the maximum', () => {
+  assert.equal(validateEvent(validEvent({ windowsBuild: 100_000 })), null);
+});
+
+test('validateEvent rejects a non-boolean fiveMInstallDetected', () => {
+  assert.equal(validateEvent(validEvent({ fiveMInstallDetected: 'yes' })), null);
+});
+
+test('validateEvent rejects a non-boolean backupCreated', () => {
+  assert.equal(validateEvent(validEvent({ backupCreated: 1 })), null);
+});
+
+test('validateEvent rejects an unparseable runTimestamp', () => {
+  assert.equal(validateEvent(validEvent({ runTimestamp: 'not-a-date' })), null);
+});
+
+test('validateEvent accepts a valid runTimestamp', () => {
+  assert.ok(validateEvent(validEvent({ runTimestamp: '2026-01-01T00:00:00.000Z' })));
 });

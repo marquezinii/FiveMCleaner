@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { rateLimitKey, withinRateLimit } from '../src/rateLimit.js';
+import { rateLimitKey, withinRateLimit, withinRequiredRateLimit } from '../src/rateLimit.js';
 
 test('rateLimitKey uses the edge-supplied client IP', () => {
   const request = new Request('https://example.test/', { headers: { 'CF-Connecting-IP': '203.0.113.7' } });
@@ -36,4 +36,20 @@ test('withinRateLimit fails open when no limiter is bound', async () => {
 test('withinRateLimit fails open when the binding throws', async () => {
   const limiter = { async limit() { throw new Error('binding unavailable'); } };
   assert.equal(await withinRateLimit(limiter, 'k'), true);
+});
+
+test('withinRequiredRateLimit fails closed when the binding is absent or throws', async () => {
+  const unavailable = { async limit() { throw new Error('binding unavailable'); } };
+  assert.equal(await withinRequiredRateLimit(undefined, 'k'), false);
+  assert.equal(await withinRequiredRateLimit({}, 'k'), false);
+  assert.equal(await withinRequiredRateLimit(unavailable, 'k'), false);
+});
+
+test('withinRequiredRateLimit allows only an explicit successful verdict', async () => {
+  const allowed = { async limit() { return { success: true }; } };
+  const denied = { async limit() { return { success: false }; } };
+  const malformed = { async limit() { return {}; } };
+  assert.equal(await withinRequiredRateLimit(allowed, 'k'), true);
+  assert.equal(await withinRequiredRateLimit(denied, 'k'), false);
+  assert.equal(await withinRequiredRateLimit(malformed, 'k'), false);
 });

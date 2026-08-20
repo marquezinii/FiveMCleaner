@@ -4,7 +4,14 @@ param(
     [string]$Runtime = 'win-x64',
 
     [ValidateSet('Debug', 'Release')]
-    [string]$Configuration = 'Release'
+    [string]$Configuration = 'Release',
+
+    # Public release hardening. When set, the internal-logic assemblies
+    # (FiveMCleaner.Core / FiveMCleaner.Windows) are obfuscated in the published
+    # output BEFORE any checksum, so the runtime ZIP, broker SHA256SUMS, release
+    # manifest and signed update manifest all cover the hardened binaries.
+    # Off by default: development and CI test builds stay un-obfuscated.
+    [switch]$Harden
 )
 
 Set-StrictMode -Version Latest
@@ -65,8 +72,32 @@ try {
             "-p:PathMap=$pathMap",
             '--output', $target.Output
         )
+        if ($Harden) {
+            # For Broker/App this is unused (harmless) - only the Launcher
+            # project defines the HardenBundledAssemblies target this
+            # property gates. See FiveMCleaner.Launcher.csproj for why the
+            # single-file bundle needs its own in-MSBuild hardening hook
+            # instead of the publish-then-harden-in-place used below.
+            $publishArguments += '-p:FiveMCleanerHarden=true'
+        }
         & dotnet @publishArguments
         if ($LASTEXITCODE -ne 0) { throw "$($target.Name) publish failed." }
+    }
+
+    if ($Harden) {
+        # Harden the loose Broker/App assemblies now, while they are still the
+        # raw publish output. Everything downstream (broker copy, both
+        # SHA256SUMS files, the runtime/portable ZIPs and every hash the
+        # release workflow signs) derives from these files, so obfuscating
+        # here is what makes the signed, shipped runtime the obfuscated one.
+        # The Launcher's single-file bundle was already hardened during its
+        # own publish above, via FiveMCleaner.Launcher.csproj's
+        # HardenBundledAssemblies target.
+        $mappingRoot = Join-Path $artifactsRoot 'obfuscation-maps'
+        & (Join-Path $PSScriptRoot 'Invoke-Obfuscation.ps1') -PublishDirectory $brokerOutput -MappingOutputDirectory $mappingRoot
+        if ($LASTEXITCODE -ne 0) { throw 'Broker obfuscation failed.' }
+        & (Join-Path $PSScriptRoot 'Invoke-Obfuscation.ps1') -PublishDirectory $appOutput -MappingOutputDirectory $mappingRoot
+        if ($LASTEXITCODE -ne 0) { throw 'App obfuscation failed.' }
     }
 
     $copiedBroker = Join-Path $appOutput 'broker'
@@ -86,6 +117,20 @@ try {
         }
     }
     Copy-Item -LiteralPath $brokerOutput -Destination $copiedBroker -Recurse
+
+    $brokerOutputPrefix = $copiedBroker.TrimEnd('\') + '\'
+    $brokerChecksums = Get-ChildItem -LiteralPath $copiedBroker -Recurse -File |
+        Sort-Object FullName |
+        ForEach-Object {
+            if (-not $_.FullName.StartsWith($brokerOutputPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                throw "Refusing to hash a file outside the broker staging directory: $($_.FullName)"
+            }
+            $relative = $_.FullName.Substring($brokerOutputPrefix.Length).Replace('\', '/')
+            $hash = (Get-FileHash -LiteralPath $_.FullName -Algorithm SHA256).Hash.ToLowerInvariant()
+            "$hash  $relative"
+        }
+    Set-Content -LiteralPath (Join-Path $copiedBroker 'SHA256SUMS.txt') -Value $brokerChecksums -Encoding utf8
+
     Copy-Item -LiteralPath '.\README.md', '.\LICENSE', '.\SECURITY.md', '.\CONTRIBUTING.md', '.\CODE_OF_CONDUCT.md' -Destination $appOutput
     Copy-Item -LiteralPath '.\docs' -Destination (Join-Path $appOutput 'docs') -Recurse
 
@@ -134,6 +179,20 @@ try {
     Compress-Archive -Path (Join-Path $finalRoot '*') -DestinationPath $archivePath -CompressionLevel Optimal
     $archiveHash = (Get-FileHash -LiteralPath $archivePath -Algorithm SHA256).Hash.ToLowerInvariant()
     Set-Content -LiteralPath $archiveHashPath -Value "$archiveHash  $([System.IO.Path]::GetFileName($archivePath))" -Encoding ascii
+
+    if ($Harden) {
+        # Fail-closed gate: don't trust that the steps above hardened
+        # everything correctly - prove it, on the exact bytes about to ship
+        # (the assembled tree and both ZIPs), and abort the build rather than
+        # produce a release asset if any un-hardened Core/Windows copy or
+        # leaked debug/obfuscation-map file is found.
+        & (Join-Path $PSScriptRoot 'Test-NoUnobfuscatedAssemblies.ps1') `
+            -RuntimeDirectory $finalRoot `
+            -Version $version `
+            -PortableZipPath $archivePath `
+            -RuntimeZipPath $runtimeArchivePath
+        if ($LASTEXITCODE -ne 0) { throw 'Fail-closed hardening verification failed.' }
+    }
 
     Write-Host "Portable build ready: $finalRoot" -ForegroundColor Green
     Write-Host "Portable archive ready: $archivePath" -ForegroundColor Green

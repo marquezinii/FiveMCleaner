@@ -34,7 +34,7 @@ public sealed class FirebaseAuthServiceTests
             _ => new HttpResponseMessage(HttpStatusCode.NotFound)
         });
 
-        var result = await service.RegisterAsync("person@example.com", "0123456789ab", keepSignedIn: false);
+        var result = await service.RegisterAsync("person@example.com", "0123456789ab", keepSignedIn: false, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         Assert.Equal(AuthenticationState.EmailVerificationRequired, result.State);
@@ -48,7 +48,7 @@ public sealed class FirebaseAuthServiceTests
     {
         using var service = CreateService([], _ => Json("""{"error":{"message":"EMAIL_NOT_FOUND"}}""", HttpStatusCode.BadRequest));
 
-        var result = await service.SignInAsync("missing@example.com", "0123456789ab", keepSignedIn: false);
+        var result = await service.SignInAsync("missing@example.com", "0123456789ab", keepSignedIn: false, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
         Assert.DoesNotContain("e-mail", result.Error!, StringComparison.OrdinalIgnoreCase);
@@ -66,13 +66,47 @@ public sealed class FirebaseAuthServiceTests
             : Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true}]}""")));
         using var service = new FirebaseAuthService(client, "test-firebase-api-key-1234567890", store);
 
-        var result = await service.RestoreSessionAsync();
+        var result = await service.RestoreSessionAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(result.Succeeded);
         Assert.Equal(AuthenticationState.SignedIn, service.Current.State);
         Assert.Equal("uid-1", service.Current.User!.Uid);
-        await service.LogoutAsync();
+        await service.LogoutAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         Assert.False(File.Exists(path));
+    }
+
+    /// <summary>
+    /// Regression guard: a rejected/expired refresh token used to make
+    /// RefreshAsync clear the session by calling LogoutCoreAsync while still
+    /// holding its own session lock, which then tried to re-acquire that same
+    /// (non-reentrant) semaphore and hung forever. This must complete
+    /// promptly, sign the user out, and leave the lock usable for the next call.
+    /// </summary>
+    [Fact]
+    public async Task RestoreSessionAsync_RejectedRefreshToken_SignsOutInsteadOfHanging()
+    {
+        var path = Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session");
+        var store = new SecureFirebaseSessionStore(path);
+        await store.WriteAsync("refresh-1", CancellationToken.None);
+        using var client = new HttpClient(new StubHandler(_ => Json("""{"error":"invalid_grant"}""", HttpStatusCode.BadRequest)));
+        using var service = new FirebaseAuthService(client, "test-firebase-api-key-1234567890", store);
+
+        var restoreTask = service.RestoreSessionAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        var completed = await Task.WhenAny(restoreTask, Task.Delay(TimeSpan.FromSeconds(10), global::Xunit.TestContext.Current.CancellationToken));
+
+        Assert.Same(restoreTask, completed);
+        var result = await restoreTask;
+        Assert.False(result.Succeeded);
+        Assert.Equal(AuthenticationState.SignedOut, result.State);
+        Assert.False(File.Exists(path));
+
+        // The lock must be free again for a follow-up call instead of stuck
+        // (permanently held, or over-released into a broken state).
+        await store.WriteAsync("refresh-2", CancellationToken.None);
+        var secondTask = service.RestoreSessionAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+        var secondCompleted = await Task.WhenAny(secondTask, Task.Delay(TimeSpan.FromSeconds(10), global::Xunit.TestContext.Current.CancellationToken));
+        Assert.Same(secondTask, secondCompleted);
+        Assert.False((await secondTask).Succeeded);
     }
 
     [Fact]
@@ -90,7 +124,7 @@ public sealed class FirebaseAuthServiceTests
             return Json("""{"users":[{"localId":"uid-g","email":"person@gmail.com","emailVerified":true}]}""");
         });
 
-        var federated = await service.SignInWithGoogleAsync("google-id-token", keepSignedIn: false);
+        var federated = await service.SignInWithGoogleAsync("google-id-token", keepSignedIn: false, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(federated.Result.Succeeded);
         // Google has already verified the address, so the account goes
@@ -112,7 +146,7 @@ public sealed class FirebaseAuthServiceTests
             ? Json("""{"localId":"uid-g","email":"person@gmail.com","idToken":"id-g","refreshToken":"refresh-g","expiresIn":"3600","isNewUser":false}""")
             : Json("""{"users":[{"localId":"uid-g","email":"person@gmail.com","emailVerified":true}]}"""));
 
-        var federated = await service.SignInWithGoogleAsync("google-id-token", keepSignedIn: false);
+        var federated = await service.SignInWithGoogleAsync("google-id-token", keepSignedIn: false, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.True(federated.Result.Succeeded);
         Assert.False(federated.IsNewUser);
@@ -123,7 +157,7 @@ public sealed class FirebaseAuthServiceTests
     {
         using var service = CreateService([], _ => Json("""{"error":{"message":"INVALID_IDP_RESPONSE"}}""", HttpStatusCode.BadRequest));
 
-        var federated = await service.SignInWithGoogleAsync("bad-token", keepSignedIn: false);
+        var federated = await service.SignInWithGoogleAsync("bad-token", keepSignedIn: false, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(federated.Result.Succeeded);
         Assert.False(string.IsNullOrWhiteSpace(federated.Result.Error));
@@ -139,8 +173,4 @@ public sealed class FirebaseAuthServiceTests
     }
 
     private static HttpResponseMessage Json(string payload, HttpStatusCode status = HttpStatusCode.OK) => new(status) { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
-    private sealed class StubHandler(Func<HttpRequestMessage, HttpResponseMessage> send) : HttpMessageHandler
-    {
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) => Task.FromResult(send(request));
-    }
 }

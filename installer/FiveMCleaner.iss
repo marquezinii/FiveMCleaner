@@ -6,11 +6,11 @@
 #define StableAppId "{{49338651-127F-4FD3-BEAD-88D8C9377672}"
 
 #ifndef AppVersion
-  #define AppVersion "1.3.2"
+  #define AppVersion "1.4.0"
 #endif
 
 #ifndef AppNumericVersion
-  #define AppNumericVersion "1.3.2.0"
+  #define AppNumericVersion "1.4.0.0"
 #endif
 
 #ifndef SourceDir
@@ -63,6 +63,7 @@ SetupIconFile={#RepositoryRoot}\src\FiveMCleaner.App\Assets\FiveMCleaner.ico
 UninstallDisplayIcon={app}\{#AppExeName}
 UninstallDisplayName={#AppName}
 UninstallFilesDir={app}
+SetupArchitecture=x64
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0.19041

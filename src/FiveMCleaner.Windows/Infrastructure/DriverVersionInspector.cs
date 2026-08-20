@@ -1,5 +1,5 @@
+using System.Globalization;
 using System.Management;
-using System.Threading;
 
 namespace FiveMCleaner.Windows.Infrastructure;
 
@@ -22,41 +22,15 @@ public interface IDriverVersionInspector
 /// class, so they are approximated by matching "chipset" in the device name
 /// among System-class entries; when nothing matches, the chipset group is
 /// simply empty rather than guessing a device.
-///
-/// Caches results for 30 seconds to avoid repeated WMI queries during a single session.
 /// </summary>
 public sealed class WindowsDriverVersionInspector : IDriverVersionInspector
 {
-    private static readonly object CacheLock = new();
-    private static DriverVersionSnapshot? cachedSnapshot;
-    private static DateTimeOffset? cachedAt;
-    private static readonly TimeSpan CacheTtl = TimeSpan.FromSeconds(30);
+    private static readonly DriverVersionSnapshot Empty = new([], [], [], []);
+    private static readonly TimedSnapshotCache<DriverVersionSnapshot> Cache = new();
 
-    public DriverVersionSnapshot GetSnapshot()
-    {
-        // Check cache first
-        lock (CacheLock)
-        {
-            if (cachedSnapshot is not null && cachedAt is not null &&
-                DateTimeOffset.UtcNow - cachedAt.Value < CacheTtl)
-            {
-                return cachedSnapshot;
-            }
-        }
+    public DriverVersionSnapshot GetSnapshot() => Cache.GetOrRead(Read);
 
-        var snapshot = GetSnapshotInternal();
-
-        // Update cache
-        lock (CacheLock)
-        {
-            cachedSnapshot = snapshot;
-            cachedAt = DateTimeOffset.UtcNow;
-        }
-
-        return snapshot;
-    }
-
-    private static DriverVersionSnapshot GetSnapshotInternal()
+    private static DriverVersionSnapshot Read()
     {
         var video = new List<DriverVersionInfo>();
         var network = new List<DriverVersionInfo>();
@@ -102,13 +76,9 @@ public sealed class WindowsDriverVersionInspector : IDriverVersionInspector
                 }
             }
         }
-        catch (ManagementException)
+        catch (Exception exception) when (exception is ManagementException or UnauthorizedAccessException)
         {
-            return new DriverVersionSnapshot([], [], [], []);
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return new DriverVersionSnapshot([], [], [], []);
+            return Empty;
         }
 
         return new DriverVersionSnapshot(video, network, audio, chipset);
@@ -128,9 +98,9 @@ public sealed class WindowsDriverVersionInspector : IDriverVersionInspector
 
         try
         {
-            var year = int.Parse(dmtfDate[..4], System.Globalization.CultureInfo.InvariantCulture);
-            var month = int.Parse(dmtfDate[4..6], System.Globalization.CultureInfo.InvariantCulture);
-            var day = int.Parse(dmtfDate[6..8], System.Globalization.CultureInfo.InvariantCulture);
+            var year = int.Parse(dmtfDate[..4], CultureInfo.InvariantCulture);
+            var month = int.Parse(dmtfDate[4..6], CultureInfo.InvariantCulture);
+            var day = int.Parse(dmtfDate[6..8], CultureInfo.InvariantCulture);
             return new DateTimeOffset(year, month, day, 0, 0, 0, TimeSpan.Zero);
         }
         catch (Exception exception) when (exception is ArgumentOutOfRangeException or FormatException)

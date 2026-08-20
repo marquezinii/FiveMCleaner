@@ -19,29 +19,7 @@ public static class WindowsActionMetadata
             return false;
         }
 
-        var expected = definition!.ToMetadata();
-        return metadata.Id == expected.Id
-            && metadata.Version == expected.Version
-            && metadata.Name == expected.Name
-            && metadata.Description == expected.Description
-            && metadata.Category == expected.Category
-            && metadata.SupportedProfiles.SequenceEqual(expected.SupportedProfiles)
-            && metadata.Risk == expected.Risk
-            && metadata.Reversibility == expected.Reversibility
-            && metadata.RequiredPrivilege == expected.RequiredPrivilege
-            && metadata.RequiresFiveMStopped == expected.RequiresFiveMStopped
-            && metadata.RequiresAcPower == expected.RequiresAcPower
-            && metadata.RequiresRestart == expected.RequiresRestart
-            && metadata.ProgressWeight == expected.ProgressWeight
-            && metadata.ExpectedImpact == expected.ExpectedImpact
-            && metadata.Prerequisites.SequenceEqual(expected.Prerequisites)
-            && metadata.IsCritical == expected.IsCritical
-            && metadata.AttemptWithoutElevationFirst == expected.AttemptWithoutElevationFirst
-            && metadata.SupportedWindows == expected.SupportedWindows
-            && metadata.DetectionSummary == expected.DetectionSummary
-            && metadata.ConfirmationSummary == expected.ConfirmationSummary
-            && metadata.UndoSummary == expected.UndoSummary
-            && metadata.RiskLimitations == expected.RiskLimitations;
+        return metadata.MatchesExactly(definition!.ToMetadata());
     }
 }
 

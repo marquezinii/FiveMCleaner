@@ -9,6 +9,8 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using FiveMCleaner.App.Services;
+using FiveMCleaner.Contracts;
 using FiveMCleaner.UpdateRuntime;
 
 namespace FiveMCleaner.App.Services;
@@ -21,8 +23,8 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
     private readonly byte[] publicKey;
     private readonly string updatesRoot;
     private readonly VersionFloorStore versionFloor;
-    private readonly string dataRoot;
     private readonly UpdaterDiagnostics diagnostics;
+    private readonly string dataRoot;
 
     public SignedManifestUpdateService()
         : this(
@@ -44,9 +46,9 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
 
     internal SignedManifestUpdateService(HttpMessageHandler handler, string dataRoot)
     {
+        this.dataRoot = dataRoot;
         client = new HttpClient(handler) { Timeout = TimeSpan.FromMinutes(15) };
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("FiveMCleaner-Updater", "2.0"));
-        this.dataRoot = dataRoot;
         updatesRoot = Path.Combine(dataRoot, "Updates");
         versionFloor = new VersionFloorStore(dataRoot);
         diagnostics = new UpdaterDiagnostics(dataRoot);
@@ -213,9 +215,10 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
         diagnostics.RecordAsync(
             new UpdaterEvent(
                 Guid.NewGuid().ToString("N"), stage, "failed", Classify(exception),
-                previous, candidate, "Production"),
+                previous, candidate, "Production",
+                BugCodeClassifier.ClassifyUpdaterException(exception, stage)),
             exception.ToString(),
-            telemetryAuthorized: true);
+            telemetryAuthorized: UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
 
     private static string Classify(Exception exception) => exception switch
     {

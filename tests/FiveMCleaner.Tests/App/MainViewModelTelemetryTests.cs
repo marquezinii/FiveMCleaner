@@ -116,5 +116,9 @@ public sealed class MainViewModelTelemetryTests
             captured.TrySetResult(telemetryEvent);
             return Task.CompletedTask;
         }
+
+        public long SuccessfulSends => 0;
+        public long FailedSends => 0;
+        public bool IsHealthy => true;
     }
 }

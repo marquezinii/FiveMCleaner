@@ -42,5 +42,17 @@ public sealed class UpdateHealthReceiptStore
         }
     }
 
+    /// <summary>
+    /// Deletes a receipt this process already confirmed. Used when
+    /// initialization fails after <see cref="Confirm"/> already ran, so the
+    /// Launcher's health-timeout rollback can still detect the failure
+    /// instead of trusting a receipt written before the crash.
+    /// </summary>
+    public void Invalidate()
+    {
+        try { File.Delete(path); }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
+    }
+
     private sealed record HealthReceipt(string TransactionId, string Version, string Nonce, DateTimeOffset ConfirmedAtUtc);
 }

@@ -12,10 +12,24 @@
  */
 export function resolveApiBase(defaultBase, locationHostname, searchParams) {
   const override = searchParams.get('api');
-  const isLocalDev = locationHostname === 'localhost'
-    || locationHostname === '127.0.0.1'
-    || locationHostname === '[::1]';
-  return isLocalDev && override ? override : defaultBase;
+  if (!isLoopbackHost(locationHostname) || !override) {
+    return defaultBase;
+  }
+
+  try {
+    const target = new URL(override);
+    const usesHttp = target.protocol === 'http:' || target.protocol === 'https:';
+    const hasCredentials = target.username.length > 0 || target.password.length > 0;
+    return usesHttp && !hasCredentials && isLoopbackHost(target.hostname)
+      ? target.origin
+      : defaultBase;
+  } catch {
+    return defaultBase;
+  }
+}
+
+function isLoopbackHost(hostname) {
+  return hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '[::1]';
 }
 
 
@@ -48,6 +62,21 @@ export function buildUpdaterEventsUrl(baseUrl, filters = {}) {
   const url = new URL('/api/updater-events', baseUrl);
   applyFilters(url, filters);
   return url.toString();
+}
+
+/** Reads the current live alert: `{ id, message, active }`. Public, no auth. */
+export async function getLiveAlert(baseUrl, fetchImpl = fetch) {
+  return requestJson(new URL('/live-alert', baseUrl).toString(), {}, fetchImpl);
+}
+
+/** Publishes or clears the live alert. `message` is optional (omit to only flip `active`). */
+export async function setLiveAlert(baseUrl, { message, active }, fetchImpl = fetch) {
+  const body = message === undefined ? { active } : { message, active };
+  return requestJson(new URL('/admin/live-alert', baseUrl).toString(), {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  }, fetchImpl);
 }
 
 function applyFilters(url, filters) {

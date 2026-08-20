@@ -1,0 +1,115 @@
+<UserControl x:Class="FiveMCleaner.App.Controls.SpectrumSelector"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="420">
+    <UserControl.Resources>
+        <Style x:Key="SpectrumOptionButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="Height" Value="40" />
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="{StaticResource RadiusSm}">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Surface2Brush}" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <!-- Segmentado, mesmo vocabulário visual do seletor de tema em
+             Configurações (SegmentedHostStyle/SegmentedOptionStyle): raio
+             contido, preenchimento neutro, nada oval. O indicador desliza
+             entre as três paradas em vez de trocar de estado sem transição —
+             este é o controle mais usado da página. -->
+        <Border Grid.Row="0" Background="{DynamicResource CanvasSunkenBrush}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusMd}" Padding="3">
+            <Grid x:Name="TrackHost" Height="40" SizeChanged="OnTrackHostSizeChanged"
+                  Focusable="True" Cursor="Hand"
+                  MouseLeftButtonDown="OnTrackClick"
+                  GotKeyboardFocus="OnTrackGotFocus" LostKeyboardFocus="OnTrackLostFocus"
+                  KeyDown="OnTrackKeyDown">
+                <!-- Mesmo vocabulário do segmentado de Configurações: o
+                     selecionado é um bloco ERGUIDO (superfície mais alta +
+                     sombra curta), não um preenchimento igual ao do hover. -->
+                <Border x:Name="SelectionIndicator"
+                        Background="{DynamicResource Surface3Brush}"
+                        BorderBrush="Transparent"
+                        BorderThickness="1"
+                        CornerRadius="{StaticResource RadiusSm}"
+                        Effect="{DynamicResource Elevation1Shadow}"
+                        HorizontalAlignment="Left"
+                        IsHitTestVisible="False">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="IndicatorTransform" X="0" />
+                    </Border.RenderTransform>
+                </Border>
+
+                <Border x:Name="ThumbFocusRing"
+                        BorderBrush="{DynamicResource FocusRingBrush}"
+                        BorderThickness="2"
+                        CornerRadius="{StaticResource RadiusSm}"
+                        Opacity="0"
+                        HorizontalAlignment="Left"
+                        IsHitTestVisible="False">
+                    <Border.RenderTransform>
+                        <TranslateTransform x:Name="ThumbFocusRingTransform" X="0" />
+                    </Border.RenderTransform>
+                </Border>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Button x:Name="Option0Button" Grid.Column="0" Style="{StaticResource SpectrumOptionButtonStyle}" Click="OnOptionClick">
+                        <TextBlock x:Name="Option0Text" Style="{StaticResource BodyStrongText}" HorizontalAlignment="Center" />
+                    </Button>
+                    <Button x:Name="Option1Button" Grid.Column="1" Style="{StaticResource SpectrumOptionButtonStyle}" Click="OnOptionClick">
+                        <TextBlock x:Name="Option1Text" Style="{StaticResource BodyStrongText}" HorizontalAlignment="Center" />
+                    </Button>
+                    <Button x:Name="Option2Button" Grid.Column="2" Style="{StaticResource SpectrumOptionButtonStyle}" Click="OnOptionClick">
+                        <TextBlock x:Name="Option2Text" Style="{StaticResource BodyStrongText}" HorizontalAlignment="Center" />
+                    </Button>
+                </Grid>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="0,10,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="Recommended0" Grid.Column="0" HorizontalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
+                <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                <TextBlock x:Name="RecommendedText0" Style="{StaticResource OverlineText}" Foreground="{DynamicResource AccentTextBrush}" />
+            </StackPanel>
+            <StackPanel x:Name="Recommended1" Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
+                <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                <TextBlock x:Name="RecommendedText1" Style="{StaticResource OverlineText}" Foreground="{DynamicResource AccentTextBrush}" />
+            </StackPanel>
+            <StackPanel x:Name="Recommended2" Grid.Column="2" HorizontalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
+                <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                <TextBlock x:Name="RecommendedText2" Style="{StaticResource OverlineText}" Foreground="{DynamicResource AccentTextBrush}" />
+            </StackPanel>
+        </Grid>
+    </Grid>
+</UserControl>

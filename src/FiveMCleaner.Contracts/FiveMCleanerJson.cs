@@ -5,6 +5,12 @@ namespace FiveMCleaner.Contracts;
 
 public static class FiveMCleanerJson
 {
+    /// <summary>
+    /// Shared by the plan sent to the broker, the broker events, the durable
+    /// journal and the local settings. Read-only: mutating it would change all
+    /// four boundaries at once, so a boundary that needs different behaviour
+    /// copies it instead.
+    /// </summary>
     public static JsonSerializerOptions Options { get; } = CreateOptions();
 
     public static string SerializeRequest(OptimizationPlanRequestDto request)
@@ -49,6 +55,10 @@ public static class FiveMCleanerJson
         };
 
         options.Converters.Add(new JsonStringEnumConverter(JsonNamingPolicy.CamelCase, allowIntegerValues: false));
+
+        // Locked here, not on first use, so the guarantee does not depend on
+        // which boundary happens to serialize first.
+        options.MakeReadOnly(populateMissingResolver: true);
         return options;
     }
 }

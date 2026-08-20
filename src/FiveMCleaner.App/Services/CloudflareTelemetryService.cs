@@ -1,23 +1,27 @@
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
+using System.Threading;
 using FiveMCleaner.Contracts;
 
 namespace FiveMCleaner.App.Services;
 
 /// <summary>
 /// Validates the full (version-2-consent) telemetry event schema before it
-/// is queued for the Cloudflare transport. Separate from
-/// <see cref="FormSubmitAnonymousTelemetryService"/>'s own, narrower
-/// validation — that transport is untouched and keeps sending only its
-/// original four fields regardless of what else this event now carries.
+/// is queued for the Cloudflare transport.
 /// </summary>
 public static class TelemetryEventValidator
 {
     private static readonly HashSet<int> AllowedRamBucketsGiB = [2, 4, 8, 16, 32, 64, 128, 256];
     private static readonly HashSet<string> AllowedProfiles = new(StringComparer.Ordinal) { "Light", "Balanced", "Aggressive" };
+    private static readonly HashSet<string> AllowedGtaEditions = new(StringComparer.Ordinal) { "Legacy", "Enhanced", "Unknown" };
+    private static readonly HashSet<string> AllowedDiskTypes = new(StringComparer.Ordinal) { "HDD", "SSD", "NVMe", "Unknown" };
+    private static readonly HashSet<int> AllowedFreeSpaceGiBBuckets = [0, 10, 50, 100, 250];
+    private static readonly HashSet<int> AllowedDaysSinceLastRunBuckets = [0, 2, 8, 30];
+    private static readonly HashSet<int> AllowedProcessCountBuckets = [0, 1, 4];
     public const int MaxActionIds = 30;
     private const int MaxShortFieldLength = 128;
 
@@ -75,6 +79,43 @@ public static class TelemetryEventValidator
                 }
             }
         }
+
+        // v5: diagnósticos essenciais expandidos
+        if (telemetryEvent.GtaEdition is not null && !AllowedGtaEditions.Contains(telemetryEvent.GtaEdition))
+        {
+            throw new ArgumentException("Edição do GTA V de telemetria não permitida.", nameof(telemetryEvent));
+        }
+
+        if (telemetryEvent.OptimizationTargetCount is { } targetCount && (targetCount < 0 || targetCount > 100_000))
+        {
+            throw new ArgumentException("Contagem de alvos de otimização fora do intervalo permitido.", nameof(telemetryEvent));
+        }
+
+        // v5: dados opcionais de contexto
+        if (telemetryEvent.WindowsBuild is { } windowsBuild && (windowsBuild < 0 || windowsBuild > 99999))
+        {
+            throw new ArgumentException("Build do Windows de telemetria fora do intervalo permitido.", nameof(telemetryEvent));
+        }
+
+        if (telemetryEvent.DiskType is not null && !AllowedDiskTypes.Contains(telemetryEvent.DiskType))
+        {
+            throw new ArgumentException("Tipo de disco de telemetria não permitido.", nameof(telemetryEvent));
+        }
+
+        if (telemetryEvent.FreeSpaceGiBBucket is { } freeSpaceBucket && !AllowedFreeSpaceGiBBuckets.Contains(freeSpaceBucket))
+        {
+            throw new ArgumentException("Faixa de espaço livre de telemetria não permitida.", nameof(telemetryEvent));
+        }
+
+        if (telemetryEvent.DaysSinceLastRunBucket is { } daysBucket && !AllowedDaysSinceLastRunBuckets.Contains(daysBucket))
+        {
+            throw new ArgumentException("Faixa de dias desde a última execução não permitida.", nameof(telemetryEvent));
+        }
+
+        if (telemetryEvent.ProcessCountAtStart is { } processCount && !AllowedProcessCountBuckets.Contains(processCount))
+        {
+            throw new ArgumentException("Faixa de contagem de processos não permitida.", nameof(telemetryEvent));
+        }
     }
 
     private static void ValidateShortField(string? value, string fieldName)
@@ -103,6 +144,8 @@ public sealed class LocalTelemetryQueue
 {
     private readonly string queueDirectory;
     private readonly JsonSerializerOptions jsonOptions;
+
+    public string QueueDirectory => queueDirectory;
 
     public LocalTelemetryQueue(string queueDirectory)
     {
@@ -326,19 +369,23 @@ public sealed class CloudflareTelemetryTransport
         ramBucketGiB = telemetryEvent.RamBucketGiB,
         profile = telemetryEvent.Profile,
         actionIds = telemetryEvent.ActionIds,
+        fiveMInstallDetected = telemetryEvent.FiveMInstallDetected,
+        gtaEdition = telemetryEvent.GtaEdition,
+        optimizationTargetCount = telemetryEvent.OptimizationTargetCount,
+        windowsBuild = telemetryEvent.WindowsBuild,
+        diskType = telemetryEvent.DiskType,
+        freeSpaceGiBBucket = telemetryEvent.FreeSpaceGiBBucket,
+        runTimestamp = telemetryEvent.RunTimestamp?.ToString("O"),
+        daysSinceLastRunBucket = telemetryEvent.DaysSinceLastRunBucket,
+        backupCreated = telemetryEvent.BackupCreated,
+        backupRestored = telemetryEvent.BackupRestored,
+        elevationUsed = telemetryEvent.ElevationUsed,
+        processCountAtStart = telemetryEvent.ProcessCountAtStart,
         environment
     };
 
-    private static Uri ValidateEndpoint(Uri value)
-    {
-        ArgumentNullException.ThrowIfNull(value);
-        if (value.Scheme != Uri.UriSchemeHttps)
-        {
-            throw new ArgumentException("Endpoint de telemetria inválido.", nameof(value));
-        }
-
-        return value;
-    }
+    private static Uri ValidateEndpoint(Uri value) =>
+        CloudflareTransportDefaults.ValidateHttpsEndpoint(value, "Endpoint de telemetria inválido.");
 
     private static string ValidateEnvironment(string value)
     {
@@ -350,24 +397,13 @@ public sealed class CloudflareTelemetryTransport
         return value;
     }
 
-    private static HttpClient CreateClient()
-    {
-        var handler = new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate
-        };
-        return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(15) };
-    }
+    private static HttpClient CreateClient() => CloudflareTransportDefaults.CreateClient(TimeSpan.FromSeconds(15));
 }
 
 /// <summary>
 /// The Cloudflare-backed <see cref="IAnonymousTelemetryService"/>: enqueues
 /// locally, then makes a best-effort attempt to flush the whole pending
-/// queue as one batch. Mutually exclusive with
-/// <see cref="FormSubmitAnonymousTelemetryService"/> by construction — the
-/// composition root in <c>MainWindow.xaml.cs</c> only ever instantiates one
-/// of the two, chosen by whether a telemetry endpoint is configured.
+/// queue as one batch.
 /// </summary>
 public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryService
 {
@@ -378,17 +414,25 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
     private readonly LocalTelemetryQueue queue;
     private readonly CloudflareTelemetryTransport transport;
     private readonly SemaphoreSlim flushLock = new(1, 1);
+    private readonly string logDirectory;
     private volatile bool enabled;
+    private long successfulSends;
+    private long failedSends;
 
     public QueuedCloudflareTelemetryService(LocalTelemetryQueue queue, CloudflareTelemetryTransport transport)
     {
         this.queue = queue ?? throw new ArgumentNullException(nameof(queue));
         this.transport = transport ?? throw new ArgumentNullException(nameof(transport));
+        logDirectory = queue.QueueDirectory;
     }
 
     public bool IsEnabled => enabled;
 
     public void SetEnabled(bool value) => enabled = value;
+
+    public long SuccessfulSends => Interlocked.Read(ref successfulSends);
+    public long FailedSends => Interlocked.Read(ref failedSends);
+    public bool IsHealthy => FailedSends == 0 || SuccessfulSends > FailedSends;
 
     public async Task TrackAsync(AnonymousTelemetryEvent telemetryEvent, CancellationToken cancellationToken = default)
     {
@@ -444,16 +488,39 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
                 {
                     queue.Remove(item.FilePath);
                 }
+                Interlocked.Add(ref successfulSends, pending.Count);
+            }
+            else
+            {
+                Interlocked.Add(ref failedSends, pending.Count);
+                LogFailure($"Telemetry flush failed with outcome: {outcome}. {pending.Count} events retained in queue.");
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Interlocked.Add(ref failedSends, 1);
+            LogFailure($"Telemetry flush threw: {ex.GetType().Name}: {ex.Message}");
             // A flush failure must never affect the optimization flow or
             // startup sequence that triggered it.
         }
         finally
         {
             flushLock.Release();
+        }
+    }
+
+    private void LogFailure(string message)
+    {
+        try
+        {
+            Directory.CreateDirectory(logDirectory);
+            var logPath = Path.Combine(logDirectory, "telemetry_failures.log");
+            var line = $"{DateTimeOffset.UtcNow:yyyy-MM-dd HH:mm:ss.fff} UTC - {message}{Environment.NewLine}";
+            File.AppendAllText(logPath, line);
+        }
+        catch
+        {
+            // Best-effort logging; never throw from telemetry.
         }
     }
 }

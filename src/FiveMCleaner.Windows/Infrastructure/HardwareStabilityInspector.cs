@@ -119,11 +119,7 @@ public sealed class WindowsHardwareStabilityInspector : IHardwareStabilityInspec
 
             return null;
         }
-        catch (ManagementException)
-        {
-            return null;
-        }
-        catch (UnauthorizedAccessException)
+        catch (Exception exception) when (exception is ManagementException or UnauthorizedAccessException)
         {
             return null;
         }

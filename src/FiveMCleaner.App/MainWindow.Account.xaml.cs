@@ -4,6 +4,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FiveMCleaner.App.Services;
+using FiveMCleaner.App.Views;
 namespace FiveMCleaner.App;
 
 /// <summary>
@@ -46,6 +47,10 @@ public partial class MainWindow
         AccountSettingsUnavailablePanel.Visibility = Visibility.Collapsed;
         AccountSettingsSignedOutPanel.Visibility = user is null ? Visibility.Visible : Visibility.Collapsed;
         AccountSettingsSignedInPanel.Visibility = user is null ? Visibility.Collapsed : Visibility.Visible;
+
+        // Signed in, the header button is just the avatar/initials -- the
+        // "Entrar / Cadastre-se" prompt only makes sense while signed out.
+        AccountLabel.Visibility = user is null ? Visibility.Visible : Visibility.Collapsed;
 
         if (user is null)
         {
@@ -257,10 +262,132 @@ public partial class MainWindow
 
         AccountSettingsStatusPanel.Visibility = Visibility.Visible;
         AccountSettingsStatusText.Text = text;
-        AccountSettingsStatusText.SetResourceReference(ForegroundProperty, error ? "RedBrush" : "GreenBrush");
-        AccountSettingsStatusIcon.Data = (Geometry)FindResource(error ? "IconInfo" : "IconCheck");
-        AccountSettingsStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, error ? "RedBrush" : "GreenBrush");
-        AccountSettingsStatusPanel.SetResourceReference(BorderBrushProperty, error ? "RedBrush" : "GreenBrush");
-        AccountSettingsStatusPanel.SetResourceReference(BackgroundProperty, error ? "AccountStatusErrorBackgroundBrush" : "AccountStatusSuccessBackgroundBrush");
+        AccountSettingsStatusText.SetResourceReference(ForegroundProperty, error ? "DangerBaseBrush" : "SuccessBaseBrush");
+        AccountSettingsStatusIcon.Data = (Geometry)FindResource(error ? "IconAlertTriangle" : "IconCheck");
+        AccountSettingsStatusIcon.SetResourceReference(System.Windows.Shapes.Shape.StrokeProperty, error ? "DangerBaseBrush" : "SuccessBaseBrush");
+        AccountSettingsStatusPanel.SetResourceReference(BorderBrushProperty, error ? "DangerBorderBrush" : "SuccessBorderBrush");
+        AccountSettingsStatusPanel.SetResourceReference(BackgroundProperty, error ? "DangerSurfaceBrush" : "SuccessSurfaceBrush");
+    }
+
+    private IFirebaseAuthService? CreateAccountService(
+        bool demoMode,
+        RemoteServicesOptions options)
+    {
+        if (demoMode
+            || !FirebaseAuthConfiguration.TryGetApiKey(options.FirebaseApiKey, out var firebaseApiKey))
+        {
+            return null;
+        }
+
+        var service = new FirebaseAuthService(firebaseApiKey);
+        service.StateChanged += (_, _) => Dispatcher.Invoke(UpdateAccountButton);
+        return service;
+    }
+
+    private async Task RestoreAccountSessionQuietlyAsync()
+    {
+        try
+        {
+            await accountService!.RestoreSessionAsync().ConfigureAwait(false);
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+        }
+    }
+
+    private void Account_Click(object sender, RoutedEventArgs e)
+    {
+        if (accountService is null)
+        {
+            System.Windows.MessageBox.Show(LocalizationService.Current.GetString("Settings.Account.Unavailable"), LocalizationService.Current.GetString("Settings.Account.Title"), MessageBoxButton.OK, MessageBoxImage.Information);
+            return;
+        }
+
+        if (accountService.Current.State == AuthenticationState.SignedIn)
+        {
+            // Já logado: o clique no cabeçalho leva direto para
+            // Configurações > Sua conta, em vez de reabrir a janela de
+            // entrar/cadastrar (que agora só cuida de autenticar, não de
+            // gerenciar a conta -- ver AccountWindow.CloseAfterSignIn).
+            ActivateNavItem(SettingsNav);
+            Navigate(SettingsPage);
+            AccountSettingsCard.BringIntoView();
+            return;
+        }
+
+        OpenAccountWindow();
+    }
+
+    private void OpenAccountWindow()
+    {
+        var dialog = new AccountWindow(accountService!, profileService, googleOAuth) { Owner = this };
+        if (dialog.ShowDialog() == true) UpdateAccountButton();
+    }
+
+    private void UpdateAccountButton()
+    {
+        var profile = accountService?.Current.User;
+        AccountLabel.Text = profile?.DisplayName ?? LocalizationService.Current.GetString("Account.SignInButton");
+        AccountButton.ToolTip = profile is null ? LocalizationService.Current.GetString("Account.SignInTooltip") : LocalizationService.Current.GetString("Account.ViewTooltip");
+        // Also sets AccountInitials/avatar for both the header and the
+        // Settings card, so a direct assignment here would just be
+        // immediately overwritten.
+        RefreshAccountSettingsCard();
+    }
+
+    private async void AccountService_StateChanged(object? sender, AuthenticationSnapshot snapshot)
+    {
+        Dispatcher.Invoke(UpdateAccountButton);
+        if (snapshot.State != AuthenticationState.SignedIn || snapshot.User is null)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                viewModel.SetAccountFirstName(null);
+                ApplyAccountSettingsUsername(null);
+            });
+            return;
+        }
+
+        await SyncAccountFirstNameAsync();
+    }
+
+    /// <summary>
+    /// Reads the caller's own first name for the Overview greeting. Firebase
+    /// Authentication REST never stores it, so it only exists in the
+    /// Worker's profile table; this is why login and quiet session restore
+    /// both need a read call instead of getting it for free off the token.
+    /// </summary>
+    private async Task SyncAccountFirstNameAsync()
+    {
+        if (accountService is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var idToken = await accountService.GetIdTokenAsync().ConfigureAwait(false);
+            if (idToken is null)
+            {
+                return;
+            }
+
+            var result = await profileService.FetchAsync(idToken).ConfigureAwait(false);
+            if (result.Outcome == AccountProfileFetchOutcome.Found)
+            {
+                Dispatcher.Invoke(() =>
+                {
+                    viewModel.SetAccountFirstName(result.FirstName);
+                    ApplyAccountSettingsUsername(result.Username);
+                });
+            }
+        }
+        catch (Exception exception) when (exception is not (
+            OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            // Sem nome não é um estado de erro visível: a saudação simplesmente
+            // fica sem o nome até a próxima sincronização bem-sucedida.
+        }
     }
 }
