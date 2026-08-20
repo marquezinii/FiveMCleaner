@@ -341,8 +341,12 @@ async function handleTelemetryIngest(request, env) {
           `INSERT OR IGNORE INTO telemetry_events
              (event_name, execution_time_ms, app_version, error_category,
               os_version, system_architecture, cpu_model, gpu_model,
-              ram_bucket_gib, profile, environment, received_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+              ram_bucket_gib, profile, environment, received_at,
+              five_m_install_detected, gta_edition, optimization_target_count,
+              windows_build, disk_type, free_space_gib_bucket, run_timestamp,
+              days_since_last_run_bucket, backup_created, backup_restored,
+              elevation_used, process_count_at_start)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         )
         .bind(
           event.eventName,
@@ -357,6 +361,18 @@ async function handleTelemetryIngest(request, env) {
           event.profile,
           event.environment,
           receivedAt,
+          event.fiveMInstallDetected === null ? null : Number(event.fiveMInstallDetected),
+          event.gtaEdition,
+          event.optimizationTargetCount,
+          event.windowsBuild,
+          event.diskType,
+          event.freeSpaceGiBBucket,
+          event.runTimestamp,
+          event.daysSinceLastRunBucket,
+          event.backupCreated === null ? null : Number(event.backupCreated),
+          event.backupRestored === null ? null : Number(event.backupRestored),
+          event.elevationUsed === null ? null : Number(event.elevationUsed),
+          event.processCountAtStart,
         ),
     );
   }

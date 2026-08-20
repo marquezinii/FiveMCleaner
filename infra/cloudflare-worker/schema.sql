@@ -17,7 +17,21 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
     ram_bucket_gib INTEGER,
     profile TEXT,
     environment TEXT NOT NULL,
-    received_at TEXT NOT NULL
+    received_at TEXT NOT NULL,
+    -- v5: expanded diagnostic fields, optional -- see migrations/0004_telemetry_v5_fields.sql
+    -- and PROJECT_STATE.md item 9. No client sends these yet.
+    five_m_install_detected INTEGER,
+    gta_edition TEXT,
+    optimization_target_count INTEGER,
+    windows_build INTEGER,
+    disk_type TEXT,
+    free_space_gib_bucket INTEGER,
+    run_timestamp TEXT,
+    days_since_last_run_bucket INTEGER,
+    backup_created INTEGER,
+    backup_restored INTEGER,
+    elevation_used INTEGER,
+    process_count_at_start INTEGER
 );
 
 CREATE INDEX IF NOT EXISTS idx_telemetry_events_received_at

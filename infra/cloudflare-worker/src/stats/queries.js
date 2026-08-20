@@ -188,3 +188,98 @@ export function recentFailures(filters, limit = 20) {
     params: [...params, limit],
   };
 }
+
+// --- v5: expanded diagnostic fields. No client sends these yet -- see
+// PROJECT_STATE.md item 9. Not wired into STATS_BUILDERS/the dashboard
+// until a client actually populates the data these would read. ---
+
+/** Distribution of GTA V editions (Legacy/Enhanced/Unknown). */
+export function gtaEditionBreakdown(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT gta_edition, COUNT(*) AS runs
+          FROM telemetry_events
+          WHERE ${whereSql} AND gta_edition IS NOT NULL
+          GROUP BY gta_edition
+          ORDER BY runs DESC`,
+    params,
+  };
+}
+
+/** FiveM installation detection rate. */
+export function fiveMInstallDetectionRate(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT
+            SUM(CASE WHEN five_m_install_detected = 1 THEN 1 ELSE 0 END) AS detected,
+            COUNT(*) AS total
+          FROM telemetry_events
+          WHERE ${whereSql} AND five_m_install_detected IS NOT NULL`,
+    params,
+  };
+}
+
+/** Distribution of disk types (HDD/SSD/NVMe/Unknown). */
+export function diskTypeBreakdown(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT disk_type, COUNT(*) AS runs
+          FROM telemetry_events
+          WHERE ${whereSql} AND disk_type IS NOT NULL
+          GROUP BY disk_type
+          ORDER BY runs DESC`,
+    params,
+  };
+}
+
+/** Average optimization target count. */
+export function averageOptimizationTargetCount(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT AVG(optimization_target_count) AS average_count, COUNT(*) AS runs
+          FROM telemetry_events
+          WHERE ${whereSql} AND optimization_target_count IS NOT NULL`,
+    params,
+  };
+}
+
+/** Backup creation and restoration rates. */
+export function backupStats(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT
+            SUM(CASE WHEN backup_created = 1 THEN 1 ELSE 0 END) AS created,
+            SUM(CASE WHEN backup_restored = 1 THEN 1 ELSE 0 END) AS restored,
+            COUNT(*) AS total
+          FROM telemetry_events
+          WHERE ${whereSql} AND (backup_created IS NOT NULL OR backup_restored IS NOT NULL)`,
+    params,
+  };
+}
+
+/** Elevation usage rate. */
+export function elevationUsageRate(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT
+            SUM(CASE WHEN elevation_used = 1 THEN 1 ELSE 0 END) AS elevated,
+            COUNT(*) AS total
+          FROM telemetry_events
+          WHERE ${whereSql} AND elevation_used IS NOT NULL`,
+    params,
+  };
+}
+
+/** Windows build distribution. */
+export function windowsBuildBreakdown(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT windows_build, COUNT(*) AS runs
+          FROM telemetry_events
+          WHERE ${whereSql} AND windows_build IS NOT NULL
+          GROUP BY windows_build
+          ORDER BY runs DESC
+          LIMIT 10`,
+    params,
+  };
+}

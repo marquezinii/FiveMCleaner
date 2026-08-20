@@ -12,6 +12,13 @@ import {
   topCpuModels,
   topGpuModels,
   ramBucketBreakdown,
+  gtaEditionBreakdown,
+  fiveMInstallDetectionRate,
+  diskTypeBreakdown,
+  averageOptimizationTargetCount,
+  backupStats,
+  elevationUsageRate,
+  windowsBuildBreakdown,
 } from '../../src/stats/queries.js';
 
 test('optimizationRunsPerDay defaults to the Production environment', () => {
@@ -142,4 +149,55 @@ test('every query filters by environment as the first bound parameter, never omi
     const { params } = builder();
     assert.equal(params[0], 'Production');
   }
+});
+
+// --- v5: expanded diagnostic fields ---
+
+test('gtaEditionBreakdown excludes nulls and groups by edition', () => {
+  const { sql } = gtaEditionBreakdown();
+
+  assert.match(sql, /gta_edition IS NOT NULL/);
+  assert.match(sql, /GROUP BY gta_edition/);
+});
+
+test('fiveMInstallDetectionRate sums detected vs. total', () => {
+  const { sql } = fiveMInstallDetectionRate();
+
+  assert.match(sql, /SUM\(CASE WHEN five_m_install_detected = 1/);
+  assert.match(sql, /five_m_install_detected IS NOT NULL/);
+});
+
+test('diskTypeBreakdown excludes nulls and orders by count descending', () => {
+  const { sql } = diskTypeBreakdown();
+
+  assert.match(sql, /disk_type IS NOT NULL/);
+  assert.match(sql, /ORDER BY runs DESC/);
+});
+
+test('averageOptimizationTargetCount averages only non-null counts', () => {
+  const { sql } = averageOptimizationTargetCount();
+
+  assert.match(sql, /AVG\(optimization_target_count\)/);
+  assert.match(sql, /optimization_target_count IS NOT NULL/);
+});
+
+test('backupStats sums created and restored independently', () => {
+  const { sql } = backupStats();
+
+  assert.match(sql, /SUM\(CASE WHEN backup_created = 1/);
+  assert.match(sql, /SUM\(CASE WHEN backup_restored = 1/);
+});
+
+test('elevationUsageRate sums elevated vs. total', () => {
+  const { sql } = elevationUsageRate();
+
+  assert.match(sql, /SUM\(CASE WHEN elevation_used = 1/);
+  assert.match(sql, /elevation_used IS NOT NULL/);
+});
+
+test('windowsBuildBreakdown excludes nulls and limits to the top 10', () => {
+  const { sql } = windowsBuildBreakdown();
+
+  assert.match(sql, /windows_build IS NOT NULL/);
+  assert.match(sql, /LIMIT 10/);
 });
