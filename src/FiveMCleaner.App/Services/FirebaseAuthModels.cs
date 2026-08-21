@@ -10,6 +10,7 @@ public enum AuthenticationState
     SignedOut,
     SigningIn,
     EmailVerificationRequired,
+    ProfileCompletionRequired,
     SignedIn,
     RefreshingSession,
     ReauthenticationRequired
@@ -58,6 +59,7 @@ public interface IFirebaseAuthService : IDisposable
     /// </summary>
     Task<FederatedSignInResult> SignInWithGoogleAsync(string googleIdToken, bool keepSignedIn, CancellationToken cancellationToken = default);
     Task<FirebaseAuthResult> RefreshEmailVerificationAsync(CancellationToken cancellationToken = default);
+    Task<FirebaseAuthResult> RefreshAccountReadinessAsync(CancellationToken cancellationToken = default);
     Task<FirebaseAuthResult> ResendVerificationEmailAsync(CancellationToken cancellationToken = default);
     Task<FirebaseAuthResult> SendPasswordResetEmailAsync(string email, CancellationToken cancellationToken = default);
     Task<FirebaseAuthResult> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken cancellationToken = default);

@@ -43,7 +43,9 @@ public partial class MainWindow
             return;
         }
 
-        var user = accountService.Current.User;
+        var user = accountService.Current.State == AuthenticationState.SignedIn
+            ? accountService.Current.User
+            : null;
         AccountSettingsUnavailablePanel.Visibility = Visibility.Collapsed;
         AccountSettingsSignedOutPanel.Visibility = user is null ? Visibility.Visible : Visibility.Collapsed;
         AccountSettingsSignedInPanel.Visibility = user is null ? Visibility.Collapsed : Visibility.Visible;
@@ -206,7 +208,9 @@ public partial class MainWindow
         }
 
         var user = accountService.Current.User;
-        var result = await RunAccountSettingsActionAsync(() => accountService.DeleteAccountAsync(AccountSettingsCurrentPasswordField.Password));
+        var result = await RunAccountSettingsActionAsync(
+            () => accountService.DeleteAccountAsync(AccountSettingsCurrentPasswordField.Password),
+            errorKey: "Account.Profile.DeleteFailed");
         if (result.Succeeded && user is not null)
         {
             // The account is gone; a leftover local photo would just be an
@@ -226,13 +230,19 @@ public partial class MainWindow
         AccountSettingsCurrentPasswordField.Clear();
     }
 
-    private async Task<FirebaseAuthResult> RunAccountSettingsActionAsync(Func<Task<FirebaseAuthResult>> action, string? success = null)
+    private async Task<FirebaseAuthResult> RunAccountSettingsActionAsync(
+        Func<Task<FirebaseAuthResult>> action,
+        string? success = null,
+        string? errorKey = null)
     {
         SetAccountSettingsBusy(true);
         try
         {
             var result = await action();
-            AccountSettingsStatus(result.Error ?? success ?? string.Empty, error: result.Error is not null);
+            var error = result.Error == FirebaseAuthService.ProfileDeletionFailedError && errorKey is not null
+                ? LocalizationService.Current.GetString(errorKey)
+                : result.Error;
+            AccountSettingsStatus(error ?? success ?? string.Empty, error: error is not null);
             return result;
         }
         finally
@@ -271,7 +281,8 @@ public partial class MainWindow
 
     private IFirebaseAuthService? CreateAccountService(
         bool demoMode,
-        RemoteServicesOptions options)
+        RemoteServicesOptions options,
+        IAccountProfileService profiles)
     {
         if (demoMode
             || !FirebaseAuthConfiguration.TryGetApiKey(options.FirebaseApiKey, out var firebaseApiKey))
@@ -279,7 +290,7 @@ public partial class MainWindow
             return null;
         }
 
-        var service = new FirebaseAuthService(firebaseApiKey);
+        var service = new FirebaseAuthService(firebaseApiKey, profiles);
         service.StateChanged += (_, _) => Dispatcher.Invoke(UpdateAccountButton);
         return service;
     }

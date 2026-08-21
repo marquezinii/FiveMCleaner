@@ -135,6 +135,8 @@ CREATE TABLE IF NOT EXISTS account_profiles (
     username_normalized TEXT NOT NULL,
     first_name TEXT NOT NULL,
     last_name TEXT NOT NULL,
+    terms_version TEXT NOT NULL,
+    terms_accepted_at TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
 

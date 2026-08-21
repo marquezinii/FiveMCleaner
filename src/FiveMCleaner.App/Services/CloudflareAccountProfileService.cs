@@ -51,6 +51,7 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
                 username = submission.Username,
                 firstName = submission.FirstName,
                 lastName = submission.LastName,
+                termsVersion = submission.TermsVersion,
             }),
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", idToken);
@@ -145,7 +146,32 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
                 AccountProfileFetchOutcome.Found,
                 body.Username,
                 body.FirstName,
-                body.LastName);
+                body.LastName,
+                body.TermsVersion);
+        }
+    }
+
+    public async Task<AccountProfileDeletionResult> DeleteAsync(
+        string idToken,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(idToken);
+
+        using var request = new HttpRequestMessage(HttpMethod.Delete, endpoint);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", idToken);
+
+        try
+        {
+            using var response = await httpClient.SendAsync(
+                request,
+                HttpCompletionOption.ResponseHeadersRead,
+                cancellationToken).ConfigureAwait(false);
+            return new AccountProfileDeletionResult(
+                response.IsSuccessStatusCode ? AccountProfileDeletionOutcome.Deleted : AccountProfileDeletionOutcome.Failed);
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        {
+            return new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Failed);
         }
     }
 
@@ -216,7 +242,8 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
     private sealed record AccountProfileResponseDto(
         [property: JsonPropertyName("username")] string? Username,
         [property: JsonPropertyName("firstName")] string? FirstName,
-        [property: JsonPropertyName("lastName")] string? LastName);
+        [property: JsonPropertyName("lastName")] string? LastName,
+        [property: JsonPropertyName("termsVersion")] string? TermsVersion);
 
     private static HttpClient CreateClient()
     {

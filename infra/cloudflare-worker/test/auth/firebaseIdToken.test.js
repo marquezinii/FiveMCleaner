@@ -331,6 +331,20 @@ test('requireFirebaseUser returns uid for a valid Bearer token', async () => {
 
   assert.equal(result.authorized, true);
   assert.equal(result.uid, 'firebase-uid-abc123');
+  assert.equal(result.emailVerified, false);
+});
+
+test('requireFirebaseUser exposes a verified e-mail claim only when Firebase asserted it', async () => {
+  const { privateKey, publicKey } = await generateRsaKeyPair();
+  const kid = 'kid-verified';
+  const token = await signToken(privateKey, { alg: 'RS256', kid }, validPayload({ email_verified: true }));
+  const result = await requireFirebaseUser(
+    new Request('https://worker.example/account/me', { headers: { Authorization: `Bearer ${token}` } }),
+    { fetch: mockJwksFetch({ [kid]: await publicJwk(publicKey, kid) }) },
+  );
+
+  assert.equal(result.authorized, true);
+  assert.equal(result.emailVerified, true);
 });
 
 test('requireFirebaseUser returns generic 401 without Authorization', async () => {

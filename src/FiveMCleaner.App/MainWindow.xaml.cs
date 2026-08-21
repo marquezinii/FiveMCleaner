@@ -88,7 +88,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             demoMode ? null : remoteServicesOptions.GoogleOAuthClientId,
             demoMode ? null : remoteServicesOptions.GoogleOAuthClientSecret);
 
-        accountService = CreateAccountService(demoMode, remoteServicesOptions);
+        accountService = CreateAccountService(demoMode, remoteServicesOptions, profileService);
         if (accountService is not null)
         {
             accountService.StateChanged += AccountService_StateChanged;

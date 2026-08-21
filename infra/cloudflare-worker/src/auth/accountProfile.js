@@ -7,6 +7,7 @@
 
 const NAME_PATTERN = /^\p{L}[\p{L} '-]{0,59}$/u;
 const USERNAME_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]{2,23}$/;
+const CURRENT_TERMS_VERSION = '2026-08-02';
 
 /**
  * Validates and normalizes the profile-completion payload. Returns null on
@@ -14,15 +15,16 @@ const USERNAME_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]{2,23}$/;
  * failed, matching the other ingest validators in this Worker.
  *
  * @param {unknown} payload
- * @returns {{ username: string, usernameNormalized: string, firstName: string, lastName: string } | null}
+ * @returns {{ username: string, usernameNormalized: string, firstName: string, lastName: string, termsVersion: string } | null}
  */
 export function validateAccountProfile(payload) {
   if (payload === null || typeof payload !== 'object') {
     return null;
   }
 
-  const { username, firstName, lastName } = payload;
-  if (typeof username !== 'string' || typeof firstName !== 'string' || typeof lastName !== 'string') {
+  const { username, firstName, lastName, termsVersion } = payload;
+  if (typeof username !== 'string' || typeof firstName !== 'string' || typeof lastName !== 'string'
+    || termsVersion !== CURRENT_TERMS_VERSION) {
     return null;
   }
 
@@ -43,6 +45,7 @@ export function validateAccountProfile(payload) {
     usernameNormalized: trimmedUsername.toLowerCase(),
     firstName: trimmedFirstName,
     lastName: trimmedLastName,
+    termsVersion,
   };
 }
 
@@ -58,13 +61,39 @@ export function validateAccountProfile(payload) {
  * @returns {Promise<{ ok: true } | { ok: false, code: 'username-taken' | 'uid-taken' | 'unknown' }>}
  */
 export async function createAccountProfile(db, uid, profile) {
+  const existing = await fetchAccountProfile(db, uid);
+  if (existing !== null) {
+    if (existing.username !== profile.username
+      || existing.firstName !== profile.firstName
+      || existing.lastName !== profile.lastName) {
+      return { ok: false, code: 'uid-taken' };
+    }
+
+    await db
+      .prepare('UPDATE account_profiles SET terms_version = ?, terms_accepted_at = ? WHERE uid = ?')
+      .bind(profile.termsVersion, new Date().toISOString(), uid)
+      .run();
+    return { ok: true };
+  }
+
   try {
+    const now = new Date().toISOString();
     await db
       .prepare(
-        `INSERT INTO account_profiles (uid, username, username_normalized, first_name, last_name, created_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO account_profiles
+           (uid, username, username_normalized, first_name, last_name, terms_version, terms_accepted_at, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       )
-      .bind(uid, profile.username, profile.usernameNormalized, profile.firstName, profile.lastName, new Date().toISOString())
+      .bind(
+        uid,
+        profile.username,
+        profile.usernameNormalized,
+        profile.firstName,
+        profile.lastName,
+        profile.termsVersion,
+        now,
+        now,
+      )
       .run();
     return { ok: true };
   } catch (err) {
@@ -77,6 +106,11 @@ export async function createAccountProfile(db, uid, profile) {
     }
     return { ok: false, code: 'unknown' };
   }
+}
+
+/** Deletes only the Firebase UID owner's profile. The caller's verified UID is the scope. */
+export async function deleteAccountProfile(db, uid) {
+  await db.prepare('DELETE FROM account_profiles WHERE uid = ?').bind(uid).run();
 }
 
 /**
@@ -125,16 +159,21 @@ export async function isUsernameAvailable(db, usernameNormalized) {
  *
  * @param {D1Database} db
  * @param {string} uid
- * @returns {Promise<{ username: string, firstName: string, lastName: string } | null>}
+ * @returns {Promise<{ username: string, firstName: string, lastName: string, termsVersion: string | null } | null>}
  */
 export async function fetchAccountProfile(db, uid) {
   const row = await db
-    .prepare('SELECT username, first_name, last_name FROM account_profiles WHERE uid = ?')
+    .prepare('SELECT username, first_name, last_name, terms_version FROM account_profiles WHERE uid = ?')
     .bind(uid)
     .first();
   if (row === null) {
     return null;
   }
 
-  return { username: row.username, firstName: row.first_name, lastName: row.last_name };
+  return {
+    username: row.username,
+    firstName: row.first_name,
+    lastName: row.last_name,
+    termsVersion: row.terms_version,
+  };
 }

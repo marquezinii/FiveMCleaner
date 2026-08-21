@@ -353,6 +353,7 @@ public sealed class AccountWindowTests
             Task.FromResult(new FederatedSignInResult(new FirebaseAuthResult(AuthenticationState.SignedOut, null, "indisponível")));
 
         public Task<FirebaseAuthResult> RefreshEmailVerificationAsync(CancellationToken cancellationToken = default) => Ok();
+        public Task<FirebaseAuthResult> RefreshAccountReadinessAsync(CancellationToken cancellationToken = default) => Ok();
         public Task<FirebaseAuthResult> ResendVerificationEmailAsync(CancellationToken cancellationToken = default) => Ok();
         public Task<FirebaseAuthResult> SendPasswordResetEmailAsync(string email, CancellationToken cancellationToken = default) => Ok();
         public Task<FirebaseAuthResult> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken cancellationToken = default) => Ok();
@@ -381,6 +382,7 @@ public sealed class AccountWindowTests
         public Task<FederatedSignInResult> SignInWithGoogleAsync(string googleIdToken, bool keepSignedIn, CancellationToken cancellationToken = default) =>
             Task.FromResult(new FederatedSignInResult(new FirebaseAuthResult(Current.State, Current.User)));
         public Task<FirebaseAuthResult> RefreshEmailVerificationAsync(CancellationToken cancellationToken = default) => Result();
+        public Task<FirebaseAuthResult> RefreshAccountReadinessAsync(CancellationToken cancellationToken = default) => Result();
         public Task<FirebaseAuthResult> ResendVerificationEmailAsync(CancellationToken cancellationToken = default) => Result();
         public Task<FirebaseAuthResult> SendPasswordResetEmailAsync(string email, CancellationToken cancellationToken = default) => Result();
         public Task<FirebaseAuthResult> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken cancellationToken = default) => Result();
@@ -400,6 +402,9 @@ public sealed class AccountWindowTests
 
         public Task<AccountProfileFetchResult> FetchAsync(string idToken, CancellationToken cancellationToken = default) =>
             Task.FromResult(new AccountProfileFetchResult(AccountProfileFetchOutcome.NotFound));
+
+        public Task<AccountProfileDeletionResult> DeleteAsync(string idToken, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Deleted));
 
         public Task<UsernameAvailability> CheckUsernameAsync(string username, CancellationToken cancellationToken = default) =>
             Task.FromResult(UsernameAvailability.Available);

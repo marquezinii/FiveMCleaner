@@ -140,11 +140,13 @@ tested.
 
 `POST /account/profile` is the first route built on it: Firebase manages
 email/password/uid only, so this route stores the fields it doesn't —
-username (globally unique, case-insensitive), first name, last name — in
-`account_profiles`, keyed by the verified Firebase UID. A username conflict
-returns `409 { "error": "username-taken" }`; the client is expected to let
-the user pick another one without discarding the Firebase account already
-created. See `src/auth/accountProfile.js`.
+username (globally unique, case-insensitive), first name, last name and the
+accepted current terms version — in `account_profiles`, keyed by the verified
+Firebase UID. It accepts only an `email_verified=true` token. A username
+conflict returns `409 { "error": "username-taken" }`; the client is expected
+to let the user pick another one without discarding the Firebase account
+already created. `DELETE /account/profile` removes only that same verified
+UID's row as part of account deletion. See `src/auth/accountProfile.js`.
 
 `GET /account/username-available?u=<name>` answers `{ "available": true|false }`
 for the registration form, so a taken name is reported while the user types

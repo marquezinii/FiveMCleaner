@@ -8,26 +8,29 @@ namespace FiveMCleaner.App.Services;
 
 public sealed class FirebaseAuthService : IFirebaseAuthService
 {
+    public const string ProfileDeletionFailedError = "account-profile-deletion-failed";
     private const string IdentityBase = "https://identitytoolkit.googleapis.com/v1/";
     private const string SecureTokenBase = "https://securetoken.googleapis.com/v1/token";
     private readonly HttpClient client;
     private readonly string apiKey;
     private readonly SecureFirebaseSessionStore sessionStore;
+    private readonly IAccountProfileService profiles;
     private string? idToken;
     private string? refreshToken;
     private DateTimeOffset tokenExpiresAt;
     private readonly SemaphoreSlim sessionLock = new(1, 1);
 
-    public FirebaseAuthService(string apiKey)
+    public FirebaseAuthService(string apiKey, IAccountProfileService profiles)
         : this(new HttpClient { Timeout = TimeSpan.FromSeconds(20) }, apiKey,
-            new SecureFirebaseSessionStore(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ProductIdentity.Name, "firebase.session")))
+            new SecureFirebaseSessionStore(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ProductIdentity.Name, "firebase.session")), profiles)
     { }
 
-    internal FirebaseAuthService(HttpClient client, string apiKey, SecureFirebaseSessionStore sessionStore)
+    internal FirebaseAuthService(HttpClient client, string apiKey, SecureFirebaseSessionStore sessionStore, IAccountProfileService profiles)
     {
         this.client = client;
         this.apiKey = apiKey;
         this.sessionStore = sessionStore;
+        this.profiles = profiles;
     }
 
     public AuthenticationSnapshot Current { get; private set; } = new(AuthenticationState.SignedOut, null);
@@ -96,6 +99,12 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
         return await LoadUserAsync(token, cancellationToken).ConfigureAwait(false);
     }
 
+    public async Task<FirebaseAuthResult> RefreshAccountReadinessAsync(CancellationToken cancellationToken = default)
+    {
+        var token = await GetIdTokenAsync(cancellationToken).ConfigureAwait(false);
+        return token is null ? Result() : await LoadUserAsync(token, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<FirebaseAuthResult> ResendVerificationEmailAsync(CancellationToken cancellationToken = default)
     {
         var token = await GetIdTokenAsync(cancellationToken).ConfigureAwait(false);
@@ -129,8 +138,37 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
         if (!await ReauthenticateAsync(currentPassword, cancellationToken).ConfigureAwait(false)) return new FirebaseAuthResult(AuthenticationState.ReauthenticationRequired, Current.User, "Confirme sua senha para excluir a conta.");
         var token = await GetIdTokenAsync(cancellationToken).ConfigureAwait(false);
         if (token is null) return Result();
+
+        var profile = await profiles.FetchAsync(token, cancellationToken).ConfigureAwait(false);
+        if (profile.Outcome != AccountProfileFetchOutcome.Found
+            || profile.TermsVersion != AccountTerms.CurrentVersion)
+        {
+            return new FirebaseAuthResult(Current.State, Current.User, ProfileDeletionFailedError);
+        }
+
+        var deletedProfile = await profiles.DeleteAsync(token, cancellationToken).ConfigureAwait(false);
+        if (deletedProfile.Outcome != AccountProfileDeletionOutcome.Deleted)
+        {
+            return new FirebaseAuthResult(Current.State, Current.User, ProfileDeletionFailedError);
+        }
+
         var response = await PostAsync<object>("accounts:delete", new { idToken = token }, cancellationToken).ConfigureAwait(false);
-        if (response.Error is not null) return Fail(response.Error);
+        if (response.Error is not null)
+        {
+            var restoredProfile = await profiles.CreateAsync(token, new AccountProfileSubmission
+            {
+                Username = profile.Username!,
+                FirstName = profile.FirstName!,
+                LastName = profile.LastName!,
+                TermsVersion = profile.TermsVersion!,
+            }, cancellationToken).ConfigureAwait(false);
+            if (restoredProfile.Outcome != AccountProfileOutcome.Created)
+            {
+                return new FirebaseAuthResult(Current.State, Current.User, ProfileDeletionFailedError);
+            }
+
+            return Fail(response.Error);
+        }
         await LogoutAsync(cancellationToken).ConfigureAwait(false);
         return Result();
     }
@@ -264,8 +302,27 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
         var user = response.Value?.users?.FirstOrDefault();
         if (response.Error is not null || user?.localId is null || user.email is null) return Fail(response.Error ?? "INVALID_ID_TOKEN");
         var firebaseUser = new FirebaseUser(user.localId, user.email, user.emailVerified);
-        SetState(firebaseUser.EmailVerified ? AuthenticationState.SignedIn : AuthenticationState.EmailVerificationRequired, firebaseUser);
+        var state = firebaseUser.EmailVerified
+            ? await ResolveReadinessAsync(token, cancellationToken).ConfigureAwait(false)
+            : AuthenticationState.EmailVerificationRequired;
+        SetState(state, firebaseUser);
         return Result();
+    }
+
+    private async Task<AuthenticationState> ResolveReadinessAsync(string token, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var profile = await profiles.FetchAsync(token, cancellationToken).ConfigureAwait(false);
+            return profile.Outcome == AccountProfileFetchOutcome.Found
+                && profile.TermsVersion == AccountTerms.CurrentVersion
+                ? AuthenticationState.SignedIn
+                : AuthenticationState.ProfileCompletionRequired;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        {
+            return AuthenticationState.ProfileCompletionRequired;
+        }
     }
 
     private async Task<(T? Value, string? Error)> PostAsync<T>(string path, object body, CancellationToken cancellationToken)

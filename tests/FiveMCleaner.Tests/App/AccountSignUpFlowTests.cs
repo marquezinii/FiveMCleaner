@@ -224,10 +224,25 @@ public sealed class AccountSignUpFlowTests
     {
         var path = sessionPath ?? TempSessionPath();
         var client = new HttpClient(new StubHandler(request => { requests.Add(request.RequestUri!.AbsolutePath); return send(request); }));
-        return new FirebaseAuthService(client, "test-firebase-api-key-1234567890", new SecureFirebaseSessionStore(path));
+        return new FirebaseAuthService(client, "test-firebase-api-key-1234567890", new SecureFirebaseSessionStore(path), new ReadyProfileService());
     }
 
     private static string TempSessionPath() => Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session");
 
     private static HttpResponseMessage Json(string payload, HttpStatusCode status = HttpStatusCode.OK) => new(status) { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
+
+    private sealed class ReadyProfileService : IAccountProfileService
+    {
+        public Task<AccountProfileResult> CreateAsync(string idToken, AccountProfileSubmission submission, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfileResult(AccountProfileOutcome.Created, null));
+
+        public Task<AccountProfileFetchResult> FetchAsync(string idToken, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfileFetchResult(AccountProfileFetchOutcome.Found, "user", "User", "Example", AccountTerms.CurrentVersion));
+
+        public Task<AccountProfileDeletionResult> DeleteAsync(string idToken, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Deleted));
+
+        public Task<UsernameAvailability> CheckUsernameAsync(string username, CancellationToken cancellationToken = default) =>
+            Task.FromResult(UsernameAvailability.Available);
+    }
 }

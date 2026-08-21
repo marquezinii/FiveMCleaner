@@ -7,6 +7,8 @@ public sealed record AccountProfileSubmission
     public required string FirstName { get; init; }
 
     public required string LastName { get; init; }
+
+    public required string TermsVersion { get; init; }
 }
 
 public enum AccountProfileOutcome
@@ -34,7 +36,16 @@ public sealed record AccountProfileFetchResult(
     AccountProfileFetchOutcome Outcome,
     string? Username = null,
     string? FirstName = null,
-    string? LastName = null);
+    string? LastName = null,
+    string? TermsVersion = null);
+
+public enum AccountProfileDeletionOutcome
+{
+    Deleted,
+    Failed,
+}
+
+public sealed record AccountProfileDeletionResult(AccountProfileDeletionOutcome Outcome);
 
 /// <summary>
 /// Verdict of the advisory username probe. <see cref="Unknown"/> means the
@@ -73,6 +84,11 @@ public interface IAccountProfileService
         string idToken,
         CancellationToken cancellationToken = default);
 
+    /// <summary>Deletes only the caller's profile, scoped server-side to the verified Firebase UID.</summary>
+    Task<AccountProfileDeletionResult> DeleteAsync(
+        string idToken,
+        CancellationToken cancellationToken = default);
+
     /// <summary>
     /// Asks the Worker whether <paramref name="username"/> is still free, so
     /// the registration form can say so while the user types instead of only
@@ -104,6 +120,11 @@ public sealed class DisabledAccountProfileService : IAccountProfileService
         string idToken,
         CancellationToken cancellationToken = default) =>
         Task.FromResult(new AccountProfileFetchResult(AccountProfileFetchOutcome.Failed));
+
+    public Task<AccountProfileDeletionResult> DeleteAsync(
+        string idToken,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Failed));
 
     public Task<UsernameAvailability> CheckUsernameAsync(
         string username,
