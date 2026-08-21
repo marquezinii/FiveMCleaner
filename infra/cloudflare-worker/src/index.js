@@ -122,6 +122,12 @@ export default {
 };
 
 async function route(request, env, url) {
+  if (request.method === 'POST'
+    && url.pathname.startsWith('/admin/')
+    && !isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
   if (request.method === 'POST' && url.pathname === '/telemetry') {
     return handleTelemetryIngest(request, env);
   }
@@ -155,16 +161,10 @@ async function route(request, env, url) {
   }
 
   if (request.method === 'POST' && url.pathname === '/admin/login') {
-    if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
-      return new Response('Forbidden', { status: 403 });
-    }
     return createPasswordAuthProvider(env).login(request);
   }
 
   if (request.method === 'POST' && url.pathname === '/admin/logout') {
-    if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
-      return new Response('Forbidden', { status: 403 });
-    }
     return createPasswordAuthProvider(env).logout(request);
   }
 

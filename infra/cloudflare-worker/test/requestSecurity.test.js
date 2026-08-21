@@ -32,7 +32,7 @@ test('readBoundedJson rejects a declared oversized body without reading it', asy
 });
 
 test('admin mutations reject requests outside the configured dashboard origin', async () => {
-  for (const path of ['/admin/login', '/admin/logout']) {
+  for (const path of ['/admin/login', '/admin/logout', '/admin/live-alert']) {
     const response = await worker.fetch(new Request(`https://worker.example${path}`, {
       method: 'POST',
       headers: { Origin: 'https://evil.example' },

@@ -97,11 +97,11 @@ URL), authentication is a small, self-contained system:
   domains — a stricter policy silently never sends the cookie back on a
   cross-site `fetch`, which is exactly what made the first deployment's
   login appear to succeed but leave the dashboard stuck on the login screen.
-- **CSRF e limites de entrada**: login e logout exigem o `Origin` exato de
-  `DASHBOARD_ORIGIN`; todos os corpos JSON públicos são lidos com limite de
-  bytes por rota antes do parse. Isso mantém o cookie cross-site necessário
-  sem aceitar mutações administrativas de outras páginas e impede buffering
-  irrestrito de payloads anônimos.
+- **CSRF e limites de entrada**: toda mutação sob `/admin/*` exige o `Origin`
+  exato de `DASHBOARD_ORIGIN`; todos os corpos JSON públicos são lidos com
+  limite de bytes por rota antes do parse. Isso mantém o cookie cross-site
+  necessário sem aceitar mutações administrativas de outras páginas e impede
+  buffering irrestrito de payloads anônimos.
 - **Swappable by design**: `src/auth/passwordAuthProvider.js` exposes exactly
   three functions — `login`, `logout`, `requireSession` — and `index.js` only
   ever calls those three. A future OAuth-based provider (Google/GitHub, or
