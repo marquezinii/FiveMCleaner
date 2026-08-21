@@ -31,7 +31,7 @@ O FiveMCleaner começa pelo diagnóstico, monta um plano compreensível e mostra
 | Área | Disponível |
 | --- | --- |
 | Otimizador | Prévia, perfis, progresso real, cancelamento seguro, resultado por ação e rollback. |
-| Conta | Cadastro, login, Google com OAuth 2.0 + PKCE, verificação de e-mail, recuperação, troca de senha/e-mail e exclusão. |
+| Conta | Cadastro, login, Google com OAuth 2.0 + PKCE, verificação de e-mail, recuperação, criação de senha para contas Google, troca de senha/e-mail e exclusão. |
 | Privacidade | ID token apenas em memória; refresh token protegido por DPAPI; telemetria limitada por consentimento. |
 | Relatos de bug | Envio explícito, campos validados, e-mail e trecho de log opcionais; sem anexos automáticos. |
 | Atualizações | Feed assinado, validação de origem/tamanho/SHA-256, staging, ativação atômica, health-check e rollback. |

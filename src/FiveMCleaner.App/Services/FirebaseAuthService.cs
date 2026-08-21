@@ -62,20 +62,7 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(googleIdToken);
         SetState(AuthenticationState.SigningIn);
-
-        // requestUri is not a redirect here: Identity Toolkit only uses it as
-        // the claimed origin of the assertion, and the loopback port the
-        // browser actually used is irrelevant to it.
-        var response = await PostAsync<FirebaseIdpResponse>(
-            "accounts:signInWithIdp",
-            new
-            {
-                postBody = $"id_token={Uri.EscapeDataString(googleIdToken)}&providerId=google.com",
-                requestUri = "http://localhost",
-                returnIdpCredential = true,
-                returnSecureToken = true,
-            },
-            cancellationToken).ConfigureAwait(false);
+        var response = await PostGoogleAssertionAsync(googleIdToken, cancellationToken).ConfigureAwait(false);
 
         if (response.Error is not null)
         {
@@ -87,6 +74,25 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
         return result.Succeeded
             ? new FederatedSignInResult(result, idp.isNewUser, idp.firstName, idp.lastName)
             : new FederatedSignInResult(result);
+    }
+
+    public async Task<FirebaseAuthResult> ReauthenticateWithGoogleAsync(string googleIdToken, CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(googleIdToken);
+        var expectedUser = Current.User;
+        if (expectedUser is null) return Result();
+
+        var response = await PostGoogleAssertionAsync(googleIdToken, cancellationToken).ConfigureAwait(false);
+        if (response.Error is not null) return Fail(response.Error, sensitiveFlow: true);
+        if (!string.Equals(response.Value?.localId, expectedUser.Uid, StringComparison.Ordinal))
+        {
+            return new FirebaseAuthResult(
+                AuthenticationState.ReauthenticationRequired,
+                expectedUser,
+                FirebaseAuthErrorCodes.GoogleAccountMismatch);
+        }
+
+        return await AcceptTokensAsync(response.Value!.ToTokens(), refreshToken is not null, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<FirebaseAuthResult> RefreshEmailVerificationAsync(CancellationToken cancellationToken = default)
@@ -110,9 +116,24 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
         return response.Error is null ? Result() : new FirebaseAuthResult(Current.State, Current.User, FirebaseAuthErrorMapper.Map(response.Error, true));
     }
 
+    public async Task<FirebaseAuthResult> CreatePasswordAsync(string newPassword, CancellationToken cancellationToken = default)
+    {
+        var user = Current.User;
+        if (user is null) return Result();
+        if (user.HasPassword)
+        {
+            return new FirebaseAuthResult(
+                AuthenticationState.ReauthenticationRequired,
+                user,
+                FirebaseAuthErrorCodes.AccountAlreadyHasPassword);
+        }
+
+        return await UpdateAsync(newPassword, user.Email, cancellationToken).ConfigureAwait(false);
+    }
+
     public async Task<FirebaseAuthResult> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken cancellationToken = default)
     {
-        if (!await ReauthenticateAsync(currentPassword, cancellationToken).ConfigureAwait(false)) return new FirebaseAuthResult(AuthenticationState.ReauthenticationRequired, Current.User, "Confirme sua senha para concluir esta alteração.");
+        if (!await ReauthenticateAsync(currentPassword, cancellationToken).ConfigureAwait(false)) return new FirebaseAuthResult(AuthenticationState.ReauthenticationRequired, Current.User, FirebaseAuthErrorCodes.CurrentPasswordInvalid);
         return await UpdateAsync(newPassword, null, cancellationToken).ConfigureAwait(false);
     }
 
@@ -234,7 +255,6 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
     private async Task<bool> ReauthenticateAsync(string password, CancellationToken cancellationToken)
     {
         if (Current.User is null) return false;
-        SetState(AuthenticationState.ReauthenticationRequired);
         var response = await PostAsync<FirebaseTokenResponse>("accounts:signInWithPassword", new { email = Current.User.Email, password, returnSecureToken = true }, cancellationToken).ConfigureAwait(false);
         if (response.Error is not null || !string.Equals(response.Value?.localId, Current.User.Uid, StringComparison.Ordinal)) return false;
         return (await AcceptTokensAsync(response.Value!, refreshToken is not null, cancellationToken).ConfigureAwait(false)).Succeeded;
@@ -263,7 +283,9 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
         var response = await PostAsync<FirebaseLookupResponse>("accounts:lookup", new { idToken = token }, cancellationToken).ConfigureAwait(false);
         var user = response.Value?.users?.FirstOrDefault();
         if (response.Error is not null || user?.localId is null || user.email is null) return Fail(response.Error ?? "INVALID_ID_TOKEN");
-        var firebaseUser = new FirebaseUser(user.localId, user.email, user.emailVerified);
+        var hasPassword = user.providerUserInfo?.Any(provider =>
+            string.Equals(provider.providerId, "password", StringComparison.Ordinal)) == true;
+        var firebaseUser = new FirebaseUser(user.localId, user.email, user.emailVerified, hasPassword);
         SetState(firebaseUser.EmailVerified ? AuthenticationState.SignedIn : AuthenticationState.EmailVerificationRequired, firebaseUser);
         return Result();
     }
@@ -281,6 +303,22 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
         catch (OperationCanceledException) { throw; }
         catch (Exception exception) when (exception is HttpRequestException or JsonException or IOException) { return (default, "NETWORK_REQUEST_FAILED"); }
     }
+
+    private Task<(FirebaseIdpResponse? Value, string? Error)> PostGoogleAssertionAsync(
+        string googleIdToken,
+        CancellationToken cancellationToken) =>
+        PostAsync<FirebaseIdpResponse>(
+            "accounts:signInWithIdp",
+            new
+            {
+                postBody = $"id_token={Uri.EscapeDataString(googleIdToken)}&providerId=google.com",
+                // Identity Toolkit only uses this as the claimed assertion
+                // origin; the browser's actual loopback port is irrelevant.
+                requestUri = "http://localhost",
+                returnIdpCredential = true,
+                returnSecureToken = true,
+            },
+            cancellationToken);
 
     private FirebaseAuthResult Result() => new(Current.State, Current.User);
     private FirebaseAuthResult Fail(string? error, bool sensitiveFlow = false)

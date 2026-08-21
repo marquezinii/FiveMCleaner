@@ -300,23 +300,48 @@
                                             </Grid>
                                         </Border>
 
-                                        <Border Style="{StaticResource SettingRowStyle}">
+                                        <TextBlock Text="{Binding [Settings.Account.Security.Title], Source={StaticResource LocalizedStrings}}"
+                                                   Style="{StaticResource SubsectionText}"
+                                                   Margin="0,28,0,5" />
+                                        <TextBlock Text="{Binding [Settings.Account.Security.Description], Source={StaticResource LocalizedStrings}}"
+                                                   Style="{StaticResource SecondaryText}"
+                                                   Margin="0,0,0,11"
+                                                   TextWrapping="Wrap" />
+
+                                        <Border Style="{StaticResource SettingRowStyle}" BorderThickness="0">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                                <StackPanel>
+                                                    <TextBlock Text="{Binding [Settings.Account.PasswordLabel], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                                                    <TextBlock x:Name="AccountSettingsPasswordValue" Margin="0,4,0,0" Style="{StaticResource SecondaryText}" />
+                                                </StackPanel>
+                                                <Button Grid.Column="1"
+                                                        x:Name="AccountSettingsPasswordButton"
+                                                        Style="{StaticResource IconButtonStyle}"
+                                                        VerticalAlignment="Center"
+                                                        Click="AccountSettingsPassword_Click">
+                                                    <Path Style="{StaticResource Icon16}" Data="{StaticResource IconEdit}" Stroke="{DynamicResource TextSecondaryBrush}" />
+                                                </Button>
+                                            </Grid>
+                                        </Border>
+
+                                        <TextBlock Text="{Binding [Settings.Account.Details.Title], Source={StaticResource LocalizedStrings}}"
+                                                   Style="{StaticResource SubsectionText}"
+                                                   Margin="0,28,0,11" />
+
+                                        <Border x:Name="AccountSettingsCurrentPasswordPanel" Style="{StaticResource SettingRowStyle}">
                                             <StackPanel>
                                                 <TextBlock Text="{Binding [Settings.Account.CurrentPasswordLabel], Source={StaticResource LocalizedStrings}}" Style="{StaticResource FieldLabelStyle}" />
                                                 <controls:RevealPasswordBox x:Name="AccountSettingsCurrentPasswordField" Placeholder="{Binding [Settings.Account.CurrentPasswordPlaceholder], Source={StaticResource LocalizedStrings}}" />
                                             </StackPanel>
                                         </Border>
 
-                                        <Border Style="{StaticResource SettingRowStyle}">
-                                            <Grid>
-                                                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                                <StackPanel>
-                                                    <TextBlock Text="{Binding [Settings.Account.NewPasswordLabel], Source={StaticResource LocalizedStrings}}" Style="{StaticResource FieldLabelStyle}" />
-                                                    <controls:RevealPasswordBox x:Name="AccountSettingsNewPasswordField" Placeholder="{Binding [Settings.Account.NewPasswordPlaceholder], Source={StaticResource LocalizedStrings}}" />
-                                                </StackPanel>
-                                                <Button Grid.Column="1" x:Name="AccountSettingsChangePasswordButton" Content="{Binding [Settings.Account.ChangePassword], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="16,23,0,0" Click="AccountSettingsChangePassword_Click" />
-                                            </Grid>
-                                        </Border>
+                                        <TextBlock x:Name="AccountSettingsPasswordRequiredHint"
+                                                   Text="{Binding [Settings.Account.PasswordRequiredForSensitiveActions], Source={StaticResource LocalizedStrings}}"
+                                                   Style="{StaticResource CaptionText}"
+                                                   Margin="2,0,0,13"
+                                                   TextWrapping="Wrap"
+                                                   Visibility="Collapsed" />
 
                                         <Border Style="{StaticResource SettingRowStyle}">
                                             <Grid>
