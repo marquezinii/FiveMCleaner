@@ -20,9 +20,6 @@ namespace FiveMCleaner.App;
 /// </summary>
 public partial class MainWindow
 {
-    /// <summary>Segoe MDL2 Assets "contact" glyph -- the header's signed-out fallback, matching the button's original default.</summary>
-    private const string SignedOutGlyph = "";
-
     private readonly AccountAvatarStore avatarStore = new();
 
     private void OpenAccountFromSettings_Click(object sender, RoutedEventArgs e) => OpenAccountWindow();
@@ -55,8 +52,8 @@ public partial class MainWindow
 
         if (user is null)
         {
-            ApplyAvatar(null, AccountAvatarEllipse, AccountInitials, SignedOutGlyph, isGlyph: true);
-            ApplyAvatar(null, AccountSettingsAvatarEllipse, AccountSettingsInitials, string.Empty, isGlyph: false);
+            ApplyAvatar(null, AccountAvatarEllipse, AccountFallbackIcon);
+            ApplyAvatar(null, AccountSettingsAvatarEllipse, AccountSettingsFallbackIcon);
             return;
         }
 
@@ -81,22 +78,21 @@ public partial class MainWindow
         RemovePhotoButton.Visibility = File.Exists(avatarStore.PathFor(user.Uid)) ? Visibility.Visible : Visibility.Collapsed;
 
         var avatar = avatarStore.TryLoad(user.Uid);
-        ApplyAvatar(avatar, AccountAvatarEllipse, AccountInitials, user.Initials, isGlyph: false);
-        ApplyAvatar(avatar, AccountSettingsAvatarEllipse, AccountSettingsInitials, user.Initials, isGlyph: false);
+        ApplyAvatar(avatar, AccountAvatarEllipse, AccountFallbackIcon);
+        ApplyAvatar(avatar, AccountSettingsAvatarEllipse, AccountSettingsFallbackIcon);
     }
 
     /// <summary>Sets <paramref name="username"/> on the Settings card once <see cref="SyncAccountFirstNameAsync"/> has read the profile.</summary>
     private void ApplyAccountSettingsUsername(string? username) =>
         AccountSettingsUsernameText.Text = string.IsNullOrWhiteSpace(username) ? string.Empty : $"@{username}";
 
-    private static void ApplyAvatar(BitmapImage? avatar, System.Windows.Shapes.Ellipse ellipse, TextBlock fallback, string fallbackText, bool isGlyph)
+    private static void ApplyAvatar(BitmapImage? avatar, System.Windows.Shapes.Ellipse ellipse, Wpf.Ui.Controls.SymbolIcon fallback)
     {
         if (avatar is null)
         {
+            ellipse.Fill = null;
             ellipse.Visibility = Visibility.Collapsed;
             fallback.Visibility = Visibility.Visible;
-            fallback.Text = fallbackText;
-            fallback.FontFamily = isGlyph ? new System.Windows.Media.FontFamily("Segoe MDL2 Assets") : fallback.FontFamily;
             return;
         }
 
