@@ -7,7 +7,7 @@
 
 - **Produto:** FiveMCleaner, aplicativo desktop Windows para otimização transparente, reversível e orientada por diagnóstico do FiveM para **GTAV Legacy**.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
-- **Último estado consolidado neste documento-fonte:** 20/08/2026, após a publicação e integração da versão 1.4.3. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
+- **Último estado consolidado neste documento-fonte:** 22/08/2026, após integrar as mudanças de autenticação, dashboard e identidade institucional na próxima versão. Antes de qualquer trabalho, confirme o estado real com Git e os testes atuais.
 - **Release pública atual:** `v1.4.3`, publicada em 20/08/2026 a partir do commit `aadf755` em `main`. O runtime assinado, instalador, hashes, manifesto e feed estável do updater foram publicados e validados.
 - **Atalho de desenvolvimento:** `FiveMCleaner - Desenvolvimento` usa `scripts\Start-DevelopmentApp.ps1`. Conforme `AI_RULES.md`, deve ser reconstruído com `scripts\Install-DevelopmentShortcut.ps1 -Build` (executado a partir do checkout/worktree da própria tarefa) ao final de toda tarefa que gerar mudanças no app — isolada ou de integração —, exceto tarefas de instalador/updater. O script espelha a árvore de trabalho atual para a pasta irmã fixa `FiveMCleaner-dev-shortcut` e aponta o atalho para essa cópia estável, então ele nunca fica órfão quando um worktree de tarefa é removido após o merge.
 
@@ -93,7 +93,9 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 - O ID Token fica em memória; refresh token opcional é persistido protegido por DPAPI. O **Firebase UID** é o identificador interno permanente, nunca o e-mail.
 - Perfil complementar (nome, sobrenome e username único) é armazenado no Worker/D1, indexado pelo UID autenticado.
 - Worker valida ID Token Firebase por RS256/JWKS, incluindo `aud`, `iss`, expiração e `sub`.
-- Login com Google usa OAuth2 + PKCE com redirect loopback e foi testado ponta a ponta com credenciais reais de desenvolvimento.
+- Login com Google usa OAuth2 + PKCE com redirect loopback; a confirmação local é estática, responsiva e usa o ícone oficial sem afetar a validação do fluxo.
+- A sessão só é liberada após e-mail verificado, perfil existente e aceite da versão atual dos termos. O provedor Firebase determina se a conta possui senha; contas Google sem senha podem vinculá-la somente após reautenticação Google com o mesmo UID.
+- Exclusão de conta remove o perfil Worker/D1 antes da conta Firebase e tenta compensar a remoção do perfil se a exclusão Firebase falhar.
 - Segredos/configuração local de Google não são versionados; overlays `Config/appsettings.{Development,Production}.local.json` são git-ignorados.
 - Gerenciamento de conta fica em Configurações. Avatar é normalizado e armazenado **somente localmente** por enquanto; não existe backend de avatar.
 
@@ -106,6 +108,7 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 - Serviço de telemetria anônima expõe contadores de saúde (`SuccessfulSends`, `FailedSends`, `IsHealthy`) e grava falhas best-effort em `telemetry_failures.log` na pasta local da fila, sem nunca lançar para o chamador.
 - Sentry é usado para crash reporting do aplicativo, com sanitização/configuração centralizada e sem transformar o SDK em dependência das camadas Core/Windows/Broker.
 - Dashboard administrativo possui filtros, visão de telemetria e bugs e tratamento defensivo de falhas de rede/respostas inválidas.
+- Cookies administrativos cross-site usam `SameSite=None`; toda mutação `POST /admin/*` exige a origem exata do dashboard, e o dashboard publica CSP restritiva/anti-frame.
 
 ### Atualização e distribuição
 
@@ -132,7 +135,7 @@ Estes números são **referência do último estado validado**, não substituem 
 
 - **20/08/2026 — release pública v1.4.3:** build Release sem warnings, **972 testes .NET**, `dotnet format --verify-no-changes`, verificação de segurança, smoke pós-ofuscação do Otimizador e da Visão geral e checks remotos de .NET, site, Worker, dashboard, SBOM e CodeQL aprovados. O workflow estável também aprovou empacotamento endurecido, assinatura do broker, smoke pós-ofuscação, instalação/desinstalação, proveniência, criação da release e publicação do feed estável assinado do updater.
 
-- **20/08/2026:** integração de 6 PRs em `dev/proxima-versao` (docs: revisão de pendências; refactor: split estrutural de `MainViewModel.cs`, `MainWindow.xaml.cs` e `website/app/page.tsx` em partial classes/componentes, sem mudança de comportamento; build: pipeline de endurecimento por ofuscação da release; feat: redesenho visual completo do app na direção "Câmara Âmbar"; fix: ingestão dos campos v5 de telemetria no Worker, schema+migration+INSERT; feat: lado do app da telemetria v5, diagnósticos essenciais/opcionais expandidos). A branch experimental `ai/telemetry/v5-expanded-fields` (nunca abriu PR, base desatualizada) foi reconciliada manualmente com o PR de ingestão do Worker — mesmos nomes de campo, sem mismatch — e seus campos de bug-report (não suportados pelo Worker) ficaram de fora, ver pendência 6. O conflito entre o redesenho visual e o split de `MainWindow.xaml.cs` (mesma região de código movida por ambas as branches) foi resolvido semanticamente realocando o método `CaptureIfRequestedAsync`/`--capture-theme=` para `MainWindow.Capture.xaml.cs`. Após integração: restore e build .NET Release sem warnings, **970 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` aprovados; Worker com **196 testes** e `npm audit` sem vulnerabilidades; site com `typecheck`, `lint`, build estático e **3 testes** aprovados; dashboard não tocado nesta rodada (último baseline: 47 testes). Atalho `FiveMCleaner - Desenvolvimento` reconstruído.
+- **22/08/2026 — integração atual:** build Release sem warnings, **978 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1` e `git diff --check` aprovados; Worker com **199 testes** e `npm audit` sem vulnerabilidades; dashboard com **47 testes** e `npm audit` sem vulnerabilidades; site com typecheck, lint, build estático, **3 testes** e `npm audit` sem vulnerabilidades. O CI da branch de integração é a confirmação remota complementar deste baseline.
 
 Ao alterar uma superfície, execute a validação aplicável novamente e use os resultados atuais no PR. Nunca use estes números para afirmar que código posterior foi testado.
 
