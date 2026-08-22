@@ -106,7 +106,7 @@ jobs:
             -bc . `
             -pn FiveMCleaner `
             -pv $version `
-            -ps "Felipe Marquezini" `
+            -ps "Vemryx" `
             -nsb https://github.com/marquezinii/FiveMCleaner
 
       - name: Upload SPDX SBOM
