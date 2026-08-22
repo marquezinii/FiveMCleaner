@@ -1,5 +1,6 @@
 #define AppName "FiveMCleaner"
-#define AppPublisher "Felipe Marquezini"
+#define AppPublisher "Vemryx"
+#define AppPublisherUrl "https://vemryx.com/"
 #define AppUrl "https://github.com/marquezinii/FiveMCleaner"
 #define AppWebsite "https://marquezinii.github.io/FiveMCleaner/"
 #define AppExeName "FiveMCleaner.Launcher.exe"
@@ -41,10 +42,10 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
-AppPublisherURL={#AppUrl}
+AppPublisherURL={#AppPublisherUrl}
 AppSupportURL={#AppWebsite}
 AppUpdatesURL={#AppUrl}/releases/latest
-AppCopyright=Copyright (c) 2026 Felipe Marquezini. All rights reserved.
+AppCopyright=Copyright (c) 2026 Vemryx. All rights reserved.
 AppComments=Transparent and reversible optimization for FiveM and Windows.
 DefaultDirName={autopf}\{#AppName}
 DefaultGroupName={#AppName}
@@ -103,7 +104,7 @@ VersionInfoDescription={#AppName} Setup
 VersionInfoProductName={#AppName}
 VersionInfoProductTextVersion={#AppVersion}
 VersionInfoTextVersion={#AppVersion}
-VersionInfoCopyright=Copyright (c) 2026 Felipe Marquezini. All rights reserved.
+VersionInfoCopyright=Copyright (c) 2026 Vemryx. All rights reserved.
 VersionInfoOriginalFileName={#InstallerBaseName}.exe
 
 [Languages]

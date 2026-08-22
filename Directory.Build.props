@@ -7,9 +7,9 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
-    <Authors>Felipe Marquezini</Authors>
-    <Company>Felipe Marquezini</Company>
-    <Copyright>Copyright (c) 2026 Felipe Marquezini. All rights reserved.</Copyright>
+    <Authors>Vemryx</Authors>
+    <Company>Vemryx</Company>
+    <Copyright>Copyright (c) 2026 Vemryx. All rights reserved.</Copyright>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/marquezinii/FiveMCleaner</RepositoryUrl>
     <Product>FiveMCleaner</Product>

@@ -91,13 +91,13 @@ public sealed class LocalizationServiceTests
         var service = new LocalizationService(CultureInfo.GetCultureInfo("en-US"));
 
         Assert.Equal(
-            "Version 0.2.0  •  Developed by Felipe Marquezini",
+            "Version 0.2.0  •  Vemryx",
             service.Format("About.VersionDeveloper", "0.2.0"));
 
         service.SetLanguage(AppLanguage.PortugueseBrazil);
 
         Assert.Equal(
-            "Versão 0.2.0  •  Desenvolvido por Felipe Marquezini",
+            "Versão 0.2.0  •  Vemryx",
             service.Format("About.VersionDeveloper", "0.2.0"));
     }
 

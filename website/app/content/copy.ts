@@ -4,6 +4,7 @@ export const DOWNLOAD_URL =
   "https://github.com/marquezinii/FiveMCleaner/releases/latest/download/FiveMCleaner-Setup-latest-win-x64.exe";
 export const GITHUB_URL = "https://github.com/marquezinii/FiveMCleaner";
 export const DISCORD_URL = "https://discord.gg/bazcuQB9n6";
+export const VEMRYX_URL = "https://vemryx.com/";
 export const ICON_URL = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icon.png`;
 
 export const copy = {
@@ -247,7 +248,7 @@ export const copy = {
       trust: "Transparência",
       community: "Comunidade",
       discord: "Discord oficial",
-      developed: "Desenvolvido por Felipe Marquezini",
+      owner: "Vemryx",
       rights: "© 2026 FiveMCleaner. Todos os direitos reservados.",
       noTracking: "Este site não usa cookies, analytics ou formulários.",
     },
@@ -492,7 +493,7 @@ export const copy = {
       trust: "Transparency",
       community: "Community",
       discord: "Official Discord",
-      developed: "Developed by Felipe Marquezini",
+      owner: "Vemryx",
       rights: "© 2026 FiveMCleaner. All rights reserved.",
       noTracking: "This website uses no cookies, analytics or forms.",
     },

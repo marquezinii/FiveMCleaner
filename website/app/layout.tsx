@@ -18,8 +18,8 @@ export const metadata: Metadata = {
     "FPS",
     "Windows 11",
   ],
-  authors: [{ name: "Felipe Marquezini" }],
-  creator: "Felipe Marquezini",
+  authors: [{ name: "Vemryx" }],
+  creator: "Vemryx",
   openGraph: {
     type: "website",
     locale: "pt_BR",

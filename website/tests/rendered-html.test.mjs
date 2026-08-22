@@ -17,7 +17,7 @@ test("exports the Portuguese FiveMCleaner landing page", async () => {
   assert.match(html, /Escolha o perfil\. O app cuida do restante\./i);
   assert.match(html, /Sua live continua sendo prioridade\./i);
   assert.match(html, /Sobre o SmartScreen e antivírus/i);
-  assert.match(html, /Desenvolvido por Felipe Marquezini/i);
+  assert.match(html, /href="https:\/\/vemryx\.com\/"[^>]*>Vemryx<\/a>/i);
   assert.match(html, /href="\/icon\.png"/i);
   assert.match(html, /<main id="main-content">/i);
   assert.match(html, /class="skip-link"/i);

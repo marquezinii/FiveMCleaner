@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { Copy } from "../content/copy";
-import { DISCORD_URL, DOWNLOAD_URL, GITHUB_URL, ICON_URL } from "../content/copy";
+import { DISCORD_URL, DOWNLOAD_URL, GITHUB_URL, ICON_URL, VEMRYX_URL } from "../content/copy";
 import { DiscordIcon } from "./Icons";
 
 export function SiteFooter({ text }: { text: Copy }) {
@@ -38,7 +38,9 @@ export function SiteFooter({ text }: { text: Copy }) {
         </div>
         <div className="section-shell footer-bottom">
           <div>
-            <span>{text.footer.developed}</span>
+            <a href={VEMRYX_URL} target="_blank" rel="noreferrer">
+              {text.footer.owner}
+            </a>
             <span>{text.footer.rights}</span>
           </div>
           <span>{text.footer.noTracking}</span>
