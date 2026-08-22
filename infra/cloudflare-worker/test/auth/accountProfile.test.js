@@ -3,12 +3,13 @@ import assert from 'node:assert/strict';
 import {
   validateAccountProfile,
   createAccountProfile,
+  deleteAccountProfile,
   fetchAccountProfile,
   normalizeUsername,
   isUsernameAvailable,
 } from '../../src/auth/accountProfile.js';
 
-const VALID = { username: 'joao_silva', firstName: 'João', lastName: "D'Ávila-Souza" };
+const VALID = { username: 'joao_silva', firstName: 'João', lastName: "D'Ávila-Souza", termsVersion: '2026-08-02' };
 
 test('validateAccountProfile accepts a well-formed profile and normalizes the username', () => {
   const result = validateAccountProfile(VALID);
@@ -17,11 +18,12 @@ test('validateAccountProfile accepts a well-formed profile and normalizes the us
     usernameNormalized: 'joao_silva',
     firstName: 'João',
     lastName: "D'Ávila-Souza",
+    termsVersion: '2026-08-02',
   });
 });
 
 test('validateAccountProfile trims surrounding whitespace', () => {
-  const result = validateAccountProfile({ username: '  joao_silva  ', firstName: '  João  ', lastName: '  Silva  ' });
+  const result = validateAccountProfile({ username: '  joao_silva  ', firstName: '  João  ', lastName: '  Silva  ', termsVersion: '2026-08-02' });
   assert.equal(result.username, 'joao_silva');
   assert.equal(result.firstName, 'João');
   assert.equal(result.lastName, 'Silva');
@@ -42,6 +44,11 @@ test('validateAccountProfile rejects a payload that is not an object', () => {
 test('validateAccountProfile rejects a missing or non-string field', () => {
   assert.equal(validateAccountProfile({ firstName: 'João', lastName: 'Silva' }), null);
   assert.equal(validateAccountProfile({ ...VALID, username: 123 }), null);
+});
+
+test('validateAccountProfile requires the current terms version', () => {
+  assert.equal(validateAccountProfile({ ...VALID, termsVersion: 'old' }), null);
+  assert.equal(validateAccountProfile({ ...VALID, termsVersion: undefined }), null);
 });
 
 test('validateAccountProfile rejects a username shorter than 3 characters', () => {
@@ -89,6 +96,9 @@ function fakeDb({ throwsWithMessage } = {}) {
     prepare(sql) {
       return {
         bind(...params) {
+          if (sql.startsWith('SELECT')) {
+            return { async first() { return null; } };
+          }
           return {
             async run() {
               if (throwsWithMessage) {
@@ -116,7 +126,9 @@ test('createAccountProfile inserts a row keyed by the verified uid, never a clie
     profile.usernameNormalized,
     profile.firstName,
     profile.lastName,
-    db.inserted[0].params[5],
+    profile.termsVersion,
+    db.inserted[0].params[6],
+    db.inserted[0].params[7],
   ]);
 });
 
@@ -148,10 +160,16 @@ function fakeReadDb(row) {
 }
 
 test('fetchAccountProfile maps the stored row to camelCase and reads by the given uid', async () => {
-  const db = fakeReadDb({ username: 'joao_silva', first_name: 'João', last_name: "D'Ávila-Souza" });
+  const db = fakeReadDb({ username: 'joao_silva', first_name: 'João', last_name: "D'Ávila-Souza", terms_version: '2026-08-02' });
   const result = await fetchAccountProfile(db, 'firebase-uid-123');
-  assert.deepEqual(result, { username: 'joao_silva', firstName: 'João', lastName: "D'Ávila-Souza" });
+  assert.deepEqual(result, { username: 'joao_silva', firstName: 'João', lastName: "D'Ávila-Souza", termsVersion: '2026-08-02' });
   assert.deepEqual(db.bound[0].params, ['firebase-uid-123']);
+});
+
+test('deleteAccountProfile scopes the deletion to the verified uid', async () => {
+  const db = fakeDb();
+  await deleteAccountProfile(db, 'firebase-uid-123');
+  assert.deepEqual(db.inserted[0].params, ['firebase-uid-123']);
 });
 
 test('fetchAccountProfile returns null when the account has no profile row', async () => {

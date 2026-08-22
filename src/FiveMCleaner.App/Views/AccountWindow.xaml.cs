@@ -49,7 +49,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         this.localization = localization ?? LocalizationService.Current;
         InitializeComponent();
         accounts.StateChanged += Accounts_StateChanged;
-        Loaded += (_, _) => Render(accounts.Current);
+        Loaded += (_, _) => ApplyAccountState(accounts.Current);
         Closed += (_, _) =>
         {
             accounts.StateChanged -= Accounts_StateChanged;
@@ -58,7 +58,22 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         };
     }
 
-    private void Accounts_StateChanged(object? sender, AuthenticationSnapshot state) => _ = Dispatcher.InvokeAsync(() => Render(state));
+    private void Accounts_StateChanged(object? sender, AuthenticationSnapshot state) => _ = Dispatcher.InvokeAsync(() => ApplyAccountState(state));
+
+    private void ApplyAccountState(AuthenticationSnapshot state)
+    {
+        if (state.State == AuthenticationState.ProfileCompletionRequired)
+        {
+            requiresProfileSetup = true;
+            _ = PrefillProfileAsync();
+        }
+        else if (state.State == AuthenticationState.SignedOut)
+        {
+            requiresProfileSetup = false;
+        }
+
+        Render(state);
+    }
 
     /// <summary>Esc cancels, exactly like the X in the title bar.</summary>
     protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
@@ -120,8 +135,8 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         AuthenticationPanel.Visibility = Show(collectingCredentials);
         ProfileFieldsPanel.Visibility = Show(registering || requiresProfileSetup);
         CredentialFieldsPanel.Visibility = Show(!requiresProfileSetup);
-        CredentialsSectionLabel.Visibility = ConfirmPanel.Visibility = TermsPanel.Visibility =
-            PasswordPolicyPanel.Visibility = Show(showRegistrationExtras);
+        CredentialsSectionLabel.Visibility = ConfirmPanel.Visibility = PasswordPolicyPanel.Visibility = Show(showRegistrationExtras);
+        TermsPanel.Visibility = Show(showRegistrationExtras || requiresProfileSetup);
 
         // The external provider only makes sense before an account exists.
         // Once Firebase has authenticated someone -- including the Google
@@ -257,7 +272,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         {
             var result = await accounts.RegisterAsync(EmailBox.Text.Trim(), PasswordField.Password, KeepSignedInBox.IsChecked == true);
             if (result.Error is not null) { Status(result.Error, true); return; }
-            await SaveProfileAsync();
+            Render(accounts.Current);
         }
         finally { SetBusy(false); }
     }
@@ -280,13 +295,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         {
             return Reject(T("Account.Validation.PasswordsMustMatch"), ConfirmPasswordField);
         }
-        if (TermsCheckBox.IsChecked != true)
-        {
-            Status(T("Account.Validation.TermsRequired"), true);
-            TermsCheckBox.Focus();
-            return false;
-        }
-        return true;
+        return ValidateTermsAcceptance();
     }
 
     private bool Reject(string message, UIElement field)
@@ -310,7 +319,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
 
     private async Task SubmitProfileAsync()
     {
-        if (!ValidateProfileFields()) return;
+        if (!ValidateProfileFields() || !ValidateTermsAcceptance()) return;
 
         SetBusy(true);
         try { await SaveProfileAsync(); } finally { SetBusy(false); }
@@ -332,6 +341,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
             Username = UsernameBox.Text.Trim(),
             FirstName = FirstNameBox.Text.Trim(),
             LastName = LastNameBox.Text.Trim(),
+            TermsVersion = AccountTerms.CurrentVersion,
         };
         var result = await profiles.CreateAsync(token, submission);
         requiresProfileSetup = result.Outcome != AccountProfileOutcome.Created;
@@ -349,6 +359,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         else
         {
             ClearStatus();
+            await accounts.RefreshAccountReadinessAsync();
         }
 
         Render(accounts.Current);
@@ -386,25 +397,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     /// </summary>
     private async Task ContinueAfterGoogleAsync(FederatedSignInResult federated)
     {
-        var token = await accounts.GetIdTokenAsync();
-        var existing = token is null
-            ? new AccountProfileFetchResult(AccountProfileFetchOutcome.Failed)
-            : await profiles.FetchAsync(token);
-
-        if (existing.Outcome == AccountProfileFetchOutcome.Found)
-        {
-            CloseAfterSignIn();
-            return;
-        }
-
-        if (existing.Outcome == AccountProfileFetchOutcome.Failed)
-        {
-            // The account is signed in and valid; only the profile lookup
-            // failed (offline, Worker down). Forcing the profile step here
-            // would risk a duplicate row for a name the user already owns.
-            CloseAfterSignIn();
-            return;
-        }
+        if (federated.Result.State != AuthenticationState.ProfileCompletionRequired) return;
 
         requiresProfileSetup = true;
         if (string.IsNullOrWhiteSpace(FirstNameBox.Text) && !string.IsNullOrWhiteSpace(federated.FirstName))
@@ -419,6 +412,27 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         ClearStatus();
         Render(accounts.Current);
         UsernameBox.Focus();
+    }
+
+    private async Task PrefillProfileAsync()
+    {
+        var token = await accounts.GetIdTokenAsync();
+        if (token is null) return;
+
+        var existing = await profiles.FetchAsync(token);
+        if (existing.Outcome != AccountProfileFetchOutcome.Found) return;
+
+        UsernameBox.Text = existing.Username ?? UsernameBox.Text;
+        FirstNameBox.Text = existing.FirstName ?? FirstNameBox.Text;
+        LastNameBox.Text = existing.LastName ?? LastNameBox.Text;
+    }
+
+    private bool ValidateTermsAcceptance()
+    {
+        if (TermsCheckBox.IsChecked == true) return true;
+        Status(T("Account.Validation.TermsRequired"), true);
+        TermsCheckBox.Focus();
+        return false;
     }
 
     // ===================== Nome de usuário =====================
