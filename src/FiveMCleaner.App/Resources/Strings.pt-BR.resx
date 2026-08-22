@@ -788,6 +788,7 @@
   <data name="Account.Validation.EmailRequiredForReset" xml:space="preserve"><value>Informe seu e-mail para receber as instruções de recuperação.</value></data>
   <data name="Account.Session.Expired" xml:space="preserve"><value>Sua sessão expirou. Entre novamente para concluir seu cadastro.</value></data>
   <data name="Account.Profile.SaveFailed" xml:space="preserve"><value>Não foi possível salvar seu perfil.</value></data>
+  <data name="Account.Profile.DeleteFailed" xml:space="preserve"><value>Não foi possível remover o perfil da sua conta. Sua conta não foi excluída.</value></data>
   <data name="Account.Google.SigningIn" xml:space="preserve"><value>Concluindo o login na janela do seu navegador…</value></data>
   <data name="Account.Google.Failed" xml:space="preserve"><value>Não foi possível entrar com o Google.</value></data>
   <data name="Account.PasswordReset.Sent" xml:space="preserve"><value>Se houver uma conta para este e-mail, enviamos as instruções de recuperação.</value></data>

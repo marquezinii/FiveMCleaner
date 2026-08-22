@@ -65,7 +65,7 @@ public sealed class FirebaseAuthServiceTests
         using var client = new HttpClient(new StubHandler(request => request.RequestUri!.Host == "securetoken.googleapis.com"
             ? Json("""{"user_id":"uid-1","id_token":"id-2","refresh_token":"refresh-2","expires_in":"3600"}""")
             : Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true}]}""")));
-        using var service = new FirebaseAuthService(client, "test-firebase-api-key-1234567890", store);
+        using var service = new FirebaseAuthService(client, "test-firebase-api-key-1234567890", store, new ReadyProfileService());
 
         var result = await service.RestoreSessionAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
@@ -74,6 +74,56 @@ public sealed class FirebaseAuthServiceTests
         Assert.Equal("uid-1", service.Current.User!.Uid);
         await service.LogoutAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         Assert.False(File.Exists(path));
+    }
+
+    [Fact]
+    public async Task SignInAsync_VerifiedUserWithoutACompleteProfile_RequiresProfileCompletion()
+    {
+        using var client = new HttpClient(new StubHandler(request => request.RequestUri!.AbsolutePath switch
+        {
+            "/v1/accounts:signInWithPassword" => Json("""{"localId":"uid-1","idToken":"id-1","refreshToken":"refresh-1","expiresIn":"3600"}"""),
+            "/v1/accounts:lookup" => Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true}]}"""),
+            _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+        }));
+        using var service = new FirebaseAuthService(
+            client,
+            "test-firebase-api-key-1234567890",
+            new SecureFirebaseSessionStore(Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session")),
+            new MissingProfileService());
+
+        var result = await service.SignInAsync(
+            "person@example.com",
+            "0123456789ab",
+            keepSignedIn: false,
+            cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(AuthenticationState.ProfileCompletionRequired, result.State);
+        Assert.Equal(AuthenticationState.ProfileCompletionRequired, service.Current.State);
+    }
+
+    [Fact]
+    public async Task DeleteAccountAsync_ProfileDeletionFailure_DoesNotDeleteFirebaseAccount()
+    {
+        var requests = new List<string>();
+        using var client = new HttpClient(new StubHandler(request =>
+        {
+            requests.Add(request.RequestUri!.AbsolutePath);
+            return request.RequestUri.AbsolutePath == "/v1/accounts:lookup"
+                ? Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true}]}""")
+                : Json("""{"localId":"uid-1","idToken":"id-1","refreshToken":"refresh-1","expiresIn":"3600"}""");
+        }));
+        using var service = new FirebaseAuthService(
+            client,
+            "test-firebase-api-key-1234567890",
+            new SecureFirebaseSessionStore(Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session")),
+            new FailingDeleteProfileService());
+        await service.SignInAsync("person@example.com", "0123456789ab", keepSignedIn: false, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+
+        var result = await service.DeleteAccountAsync("0123456789ab", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Equal(FirebaseAuthService.ProfileDeletionFailedError, result.Error);
+        Assert.DoesNotContain("/v1/accounts:delete", requests);
     }
 
     /// <summary>
@@ -90,7 +140,7 @@ public sealed class FirebaseAuthServiceTests
         var store = new SecureFirebaseSessionStore(path);
         await store.WriteAsync("refresh-1", CancellationToken.None);
         using var client = new HttpClient(new StubHandler(_ => Json("""{"error":"invalid_grant"}""", HttpStatusCode.BadRequest)));
-        using var service = new FirebaseAuthService(client, "test-firebase-api-key-1234567890", store);
+        using var service = new FirebaseAuthService(client, "test-firebase-api-key-1234567890", store, new ReadyProfileService());
 
         var restoreTask = service.RestoreSessionAsync(cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         var completed = await Task.WhenAny(restoreTask, Task.Delay(TimeSpan.FromSeconds(10), global::Xunit.TestContext.Current.CancellationToken));
@@ -263,8 +313,35 @@ public sealed class FirebaseAuthServiceTests
     {
         var path = Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session");
         var client = new HttpClient(new StubHandler(request => { requests.Add(request.RequestUri!.AbsolutePath); return send(request); }));
-        return new FirebaseAuthService(client, "test-firebase-api-key-1234567890", new SecureFirebaseSessionStore(path));
+        return new FirebaseAuthService(client, "test-firebase-api-key-1234567890", new SecureFirebaseSessionStore(path), new ReadyProfileService());
     }
 
     private static HttpResponseMessage Json(string payload, HttpStatusCode status = HttpStatusCode.OK) => new(status) { Content = new StringContent(payload, Encoding.UTF8, "application/json") };
+
+    private class ReadyProfileService : IAccountProfileService
+    {
+        public Task<AccountProfileResult> CreateAsync(string idToken, AccountProfileSubmission submission, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfileResult(AccountProfileOutcome.Created, null));
+
+        public virtual Task<AccountProfileFetchResult> FetchAsync(string idToken, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfileFetchResult(AccountProfileFetchOutcome.Found, "user", "User", "Example", AccountTerms.CurrentVersion));
+
+        public virtual Task<AccountProfileDeletionResult> DeleteAsync(string idToken, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Deleted));
+
+        public Task<UsernameAvailability> CheckUsernameAsync(string username, CancellationToken cancellationToken = default) =>
+            Task.FromResult(UsernameAvailability.Available);
+    }
+
+    private sealed class MissingProfileService : ReadyProfileService
+    {
+        public override Task<AccountProfileFetchResult> FetchAsync(string idToken, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfileFetchResult(AccountProfileFetchOutcome.NotFound));
+    }
+
+    private sealed class FailingDeleteProfileService : ReadyProfileService
+    {
+        public override Task<AccountProfileDeletionResult> DeleteAsync(string idToken, CancellationToken cancellationToken = default) =>
+            Task.FromResult(new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Failed));
+    }
 }

@@ -8,6 +8,7 @@ import { requireFirebaseUser } from './auth/firebaseIdToken.js';
 import {
   validateAccountProfile,
   createAccountProfile,
+  deleteAccountProfile,
   fetchAccountProfile,
   normalizeUsername,
   isUsernameAvailable,
@@ -37,6 +38,7 @@ const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 //   POST    /bugs                  -- ingest one bug report, text-only (no auth; validated server-side)
 //   POST    /account/profile       -- create the username/first/last-name profile for a Firebase account (requires a valid Firebase ID token)
 //   GET     /account/profile       -- read the caller's own username/first/last-name profile (requires a valid Firebase ID token)
+//   DELETE  /account/profile       -- delete the caller's own profile before its Firebase account is deleted
 //   GET     /account/username-available -- advisory "is this username free?" probe for the registration form (no auth; rate limited per IP)
 //   POST    /admin/login           -- { password } -> session cookie
 //   POST    /admin/logout          -- clears the session cookie
@@ -120,6 +122,12 @@ export default {
 };
 
 async function route(request, env, url) {
+  if (request.method === 'POST'
+    && url.pathname.startsWith('/admin/')
+    && !isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
+    return new Response('Forbidden', { status: 403 });
+  }
+
   if (request.method === 'POST' && url.pathname === '/telemetry') {
     return handleTelemetryIngest(request, env);
   }
@@ -139,6 +147,9 @@ async function route(request, env, url) {
   if (request.method === 'GET' && url.pathname === '/account/profile') {
     return handleAccountProfileGet(request, env);
   }
+  if (request.method === 'DELETE' && url.pathname === '/account/profile') {
+    return handleAccountProfileDelete(request, env);
+  }
   if (request.method === 'GET' && url.pathname === '/account/username-available') {
     return handleUsernameAvailability(request, env, url);
   }
@@ -150,16 +161,10 @@ async function route(request, env, url) {
   }
 
   if (request.method === 'POST' && url.pathname === '/admin/login') {
-    if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
-      return new Response('Forbidden', { status: 403 });
-    }
     return createPasswordAuthProvider(env).login(request);
   }
 
   if (request.method === 'POST' && url.pathname === '/admin/logout') {
-    if (!isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
-      return new Response('Forbidden', { status: 403 });
-    }
     return createPasswordAuthProvider(env).logout(request);
   }
 
@@ -275,6 +280,7 @@ async function handleLiveAlertUpdate(request, env) {
 async function handleAccountProfileCreate(request, env) {
   const auth = await requireFirebaseUser(request);
   if (!auth.authorized) return auth.response;
+  if (!auth.emailVerified) return jsonResponse({ error: 'email-verification-required' }, 403);
 
   const payload = await readBoundedJson(request, MAX_ACCOUNT_PROFILE_BODY_BYTES);
   if (payload === null) return new Response('Invalid JSON', { status: 400 });
@@ -303,6 +309,14 @@ async function handleAccountProfileGet(request, env) {
   }
 
   return jsonResponse(profile);
+}
+
+async function handleAccountProfileDelete(request, env) {
+  const auth = await requireFirebaseUser(request);
+  if (!auth.authorized) return auth.response;
+
+  await deleteAccountProfile(env.TELEMETRY_DB, auth.uid);
+  return new Response(null, { status: 204 });
 }
 
 async function handleUpdaterEventsList(request, env, url) {

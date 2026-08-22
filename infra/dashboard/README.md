@@ -35,6 +35,8 @@ attachment/screenshot, no R2) — see `infra/cloudflare-worker/README.md`.
   environment), fetching every stat, drawing every chart, rendering the
   recent-failures table, and the CSV export links. Thin glue over the tested
   modules above.
+- `_headers` — Cloudflare Pages headers that forbid framing, plugins and
+  third-party scripts while allowing requests only to the deployed Worker.
 
 Filters include an **Ambiente** selector (Produção/Desenvolvimento/Todos) so
 the dashboard can look across environments when debugging the pipeline

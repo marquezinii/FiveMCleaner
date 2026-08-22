@@ -13,6 +13,7 @@ public sealed class CloudflareAccountProfileServiceTests
         Username = "joao_silva",
         FirstName = "João",
         LastName = "Silva",
+        TermsVersion = AccountTerms.CurrentVersion,
     };
 
     [Fact]
@@ -121,6 +122,24 @@ public sealed class CloudflareAccountProfileServiceTests
         var result = await service.FetchAsync("id-token-1", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(AccountProfileFetchOutcome.Failed, result.Outcome);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_UsesTheAuthenticatedProfileRoute()
+    {
+        HttpRequestMessage? captured = null;
+        var service = CreateService(request =>
+        {
+            captured = request;
+            return new HttpResponseMessage(HttpStatusCode.NoContent);
+        });
+
+        var result = await service.DeleteAsync("id-token-1", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Equal(AccountProfileDeletionOutcome.Deleted, result.Outcome);
+        Assert.Equal(HttpMethod.Delete, captured!.Method);
+        Assert.Equal("Bearer", captured.Headers.Authorization!.Scheme);
+        Assert.Equal("id-token-1", captured.Headers.Authorization!.Parameter);
     }
 
     [Fact]

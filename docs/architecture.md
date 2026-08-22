@@ -39,11 +39,16 @@ a sessão local.
 como o Firebase só administra e-mail/senha/uid, essa rota guarda o que ele
 não guarda — nome, sobrenome e um nome de usuário único (case-insensitive) —
 em `account_profiles`, sempre indexado pelo UID já validado do token, nunca
-por um valor enviado pelo cliente. `AccountProfileService`
-(`FiveMCleaner.App/Services`) chama essa rota depois que o cadastro no
-Firebase é concluído; se o usuário escolhido já existir, a resposta é
+por um valor enviado pelo cliente. A criação do perfil exige ID token com
+`email_verified=true` e a aceitação da versão vigente dos termos; até ambos
+existirem, a conta fica em `ProfileCompletionRequired`, não em `SignedIn`.
+`AccountProfileService` (`FiveMCleaner.App/Services`) chama essa rota depois
+da confirmação de e-mail; se o usuário escolhido já existir, a resposta é
 `409 username-taken` e a conta Firebase já criada é preservada — a janela de
-conta pede outro nome de usuário em vez de descartar o cadastro.
+conta pede outro nome de usuário em vez de descartar o cadastro. A exclusão
+remove primeiro o perfil pelo UID autenticado e só então a conta Firebase;
+se o Firebase recusar a exclusão, o perfil é restaurado antes de informar a
+falha.
 
 | Projeto                  | Responsabilidade                                                    | Não deve conhecer                                        |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- |
