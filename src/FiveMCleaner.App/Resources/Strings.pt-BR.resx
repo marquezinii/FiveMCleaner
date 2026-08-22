@@ -818,4 +818,33 @@
   <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Remover</value></data>
   <data name="Progress.CancelHelp" xml:space="preserve"><value>O cancelamento é solicitado com segurança após a ação atual.</value></data>
   <data name="Settings.Account.NewPasswordPlaceholder" xml:space="preserve"><value>Mínimo de 8 caracteres</value></data>
+  <data name="Settings.Account.Security.Title" xml:space="preserve"><value>Segurança</value></data>
+  <data name="Settings.Account.Security.Description" xml:space="preserve"><value>Gerencie a credencial usada para acessar sua conta.</value></data>
+  <data name="Settings.Account.PasswordLabel" xml:space="preserve"><value>Senha</value></data>
+  <data name="Settings.Account.PasswordNotConfigured" xml:space="preserve"><value>Não configurada</value></data>
+  <data name="Settings.Account.ResetPasswordTooltip" xml:space="preserve"><value>Redefinir senha</value></data>
+  <data name="Settings.Account.CreatePasswordTooltip" xml:space="preserve"><value>Criar senha</value></data>
+  <data name="Settings.Account.Details.Title" xml:space="preserve"><value>Dados da conta</value></data>
+  <data name="Settings.Account.PasswordRequiredForSensitiveActions" xml:space="preserve"><value>Crie uma senha antes de alterar o e-mail ou excluir sua conta.</value></data>
+  <data name="PasswordSecurity.WindowTitle" xml:space="preserve"><value>Segurança da conta</value></data>
+  <data name="PasswordSecurity.Reset.Title" xml:space="preserve"><value>Redefinir senha</value></data>
+  <data name="PasswordSecurity.Reset.Subtitle" xml:space="preserve"><value>Confirme sua senha atual e escolha uma nova senha para sua conta.</value></data>
+  <data name="PasswordSecurity.Reset.Action" xml:space="preserve"><value>Salvar nova senha</value></data>
+  <data name="PasswordSecurity.Create.Title" xml:space="preserve"><value>Criar senha</value></data>
+  <data name="PasswordSecurity.Create.Subtitle" xml:space="preserve"><value>Adicione uma senha para também poder entrar sem o Google.</value></data>
+  <data name="PasswordSecurity.Create.Action" xml:space="preserve"><value>Criar senha</value></data>
+  <data name="PasswordSecurity.CurrentPasswordPlaceholder" xml:space="preserve"><value>Digite sua senha atual</value></data>
+  <data name="PasswordSecurity.ConfirmPasswordLabel" xml:space="preserve"><value>Confirme a nova senha</value></data>
+  <data name="PasswordSecurity.GoogleConfirmation" xml:space="preserve"><value>Ao continuar, o Google pedirá que você confirme sua identidade. Sua senha do Google nunca é compartilhada com o FiveMCleaner.</value></data>
+  <data name="PasswordSecurity.Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="PasswordSecurity.Validation.CurrentPasswordRequired" xml:space="preserve"><value>Informe sua senha atual.</value></data>
+  <data name="PasswordSecurity.Validation.CurrentPasswordInvalid" xml:space="preserve"><value>A senha atual está incorreta.</value></data>
+  <data name="PasswordSecurity.Validation.MinimumLength" xml:space="preserve"><value>A nova senha precisa de pelo menos {0} caracteres.</value></data>
+  <data name="PasswordSecurity.Validation.PasswordUnchanged" xml:space="preserve"><value>Escolha uma senha diferente da atual.</value></data>
+  <data name="PasswordSecurity.Validation.GoogleAccountMismatch" xml:space="preserve"><value>Selecione a mesma conta Google vinculada ao FiveMCleaner.</value></data>
+  <data name="PasswordSecurity.Validation.AlreadyHasPassword" xml:space="preserve"><value>Esta conta já possui senha. Reabra a janela para redefini-la.</value></data>
+  <data name="PasswordSecurity.Validation.Failed" xml:space="preserve"><value>Não foi possível atualizar sua senha. Tente novamente.</value></data>
+  <data name="PasswordSecurity.GoogleUnavailable" xml:space="preserve"><value>A confirmação de identidade pelo Google não está disponível nesta instalação.</value></data>
+  <data name="PasswordSecurity.GoogleOpening" xml:space="preserve"><value>Abrindo o Google para confirmar sua identidade…</value></data>
+  <data name="PasswordSecurity.Success" xml:space="preserve"><value>Sua senha foi atualizada.</value></data>
 </root>

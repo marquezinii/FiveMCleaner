@@ -818,4 +818,33 @@
   <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Remove</value></data>
   <data name="Progress.CancelHelp" xml:space="preserve"><value>Cancellation is requested safely after the current action.</value></data>
   <data name="Settings.Account.NewPasswordPlaceholder" xml:space="preserve"><value>At least 8 characters</value></data>
+  <data name="Settings.Account.Security.Title" xml:space="preserve"><value>Security</value></data>
+  <data name="Settings.Account.Security.Description" xml:space="preserve"><value>Manage the credential used to access your account.</value></data>
+  <data name="Settings.Account.PasswordLabel" xml:space="preserve"><value>Password</value></data>
+  <data name="Settings.Account.PasswordNotConfigured" xml:space="preserve"><value>Not configured</value></data>
+  <data name="Settings.Account.ResetPasswordTooltip" xml:space="preserve"><value>Reset password</value></data>
+  <data name="Settings.Account.CreatePasswordTooltip" xml:space="preserve"><value>Create password</value></data>
+  <data name="Settings.Account.Details.Title" xml:space="preserve"><value>Account details</value></data>
+  <data name="Settings.Account.PasswordRequiredForSensitiveActions" xml:space="preserve"><value>Create a password before changing your e-mail or deleting your account.</value></data>
+  <data name="PasswordSecurity.WindowTitle" xml:space="preserve"><value>Account security</value></data>
+  <data name="PasswordSecurity.Reset.Title" xml:space="preserve"><value>Reset password</value></data>
+  <data name="PasswordSecurity.Reset.Subtitle" xml:space="preserve"><value>Confirm your current password, then choose a new one for your account.</value></data>
+  <data name="PasswordSecurity.Reset.Action" xml:space="preserve"><value>Save new password</value></data>
+  <data name="PasswordSecurity.Create.Title" xml:space="preserve"><value>Create password</value></data>
+  <data name="PasswordSecurity.Create.Subtitle" xml:space="preserve"><value>Add a password so you can also sign in without Google.</value></data>
+  <data name="PasswordSecurity.Create.Action" xml:space="preserve"><value>Create password</value></data>
+  <data name="PasswordSecurity.CurrentPasswordPlaceholder" xml:space="preserve"><value>Enter your current password</value></data>
+  <data name="PasswordSecurity.ConfirmPasswordLabel" xml:space="preserve"><value>Confirm new password</value></data>
+  <data name="PasswordSecurity.GoogleConfirmation" xml:space="preserve"><value>When you continue, Google will ask you to confirm your identity. Your Google password is never shared with FiveMCleaner.</value></data>
+  <data name="PasswordSecurity.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="PasswordSecurity.Validation.CurrentPasswordRequired" xml:space="preserve"><value>Enter your current password.</value></data>
+  <data name="PasswordSecurity.Validation.CurrentPasswordInvalid" xml:space="preserve"><value>The current password is incorrect.</value></data>
+  <data name="PasswordSecurity.Validation.MinimumLength" xml:space="preserve"><value>The new password needs at least {0} characters.</value></data>
+  <data name="PasswordSecurity.Validation.PasswordUnchanged" xml:space="preserve"><value>Choose a password different from your current one.</value></data>
+  <data name="PasswordSecurity.Validation.GoogleAccountMismatch" xml:space="preserve"><value>Select the same Google account linked to FiveMCleaner.</value></data>
+  <data name="PasswordSecurity.Validation.AlreadyHasPassword" xml:space="preserve"><value>This account already has a password. Reopen the window to reset it.</value></data>
+  <data name="PasswordSecurity.Validation.Failed" xml:space="preserve"><value>We couldn't update your password. Try again.</value></data>
+  <data name="PasswordSecurity.GoogleUnavailable" xml:space="preserve"><value>Google identity confirmation is not available in this installation.</value></data>
+  <data name="PasswordSecurity.GoogleOpening" xml:space="preserve"><value>Opening Google to confirm your identity…</value></data>
+  <data name="PasswordSecurity.Success" xml:space="preserve"><value>Your password has been updated.</value></data>
 </root>
