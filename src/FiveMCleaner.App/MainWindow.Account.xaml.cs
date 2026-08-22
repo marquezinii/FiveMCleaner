@@ -1,6 +1,7 @@
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Automation;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using FiveMCleaner.App.Services;
@@ -57,6 +58,23 @@ public partial class MainWindow
         }
 
         AccountSettingsEmailText.Text = user.Email;
+        var hasPassword = user.HasPassword;
+        AccountSettingsPasswordValue.Text = hasPassword
+            ? "••••••••••"
+            : LocalizationService.Current.GetString("Settings.Account.PasswordNotConfigured");
+        var passwordAction = LocalizationService.Current.GetString(
+            hasPassword ? "Settings.Account.ResetPasswordTooltip" : "Settings.Account.CreatePasswordTooltip");
+        AccountSettingsPasswordButton.ToolTip = passwordAction;
+        AutomationProperties.SetName(AccountSettingsPasswordButton, passwordAction);
+        AccountSettingsCurrentPasswordPanel.Visibility = hasPassword ? Visibility.Visible : Visibility.Collapsed;
+        AccountSettingsPasswordRequiredHint.Visibility = hasPassword ? Visibility.Collapsed : Visibility.Visible;
+        AccountSettingsChangeEmailButton.IsEnabled = hasPassword;
+        AccountSettingsDeleteAccountButton.IsEnabled = hasPassword;
+        ToolTipService.SetShowOnDisabled(AccountSettingsChangeEmailButton, !hasPassword);
+        ToolTipService.SetShowOnDisabled(AccountSettingsDeleteAccountButton, !hasPassword);
+        var passwordRequired = LocalizationService.Current.GetString("Settings.Account.PasswordRequiredForSensitiveActions");
+        AccountSettingsChangeEmailButton.ToolTip = hasPassword ? null : passwordRequired;
+        AccountSettingsDeleteAccountButton.ToolTip = hasPassword ? null : passwordRequired;
         RemovePhotoButton.Visibility = File.Exists(avatarStore.PathFor(user.Uid)) ? Visibility.Visible : Visibility.Collapsed;
 
         var avatar = avatarStore.TryLoad(user.Uid);
@@ -126,31 +144,21 @@ public partial class MainWindow
         RefreshAccountSettingsCard();
     }
 
-    private async void AccountSettingsChangePassword_Click(object sender, RoutedEventArgs e)
+    private void AccountSettingsPassword_Click(object sender, RoutedEventArgs e)
     {
         if (accountService is null)
         {
             return;
         }
 
-        if (AccountSettingsCurrentPasswordField.Password.Length == 0)
+        var dialog = new PasswordSecurityWindow(accountService, googleOAuth) { Owner = this };
+        if (dialog.ShowDialog() == true)
         {
-            AccountSettingsStatus("Confirme sua senha atual para alterar a senha.", error: true);
-            AccountSettingsCurrentPasswordField.Focus();
-            return;
+            AccountSettingsStatus(
+                LocalizationService.Current.GetString("PasswordSecurity.Success"),
+                error: false);
+            RefreshAccountSettingsCard();
         }
-
-        if (!AccountPasswordPolicy.IsValid(AccountSettingsNewPasswordField.Password))
-        {
-            AccountSettingsStatus($"A nova senha precisa de pelo menos {AccountPasswordPolicy.MinimumLength} caracteres.", error: true);
-            AccountSettingsNewPasswordField.Focus();
-            return;
-        }
-
-        await RunAccountSettingsActionAsync(
-            () => accountService.ChangePasswordAsync(AccountSettingsCurrentPasswordField.Password, AccountSettingsNewPasswordField.Password),
-            "Sua senha foi alterada.");
-        AccountSettingsNewPasswordField.Clear();
     }
 
     private async void AccountSettingsChangeEmail_Click(object sender, RoutedEventArgs e)
@@ -241,9 +249,10 @@ public partial class MainWindow
     {
         ChangePhotoButton.IsEnabled = !busy;
         RemovePhotoButton.IsEnabled = !busy;
-        AccountSettingsChangePasswordButton.IsEnabled = !busy;
-        AccountSettingsChangeEmailButton.IsEnabled = !busy;
-        AccountSettingsDeleteAccountButton.IsEnabled = !busy;
+        AccountSettingsPasswordButton.IsEnabled = !busy;
+        var hasPassword = accountService?.Current.User?.HasPassword == true;
+        AccountSettingsChangeEmailButton.IsEnabled = !busy && hasPassword;
+        AccountSettingsDeleteAccountButton.IsEnabled = !busy && hasPassword;
         AccountSettingsLogoutButton.IsEnabled = !busy;
         Cursor = busy ? System.Windows.Input.Cursors.Wait : null;
     }

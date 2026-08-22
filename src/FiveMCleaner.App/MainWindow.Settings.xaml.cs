@@ -60,6 +60,7 @@ public partial class MainWindow
         if (IsLoaded)
         {
             viewModel.SelectLanguage(language);
+            UpdateAccountButton();
         }
     }
 
