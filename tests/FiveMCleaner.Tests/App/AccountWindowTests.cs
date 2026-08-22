@@ -356,6 +356,8 @@ public sealed class AccountWindowTests
         public Task<FirebaseAuthResult> RefreshAccountReadinessAsync(CancellationToken cancellationToken = default) => Ok();
         public Task<FirebaseAuthResult> ResendVerificationEmailAsync(CancellationToken cancellationToken = default) => Ok();
         public Task<FirebaseAuthResult> SendPasswordResetEmailAsync(string email, CancellationToken cancellationToken = default) => Ok();
+        public Task<FirebaseAuthResult> ReauthenticateWithGoogleAsync(string googleIdToken, CancellationToken cancellationToken = default) => Ok();
+        public Task<FirebaseAuthResult> CreatePasswordAsync(string newPassword, CancellationToken cancellationToken = default) => Ok();
         public Task<FirebaseAuthResult> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken cancellationToken = default) => Ok();
         public Task<FirebaseAuthResult> ChangeEmailAsync(string currentPassword, string newEmail, CancellationToken cancellationToken = default) => Ok();
         public Task<FirebaseAuthResult> DeleteAccountAsync(string currentPassword, CancellationToken cancellationToken = default) => Ok();
@@ -385,6 +387,8 @@ public sealed class AccountWindowTests
         public Task<FirebaseAuthResult> RefreshAccountReadinessAsync(CancellationToken cancellationToken = default) => Result();
         public Task<FirebaseAuthResult> ResendVerificationEmailAsync(CancellationToken cancellationToken = default) => Result();
         public Task<FirebaseAuthResult> SendPasswordResetEmailAsync(string email, CancellationToken cancellationToken = default) => Result();
+        public Task<FirebaseAuthResult> ReauthenticateWithGoogleAsync(string googleIdToken, CancellationToken cancellationToken = default) => Result();
+        public Task<FirebaseAuthResult> CreatePasswordAsync(string newPassword, CancellationToken cancellationToken = default) => Result();
         public Task<FirebaseAuthResult> ChangePasswordAsync(string currentPassword, string newPassword, CancellationToken cancellationToken = default) => Result();
         public Task<FirebaseAuthResult> ChangeEmailAsync(string currentPassword, string newEmail, CancellationToken cancellationToken = default) => Result();
         public Task<FirebaseAuthResult> DeleteAccountAsync(string currentPassword, CancellationToken cancellationToken = default) => Result();

@@ -29,7 +29,7 @@ public sealed class FirebaseAuthServiceTests
         using var service = CreateService(requests, request => request.RequestUri!.AbsolutePath switch
         {
             "/v1/accounts:signUp" => Json("""{"localId":"uid-1","email":"person@example.com","idToken":"id-1","refreshToken":"refresh-1","expiresIn":"3600"}"""),
-            "/v1/accounts:lookup" => Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":false}]}"""),
+            "/v1/accounts:lookup" => Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":false,"providerUserInfo":[{"providerId":"password"}]}]}"""),
             "/v1/accounts:sendOobCode" => Json("{}"),
             _ => new HttpResponseMessage(HttpStatusCode.NotFound)
         });
@@ -39,6 +39,7 @@ public sealed class FirebaseAuthServiceTests
         Assert.True(result.Succeeded);
         Assert.Equal(AuthenticationState.EmailVerificationRequired, result.State);
         Assert.Equal("uid-1", result.User!.Uid);
+        Assert.True(result.User.HasPassword);
         Assert.Contains("/v1/accounts:signUp", requests);
         Assert.Contains("/v1/accounts:sendOobCode", requests);
     }
@@ -171,7 +172,7 @@ public sealed class FirebaseAuthServiceTests
                 body = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
                 return Json("""{"localId":"uid-g","email":"person@gmail.com","idToken":"id-g","refreshToken":"refresh-g","expiresIn":"3600","firstName":"João","lastName":"Silva","isNewUser":true}""");
             }
-            return Json("""{"users":[{"localId":"uid-g","email":"person@gmail.com","emailVerified":true}]}""");
+            return Json("""{"users":[{"localId":"uid-g","email":"person@gmail.com","emailVerified":true,"providerUserInfo":[{"providerId":"google.com"}]}]}""");
         });
 
         var federated = await service.SignInWithGoogleAsync("google-id-token", keepSignedIn: false, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
@@ -181,6 +182,7 @@ public sealed class FirebaseAuthServiceTests
         // straight to SignedIn instead of the e-mail confirmation step.
         Assert.Equal(AuthenticationState.SignedIn, federated.Result.State);
         Assert.Equal("uid-g", federated.Result.User!.Uid);
+        Assert.False(federated.Result.User.HasPassword);
         Assert.True(federated.IsNewUser);
         Assert.Equal("João", federated.FirstName);
         Assert.Equal("Silva", federated.LastName);
@@ -213,6 +215,98 @@ public sealed class FirebaseAuthServiceTests
         Assert.False(string.IsNullOrWhiteSpace(federated.Result.Error));
         Assert.False(federated.IsNewUser);
         Assert.Null(federated.FirstName);
+    }
+
+    [Fact]
+    public async Task CreatePasswordAsync_ReauthenticatesSameGoogleAccountAndLinksPasswordProvider()
+    {
+        var passwordCreated = false;
+        string? requestBody = null;
+        using var service = CreateService([], request =>
+        {
+            if (request.RequestUri!.AbsolutePath == "/v1/accounts:update")
+            {
+                requestBody = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            }
+            return request.RequestUri.AbsolutePath switch
+            {
+                "/v1/accounts:signInWithIdp" => Json("""{"localId":"uid-g","email":"person@gmail.com","idToken":"id-g","refreshToken":"refresh-g","expiresIn":"3600","isNewUser":false}"""),
+                "/v1/accounts:lookup" => Json(passwordCreated
+                    ? """{"users":[{"localId":"uid-g","email":"person@gmail.com","emailVerified":true,"providerUserInfo":[{"providerId":"google.com"},{"providerId":"password"}]}]}"""
+                    : """{"users":[{"localId":"uid-g","email":"person@gmail.com","emailVerified":true,"providerUserInfo":[{"providerId":"google.com"}]}]}"""),
+                "/v1/accounts:update" => SetPasswordCreated(),
+                _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+            };
+        });
+
+        HttpResponseMessage SetPasswordCreated()
+        {
+            passwordCreated = true;
+            return Json("""{"localId":"uid-g","email":"person@gmail.com","idToken":"id-p","refreshToken":"refresh-p","expiresIn":"3600"}""");
+        }
+
+        var signedIn = await service.SignInWithGoogleAsync("google-token", keepSignedIn: false, global::Xunit.TestContext.Current.CancellationToken);
+        var reauthenticated = await service.ReauthenticateWithGoogleAsync("google-token", global::Xunit.TestContext.Current.CancellationToken);
+        var created = await service.CreatePasswordAsync("0123456789ab", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.True(signedIn.Result.Succeeded);
+        Assert.True(reauthenticated.Succeeded);
+        Assert.True(created.Succeeded);
+        Assert.True(created.User!.HasPassword);
+        Assert.NotNull(requestBody);
+        Assert.Contains("person@gmail.com", requestBody, StringComparison.Ordinal);
+        Assert.Contains("0123456789ab", requestBody, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task ReauthenticateWithGoogleAsync_RejectsDifferentGoogleAccountWithoutReplacingSession()
+    {
+        using var service = CreateService([], request =>
+        {
+            if (request.RequestUri!.AbsolutePath == "/v1/accounts:lookup")
+            {
+                return Json("""{"users":[{"localId":"uid-g","email":"person@gmail.com","emailVerified":true,"providerUserInfo":[{"providerId":"google.com"}]}]}""");
+            }
+
+            var body = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            return body.Contains("other-token", StringComparison.Ordinal)
+                ? Json("""{"localId":"uid-other","email":"other@gmail.com","idToken":"id-other","refreshToken":"refresh-other","expiresIn":"3600"}""")
+                : Json("""{"localId":"uid-g","email":"person@gmail.com","idToken":"id-g","refreshToken":"refresh-g","expiresIn":"3600"}""");
+        });
+
+        await service.SignInWithGoogleAsync("google-token", keepSignedIn: false, global::Xunit.TestContext.Current.CancellationToken);
+        var result = await service.ReauthenticateWithGoogleAsync("other-token", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal("GOOGLE_ACCOUNT_MISMATCH", result.Error);
+        Assert.Equal(AuthenticationState.SignedIn, service.Current.State);
+        Assert.Equal("uid-g", service.Current.User!.Uid);
+    }
+
+    [Fact]
+    public async Task ChangePasswordAsync_RejectsWrongCurrentPasswordWithoutLosingSignedInSession()
+    {
+        var requests = new List<string>();
+        using var service = CreateService(requests, request =>
+        {
+            if (request.RequestUri!.AbsolutePath == "/v1/accounts:lookup")
+            {
+                return Json("""{"users":[{"localId":"uid-p","email":"person@example.com","emailVerified":true,"providerUserInfo":[{"providerId":"password"}]}]}""");
+            }
+
+            var body = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            return body.Contains("wrong-password", StringComparison.Ordinal)
+                ? Json("""{"error":{"message":"INVALID_LOGIN_CREDENTIALS"}}""", HttpStatusCode.BadRequest)
+                : Json("""{"localId":"uid-p","email":"person@example.com","idToken":"id-p","refreshToken":"refresh-p","expiresIn":"3600"}""");
+        });
+
+        await service.SignInAsync("person@example.com", "current-password", keepSignedIn: false, global::Xunit.TestContext.Current.CancellationToken);
+        var result = await service.ChangePasswordAsync("wrong-password", "0123456789ab", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal("CURRENT_PASSWORD_INVALID", result.Error);
+        Assert.Equal(AuthenticationState.SignedIn, service.Current.State);
+        Assert.DoesNotContain("/v1/accounts:update", requests);
     }
 
     private static FirebaseAuthService CreateService(List<string> requests, Func<HttpRequestMessage, HttpResponseMessage> send)

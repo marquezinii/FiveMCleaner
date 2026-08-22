@@ -819,4 +819,33 @@
   <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Quitar</value></data>
   <data name="Progress.CancelHelp" xml:space="preserve"><value>La cancelación se solicita de forma segura después de la acción actual.</value></data>
   <data name="Settings.Account.NewPasswordPlaceholder" xml:space="preserve"><value>Mínimo de 8 caracteres</value></data>
+  <data name="Settings.Account.Security.Title" xml:space="preserve"><value>Seguridad</value></data>
+  <data name="Settings.Account.Security.Description" xml:space="preserve"><value>Administra la credencial utilizada para acceder a tu cuenta.</value></data>
+  <data name="Settings.Account.PasswordLabel" xml:space="preserve"><value>Contraseña</value></data>
+  <data name="Settings.Account.PasswordNotConfigured" xml:space="preserve"><value>No configurada</value></data>
+  <data name="Settings.Account.ResetPasswordTooltip" xml:space="preserve"><value>Restablecer contraseña</value></data>
+  <data name="Settings.Account.CreatePasswordTooltip" xml:space="preserve"><value>Crear contraseña</value></data>
+  <data name="Settings.Account.Details.Title" xml:space="preserve"><value>Datos de la cuenta</value></data>
+  <data name="Settings.Account.PasswordRequiredForSensitiveActions" xml:space="preserve"><value>Crea una contraseña antes de cambiar el correo o eliminar tu cuenta.</value></data>
+  <data name="PasswordSecurity.WindowTitle" xml:space="preserve"><value>Seguridad de la cuenta</value></data>
+  <data name="PasswordSecurity.Reset.Title" xml:space="preserve"><value>Restablecer contraseña</value></data>
+  <data name="PasswordSecurity.Reset.Subtitle" xml:space="preserve"><value>Confirma tu contraseña actual y elige una nueva para tu cuenta.</value></data>
+  <data name="PasswordSecurity.Reset.Action" xml:space="preserve"><value>Guardar nueva contraseña</value></data>
+  <data name="PasswordSecurity.Create.Title" xml:space="preserve"><value>Crear contraseña</value></data>
+  <data name="PasswordSecurity.Create.Subtitle" xml:space="preserve"><value>Añade una contraseña para poder iniciar sesión también sin Google.</value></data>
+  <data name="PasswordSecurity.Create.Action" xml:space="preserve"><value>Crear contraseña</value></data>
+  <data name="PasswordSecurity.CurrentPasswordPlaceholder" xml:space="preserve"><value>Escribe tu contraseña actual</value></data>
+  <data name="PasswordSecurity.ConfirmPasswordLabel" xml:space="preserve"><value>Confirma la nueva contraseña</value></data>
+  <data name="PasswordSecurity.GoogleConfirmation" xml:space="preserve"><value>Al continuar, Google te pedirá que confirmes tu identidad. Tu contraseña de Google nunca se comparte con FiveMCleaner.</value></data>
+  <data name="PasswordSecurity.Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="PasswordSecurity.Validation.CurrentPasswordRequired" xml:space="preserve"><value>Introduce tu contraseña actual.</value></data>
+  <data name="PasswordSecurity.Validation.CurrentPasswordInvalid" xml:space="preserve"><value>La contraseña actual es incorrecta.</value></data>
+  <data name="PasswordSecurity.Validation.MinimumLength" xml:space="preserve"><value>La nueva contraseña debe tener al menos {0} caracteres.</value></data>
+  <data name="PasswordSecurity.Validation.PasswordUnchanged" xml:space="preserve"><value>Elige una contraseña diferente de la actual.</value></data>
+  <data name="PasswordSecurity.Validation.GoogleAccountMismatch" xml:space="preserve"><value>Selecciona la misma cuenta de Google vinculada a FiveMCleaner.</value></data>
+  <data name="PasswordSecurity.Validation.AlreadyHasPassword" xml:space="preserve"><value>Esta cuenta ya tiene contraseña. Vuelve a abrir la ventana para restablecerla.</value></data>
+  <data name="PasswordSecurity.Validation.Failed" xml:space="preserve"><value>No se pudo actualizar tu contraseña. Inténtalo de nuevo.</value></data>
+  <data name="PasswordSecurity.GoogleUnavailable" xml:space="preserve"><value>La confirmación de identidad con Google no está disponible en esta instalación.</value></data>
+  <data name="PasswordSecurity.GoogleOpening" xml:space="preserve"><value>Abriendo Google para confirmar tu identidad…</value></data>
+  <data name="PasswordSecurity.Success" xml:space="preserve"><value>Tu contraseña se ha actualizado.</value></data>
 </root>

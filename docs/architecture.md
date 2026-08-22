@@ -28,6 +28,13 @@ use o Firebase UID como identificador interno. No Worker, a verificação fica e
 `aud`/`iss`/`exp`/`sub`). Com `emailVerified=false`, o estado é
 `EmailVerificationRequired` e recursos autenticados ficam bloqueados.
 
+O estado carregado pelo `accounts:lookup` também identifica se o provedor
+`password` está vinculado. Contas criadas por e-mail redefinem a senha somente
+depois de reautenticar com a senha atual; contas criadas apenas pelo Google
+confirmam novamente a mesma identidade Google e então vinculam a primeira senha
+com `accounts:update`. Um token Google de outro UID é rejeitado antes de substituir
+a sessão local.
+
 `POST /account/profile` é a primeira rota de produto sobre esse verificador:
 como o Firebase só administra e-mail/senha/uid, essa rota guarda o que ele
 não guarda — nome, sobrenome e um nome de usuário único (case-insensitive) —

@@ -19,6 +19,7 @@ public sealed partial class LocalizedInterfaceContractTests
             Path.Combine(root, "src", "FiveMCleaner.App", "Views", "BugReportWindow.xaml"),
             Path.Combine(root, "src", "FiveMCleaner.App", "Views", "PrivacyConsentWindow.xaml"),
             Path.Combine(root, "src", "FiveMCleaner.App", "Views", "ReleaseNotesWindow.xaml"),
+            Path.Combine(root, "src", "FiveMCleaner.App", "Views", "PasswordSecurityWindow.xaml"),
             Path.Combine(root, "src", "FiveMCleaner.App", "Views", "Pages", "OptimizerPage.xaml")
         };
         var keys = sources
