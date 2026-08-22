@@ -145,9 +145,9 @@
                             ToolTip="{Binding [Account.TitleBar.SignInPrompt], Source={StaticResource LocalizedStrings}}"
                             AutomationProperties.Name="{Binding [Account.TitleBar.SignInPrompt], Source={StaticResource LocalizedStrings}}">
                         <StackPanel Orientation="Horizontal">
-                            <Border Width="26" Height="26" CornerRadius="{StaticResource RadiusPill}" Background="{DynamicResource Surface2Brush}">
+                            <Border Width="26" Height="26" CornerRadius="{StaticResource RadiusPill}">
                                 <Grid>
-                                    <TextBlock x:Name="AccountInitials" Style="{StaticResource CaptionText}" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                    <ui:SymbolIcon x:Name="AccountFallbackIcon" Symbol="Person20" Width="20" Height="20" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                     <Ellipse x:Name="AccountAvatarEllipse" Width="26" Height="26" Visibility="Collapsed" />
                                 </Grid>
                             </Border>
@@ -283,9 +283,9 @@
                                         <Border Style="{StaticResource SettingRowStyle}">
                                             <Grid>
                                                 <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                                <Border Width="52" Height="52" CornerRadius="{StaticResource RadiusPill}" Background="{DynamicResource Surface2Brush}">
+                                                <Border Width="52" Height="52" CornerRadius="{StaticResource RadiusPill}">
                                                     <Grid>
-                                                        <TextBlock x:Name="AccountSettingsInitials" Style="{StaticResource BodyStrongText}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                                        <ui:SymbolIcon x:Name="AccountSettingsFallbackIcon" Symbol="Person32" Width="32" Height="32" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
                                                         <Ellipse x:Name="AccountSettingsAvatarEllipse" Width="52" Height="52" Visibility="Collapsed" />
                                                     </Grid>
                                                 </Border>
