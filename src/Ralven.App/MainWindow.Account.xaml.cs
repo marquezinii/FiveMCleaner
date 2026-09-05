@@ -244,8 +244,32 @@ public partial class MainWindow
         ApplyAccountEntitlementPresentation();
     }
 
+    private async Task<bool> AuthorizeProOperationAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        // Demo uses only simulated optimization and an in-memory workspace.
+        if (demoMode) return true;
+        if (accountService?.Current is not { State: AuthenticationState.SignedIn, User: { } user }
+            || entitlementService is null) return false;
+        var version = Volatile.Read(ref accountEntitlementSyncVersion);
+        try
+        {
+            var token = await accountService.GetIdTokenAsync().ConfigureAwait(false);
+            if (token is null) return false;
+            var snapshot = await entitlementService.FetchAsync(token, cancellationToken).ConfigureAwait(false);
+            return IsCurrentAccountEntitlementResponse(version, Volatile.Read(ref accountEntitlementSyncVersion), user.Uid, accountService.Current)
+                && IsEffectiveProEntitlement(snapshot, TimeProvider.System.GetUtcNow());
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
+        catch (Exception exception) when (exception is not (OutOfMemoryException or StackOverflowException or AccessViolationException))
+        {
+            return false;
+        }
+    }
+
     private void ApplyAccountEntitlementPresentation()
     {
+        viewModel.SetProAccess(demoMode || IsEffectiveProEntitlement(accountEntitlement, TimeProvider.System.GetUtcNow()));
         var localization = LocalizationService.Current;
         switch (accountEntitlement.Tier)
         {

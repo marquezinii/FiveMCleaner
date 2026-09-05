@@ -514,6 +514,7 @@ public sealed partial class MainViewModel
 
     private void RefreshLocalizedState()
     {
+        RefreshUltraPresentation();
         RefreshGreeting();
         OnPropertyChanged(nameof(LanguagePreference));
         OnPropertyChanged(nameof(CurrentLanguage));

@@ -11,6 +11,28 @@ namespace Ralven.Tests.Windows;
 public sealed class WindowsTransactionEngineTests
 {
     [Fact]
+    public async Task PersonalJournalCannotResumeAsAnotherRoutineAndStillAllowsRollback()
+    {
+        var action = new TestGameModeAction();
+        var journals = new InMemoryJournalStore();
+        var engine = new WindowsTransactionEngine(new WindowsActionCatalog([action]), journals);
+        var context = Context(Guid.NewGuid(), elevated: false) with
+        {
+            Profile = OptimizationProfile.Aggressive,
+            PersonalUsage = PersonalUsage.Work
+        };
+        await engine.ExecuteAsync([action], context, cancellationToken: TestContext.Current.CancellationToken);
+        Assert.Equal(PersonalUsage.Work, journals.Get(context.TransactionId).PersonalUsage);
+        await Assert.ThrowsAsync<InvalidOperationException>(() => engine.ExecuteAsync(
+            [action], context with { PersonalUsage = PersonalUsage.Gaming },
+            cancellationToken: TestContext.Current.CancellationToken));
+
+        var rollback = await engine.RollbackAsync(context.TransactionId, isElevated: false,
+            cancellationToken: TestContext.Current.CancellationToken);
+        Assert.Equal(TransactionState.RolledBack, rollback.State);
+    }
+
+    [Fact]
     public async Task NewJournal_PersistsThePlanProfile()
     {
         var action = new TestGameModeAction();

@@ -347,7 +347,9 @@ public sealed partial class MainViewModel
     {
         return record.Kind == AppHistoryKind.WindowsGaming
             ? localization.GetString("History.WindowsGamingTitle")
-            : localization.Format("History.ProfileTitle", ProfileName(record.Profile));
+            : localization.Format("History.ProfileTitle", record.PersonalUsage is { } usage
+                ? localization.GetString("Ultra.Name") + " · " + localization.GetString($"Ultra.Usage.{usage}")
+                : ProfileName(record.Profile));
     }
 
     /// <summary>

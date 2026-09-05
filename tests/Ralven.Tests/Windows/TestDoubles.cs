@@ -355,7 +355,7 @@ internal sealed class FakeTrimStatusInspector : ITrimStatusInspector
     }
 }
 
-internal sealed class FakeMouseAccelerationInspector : IMouseAccelerationInspector
+internal sealed class FakeMouseAccelerationInspector : IMouseAccelerationController
 {
     public MouseAccelerationSnapshot Snapshot { get; set; } = new(
         MouseAccelerationInspectionState.Available,
@@ -364,6 +364,12 @@ internal sealed class FakeMouseAccelerationInspector : IMouseAccelerationInspect
         0);
 
     public MouseAccelerationSnapshot GetSnapshot() => Snapshot;
+
+    public void Set(int threshold1, int threshold2, int accelerationLevel) => Snapshot = new(
+        MouseAccelerationInspectionState.Available,
+        threshold1,
+        threshold2,
+        accelerationLevel);
 }
 
 internal sealed class FakeOverlaySoftwareInspector : IOverlaySoftwareInspector

@@ -105,14 +105,6 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             accountService.StateChanged += AccountService_StateChanged;
         }
 
-        // StateChanged only fires once RestoreSessionAsync actually finds a
-        // stored session; a fresh install or an already-signed-out user
-        // never raises it, so the Settings card needs one explicit call here
-        // to land on the right panel (unavailable/signed-out/signed-in)
-        // instead of relying on whatever Visibility happens to be XAML's
-        // default.
-        RefreshAccountSettingsCard();
-
         // Plan.Title and the Refresh button follow the language automatically
         // through their {Binding [key], Source={StaticResource
         // LocalizedStrings}} markup, but the entitlement value/detail text is
@@ -124,7 +116,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         queuedCloudflareTelemetry = telemetry.Queued;
 
         viewModel = new MainViewModel(
-            new AppOptimizationService(demoMode, commandLine.SyntheticDemo),
+            new AppOptimizationService(demoMode, commandLine.SyntheticDemo) { AuthorizePro = AuthorizeProOperationAsync },
             localization: LocalizationService.Current,
             startupRegistration: startupRegistration,
             releaseUpdateService: releaseUpdateService,
@@ -134,7 +126,16 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             windowsGamingControls: new WindowsGamingControlsService(demoMode),
             windowsSystemHealthInspector: demoMode
                 ? new SyntheticWindowsSystemHealthInspector()
-                : new WindowsSystemHealthInspector());
+                : new WindowsSystemHealthInspector(),
+            personalWorkspaceService: new PersonalWorkspaceService(AuthorizeProOperationAsync, inMemory: demoMode));
+
+        // StateChanged only fires once RestoreSessionAsync actually finds a
+        // stored session; a fresh install or an already-signed-out user
+        // never raises it, so the Settings card needs one explicit call here
+        // to land on the right panel (unavailable/signed-out/signed-in)
+        // instead of relying on whatever Visibility happens to be XAML's
+        // default.
+        RefreshAccountSettingsCard();
         if (!string.IsNullOrWhiteSpace(commandLine.JustUpdatedVersion))
         {
             viewModel.ReportCompletedUpdate(commandLine.JustUpdatedVersion);

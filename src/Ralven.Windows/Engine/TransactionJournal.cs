@@ -70,6 +70,9 @@ public sealed record WindowsTransactionJournal
     /// </summary>
     public OptimizationProfile? Profile { get; set; }
 
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public PersonalUsage? PersonalUsage { get; init; }
+
     public required TransactionState State { get; set; }
 
     public string? Error { get; set; }

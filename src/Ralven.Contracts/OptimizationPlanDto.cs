@@ -47,6 +47,9 @@ public sealed record OptimizationPlanDto
 
     public required OptimizationOptionsDto Options { get; init; }
 
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public PersonalOptimizationPreferencesDto? PersonalPreferences { get; init; }
+
     public required bool IsExecutable { get; init; }
 
     public required bool RequiresElevation { get; init; }

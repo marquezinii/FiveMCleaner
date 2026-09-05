@@ -191,6 +191,10 @@ public sealed class WindowsTransactionEngine
         else
         {
             ValidateExistingJournal(journal, actions);
+            if (journal.PersonalUsage != context.PersonalUsage)
+            {
+                throw new InvalidOperationException("The transaction belongs to a different personal plan.");
+            }
             if (journal.Profile is not null
                 && context.Profile is not null
                 && journal.Profile != context.Profile)
@@ -831,6 +835,7 @@ public sealed class WindowsTransactionEngine
             UpdatedAtUtc = context.StartedAtUtc,
             WasElevated = context.IsElevated,
             Profile = context.Profile,
+            PersonalUsage = context.PersonalUsage,
             State = TransactionState.Created,
             Actions = actions.Select((action, index) => new WindowsActionJournalEntry
             {

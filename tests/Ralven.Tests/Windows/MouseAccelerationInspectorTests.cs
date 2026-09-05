@@ -44,4 +44,23 @@ public sealed class MouseAccelerationInspectorTests
 
         Assert.Equal(MouseAccelerationSnapshot.Unavailable, snapshot);
     }
+
+    [Fact]
+    public void Set_WritesTheThreeDocumentedMouseValues()
+    {
+        int[]? written = null;
+        var controller = new WindowsMouseAccelerationInspector(
+            _ => true,
+            values =>
+            {
+                written = values;
+                return true;
+            });
+
+        controller.Set(0, 0, 0);
+
+        Assert.NotNull(written);
+        Assert.Equal([0, 0, 0], written!);
+        Assert.Throws<ArgumentOutOfRangeException>(() => controller.Set(0, 0, 3));
+    }
 }

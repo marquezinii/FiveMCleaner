@@ -62,6 +62,7 @@ public sealed partial class MainViewModel
                 localization.CurrentCulture));
 
     public bool CanRefreshWindowsGamingSettings => !IsBusy
+        && !isPersonalBusy
         && !isInitializing
         && !isWindowsGamingBusy
         && !IsUpdateDownloading

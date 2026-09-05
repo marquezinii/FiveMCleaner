@@ -176,5 +176,6 @@ internal enum ActionOptionGate
     ToggleFullscreenOptimizations,
     ToggleHags,
     GuideDriverReinstall,
-    AdjustPciExpressPowerManagement
+    AdjustPciExpressPowerManagement,
+    UseConsistentPointerResponse
 }

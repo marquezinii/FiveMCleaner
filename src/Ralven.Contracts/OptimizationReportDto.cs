@@ -30,6 +30,9 @@ public sealed record OptimizationReportDto
 
     public required OptimizationProfile Profile { get; init; }
 
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public PersonalUsage? PersonalUsage { get; init; }
+
     public required DateTimeOffset CreatedAtUtc { get; init; }
 
     public required int VerifiedCount { get; init; }

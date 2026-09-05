@@ -60,6 +60,7 @@ public static class OptimizationReportBuilder
         {
             TransactionId = journal.TransactionId,
             Profile = profile,
+            PersonalUsage = journal.PersonalUsage,
             CreatedAtUtc = journal.CreatedAtUtc,
             VerifiedCount = lines.Count(line => line.Outcome == ActionExecutionOutcome.Verified),
             ChangedCount = lines.Count(line => line.Outcome == ActionExecutionOutcome.Applied),

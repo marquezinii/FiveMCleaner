@@ -73,7 +73,10 @@ public static class TechnicalReportBuilder
         builder.AppendLine($"{localization.GetString("Report.Field.Transaction")}: {report.TransactionId:N}");
         builder.AppendLine(
             $"{localization.GetString("Report.Field.Date")}: {report.CreatedAtUtc.UtcDateTime:yyyy-MM-dd HH:mm} UTC");
-        builder.AppendLine($"{localization.GetString("Report.Field.Profile")}: {report.Profile}");
+        var profileName = report.PersonalUsage is { } usage
+            ? $"{localization.GetString("Ultra.Name")} · {localization.GetString($"Ultra.Usage.{usage}")}"
+            : report.Profile.ToString();
+        builder.AppendLine($"{localization.GetString("Report.Field.Profile")}: {profileName}");
         if (diagnostic is not null)
         {
             builder.AppendLine($"{localization.GetString("Report.Field.System")}: "

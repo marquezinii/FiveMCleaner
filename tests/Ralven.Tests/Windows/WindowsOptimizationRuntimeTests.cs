@@ -51,6 +51,26 @@ public sealed class WindowsOptimizationRuntimeTests
     }
 
     [Fact]
+    public void ResolveActions_RejectsPersonalOptionsEvenWhenTheActionListWasNotChanged()
+    {
+        using var directory = new TemporaryDirectory();
+        var (runtime, _, _) = WindowsTestRuntime.Create(directory);
+        var plan = PlanBuilder.Build(new OptimizationPlanRequestDto
+        {
+            Scope = OptimizationScope.GeneralWindows,
+            Profile = OptimizationProfile.Aggressive,
+            Edition = FiveMEdition.Unknown,
+            PersonalPreferences = new()
+        }, PlanBuildContext.New(TimeProvider.System));
+
+        Assert.NotEmpty(runtime.ResolveActions(plan));
+        Assert.Throws<InvalidOperationException>(() => runtime.ResolveActions(plan with
+        {
+            Options = plan.Options with { TemporaryFileMinimumAgeDays = 29 }
+        }));
+    }
+
+    [Fact]
     public void ResolveActions_RejectsTamperedMetadata()
     {
         using var temporaryDirectory = new TemporaryDirectory();

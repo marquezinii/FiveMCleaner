@@ -9,8 +9,9 @@ pagamento não estiverem fechados e testados no ambiente de teste do provedor.
 
 O aplicativo já consulta `GET /account/entitlements` após o login e permite
 atualizar o status em Configurações, mostrando Gratuito, Pro com validade ou
-indisponível. Esse snapshot fica somente em memória: ainda não libera recursos
-Pro, não cria checkout e uma falha de leitura nunca concede acesso.
+indisponível. Esse snapshot fica somente em memória e apresenta a disponibilidade
+[dos recursos Ultra](ultra.md). Os serviços revalidam o Pro antes de cada nova
+operação paga; falha de leitura nunca concede acesso. Isso não cria checkout.
 
 O primeiro provedor previsto é o Mercado Pago, com valores em BRL. A modelagem
 interna continua neutra o suficiente para que identidade de conta e autorização
@@ -71,8 +72,9 @@ teste em um `.dev.vars` ignorado pelo Git.
 4. Implementar o cancelamento externo e só então liberar a exclusão de conta;
    até lá, o Worker bloqueia a exclusão quando encontra um checkout ou uma
    assinatura local.
-5. Implementar a oferta e o gating dos futuros recursos Pro sem reduzir as
-   funções gratuitas existentes nem esconder alterações que uma otimização fará.
+5. Validar a oferta Ultra em piloto, preservando as funções gratuitas e a
+   transparência do plano. O gating de rotinas, acompanhamento e medições já
+   está implementado; disposição a pagar e retenção ainda precisam ser medidas.
 6. Executar testes completos com credenciais de teste, reenvio, evento fora de
    ordem, timeout após commit, cancelamento, estorno e indisponibilidade do
    provedor antes de aplicar a migration e configurar secrets em produção.

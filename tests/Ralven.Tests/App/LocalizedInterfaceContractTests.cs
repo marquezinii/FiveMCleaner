@@ -32,6 +32,7 @@ public sealed partial class LocalizedInterfaceContractTests
         var sources = new[]
         {
             Path.Combine(root, "src", "Ralven.App", "MainWindow.xaml"),
+            Path.Combine(root, "src", "Ralven.App", "Controls", "UltraPanel.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "BugReportWindow.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "PrivacyConsentWindow.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "ReleaseNotesWindow.xaml"),
@@ -449,6 +450,7 @@ public sealed partial class LocalizedInterfaceContractTests
         var pageDirectory = Path.Combine(root, "src", "Ralven.App", "Views", "Pages");
         var optimizer = File.ReadAllText(Path.Combine(pageDirectory, "OptimizerPage.xaml"))
             + File.ReadAllText(Path.Combine(pageDirectory, "OptimizerPage.xaml.cs"));
+        var ultraPanel = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "Controls", "UltraPanel.xaml"));
 
         Assert.Contains("IsOptimizerIdle", optimizer, StringComparison.Ordinal);
         Assert.Contains("IsBusy", optimizer, StringComparison.Ordinal);
@@ -463,11 +465,15 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("ConfirmationSummary", optimizer, StringComparison.Ordinal);
         Assert.Contains("UndoSummary", optimizer, StringComparison.Ordinal);
         Assert.Contains("RiskLimitations", optimizer, StringComparison.Ordinal);
-        // O trilho único (SpectrumSelector) substituiu o hero recomendado +
-        // três cards de perfil por um único sistema visual; o sinal de
+        // O trilho único (SpectrumSelector) mantém os quatro perfis no mesmo
+        // sistema visual; o sinal de
         // "recomendado" chega via RecommendedIndex, calculado a partir das
         // mesmas três propriedades do ViewModel.
         Assert.Contains("SpectrumSelector", optimizer, StringComparison.Ordinal);
+        Assert.Contains("Option3Label=\"{Binding [Ultra.Name]", optimizer, StringComparison.Ordinal);
+        Assert.DoesNotContain("ExclusiveLabel=", optimizer, StringComparison.Ordinal);
+        Assert.Contains("[Ultra.Exclusive]", ultraPanel, StringComparison.Ordinal);
+        Assert.DoesNotContain("SelectUltra_Click", optimizer, StringComparison.Ordinal);
         Assert.Contains("RecommendedIndex", optimizer, StringComparison.Ordinal);
         Assert.Contains("IsLightRecommended", optimizer, StringComparison.Ordinal);
         Assert.Contains("IsBalancedRecommended", optimizer, StringComparison.Ordinal);
@@ -567,8 +573,11 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("IsEnabled=\"{Binding CanRollback}\"", history, StringComparison.Ordinal);
 
         var options = selector.Descendants(presentation + "RadioButton").ToArray();
-        Assert.Equal(3, options.Length);
+        Assert.Equal(4, options.Length);
         Assert.All(options, option => Assert.Equal("SpectrumOptions", (string?)option.Attribute("GroupName")));
+        Assert.Contains(options, option =>
+            (string?)option.Attribute(x + "Name") == "Option3Button"
+            && option.ToString().Contains("ProAccentGradientBrush", StringComparison.Ordinal));
         Assert.DoesNotContain(selector.Descendants(presentation + "Button"), element =>
             ((string?)element.Attribute(x + "Name"))?.StartsWith("Option", StringComparison.Ordinal) == true);
         var track = Assert.Single(selector.Descendants(presentation + "Grid"), element =>

@@ -70,8 +70,9 @@ O primeiro escopo geral reutiliza somente capacidades já estreitas e testadas:
 - ASPM PCI Express apenas quando a configuração existe no plano ativo, com
   captura separada de AC/DC, compensação de falha parcial, pós-verificação e
   restauração dos dois valores sem sobrescrever uma escolha posterior;
-- efeitos visuais e atraso de menus allowlisted via `SystemParametersInfo`, com
-  verificação e rollback, preservando legibilidade e suavização de fontes.
+- efeitos visuais, atraso de menus e aceleração do ponteiro allowlisted via
+  `SystemParametersInfo`, com verificação e rollback. A ação do ponteiro é opt-in
+  do Ultra, preserva a velocidade escolhida e restaura os três valores anteriores.
 
 Nenhuma dessas ações autoriza mudar pagefile, limpar standby list, instalar ou
 remover driver, alterar taxa de atualização, desabilitar item de inicialização,
@@ -83,9 +84,10 @@ Quando o Windows não fornece o fato necessário, o resultado é indisponível o
 Os diagnósticos de TRIM e aceleração do mouse são consultas fixas e somente
 leitura: respectivamente `fsutil behavior query DisableDeleteNotify` e
 `SystemParametersInfo(SPI_GETMOUSE)`. O primeiro relata apenas a política de
-delete notification para NTFS/ReFS, sem afirmar suporte do dispositivo; o
-segundo não altera preferências do usuário nem presume que um jogo use o caminho
-de ponteiro do Windows. Nenhum deles atravessa o broker.
+delete notification para NTFS/ReFS, sem afirmar suporte do dispositivo. O
+diagnóstico do mouse não altera preferências nem presume que um jogo use o
+caminho de ponteiro do Windows; a alteração separada por `SPI_SETMOUSE` só entra
+quando a preferência explícita do Ultra compõe a ação. Nenhuma delas atravessa o broker.
 
 As ações compartilhadas de Modo de Jogo e captura preservam a verificação já
 existente de processo FiveM. Assim, uma instalação ausente não impede a
@@ -537,3 +539,13 @@ A cópia é sempre uma ação explícita do usuário; nada é enviado pela rede.
 ## Comunicação de vulnerabilidades
 
 Não publique exploits ou bypasses em issues. Siga [SECURITY.md](../SECURITY.md).
+
+## Ultra e acesso Pro
+
+O [Ultra](ultra.md) compõe apenas ações tipadas e suportadas no Windows geral.
+Sua ação exclusiva de resposta do ponteiro só pode ser selecionada por uma
+preferência pessoal presente no plano; não é habilitada por opções dos perfis
+gratuitos. Runtime e broker recompõem o plano e rejeitam opções divergentes.
+Limpeza permanece opt-in; ASPM não entra no perfil pessoal. Acompanhamento e
+medições somente leem o PC e não reaplicam ajustes. Pro é revalidado antes de novas operações, preservando transações em
+andamento, registros locais e rollback após expiração.

@@ -81,6 +81,8 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
     public string LogsDirectory => logsDirectory;
 
+    internal Func<CancellationToken, Task<bool>> AuthorizePro { private get; init; } = _ => Task.FromResult(false);
+
     /// <summary>
     /// Read settings leniently. Writing stays strict
     /// (<see cref="indentedJson"/>), but a settings.json that drifted from the
@@ -316,19 +318,24 @@ public sealed class AppOptimizationService : IAppOptimizationService
         }
     }
 
-    public Task<AppOptimizationResult> ExecuteAsync(
+    public async Task<AppOptimizationResult> ExecuteAsync(
         OptimizationPlanDto plan,
         IProgress<AppProgressUpdate> progress,
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(plan);
         ArgumentNullException.ThrowIfNull(progress);
+        cancellationToken.ThrowIfCancellationRequested();
+        if (plan.PersonalPreferences is not null && !await AuthorizePro(cancellationToken).ConfigureAwait(false))
+        {
+            throw new ProAccessRequiredException(localization.GetString("Ultra.AccessRequired"));
+        }
         if (demoMode)
         {
-            return demoSimulator.SimulatePlanAsync(plan, progress, cancellationToken);
+            return await demoSimulator.SimulatePlanAsync(plan, progress, cancellationToken).ConfigureAwait(false);
         }
 
-        return ExecutePlanCoreAsync(plan, progress, cancellationToken);
+        return await ExecutePlanCoreAsync(plan, progress, cancellationToken).ConfigureAwait(false);
     }
 
     public async Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(
@@ -376,6 +383,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                     TransactionId = journal.TransactionId,
                     CreatedAt = journal.CreatedAtUtc,
                     Profile = profile,
+                    PersonalUsage = journal.PersonalUsage,
                     Kind = IsWindowsGamingControlsTransaction(journal)
                         ? AppHistoryKind.WindowsGaming
                         : AppHistoryKind.Optimization,

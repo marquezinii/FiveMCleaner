@@ -66,6 +66,8 @@ public partial class MainWindow
                     "System" => (Element: (UIElement)SystemPage, Nav: SystemNav),
                     "Applications" => (Element: (UIElement)ApplicationsPage, Nav: ApplicationsNav),
                     "Games" => (Element: (UIElement)GamesPage, Nav: GamesNav),
+                    "Ultra" => ConfigureUltraCapture(true, arguments),
+                    "UltraLocked" => ConfigureUltraCapture(false, arguments),
                     "Optimizer" => ConfigureOptimizerCapture(OptimizationScope.GeneralWindows, OptimizerNav),
                     "FiveMOptimizer" => ConfigureOptimizerCapture(OptimizationScope.FiveMLegacy, GamesNav),
                     "History" => (HistoryPage, HistoryNav),
@@ -108,6 +110,28 @@ public partial class MainWindow
             // alive after the window closes, making the release gate hang.
             System.Windows.Application.Current.Shutdown(0);
         }
+    }
+
+    private (UIElement Element, Wpf.Ui.Controls.NavigationViewItem Nav) ConfigureUltraCapture(bool pro, IReadOnlyList<string> arguments)
+    {
+        var target = ConfigureOptimizerCapture(OptimizationScope.GeneralWindows, OptimizerNav);
+        if (demoMode) viewModel.SetProAccess(pro);
+        viewModel.SelectUltra();
+        var section = arguments.FirstOrDefault(value => value.StartsWith("--capture-ultra-section=", StringComparison.OrdinalIgnoreCase))?
+            ["--capture-ultra-section=".Length..];
+        var expander = section switch
+        {
+            "Profiles" => OptimizerPage.UltraWorkspace.RoutineExpander,
+            "Tracking" => OptimizerPage.UltraWorkspace.TrackingExpander,
+            "Measurements" => OptimizerPage.UltraWorkspace.MeasurementExpander,
+            _ => null
+        };
+        if (expander is not null)
+        {
+            expander.IsExpanded = true;
+            Dispatcher.InvokeAsync(expander.BringIntoView, System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+        return target;
     }
 
     internal static bool TryParseCaptureSize(string value, out int width, out int height)

@@ -179,3 +179,12 @@ guardado só como Secret do Worker), proteção contra força bruta e sessões
 revogáveis no lado do servidor, desenhada para poder ser trocada por outro
 provedor no futuro sem reescrever o resto do Worker. Detalhes completos em
 `infra/cloudflare-worker/README.md`.
+
+## Dados locais do Ultra
+
+[Rotinas, observações e medições Ultra](ultra.md) ficam somente no perfil local do
+Windows, em `Personal/workspace.json`, sem sincronização remota. O acompanhamento
+é opt-in e para com o aplicativo fechado ou sem Pro vigente. Nomes de tarefas,
+assinatura de hardware e valores das medições não ampliam os payloads de
+telemetria, crash reporting ou relatos. A validação do entitlement usa apenas o
+endpoint autenticado já existente; não envia os dados do workspace.

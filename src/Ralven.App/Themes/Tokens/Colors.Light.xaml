@@ -137,4 +137,9 @@
     <DropShadowEffect x:Key="Elevation1Shadow" Color="#0A0A0B" Opacity="0.10" BlurRadius="12" ShadowDepth="2" Direction="270" />
     <DropShadowEffect x:Key="Elevation2Shadow" Color="#0A0A0B" Opacity="0.16" BlurRadius="24" ShadowDepth="5" Direction="270" />
     <DropShadowEffect x:Key="Elevation3Shadow" Color="#0A0A0B" Opacity="0.24" BlurRadius="46" ShadowDepth="14" Direction="270" />
+    <SolidColorBrush x:Key="ProAccentBrush" Color="#6842A0" />
+    <LinearGradientBrush x:Key="ProAccentGradientBrush" StartPoint="0,0" EndPoint="1,0">
+        <GradientStop Color="#6842A0" Offset="0" />
+        <GradientStop Color="#9C3FD1" Offset="1" />
+    </LinearGradientBrush>
 </ResourceDictionary>

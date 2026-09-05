@@ -162,9 +162,11 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
         ILiveAlertService? liveAlertService = null,
         WindowsGamingControlsService? windowsGamingControls = null,
         Func<string, FiveMSessionPresence>? fiveMSessionProbe = null,
-        IWindowsSystemHealthInspector? windowsSystemHealthInspector = null)
+        IWindowsSystemHealthInspector? windowsSystemHealthInspector = null,
+        PersonalWorkspaceService? personalWorkspaceService = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
+        this.personalWorkspaceService = personalWorkspaceService ?? new PersonalWorkspaceService(_ => Task.FromResult(false), inMemory: true);
         this.localization = localization ?? LocalizationService.Current;
         this.startupRegistration = startupRegistration ?? new WindowsStartupRegistrationService();
         this.releaseUpdateService = releaseUpdateService;
@@ -213,9 +215,11 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
 
     public bool IsOptimizerIdle => !IsBusy && !IsReportAvailable;
 
-    public bool CanRefresh => !IsBusy && !isInitializing && !isWindowsGamingBusy;
+    public bool CanRefresh => !IsBusy && !isInitializing && !isWindowsGamingBusy && !isPersonalBusy;
 
     public bool CanStart => !IsBusy
+        && !isPersonalBusy
+        && (!IsUltraSelected || hasProAccess)
         && !isWindowsGamingBusy
         && !isInitializing
         && diagnostic is not null
@@ -295,6 +299,8 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
             OnPropertyChanged(nameof(EmptyPlanMessage));
             RaiseCommandState();
         }
+        await InitializePersonalWorkspaceAsync();
+        await ObservePersonalPcAsync();
     }
 
     public async Task RefreshDiagnosticAsync()
@@ -328,10 +334,16 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
             OnPropertyChanged(nameof(EmptyPlanMessage));
             RaiseCommandState();
         }
+        await ObservePersonalPcAsync();
     }
 
     private void RaiseCommandState()
     {
+        OnPropertyChanged(nameof(CanEditPersonalPreferences));
+        OnPropertyChanged(nameof(CanSavePersonalProfile));
+        OnPropertyChanged(nameof(CanUsePersonalTools));
+        OnPropertyChanged(nameof(CanCheckPersonalTracking));
+        OnPropertyChanged(nameof(CanStopPersonalTracking));
         OnPropertyChanged(nameof(CanRefresh));
         OnPropertyChanged(nameof(CanStart));
         OnPropertyChanged(nameof(CanCancel));
@@ -347,6 +359,9 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
 
     public void Dispose()
     {
+        personalLifetime.Cancel();
+        personalTrackingTimer?.Stop();
+        personalTrackingTimer = null;
         StopFiveMSessionMonitor();
         liveMetricsEnabled = false;
         liveMetricsTimer?.Stop();

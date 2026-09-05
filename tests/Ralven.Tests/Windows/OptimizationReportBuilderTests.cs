@@ -8,6 +8,18 @@ namespace Ralven.Tests.Windows;
 public sealed class OptimizationReportBuilderTests
 {
     [Fact]
+    public void Build_PreservesPersonalRoutineForHistoryAndTechnicalReports()
+    {
+        var journal = Journal() with { PersonalUsage = PersonalUsage.Streaming };
+        var report = OptimizationReportBuilder.Build(journal, OptimizationProfile.Aggressive);
+        Assert.Equal(PersonalUsage.Streaming, report.PersonalUsage);
+        var text = Ralven.App.Services.TechnicalReportBuilder.Build(report, null,
+            new Ralven.App.Services.LocalizationService(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
+        Assert.Contains("Ultra", text);
+        Assert.DoesNotContain("Aggressive", text);
+    }
+
+    [Fact]
     public void Build_CountsOutcomesAndNeverClaimsSuccessWhenAnActionFailed()
     {
         var journal = Journal(

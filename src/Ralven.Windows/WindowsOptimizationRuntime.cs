@@ -86,7 +86,7 @@ public sealed record WindowsOptimizationDependencies
 
     public required ITrimStatusInspector TrimStatus { get; init; }
 
-    public required IMouseAccelerationInspector MouseAcceleration { get; init; }
+    public required IMouseAccelerationController MouseAcceleration { get; init; }
 
     public required IOverlaySoftwareInspector OverlaySoftware { get; init; }
 
@@ -290,6 +290,7 @@ public sealed class WindowsOptimizationActionFactory
             CreateAction(OptimizationActionIds.ToggleHags, options),
             CreateAction(OptimizationActionIds.EnableSessionPerformancePowerPlan, options),
             CreateAction(OptimizationActionIds.AdjustPciExpressPowerManagement, options),
+            CreateAction(OptimizationActionIds.DisableMouseAcceleration, options),
             CreateAction(OptimizationActionIds.GuideMousePollingRate, options)
         ];
     }
@@ -477,6 +478,9 @@ public sealed class WindowsOptimizationActionFactory
                 environment.FiveMExecutablePath,
                 environment.GtaVExecutablePath),
             OptimizationActionIds.ToggleHags => new HagsToggleAction(dependencies.Registry),
+            OptimizationActionIds.DisableMouseAcceleration => new PointerAccelerationAction(
+                dependencies.MouseAcceleration,
+                dependencies.ActionText),
             OptimizationActionIds.EnableSessionPerformancePowerPlan =>
                 new SessionPerformancePowerPlanAction(
                     dependencies.PowerPlans,
@@ -614,6 +618,7 @@ public sealed class WindowsOptimizationActionFactory
             PlanBuilder.CanonicalRequestFor(plan),
             PlanBuildContext.For(plan));
         if (!canonical.IsExecutable
+            || canonical.Options != plan.Options
             || canonical.Scope != plan.Scope
             || canonical.Actions.Count != plan.Actions.Count
             || canonical.RequiresElevation != plan.RequiresElevation
@@ -799,7 +804,7 @@ public sealed class WindowsOptimizationRuntime
     {
         return Engine.ExecuteAsync(
             ResolveActions(plan),
-            context with { Profile = plan.Profile },
+            context with { Profile = plan.Profile, PersonalUsage = plan.PersonalPreferences?.Usage },
             options,
             cancellationToken);
     }

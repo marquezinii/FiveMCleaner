@@ -29,6 +29,7 @@ public sealed partial class MainViewModel
     public bool CanRevertLastOptimization => ComparisonRegressionSuspected
         && !IsBusy
         && !isWindowsGamingBusy
+        && !isPersonalBusy
         && lastTransactionId is { } id
         && HistoryItems.Any(item => item.TransactionId == id && item.CanRollback);
 
@@ -38,6 +39,7 @@ public sealed partial class MainViewModel
 
     public bool CanRunGtaVBenchmark => !IsBusy
         && !isWindowsGamingBusy
+        && !isPersonalBusy
         && !IsGtaVBenchmarkRunning;
 
     public string ProfilePresentationBenefits { get => profilePresentationBenefits; private set => SetProperty(ref profilePresentationBenefits, value); }
@@ -48,19 +50,19 @@ public sealed partial class MainViewModel
 
     public bool IsLightSelected
     {
-        get => selectedProfile == OptimizationProfile.Light;
+        get => !IsUltraSelected && selectedProfile == OptimizationProfile.Light;
         set { if (value) SelectProfile(OptimizationProfile.Light); }
     }
 
     public bool IsBalancedSelected
     {
-        get => selectedProfile == OptimizationProfile.Balanced;
+        get => !IsUltraSelected && selectedProfile == OptimizationProfile.Balanced;
         set { if (value) SelectProfile(OptimizationProfile.Balanced); }
     }
 
     public bool IsAggressiveSelected
     {
-        get => selectedProfile == OptimizationProfile.Aggressive;
+        get => !IsUltraSelected && selectedProfile == OptimizationProfile.Aggressive;
         set { if (value) SelectProfile(OptimizationProfile.Aggressive); }
     }
 
@@ -125,7 +127,7 @@ public sealed partial class MainViewModel
         get
         {
             var upper = SelectedProfileName.ToUpper(localization.CurrentCulture);
-            return selectedProfile == RecommendedProfile
+            return !IsUltraSelected && selectedProfile == RecommendedProfile
                 ? $"{upper} • {localization.GetString("Profiles.RecommendedBadge")}"
                 : upper;
         }
@@ -136,7 +138,7 @@ public sealed partial class MainViewModel
     /// to <see cref="SelectedProfileName"/>, instead of text concatenated
     /// into the all-caps <see cref="SelectedProfileLabel"/> heading.
     /// </summary>
-    public bool IsSelectedProfileRecommended => selectedProfile == RecommendedProfile;
+    public bool IsSelectedProfileRecommended => !IsUltraSelected && selectedProfile == RecommendedProfile;
 
     /// <summary>
     /// Posição do perfil selecionado na escala Leve → Médio → Agressivo, de 0 a 1.
@@ -157,16 +159,18 @@ public sealed partial class MainViewModel
         ? localization.GetString("Plan.Elevation.OnePrompt")
         : localization.GetString("Plan.Elevation.CurrentUser");
 
-    public string SelectedProfileName => ProfileName(selectedProfile);
+    public string SelectedProfileName => IsUltraSelected ? localization.GetString("Ultra.Name") : ProfileName(selectedProfile);
 
     public void SetOptimizationScope(OptimizationScope scope)
     {
-        if (IsBusy || optimizationScope == scope)
+        if (IsBusy || isPersonalBusy || optimizationScope == scope)
         {
             return;
         }
 
         optimizationScope = scope;
+        isUltraSelected = false;
+        RefreshUltraPresentation();
         ApplyReport(null);
         ApplyComparison(null);
         lastTransactionId = null;
@@ -181,13 +185,15 @@ public sealed partial class MainViewModel
 
     public void SelectProfile(OptimizationProfile profile)
     {
-        if (selectedProfile == profile)
+        if (IsBusy || isPersonalBusy || (selectedProfile == profile && !isUltraSelected))
         {
             return;
         }
 
         profileInitializedFromDiagnostic = true;
+        isUltraSelected = false;
         selectedProfile = profile;
+        RefreshUltraPresentation();
         OnPropertyChanged(nameof(IsLightSelected));
         OnPropertyChanged(nameof(IsBalancedSelected));
         OnPropertyChanged(nameof(IsAggressiveSelected));
@@ -253,12 +259,22 @@ public sealed partial class MainViewModel
             telemetryEventName = "optimization-failed";
             telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
             telemetryBugCode = BugCodeClassifier.ClassifyException(exception, "optimization");
-            HandleOptimizationFailed();
+            if (exception is ProAccessRequiredException)
+            {
+                SetProAccess(false);
+                UltraStatus = localization.GetString("Ultra.AccessRequired");
+                FinalizeHeadline(UltraStatus);
+            }
+            else
+            {
+                HandleOptimizationFailed();
+            }
         }
         finally
         {
             FinalizeOptimizationRun(completedSuccessfully, telemetryEventName, telemetryErrorCategory, telemetryBugCode);
         }
+        await ObservePersonalPcAsync();
     }
 
     private bool TryPrepareOptimizationRun()
@@ -485,7 +501,8 @@ public sealed partial class MainViewModel
                 Profile = selectedProfile,
                 Scope = optimizationScope,
                 Edition = edition,
-                Options = options
+                Options = options,
+                PersonalPreferences = IsUltraSelected ? personalPreferences : null
             },
             PlanBuildContext.New(TimeProvider.System));
 
@@ -530,6 +547,11 @@ public sealed partial class MainViewModel
             "  •  ",
             presentation.AnalyzedCategories.Select(category =>
                 localization.GetString($"Category.{category}")));
+        if (IsUltraSelected)
+        {
+            ProfilePresentationBenefits = localization.GetString("Ultra.Description");
+            ProfilePresentationImpact = localization.GetString($"Risk.{currentPlan?.MaximumRisk ?? ActionRisk.Informational}");
+        }
     }
 
     private ActionDisplayItem ToDisplayItem(ActionMetadataDto action)

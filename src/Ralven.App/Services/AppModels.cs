@@ -214,6 +214,8 @@ public sealed record AppHistoryRecord
 
     public required OptimizationProfile Profile { get; init; }
 
+    public PersonalUsage? PersonalUsage { get; init; }
+
     public AppHistoryKind Kind { get; init; }
 
     public required string State { get; init; }

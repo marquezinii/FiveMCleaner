@@ -113,7 +113,7 @@ public sealed partial class MainViewModel
 
     private async Task CaptureLiveMetricsAsync()
     {
-        if (!liveMetricsEnabled || liveMetricsCaptureInProgress)
+        if (!liveMetricsEnabled || liveMetricsCaptureInProgress || isPersonalBusy)
         {
             return;
         }
