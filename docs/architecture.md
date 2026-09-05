@@ -242,7 +242,15 @@ Isso é o que torna a validação possível: tanto o broker elevado quanto `Wind
 - `Failed` — erro genuíno; a própria ação foi revertida;
 - `RolledBack` — revertida com sucesso após falha;
 - `RollbackFailed` — requer atenção e fica destacado no relatório;
-- `NotRun` — não executada porque uma falha crítica anterior abortou o restante da run.
+- `NotRun` — não executada porque uma falha crítica ou cancelamento interrompeu o restante da run.
+
+O relatório só indica sucesso para uma transação `Committed` sem ações
+pendentes, não executadas ou com falha. As mensagens de diagnóstico gravadas no
+journal são preservadas no resultado e no relatório técnico; uma razão explícita
+de falha ou omissão tem precedência sobre mensagens anteriores. Após consultar
+o resultado, o usuário pode preparar outra otimização preservando o perfil e as
+preferências selecionadas. Cancelamento da execução local também entrega um
+resultado e atualiza o histórico.
 
 Esse enum é independente do estado transacional do journal
 (`ActionJournalState`), que continua controlando elegibilidade de

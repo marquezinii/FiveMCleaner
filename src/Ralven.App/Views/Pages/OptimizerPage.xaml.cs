@@ -115,6 +115,11 @@ public partial class OptimizerPage : UserControl
         (Window.GetWindow(this) as MainWindow)?.RequestCancelOptimization();
     }
 
+    private void PrepareNewOptimization_Click(object sender, RoutedEventArgs e)
+    {
+        ViewModel?.PrepareNewOptimization();
+    }
+
     private void OpenHistory_Click(object sender, RoutedEventArgs e)
     {
         if (Window.GetWindow(this) is MainWindow shell)

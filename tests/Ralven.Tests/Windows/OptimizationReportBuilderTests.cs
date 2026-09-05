@@ -47,6 +47,8 @@ public sealed class OptimizationReportBuilderTests
             Entry(1, OptimizationActionIds.VerifyFiveMIsStopped, ActionExecutionOutcome.Verified),
             Entry(2, OptimizationActionIds.EnableGameMode, ActionExecutionOutcome.Applied));
 
+        // A successful report also requires a confirmed terminal transaction.
+        journal.State = TransactionState.Committed;
         var report = OptimizationReportBuilder.Build(journal, OptimizationProfile.Light);
 
         Assert.True(report.Succeeded);
@@ -86,6 +88,40 @@ public sealed class OptimizationReportBuilderTests
         var report = OptimizationReportBuilder.Build(journal, OptimizationProfile.Light);
 
         Assert.Null(report.Lines[0].BugCode);
+    }
+
+    [Theory]
+    [InlineData(TransactionState.Created)]
+    [InlineData(TransactionState.Applying)]
+    [InlineData(TransactionState.AwaitingElevation)]
+    [InlineData(TransactionState.CommittedWithErrors)]
+    public void Build_UnconfirmedTransactionNeverReportsSuccess(TransactionState state)
+    {
+        var journal = Journal(Entry(1, OptimizationActionIds.EnableGameMode, ActionExecutionOutcome.Applied));
+        journal.State = state;
+        Assert.False(OptimizationReportBuilder.Build(journal, OptimizationProfile.Light).Succeeded);
+    }
+
+    [Theory]
+    [InlineData(ActionExecutionOutcome.Pending)]
+    [InlineData(ActionExecutionOutcome.NotRun)]
+    public void Build_UnfinishedActionsNeverReportSuccess(ActionExecutionOutcome outcome)
+    {
+        var entry = Entry(1, OptimizationActionIds.EnableGameMode, outcome);
+        entry.State = ActionJournalState.Pending;
+        var journal = Journal(entry);
+        journal.State = TransactionState.Committed;
+        Assert.False(OptimizationReportBuilder.Build(journal, OptimizationProfile.Light).Succeeded);
+    }
+
+    [Fact]
+    public void Build_FailureReasonTakesPrecedenceOverEarlierActionMessages()
+    {
+        var entry = Entry(1, OptimizationActionIds.EnableGameMode, ActionExecutionOutcome.Failed);
+        entry.Messages.Add("The setting was changed before verification failed.");
+        entry.OutcomeReason = "The setting could not be verified.";
+        var report = OptimizationReportBuilder.Build(Journal(entry), OptimizationProfile.Light);
+        Assert.Equal(entry.OutcomeReason, Assert.Single(report.Lines).Reason);
     }
 
     private static WindowsTransactionJournal Journal(params WindowsActionJournalEntry[] entries)

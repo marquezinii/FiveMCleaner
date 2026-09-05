@@ -1643,4 +1643,5 @@ Media CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Ultra.Operation.Cancel" xml:space="preserve"><value>Cancelar esta lectura</value></data>
   <data name="Ultra.Operation.Cancelled" xml:space="preserve"><value>Operación cancelada. Se conservaron los registros existentes.</value></data>
   <data name="Ultra.Operation.Failed" xml:space="preserve"><value>No se pudo completar esta operación. Revisa el análisis del PC y el acceso al almacenamiento local e inténtalo de nuevo. No se registró ningún éxito.</value></data>
+  <data name="Optimizer.PrepareAgain" xml:space="preserve"><value>Preparar otra optimización</value></data>
 </root>

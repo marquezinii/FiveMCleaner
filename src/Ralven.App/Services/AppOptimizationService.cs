@@ -335,7 +335,22 @@ public sealed class AppOptimizationService : IAppOptimizationService
             return await demoSimulator.SimulatePlanAsync(plan, progress, cancellationToken).ConfigureAwait(false);
         }
 
-        return await ExecutePlanCoreAsync(plan, progress, cancellationToken).ConfigureAwait(false);
+        try
+        {
+            return await ExecutePlanCoreAsync(plan, progress, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            return await CreateResultFromJournalAsync(
+                plan.PlanId,
+                plan.Profile,
+                succeeded: false,
+                wasCancelled: true,
+                localization.GetString("Status.SafeCancellation.Headline"),
+                CancellationToken.None,
+                failureBugCode: BugCode.APP_OPT_CANCELLED,
+                failureErrorCategory: "cancelled").ConfigureAwait(false);
+        }
     }
 
     public async Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(
@@ -827,9 +842,21 @@ public sealed class AppOptimizationService : IAppOptimizationService
         _ => "Runtime.ApplyingAction"
     };
 
-    private async Task<bool> RollbackCoreAsync(
+    private Task<bool> RollbackCoreAsync(
         Guid transactionId,
         IProgress<AppProgressUpdate> progress,
+        CancellationToken cancellationToken) => RollbackCoreAsync(
+            transactionId,
+            progress,
+            CreateRuntimeForDetectedInstallation().Engine,
+            token => ExecuteElevatedRollbackAsync(transactionId, progress, token),
+            cancellationToken);
+
+    internal async Task<bool> RollbackCoreAsync(
+        Guid transactionId,
+        IProgress<AppProgressUpdate> progress,
+        WindowsTransactionEngine engine,
+        Func<CancellationToken, Task<bool>> rollbackAdministrator,
         CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
@@ -842,8 +869,18 @@ public sealed class AppOptimizationService : IAppOptimizationService
             Detail = localization.Format("Runtime.ValidatingTransaction", transactionId.ToString("N"))
         });
 
-        var runtime = CreateRuntimeForDetectedInstallation();
-        var localResult = await runtime.Engine.RollbackAsync(
+        // Execution commits user changes before the administrator phase.
+        // Restore that phase first so ASPM sees its original power scheme.
+        var journal = await LoadJournalAsync(transactionId, cancellationToken).ConfigureAwait(false)
+            ?? throw new FileNotFoundException($"Transaction journal '{transactionId}' was not found.");
+        if (journal.Actions.Any(action => action.RequiredPrivilege == RequiredPrivilege.Administrator
+                && CanOfferRollback(action))
+            && !await rollbackAdministrator(cancellationToken).ConfigureAwait(false))
+        {
+            return false;
+        }
+
+        var localResult = await engine.RollbackAsync(
             transactionId,
             isElevated: false,
             new WindowsRollbackOptions
@@ -860,9 +897,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 progress);
         }
 
-        if (localResult.State is not (
-            TransactionState.RolledBack
-            or TransactionState.AwaitingElevationRollback))
+        if (localResult.State != TransactionState.RolledBack)
         {
             progress.Report(new AppProgressUpdate
             {
@@ -873,18 +908,6 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 Detail = localization.GetString("Runtime.RestoreIncomplete")
             });
             return false;
-        }
-
-        if (localResult.State == TransactionState.AwaitingElevationRollback)
-        {
-            var elevated = await ExecuteElevatedRollbackAsync(
-                transactionId,
-                progress,
-                cancellationToken).ConfigureAwait(false);
-            if (!elevated)
-            {
-                return false;
-            }
         }
 
         progress.Report(new AppProgressUpdate

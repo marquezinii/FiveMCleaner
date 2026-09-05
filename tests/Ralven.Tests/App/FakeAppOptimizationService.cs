@@ -28,6 +28,10 @@ public sealed class FakeAppOptimizationService : IAppOptimizationService
     public AppSettings? SavedSettings { get; private set; }
     public int SaveCallCount { get; private set; }
 
+    public int HistoryLoadCount { get; private set; }
+
+    public AppOptimizationResult? ExecutionResult { get; set; }
+
     public Exception? SettingsSaveException { get; set; }
 
     public FakeAppOptimizationService(
@@ -90,8 +94,11 @@ public sealed class FakeAppOptimizationService : IAppOptimizationService
             ? Task.FromResult(CreateMinimalDiagnostic(isFiveMRunning, gtaVIsRunning, fiveMRoot, edition, recommendedProfile))
             : Task.FromException<AppDiagnostic>(DiagnosticException);
 
-    public Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(history);
+    public Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(CancellationToken cancellationToken = default)
+    {
+        HistoryLoadCount++;
+        return Task.FromResult(history);
+    }
 
     public Task<OptimizationReportDto?> LoadReportAsync(
         Guid transactionId,
@@ -102,7 +109,7 @@ public sealed class FakeAppOptimizationService : IAppOptimizationService
         OptimizationPlanDto plan,
         IProgress<AppProgressUpdate> progress,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        ExecutionResult is { } result ? Task.FromResult(result) : throw new NotSupportedException();
 
     public Task<bool> RollbackAsync(
         Guid transactionId,

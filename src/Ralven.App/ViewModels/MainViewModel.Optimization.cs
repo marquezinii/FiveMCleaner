@@ -161,6 +161,20 @@ public sealed partial class MainViewModel
 
     public string SelectedProfileName => IsUltraSelected ? localization.GetString("Ultra.Name") : ProfileName(selectedProfile);
 
+    public void PrepareNewOptimization()
+    {
+        if (!CanEditPersonalPreferences)
+        {
+            return;
+        }
+
+        ApplyReport(null);
+        ApplyComparison(null);
+        lastTransactionId = null;
+        StepLedger.Clear();
+        RefreshPlan();
+    }
+
     public void SetOptimizationScope(OptimizationScope scope)
     {
         if (IsBusy || isPersonalBusy || optimizationScope == scope)

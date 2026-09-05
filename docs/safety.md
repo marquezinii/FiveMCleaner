@@ -385,6 +385,21 @@ corrompido ou não corresponde à identidade das ações; recibos terminais são
 retidos para impedir replay. Registros legados sem recibo continuam visíveis no
 histórico, mas não oferecem rollback administrativo.
 
+A restauração solicitada pelo usuário segue a ordem inversa das fases:
+primeiro o broker restaura as ações administrativas, depois o app restaura as
+ações de usuário padrão. Isso devolve o plano de energia original antes de
+restaurar sua política ASPM. Cancelamento do UAC ou falha administrativa impede
+a fase local; mudanças posteriores do usuário continuam protegidas pelas
+verificações de snapshot. `AwaitingStandardRollback` confirma somente o término
+da etapa administrativa, nunca a restauração completa.
+
+Uma falha local isolada permite executar ações administrativas ainda pendentes;
+a falha original permanece no journal e no relatório. Ações falhadas não são
+reexecutadas e uma falha crítica continua impedindo as etapas restantes.
+Cancelamento, inclusive entre ações, finaliza a transação como
+`CommittedWithErrors`, registra as ações não executadas e preserva os snapshots
+das mudanças confirmadas para o histórico e rollback.
+
 Esse modelo atende ao requisito de "tratar erro sem interromper
 inutilmente todo o processo" sem abrir mão de nenhum dos invariantes de
 segurança documentados nesta página.
