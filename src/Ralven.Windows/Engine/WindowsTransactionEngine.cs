@@ -89,7 +89,11 @@ public sealed class WindowsTransactionEngine
                     journal.Error);
             }
 
-            if (journal.State == TransactionState.CommittedWithErrors)
+            if (journal.State == TransactionState.CommittedWithErrors
+                && !(context.IsElevated
+                    && options.IncludeAdministratorActions
+                    && !options.IncludeStandardUserActions
+                    && GetDeferredAdministratorIds(journal).Count > 0))
             {
                 return CreateResult(journal, [], GetDeferredAdministratorIds(journal), journal.Error);
             }
@@ -107,8 +111,18 @@ public sealed class WindowsTransactionEngine
 
             if (options.IsolateFailures)
             {
-                return await ExecuteIsolatedAsync(journal, selected, context, cancellationToken)
-                    .ConfigureAwait(false);
+                try
+                {
+                    return await ExecuteIsolatedAsync(journal, selected, context, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+                {
+                    // Also finalize cancellation between actions, outside the
+                    // individual action's compensation boundary.
+                    await FinalizeCancelledIsolatedRunAsync(journal).ConfigureAwait(false);
+                    throw;
+                }
             }
 
             var applied = new List<(IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry)>();
@@ -895,7 +909,7 @@ public sealed class WindowsTransactionEngine
         return journal.Actions.Any(entry => entry.State is
             ActionJournalState.Pending or ActionJournalState.DeferredPrivilege)
             ? TransactionState.AwaitingElevation
-            : TransactionState.Committed;
+            : DetermineIsolatedFinalState(journal);
     }
 
     private static IReadOnlyList<string> GetDeferredAdministratorIds(
@@ -1110,14 +1124,6 @@ public sealed class WindowsTransactionEngine
                     [cancellationException, .. recoveryErrors]).ToString();
             }
 
-            recoveryErrors.AddRange(await FinalizeCancelledIsolatedRunAsync(journal)
-                .ConfigureAwait(false));
-            if (recoveryErrors.Count > 0)
-            {
-                item.Entry.Error = new AggregateException(
-                    [cancellationException, .. recoveryErrors]).ToString();
-            }
-
             throw;
         }
         catch (UnauthorizedAccessException) when (
@@ -1269,13 +1275,14 @@ public sealed class WindowsTransactionEngine
     {
         foreach (var entry in journal.Actions.Where(entry =>
                      entry.State is ActionJournalState.Pending
-                         or ActionJournalState.DeferredPrivilege))
+                         or ActionJournalState.DeferredPrivilege
+                     || (entry.State == ActionJournalState.Applying && !entry.Changed)))
         {
             MarkTerminal(entry, ActionJournalState.Skipped,
                 ActionExecutionOutcome.NotRun, "Ignorada porque a operação foi cancelada.");
         }
 
-        journal.State = DetermineIsolatedFinalState(journal);
+        journal.State = TransactionState.CommittedWithErrors;
         journal.Error = "A operação foi cancelada pelo usuário.";
         var recoveryErrors = new List<Exception>();
         await TrySaveDuringRecoveryAsync(journal, recoveryErrors).ConfigureAwait(false);

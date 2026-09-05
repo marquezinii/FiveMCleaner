@@ -33,7 +33,9 @@ public static class OptimizationReportBuilder
                 ActionName = definition?.Name ?? entry.ActionId,
                 Category = definition?.Category ?? ActionCategory.Safety,
                 Outcome = outcome,
-                Reason = entry.OutcomeReason,
+                Reason = string.IsNullOrWhiteSpace(entry.OutcomeReason)
+                    ? string.Join(Environment.NewLine, entry.Messages)
+                    : entry.OutcomeReason,
                 BugCode = entry.BugCode
             });
 
@@ -71,7 +73,10 @@ public static class OptimizationReportBuilder
             NotRunCount = lines.Count(line => line.Outcome == ActionExecutionOutcome.NotRun),
             RequiresRestart = requiresRestart,
             RestorePossible = restorePossible,
-            Succeeded = failed == 0 && rollbackFailed == 0,
+            Succeeded = journal.State == TransactionState.Committed
+                && failed == 0 && rollbackFailed == 0
+                && lines.All(line => line.Outcome is ActionExecutionOutcome.Verified
+                    or ActionExecutionOutcome.Applied or ActionExecutionOutcome.Skipped or ActionExecutionOutcome.Warning),
             Lines = lines
         };
     }

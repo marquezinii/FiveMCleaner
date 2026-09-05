@@ -143,7 +143,7 @@ internal static class Program
         }
 
         BrokerDiagnosticsLog.Record("journal-saved", plan.PlanId);
-        if (result.State != TransactionState.Committed)
+        if (!IsAdministratorExecutionComplete(result))
         {
             BrokerDiagnosticsLog.Record("execution-failed", plan.PlanId);
             events.Publish(
@@ -206,7 +206,7 @@ internal static class Program
                 BrokerExitCode.RollbackFailed);
         }
 
-        if (result.State != TransactionState.RolledBack)
+        if (!IsAdministratorRollbackComplete(result))
         {
             BrokerDiagnosticsLog.Record("rollback-failed", transactionId);
             events.Publish(
@@ -236,6 +236,16 @@ internal static class Program
             });
         return BrokerExitCode.Success;
     }
+
+    internal static bool IsAdministratorExecutionComplete(WindowsTransactionResult result) =>
+        result.State is TransactionState.Committed or TransactionState.CommittedWithErrors
+        && result.Error is null
+        && result.DeferredAdministratorActionIds.Count == 0;
+
+    internal static bool IsAdministratorRollbackComplete(WindowsTransactionResult result) =>
+        result.State is TransactionState.RolledBack or TransactionState.AwaitingStandardRollback
+            or TransactionState.CommittedWithErrors
+        && result.Error is null;
 
     private static int PublishTimeout(NamedPipeEventWriter events, Guid planId)
     {

@@ -1643,4 +1643,5 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Ultra.Operation.Cancel" xml:space="preserve"><value>Cancel this reading</value></data>
   <data name="Ultra.Operation.Cancelled" xml:space="preserve"><value>Operation cancelled. Existing records were preserved.</value></data>
   <data name="Ultra.Operation.Failed" xml:space="preserve"><value>This operation could not be completed. Check the PC diagnosis and access to local storage, then try again. No success was recorded.</value></data>
+  <data name="Optimizer.PrepareAgain" xml:space="preserve"><value>Prepare another optimization</value></data>
 </root>
