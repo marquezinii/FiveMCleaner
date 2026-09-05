@@ -81,9 +81,6 @@ public partial class ApplicationsPage : UserControl, IDisposable
 
     private void ShowInventory(UIElement selected)
     {
-        CatalogFilterPanel.Visibility = ReferenceEquals(selected, DiscoverPackagesPanel)
-            ? Visibility.Collapsed
-            : Visibility.Visible;
         InstalledApplicationsPanel.Visibility = ReferenceEquals(
             selected,
             InstalledApplicationsPanel)

@@ -8,13 +8,50 @@
              d:DesignWidth="1400"
              d:DesignHeight="820"
              Loaded="ApplicationsPage_Loaded">
+    <UserControl.Resources>
+        <Style x:Key="ApplicationAreaOptionStyle" TargetType="RadioButton">
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="Cursor" Value="Hand" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Border x:Name="Root"
+                                MinHeight="94"
+                                Padding="16,14"
+                                Background="{DynamicResource CanvasSunkenBrush}"
+                                BorderBrush="{DynamicResource BorderSubtleBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource RadiusMd}">
+                            <ContentPresenter />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource Surface2Brush}" />
+                            </Trigger>
+                            <Trigger Property="IsChecked" Value="True">
+                                <Setter TargetName="Root" Property="Background" Value="{DynamicResource AccentWashBrush}" />
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsKeyboardFocused" Value="True">
+                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource FocusRingBrush}" />
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter TargetName="Root" Property="Opacity" Value="0.45" />
+                                <Setter Property="Cursor" Value="Arrow" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
     <ScrollViewer x:Name="PageScrollViewer"
                   VerticalScrollBarVisibility="Auto"
                   HorizontalScrollBarVisibility="Disabled">
     <Grid MinHeight="{Binding ViewportHeight, ElementName=PageScrollViewer}">
     <Grid Margin="28,24,28,28">
         <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -33,129 +70,182 @@
             </StackPanel>
         </Border>
 
-        <Border Grid.Row="1" Style="{StaticResource PanelSurface}" Padding="0" Margin="0,0,0,16">
+        <Border Grid.Row="1" Style="{StaticResource PanelSurface}" Padding="24" Margin="0,0,0,16">
             <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="0.6*" />
-                    <ColumnDefinition Width="0.6*" />
-                    <ColumnDefinition Width="0.6*" />
-                    <ColumnDefinition Width="0.6*" />
-                    <ColumnDefinition Width="1.8*" />
-                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="0" Style="{StaticResource InstrumentCellStyle}">
-                    <TextBlock Text="{Binding InstalledApplicationCount}" Style="{StaticResource MetricSmallText}" />
-                    <TextBlock Text="{Binding [Applications.Inventory.InstalledCount], Source={StaticResource LocalizedStrings}}"
-                               Style="{StaticResource CaptionText}"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
-                </StackPanel>
+                <Grid Grid.Row="0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,24,0">
+                        <TextBlock Text="{Binding [Applications.Navigation.Title], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SectionText}" />
+                        <TextBlock Text="{Binding [Applications.Navigation.Description], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   Margin="0,6,0,0"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Content="{Binding [Applications.Navigation.RefreshAll], Source={StaticResource LocalizedStrings}}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            VerticalAlignment="Center"
+                            IsEnabled="{Binding CanRefreshApplications}"
+                            Click="RefreshInventory_Click" />
+                </Grid>
 
-                <StackPanel Grid.Column="1" Style="{StaticResource InstrumentCellStyle}">
-                    <TextBlock Text="{Binding ManagedPackageCount}" Style="{StaticResource MetricSmallText}" />
-                    <TextBlock Text="{Binding [Applications.Packages.Count], Source={StaticResource LocalizedStrings}}"
-                               Style="{StaticResource CaptionText}"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
-                </StackPanel>
+                <Grid Grid.Row="1" Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="1.5*" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
 
-                <StackPanel Grid.Column="2" Style="{StaticResource InstrumentCellStyle}">
-                    <TextBlock Text="{Binding StartupItemCount}" Style="{StaticResource MetricSmallText}" />
-                    <TextBlock Text="{Binding [Applications.Inventory.StartupCount], Source={StaticResource LocalizedStrings}}"
-                               Style="{StaticResource CaptionText}"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
-                </StackPanel>
+                    <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                        <TextBlock Text="{Binding [Applications.Navigation.Manage], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource OverlineText}"
+                                   Margin="2,0,0,8" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <RadioButton x:Name="DiscoverTab"
+                                         Grid.Column="0"
+                                         GroupName="ApplicationInventoryTab"
+                                         Style="{StaticResource ApplicationAreaOptionStyle}"
+                                         Checked="InventoryTab_Checked"
+                                         automation:AutomationProperties.Name="{Binding [Applications.Discover.Tab], Source={StaticResource LocalizedStrings}}"
+                                         automation:AutomationProperties.HelpText="{Binding [Applications.Discover.Description], Source={StaticResource LocalizedStrings}}">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding [Applications.Discover.Tab], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                                    <TextBlock Text="{Binding [Applications.Discover.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </RadioButton>
+                            <RadioButton x:Name="UpdatesTab"
+                                         Grid.Column="1"
+                                         GroupName="ApplicationInventoryTab"
+                                         Style="{StaticResource ApplicationAreaOptionStyle}"
+                                         Checked="InventoryTab_Checked"
+                                         automation:AutomationProperties.Name="{Binding [Applications.Updates.Tab], Source={StaticResource LocalizedStrings}}"
+                                         automation:AutomationProperties.HelpText="{Binding [Applications.Updates.Description], Source={StaticResource LocalizedStrings}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding [Applications.Updates.Tab], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                                        <TextBlock Text="{Binding [Applications.Updates.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,5,8,0" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding ApplicationUpdateCount}" Style="{StaticResource MetricSmallText}" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton x:Name="ManagedTab"
+                                         Grid.Column="2"
+                                         GroupName="ApplicationInventoryTab"
+                                         Style="{StaticResource ApplicationAreaOptionStyle}"
+                                         Margin="0"
+                                         Checked="InventoryTab_Checked"
+                                         automation:AutomationProperties.Name="{Binding [Applications.Packages.Tab], Source={StaticResource LocalizedStrings}}"
+                                         automation:AutomationProperties.HelpText="{Binding [Applications.Packages.Description], Source={StaticResource LocalizedStrings}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding [Applications.Packages.Tab], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                                        <TextBlock Text="{Binding [Applications.Packages.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,5,8,0" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding ManagedPackageCount}" Style="{StaticResource MetricSmallText}" />
+                                </Grid>
+                            </RadioButton>
+                        </Grid>
+                    </StackPanel>
 
-                <StackPanel Grid.Column="3" Style="{StaticResource InstrumentCellStyle}">
-                    <TextBlock Text="{Binding ApplicationUpdateCount}" Style="{StaticResource MetricSmallText}" />
-                    <TextBlock Text="{Binding [Applications.Updates.Count], Source={StaticResource LocalizedStrings}}"
-                               Style="{StaticResource CaptionText}"
-                               TextWrapping="Wrap"
-                               Margin="0,4,0,0" />
-                </StackPanel>
+                    <Border Grid.Column="1" Style="{StaticResource VerticalHairlineDivider}" />
 
-                <StackPanel Grid.Column="4" Style="{StaticResource InstrumentCellStyle}">
-                    <TextBlock Text="{Binding [Applications.Inventory.Status.Title], Source={StaticResource LocalizedStrings}}"
-                               Style="{StaticResource OverlineText}" />
-                    <TextBlock Text="{Binding InventoryStatusMessage}"
-                               Style="{StaticResource SecondaryText}"
-                               Margin="0,5,0,0"
-                               TextWrapping="Wrap"
-                               automation:AutomationProperties.LiveSetting="Polite" />
-                    <TextBlock Text="{Binding InventoryObservedAtLabel}"
-                               Style="{StaticResource CaptionText}"
-                               Margin="0,4,0,0"
-                               Visibility="{Binding InventoryObservedAtLabel, Converter={StaticResource StringToVisibilityConverter}}" />
-                </StackPanel>
+                    <StackPanel Grid.Column="2" Margin="24,0,0,0">
+                        <TextBlock Text="{Binding [Applications.Navigation.Review], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource OverlineText}"
+                                   Margin="2,0,0,8" />
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <RadioButton x:Name="InstalledTab"
+                                         Grid.Column="0"
+                                         GroupName="ApplicationInventoryTab"
+                                         Style="{StaticResource ApplicationAreaOptionStyle}"
+                                         Checked="InventoryTab_Checked"
+                                         automation:AutomationProperties.Name="{Binding [Applications.Inventory.InstalledTab], Source={StaticResource LocalizedStrings}}"
+                                         automation:AutomationProperties.HelpText="{Binding [Applications.Installed.Description], Source={StaticResource LocalizedStrings}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding [Applications.Inventory.InstalledTab], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                                        <TextBlock Text="{Binding [Applications.Installed.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,5,8,0" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding InstalledApplicationCount}" Style="{StaticResource MetricSmallText}" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton x:Name="StartupTab"
+                                         Grid.Column="1"
+                                         GroupName="ApplicationInventoryTab"
+                                         Style="{StaticResource ApplicationAreaOptionStyle}"
+                                         Margin="0"
+                                         Checked="InventoryTab_Checked"
+                                         automation:AutomationProperties.Name="{Binding [Applications.Inventory.StartupTab], Source={StaticResource LocalizedStrings}}"
+                                         automation:AutomationProperties.HelpText="{Binding [Applications.Startup.Description], Source={StaticResource LocalizedStrings}}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding [Applications.Inventory.StartupTab], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                                        <TextBlock Text="{Binding [Applications.Startup.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,5,8,0" TextWrapping="Wrap" />
+                                    </StackPanel>
+                                    <TextBlock Grid.Column="1" Text="{Binding StartupItemCount}" Style="{StaticResource MetricSmallText}" />
+                                </Grid>
+                            </RadioButton>
+                        </Grid>
+                    </StackPanel>
+                </Grid>
             </Grid>
         </Border>
 
-        <Grid Grid.Row="2" Margin="0,0,0,16">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="Auto" />
-            </Grid.ColumnDefinitions>
-
-            <Border Grid.Column="0" Style="{StaticResource SegmentedHostStyle}" VerticalAlignment="Bottom">
-                <StackPanel Orientation="Horizontal">
-                    <RadioButton x:Name="DiscoverTab"
-                                 GroupName="ApplicationInventoryTab"
-                                 Style="{StaticResource SegmentedOptionStyle}"
-                                 Content="{Binding [Applications.Discover.Tab], Source={StaticResource LocalizedStrings}}"
-                                 Checked="InventoryTab_Checked" />
-                    <RadioButton x:Name="UpdatesTab"
-                                 GroupName="ApplicationInventoryTab"
-                                 Style="{StaticResource SegmentedOptionStyle}"
-                                 Content="{Binding [Applications.Updates.Tab], Source={StaticResource LocalizedStrings}}"
-                                 Checked="InventoryTab_Checked" />
-                    <RadioButton x:Name="ManagedTab"
-                                 GroupName="ApplicationInventoryTab"
-                                 Style="{StaticResource SegmentedOptionStyle}"
-                                 Content="{Binding [Applications.Packages.Tab], Source={StaticResource LocalizedStrings}}"
-                                 Checked="InventoryTab_Checked" />
-                    <RadioButton x:Name="InstalledTab"
-                                 GroupName="ApplicationInventoryTab"
-                                 Style="{StaticResource SegmentedOptionStyle}"
-                                 Content="{Binding [Applications.Inventory.InstalledTab], Source={StaticResource LocalizedStrings}}"
-                                 Checked="InventoryTab_Checked" />
-                    <RadioButton x:Name="StartupTab"
-                                 GroupName="ApplicationInventoryTab"
-                                 Style="{StaticResource SegmentedOptionStyle}"
-                                 Content="{Binding [Applications.Inventory.StartupTab], Source={StaticResource LocalizedStrings}}"
-                                 Checked="InventoryTab_Checked" />
-                </StackPanel>
-            </Border>
-
-            <StackPanel x:Name="CatalogFilterPanel" Grid.Column="1" Margin="18,0" MaxWidth="520">
-                <TextBlock Text="{Binding [Applications.Inventory.Search], Source={StaticResource LocalizedStrings}}"
-                           Style="{StaticResource CaptionText}"
-                           Margin="2,0,0,5" />
-                <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
-                         Style="{StaticResource FormTextBoxStyle}"
-                         automation:AutomationProperties.Name="{Binding [Applications.Inventory.Search], Source={StaticResource LocalizedStrings}}" />
-            </StackPanel>
-
-            <Button Grid.Column="2"
-                    Content="{Binding [Applications.Inventory.Refresh], Source={StaticResource LocalizedStrings}}"
-                    Style="{StaticResource SecondaryButtonStyle}"
-                    VerticalAlignment="Bottom"
-                    IsEnabled="{Binding CanRefreshApplications}"
-                    Click="RefreshInventory_Click" />
-        </Grid>
-
-        <Border Grid.Row="3" Style="{StaticResource PanelSurface}" Padding="24" MinHeight="260">
+        <Border Grid.Row="2" Style="{StaticResource PanelSurface}" Padding="24" MinHeight="260">
             <Grid>
                 <Grid x:Name="DiscoverPackagesPanel" Visibility="Collapsed">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="0,0,0,12">
+                    <StackPanel Grid.Row="0" Margin="0,0,0,18">
+                        <TextBlock Text="{Binding [Applications.Discover.Title], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SectionText}" />
+                        <TextBlock Text="{Binding [Applications.Discover.Description], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   Margin="0,6,0,0"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Grid Grid.Row="1" Margin="0,0,0,12">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
@@ -174,14 +264,14 @@
                                 Click="SearchPackages_Click" />
                     </Grid>
 
-                    <TextBlock Grid.Row="1"
+                    <TextBlock Grid.Row="2"
                                Text="{Binding DiscoverStatusMessage}"
                                Style="{StaticResource SecondaryText}"
                                TextWrapping="Wrap"
                                Margin="0,0,0,16"
                                automation:AutomationProperties.LiveSetting="Polite" />
 
-                    <Border Grid.Row="2" Style="{StaticResource TableHeaderRowStyle}">
+                    <Border Grid.Row="3" Style="{StaticResource TableHeaderRowStyle}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1.7*" />
@@ -197,7 +287,7 @@
                         </Grid>
                     </Border>
 
-                    <Grid Grid.Row="3">
+                    <Grid Grid.Row="4">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <ItemsControl ItemsSource="{Binding DiscoveredPackages}"
                                           Visibility="{Binding HasDiscoveredPackages, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -250,17 +340,41 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0"
+                    <Grid Grid.Row="0" Margin="0,0,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="420" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,24,0">
+                            <TextBlock Text="{Binding [Applications.Packages.Title], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SectionText}" />
+                            <TextBlock Text="{Binding [Applications.Packages.Description], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SecondaryText}"
+                                       Margin="0,6,0,0"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding [Applications.Filter.Current], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="2,0,0,5" />
+                            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource FormTextBoxStyle}"
+                                     automation:AutomationProperties.Name="{Binding [Applications.Filter.Current], Source={StaticResource LocalizedStrings}}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <TextBlock Grid.Row="1"
                                Text="{Binding ManagedPackagesStatusMessage}"
                                Style="{StaticResource SecondaryText}"
                                TextWrapping="Wrap"
                                Margin="0,0,0,16"
                                automation:AutomationProperties.LiveSetting="Polite" />
 
-                    <Border Grid.Row="1" Style="{StaticResource TableHeaderRowStyle}">
+                    <Border Grid.Row="2" Style="{StaticResource TableHeaderRowStyle}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="1.7*" />
@@ -276,7 +390,7 @@
                         </Grid>
                     </Border>
 
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="3">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <ItemsControl ItemsSource="{Binding ManagedPackages}"
                                           Visibility="{Binding HasManagedPackages, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -329,16 +443,49 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0"
-                               Text="{Binding [Applications.Inventory.ReadOnly], Source={StaticResource LocalizedStrings}}"
-                               Style="{StaticResource SecondaryText}"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,16" />
+                    <Grid Grid.Row="0" Margin="0,0,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="420" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,24,0">
+                            <TextBlock Text="{Binding [Applications.Installed.Title], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SectionText}" />
+                            <TextBlock Text="{Binding [Applications.Installed.Description], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SecondaryText}"
+                                       Margin="0,6,0,0"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding [Applications.Filter.Current], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="2,0,0,5" />
+                            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource FormTextBoxStyle}"
+                                     automation:AutomationProperties.Name="{Binding [Applications.Filter.Current], Source={StaticResource LocalizedStrings}}" />
+                        </StackPanel>
+                    </Grid>
 
-                    <Border Grid.Row="1" Style="{StaticResource TableHeaderRowStyle}">
+                    <StackPanel Grid.Row="1" Margin="0,0,0,16">
+                        <TextBlock Text="{Binding [Applications.Inventory.ReadOnly], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding InventoryStatusMessage}"
+                                   Style="{StaticResource SecondaryText}"
+                                   Margin="0,6,0,0"
+                                   TextWrapping="Wrap"
+                                   automation:AutomationProperties.LiveSetting="Polite" />
+                        <TextBlock Text="{Binding InventoryObservedAtLabel}"
+                                   Style="{StaticResource CaptionText}"
+                                   Margin="0,4,0,0"
+                                   Visibility="{Binding InventoryObservedAtLabel, Converter={StaticResource StringToVisibilityConverter}}" />
+                    </StackPanel>
+
+                    <Border Grid.Row="2" Style="{StaticResource TableHeaderRowStyle}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2*" />
@@ -355,7 +502,7 @@
                         </Grid>
                     </Border>
 
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="3">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <ItemsControl ItemsSource="{Binding InstalledApplications}"
                                           Visibility="{Binding HasInstalledApplications, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -403,16 +550,49 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0"
-                               Text="{Binding [Applications.Inventory.ReadOnly], Source={StaticResource LocalizedStrings}}"
-                               Style="{StaticResource SecondaryText}"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,16" />
+                    <Grid Grid.Row="0" Margin="0,0,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="420" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,24,0">
+                            <TextBlock Text="{Binding [Applications.Startup.Title], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SectionText}" />
+                            <TextBlock Text="{Binding [Applications.Startup.Description], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SecondaryText}"
+                                       Margin="0,6,0,0"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding [Applications.Filter.Current], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="2,0,0,5" />
+                            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource FormTextBoxStyle}"
+                                     automation:AutomationProperties.Name="{Binding [Applications.Filter.Current], Source={StaticResource LocalizedStrings}}" />
+                        </StackPanel>
+                    </Grid>
 
-                    <Border Grid.Row="1" Style="{StaticResource TableHeaderRowStyle}">
+                    <StackPanel Grid.Row="1" Margin="0,0,0,16">
+                        <TextBlock Text="{Binding [Applications.Inventory.ReadOnly], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding InventoryStatusMessage}"
+                                   Style="{StaticResource SecondaryText}"
+                                   Margin="0,6,0,0"
+                                   TextWrapping="Wrap"
+                                   automation:AutomationProperties.LiveSetting="Polite" />
+                        <TextBlock Text="{Binding InventoryObservedAtLabel}"
+                                   Style="{StaticResource CaptionText}"
+                                   Margin="0,4,0,0"
+                                   Visibility="{Binding InventoryObservedAtLabel, Converter={StaticResource StringToVisibilityConverter}}" />
+                    </StackPanel>
+
+                    <Border Grid.Row="2" Style="{StaticResource TableHeaderRowStyle}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="2*" />
@@ -425,7 +605,7 @@
                         </Grid>
                     </Border>
 
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="3">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <ItemsControl ItemsSource="{Binding StartupItems}"
                                           Visibility="{Binding HasStartupItems, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -469,10 +649,34 @@
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <Grid Grid.Row="0" Margin="0,0,0,16">
+                    <Grid Grid.Row="0" Margin="0,0,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="420" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,24,0">
+                            <TextBlock Text="{Binding [Applications.Updates.Title], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SectionText}" />
+                            <TextBlock Text="{Binding [Applications.Updates.Description], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SecondaryText}"
+                                       Margin="0,6,0,0"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding [Applications.Filter.Current], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="2,0,0,5" />
+                            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                                     Style="{StaticResource FormTextBoxStyle}"
+                                     automation:AutomationProperties.Name="{Binding [Applications.Filter.Current], Source={StaticResource LocalizedStrings}}" />
+                        </StackPanel>
+                    </Grid>
+
+                    <Grid Grid.Row="1" Margin="0,0,0,16">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
@@ -511,7 +715,7 @@
                         </StackPanel>
                     </Grid>
 
-                    <Border Grid.Row="1" Style="{StaticResource TableHeaderRowStyle}">
+                    <Border Grid.Row="2" Style="{StaticResource TableHeaderRowStyle}">
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="48" />
@@ -530,7 +734,7 @@
                         </Grid>
                     </Border>
 
-                    <Grid Grid.Row="2">
+                    <Grid Grid.Row="3">
                         <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                             <ItemsControl ItemsSource="{Binding ApplicationUpdates}"
                                           Visibility="{Binding HasApplicationUpdates, Converter={StaticResource BooleanToVisibilityConverter}}">
@@ -608,23 +812,76 @@
             </Grid>
         </Border>
 
-        <Border Grid.Row="4" Style="{StaticResource NotesColumnSurface}" Margin="0,16,0,0">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="1.2*" />
-                    <ColumnDefinition Width="2*" />
-                </Grid.ColumnDefinitions>
-                <StackPanel Grid.Column="0" Margin="0,0,24,0">
-                    <TextBlock Text="{Binding [Applications.Platform.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SubsectionText}" />
-                    <TextBlock Text="{Binding [Applications.Platform.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,8,0,0" TextWrapping="Wrap" />
-                </StackPanel>
-                <WrapPanel Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Center">
-                    <Button Content="{Binding [Applications.Installed.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,4,8,4" Click="OpenInstalledApps_Click" />
-                    <Button Content="{Binding [Applications.Startup.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,4,8,4" Click="OpenStartupApps_Click" />
-                    <Button Content="{Binding [Applications.StoreUpdates.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,4,8,4" Click="OpenStoreUpdates_Click" />
-                    <Button Content="{Binding [Applications.Defaults.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,4,0,4" Click="OpenDefaultApps_Click" />
-                </WrapPanel>
-            </Grid>
+        <Border Grid.Row="3" Style="{StaticResource NotesColumnSurface}" Margin="0,16,0,0">
+            <StackPanel>
+                <TextBlock Text="{Binding [Applications.Platform.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SubsectionText}" />
+                <TextBlock Text="{Binding [Applications.Platform.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,8,0,0" TextWrapping="Wrap" />
+
+                <Grid Margin="0,20,0,0">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="1" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="1" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <Grid Grid.Row="0" Grid.Column="0" Margin="0,0,24,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,20,0">
+                            <TextBlock Text="{Binding [Applications.Installed.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                            <TextBlock Text="{Binding [Applications.Installed.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="{Binding [Applications.Installed.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="OpenInstalledApps_Click" />
+                    </Grid>
+
+                    <Grid Grid.Row="0" Grid.Column="2" Margin="24,0,0,18">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,20,0">
+                            <TextBlock Text="{Binding [Applications.Startup.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                            <TextBlock Text="{Binding [Applications.Startup.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="{Binding [Applications.Startup.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="OpenStartupApps_Click" />
+                    </Grid>
+
+                    <Border Grid.RowSpan="3" Grid.Column="1" Style="{StaticResource VerticalHairlineDivider}" />
+                    <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource HairlineDivider}" />
+                    <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource HairlineDivider}" />
+
+                    <Grid Grid.Row="2" Grid.Column="0" Margin="0,18,24,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,20,0">
+                            <TextBlock Text="{Binding [Applications.StoreUpdates.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                            <TextBlock Text="{Binding [Applications.StoreUpdates.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="{Binding [Applications.StoreUpdates.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="OpenStoreUpdates_Click" />
+                    </Grid>
+
+                    <Grid Grid.Row="2" Grid.Column="2" Margin="24,18,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Margin="0,0,20,0">
+                            <TextBlock Text="{Binding [Applications.Defaults.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                            <TextBlock Text="{Binding [Applications.Defaults.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="{Binding [Applications.Defaults.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" VerticalAlignment="Center" Click="OpenDefaultApps_Click" />
+                    </Grid>
+                </Grid>
+            </StackPanel>
         </Border>
     </Grid>
     </Grid>

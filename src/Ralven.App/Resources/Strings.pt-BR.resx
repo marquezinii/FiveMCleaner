@@ -103,12 +103,18 @@
   <data name="System.Gaming.RestoreConfirm.Title" xml:space="preserve"><value>Restaurar ajustes anteriores?</value></data>
   <data name="System.Gaming.RestoreConfirm.Message" xml:space="preserve"><value>O Ralven tentará restaurar somente os valores alterados por esta operação. Um valor modificado depois por outro programa não será sobrescrito.</value></data>
   <data name="Applications.Title" xml:space="preserve"><value>Aplicativos</value></data>
-  <data name="Applications.Subtitle" xml:space="preserve"><value>Pesquise, instale, atualize e remova aplicativos compatíveis pelos catálogos confiáveis do WinGet e da Microsoft Store. O Ralven mostra a origem e o pacote exato antes de cada mudança.</value></data>
+  <data name="Applications.Subtitle" xml:space="preserve"><value>Instale, atualize ou remova aplicativos compatíveis, ou consulte o que já existe neste PC. Cada área explica sua origem, alcance e possíveis mudanças.</value></data>
+  <data name="Applications.Navigation.Title" xml:space="preserve"><value>Escolha o que você quer fazer</value></data>
+  <data name="Applications.Navigation.Description" xml:space="preserve"><value>As ações de pacotes do Ralven estão separadas das informações locais somente leitura e dos controles nativos do Windows.</value></data>
+  <data name="Applications.Navigation.Manage" xml:space="preserve"><value>Instalar e manter</value></data>
+  <data name="Applications.Navigation.Review" xml:space="preserve"><value>Consultar este PC</value></data>
+  <data name="Applications.Navigation.RefreshAll" xml:space="preserve"><value>Atualizar todos os dados</value></data>
+  <data name="Applications.Filter.Current" xml:space="preserve"><value>Filtrar esta lista</value></data>
   <data name="Applications.Installed.Title" xml:space="preserve"><value>Aplicativos instalados</value></data>
-  <data name="Applications.Installed.Description" xml:space="preserve"><value>Revise os aplicativos instalados, o espaço usado e as opções de desinstalação fornecidas pelo Windows.</value></data>
+  <data name="Applications.Installed.Description" xml:space="preserve"><value>Consulte nomes, fabricantes, versões e tamanhos estimados. Para alterações completas, use os controles do Windows abaixo.</value></data>
   <data name="Applications.Installed.Action" xml:space="preserve"><value>Abrir controles de aplicativos do Windows</value></data>
   <data name="Applications.Startup.Title" xml:space="preserve"><value>Aplicativos de inicialização</value></data>
-  <data name="Applications.Startup.Description" xml:space="preserve"><value>Escolha quais aplicativos podem iniciar junto com a sua sessão do Windows.</value></data>
+  <data name="Applications.Startup.Description" xml:space="preserve"><value>Veja quais itens iniciam com o Windows. Para ativar ou desativar, use os controles do Windows abaixo.</value></data>
   <data name="Applications.Startup.Action" xml:space="preserve"><value>Abrir controles de inicialização do Windows</value></data>
   <data name="Applications.StoreUpdates.Title" xml:space="preserve"><value>Atualizações da Microsoft Store</value></data>
   <data name="Applications.StoreUpdates.Description" xml:space="preserve"><value>A Microsoft Store controla as atualizações da biblioteca e mantém o fluxo confiável de confirmação para instalá-las.</value></data>
@@ -123,7 +129,7 @@
   <data name="Applications.Inventory.Status.Unavailable" xml:space="preserve"><value>O Ralven não conseguiu ler o inventário de aplicativos. Nada foi alterado.</value></data>
   <data name="Applications.Inventory.Status.UpdatedAt" xml:space="preserve"><value>Atualizado às {0}</value></data>
   <data name="Applications.Inventory.ReadOnly" xml:space="preserve"><value>Este inventário do registro é somente leitura. O Ralven nunca executa comandos de desinstalação descobertos aqui nem altera a inicialização de aplicativos de terceiros.</value></data>
-  <data name="Applications.Inventory.InstalledTab" xml:space="preserve"><value>Inventário</value></data>
+  <data name="Applications.Inventory.InstalledTab" xml:space="preserve"><value>Instalados</value></data>
   <data name="Applications.Inventory.StartupTab" xml:space="preserve"><value>Inicialização</value></data>
   <data name="Applications.Inventory.Search" xml:space="preserve"><value>Pesquisar aplicativos</value></data>
   <data name="Applications.Inventory.Refresh" xml:space="preserve"><value>Atualizar</value></data>
@@ -149,7 +155,9 @@
   <data name="Applications.Inventory.Unavailable.Installed" xml:space="preserve"><value>Os aplicativos instalados estão indisponíveis agora. Atualize para tentar novamente.</value></data>
   <data name="Applications.Inventory.Unavailable.Startup" xml:space="preserve"><value>As entradas de inicialização estão indisponíveis agora. Atualize para tentar novamente.</value></data>
   <data name="Applications.Packages.Count" xml:space="preserve"><value>pacotes gerenciados</value></data>
-  <data name="Applications.Packages.Tab" xml:space="preserve"><value>Gerenciados</value></data>
+  <data name="Applications.Packages.Tab" xml:space="preserve"><value>Desinstalar</value></data>
+  <data name="Applications.Packages.Title" xml:space="preserve"><value>Aplicativos gerenciados</value></data>
+  <data name="Applications.Packages.Description" xml:space="preserve"><value>Remova aplicativos reconhecidos pelo WinGet ou pela Microsoft Store. Os demais continuam disponíveis nos controles do Windows.</value></data>
   <data name="Applications.Packages.Status.Loading" xml:space="preserve"><value>Lendo pacotes gerenciados pelo WinGet e pela Microsoft Store…</value></data>
   <data name="Applications.Packages.Status.Ready" xml:space="preserve"><value>Pacotes gerenciados carregados das origens confiáveis.</value></data>
   <data name="Applications.Packages.Status.Empty" xml:space="preserve"><value>Nenhum pacote gerenciado foi encontrado nas origens confiáveis.</value></data>
@@ -191,7 +199,9 @@
   <data name="Applications.Packages.Uninstall.Confirm.Message" xml:space="preserve"><value>O Ralven pedirá ao WinGet para desinstalar {0} ({1}) de {2}. O desinstalador do fabricante pode abrir e o Windows pode solicitar permissão de administrador. O Ralven não pode reverter esta ação.</value></data>
   <data name="Applications.Packages.Uninstall.Confirm.Cancel" xml:space="preserve"><value>Manter aplicativo</value></data>
   <data name="Applications.Packages.Uninstall.Confirm.Action" xml:space="preserve"><value>Desinstalar aplicativo</value></data>
-  <data name="Applications.Discover.Tab" xml:space="preserve"><value>Descobrir</value></data>
+  <data name="Applications.Discover.Tab" xml:space="preserve"><value>Instalar</value></data>
+  <data name="Applications.Discover.Title" xml:space="preserve"><value>Instalar aplicativos</value></data>
+  <data name="Applications.Discover.Description" xml:space="preserve"><value>Pesquise nos catálogos confiáveis do WinGet e da Microsoft Store e revise o pacote exato antes de instalar.</value></data>
   <data name="Applications.Discover.Search" xml:space="preserve"><value>Pesquisar no WinGet e na Microsoft Store</value></data>
   <data name="Applications.Discover.SearchAction" xml:space="preserve"><value>Pesquisar</value></data>
   <data name="Applications.Discover.Status.Ready" xml:space="preserve"><value>Pesquise nos catálogos confiáveis pelo nome do aplicativo ou ID do pacote.</value></data>
@@ -206,6 +216,8 @@
   <data name="Applications.Discover.Confirm.Action" xml:space="preserve"><value>Instalar aplicativo</value></data>
   <data name="Applications.Updates.Count" xml:space="preserve"><value>atualizações disponíveis</value></data>
   <data name="Applications.Updates.Tab" xml:space="preserve"><value>Atualizações</value></data>
+  <data name="Applications.Updates.Title" xml:space="preserve"><value>Atualizações de aplicativos</value></data>
+  <data name="Applications.Updates.Description" xml:space="preserve"><value>Compare as versões instalada e disponível e atualize somente os aplicativos que você selecionar.</value></data>
   <data name="Applications.Updates.Status.Checking" xml:space="preserve"><value>Verificando atualizações nos catálogos confiáveis de aplicativos…</value></data>
   <data name="Applications.Updates.Status.Available" xml:space="preserve"><value>Atualizações foram encontradas. Confira cada versão e origem antes de instalar.</value></data>
   <data name="Applications.Updates.Status.Current" xml:space="preserve"><value>Nenhuma atualização foi encontrada para os aplicativos compatíveis.</value></data>
@@ -242,8 +254,8 @@
   <data name="Applications.Updates.BatchConfirm.Message" xml:space="preserve"><value>O Ralven atualizará {0} aplicativos selecionados, um por vez, pelo WinGet. Cada fabricante controla seu instalador, pode solicitar permissão de administrador e não pode ser revertido pelo Ralven. Ao continuar, você aceita os termos dos pacotes e das origens.</value></data>
   <data name="Applications.Updates.BatchConfirm.Cancel" xml:space="preserve"><value>Agora não</value></data>
   <data name="Applications.Updates.BatchConfirm.Action" xml:space="preserve"><value>Atualizar selecionados</value></data>
-  <data name="Applications.Platform.Title" xml:space="preserve"><value>Ações controladas pelo Windows</value></data>
-  <data name="Applications.Platform.Description" xml:space="preserve"><value>Use as telas nativas do Windows para controles completos de aplicativos, inicialização, padrões e histórico da biblioteca da Microsoft Store.</value></data>
+  <data name="Applications.Platform.Title" xml:space="preserve"><value>Mais controles do Windows</value></data>
+  <data name="Applications.Platform.Description" xml:space="preserve"><value>Estas ações abrem as telas nativas responsáveis por configurações que o Ralven apenas consulta ou não gerencia.</value></data>
   <data name="Greeting.Morning.WithName" xml:space="preserve"><value>Bom dia, {0}. O que iremos fazer hoje?</value></data>
   <data name="Greeting.Morning.NoName" xml:space="preserve"><value>Bom dia. O que iremos fazer hoje?</value></data>
   <data name="Greeting.Afternoon.WithName" xml:space="preserve"><value>Boa tarde, {0}. O que iremos fazer hoje?</value></data>
