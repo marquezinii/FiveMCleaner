@@ -9,11 +9,14 @@ namespace Ralven.App.Services;
 
 internal sealed class ProAccessRequiredException(string message) : UnauthorizedAccessException(message);
 
-public enum PcChangeKind { Hardware, Windows, GameMode, BackgroundCapture, LowDiskSpace }
+public enum PcChangeKind { Hardware, Windows, GameMode, BackgroundCapture, LowDiskSpace, PointerAcceleration }
 
 public sealed record PcObservation(
     DateTimeOffset CapturedAt, string HardwareSignature, string WindowsVersion,
-    double FreeDiskGiB, WindowsGamingSettingState GameMode, WindowsGamingSettingState BackgroundCapture);
+    double FreeDiskGiB, WindowsGamingSettingState GameMode, WindowsGamingSettingState BackgroundCapture)
+{
+    public bool? PointerAccelerationEnabled { get; init; }
+}
 
 public sealed record PcChange(DateTimeOffset CapturedAt, PcChangeKind Kind);
 
@@ -39,6 +42,7 @@ public sealed class PersonalWorkspaceService
     private readonly string directory;
     private readonly Func<CancellationToken, Task<bool>> authorizePro;
     private readonly ILocalizationService localization;
+    private readonly IMouseAccelerationInspector mouseAcceleration;
     private readonly bool inMemory;
     private readonly SemaphoreSlim gate = new(1, 1);
     private PersonalWorkspace memory = new();
@@ -48,13 +52,15 @@ public sealed class PersonalWorkspaceService
         Func<CancellationToken, Task<bool>> authorizePro,
         bool inMemory = false,
         string? directory = null,
-        ILocalizationService? localization = null)
+        ILocalizationService? localization = null,
+        IMouseAccelerationInspector? mouseAcceleration = null)
     {
         this.authorizePro = authorizePro;
         this.inMemory = inMemory;
         this.directory = Path.GetFullPath(directory ?? Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ProductIdentity.Name, "Personal"));
         this.localization = localization ?? LocalizationService.Current;
+        this.mouseAcceleration = mouseAcceleration ?? new WindowsMouseAccelerationInspector();
     }
 
     public async Task RequireProAsync(CancellationToken cancellationToken = default)
@@ -75,10 +81,16 @@ public sealed class PersonalWorkspaceService
                 || current.CpuName == localization.GetString("Diagnosis.CpuUnknown"))
                 throw new InvalidOperationException("The hardware identity is incomplete.");
             var gaming = await gamingControls.ReadAsync(cancellationToken).ConfigureAwait(false);
+            var mouse = mouseAcceleration.GetSnapshot();
             var drive = new DriveInfo(Path.GetPathRoot(Environment.SystemDirectory)!);
             return new PcObservation(DateTimeOffset.UtcNow,
                 HardwareProfileSignature.Compute(current.CpuName, current.GpuNames, current.TotalMemoryGiB),
-                current.OsLabel, drive.AvailableFreeSpace / 1024d / 1024 / 1024, gaming.GameMode, gaming.BackgroundCapture);
+                current.OsLabel, drive.AvailableFreeSpace / 1024d / 1024 / 1024, gaming.GameMode, gaming.BackgroundCapture)
+            {
+                PointerAccelerationEnabled = mouse.State == MouseAccelerationInspectionState.Available
+                    ? mouse.AccelerationLevel > 0
+                    : null
+            };
         }, cancellationToken);
 
     public async Task<PersonalWorkspace> LoadAsync(CancellationToken cancellationToken = default)
@@ -191,6 +203,9 @@ public sealed class PersonalWorkspaceService
         if (Known(previous.BackgroundCapture) && Known(current.BackgroundCapture) && previous.BackgroundCapture != current.BackgroundCapture)
             result.Add(new(current.CapturedAt, PcChangeKind.BackgroundCapture));
         if (previous.FreeDiskGiB >= 10 && current.FreeDiskGiB < 10) result.Add(new(current.CapturedAt, PcChangeKind.LowDiskSpace));
+        if (previous.PointerAccelerationEnabled.HasValue && current.PointerAccelerationEnabled.HasValue
+            && previous.PointerAccelerationEnabled != current.PointerAccelerationEnabled)
+            result.Add(new(current.CapturedAt, PcChangeKind.PointerAcceleration));
         return result;
     }
 

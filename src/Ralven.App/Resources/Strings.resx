@@ -1037,6 +1037,12 @@
   <data name="Actions.windows.appearance.menu-show-delay.reduce.ConfirmationSummary" xml:space="preserve"><value>Reads the setting again and confirms that the delay matches the applied target.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.UndoSummary" xml:space="preserve"><value>Fully reversible: rollback restores the previous menu opening delay.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.RiskLimitations" xml:space="preserve"><value>Changes how quickly Windows menus open; the perceived effect can vary by PC and usage.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.Name" xml:space="preserve"><value>Use consistent pointer response</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.Description" xml:space="preserve"><value>Disables Windows pointer acceleration without changing the speed selected by the user.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.DetectionSummary" xml:space="preserve"><value>Reads the acceleration thresholds and level through the Windows SystemParametersInfo API.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.ConfirmationSummary" xml:space="preserve"><value>Reads the settings again and confirms that both thresholds and the acceleration level are zero.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.UndoSummary" xml:space="preserve"><value>Fully reversible: restores all three previous values without changing pointer speed.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.RiskLimitations" xml:space="preserve"><value>Changes mouse feel on the desktop; games using Raw Input may ignore this setting.</value></data>
   <data name="Runtime.ApplyingAction" xml:space="preserve"><value>Applying {0}</value></data>
   <data name="Runtime.ActionCompleted" xml:space="preserve"><value>Completed: {0}</value></data>
   <data name="Runtime.ValidatingTransaction" xml:space="preserve"><value>Validating transaction {0}.</value></data>
@@ -1557,6 +1563,9 @@
   <data name="ActionResults.MouseAcceleration.Inactive" xml:space="preserve"><value>Windows pointer acceleration is disabled (thresholds {0}/{1}).</value></data>
   <data name="ActionResults.MenuShowDelay.AlreadyOptimized" xml:space="preserve"><value>Windows menu opening delay was already optimized.</value></data>
   <data name="ActionResults.MenuShowDelay.Applied" xml:space="preserve"><value>Windows menu opening responsiveness was adjusted.</value></data>
+  <data name="ActionResults.PointerResponse.Unavailable" xml:space="preserve"><value>Windows pointer settings could not be queried, so no change was made.</value></data>
+  <data name="ActionResults.PointerResponse.AlreadyConsistent" xml:space="preserve"><value>Windows pointer acceleration was already disabled.</value></data>
+  <data name="ActionResults.PointerResponse.Applied" xml:space="preserve"><value>Windows pointer acceleration was disabled. Pointer speed was preserved.</value></data>
   <data name="Ultra.Name" xml:space="preserve"><value>Ultra</value></data>
   <data name="Ultra.Exclusive" xml:space="preserve"><value>Exclusive to Pro users</value></data>
   <data name="Ultra.Description" xml:space="preserve"><value>A Windows plan shaped by your routine and preferences, with local change tracking and guided comparisons.</value></data>
@@ -1571,15 +1580,23 @@
   <data name="Ultra.Usage.Gaming.Detail" xml:space="preserve"><value>Include Windows Game Mode and choose whether to preserve clips and desktop effects. The final plan shows each adjustment.</value></data>
   <data name="Ultra.Usage.Streaming.Detail" xml:space="preserve"><value>Keep Windows background recording by default. Ralven never closes OBS, Streamlabs or your work apps.</value></data>
   <data name="Ultra.Usage.Work.Detail" xml:space="preserve"><value>Keep desktop appearance and recording. Game Mode is left alone; business software, startup entries and services are not changed.</value></data>
+  <data name="Ultra.Smart.Title" xml:space="preserve"><value>Smart plan</value></data>
+  <data name="Ultra.Smart.NeedsDiagnosis" xml:space="preserve"><value>Run a PC diagnosis to adapt this routine to the current hardware and workload.</value></data>
+  <data name="Ultra.Smart.HighPressure" xml:space="preserve"><value>High resource pressure was detected. The recommendation reduces desktop effects while preserving apps, services and security.</value></data>
+  <data name="Ultra.Smart.StreamingDetected" xml:space="preserve"><value>Streaming software was detected. The recommendation preserves recording while adapting power and input to this routine.</value></data>
+  <data name="Ultra.Smart.Ready" xml:space="preserve"><value>The recommendation adapts background capture, plugged-in power and pointer response to this routine.</value></data>
+  <data name="Ultra.Smart.Apply" xml:space="preserve"><value>Build recommendation for this PC</value></data>
+  <data name="Ultra.Smart.Applied" xml:space="preserve"><value>Recommendation built. Review the selected options and the final action preview.</value></data>
   <data name="Ultra.PreserveAppearance" xml:space="preserve"><value>Preserve Windows animations and appearance</value></data>
   <data name="Ultra.PreserveCapture" xml:space="preserve"><value>Preserve Windows background recording</value></data>
   <data name="Ultra.AllowPower" xml:space="preserve"><value>Allow more power use while plugged in</value></data>
   <data name="Ultra.CleanTemp" xml:space="preserve"><value>Remove temporary files older than 30 days</value></data>
+  <data name="Ultra.ConsistentPointer" xml:space="preserve"><value>Use consistent pointer response (disable Windows acceleration)</value></data>
   <data name="Ultra.Preferences.Help" xml:space="preserve"><value>More power can increase heat and fan noise. Temporary-file deletion cannot be undone. Saving a routine does not apply it; review the actions before optimizing.</value></data>
   <data name="Ultra.Profile.Save" xml:space="preserve"><value>Save this routine</value></data>
   <data name="Ultra.Profile.Saved" xml:space="preserve"><value>Routine saved on this PC. No Windows setting was changed.</value></data>
   <data name="Ultra.Tracking.Title" xml:space="preserve"><value>Follow changes on this PC</value></data>
-  <data name="Ultra.Tracking.Help" xml:space="preserve"><value>Opt-in, local readings every 15 minutes while Ralven is open, plus new diagnoses. Tracks Game Mode, background recording and low disk space. Hardware and Windows identity refresh with a new diagnosis. No setting is reapplied automatically.</value></data>
+  <data name="Ultra.Tracking.Help" xml:space="preserve"><value>Opt-in, local readings every 15 minutes while Ralven is open, plus new diagnoses. Tracks Game Mode, background recording, pointer acceleration and low disk space. Hardware and Windows identity refresh with a new diagnosis. No setting is reapplied automatically.</value></data>
   <data name="Ultra.Tracking.Empty" xml:space="preserve"><value>No reference saved yet. Choose the current PC state to start.</value></data>
   <data name="Ultra.Tracking.Active" xml:space="preserve"><value>Tracking enabled · last reading: {0}</value></data>
   <data name="Ultra.Tracking.Paused" xml:space="preserve"><value>Tracking paused · last saved reading: {0}</value></data>
@@ -1594,6 +1611,7 @@
   <data name="Ultra.Change.GameMode" xml:space="preserve"><value>The Windows Game Mode setting changed.</value></data>
   <data name="Ultra.Change.BackgroundCapture" xml:space="preserve"><value>The Windows background recording setting changed.</value></data>
   <data name="Ultra.Change.LowDiskSpace" xml:space="preserve"><value>Free space on the system drive fell below 10 GB.</value></data>
+  <data name="Ultra.Change.PointerAcceleration" xml:space="preserve"><value>The Windows pointer acceleration setting changed.</value></data>
   <data name="Ultra.Measure.Title" xml:space="preserve"><value>Compare the same activity</value></data>
   <data name="Ultra.Measure.Help" xml:space="preserve"><value>1. Choose a routine and name the task. 2. Run the same activity while collecting 30 samples (about 30 seconds). 3. Repeat under the same conditions after reviewing your plan. Values show resource usage, not FPS or proof of performance gain. Do not compare idle time with a game or render.</value></data>
   <data name="Ultra.Measure.Context" xml:space="preserve"><value>Task name (use the same name to compare)</value></data>

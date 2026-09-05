@@ -109,6 +109,18 @@ public sealed class PersonalWorkspaceTests
     }
 
     [Fact]
+    public void TrackingReportsPointerAccelerationDriftOnlyWhenBothReadingsAreAvailable()
+    {
+        var disabled = Observation with { PointerAccelerationEnabled = false };
+        var enabled = Observation with { PointerAccelerationEnabled = true };
+
+        Assert.Equal(
+            [PcChangeKind.PointerAcceleration],
+            PersonalWorkspaceService.DetectChanges(disabled, enabled).Select(change => change.Kind));
+        Assert.Empty(PersonalWorkspaceService.DetectChanges(disabled, enabled with { PointerAccelerationEnabled = null }));
+    }
+
+    [Fact]
     public void MeasurementsRejectMissingCoverageAndIncompatibleComparisons()
     {
         var snapshots = Enumerable.Range(0, 30).Select(index => new LiveSystemMetricsSnapshot(

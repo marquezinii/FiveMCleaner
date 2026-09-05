@@ -272,8 +272,10 @@ Leve, Médio e Agressivo são seleções versionadas de ações e parâmetros. E
 [Ultra](ultra.md) adiciona preferências pessoais ao plano geral do Windows,
 sem ampliar o enum de perfis. `PersonalOptimizationPolicy` compõe opções
 canônicas; runtime e broker revalidam essa composição. `PersonalWorkspaceService`
-cuida de rotinas, observações e medições locais limitadas, sem novas mutações
-nativas. O acesso Pro é revalidado na entrada dos serviços; histórico e rollback
+cuida de rotinas, observações e medições locais limitadas. A preferência exclusiva
+de resposta consistente do ponteiro seleciona uma ação tipada, verificada e
+reversível por `SystemParametersInfo`; ela não entra em planos gratuitos. O acesso
+Pro é revalidado na entrada dos serviços; histórico e rollback
 não dependem da assinatura.
 
 ```text

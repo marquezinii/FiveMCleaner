@@ -1037,6 +1037,12 @@
   <data name="Actions.windows.appearance.menu-show-delay.reduce.ConfirmationSummary" xml:space="preserve"><value>Relê e confirma que o atraso não ultrapassa 100 ms.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.UndoSummary" xml:space="preserve"><value>Totalmente reversível: o atraso anterior é restaurado no rollback.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.RiskLimitations" xml:space="preserve"><value>Muda somente a velocidade de abertura de menus em cascata; o efeito percebido varia conforme o uso.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.Name" xml:space="preserve"><value>Usar resposta consistente do ponteiro</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.Description" xml:space="preserve"><value>Desativa a aceleração do ponteiro do Windows sem alterar a velocidade escolhida pelo usuário.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.DetectionSummary" xml:space="preserve"><value>Lê os limiares e o nível de aceleração pela API SystemParametersInfo do Windows.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.ConfirmationSummary" xml:space="preserve"><value>Relê e confirma que os limiares e o nível de aceleração ficaram em zero.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.UndoSummary" xml:space="preserve"><value>Totalmente reversível: restaura os três valores anteriores sem alterar a velocidade do ponteiro.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.RiskLimitations" xml:space="preserve"><value>Muda a sensação do mouse no desktop; jogos com Raw Input podem ignorar esta configuração.</value></data>
   <data name="Runtime.ApplyingAction" xml:space="preserve"><value>Aplicando {0}</value></data>
   <data name="Runtime.ActionCompleted" xml:space="preserve"><value>Concluído: {0}</value></data>
   <data name="Runtime.ValidatingTransaction" xml:space="preserve"><value>Validando transação {0}.</value></data>
@@ -1557,6 +1563,9 @@
   <data name="ActionResults.MouseAcceleration.Inactive" xml:space="preserve"><value>A aceleração do ponteiro do Windows está desativada (limiares {0}/{1}).</value></data>
   <data name="ActionResults.MenuShowDelay.AlreadyOptimized" xml:space="preserve"><value>O atraso de abertura dos menus do Windows já estava otimizado.</value></data>
   <data name="ActionResults.MenuShowDelay.Applied" xml:space="preserve"><value>A resposta de abertura dos menus do Windows foi ajustada.</value></data>
+  <data name="ActionResults.PointerResponse.Unavailable" xml:space="preserve"><value>Não foi possível consultar as configurações do ponteiro do Windows; nenhuma mudança foi feita.</value></data>
+  <data name="ActionResults.PointerResponse.AlreadyConsistent" xml:space="preserve"><value>A aceleração do ponteiro do Windows já estava desativada.</value></data>
+  <data name="ActionResults.PointerResponse.Applied" xml:space="preserve"><value>A aceleração do ponteiro do Windows foi desativada. A velocidade escolhida foi preservada.</value></data>
   <data name="Ultra.Name" xml:space="preserve"><value>Ultra</value></data>
   <data name="Ultra.Exclusive" xml:space="preserve"><value>Exclusivo para usuários Pro</value></data>
   <data name="Ultra.Description" xml:space="preserve"><value>Um plano para o Windows conforme sua rotina e preferências, com acompanhamento local e comparações guiadas.</value></data>
@@ -1571,15 +1580,23 @@
   <data name="Ultra.Usage.Gaming.Detail" xml:space="preserve"><value>Inclua o Modo de Jogo do Windows e escolha se preserva clipes e efeitos do desktop. O plano final mostra cada ajuste.</value></data>
   <data name="Ultra.Usage.Streaming.Detail" xml:space="preserve"><value>Preserve a gravação em segundo plano do Windows por padrão. O Ralven nunca fecha OBS, Streamlabs ou seus aplicativos de trabalho.</value></data>
   <data name="Ultra.Usage.Work.Detail" xml:space="preserve"><value>Preserve a aparência e a gravação. O Modo de Jogo fica como está; softwares de trabalho, inicialização e serviços não são alterados.</value></data>
+  <data name="Ultra.Smart.Title" xml:space="preserve"><value>Plano inteligente</value></data>
+  <data name="Ultra.Smart.NeedsDiagnosis" xml:space="preserve"><value>Faça uma análise do PC para adaptar esta rotina ao hardware e à carga atuais.</value></data>
+  <data name="Ultra.Smart.HighPressure" xml:space="preserve"><value>Foi detectada pressão alta de recursos. A recomendação reduz efeitos do desktop e preserva aplicativos, serviços e segurança.</value></data>
+  <data name="Ultra.Smart.StreamingDetected" xml:space="preserve"><value>Foi detectado software de transmissão. A recomendação preserva a gravação e adapta energia e entrada a esta rotina.</value></data>
+  <data name="Ultra.Smart.Ready" xml:space="preserve"><value>A recomendação adapta captura em segundo plano, energia na tomada e resposta do ponteiro a esta rotina.</value></data>
+  <data name="Ultra.Smart.Apply" xml:space="preserve"><value>Montar recomendação para este PC</value></data>
+  <data name="Ultra.Smart.Applied" xml:space="preserve"><value>Recomendação montada. Revise as opções marcadas e a prévia final das ações.</value></data>
   <data name="Ultra.PreserveAppearance" xml:space="preserve"><value>Preservar animações e aparência do Windows</value></data>
   <data name="Ultra.PreserveCapture" xml:space="preserve"><value>Preservar gravação em segundo plano do Windows</value></data>
   <data name="Ultra.AllowPower" xml:space="preserve"><value>Permitir maior consumo na tomada</value></data>
   <data name="Ultra.CleanTemp" xml:space="preserve"><value>Remover temporários com mais de 30 dias</value></data>
+  <data name="Ultra.ConsistentPointer" xml:space="preserve"><value>Usar resposta consistente do ponteiro (desativar aceleração do Windows)</value></data>
   <data name="Ultra.Preferences.Help" xml:space="preserve"><value>Maior consumo pode aumentar calor e ruído. A exclusão de temporários não pode ser desfeita. Salvar uma rotina não a aplica; revise as ações antes de otimizar.</value></data>
   <data name="Ultra.Profile.Save" xml:space="preserve"><value>Salvar esta rotina</value></data>
   <data name="Ultra.Profile.Saved" xml:space="preserve"><value>Rotina salva neste PC. Nenhuma configuração do Windows foi alterada.</value></data>
   <data name="Ultra.Tracking.Title" xml:space="preserve"><value>Acompanhar mudanças deste PC</value></data>
-  <data name="Ultra.Tracking.Help" xml:space="preserve"><value>Leituras locais opcionais a cada 15 minutos com o Ralven aberto e em novas análises. Acompanha Modo de Jogo, gravação em segundo plano e pouco espaço em disco. Hardware e Windows são atualizados em uma nova análise. Nenhum ajuste é reaplicado automaticamente.</value></data>
+  <data name="Ultra.Tracking.Help" xml:space="preserve"><value>Leituras locais opcionais a cada 15 minutos com o Ralven aberto e em novas análises. Acompanha Modo de Jogo, gravação em segundo plano, aceleração do ponteiro e pouco espaço em disco. Hardware e Windows são atualizados em uma nova análise. Nenhum ajuste é reaplicado automaticamente.</value></data>
   <data name="Ultra.Tracking.Empty" xml:space="preserve"><value>Nenhuma referência salva. Escolha o estado atual do PC para começar.</value></data>
   <data name="Ultra.Tracking.Active" xml:space="preserve"><value>Acompanhamento ativo · última leitura: {0}</value></data>
   <data name="Ultra.Tracking.Paused" xml:space="preserve"><value>Acompanhamento pausado · última leitura salva: {0}</value></data>
@@ -1594,6 +1611,7 @@
   <data name="Ultra.Change.GameMode" xml:space="preserve"><value>A configuração do Modo de Jogo do Windows mudou.</value></data>
   <data name="Ultra.Change.BackgroundCapture" xml:space="preserve"><value>A configuração da gravação em segundo plano do Windows mudou.</value></data>
   <data name="Ultra.Change.LowDiskSpace" xml:space="preserve"><value>O espaço livre na unidade do sistema passou abaixo de 10 GB.</value></data>
+  <data name="Ultra.Change.PointerAcceleration" xml:space="preserve"><value>A configuração de aceleração do ponteiro do Windows mudou.</value></data>
   <data name="Ultra.Measure.Title" xml:space="preserve"><value>Comparar a mesma atividade</value></data>
   <data name="Ultra.Measure.Help" xml:space="preserve"><value>1. Escolha uma rotina e dê um nome à tarefa. 2. Execute a mesma atividade durante 30 amostras (cerca de 30 segundos). 3. Repita nas mesmas condições depois de revisar seu plano. Os valores mostram uso de recursos, não FPS nem prova de ganho de desempenho. Não compare repouso com jogo ou renderização.</value></data>
   <data name="Ultra.Measure.Context" xml:space="preserve"><value>Nome da tarefa (repita o nome para comparar)</value></data>

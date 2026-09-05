@@ -38,7 +38,7 @@ public static class PlanBuilder
             .Where(action => action.Supports(request.Profile))
             .Where(action => action.Supports(request.Scope))
             .Where(action => action.SupportsWindows(request.DetectedWindows))
-            .Where(action => IsEnabled(action.OptionGate, request.Options))
+            .Where(action => IsEnabled(action.OptionGate, request.Options, request.PersonalPreferences))
             .ToArray();
 
         var plannedActions = selectedDefinitions
@@ -285,7 +285,10 @@ public static class PlanBuilder
         return notices;
     }
 
-    private static bool IsEnabled(ActionOptionGate gate, OptimizationOptionsDto options)
+    private static bool IsEnabled(
+        ActionOptionGate gate,
+        OptimizationOptionsDto options,
+        PersonalOptimizationPreferencesDto? personalPreferences)
     {
         return gate switch
         {
@@ -314,6 +317,7 @@ public static class PlanBuilder
             ActionOptionGate.ToggleHags => options.ToggleHagsExperiment,
             ActionOptionGate.GuideDriverReinstall => options.GuideDriverReinstall,
             ActionOptionGate.AdjustPciExpressPowerManagement => options.AdjustPciExpressPowerManagement,
+            ActionOptionGate.UseConsistentPointerResponse => personalPreferences?.UseConsistentPointerResponse == true,
             _ => throw new ArgumentOutOfRangeException(nameof(gate), gate, "Unknown option gate value.")
         };
     }

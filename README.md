@@ -49,10 +49,11 @@ Otimizar analisa automaticamente o computador, recomenda Leve, Médio ou Agressi
 | **Leve** | Ajustes suaves, com prioridade para preservar a experiência visual. |
 | **Médio** | Equilíbrio entre qualidade, responsividade e consistência. |
 | **Agressivo** | Reduz efeitos e opções pesadas para máquinas mais limitadas. |
-| **Ultra (Pro)** | Rotinas pessoais do Windows, acompanhamento local de mudanças e medições guiadas da mesma atividade. |
+| **Ultra (Pro)** | Plano inteligente por rotina e diagnóstico, resposta consistente do ponteiro, acompanhamento local de mudanças e medições guiadas. |
 
-Leve, Médio e Agressivo continuam gratuitos. [Ultra](docs/ultra.md) usa ações já
-suportadas conforme suas preferências; não promete ser mais agressivo. Requer
+Leve, Médio e Agressivo continuam gratuitos. [Ultra](docs/ultra.md) adapta ações
+seguras ao uso e ao diagnóstico, com uma preferência exclusiva e reversível para
+o ponteiro; não promete ser mais agressivo. Requer
 acesso Pro confirmado pelo servidor. O checkout público ainda não está ativo.
 
 Perfis são composições de ações conhecidas — não listas genéricas de "tweaks". Manutenção de dados é sempre opt-in; caches protegidos, entitlements, plugins e autenticação nunca são tratados como lixo.

@@ -4,6 +4,27 @@ namespace Ralven.Core.Planning;
 
 public static class PersonalOptimizationPolicy
 {
+    public static PersonalOptimizationPreferencesDto Recommend(
+        PersonalUsage usage,
+        bool highPerformancePressure,
+        bool streamingSoftwareDetected)
+    {
+        if (!Enum.IsDefined(usage))
+        {
+            throw new ArgumentOutOfRangeException(nameof(usage));
+        }
+
+        return new PersonalOptimizationPreferencesDto
+        {
+            Usage = usage,
+            PreserveAppearance = !highPerformancePressure,
+            PreserveBackgroundCapture = usage == PersonalUsage.Streaming || streamingSoftwareDetected,
+            AllowPerformancePower = usage is PersonalUsage.Gaming or PersonalUsage.Streaming,
+            CleanOldTemporaryFiles = false,
+            UseConsistentPointerResponse = usage == PersonalUsage.Gaming
+        };
+    }
+
     public static OptimizationOptionsDto CreateOptions(PersonalOptimizationPreferencesDto preferences)
     {
         ArgumentNullException.ThrowIfNull(preferences);

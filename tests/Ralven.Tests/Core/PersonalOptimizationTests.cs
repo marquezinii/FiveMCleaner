@@ -25,6 +25,7 @@ public sealed class PersonalOptimizationTests
         Assert.False(plan.Options.UseSessionPerformancePowerPlan);
         Assert.False(plan.Options.CleanUserTemporaryFiles);
         Assert.False(plan.Options.AdjustPciExpressPowerManagement);
+        Assert.DoesNotContain(OptimizationActionIds.DisableMouseAcceleration, ids);
         Assert.DoesNotContain(OptimizationActionIds.ApplyAggressiveLegacyGraphics, ids);
         Assert.DoesNotContain(OptimizationActionIds.ApplyAggressiveGtaVGraphics, ids);
         Assert.DoesNotContain(plan.Notices, notice => notice.Code == "aggressive-prioritizes-performance");
@@ -40,7 +41,8 @@ public sealed class PersonalOptimizationTests
             PreserveAppearance = false,
             PreserveBackgroundCapture = false,
             AllowPerformancePower = true,
-            CleanOldTemporaryFiles = true
+            CleanOldTemporaryFiles = true,
+            UseConsistentPointerResponse = true
         });
         var ids = plan.Actions.Select(action => action.Metadata.Id).ToArray();
 
@@ -48,8 +50,38 @@ public sealed class PersonalOptimizationTests
         Assert.Contains(OptimizationActionIds.DisableBackgroundCapture, ids);
         Assert.Contains(OptimizationActionIds.EnableSessionPerformancePowerPlan, ids);
         Assert.Contains(OptimizationActionIds.CleanUserTemporaryFiles, ids);
+        Assert.Contains(OptimizationActionIds.DisableMouseAcceleration, ids);
         Assert.Equal(30, plan.Options.TemporaryFileMinimumAgeDays);
         Assert.False(plan.Options.AdjustPciExpressPowerManagement);
+    }
+
+    [Fact]
+    public void SmartRecommendationAdaptsToRoutinePressureAndStreamingSoftware()
+    {
+        var gaming = PersonalOptimizationPolicy.Recommend(
+            PersonalUsage.Gaming,
+            highPerformancePressure: true,
+            streamingSoftwareDetected: false);
+        Assert.False(gaming.PreserveAppearance);
+        Assert.False(gaming.PreserveBackgroundCapture);
+        Assert.True(gaming.AllowPerformancePower);
+        Assert.True(gaming.UseConsistentPointerResponse);
+        Assert.False(gaming.CleanOldTemporaryFiles);
+
+        var streamingDetected = PersonalOptimizationPolicy.Recommend(
+            PersonalUsage.Gaming,
+            highPerformancePressure: false,
+            streamingSoftwareDetected: true);
+        Assert.True(streamingDetected.PreserveAppearance);
+        Assert.True(streamingDetected.PreserveBackgroundCapture);
+
+        var work = PersonalOptimizationPolicy.Recommend(
+            PersonalUsage.Work,
+            highPerformancePressure: false,
+            streamingSoftwareDetected: false);
+        Assert.False(work.PreserveBackgroundCapture);
+        Assert.False(work.AllowPerformancePower);
+        Assert.False(work.UseConsistentPointerResponse);
     }
 
     [Fact]

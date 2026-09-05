@@ -7,9 +7,10 @@ Leve, Médio e Agressivo continuam gratuitos, incluindo diagnóstico, prévia,
 histórico, comparação básica e rollback. FiveM mantém seu fluxo independente.
 Não há checkout público nem concessão automática de assinatura nesta etapa.
 
-O valor proposto é preservar preferências entre usos do PC, acompanhar mudanças
-locais e repetir uma medição comparável. Ultra não aumenta o limite de risco das
-ações existentes e não promete ganhos universais de desempenho.
+O valor proposto é montar uma recomendação conforme uso, pressão de recursos e
+software de transmissão detectado, preservar preferências entre usos do PC,
+acompanhar mudanças locais e repetir uma medição comparável. Ultra não aumenta o
+limite de risco das ações existentes e não promete ganhos universais de desempenho.
 
 ## Rotinas e preferências
 
@@ -17,16 +18,25 @@ Há quatro rotinas salvas por perfil de usuário do Windows:
 
 | Rotina | Uso atendido | Composição inicial |
 | --- | --- | --- |
-| Dia a dia | Navegador, comunicação e uso doméstico | Preserva aparência e captura; inclui responsividade de menus. |
-| Jogos | Jogadores e entusiastas | Mesmas proteções, com Modo de Jogo do Windows. |
-| Transmissão e gravação | Streamers e criadores | Inclui Modo de Jogo; preserva a gravação histórica do Windows. Não encerra aplicativos. |
-| Trabalho e estudo | Estudantes, profissionais e uso individual em empresas | Mantém Modo de Jogo como está; preserva aparência e captura. |
+| Dia a dia | Navegador, comunicação e uso doméstico | Preserva aparência, desativa captura contínua quando nenhum software de transmissão é detectado e inclui responsividade de menus. |
+| Jogos | Jogadores e entusiastas | Inclui Modo de Jogo, energia de desempenho na tomada e resposta consistente do ponteiro; preserva captura quando detecta software de transmissão. |
+| Transmissão e gravação | Streamers e criadores | Inclui Modo de Jogo e energia de desempenho; preserva a gravação histórica do Windows. Não encerra aplicativos. |
+| Trabalho e estudo | Estudantes, profissionais e uso individual em empresas | Mantém Modo de Jogo como está, preserva aparência e desativa captura contínua quando não foi detectada uma ferramenta de transmissão. |
 
-Cada rotina pode salvar quatro preferências: preservar aparência, preservar
+O plano inteligente usa o diagnóstico atual. Pressão alta de recursos recomenda
+reduzir efeitos visuais; software de transmissão conhecido preserva a captura em
+segundo plano. A recomendação nunca inclui limpeza e fica visível para revisão
+antes da execução.
+
+Cada rotina pode salvar cinco preferências: preservar aparência, preservar
 gravação histórica do Windows, permitir plano de energia de desempenho quando
-conectado à tomada e limpar temporários com pelo menos 30 dias. As duas últimas
-começam desligadas. Salvar não altera o Windows. Aplicar continua exigindo
+conectado à tomada, limpar temporários com pelo menos 30 dias e usar resposta
+consistente do ponteiro. Salvar não altera o Windows. Aplicar continua exigindo
 prévia, confirmação e as condições nativas da ação.
+
+A resposta consistente zera somente os dois limiares e o nível de aceleração por
+`SPI_SETMOUSE`; a velocidade do ponteiro não é alterada. A ação captura e verifica
+o estado anterior para rollback e não promete efeito em jogos que usam Raw Input.
 
 “Preservar” mantém o estado atual; não desfaz uma otimização anterior. A
 restauração continua no Histórico. Limpeza é opt-in e não pode ser desfeita.
@@ -37,7 +47,7 @@ ação disponível também altera parâmetros de bateria.
 
 O usuário ativa explicitamente as leituras. O app guarda uma referência e
 compara cada nova observação com a leitura anterior. Verifica Modo de Jogo,
-gravação histórica e transição para menos de 10 GiB livres na unidade do sistema.
+gravação histórica, aceleração do ponteiro e transição para menos de 10 GiB livres na unidade do sistema.
 Identidade do hardware e versão do Windows são renovadas pelo diagnóstico.
 
 Há leitura após diagnóstico, após otimização e a cada 15 minutos com o app

@@ -20,4 +20,6 @@ public sealed record PersonalOptimizationPreferencesDto
     public bool AllowPerformancePower { get; init; }
 
     public bool CleanOldTemporaryFiles { get; init; }
+
+    public bool UseConsistentPointerResponse { get; init; }
 }

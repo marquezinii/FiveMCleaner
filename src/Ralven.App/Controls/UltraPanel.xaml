@@ -9,6 +9,11 @@
                 <ComboBox ItemsSource="{Binding PersonalUsageLabels}" SelectedIndex="{Binding PersonalUsageIndex, Mode=TwoWay}"
                           AutomationProperties.Name="{Binding [Ultra.Usage.Label], Source={StaticResource LocalizedStrings}}" />
                 <TextBlock Text="{Binding PersonalUsageDetail}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,8,0,14" />
+                <TextBlock Text="{Binding [Ultra.Smart.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}"
+                           Foreground="{DynamicResource ProAccentGradientBrush}" />
+                <TextBlock Text="{Binding PersonalRecommendationSummary}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,8" />
+                <Button Content="{Binding [Ultra.Smart.Apply], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                        Click="ApplyRecommendation_Click" Margin="0,0,0,12" />
                 <CheckBox IsChecked="{Binding PersonalPreserveAppearance, Mode=TwoWay}" Margin="0,4">
                     <TextBlock Text="{Binding [Ultra.PreserveAppearance], Source={StaticResource LocalizedStrings}}" TextWrapping="Wrap" />
                 </CheckBox>
@@ -20,6 +25,9 @@
                 </CheckBox>
                 <CheckBox IsChecked="{Binding PersonalCleanTemporaryFiles, Mode=TwoWay}" Margin="0,4">
                     <TextBlock Text="{Binding [Ultra.CleanTemp], Source={StaticResource LocalizedStrings}}" TextWrapping="Wrap" />
+                </CheckBox>
+                <CheckBox IsChecked="{Binding PersonalUseConsistentPointerResponse, Mode=TwoWay}" Margin="0,4">
+                    <TextBlock Text="{Binding [Ultra.ConsistentPointer], Source={StaticResource LocalizedStrings}}" TextWrapping="Wrap" />
                 </CheckBox>
                 <TextBlock Text="{Binding [Ultra.Preferences.Help], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,10" />
                 <Button Content="{Binding [Ultra.Profile.Save], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"

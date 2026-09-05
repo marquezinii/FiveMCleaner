@@ -156,7 +156,9 @@ Fonte adicional:
 
 **Fato.** `WscGetSecurityProviderHealth` retorna a saúde agregada da categoria
 de proteção solicitada. `SystemParametersInfo` com `SPI_GETMOUSE` retorna os dois
-limiares e o nível de aceleração do ponteiro em um vetor de três inteiros.
+limiares e o nível de aceleração do ponteiro em um vetor de três inteiros;
+`SPI_SETMOUSE` grava esses mesmos três valores. `SPIF_UPDATEINIFILE` persiste a
+mudança e `SPIF_SENDCHANGE` notifica os aplicativos.
 
 Fontes:
 
@@ -165,9 +167,10 @@ Fontes:
 
 **Decisão.** O plano geral consulta as três categorias de proteção separadamente
 e não interpreta falha da Central de Segurança como estado saudável. A leitura
-do mouse é apenas diagnóstico da configuração do usuário: o Ralven não altera
-proteções, Windows Update, velocidade, limiares ou aceleração automaticamente e
-não deduz o caminho de entrada usado por um jogo a partir desse valor.
+do mouse continua disponível como diagnóstico. O Ultra pode, por preferência
+explícita, zerar limiares e aceleração sem alterar a velocidade do ponteiro;
+captura os três valores anteriores, verifica aplicação e rollback e não deduz o
+caminho de entrada usado por um jogo a partir dessa configuração.
 
 ### Responsividade da interface
 

@@ -2,6 +2,7 @@ using System.Collections.ObjectModel;
 using System.Windows.Threading;
 using Ralven.App.Services;
 using Ralven.Contracts;
+using Ralven.Core.Planning;
 
 namespace Ralven.App.ViewModels;
 
@@ -30,6 +31,14 @@ public sealed partial class MainViewModel
     public bool CanStopPersonalTracking => personalWorkspace.TrackingEnabled && CanEditPersonalPreferences;
     public string UltraStatus { get => ultraStatus; private set => SetProperty(ref ultraStatus, value); }
     public string PersonalUsageDetail => localization.GetString($"Ultra.Usage.{personalPreferences.Usage}.Detail");
+    public string PersonalRecommendationSummary => diagnostic switch
+    {
+        null => localization.GetString("Ultra.Smart.NeedsDiagnosis"),
+        { PerformancePressure: PerformancePressureLevel.High } => localization.GetString("Ultra.Smart.HighPressure"),
+        { StreamingSoftware.Applications: var applications } when applications.Any(item => item.IsDetected) =>
+            localization.GetString("Ultra.Smart.StreamingDetected"),
+        _ => localization.GetString("Ultra.Smart.Ready")
+    };
     public string MeasurementContext { get => measurementContext; set => SetProperty(ref measurementContext, value); }
     public IReadOnlyList<string> PersonalUsageLabels => Enum.GetValues<PersonalUsage>()
         .Select(usage => localization.GetString($"Ultra.Usage.{usage}")).ToArray();
@@ -43,7 +52,7 @@ public sealed partial class MainViewModel
         {
             if (refreshingUltra || !CanEditPersonalPreferences || value == (int)personalPreferences.Usage || !Enum.IsDefined((PersonalUsage)value)) return;
             personalPreferences = personalWorkspace.Profiles.FirstOrDefault(profile => profile.Usage == (PersonalUsage)value)
-                ?? new PersonalOptimizationPreferencesDto { Usage = (PersonalUsage)value };
+                ?? RecommendPersonalPreferences((PersonalUsage)value);
             RefreshUltraPresentation();
             RefreshPlan();
         }
@@ -73,6 +82,12 @@ public sealed partial class MainViewModel
         set => UpdatePersonalPreferences(personalPreferences with { CleanOldTemporaryFiles = value });
     }
 
+    public bool PersonalUseConsistentPointerResponse
+    {
+        get => personalPreferences.UseConsistentPointerResponse;
+        set => UpdatePersonalPreferences(personalPreferences with { UseConsistentPointerResponse = value });
+    }
+
     public string PersonalTrackingSummary => personalWorkspace.LastObservation is { } observed
         ? localization.Format(personalWorkspace.TrackingEnabled && hasProAccess ? "Ultra.Tracking.Active" : "Ultra.Tracking.Paused",
             observed.CapturedAt.ToLocalTime().ToString("g", localization.CurrentCulture))
@@ -97,9 +112,14 @@ public sealed partial class MainViewModel
     public void SelectUltra()
     {
         if (!IsGeneralWindowsOptimization || !CanEditPersonalPreferences) return;
+        var enteringUltra = !isUltraSelected;
         isUltraSelected = true;
         selectedProfile = OptimizationProfile.Aggressive;
         profileInitializedFromDiagnostic = true;
+        if (enteringUltra && personalWorkspace.Profiles.All(profile => profile.Usage != personalPreferences.Usage))
+        {
+            personalPreferences = RecommendPersonalPreferences(personalPreferences.Usage);
+        }
         ApplyReport(null);
         RefreshUltraPresentation();
         RefreshPlan();
@@ -119,6 +139,19 @@ public sealed partial class MainViewModel
         RefreshUltraPresentation();
         RefreshPlan();
     }
+
+    public void ApplyPersonalRecommendation()
+    {
+        if (!CanEditPersonalPreferences) return;
+        UpdatePersonalPreferences(RecommendPersonalPreferences(personalPreferences.Usage));
+        UltraStatus = localization.GetString("Ultra.Smart.Applied");
+    }
+
+    private PersonalOptimizationPreferencesDto RecommendPersonalPreferences(PersonalUsage usage) =>
+        PersonalOptimizationPolicy.Recommend(
+            usage,
+            diagnostic?.PerformancePressure == PerformancePressureLevel.High,
+            diagnostic?.StreamingSoftware.Applications.Any(item => item.IsDetected) == true);
 
     private async Task InitializePersonalWorkspaceAsync()
     {
@@ -231,6 +264,7 @@ public sealed partial class MainViewModel
             nameof(CanSavePersonalProfile), nameof(CanUsePersonalTools), nameof(CanCheckPersonalTracking), nameof(CanStopPersonalTracking),
             nameof(PersonalUsageLabels), nameof(PersonalUsageIndex), nameof(PersonalUsageDetail), nameof(PersonalPreserveAppearance),
             nameof(PersonalPreserveCapture), nameof(PersonalAllowPerformancePower), nameof(PersonalCleanTemporaryFiles),
+            nameof(PersonalUseConsistentPointerResponse), nameof(PersonalRecommendationSummary),
             nameof(PersonalTrackingSummary), nameof(PersonalComparisonSummary), nameof(SelectedProfileName),
             nameof(SelectedProfileLabel), nameof(IsSelectedProfileRecommended), nameof(IsLightSelected), nameof(IsBalancedSelected), nameof(IsAggressiveSelected)
         }) OnPropertyChanged(property);
