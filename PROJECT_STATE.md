@@ -7,7 +7,7 @@
 
 - **Produto:** Ralven, aplicativo desktop Windows para otimização transparente, reversível e orientada por diagnóstico do FiveM para **GTAV Legacy**.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
-- **Último estado consolidado:** 05/09/2026, após integrar o plano Ultra e a nova experiência da aba Aplicativos. Confirme o estado real com Git e testes atuais antes de trabalhar.
+- **Último estado consolidado:** 05/09/2026. Confirme o estado real com Git e testes atuais antes de trabalhar.
 - **Release pública atual:** `v1.6.1`, publicada a partir de `main`. A próxima versão só é definida no fluxo oficial de release a partir das mudanças posteriores a essa tag.
 - **Atalho de desenvolvimento:** `Ralven - Desenvolvimento` usa `scripts\Start-DevelopmentApp.ps1`. Conforme `AI_RULES.md`, deve ser reconstruído com `scripts\Install-DevelopmentShortcut.ps1 -Build` quando aplicável. O script espelha a árvore para a pasta irmã fixa `Ralven-dev-shortcut`, sem ficar órfão após a remoção de um worktree.
 
@@ -20,7 +20,7 @@
 - Caches e arquivos sensíveis são tratados por allowlist. Autenticação, `game-storage`, NUI storage, configurações e plugins não são lixo automático.
 - Perfis **Leve, Médio e Agressivo** e o plano pessoal **Ultra** são composições versionadas de ações; nunca uma lista arbitrária de tweaks.
 - Cada ação deve ter escopo conhecido, pré-condições, validação, resultado tipado e rollback quando aplicável.
-- O fluxo padrão é isolado por ação: verificar → aplicar → validar → registrar. Falha normal reverte somente a ação afetada; falha crítica pode abortar o restante. O broker elevado mantém contrato estrito e allowlisted.
+- O fluxo padrão é isolado por ação: verificar → aplicar → validar → registrar. Falha normal reverte somente a ação afetada; falha crítica pode abortar o restante. O broker elevado mantém contrato estrito e allowlisted. Cancelamentos preservam o histórico e os snapshots confirmados; a restauração desfaz a fase administrativa antes da local.
 - Não medir FPS ao vivo dentro do FiveM por overlay/hook. O benchmark implementado é o benchmark **standalone oficial do GTA V**, opt-in e fora de uma sessão FiveM.
 - Dados indisponíveis por limitações do Windows/driver devem aparecer como indisponíveis; nunca estimar ou inventar métricas.
 
@@ -139,7 +139,7 @@ Somente itens ainda relevantes devem permanecer aqui. Quando resolvidos e integr
 
 Estes números são **referência do último estado validado**, não substituem testes da branch atual.
 
-- **05/09/2026 — `dev/proxima-versao` integrada:** restore com auditoria NuGet, build Release sem avisos, **1.341 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1 -SkipTests` e `git diff --check` aprovados. A CI dos trabalhos integrados aprovou .NET, Worker, dashboard e SBOM; nenhuma superfície web foi alterada nesta integração.
+- **05/09/2026 — `dev/proxima-versao` integrada:** restore com auditoria NuGet, build Release sem avisos, **1.369 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1 -SkipTests` e `git diff --check` aprovados. A CI dos trabalhos integrados aprovou .NET, Worker, dashboard e SBOM; nenhuma superfície web foi alterada nesta integração.
 
 ## 7. Comandos essenciais
 
