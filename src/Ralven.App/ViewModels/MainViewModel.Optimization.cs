@@ -46,8 +46,6 @@ public sealed partial class MainViewModel
 
     public string ProfilePresentationImpact { get => profilePresentationImpact; private set => SetProperty(ref profilePresentationImpact, value); }
 
-    public string ProfilePresentationCategories { get => profilePresentationCategories; private set => SetProperty(ref profilePresentationCategories, value); }
-
     public bool IsLightSelected
     {
         get => !IsUltraSelected && selectedProfile == OptimizationProfile.Light;
@@ -97,8 +95,7 @@ public sealed partial class MainViewModel
 
     public string PlanHeader => localization.Format(
         "Plan.ActionsCatalog",
-        SelectedActionCount,
-        currentPlan?.CatalogVersion ?? 1);
+        SelectedActionCount);
 
     public string AutomaticAnalysisHeader => localization.Format(
         "Optimizer.AutomaticAnalysis.Header",
@@ -108,7 +105,7 @@ public sealed partial class MainViewModel
         ? string.Empty
         : currentPlan?.Notices.Count > 0
         ? string.Join("  •  ", currentPlan.Notices.Select(LocalizeNotice))
-        : localization.GetString("Plan.NoAdditionalWarnings");
+        : string.Empty;
 
     public string EmptyPlanMessage => diagnostic is null
         ? localization.GetString(diagnosticFailed
@@ -557,10 +554,6 @@ public sealed partial class MainViewModel
         ProfilePresentationBenefits = localization.GetString(
             $"Profiles.Presentation.{optimizationScope}.{selectedProfile}.Benefits");
         ProfilePresentationImpact = localization.GetString($"Profiles.Presentation.Impact.{presentation.ImpactLevel}");
-        ProfilePresentationCategories = string.Join(
-            "  •  ",
-            presentation.AnalyzedCategories.Select(category =>
-                localization.GetString($"Category.{category}")));
         if (IsUltraSelected)
         {
             ProfilePresentationBenefits = localization.GetString("Ultra.Description");
@@ -602,6 +595,9 @@ public sealed partial class MainViewModel
             : action.Reversibility is ActionReversibility.Irreversible or ActionReversibility.RebuildableData
                 ? localization.GetString("Privilege.PermanentCleanup")
                 : localization.GetString("Privilege.Reversible");
+        var primaryCaution = action.Reversibility is ActionReversibility.Irreversible or ActionReversibility.RebuildableData
+            ? privilege
+            : string.Empty;
         var categoryLabel = action.Category switch
         {
             ActionCategory.Safety => localization.GetString("Category.Safety"),
@@ -636,7 +632,7 @@ public sealed partial class MainViewModel
             risk,
             riskBrushKey,
             privilege,
-            requiresElevation,
+            primaryCaution,
             categoryLabel);
     }
 

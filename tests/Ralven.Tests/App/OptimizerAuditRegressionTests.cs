@@ -142,7 +142,8 @@ public sealed class OptimizerAuditRegressionTests
     public async Task CompletedOptimization_CanReturnToPreparationWithoutLosingProfile()
     {
         var service = new FakeAppOptimizationService(new AppSettings(), false);
-        using var vm = new MainViewModel(service);
+        var localization = new LocalizationService(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+        using var vm = new MainViewModel(service, localization);
         await vm.InitializeAsync();
         vm.SelectProfile(OptimizationProfile.Light);
         var report = OptimizationReportBuilder.Build(new WindowsTransactionJournal
@@ -166,6 +167,9 @@ public sealed class OptimizerAuditRegressionTests
         };
         await vm.StartOptimizationAsync();
         Assert.True(vm.IsReportAvailable);
+        Assert.Equal(localization.GetString("Report.Primary.NoChanges"), vm.ReportSummaryLabel);
+        Assert.Contains("0", vm.ReportDetailSummaryLabel, StringComparison.Ordinal);
+        Assert.Empty(vm.ReportRestartLabel);
         vm.PrepareNewOptimization();
         Assert.True(vm.IsOptimizerIdle);
         Assert.True(vm.CanStart);
