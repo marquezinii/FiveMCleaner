@@ -149,7 +149,8 @@ Para cada nova tarefa normal, o agente deve:
 5. criar a branch da tarefa automaticamente;
 6. criar ou reutilizar um **worktree exclusivo** para essa branch sempre que o
    agente ainda não estiver em um checkout isolado da própria tarefa;
-7. executar alterações, testes e commits somente nesse checkout isolado.
+7. criar ou atualizar `OBJECTIVE.md` na raiz da branch, antes das alterações;
+8. executar alterações, testes e commits somente nesse checkout isolado.
 
 Nunca troque a branch de um checkout que possa estar sendo usado por outro agente
 ou processo. Se um worktree não for tecnicamente possível, preserve o checkout
@@ -227,12 +228,13 @@ Ao terminar uma tarefa, o agente deve automaticamente:
    aplicáveis;
 3. corrigir falhas introduzidas pela própria tarefa;
 4. criar os commits finais profissionais;
-5. quando houver remoto e autenticação disponíveis, enviar **somente a branch da
+5. incluir o `OBJECTIVE.md` atualizado no commit da tarefa;
+6. quando houver remoto e autenticação disponíveis, enviar **somente a branch da
    tarefa** para o remoto;
-6. criar ou atualizar um Pull Request dessa branch para `dev/proxima-versao`;
-7. deixar no PR um resumo objetivo das mudanças, validações executadas,
+7. criar ou atualizar um Pull Request dessa branch para `dev/proxima-versao`;
+8. deixar no PR um resumo objetivo das mudanças, validações executadas,
    limitações/riscos conhecidos e dependências de outros PRs quando existirem;
-8. informar ao usuário o resultado da tarefa, incluindo branch, PR, testes e
+9. informar ao usuário o resultado da tarefa, incluindo branch, PR, testes e
    qualquer limitação relevante.
 
 A criação e atualização desse PR são autorizadas por estas regras e não exigem
@@ -254,6 +256,33 @@ Use título curto e orientado à mudança. O corpo deve conter, quando aplicáve
 
 Não inclua segredos, caminhos locais desnecessários, prompts ou detalhes internos
 da ferramenta/agente.
+
+### `OBJECTIVE.md` obrigatório
+
+Toda tarefa que produzir um commit ou Pull Request deve conter um
+`OBJECTIVE.md` na raiz da sua branch. Ele é o contrato curto da tarefa para
+revisão e integração: não substitui o corpo do PR, o diff ou os testes.
+
+O arquivo deve ser criado no início da tarefa e atualizado antes do PR com, no
+mínimo:
+
+- **Agente**: a IA/ferramenta responsável, por exemplo `Codex`, `Claude Code`,
+  `Cursor` ou `Antigravity`;
+- **Objetivo**: resultado de produto ou engenharia pretendido, em linguagem
+  objetiva;
+- **Escopo**: o que pertence e o que não pertence à tarefa;
+- **Critérios de conclusão**: comportamento, validação ou evidência que deve
+  demonstrar o objetivo;
+- **Resultado entregue**: resumo factual atualizado ao concluir, incluindo
+  limitações reais se existirem.
+
+`OBJECTIVE.md` descreve somente a tarefa atual da branch. Não o transforme em
+changelog, diário de execução, cópia do prompt ou lista de tarefas antigas. A
+identificação da IA é permitida nesse arquivo, mas continua proibida em
+mensagens de commit. O arquivo deve seguir junto no PR para que o objetivo
+declarado possa ser comparado com o diff, os testes e o resultado. O agente
+integrador usa essa comparação para avaliar aderência, escopo e eficiência da
+entrega, sem tratar a autoavaliação do agente como evidência suficiente.
 
 O PR pode conter detalhes de implementação e validação que **não devem ser
 copiados integralmente para `PROJECT_STATE.md`**. O PR é o handoff detalhado; o
@@ -294,7 +323,10 @@ No modo integrador, o agente deve:
    incompletos, falhos ou dependentes de outro trabalho;
 4. determinar uma ordem de integração baseada em dependências, áreas
    sobrepostas e risco;
-5. para cada PR, revisar o diff, testes, contratos afetados e possíveis conflitos
+5. para cada PR, ler primeiro o `OBJECTIVE.md` da branch e comparar seu objetivo,
+   escopo e critérios de conclusão com o diff, os testes e o resultado entregue;
+   avaliar se a solução cumpre esse objetivo com escopo proporcional antes de
+   revisar contratos afetados e possíveis conflitos
    **textuais e lógicos** com a `dev` atual e com os demais PRs;
 6. atualizar a branch do PR com a base atual quando necessário e resolver
    conflitos preservando a intenção válida dos dois lados;
