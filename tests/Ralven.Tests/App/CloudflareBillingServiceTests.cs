@@ -24,7 +24,7 @@ public sealed class CloudflareBillingServiceTests
             requests.Add((request.RequestUri.AbsolutePath, request.Method.Method,
                 request.Content is null ? null : await request.Content.ReadAsStringAsync(Cancellation)));
             return Json(request.RequestUri.AbsolutePath.EndsWith("checkout", StringComparison.Ordinal)
-                ? """{"checkoutUrl":"https://www.mercadopago.com.br/subscriptions/checkout?preapproval_id=fixture"}""" : OfferJson);
+                ? """{"checkoutUrl":"https://asaas.com/checkoutSession/show?id=fixture"}""" : OfferJson);
         })), new Uri("https://example.com/account/profile"));
 
         Assert.Equal(1990, (await service.FetchAsync("fixture-token", Cancellation)).Value!.Offer!.AmountCents);
@@ -40,17 +40,18 @@ public sealed class CloudflareBillingServiceTests
     }
 
     [Theory]
-    [InlineData("http://www.mercadopago.com.br/subscriptions/checkout?id=fixture")]
-    [InlineData("https://www.mercadopago.com.br.attacker.test/subscriptions/checkout")]
-    [InlineData("https://www.mercadopago.com.br@attacker.test/subscriptions/checkout")]
-    [InlineData("https://user@www.mercadopago.com.br/subscriptions/checkout")]
-    [InlineData("https://www.mercadopago.com.br:8443/subscriptions/checkout")]
-    [InlineData("https://www.mercadopago.com.br/redirect?url=https://attacker.test")]
-    [InlineData("https://www.mercadopago.com.br/subscriptions/checkout#token")]
+    [InlineData("http://asaas.com/checkoutSession/show?id=fixture")]
+    [InlineData("https://asaas.com.attacker.test/checkoutSession/show?id=fixture")]
+    [InlineData("https://asaas.com@attacker.test/checkoutSession/show?id=fixture")]
+    [InlineData("https://user@asaas.com/checkoutSession/show?id=fixture")]
+    [InlineData("https://asaas.com:8443/checkoutSession/show?id=fixture")]
+    [InlineData("https://asaas.com/redirect?id=fixture")]
+    [InlineData("https://asaas.com/checkoutSession/show?id=fixture#token")]
     [InlineData("file:///C:/Windows/System32/cmd.exe")]
-    [InlineData("https://www.mercadopago.com.br/subscriptions/checkout")]
-    [InlineData("https://www.mercadopago.com.br/subscriptions/checkout?preapproval_id=a&preapproval_id=b")]
-    [InlineData("https://www.mercadopago.com.br/subscriptions/checkout?preapproval_id=a&%70reapproval_id=b")]
+    [InlineData("https://asaas.com/checkoutSession/show")]
+    [InlineData("https://asaas.com/checkoutSession/show?id=a&id=b")]
+    [InlineData("https://asaas.com/checkoutSession/show?id=a&%69d=b")]
+    [InlineData("https://asaas.com/checkoutSession/show?id=a&next=evil")]
     public async Task CheckoutRejectsNonHostedProviderTargets(string target)
     {
         var service = Create(_ => Json(JsonSerializer.Serialize(new { checkoutUrl = target })));

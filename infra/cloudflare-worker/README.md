@@ -1,12 +1,11 @@
 # Ralven telemetry + dashboard API Worker
 
 **Deployed** at
-`https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`.
+`https://api.vemryx.com`.
 
-The hostname, Cloudflare Worker name, D1 database name/ID and Firebase project
-ID are pre-existing external infrastructure identifiers. They remain unchanged
-until a separately provisioned migration exists; none of them is exposed as
-Ralven product branding in the UI.
+The legacy `workers.dev` route, Cloudflare Worker name, D1 database name/ID and
+Firebase project ID remain as compatibility identifiers until a separately
+provisioned migration exists. Public clients use the Ralven domain above.
 
 This is the Cloudflare Worker + D1 backend for the anonymous telemetry
 pipeline described in [`docs/telemetry.md`](../../docs/telemetry.md) and the
@@ -200,43 +199,40 @@ routes and returns only the current tier, entitlement keys and validity. Missing
 or expired access is a normal `free` response; provider identifiers are never
 returned.
 
-`POST /billing/mercado-pago/webhook` verifies the Mercado Pago signature over
-the signed request envelope, fetches `GET /preapproval/{id}` with a Worker-only
-Access Token, and matches the canonical reference, BRL amount and currency to a
-server-side checkout intent before updating billing state. It never trusts or
-persists the webhook body. Authorized-payment events also fetch the canonical
-invoice and payment: only an approved, unrefunded payment grants its monthly
-period. Mandate authorization alone never grants Pro.
+`POST /billing/asaas/webhook` validates a dedicated `asaas-access-token`,
+deduplicates the event ID, and fetches the canonical payment and subscription
+with a Worker-only API key. Only a `CONFIRMED` or `RECEIVED` card payment
+linked to the server checkout, without completed refund or chargeback, grants
+its monthly period. Checkout or subscription status alone never grants Pro.
 Both required credentials are Worker secrets:
 
 ```bash
-wrangler secret put MERCADO_PAGO_ACCESS_TOKEN
-wrangler secret put MERCADO_PAGO_WEBHOOK_SECRET
+wrangler secret put ASAAS_ACCESS_TOKEN
+wrangler secret put ASAAS_WEBHOOK_TOKEN
 ```
 
 `GET /account/billing`, `POST /account/billing/checkout` (`{ offerKey }`) and
 `POST /account/billing/cancel` (`{}`) use Firebase authentication. Offers include
 their price in the key to prevent stale consent from accepting another price.
-Checkout creation is serialized by a durable intent; ambiguous provider results
-are recovered by the exact opaque reference and never blindly recreated.
-Cancellation is read back from the provider, preserves already paid access and
-permits account deletion only after every mandate is confirmed cancelled.
+Checkout creation is serialized by a durable intent. Because Asaas Checkout
+does not document an idempotency key, an ambiguous create is never retried.
+Cancellation stops the checkout or subscription, preserves already paid access
+and permits account deletion only after the provider accepts it.
 
 Apply migrations through `0009_billing_checkout_payments.sql` with this code.
-`MERCADO_PAGO_BILLING_ENABLED` remains `false` in the committed configuration;
-activation requires the two secrets, `MERCADO_PAGO_RETURN_URL` (HTTPS),
-`MERCADO_PAGO_AMOUNT_CENTS` (default 1990, monthly BRL), and the required
+`ASAAS_BILLING_ENABLED` remains `false` in the committed configuration;
+activation requires the two secrets, `ASAAS_RETURN_URL` (HTTPS),
+`ASAAS_ENVIRONMENT`, `ASAAS_AMOUNT_CENTS` (default 1990, monthly BRL), and the required
 `BILLING_WRITE_LIMITER` / `BILLING_READ_LIMITER` bindings. Account refresh
-reconciles relevant invoices, recovering missed notifications. Configure the public webhook URL and the
-`subscription_preapproval`, `subscription_authorized_payment`, `payment` topics
-in the Mercado Pago application dashboard. Do not assume a per-mandate
-`notification_url` is supported. Complete the sandbox and commercial-readiness
+reconciles payments linked to the checkout, recovering missed notifications.
+Configure Checkout, subscription and payment events in the Asaas dashboard.
+Complete the sandbox and commercial-readiness
 steps in [`docs/billing.md`](../../docs/billing.md) before enabling sales.
 
 The Worker itself serves a script-free, query-independent return page at
 `GET /billing/return`. After deploying this code, use
-`https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/billing/return`
-as `MERCADO_PAGO_RETURN_URL`. It directs the user back to Ralven Pro and
+`https://api.vemryx.com/billing/return`
+as `ASAAS_RETURN_URL`. It directs the user back to Ralven Pro and
 **Atualizar assinatura**, makes no approval claim, and uses CSP with a style
 nonce, `no-store`, `no-referrer` and frame protection.
 
@@ -263,10 +259,10 @@ npm run hash-admin-password       # prints the ADMIN_PASSWORD_HASH value
 wrangler secret put ADMIN_PASSWORD_HASH
 wrangler secret put IP_HASH_SECRET   # any long random string
 wrangler secret put ADMIN_CSRF_SECRET # distinct long random string
-wrangler secret put MERCADO_PAGO_ACCESS_TOKEN
-wrangler secret put MERCADO_PAGO_WEBHOOK_SECRET
+wrangler secret put ASAAS_ACCESS_TOKEN
+wrangler secret put ASAAS_WEBHOOK_TOKEN
 
-wrangler d1 migrations apply fivemcleaner-telemetry --remote   # captures a D1 backup; touches the real database — ask first
+wrangler d1 migrations apply TELEMETRY_DB --remote   # captures a D1 backup; touches the real database — ask first
 wrangler deploy   # touches Cloudflare — ask first
 ```
 

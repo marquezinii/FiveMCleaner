@@ -17,9 +17,8 @@ import {
 } from './charts.js';
 import { drawBarChart, drawDonutChart, drawLineChart, DONUT_COLORS, CHART_COLORS } from './rendering.js';
 
-// The dashboard (Cloudflare Pages) and the Worker are deliberately two
-// separate origins -- no custom domain/routing was set up to make them
-// share one, so the deployed Worker's own workers.dev URL is the default.
+// The dashboard (Cloudflare Pages) and the API are deliberately separate
+// origins, so location.origin would point at the dashboard instead of the API.
 // Override via `?api=https://...` only for local testing against a
 // `wrangler dev` instance running on a different port.
 //
@@ -28,9 +27,7 @@ import { drawBarChart, drawDonutChart, drawLineChart, DONUT_COLORS, CHART_COLORS
 // form POSTs the admin password there. So it is honored only when the
 // dashboard itself is served from localhost -- a production host always
 // talks to the real Worker and ignores any `?api=`.
-// This hostname is the immutable identifier of the already-deployed Worker;
-// it is not a user-facing product name.
-const DEFAULT_API_BASE = 'https://fivemcleaner-telemetry.felipemarquesini10.workers.dev';
+const DEFAULT_API_BASE = 'https://api.vemryx.com';
 const API_BASE = resolveApiBase(DEFAULT_API_BASE, location.hostname, new URLSearchParams(location.search));
 
 const CHART_DEFINITIONS = [

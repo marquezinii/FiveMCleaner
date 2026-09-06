@@ -123,22 +123,22 @@ const workerSchemaSmoke = `
     (id, account_uid, provider, external_reference, offer_key, amount_cents, currency,
      provider_checkout_id, state, created_at, updated_at)
   VALUES
-    ('checkout-1', 'test-user', 'mercado_pago', 'opaque-checkout-1', 'ralven_pro_monthly',
+    ('checkout-1', 'test-user', 'asaas', 'opaque-checkout-1', 'ralven_pro_monthly',
      1490, 'BRL', 'provider-checkout-1', 'completed', '2026-01-01T00:00:00.000Z',
      '2026-01-01T00:01:00.000Z');
   INSERT INTO billing_webhook_events
     (provider, provider_request_id, resource_id, received_at,
      processing_outcome, processed_at)
   VALUES
-    ('mercado_pago', 'request-1', 'provider-subscription-1',
+    ('asaas', 'request-1', 'provider-subscription-1',
      '2026-01-01T00:01:01.000Z', 'processed', '2026-01-01T00:01:02.000Z');
   INSERT INTO billing_subscriptions
     (id, account_uid, checkout_intent_id, provider, provider_subscription_id,
      offer_key, state, provider_updated_at, last_event_id, created_at, updated_at)
   VALUES
-    ('subscription-1', 'test-user', 'checkout-1', 'mercado_pago', 'provider-subscription-1',
+    ('subscription-1', 'test-user', 'checkout-1', 'asaas', 'provider-subscription-1',
      'ralven_pro_monthly', 'authorized', '2026-01-01T00:01:00.000Z',
-     (SELECT id FROM billing_webhook_events WHERE provider = 'mercado_pago' AND provider_request_id = 'request-1'),
+     (SELECT id FROM billing_webhook_events WHERE provider = 'asaas' AND provider_request_id = 'request-1'),
      '2026-01-01T00:00:00.000Z', '2026-01-01T00:01:02.000Z');
   INSERT INTO account_entitlements
     (account_uid, entitlement_key, state, subscription_id, valid_from, valid_until,
@@ -146,7 +146,7 @@ const workerSchemaSmoke = `
   VALUES
     ('test-user', 'ralven_pro', 'active', 'subscription-1', '2026-01-01T00:00:00.000Z',
      '2026-02-01T00:00:00.000Z', '2026-01-01T00:01:00.000Z',
-     (SELECT id FROM billing_webhook_events WHERE provider = 'mercado_pago' AND provider_request_id = 'request-1'),
+     (SELECT id FROM billing_webhook_events WHERE provider = 'asaas' AND provider_request_id = 'request-1'),
      '2026-01-01T00:01:02.000Z');
   SELECT message, active, updated_at FROM live_alert WHERE id = 1;
   SELECT username, first_name, last_name, terms_version FROM account_profiles WHERE uid = 'test-user';
@@ -208,39 +208,39 @@ test('billing migration enforces ownership, deduplicates events, and cascades ac
       (id, account_uid, provider, external_reference, offer_key, amount_cents, currency,
        state, created_at, updated_at)
     VALUES
-      ('checkout-valid', 'billing-user', 'mercado_pago', 'opaque-valid',
+      ('checkout-valid', 'billing-user', 'asaas', 'opaque-valid',
        'ralven_pro_monthly', 1490, 'BRL', 'pending',
        '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
     INSERT OR IGNORE INTO billing_checkout_intents
       (id, account_uid, provider, external_reference, offer_key, amount_cents, currency,
        state, created_at, updated_at)
     VALUES
-      ('checkout-replay', 'billing-user', 'mercado_pago', 'opaque-valid',
+      ('checkout-replay', 'billing-user', 'asaas', 'opaque-valid',
        'ralven_pro_monthly', 1490, 'BRL', 'pending',
        '2026-01-01T00:00:01.000Z', '2026-01-01T00:00:01.000Z'),
-      ('checkout-invalid-state', 'billing-user', 'mercado_pago', 'opaque-invalid',
+      ('checkout-invalid-state', 'billing-user', 'asaas', 'opaque-invalid',
        'ralven_pro_monthly', 1490, 'BRL', 'unknown',
        '2026-01-01T00:00:01.000Z', '2026-01-01T00:00:01.000Z');
     INSERT INTO billing_webhook_events
       (provider, provider_request_id, resource_id, received_at)
     VALUES
-      ('mercado_pago', 'request-late', 'provider-subscription-1',
+      ('asaas', 'request-late', 'provider-subscription-1',
        '2026-01-01T00:02:02.000Z'),
-      ('mercado_pago', 'request-early', 'provider-subscription-1',
+      ('asaas', 'request-early', 'provider-subscription-1',
        '2026-01-01T00:02:01.000Z');
     INSERT OR IGNORE INTO billing_webhook_events
       (provider, provider_request_id, resource_id, received_at)
     VALUES
-      ('mercado_pago', 'request-late', 'different-resource',
+      ('asaas', 'request-late', 'different-resource',
        '2026-01-01T00:03:00.000Z');
     INSERT INTO billing_subscriptions
       (id, account_uid, checkout_intent_id, provider, provider_subscription_id,
        offer_key, state, provider_updated_at, last_event_id, created_at, updated_at)
     VALUES
-      ('subscription-valid', 'billing-user', 'checkout-valid', 'mercado_pago',
+      ('subscription-valid', 'billing-user', 'checkout-valid', 'asaas',
        'provider-subscription-1', 'ralven_pro_monthly', 'authorized',
        '2026-01-01T00:02:00.000Z',
-       (SELECT id FROM billing_webhook_events WHERE provider = 'mercado_pago' AND provider_request_id = 'request-late'),
+       (SELECT id FROM billing_webhook_events WHERE provider = 'asaas' AND provider_request_id = 'request-late'),
        '2026-01-01T00:00:00.000Z', '2026-01-01T00:02:02.000Z');
     INSERT INTO account_entitlements
       (account_uid, entitlement_key, state, subscription_id, valid_from, valid_until,
@@ -249,11 +249,11 @@ test('billing migration enforces ownership, deduplicates events, and cascades ac
       ('billing-user', 'ralven_pro', 'active', 'subscription-valid',
        '2026-01-01T00:00:00.000Z', '2026-02-01T00:00:00.000Z',
        '2026-01-01T00:02:00.000Z',
-       (SELECT id FROM billing_webhook_events WHERE provider = 'mercado_pago' AND provider_request_id = 'request-late'),
+       (SELECT id FROM billing_webhook_events WHERE provider = 'asaas' AND provider_request_id = 'request-late'),
        '2026-01-01T00:02:02.000Z');
     SELECT id FROM billing_checkout_intents ORDER BY id;
     SELECT provider_request_id FROM billing_webhook_events
-      WHERE provider = 'mercado_pago' AND resource_id = 'provider-subscription-1'
+      WHERE provider = 'asaas' AND resource_id = 'provider-subscription-1'
       ORDER BY received_at, id;
     SELECT name FROM sqlite_master
       WHERE type = 'index' AND name IN (
@@ -278,7 +278,7 @@ test('billing migration enforces ownership, deduplicates events, and cascades ac
       (id, account_uid, checkout_intent_id, provider, provider_subscription_id,
        offer_key, state, provider_updated_at, created_at, updated_at)
     VALUES
-      ('subscription-cross-account', 'billing-other', 'checkout-valid', 'mercado_pago',
+      ('subscription-cross-account', 'billing-other', 'checkout-valid', 'asaas',
        'provider-subscription-cross', 'ralven_pro_monthly', 'authorized',
        '2026-01-01T00:03:00.000Z', '2026-01-01T00:03:00.000Z',
        '2026-01-01T00:03:00.000Z');
@@ -305,7 +305,7 @@ test('billing migration enforces ownership, deduplicates events, and cascades ac
       (SELECT COUNT(*) FROM billing_checkout_intents WHERE account_uid = 'billing-user') AS checkout_count,
       (SELECT COUNT(*) FROM billing_subscriptions WHERE account_uid = 'billing-user') AS subscription_count,
       (SELECT COUNT(*) FROM account_entitlements WHERE account_uid = 'billing-user') AS entitlement_count,
-      (SELECT COUNT(*) FROM billing_webhook_events WHERE provider = 'mercado_pago') AS webhook_count;
+      (SELECT COUNT(*) FROM billing_webhook_events WHERE provider = 'asaas') AS webhook_count;
   `);
   assert.deepEqual(deletion.at(-1).results, [{
     checkout_count: 0,

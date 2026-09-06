@@ -19,7 +19,7 @@ if ($config.environment -ne 'Production') {
 $telemetryEndpoint = $null
 if (-not [Uri]::TryCreate($config.telemetryEndpoint, [UriKind]::Absolute, [ref]$telemetryEndpoint) -or
     $telemetryEndpoint.AbsoluteUri -ne
-        'https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry') {
+        'https://api.vemryx.com/telemetry') {
     throw 'Production telemetry endpoint is not allowlisted.'
 }
 
@@ -36,7 +36,7 @@ function Invoke-RemoteD1Json([string]$Sql) {
     Push-Location $WorkerDirectory
     try {
         $singleLineSql = ($Sql -replace '[\r\n]+', ' ').Trim()
-        $output = npx.cmd wrangler d1 execute fivemcleaner-telemetry `
+        $output = npx.cmd wrangler d1 execute TELEMETRY_DB `
             --remote --command $singleLineSql --json
         if ($LASTEXITCODE -ne 0) {
             throw 'Remote D1 command failed.'
@@ -52,7 +52,7 @@ function Invoke-RemoteD1([string]$Sql) {
     Push-Location $WorkerDirectory
     try {
         $singleLineSql = ($Sql -replace '[\r\n]+', ' ').Trim()
-        npx.cmd wrangler d1 execute fivemcleaner-telemetry `
+        npx.cmd wrangler d1 execute TELEMETRY_DB `
             --remote --command $singleLineSql | Out-Null
         if ($LASTEXITCODE -ne 0) {
             throw 'Remote D1 command failed.'

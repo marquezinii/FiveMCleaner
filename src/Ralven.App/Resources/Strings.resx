@@ -1681,22 +1681,22 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Pro.SignIn.Description" xml:space="preserve"><value>Sign in to see the current offer and manage the subscription linked to your Ralven account.</value></data>
   <data name="Pro.Unavailable.Description" xml:space="preserve"><value>Check your connection and try refreshing. Your Free tools and saved history remain available.</value></data>
   <data name="Pro.Cancelled.Description" xml:space="preserve"><value>Future renewals are stopped. Any confirmed paid period stays available until its end date.</value></data>
-  <data name="Pro.Pending.Description" xml:space="preserve"><value>Access starts after Mercado Pago confirms an approved charge. Returning from checkout alone does not activate Pro.</value></data>
+  <data name="Pro.Pending.Description" xml:space="preserve"><value>Access starts after Asaas confirms an approved charge. Returning from checkout alone does not activate Pro.</value></data>
   <data name="Pro.SalesUnavailable.Description" xml:space="preserve"><value>Subscriptions are not available for purchase right now. Explore the workspace and keep using Free.</value></data>
-  <data name="Pro.Status.Description" xml:space="preserve"><value>Manage your subscription here. Checkout and recurring charges are handled securely by Mercado Pago.</value></data>
+  <data name="Pro.Status.Description" xml:space="preserve"><value>Manage your subscription here. Checkout and recurring charges are handled securely by Asaas.</value></data>
   <data name="Pro.AccessUntil" xml:space="preserve"><value>Paid access until {0}</value></data>
   <data name="Pro.RenewsAt" xml:space="preserve"><value>Next expected renewal: {0}</value></data>
   <data name="Pro.Loading" xml:space="preserve"><value>Checking subscription</value></data>
   <data name="Pro.SignIn" xml:space="preserve"><value>Sign in to see plans</value></data>
   <data name="Pro.Checkout.Consent" xml:space="preserve"><value>I understand the recurring charge of {0} per month and that I can cancel future renewals here.</value></data>
-  <data name="Pro.Checkout" xml:space="preserve"><value>Continue to Mercado Pago</value></data>
-  <data name="Pro.Checkout.Security" xml:space="preserve"><value>Your browser opens Mercado Pago. Ralven never receives your card details.</value></data>
+  <data name="Pro.Checkout" xml:space="preserve"><value>Continue to Asaas</value></data>
+  <data name="Pro.Checkout.Security" xml:space="preserve"><value>Your browser opens Asaas. Ralven never receives your card details.</value></data>
   <data name="Pro.Checkout.Opened" xml:space="preserve"><value>Checkout opened in your browser. Complete it there, then refresh to check confirmation. Do not pay again if the confirmation is still pending.</value></data>
   <data name="Pro.Refresh" xml:space="preserve"><value>Refresh subscription</value></data>
   <data name="Pro.Cancel" xml:space="preserve"><value>Cancel renewal</value></data>
   <data name="Pro.Manage" xml:space="preserve"><value>Plans and subscription</value></data>
   <data name="Pro.Cancel.Title" xml:space="preserve"><value>Cancel future renewals?</value></data>
-  <data name="Pro.Cancel.Message" xml:space="preserve"><value>Mercado Pago will stop future recurring charges. Your confirmed paid access remains until its end date. Cancelling does not refund past charges. Your local history and restore options remain available.</value></data>
+  <data name="Pro.Cancel.Message" xml:space="preserve"><value>Asaas will stop future recurring charges. Your confirmed paid access remains until its end date. Cancelling does not refund past charges. Your local history and restore options remain available.</value></data>
   <data name="Pro.Cancel.Keep" xml:space="preserve"><value>Keep subscription</value></data>
   <data name="Pro.Cancel.Confirm" xml:space="preserve"><value>Cancel renewal</value></data>
   <data name="Pro.Cancel.Success" xml:space="preserve"><value>Cancellation confirmed. No new renewals will be requested for this subscription.</value></data>
@@ -1739,5 +1739,5 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Personal.Export.Filter" xml:space="preserve"><value>Text report (*.txt)|*.txt</value></data>
   <data name="Personal.Export.Saved" xml:space="preserve"><value>Personal history exported. Review the file before sharing.</value></data>
   <data name="Personal.Export.Failed" xml:space="preserve"><value>Could not export the history. Check the selected location and try again.</value></data>
-  <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>Your verified email is sent to Mercado Pago to create the subscription. Ralven stores billing references, amounts, statuses and dates; never card details. Any refund, including a partial refund, removes access for the related paid period.</value></data>
+  <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>You enter the payer information on the secure Asaas page. Ralven stores billing references, amounts, statuses and dates; never card details. Any completed refund, including a partial refund, removes access for the related paid period.</value></data>
 </root>

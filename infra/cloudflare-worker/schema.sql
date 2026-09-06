@@ -159,6 +159,7 @@ CREATE TABLE IF NOT EXISTS billing_checkout_intents (
     amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
     currency TEXT NOT NULL CHECK (currency = 'BRL'),
     provider_checkout_id TEXT CHECK (provider_checkout_id IS NULL OR length(provider_checkout_id) BETWEEN 1 AND 128),
+    create_attempt_started_at TEXT,
     state TEXT NOT NULL CHECK (state IN ('created', 'pending', 'completed', 'cancelled')),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
@@ -169,10 +170,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_checkout_intents_provider_checkout
     ON billing_checkout_intents (provider, provider_checkout_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_checkout_intents_account_contract
     ON billing_checkout_intents (id, account_uid, provider, offer_key);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_one_open_checkout
+    ON billing_checkout_intents(account_uid) WHERE state <> 'cancelled';
 
--- Mercado Pago signs the request ID and resource ID, not the webhook body.
--- Persist only that signed envelope plus internal processing
--- state; resource details must be fetched from the provider before any grant.
+-- Persist only the authenticated event envelope plus internal processing
+-- state. Resource details are fetched from the provider before any grant.
 CREATE TABLE IF NOT EXISTS billing_webhook_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     provider TEXT NOT NULL CHECK (length(provider) BETWEEN 1 AND 32),
@@ -211,6 +213,22 @@ CREATE TABLE IF NOT EXISTS billing_subscriptions (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_subscriptions_account_contract
     ON billing_subscriptions (id, account_uid);
+
+CREATE TABLE IF NOT EXISTS billing_payments (
+    provider_payment_id TEXT PRIMARY KEY NOT NULL,
+    subscription_id TEXT NOT NULL REFERENCES billing_subscriptions(id) ON DELETE CASCADE,
+    state TEXT NOT NULL CHECK(state IN ('approved', 'pending', 'rejected', 'refunded', 'cancelled', 'charged_back')),
+    amount_cents INTEGER NOT NULL CHECK(amount_cents > 0),
+    refunded_cents INTEGER NOT NULL CHECK(refunded_cents >= 0),
+    currency TEXT NOT NULL CHECK(currency = 'BRL'),
+    period_start TEXT NOT NULL,
+    period_end TEXT NOT NULL CHECK(period_end > period_start),
+    provider_updated_at TEXT NOT NULL,
+    last_event_id INTEGER NOT NULL REFERENCES billing_webhook_events(id),
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_billing_payment_subscription_period
+    ON billing_payments(subscription_id, period_start, period_end);
 
 -- This is the server-authoritative access snapshot read by the app. Paid
 -- access is always time-bounded and traceable to a normalized subscription

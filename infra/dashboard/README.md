@@ -78,12 +78,10 @@ npx wrangler pages project create ralven-dashboard --production-branch=productio
 npx wrangler pages deploy . --project-name=ralven-dashboard --branch=production
 ```
 
-`assets/app.js` hardcodes the Worker's `workers.dev` URL as the default API
-base (no custom domain connects the two, so `location.origin` would point
-at the dashboard's own, wrong origin) — update that constant first if the
-Worker is ever redeployed under a different URL. The Pages project name and
-Worker hostname are retained external infrastructure identifiers, not public
-brand names. The Ralven-only dashboard's target address is
+`assets/app.js` usa `https://api.vemryx.com` como API padrão; `location.origin`
+continua sendo o endereço do próprio dashboard. O nome do projeto Pages e os
+identificadores legados do Worker são mantidos somente por compatibilidade com
+clientes já publicados. O endereço do dashboard do Ralven é
 `https://ralven-dashboard.pages.dev`. During the cutover, the previous
 `dashboard.vemryx.com` and `fivemcleaner-dashboard.pages.dev` origins remain in
 the Worker CORS allowlist so existing sessions and bookmarks do not break before

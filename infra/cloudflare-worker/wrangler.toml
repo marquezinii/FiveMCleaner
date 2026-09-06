@@ -15,7 +15,7 @@
 ## real benefit here, since D1 already distinguishes rows by that column;
 ## they were removed. `wrangler deploy` (no --env) is what is actually live
 ## at:
-##   https://fivemcleaner-telemetry.felipemarquesini10.workers.dev
+##   https://api.vemryx.com
 ##
 ## The .NET client is fully wired to send both anonymous telemetry
 ## (`POST /telemetry`) and bug reports (`POST /bugs`) to this Worker.
@@ -32,9 +32,10 @@
 ##                          brute-force tracking from storing a raw IP
 ##   ADMIN_CSRF_SECRET   -- a distinct long random string for session-bound
 ##                          CSRF tokens
-##   MERCADO_PAGO_ACCESS_TOKEN -- server-only token for typed subscription
-##                                creation, cancellation and canonical reads
-##   MERCADO_PAGO_WEBHOOK_SECRET -- segredo HMAC da URL de webhook de assinaturas
+##   ASAAS_ACCESS_TOKEN -- server-only production API key for checkout,
+##                         cancellation and canonical reads
+##   ASAAS_WEBHOOK_TOKEN -- distinct 32-255 character token sent by Asaas in
+##                          the asaas-access-token header
 ##
 ## DASHBOARD_ORIGIN below is a plain, non-secret var -- the exact comma-separated
 ## origins the dashboard is served from, so CORS headers are only ever sent back
@@ -52,8 +53,10 @@ main = "src/index.js"
 compatibility_date = "2026-08-11"
 
 [vars]
-MERCADO_PAGO_BILLING_ENABLED = "false"
-MERCADO_PAGO_AMOUNT_CENTS = "1990"
+ASAAS_BILLING_ENABLED = "false"
+ASAAS_ENVIRONMENT = "production"
+ASAAS_AMOUNT_CENTS = "1990"
+ASAAS_RETURN_URL = "https://api.vemryx.com/billing/return"
 DASHBOARD_ORIGIN = "https://ralven-dashboard.pages.dev,https://dashboard.vemryx.com,https://fivemcleaner-dashboard.pages.dev"
 
 [[ratelimits]]

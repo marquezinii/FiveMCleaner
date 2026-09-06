@@ -191,7 +191,7 @@ public static class RemoteServicesOptionsLoader
 /// </summary>
 public static class TelemetryEndpointPolicy
 {
-    public const string ProductionHost = "fivemcleaner-telemetry.felipemarquesini10.workers.dev";
+    public const string ProductionHost = "api.vemryx.com";
     public const string TelemetryPath = "/telemetry";
 
     public static bool TryCreate(

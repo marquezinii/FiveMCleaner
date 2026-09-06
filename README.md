@@ -55,11 +55,11 @@ Leve, Médio e Agressivo continuam gratuitos. O [espaço pessoal](docs/ultra.md)
 seguras ao uso e ao diagnóstico, com uma preferência exclusiva e reversível para
 o ponteiro; não promete ser mais agressivo. Requer
 acesso Pro confirmado pelo servidor. A página **Ralven Pro** reúne comparação de
-planos, checkout hospedado do Mercado Pago, atualização do status e cancelamento
+planos, checkout hospedado do Asaas, atualização do status e cancelamento
 de renovação. A oferta mensal padrão é R$ 19,90, configurada no servidor; vendas
 ficam desabilitadas até a configuração e homologação do provedor. Consulte
 [cobrança e acesso pago](docs/billing.md) para implantação e testes externos.
-Para começar pela conta Mercado Pago, siga o [guia de configuração](docs/mercado-pago-setup.md).
+Para configurar o provedor, siga o [guia do Asaas](docs/asaas-setup.md).
 
 Diagnóstico, perfis gratuitos, ferramentas FiveM Legacy, histórico, relatórios e
 restauração continuam Free. Pro acrescenta conveniência e acompanhamento:

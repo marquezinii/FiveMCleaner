@@ -43,7 +43,7 @@ export function billingReturnPage() {
       <li>Abra a página <strong>Ralven Pro</strong>.</li>
       <li>Selecione <strong>Atualizar assinatura</strong> para consultar o status.</li>
     </ol>
-    <p class="notice">O pagamento ainda pode estar pendente. Esta página não confirma aprovação: o acesso Pro só é liberado após a confirmação do pagamento pelo Mercado Pago.</p>
+    <p class="notice">O pagamento ainda pode estar pendente. Esta página não confirma aprovação: o acesso Pro só é liberado após a confirmação do pagamento pelo Asaas.</p>
     <p class="footer">Se o status ainda não mudou, aguarde alguns instantes e atualize novamente no aplicativo. Não inicie outra assinatura para tentar acelerar a confirmação.</p>
   </main>
 </body>

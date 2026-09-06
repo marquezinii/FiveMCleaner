@@ -87,7 +87,7 @@ Append-only, seguindo a convenção de prefixo por domínio já existente:
   captura em segundo plano, hoje cai em `WIN_REGISTRY` genérico).
 - Categorias novas para superfícies sem código hoje:
   - `BILL_CHECKOUT`, `BILL_WEBHOOK_VALIDATION`, `BILL_ENTITLEMENT_SYNC`
-    (fundação de cobrança Mercado Pago).
+    (fundação de cobrança recorrente).
   - `APP_INV_SCAN`, `APP_INV_STARTUP_ENTRY` (aba Aplicativos: inventário de
     programas/entradas de inicialização).
   - `SEC_HEALTH_QUERY` (leitura de saúde do Windows Security Center na aba

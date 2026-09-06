@@ -56,14 +56,15 @@ public sealed class CloudflareBillingService
         if (!Uri.TryCreate(value, UriKind.Absolute, out var parsed)
             || parsed.Scheme != Uri.UriSchemeHttps || !parsed.IsDefaultPort
             || parsed.UserInfo.Length != 0 || parsed.Fragment.Length != 0
-            || parsed.IdnHost != "www.mercadopago.com.br" || parsed.AbsoluteUri.Length > 2048) return false;
+            || parsed.IdnHost != "asaas.com" || parsed.AbsoluteUri.Length > 2048) return false;
         // Hosted subscription checkout only. A provider-hosted arbitrary redirect is not a checkout.
-        if (parsed.AbsolutePath is not ("/subscriptions/checkout" or "/subscriptions/checkout/")) return false;
+        if (parsed.AbsolutePath != "/checkoutSession/show") return false;
         var ids = parsed.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries)
             .Select(part => part.Split('=', 2))
-            .Where(part => Uri.UnescapeDataString(part[0]) == "preapproval_id")
+            .Where(part => Uri.UnescapeDataString(part[0]) == "id")
             .ToArray();
-        if (ids.Length != 1 || ids[0].Length != 2) return false;
+        if (ids.Length != 1 || ids[0].Length != 2
+            || parsed.Query.TrimStart('?').Split('&', StringSplitOptions.RemoveEmptyEntries).Length != 1) return false;
         var id = Uri.UnescapeDataString(ids[0][1]);
         if (id.Length is < 1 or > 128
             || id.Any(character => !char.IsAsciiLetterOrDigit(character) && character is not ('_' or '-'))) return false;

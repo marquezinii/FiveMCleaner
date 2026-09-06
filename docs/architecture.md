@@ -128,15 +128,15 @@ falha.
 A cobrança fica no Worker e no D1, separada da autenticação
 Firebase e das políticas de otimização. O aplicativo pode ler apenas o snapshot
 server-side de acesso da própria UID em `GET /account/entitlements`; IDs e
-estados do provedor não são contratos do cliente. Notificações do Mercado Pago
-são autenticadas por HMAC e sempre reconciliadas contra o recurso canônico e um
+estados do provedor não são contratos do cliente. Eventos do Asaas são
+autenticados por token dedicado, deduplicados e reconciliados contra o recurso canônico e um
 checkout intent criado pelo servidor. O corpo da notificação, um redirect de
 checkout ou o estado `authorized` de uma assinatura não concedem Pro. Veja
 [Cobrança e acesso pago](billing.md) para o contrato e os bloqueadores de
 ativação. `CloudflareBillingService` consulta oferta/status e solicita checkout ou
 cancelamento autenticado; `MainWindow.Billing.xaml.cs` coordena a página Pro e
 descarta respostas após troca de conta. URLs externas são restritas ao checkout
-hospedado brasileiro do Mercado Pago. Preço e chave de oferta versionada são
+hospedado do Asaas. Preço e chave de oferta versionada são
 definidos pelo servidor; a confirmação na UI é invalidada se a oferta mudar.
 Pagamentos reconciliados mantêm períodos estáveis no ledger D1. Cancelamento
 confirmado interrompe renovação e preserva o período pago; somente então a

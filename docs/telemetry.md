@@ -6,10 +6,9 @@ Para contrato, troubleshooting e checklist de release da infraestrutura, veja
 ## Consentimento
 
 A assinatura Pro tem um fluxo separado, iniciado explicitamente pelo usuário
-na página Ralven Pro. Seu e-mail verificado é enviado ao Mercado Pago para criar
-o checkout; não é persistido nas tabelas de cobrança do Ralven. O Worker/D1
-guarda UID, referências opacas, valor/moeda, estados e datas necessários ao
-pagamento e ao acesso. Dados de cartão ficam no provedor. Nenhum desses dados
+na página Ralven Pro. Os dados do pagador são informados diretamente na página
+segura do Asaas. O Worker/D1 guarda UID, referências opacas, valor/moeda, estados
+e datas necessários ao pagamento e ao acesso. Dados de cartão ficam no provedor. Nenhum desses dados
 entra na telemetria, nos crashes ou nos relatórios pessoais exportados; ver
 [cobrança e acesso pago](billing.md). Aceitar a telemetria não inicia assinatura.
 
@@ -153,7 +152,7 @@ DSN do Sentry, apenas com a tag `Environment` diferente.
 
 O Worker que recebe a telemetria de uso (não os relatórios de falha, que
 vão direto ao Sentry) está **implantado** em
-`https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`, com
+`https://api.vemryx.com`, com
 validação server-side, schema D1 (incluindo uma tabela normalizada de ações
 aplicadas, para "função mais usada"), endpoints de estatística agregada
 (`/api/stats/*`) e autenticação própria protegendo esses endpoints —

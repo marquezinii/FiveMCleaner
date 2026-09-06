@@ -22,10 +22,9 @@ import { createCsrfToken, isValidCsrfToken } from './auth/crypto.js';
 import { validateLiveAlertUpdate } from './liveAlert/validateSubmission.js';
 import { buildLiveAlertUpsert, toLiveAlertResponse } from './liveAlert/store.js';
 import { fetchAccountEntitlements } from './billing/entitlements.js';
-import { handleMercadoPagoNotification } from './billing/mercadoPagoNotifications.js';
+import { handleAsaasWebhook, refreshEntitlementStatement, revokeEntitlementStatement } from './billing/asaasBilling.js';
 import { createAccountCheckout, cancelAccountBilling, fetchAccountBilling, syncAccountBilling } from './billing/accountBilling.js';
-import { BillingError } from './billing/mercadoPagoApi.js';
-import { refreshEntitlementStatement, revokeEntitlementStatement } from './billing/mercadoPagoPayments.js';
+import { BillingError } from './billing/asaasApi.js';
 import { billingReturnPage } from './billing/returnPage.js';
 
 const MAX_TELEMETRY_BODY_BYTES = 512 * 1024;
@@ -50,7 +49,7 @@ const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 //   POST    /account/billing/checkout -- hosted monthly checkout for the accepted server offer
 //   POST    /account/billing/cancel -- stop future renewals after provider confirmation
 //   GET     /account/username-available -- advisory "is this username free?" probe for the registration form (no auth; rate limited per IP)
-//   POST    /billing/mercado-pago/webhook -- verify and reconcile one Mercado Pago subscription notification
+//   POST    /billing/asaas/webhook -- authenticate and reconcile one Asaas billing event
 //   POST    /admin/login           -- { password } -> session cookie
 //   POST    /admin/logout          -- clears the session cookie
 //   GET     /admin/csrf            -- session-bound CSRF token (requires a valid session)
@@ -168,8 +167,8 @@ async function route(request, env, url) {
   if (request.method === 'POST' && url.pathname === '/admin/live-alert') {
     return handleLiveAlertUpdate(request, env);
   }
-  if (request.method === 'POST' && url.pathname === '/billing/mercado-pago/webhook') {
-    return handleMercadoPagoNotification(request, env);
+  if (request.method === 'POST' && url.pathname === '/billing/asaas/webhook') {
+    return handleAsaasWebhook(request, env);
   }
 
   if (request.method === 'GET' && url.pathname === '/admin/csrf') {

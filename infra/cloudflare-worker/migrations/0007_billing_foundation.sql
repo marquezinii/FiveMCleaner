@@ -22,9 +22,8 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_checkout_intents_provider_checkout
 CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_checkout_intents_account_contract
     ON billing_checkout_intents (id, account_uid, provider, offer_key);
 
--- Mercado Pago signs the request ID and resource ID, not the webhook body.
--- Persist only that signed envelope plus internal processing
--- state; resource details must be fetched from the provider before any grant.
+-- Persist only the authenticated event envelope plus internal processing
+-- state. Resource details are fetched from the provider before any grant.
 CREATE TABLE IF NOT EXISTS billing_webhook_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     provider TEXT NOT NULL CHECK (length(provider) BETWEEN 1 AND 32),

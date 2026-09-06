@@ -1681,22 +1681,22 @@ Media CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Pro.SignIn.Description" xml:space="preserve"><value>Inicia sesión para consultar la oferta actual y gestionar la suscripción vinculada a tu cuenta Ralven.</value></data>
   <data name="Pro.Unavailable.Description" xml:space="preserve"><value>Comprueba tu conexión y vuelve a actualizar. Las herramientas Free y el historial guardado siguen disponibles.</value></data>
   <data name="Pro.Cancelled.Description" xml:space="preserve"><value>Las próximas renovaciones se han detenido. El período pagado confirmado permanece disponible hasta su fecha final.</value></data>
-  <data name="Pro.Pending.Description" xml:space="preserve"><value>El acceso comienza cuando Mercado Pago confirma un cobro aprobado. Volver del checkout no activa Pro por sí solo.</value></data>
+  <data name="Pro.Pending.Description" xml:space="preserve"><value>El acceso comienza cuando Asaas confirma un cobro aprobado. Volver del checkout no activa Pro por sí solo.</value></data>
   <data name="Pro.SalesUnavailable.Description" xml:space="preserve"><value>Las suscripciones aún no están disponibles para comprar. Explora el espacio personal y sigue usando Free.</value></data>
-  <data name="Pro.Status.Description" xml:space="preserve"><value>Gestiona tu suscripción aquí. Mercado Pago procesa el checkout y los cobros recurrentes.</value></data>
+  <data name="Pro.Status.Description" xml:space="preserve"><value>Gestiona tu suscripción aquí. Asaas procesa el checkout y los cobros recurrentes.</value></data>
   <data name="Pro.AccessUntil" xml:space="preserve"><value>Acceso pagado hasta {0}</value></data>
   <data name="Pro.RenewsAt" xml:space="preserve"><value>Próxima renovación prevista: {0}</value></data>
   <data name="Pro.Loading" xml:space="preserve"><value>Consultando suscripción</value></data>
   <data name="Pro.SignIn" xml:space="preserve"><value>Entrar para ver planes</value></data>
   <data name="Pro.Checkout.Consent" xml:space="preserve"><value>Entiendo el cobro recurrente de {0} al mes y que puedo cancelar las próximas renovaciones aquí.</value></data>
-  <data name="Pro.Checkout" xml:space="preserve"><value>Continuar en Mercado Pago</value></data>
-  <data name="Pro.Checkout.Security" xml:space="preserve"><value>Tu navegador abrirá Mercado Pago. Ralven no recibe los datos de tu tarjeta.</value></data>
+  <data name="Pro.Checkout" xml:space="preserve"><value>Continuar en Asaas</value></data>
+  <data name="Pro.Checkout.Security" xml:space="preserve"><value>Tu navegador abrirá Asaas. Ralven no recibe los datos de tu tarjeta.</value></data>
   <data name="Pro.Checkout.Opened" xml:space="preserve"><value>Checkout abierto en el navegador. Complétalo allí y actualiza para comprobar la confirmación. No vuelvas a pagar si la confirmación sigue pendiente.</value></data>
   <data name="Pro.Refresh" xml:space="preserve"><value>Actualizar suscripción</value></data>
   <data name="Pro.Cancel" xml:space="preserve"><value>Cancelar renovación</value></data>
   <data name="Pro.Manage" xml:space="preserve"><value>Planes y suscripción</value></data>
   <data name="Pro.Cancel.Title" xml:space="preserve"><value>¿Cancelar las próximas renovaciones?</value></data>
-  <data name="Pro.Cancel.Message" xml:space="preserve"><value>Mercado Pago detendrá los próximos cobros recurrentes. Tu acceso pagado confirmado permanece hasta su fecha final. Cancelar no reembolsa cobros anteriores. Tu historial local y las opciones de restauración siguen disponibles.</value></data>
+  <data name="Pro.Cancel.Message" xml:space="preserve"><value>Asaas detendrá los próximos cobros recurrentes. Tu acceso pagado confirmado permanece hasta su fecha final. Cancelar no reembolsa cobros anteriores. Tu historial local y las opciones de restauración siguen disponibles.</value></data>
   <data name="Pro.Cancel.Keep" xml:space="preserve"><value>Mantener suscripción</value></data>
   <data name="Pro.Cancel.Confirm" xml:space="preserve"><value>Cancelar renovación</value></data>
   <data name="Pro.Cancel.Success" xml:space="preserve"><value>Cancelación confirmada. No se solicitarán nuevas renovaciones de esta suscripción.</value></data>
@@ -1739,5 +1739,5 @@ Media CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Personal.Export.Filter" xml:space="preserve"><value>Informe de texto (*.txt)|*.txt</value></data>
   <data name="Personal.Export.Saved" xml:space="preserve"><value>Historial personal exportado. Revisa el archivo antes de compartir.</value></data>
   <data name="Personal.Export.Failed" xml:space="preserve"><value>No se pudo exportar el historial. Comprueba la ubicación y vuelve a intentarlo.</value></data>
-  <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>Tu correo verificado se envía a Mercado Pago para crear la suscripción. Ralven guarda referencias, importes, estados y fechas del cobro; nunca datos de tarjeta. Cualquier reembolso, incluso parcial, elimina el acceso del período pagado correspondiente.</value></data>
+  <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>Introduces los datos del pagador en la página segura de Asaas. Ralven guarda referencias, importes, estados y fechas del cobro; nunca datos de tarjeta. Cualquier reembolso completado, incluso parcial, elimina el acceso del período pagado correspondiente.</value></data>
 </root>

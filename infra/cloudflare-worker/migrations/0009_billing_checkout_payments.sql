@@ -1,4 +1,4 @@
--- One unresolved mandate per account. Cancelled mandates and paid intervals
+-- One unresolved checkout per account. Cancelled checkouts and paid intervals
 -- remain auditable until the user explicitly deletes their account.
 CREATE UNIQUE INDEX idx_billing_one_open_checkout
     ON billing_checkout_intents(account_uid) WHERE state <> 'cancelled';
@@ -6,7 +6,6 @@ ALTER TABLE billing_checkout_intents ADD COLUMN create_attempt_started_at TEXT;
 
 CREATE TABLE billing_payments (
     provider_payment_id TEXT PRIMARY KEY NOT NULL,
-    authorized_payment_id TEXT NOT NULL,
     subscription_id TEXT NOT NULL REFERENCES billing_subscriptions(id) ON DELETE CASCADE,
     state TEXT NOT NULL CHECK(state IN ('approved', 'pending', 'rejected', 'refunded', 'cancelled', 'charged_back')),
     amount_cents INTEGER NOT NULL CHECK(amount_cents > 0),
@@ -20,4 +19,3 @@ CREATE TABLE billing_payments (
 );
 CREATE INDEX idx_billing_payment_subscription_period
     ON billing_payments(subscription_id, period_start, period_end);
-CREATE INDEX idx_billing_payment_invoice ON billing_payments(authorized_payment_id);
