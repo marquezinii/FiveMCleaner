@@ -96,6 +96,32 @@ poderá virar ação futura após existir detecção de filesystem/volume, privi
 tipado, verificação e uma apresentação explícita de que ReTrim não possui
 rollback.
 
+### Limites dos diagnósticos gerais do Windows
+
+**Fato.** Em `MEMORYSTATUSEX`, `ullTotalPageFile` e `ullAvailPageFile` representam
+limite e folga de memória comprometida disponíveis ao sistema/processo, não o
+tamanho isolado do arquivo de paginação. Os contadores de pacotes descartados e
+com erro de `IPInterfaceStatistics` são totais acumulados da interface; uma
+leitura única não informa quando ocorreram nem comprova perda atual. O provedor
+documentado para erros WHEA no log `System` é
+`Microsoft-Windows-WHEA-Logger`.
+
+Fontes:
+
+- [MEMORYSTATUSEX](https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/ns-sysinfoapi-memorystatusex)
+- [IPInterfaceStatistics.IncomingPacketsDiscarded](https://learn.microsoft.com/en-us/dotnet/api/system.net.networkinformation.ipinterfacestatistics.incomingpacketsdiscarded)
+- [Consulta de eventos WHEA no log System](https://learn.microsoft.com/en-us/windows-hardware/drivers/whea/querying-the-system-event-log-for-hardware-error-events)
+
+**Fato.** `Win32_PhysicalMemory` expõe a capacidade e a frequência configurada,
+mas não documenta topologia de canais nem o perfil XMP/EXPO ativo. Quantidade de
+módulos e o campo `Speed` não são evidência suficiente para afirmar esses estados.
+
+Fonte: [Win32_PhysicalMemory](https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-physicalmemory).
+
+**Decisão.** O Ralven apresenta essas leituras como inventário e contadores
+acumulados. Não classifica um gargalo de rede a partir de uma única leitura, não
+infere canais/XMP/EXPO e não descreve limite de commit como tamanho do pagefile.
+
 ## Centro de aplicativos inspirado no UniGetUI
 
 **Fato.** O UniGetUI oficial organiza sua experiência em catálogos de pacotes

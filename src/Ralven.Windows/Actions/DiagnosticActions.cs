@@ -237,12 +237,13 @@ public sealed class NetworkHealthDiagnosisAction : ReadOnlyDiagnosticAction
         var link = DescribeLink(snapshot);
         if (snapshot.DiscardedPackets > 0 || snapshot.ErrorPackets > 0)
         {
-            return $"Sinais locais de instabilidade de rede: {snapshot.DiscardedPackets} pacote(s) descartado(s) "
-                + $"e {snapshot.ErrorPackets} com erro na(s) placa(s) ativa(s). Isso não mede latência ou "
-                + $"jitter até um serviço remoto; confirme pela ferramenta do aplicativo ou jogo afetado.{link}";
+            return $"Os contadores acumulados das placas ativas registram {snapshot.DiscardedPackets} pacote(s) "
+                + $"descartado(s) e {snapshot.ErrorPackets} com erro desde que as interfaces foram iniciadas. "
+                + $"Isso não confirma instabilidade atual nem mede latência ou jitter; confirme durante o problema "
+                + $"pela ferramenta do aplicativo ou jogo afetado.{link}";
         }
 
-        return $"Nenhum sinal local de perda de pacotes foi encontrado nas placas de rede ativas.{link}";
+        return $"Os contadores acumulados das placas ativas não registram pacotes descartados ou com erro.{link}";
     }
 
     private static string DescribeLink(NetworkHealthSnapshot snapshot)
@@ -316,18 +317,19 @@ public sealed class PagefileCommitDiagnosisAction : ReadOnlyDiagnosticAction
 
     internal static string Classify(SystemResourceSnapshot snapshot)
     {
-        if (snapshot.TotalPageFileBytes <= 0)
+        if (snapshot.CommitLimitBytes <= 0)
         {
-            return "Não foi possível ler o tamanho do arquivo de paginação neste momento.";
+            return "Não foi possível ler o limite de commit de memória neste momento.";
         }
 
-        var availableRatio = (double)snapshot.AvailablePageFileBytes / snapshot.TotalPageFileBytes;
-        var totalGiB = snapshot.TotalPageFileBytes / (double)DiagnosticSignals.GiB;
+        var availableRatio = (double)snapshot.AvailableCommitBytes / snapshot.CommitLimitBytes;
+        var totalGiB = snapshot.CommitLimitBytes / (double)DiagnosticSignals.GiB;
 
         return availableRatio < LowAvailablePageFileRatio
-            ? $"O commit de memória está próximo do limite do pagefile ({totalGiB:0.#} GB no total); "
-                + "risco de lentidão por paginação excessiva sob carga."
-            : $"Há folga suficiente no pagefile ({totalGiB:0.#} GB no total) para a carga atual.";
+            ? $"O commit de memória está próximo do limite disponível ao processo ({totalGiB:0.#} GB, "
+                + "composto por RAM e pagefile); novas alocações podem falhar sob carga."
+            : $"Há folga suficiente no limite de commit disponível ao processo ({totalGiB:0.#} GB, "
+                + "composto por RAM e pagefile) para a carga atual.";
     }
 }
 

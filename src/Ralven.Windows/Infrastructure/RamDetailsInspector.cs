@@ -4,8 +4,7 @@ namespace Ralven.Windows.Infrastructure;
 
 public sealed record RamModuleInfo(
     long CapacityBytes,
-    uint ConfiguredClockMhz,
-    uint RatedClockMhz);
+    uint ConfiguredClockMhz);
 
 public sealed record RamDetailsSnapshot(IReadOnlyList<RamModuleInfo> Modules);
 
@@ -15,11 +14,10 @@ public interface IRamDetailsInspector
 }
 
 /// <summary>
-/// Reads per-module RAM details from WMI Win32_PhysicalMemory: capacity, the
-/// configured (running) clock speed and the module's own rated (SPD) speed.
-/// Used to build honest heuristics for single-channel and XMP/EXPO status —
-/// neither is directly exposed by Windows without vendor tooling, so both are
-/// presented as inferences, not facts.
+/// Reads per-module RAM capacity and configured clock speed from WMI
+/// Win32_PhysicalMemory. Windows does not expose channel topology or active
+/// XMP/EXPO state reliably through this class, so this inspector does not try
+/// to infer either one.
 /// </summary>
 public sealed class WindowsRamDetailsInspector : IRamDetailsInspector
 {
@@ -34,7 +32,7 @@ public sealed class WindowsRamDetailsInspector : IRamDetailsInspector
         try
         {
             using var searcher = new ManagementObjectSearcher(
-                "SELECT Capacity, ConfiguredClockSpeed, Speed FROM Win32_PhysicalMemory");
+                "SELECT Capacity, ConfiguredClockSpeed FROM Win32_PhysicalMemory");
             using var results = searcher.Get();
             foreach (ManagementObject module in results.Cast<ManagementObject>())
             {
@@ -45,8 +43,7 @@ public sealed class WindowsRamDetailsInspector : IRamDetailsInspector
                     {
                         modules.Add(new RamModuleInfo(
                             checked((long)capacity.Value),
-                            module["ConfiguredClockSpeed"] as uint? ?? 0,
-                            module["Speed"] as uint? ?? 0));
+                            module["ConfiguredClockSpeed"] as uint? ?? 0));
                     }
                 }
             }

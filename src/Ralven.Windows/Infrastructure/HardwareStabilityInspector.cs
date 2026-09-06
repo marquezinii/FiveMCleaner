@@ -15,7 +15,7 @@ public interface IHardwareStabilityInspector
 
 /// <summary>
 /// Reads two independent, driver-free stability signals: recent
-/// Kernel-WHEA hardware error events from the Windows Event Log (the same
+/// WHEA-Logger hardware error events from the Windows Event Log (the same
 /// mechanism Reliability Monitor and Event Viewer use — no extra driver
 /// required), and the BIOS release date from WMI Win32_BIOS. It never
 /// attempts to read Resizable BAR/Above 4G Decoding/Smart Access Memory:
@@ -25,6 +25,9 @@ public interface IHardwareStabilityInspector
 /// </summary>
 public sealed class WindowsHardwareStabilityInspector : IHardwareStabilityInspector
 {
+    internal const string WheaEventQuery =
+        "*[System[Provider[@Name='Microsoft-Windows-WHEA-Logger']]]";
+
     private static readonly TimeSpan LookbackWindow = TimeSpan.FromDays(30);
 
     public HardwareStabilitySnapshot GetSnapshot()
@@ -41,7 +44,7 @@ public sealed class WindowsHardwareStabilityInspector : IHardwareStabilityInspec
             var query = new EventLogQuery(
                 "System",
                 PathType.LogName,
-                "*[System[Provider[@Name='Microsoft-Windows-Kernel-WHEA']]]")
+                WheaEventQuery)
             {
                 ReverseDirection = true
             };

@@ -87,14 +87,6 @@ public sealed class GpuDetailsDiagnosisAction : ReadOnlyDiagnosticAction
 
 public sealed class RamDetailsDiagnosisAction : ReadOnlyDiagnosticAction
 {
-    /// <summary>
-    /// Tolerance below the module's rated (SPD) speed before XMP/EXPO is
-    /// reported as probably disabled: reported clocks are rounded and vendors
-    /// publish slightly different rated values, so an exact comparison would
-    /// produce false alarms.
-    /// </summary>
-    private const double RatedClockTolerance = 0.9d;
-
     private readonly IRamDetailsInspector inspector;
 
     public RamDetailsDiagnosisAction(IRamDetailsInspector inspector)
@@ -121,33 +113,13 @@ public sealed class RamDetailsDiagnosisAction : ReadOnlyDiagnosticAction
             .DefaultIfEmpty(0u)
             .Max();
 
-        var channelHint = count == 1
-            ? "provavelmente single-channel (apenas um pente instalado)"
-            : count % 2 == 0
-                ? "provavelmente multi-channel (quantidade par de pentes)"
-                : "quantidade ímpar de pentes; a configuração de canais não pôde ser confirmada";
-
         var frequencyLabel = configured > 0
             ? $"{configured} MHz configurados"
             : "frequência configurada não disponível";
 
-        return $"{count} módulo(s) de memória detectado(s), {frequencyLabel}. {channelHint}. "
-            + BuildXmpHint(snapshot.Modules);
-    }
-
-    private static string BuildXmpHint(IReadOnlyList<RamModuleInfo> modules)
-    {
-        var withRated = modules
-            .Where(module => module.RatedClockMhz > 0 && module.ConfiguredClockMhz > 0)
-            .ToArray();
-        if (withRated.Length == 0)
-        {
-            return "Não foi possível comparar a velocidade configurada com a velocidade nominal (XMP/EXPO).";
-        }
-
-        return withRated.Any(module => module.ConfiguredClockMhz < module.RatedClockMhz * RatedClockTolerance)
-            ? "A memória parece rodar abaixo da velocidade nominal (XMP/EXPO possivelmente desativado)."
-            : "A memória parece rodar na velocidade nominal ou acima (XMP/EXPO provavelmente ativo).";
+        return $"{count} módulo(s) de memória detectado(s), {frequencyLabel}. O Windows não expõe "
+            + "a topologia de canais nem o estado de XMP/EXPO de forma confiável; confirme esses dados "
+            + "na BIOS/UEFI ou na ferramenta oficial do fabricante.";
     }
 }
 
@@ -644,12 +616,15 @@ public sealed class HardwareStabilityDiagnosisAction : ReadOnlyDiagnosticAction
             ? BuildBiosLabel(releaseDate, nowUtc)
             : "Não foi possível ler a data de lançamento da BIOS.";
 
-        var memoryLabel = snapshot.RecentMemoryFlavoredWheaEventCount > 0
-            ? $"{snapshot.RecentMemoryFlavoredWheaEventCount} evento(s) de erro de hardware "
-                + "possivelmente relacionados à memória nos últimos 30 dias."
-            : "Nenhum evento de erro de hardware relacionado à memória nos últimos 30 dias.";
+        var wheaLabel = snapshot.RecentWheaEventCount <= 0
+            ? "Nenhum evento WHEA de erro de hardware foi encontrado nos últimos 30 dias."
+            : snapshot.RecentMemoryFlavoredWheaEventCount > 0
+                ? $"{snapshot.RecentWheaEventCount} evento(s) WHEA nos últimos 30 dias; "
+                    + $"{snapshot.RecentMemoryFlavoredWheaEventCount} evento(s) possui(em) possível indicação de memória."
+                : $"{snapshot.RecentWheaEventCount} evento(s) WHEA nos últimos 30 dias, sem indicação "
+                    + "de memória identificável nos dados do evento.";
 
-        return $"{biosLabel} {memoryLabel} Resizable BAR/Above 4G Decoding/Smart Access Memory não podem "
+        return $"{biosLabel} {wheaLabel} Resizable BAR/Above 4G Decoding/Smart Access Memory não podem "
             + "ser detectados de forma confiável sem ferramenta do fabricante; verifique na BIOS ou no "
             + "painel oficial da placa-mãe/GPU.";
     }
@@ -689,7 +664,6 @@ public sealed class BottleneckClassificationAction : ReadOnlyDiagnosticAction
     private readonly ISystemResourceInspector systemResources;
     private readonly IResourceUsageInspector resourceUsage;
     private readonly IThermalInspector thermal;
-    private readonly INetworkHealthInspector networkHealth;
     private readonly IGpuDetailsInspector gpuDetails;
     private readonly IBackgroundProcessInspector backgroundProcess;
 
@@ -697,14 +671,12 @@ public sealed class BottleneckClassificationAction : ReadOnlyDiagnosticAction
         ISystemResourceInspector systemResources,
         IResourceUsageInspector resourceUsage,
         IThermalInspector thermal,
-        INetworkHealthInspector networkHealth,
         IGpuDetailsInspector gpuDetails,
         IBackgroundProcessInspector backgroundProcess)
     {
         this.systemResources = systemResources ?? throw new ArgumentNullException(nameof(systemResources));
         this.resourceUsage = resourceUsage ?? throw new ArgumentNullException(nameof(resourceUsage));
         this.thermal = thermal ?? throw new ArgumentNullException(nameof(thermal));
-        this.networkHealth = networkHealth ?? throw new ArgumentNullException(nameof(networkHealth));
         this.gpuDetails = gpuDetails ?? throw new ArgumentNullException(nameof(gpuDetails));
         this.backgroundProcess = backgroundProcess ?? throw new ArgumentNullException(nameof(backgroundProcess));
     }
@@ -718,7 +690,6 @@ public sealed class BottleneckClassificationAction : ReadOnlyDiagnosticAction
             systemResources.GetSnapshot(),
             resourceUsage.GetSnapshot(),
             thermal.GetSnapshot(),
-            networkHealth.GetSnapshot(),
             gpuDetails.GetSnapshot(),
             backgroundProcess.GetTopConsumer(ExcludedProcessNames)));
     }
@@ -742,42 +713,34 @@ public sealed class BottleneckClassificationAction : ReadOnlyDiagnosticAction
                 + "CPU de forma relevante enquanto o sistema está sob análise.";
         }
 
-        // 3. Rede: perda/erro de pacotes local.
-        if (input.NetworkHealth.HasActiveInterface
-            && (input.NetworkHealth.DiscardedPackets > 0 || input.NetworkHealth.ErrorPackets > 0))
-        {
-            return "Gargalo provável: rede. Há descarte ou erro de pacotes na placa de rede ativa, "
-                + "o que pode causar jitter ou perda de conexão em aplicativos e jogos.";
-        }
-
-        // 4. Disco: tempo ativo elevado.
+        // 3. Disco: tempo ativo elevado.
         if (input.ResourceUsage.DiskPercent >= HighUtilizationPercent)
         {
             return "Gargalo provável: disco. A unidade está com tempo ativo elevado, "
                 + "o que pode causar travamentos ao carregar texturas/streaming.";
         }
 
-        // 5. RAM: pouca memória disponível.
+        // 4. RAM: pouca memória disponível.
         if (DiagnosticSignals.IsMemoryUnderPressure(input.SystemResources))
         {
             return "Gargalo provável: memória RAM. A memória disponível está baixa, "
                 + "o que pode causar paginação e engasgos.";
         }
 
-        // 6. VRAM: GPU saturada em uma placa com pouca VRAM total (estimativa).
-        var lowestVram = input.GpuDetails
+        // 5. VRAM: só acusa pouca VRAM quando nenhum adaptador conhecido tem mais de 4 GB.
+        var highestVram = input.GpuDetails
             .Where(gpu => gpu.VramBytes is > 0)
             .Select(gpu => gpu.VramBytes!.Value)
             .DefaultIfEmpty(0)
-            .Min();
+            .Max();
         if (input.ResourceUsage.GpuPercent >= HighUtilizationPercent
-            && lowestVram is > 0 and <= SmallVramBytes)
+            && highestVram is > 0 and <= SmallVramBytes)
         {
             return "Gargalo provável: VRAM. A GPU detectada tem pouca memória de vídeo (4 GB ou menos) "
                 + "e está com uso alto; texturas em qualidade mais alta podem causar stutter.";
         }
 
-        // 7. GPU: GPU saturada com CPU folgada.
+        // 6. GPU: GPU saturada com CPU folgada.
         if (input.ResourceUsage.GpuPercent >= HighUtilizationPercent
             && input.ResourceUsage.CpuPercent < ModerateUtilizationPercent)
         {
@@ -785,7 +748,7 @@ public sealed class BottleneckClassificationAction : ReadOnlyDiagnosticAction
                 + "reduzir opções gráficas tende a ajudar mais que ajustes de CPU.";
         }
 
-        // 8. CPU: CPU saturada com GPU não saturada.
+        // 7. CPU: CPU saturada com GPU não saturada.
         if (input.ResourceUsage.CpuPercent >= ModerateUtilizationPercent
             && input.ResourceUsage.GpuPercent < HighUtilizationPercent)
         {
@@ -803,6 +766,5 @@ public sealed record BottleneckClassificationInput(
     SystemResourceSnapshot SystemResources,
     ResourceUsageSnapshot ResourceUsage,
     ThermalSnapshot Thermal,
-    NetworkHealthSnapshot NetworkHealth,
     IReadOnlyList<GpuAdapterDetails> GpuDetails,
     BackgroundProcessUsage? BackgroundProcess);
