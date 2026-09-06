@@ -7,7 +7,7 @@
 
 - **Produto:** Ralven, aplicativo desktop Windows para otimização transparente, reversível e orientada por diagnóstico do FiveM para **GTAV Legacy**.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
-- **Último estado consolidado:** 05/09/2026. Confirme o estado real com Git e testes atuais antes de trabalhar.
+- **Último estado consolidado:** 06/09/2026. Confirme o estado real com Git e testes atuais antes de trabalhar.
 - **Release pública atual:** `v1.6.1`, publicada a partir de `main`. A próxima versão só é definida no fluxo oficial de release a partir das mudanças posteriores a essa tag.
 - **Atalho de desenvolvimento:** `Ralven - Desenvolvimento` usa `scripts\Start-DevelopmentApp.ps1`. Conforme `AI_RULES.md`, deve ser reconstruído com `scripts\Install-DevelopmentShortcut.ps1 -Build` quando aplicável. O script espelha a árvore para a pasta irmã fixa `Ralven-dev-shortcut`, sem ficar órfão após a remoção de um worktree.
 
@@ -74,7 +74,7 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 - Aba **Aplicativos** separa instalação/manutenção de consultas locais, com busca e contagens por lista e atalhos explicados para controles nativos do Windows. O inventário não executa `UninstallString`, não altera `StartupApproved` nem escreve no Registro.
 - Aba **Jogos** é o catálogo de títulos compatíveis; hoje mostra FiveM sobre GTAV Legacy e encaminha para o fluxo especializado existente, sem habilitar outros jogos ou GTAV Enhanced.
 - Revisão do plano do Otimizador detalha por ação: como é detectada, o que a confirmação verifica, como é desfeita e riscos/limitações; texto cai no conteúdo do catálogo quando a chave de localização não existe.
-- Aba **Otimizador** oferece o plano geral `GeneralWindows` na trilha Preparar → Executar → Resultado e preserva a experiência especializada `FiveMLegacy` em Jogos. O Ultra adiciona recomendação pessoal Pro, acompanhamento local opt-in e medições comparáveis limitadas; acesso é revalidado antes de novas operações.
+- Aba **Otimizador** oferece o plano geral `GeneralWindows` na trilha Preparar → Executar → Resultado e preserva a experiência especializada `FiveMLegacy` em Jogos. `OptimizerPage` (compartilhada pelos dois fluxos) usa hierarquia progressiva: benefício/impacto ficam na leitura principal; risco, acesso, verificação, rollback e limitações ficam sob detalhes técnicos expansíveis, sem remover conteúdo. O Ultra adiciona recomendação pessoal Pro, acompanhamento local opt-in e medições comparáveis limitadas; acesso é revalidado antes de novas operações.
 - Nos perfis padrão, cache/reparo permanece opt-in: Leve limita mutações a limpeza temporária segura e Modo de Jogo; Médio adiciona captura, energia e ajustes moderados reversíveis; Agressivo adiciona somente o conjunto conservador de aparência/responsividade. O perfil FiveM mantém ações próprias de GTAV Legacy e bloqueia com segurança processos/sessões incompatíveis.
 - Painel de **Notas da Versão** (`ReleaseNotesWindow`) é exibido automaticamente após um update bem-sucedido, controlado por `ReleaseNotesEvaluator`/`ReleaseNotesCatalog` e pelo campo `LastSeenReleaseNotesVersion` das configurações (mostra de novo só quando existem notas mais recentes que a última vista).
 - Aviso ao vivo: ícone/banner no app consultam `GET /live-alert` (Worker) e mostram mensagem publicada pelo dashboard; dispensa é lembrada por `DismissedLiveAlertId` até o próximo aviso.
@@ -82,8 +82,8 @@ Preferências, journals, solicitações efêmeras, filas e logs locais ficam sob
 
 ### Motor de otimização e diagnóstico
 
-- `ActionCatalog.CurrentVersion` mais recente registrado: **21**.
-- Diagnósticos cobrem FiveM/GTA, CPU, GPU, RAM, armazenamento/TRIM, cache, processos, rede, pagefile/commit, drivers, taxa de atualização, aceleração do mouse, energia, WHEA, sinais de throttling e outros dados obtidos por APIs nativas/best-effort.
+- `ActionCatalog.CurrentVersion` mais recente registrado: **22**.
+- Diagnósticos cobrem FiveM/GTA, CPU, GPU, RAM, armazenamento/TRIM, cache, processos, rede, pagefile/commit, drivers, taxa de atualização, aceleração do mouse, energia, WHEA, sinais de throttling e outros dados obtidos por APIs nativas/best-effort. Eventos WHEA no log `System` usam o provedor `Microsoft-Windows-WHEA-Logger`; rede não classifica gargalo a partir de contadores cumulativos de uma única leitura; RAM não infere canais/XMP/EXPO a partir de `Win32_PhysicalMemory`; VRAM considera o melhor adaptador conhecido em sistemas híbridos; pagefile é apresentado como limite/folga de commit, não como tamanho do arquivo. Ver `docs/research.md`.
 - Existem diagnósticos somente leitura para gargalo provável, overlays/captura, logs do FiveM e orientação de medição pelas ferramentas oficiais do FiveM.
 - Relatório estruturado e relatório técnico sanitizado podem ser copiados/salvos explicitamente pelo usuário.
 - Falhas automáticas usam `BugCodeClassifier`; relatos manuais escolhem um motivo localizado mapeado para o mesmo `BugCode` allowlisted, permitindo agrupamento estável sem enviar classificação arbitrária.
@@ -139,7 +139,7 @@ Somente itens ainda relevantes devem permanecer aqui. Quando resolvidos e integr
 
 Estes números são **referência do último estado validado**, não substituem testes da branch atual.
 
-- **05/09/2026 — `dev/proxima-versao` integrada:** restore com auditoria NuGet, build Release sem avisos, **1.369 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1 -SkipTests` e `git diff --check` aprovados. A CI dos trabalhos integrados aprovou .NET, Worker, dashboard e SBOM; nenhuma superfície web foi alterada nesta integração.
+- **06/09/2026 — `dev/proxima-versao` integrada (PRs #126, #127):** restore, build Release sem avisos, **1.374 testes .NET**, `dotnet format --verify-no-changes`, `scripts/Verify-Safety.ps1 -SkipTests` e `git diff --check` aprovados. A CI dos dois PRs aprovou .NET, Worker, dashboard e SBOM; nenhuma superfície web foi alterada nesta integração.
 
 ## 7. Comandos essenciais
 
