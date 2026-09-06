@@ -80,6 +80,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         {
             profileService = new CloudflareAccountProfileService(profileEndpoint);
             entitlementService = new CloudflareAccountEntitlementService(profileEndpoint);
+            billingService = new CloudflareBillingService(profileEndpoint);
         }
         else
         {
@@ -151,6 +152,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         SourceInitialized += MainWindow_SourceInitialized;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
+        Activated += BillingWindow_Activated;
         System.Windows.Application.Current.SessionEnding += Application_SessionEnding;
     }
 
@@ -378,6 +380,8 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
+        billingLifetime.Cancel();
+        Activated -= BillingWindow_Activated;
         applicationsPage?.Dispose();
         viewModel.Dispose();
         windowSource?.RemoveHook(WindowMessageHook);
@@ -392,8 +396,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         (releaseUpdateService as IDisposable)?.Dispose();
     }
 
-    private void MainWindow_LanguageChanged(object? sender, AppLanguageChangedEventArgs e) =>
+    private void MainWindow_LanguageChanged(object? sender, AppLanguageChangedEventArgs e)
+    {
         ApplyAccountEntitlementPresentation();
+        proViewModel.Refresh();
+    }
 
     private void Application_SessionEnding(object? sender, SessionEndingCancelEventArgs e)
     {

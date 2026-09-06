@@ -15,7 +15,8 @@ public sealed class OptimizationReportBuilderTests
         Assert.Equal(PersonalUsage.Streaming, report.PersonalUsage);
         var text = Ralven.App.Services.TechnicalReportBuilder.Build(report, null,
             new Ralven.App.Services.LocalizationService(System.Globalization.CultureInfo.GetCultureInfo("en-US")));
-        Assert.Contains("Ultra", text);
+        Assert.Contains("Personal", text);
+        Assert.Contains("Streaming", text);
         Assert.DoesNotContain("Aggressive", text);
     }
 

@@ -32,8 +32,8 @@
 ##                          brute-force tracking from storing a raw IP
 ##   ADMIN_CSRF_SECRET   -- a distinct long random string for session-bound
 ##                          CSRF tokens
-##   MERCADO_PAGO_ACCESS_TOKEN -- token server-side usado somente para consultar
-##                                recursos canônicos da API do Mercado Pago
+##   MERCADO_PAGO_ACCESS_TOKEN -- server-only token for typed subscription
+##                                creation, cancellation and canonical reads
 ##   MERCADO_PAGO_WEBHOOK_SECRET -- segredo HMAC da URL de webhook de assinaturas
 ##
 ## DASHBOARD_ORIGIN below is a plain, non-secret var -- the exact comma-separated
@@ -52,7 +52,19 @@ main = "src/index.js"
 compatibility_date = "2026-08-11"
 
 [vars]
+MERCADO_PAGO_BILLING_ENABLED = "false"
+MERCADO_PAGO_AMOUNT_CENTS = "1990"
 DASHBOARD_ORIGIN = "https://ralven-dashboard.pages.dev,https://dashboard.vemryx.com,https://fivemcleaner-dashboard.pages.dev"
+
+[[ratelimits]]
+name = "BILLING_WRITE_LIMITER"
+namespace_id = "1006"
+simple = { limit = 10, period = 60 }
+
+[[ratelimits]]
+name = "BILLING_READ_LIMITER"
+namespace_id = "1007"
+simple = { limit = 20, period = 60 }
 
 [[d1_databases]]
 binding = "TELEMETRY_DB"

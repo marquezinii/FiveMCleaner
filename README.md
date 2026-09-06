@@ -49,12 +49,23 @@ Otimizar analisa automaticamente o computador, recomenda Leve, Médio ou Agressi
 | **Leve** | Ajustes suaves, com prioridade para preservar a experiência visual. |
 | **Médio** | Equilíbrio entre qualidade, responsividade e consistência. |
 | **Agressivo** | Reduz efeitos e opções pesadas para máquinas mais limitadas. |
-| **Ultra (Pro)** | Plano inteligente por rotina e diagnóstico, resposta consistente do ponteiro, acompanhamento local de mudanças e medições guiadas. |
+| **Pessoal (Pro)** | Preferências por rotina, recomendações conforme o diagnóstico, acompanhamento local de mudanças e medições guiadas com comparação e exportação. |
 
-Leve, Médio e Agressivo continuam gratuitos. [Ultra](docs/ultra.md) adapta ações
+Leve, Médio e Agressivo continuam gratuitos. O [espaço pessoal](docs/ultra.md) adapta ações
 seguras ao uso e ao diagnóstico, com uma preferência exclusiva e reversível para
 o ponteiro; não promete ser mais agressivo. Requer
-acesso Pro confirmado pelo servidor. O checkout público ainda não está ativo.
+acesso Pro confirmado pelo servidor. A página **Ralven Pro** reúne comparação de
+planos, checkout hospedado do Mercado Pago, atualização do status e cancelamento
+de renovação. A oferta mensal padrão é R$ 19,90, configurada no servidor; vendas
+ficam desabilitadas até a configuração e homologação do provedor. Consulte
+[cobrança e acesso pago](docs/billing.md) para implantação e testes externos.
+Para começar pela conta Mercado Pago, siga o [guia de configuração](docs/mercado-pago-setup.md).
+
+Diagnóstico, perfis gratuitos, ferramentas FiveM Legacy, histórico, relatórios e
+restauração continuam Free. Pro acrescenta conveniência e acompanhamento:
+quatro rotinas pessoais, leituras locais opt-in e comparação de medições
+compatíveis. O histórico pessoal completo e a exportação dos registros já
+criados continuam disponíveis após o vencimento da assinatura.
 
 Perfis são composições de ações conhecidas — não listas genéricas de "tweaks". Manutenção de dados é sempre opt-in; caches protegidos, entitlements, plugins e autenticação nunca são tratados como lixo.
 

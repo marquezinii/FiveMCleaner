@@ -322,7 +322,7 @@ export async function verifyFirebaseIdToken(token, options = {}) {
  *
  * @param {Request} request
  * @param {Parameters<typeof verifyFirebaseIdToken>[1]} [options]
- * @returns {Promise<{ authorized: true, uid: string, emailVerified: boolean } | { authorized: false, response: Response }>}
+ * @returns {Promise<{ authorized: true, uid: string, emailVerified: boolean, email: string | null } | { authorized: false, response: Response }>}
  */
 export async function requireFirebaseUser(request, options = {}) {
   const header = request.headers.get('Authorization');
@@ -337,7 +337,9 @@ export async function requireFirebaseUser(request, options = {}) {
 
   try {
     const { uid, payload } = await verifyFirebaseIdToken(match[1], options);
-    return { authorized: true, uid, emailVerified: payload.email_verified === true };
+    const email = payload.email_verified === true && typeof payload.email === 'string'
+      && payload.email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email) ? payload.email : null;
+    return { authorized: true, uid, emailVerified: payload.email_verified === true, email };
   } catch {
     return { authorized: false, response: unauthorizedResponse() };
   }

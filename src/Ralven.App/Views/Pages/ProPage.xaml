@@ -1,0 +1,111 @@
+<UserControl x:Class="Ralven.App.Views.Pages.ProPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             SizeChanged="Page_SizeChanged">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="28,24,28,28" MaxWidth="1280" HorizontalAlignment="Stretch">
+            <TextBlock Text="{Binding [Pro.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" />
+            <Rectangle Style="{StaticResource TitleAccentRule}" Margin="0,10,0,20" />
+            <TextBlock Text="{Binding [Pro.Headline], Source={StaticResource LocalizedStrings}}" Style="{StaticResource DisplayText}" TextWrapping="Wrap" />
+            <TextBlock Text="{Binding [Pro.Subtitle], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" MaxWidth="790" HorizontalAlignment="Left" Margin="0,10,0,24" />
+
+            <Border Style="{StaticResource AlertRowStyle}" Margin="0,0,0,16" Visibility="{Binding IsDemo, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock Text="{Binding [Pro.Demo.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyText}" TextWrapping="Wrap" />
+            </Border>
+
+            <Grid x:Name="OfferLayout">
+                <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition x:Name="OfferColumn" Width="350" /></Grid.ColumnDefinitions>
+                <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                <Border x:Name="BenefitsPanel" Style="{StaticResource PanelSurface}" Padding="24" Margin="0,0,20,0">
+                    <StackPanel>
+                        <TextBlock Text="{Binding [Pro.Benefits.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" TextWrapping="Wrap" />
+                        <Grid Margin="0,22,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="34" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <ui:SymbolIcon Symbol="Options24" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding [Pro.Routines.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding [Pro.Routines.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid Margin="0,22,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="34" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <ui:SymbolIcon Symbol="DesktopPulse24" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding [Pro.Tracking.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding [Pro.Tracking.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                        <Grid Margin="0,22,0,0">
+                            <Grid.ColumnDefinitions><ColumnDefinition Width="34" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                            <ui:SymbolIcon Symbol="DataTrending24" Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Top" />
+                            <StackPanel Grid.Column="1">
+                                <TextBlock Text="{Binding [Pro.Measurements.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding [Pro.Measurements.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Grid>
+                        <Border Style="{StaticResource HairlineDivider}" Margin="0,24,0,20" />
+                        <TextBlock Text="{Binding [Pro.Honesty], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                        <Button Content="{Binding [Pro.Explore], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,18,0,0" Click="Explore_Click" />
+                    </StackPanel>
+                </Border>
+
+                <Border x:Name="SubscriptionPanel" Grid.Column="1" Style="{StaticResource PanelSurface}" Padding="24" VerticalAlignment="Top">
+                    <StackPanel>
+                        <TextBlock Text="{Binding [Pro.PlanName], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" />
+                        <TextBlock Text="{Binding Price}" Style="{StaticResource DisplayText}" Margin="0,14,0,0" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding [Pro.PerMonth], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,4,0,18" />
+                        <TextBlock Text="{Binding StatusTitle}" Style="{StaticResource BodyStrongText}" AutomationProperties.LiveSetting="Polite" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding StatusDetail}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        <TextBlock Text="{Binding AccessDetail}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,10,0,0" />
+                        <TextBlock Text="{Binding RenewalDetail}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                        <ProgressBar IsIndeterminate="True" Height="3" Margin="0,14,0,0" Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                     AutomationProperties.Name="{Binding [Pro.Loading], Source={StaticResource LocalizedStrings}}" />
+                        <Button Content="{Binding [Pro.SignIn], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,18,0,0" Click="SignIn_Click"
+                                Visibility="{Binding CanSignIn, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <StackPanel Visibility="{Binding ShowCheckout, Converter={StaticResource BooleanToVisibilityConverter}}" Margin="0,18,0,0">
+                            <CheckBox IsChecked="{Binding Consent}" IsEnabled="{Binding CanRefresh}" VerticalContentAlignment="Top" AutomationProperties.Name="{Binding ConsentText}">
+                                <TextBlock Text="{Binding ConsentText}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" MaxWidth="270" />
+                            </CheckBox>
+                            <Button Content="{Binding [Pro.Checkout], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,16,0,0" IsEnabled="{Binding CanCheckout}" Click="Checkout_Click" />
+                            <TextBlock Text="{Binding [Pro.Checkout.Privacy], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,10,0,0" />
+                            <TextBlock Text="{Binding [Pro.Checkout.Security], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,10,0,0" />
+                        </StackPanel>
+                        <Button Content="{Binding [Pro.Refresh], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,14,0,0" IsEnabled="{Binding CanRefresh}" Click="Refresh_Click" />
+                        <Button Content="{Binding [Pro.Cancel], Source={StaticResource LocalizedStrings}}" Style="{StaticResource LinkButtonStyle}" Margin="0,14,0,0" IsEnabled="{Binding CanCancel}" Click="Cancel_Click"
+                                Visibility="{Binding ShowCancel, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                        <TextBlock Text="{Binding Message}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,16,0,0" AutomationProperties.LiveSetting="Polite"
+                                   Visibility="{Binding HasMessage, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <Border Style="{StaticResource PanelSurface}" Padding="24" Margin="0,20,0,0">
+                <StackPanel>
+                    <TextBlock Text="{Binding [Pro.Comparison.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" TextWrapping="Wrap" />
+                    <Grid Margin="0,18,0,0">
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="70" /><ColumnDefinition Width="70" /></Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                        <TextBlock Grid.Column="1" Text="{Binding [Pro.FreeName], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" HorizontalAlignment="Center" />
+                        <TextBlock Grid.Column="2" Text="{Binding [Pro.ProName], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" HorizontalAlignment="Center" />
+                        <TextBlock Grid.Row="1" Text="{Binding [Pro.Comparison.Diagnostics], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,14,16,0" />
+                        <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding [Pro.Included], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,14,0,0" />
+                        <TextBlock Grid.Row="1" Grid.Column="2" Text="{Binding [Pro.Included], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,14,0,0" />
+                        <TextBlock Grid.Row="2" Text="{Binding [Pro.Comparison.Safety], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,14,16,0" />
+                        <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding [Pro.Included], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,14,0,0" />
+                        <TextBlock Grid.Row="2" Grid.Column="2" Text="{Binding [Pro.Included], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,14,0,0" />
+                        <TextBlock Grid.Row="3" Text="{Binding [Pro.Comparison.Personal], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,14,16,0" />
+                        <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding [Pro.Preview], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,14,0,0" />
+                        <TextBlock Grid.Row="3" Grid.Column="2" Text="{Binding [Pro.Included], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,14,0,0" />
+                        <TextBlock Grid.Row="4" Text="{Binding [Pro.Comparison.Tracking], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,14,16,0" />
+                        <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding [Pro.NotIncluded], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,14,0,0" />
+                        <TextBlock Grid.Row="4" Grid.Column="2" Text="{Binding [Pro.Included], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" HorizontalAlignment="Center" Margin="0,14,0,0" />
+                    </Grid>
+                    <Border Style="{StaticResource HairlineDivider}" Margin="0,20,0,16" />
+                    <TextBlock Text="{Binding [Pro.CancellationPolicy], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                    <Button Content="{Binding [Pro.Support], Source={StaticResource LocalizedStrings}}" Style="{StaticResource LinkButtonStyle}" HorizontalAlignment="Left" Margin="0,12,0,0" Click="Support_Click" />
+                </StackPanel>
+            </Border>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

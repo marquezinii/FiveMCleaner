@@ -5,6 +5,14 @@ Para contrato, troubleshooting e checklist de release da infraestrutura, veja
 
 ## Consentimento
 
+A assinatura Pro tem um fluxo separado, iniciado explicitamente pelo usuário
+na página Ralven Pro. Seu e-mail verificado é enviado ao Mercado Pago para criar
+o checkout; não é persistido nas tabelas de cobrança do Ralven. O Worker/D1
+guarda UID, referências opacas, valor/moeda, estados e datas necessários ao
+pagamento e ao acesso. Dados de cartão ficam no provedor. Nenhum desses dados
+entra na telemetria, nos crashes ou nos relatórios pessoais exportados; ver
+[cobrança e acesso pago](billing.md). Aceitar a telemetria não inicia assinatura.
+
 Quando uma versão altera a política, a tela de transparência volta a aparecer
 e só pode ser fechada por **Continuar**. Sem mudança na política, a escolha
 salva não é perguntada de novo.

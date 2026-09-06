@@ -92,18 +92,24 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition x:Name="Option3MarkColumn" Width="*" />
             </Grid.ColumnDefinitions>
-            <StackPanel x:Name="Recommended0" Grid.Column="0" HorizontalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
-                <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                <TextBlock x:Name="RecommendedText0" Style="{StaticResource OverlineText}" FontSize="10" Foreground="{DynamicResource AccentTextBrush}" />
-            </StackPanel>
-            <StackPanel x:Name="Recommended1" Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
-                <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                <TextBlock x:Name="RecommendedText1" Style="{StaticResource OverlineText}" FontSize="10" Foreground="{DynamicResource AccentTextBrush}" />
-            </StackPanel>
-            <StackPanel x:Name="Recommended2" Grid.Column="2" HorizontalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
-                <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                <TextBlock x:Name="RecommendedText2" Style="{StaticResource OverlineText}" FontSize="10" Foreground="{DynamicResource AccentTextBrush}" />
-            </StackPanel>
+            <Viewbox x:Name="Recommended0" Grid.Column="0" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="RecommendedText0" Style="{StaticResource OverlineText}" FontSize="10" Foreground="{DynamicResource AccentTextBrush}" />
+                </StackPanel>
+            </Viewbox>
+            <Viewbox x:Name="Recommended1" Grid.Column="1" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="RecommendedText1" Style="{StaticResource OverlineText}" FontSize="10" Foreground="{DynamicResource AccentTextBrush}" />
+                </StackPanel>
+            </Viewbox>
+            <Viewbox x:Name="Recommended2" Grid.Column="2" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="RecommendedText2" Style="{StaticResource OverlineText}" FontSize="10" Foreground="{DynamicResource AccentTextBrush}" />
+                </StackPanel>
+            </Viewbox>
         </Grid>
     </Grid>
 </UserControl>

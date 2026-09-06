@@ -1,11 +1,12 @@
-# Ultra: rotinas pessoais do Windows
+# Espaço pessoal Pro: rotinas do Windows
 
 ## Escopo implementado
 
-Ultra é a experiência pessoal do Ralven Pro no otimizador geral do Windows.
+Espaço pessoal é a experiência do Ralven Pro no otimizador geral do Windows.
+O nome interno Ultra permanece nos contratos e arquivos; não é um terceiro plano.
 Leve, Médio e Agressivo continuam gratuitos, incluindo diagnóstico, prévia,
 histórico, comparação básica e rollback. FiveM mantém seu fluxo independente.
-Não há checkout público nem concessão automática de assinatura nesta etapa.
+O acesso à assinatura e à contratação está descrito em [billing.md](billing.md).
 
 O valor proposto é montar uma recomendação conforme uso, pressão de recursos e
 software de transmissão detectado, preservar preferências entre usos do PC,
@@ -66,6 +67,10 @@ requer mesma rotina, nome de tarefa, hardware e versão do Windows, 30 amostras 
 duração entre 29 e 45 segundos nas duas coletas. Pelo menos uma métrica deve
 estar disponível em ambas. O usuário precisa repetir a mesma atividade.
 
+O usuário pode escolher qualquer medição retida e uma referência anterior.
+O aplicativo sugere a última referência compatível; seleção da mesma medição,
+referência posterior ou atividade incompatível não produz uma diferença.
+Cards de CPU, GPU, memória e disco mostram valores e indisponibilidade explícita.
 O resultado mostra utilização média e diferença em pontos percentuais.
 Utilização menor não prova maior desempenho; não se calcula ganho de FPS,
 latência ou estabilidade com essas leituras.
@@ -74,7 +79,7 @@ latência ou estabilidade com essas leituras.
 
 `%LOCALAPPDATA%/Ralven/Personal/workspace.json` contém até quatro rotinas,
 60 eventos de mudança e 30 medições, com limite de 512 KiB. A interface apresenta
-as oito mudanças e seis medições mais recentes. Os nomes das tarefas são locais,
+todas as 60 mudanças e 30 medições retidas. Os nomes das tarefas são locais,
 com até 80 caracteres; não devem conter segredos. Os dados pertencem ao perfil
 do Windows e não são sincronizados entre contas ou computadores.
 
@@ -90,7 +95,15 @@ e armazenamento em memória.
 
 Uma autorização válida inicia uma operação finita. Expiração não interrompe
 transações em andamento nem apaga uma medição concluída. Leitura de registros,
-pausa do acompanhamento e rollback permanecem disponíveis sem assinatura.
+exportação local de histórico em texto, pausa do acompanhamento e rollback
+permanecem disponíveis sem assinatura. A exportação é explícita, reaproveita o
+sanitizador de paths pessoais e exclui assinaturas de hardware, identidade de conta
+e observações brutas. Como nomes de tarefa são texto livre local, a interface
+orienta revisar o arquivo antes de compartilhar.
+
+A introdução orienta a primeira rotina e oferece acesso direto ao Pro. O resumo
+de mudanças mostra o último evento e permite solicitar nova análise ou revisar
+o plano pessoal; nenhuma dessas ações reaplica ajustes automaticamente.
 As políticas de cancelamento e cobrança continuam em [billing.md](billing.md).
 
 `PersonalOptimizationPolicy` compõe exclusivamente opções suportadas.

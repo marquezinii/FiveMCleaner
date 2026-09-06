@@ -1444,7 +1444,7 @@
   <data name="Settings.Account.Title" xml:space="preserve"><value>Cuenta</value></data>
   <data name="Settings.Account.Plan.Title" xml:space="preserve"><value>Plan</value></data>
   <data name="Settings.Account.Plan.Free" xml:space="preserve"><value>Gratuito</value></data>
-  <data name="Settings.Account.Plan.FreeDetail" xml:space="preserve"><value>No hay ningún acceso Pro activo vinculado a esta cuenta.</value></data>
+  <data name="Settings.Account.Plan.FreeDetail" xml:space="preserve"><value>Diagnóstico completo, perfiles gratuitos, historial y restauración. Descubre Pro para rutinas personales y comparaciones locales continuas.</value></data>
   <data name="Settings.Account.Plan.ProUntil" xml:space="preserve"><value>Pro hasta {0}</value></data>
   <data name="Settings.Account.Plan.ProDetail" xml:space="preserve"><value>Acceso Pro confirmado por los servidores de Ralven.</value></data>
   <data name="Settings.Account.Plan.Unavailable" xml:space="preserve"><value>No se pudo confirmar tu plan</value></data>
@@ -1588,11 +1588,11 @@
   <data name="ActionResults.PointerResponse.Unavailable" xml:space="preserve"><value>No se pudo consultar la configuración del puntero de Windows; no se realizó ningún cambio.</value></data>
   <data name="ActionResults.PointerResponse.AlreadyConsistent" xml:space="preserve"><value>La aceleración del puntero de Windows ya estaba desactivada.</value></data>
   <data name="ActionResults.PointerResponse.Applied" xml:space="preserve"><value>Se desactivó la aceleración del puntero de Windows. Se conservó la velocidad elegida.</value></data>
-  <data name="Ultra.Name" xml:space="preserve"><value>Ultra</value></data>
-  <data name="Ultra.Exclusive" xml:space="preserve"><value>Exclusivo para usuarios Pro</value></data>
+  <data name="Ultra.Name" xml:space="preserve"><value>Personal</value></data>
+  <data name="Ultra.Exclusive" xml:space="preserve"><value>Espacio personal · Ralven Pro</value></data>
   <data name="Ultra.Description" xml:space="preserve"><value>Un plan para Windows según tu rutina y preferencias, con seguimiento local y comparaciones guiadas.</value></data>
-  <data name="Ultra.AccessRequired" xml:space="preserve"><value>Ultra es exclusivo para usuarios Pro. Consulta tu plan en Configuración &gt; Cuenta.</value></data>
-  <data name="Ultra.Profiles" xml:space="preserve"><value>Tus rutinas guardadas</value></data>
+  <data name="Ultra.AccessRequired" xml:space="preserve"><value>El espacio personal forma parte de Pro. Abre Ralven Pro para consultar tu plan.</value></data>
+  <data name="Ultra.Profiles" xml:space="preserve"><value>Tus rutinas</value></data>
   <data name="Ultra.Usage.Label" xml:space="preserve"><value>Elige una rutina</value></data>
   <data name="Ultra.Usage.Everyday" xml:space="preserve"><value>Uso diario</value></data>
   <data name="Ultra.Usage.Gaming" xml:space="preserve"><value>Juegos</value></data>
@@ -1654,4 +1654,90 @@ Media CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Ultra.Operation.Cancelled" xml:space="preserve"><value>Operación cancelada. Se conservaron los registros existentes.</value></data>
   <data name="Ultra.Operation.Failed" xml:space="preserve"><value>No se pudo completar esta operación. Revisa el análisis del PC y el acceso al almacenamiento local e inténtalo de nuevo. No se registró ningún éxito.</value></data>
   <data name="Optimizer.PrepareAgain" xml:space="preserve"><value>Preparar otra optimización</value></data>
+  <data name="Pro.Title" xml:space="preserve"><value>Ralven Pro</value></data>
+  <data name="Pro.Headline" xml:space="preserve"><value>Tu PC, listo para tu rutina.</value></data>
+  <data name="Pro.Subtitle" xml:space="preserve"><value>Guarda tus preferencias, descubre qué cambió y compara tus tareas diarias. Más control sobre tu PC, con cada cambio explicado.</value></data>
+  <data name="Pro.Benefits.Title" xml:space="preserve"><value>Un espacio personal para tu PC</value></data>
+  <data name="Pro.Routines.Title" xml:space="preserve"><value>Una rutina para cada momento</value></data>
+  <data name="Pro.Routines.Description" xml:space="preserve"><value>Guarda preferencias para juegos, transmisiones, trabajo y uso diario. Revisa una recomendación basada en el último análisis del PC antes de aplicarla.</value></data>
+  <data name="Pro.Tracking.Title" xml:space="preserve"><value>Descubre cuándo cambia tu configuración</value></data>
+  <data name="Pro.Tracking.Description" xml:space="preserve"><value>Activa lecturas locales mientras Ralven está abierto. Consulta cambios en los ajustes de juegos, el puntero y el espacio en disco, sin ajustes automáticos.</value></data>
+  <data name="Pro.Measurements.Title" xml:space="preserve"><value>Compara con contexto, conserva tus resultados</value></data>
+  <data name="Pro.Measurements.Description" xml:space="preserve"><value>Registra muestras de 30 segundos de CPU, GPU, memoria y disco. Elige mediciones compatibles y exporta tu historial local.</value></data>
+  <data name="Pro.Honesty" xml:space="preserve"><value>Los resultados dependen del hardware y de la actividad. El uso de recursos no es un benchmark de FPS y Pro no promete mejoras universales.</value></data>
+  <data name="Pro.Explore" xml:space="preserve"><value>Explorar espacio personal</value></data>
+  <data name="Pro.PlanName" xml:space="preserve"><value>Ralven Pro · mensual</value></data>
+  <data name="Pro.PerMonth" xml:space="preserve"><value>al mes · cobro recurrente en BRL</value></data>
+  <data name="Pro.Price.Unavailable" xml:space="preserve"><value>Consulta la disponibilidad</value></data>
+  <data name="Pro.Status.Demo" xml:space="preserve"><value>Modo de presentación</value></data>
+  <data name="Pro.Status.SignedOut" xml:space="preserve"><value>Primero, tu cuenta</value></data>
+  <data name="Pro.Status.Unavailable" xml:space="preserve"><value>No se pudo consultar tu suscripción</value></data>
+  <data name="Pro.Status.Free" xml:space="preserve"><value>Tu plan Free sigue completo</value></data>
+  <data name="Pro.Status.Cancelled" xml:space="preserve"><value>Renovación cancelada</value></data>
+  <data name="Pro.Status.Paid" xml:space="preserve"><value>Período pagado confirmado</value></data>
+  <data name="Pro.Status.Paused" xml:space="preserve"><value>Suscripción pausada</value></data>
+  <data name="Pro.Status.Pending" xml:space="preserve"><value>Esperando confirmación del pago</value></data>
+  <data name="Pro.Demo.Description" xml:space="preserve"><value>Solo presentación. El precio es ilustrativo y no se crea ningún checkout ni pago en este modo.</value></data>
+  <data name="Pro.SignIn.Description" xml:space="preserve"><value>Inicia sesión para consultar la oferta actual y gestionar la suscripción vinculada a tu cuenta Ralven.</value></data>
+  <data name="Pro.Unavailable.Description" xml:space="preserve"><value>Comprueba tu conexión y vuelve a actualizar. Las herramientas Free y el historial guardado siguen disponibles.</value></data>
+  <data name="Pro.Cancelled.Description" xml:space="preserve"><value>Las próximas renovaciones se han detenido. El período pagado confirmado permanece disponible hasta su fecha final.</value></data>
+  <data name="Pro.Pending.Description" xml:space="preserve"><value>El acceso comienza cuando Mercado Pago confirma un cobro aprobado. Volver del checkout no activa Pro por sí solo.</value></data>
+  <data name="Pro.SalesUnavailable.Description" xml:space="preserve"><value>Las suscripciones aún no están disponibles para comprar. Explora el espacio personal y sigue usando Free.</value></data>
+  <data name="Pro.Status.Description" xml:space="preserve"><value>Gestiona tu suscripción aquí. Mercado Pago procesa el checkout y los cobros recurrentes.</value></data>
+  <data name="Pro.AccessUntil" xml:space="preserve"><value>Acceso pagado hasta {0}</value></data>
+  <data name="Pro.RenewsAt" xml:space="preserve"><value>Próxima renovación prevista: {0}</value></data>
+  <data name="Pro.Loading" xml:space="preserve"><value>Consultando suscripción</value></data>
+  <data name="Pro.SignIn" xml:space="preserve"><value>Entrar para ver planes</value></data>
+  <data name="Pro.Checkout.Consent" xml:space="preserve"><value>Entiendo el cobro recurrente de {0} al mes y que puedo cancelar las próximas renovaciones aquí.</value></data>
+  <data name="Pro.Checkout" xml:space="preserve"><value>Continuar en Mercado Pago</value></data>
+  <data name="Pro.Checkout.Security" xml:space="preserve"><value>Tu navegador abrirá Mercado Pago. Ralven no recibe los datos de tu tarjeta.</value></data>
+  <data name="Pro.Checkout.Opened" xml:space="preserve"><value>Checkout abierto en el navegador. Complétalo allí y actualiza para comprobar la confirmación. No vuelvas a pagar si la confirmación sigue pendiente.</value></data>
+  <data name="Pro.Refresh" xml:space="preserve"><value>Actualizar suscripción</value></data>
+  <data name="Pro.Cancel" xml:space="preserve"><value>Cancelar renovación</value></data>
+  <data name="Pro.Manage" xml:space="preserve"><value>Planes y suscripción</value></data>
+  <data name="Pro.Cancel.Title" xml:space="preserve"><value>¿Cancelar las próximas renovaciones?</value></data>
+  <data name="Pro.Cancel.Message" xml:space="preserve"><value>Mercado Pago detendrá los próximos cobros recurrentes. Tu acceso pagado confirmado permanece hasta su fecha final. Cancelar no reembolsa cobros anteriores. Tu historial local y las opciones de restauración siguen disponibles.</value></data>
+  <data name="Pro.Cancel.Keep" xml:space="preserve"><value>Mantener suscripción</value></data>
+  <data name="Pro.Cancel.Confirm" xml:space="preserve"><value>Cancelar renovación</value></data>
+  <data name="Pro.Cancel.Success" xml:space="preserve"><value>Cancelación confirmada. No se solicitarán nuevas renovaciones de esta suscripción.</value></data>
+  <data name="Pro.Comparison.Title" xml:space="preserve"><value>Elige lo que encaja con tu rutina</value></data>
+  <data name="Pro.FreeName" xml:space="preserve"><value>Free</value></data>
+  <data name="Pro.ProName" xml:space="preserve"><value>Pro</value></data>
+  <data name="Pro.Comparison.Diagnostics" xml:space="preserve"><value>Diagnóstico del PC, perfiles gratuitos y herramientas para FiveM Legacy</value></data>
+  <data name="Pro.Comparison.Safety" xml:space="preserve"><value>Revisión del plan, historial, informes y restauración</value></data>
+  <data name="Pro.Comparison.Personal" xml:space="preserve"><value>Rutinas personales guardadas y recomendaciones según tu uso</value></data>
+  <data name="Pro.Comparison.Tracking" xml:space="preserve"><value>Nuevas lecturas de cambios y mediciones guiadas</value></data>
+  <data name="Pro.Included" xml:space="preserve"><value>Incluido</value></data>
+  <data name="Pro.NotIncluded" xml:space="preserve"><value>—</value></data>
+  <data name="Pro.Preview" xml:space="preserve"><value>Vista previa</value></data>
+  <data name="Pro.CancellationPolicy" xml:space="preserve"><value>Cancela las próximas renovaciones aquí en cualquier momento. El acceso pagado continúa hasta la fecha final confirmada; reembolsos y disputas afectan al período reembolsado. Los registros guardados y la restauración siguen accesibles tras el vencimiento. Para ayuda con cobros o solicitudes de reembolso, usa nuestro canal de soporte; no publiques datos de tarjeta ni contraseñas.</value></data>
+  <data name="Pro.Support" xml:space="preserve"><value>Abrir soporte en Discord</value></data>
+  <data name="Pro.Error.RateLimited" xml:space="preserve"><value>Demasiadas solicitudes. Espera un momento y actualiza tu suscripción.</value></data>
+  <data name="Pro.Error.Existing" xml:space="preserve"><value>Esta cuenta ya tiene una suscripción. Actualiza su estado para gestionarla.</value></data>
+  <data name="Pro.Error.Pending" xml:space="preserve"><value>El proveedor aún no ha confirmado la solicitud anterior. Actualiza antes de intentarlo de nuevo. No se ha creado una segunda suscripción.</value></data>
+  <data name="Pro.Error.OfferChanged" xml:space="preserve"><value>La oferta cambió. Actualiza para revisar el precio actual y confirmar de nuevo.</value></data>
+  <data name="Pro.Error.Request" xml:space="preserve"><value>No se pudo confirmar la solicitud. Actualiza para consultar su estado antes de intentarlo de nuevo. Un cobro o cancelación pendiente no debe considerarse completado.</value></data>
+  <data name="Personal.Introduction" xml:space="preserve"><value>Tus rutinas, tus decisiones. Guarda un plan personal, sigue los cambios y compara la misma actividad. Guardar una rutina nunca modifica Windows.</value></data>
+  <data name="Personal.Upgrade" xml:space="preserve"><value>Conocer Ralven Pro</value></data>
+  <data name="Personal.History.Count" xml:space="preserve"><value>{0}/30 mediciones · {1}/60 cambios guardados en este PC</value></data>
+  <data name="Personal.Tracking.Latest" xml:space="preserve"><value>Último cambio registrado: {0} · {1}</value></data>
+  <data name="Personal.Tracking.Analyze" xml:space="preserve"><value>Analizar este PC de nuevo</value></data>
+  <data name="Personal.Tracking.Review" xml:space="preserve"><value>Revisar mi plan personal</value></data>
+  <data name="Personal.Measure.CompareHelp" xml:space="preserve"><value>Elige una medición y una referencia anterior. Solo se comparan actividades, hardware y versiones de Windows equivalentes. Las diferencias son puntos porcentuales, no mejoras de rendimiento.</value></data>
+  <data name="Personal.Measure.Selected" xml:space="preserve"><value>Medición para consultar</value></data>
+  <data name="Personal.Measure.Baseline" xml:space="preserve"><value>Referencia anterior</value></data>
+  <data name="Personal.Measure.Before" xml:space="preserve"><value>Referencia:</value></data>
+  <data name="Personal.Measure.Delta" xml:space="preserve"><value>{0} p.p.</value></data>
+  <data name="Personal.Metric.Cpu" xml:space="preserve"><value>CPU</value></data>
+  <data name="Personal.Metric.Gpu" xml:space="preserve"><value>GPU</value></data>
+  <data name="Personal.Metric.Memory" xml:space="preserve"><value>Memoria</value></data>
+  <data name="Personal.Metric.Disk" xml:space="preserve"><value>Actividad de disco</value></data>
+  <data name="Personal.History.AllMeasurements" xml:space="preserve"><value>Todas las mediciones guardadas</value></data>
+  <data name="Personal.Export.Title" xml:space="preserve"><value>Ralven · Informe del espacio personal</value></data>
+  <data name="Personal.Export.Button" xml:space="preserve"><value>Exportar mi historial local</value></data>
+  <data name="Personal.Export.Help" xml:space="preserve"><value>Tu historial guardado sigue disponible para lectura y exportación cuando expire Pro. El informe de texto excluye identificadores de hardware. Revisa los nombres de tareas antes de compartir.</value></data>
+  <data name="Personal.Export.Filter" xml:space="preserve"><value>Informe de texto (*.txt)|*.txt</value></data>
+  <data name="Personal.Export.Saved" xml:space="preserve"><value>Historial personal exportado. Revisa el archivo antes de compartir.</value></data>
+  <data name="Personal.Export.Failed" xml:space="preserve"><value>No se pudo exportar el historial. Comprueba la ubicación y vuelve a intentarlo.</value></data>
+  <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>Tu correo verificado se envía a Mercado Pago para crear la suscripción. Ralven guarda referencias, importes, estados y fechas del cobro; nunca datos de tarjeta. Cualquier reembolso, incluso parcial, elimina el acceso del período pagado correspondiente.</value></data>
 </root>

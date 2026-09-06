@@ -57,8 +57,8 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
   `docs/superpowers/specs/2026-08-17-live-alerts-design.md`.
 - `src/auth/` — the custom admin authentication (see below).
 - `src/billing/` — provider webhook verification/reconciliation and the
-  authenticated, provider-neutral entitlement read model. This is a safe
-  foundation only: no public checkout or automatic Pro grant exists yet. See
+  authenticated checkout/cancellation and payment-backed entitlement read model.
+  Sales are disabled by default until provider sandbox validation. See
   [`docs/billing.md`](../../docs/billing.md).
 - `src/stats/` — `queries.js` (pure SQL+params builders, one per dashboard
   chart) and `csv.js` (pure CSV serialization for the export feature).
@@ -193,7 +193,7 @@ lookup (`LIVE_ALERT_LIMITER`, 30/60s per IP) — it is read-only, unauthenticate
 by necessity (every installed app reads it), and never exposes anything more
 sensitive than the one message an admin chose to broadcast.
 
-## Billing foundation
+## Billing and recurring subscriptions
 
 `GET /account/entitlements` uses the same verified Firebase UID as the profile
 routes and returns only the current tier, entitlement keys and validity. Missing
@@ -203,8 +203,10 @@ returned.
 `POST /billing/mercado-pago/webhook` verifies the Mercado Pago signature over
 the signed request envelope, fetches `GET /preapproval/{id}` with a Worker-only
 Access Token, and matches the canonical reference, BRL amount and currency to a
-server-side checkout intent before updating billing state. It deliberately does
-not trust or persist the webhook body and does not grant Pro in this foundation.
+server-side checkout intent before updating billing state. It never trusts or
+persists the webhook body. Authorized-payment events also fetch the canonical
+invoice and payment: only an approved, unrefunded payment grants its monthly
+period. Mandate authorization alone never grants Pro.
 Both required credentials are Worker secrets:
 
 ```bash
@@ -212,12 +214,31 @@ wrangler secret put MERCADO_PAGO_ACCESS_TOKEN
 wrangler secret put MERCADO_PAGO_WEBHOOK_SECRET
 ```
 
-Do not apply the billing migration or configure production credentials until
-the activation blockers in [`docs/billing.md`](../../docs/billing.md) are
-resolved. Until a provider cancellation flow exists, account deletion returns
-`409 billing-cancellation-required` when a local checkout or subscription is
-linked, so it cannot remove the only mapping while the provider may continue
-charging.
+`GET /account/billing`, `POST /account/billing/checkout` (`{ offerKey }`) and
+`POST /account/billing/cancel` (`{}`) use Firebase authentication. Offers include
+their price in the key to prevent stale consent from accepting another price.
+Checkout creation is serialized by a durable intent; ambiguous provider results
+are recovered by the exact opaque reference and never blindly recreated.
+Cancellation is read back from the provider, preserves already paid access and
+permits account deletion only after every mandate is confirmed cancelled.
+
+Apply migrations through `0009_billing_checkout_payments.sql` with this code.
+`MERCADO_PAGO_BILLING_ENABLED` remains `false` in the committed configuration;
+activation requires the two secrets, `MERCADO_PAGO_RETURN_URL` (HTTPS),
+`MERCADO_PAGO_AMOUNT_CENTS` (default 1990, monthly BRL), and the required
+`BILLING_WRITE_LIMITER` / `BILLING_READ_LIMITER` bindings. Account refresh
+reconciles relevant invoices, recovering missed notifications. Configure the public webhook URL and the
+`subscription_preapproval`, `subscription_authorized_payment`, `payment` topics
+in the Mercado Pago application dashboard. Do not assume a per-mandate
+`notification_url` is supported. Complete the sandbox and commercial-readiness
+steps in [`docs/billing.md`](../../docs/billing.md) before enabling sales.
+
+The Worker itself serves a script-free, query-independent return page at
+`GET /billing/return`. After deploying this code, use
+`https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/billing/return`
+as `MERCADO_PAGO_RETURN_URL`. It directs the user back to Ralven Pro and
+**Atualizar assinatura**, makes no approval claim, and uses CSP with a style
+nonce, `no-store`, `no-referrer` and frame protection.
 
 Legacy Worker product tables (`user_accounts` / sessions), if still present on
 remote D1 from the pre-Firebase system, are not migrated. There are no real

@@ -1,5 +1,6 @@
 import { readBoundedJson } from '../requestSecurity.js';
 import { verifyMercadoPagoSignature } from './mercadoPagoSignature.js';
+import { cents } from './mercadoPagoApi.js';
 
 const PROVIDER = 'mercado_pago';
 const MAX_PROVIDER_BODY_BYTES = 32 * 1024;
@@ -22,16 +23,7 @@ function parseProviderUpdatedAt(value) {
   return Number.isFinite(milliseconds) ? new Date(milliseconds).toISOString() : null;
 }
 
-function amountToCents(value) {
-  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
-    return null;
-  }
-
-  const cents = Math.round(value * 100);
-  return Number.isSafeInteger(cents) && Math.abs(value - (cents / 100)) < 1e-9 ? cents : null;
-}
-
-function parsePreapproval(value, resourceId) {
+export function parsePreapproval(value, resourceId) {
   if (value === null || typeof value !== 'object' || value.id !== resourceId
     || typeof value.external_reference !== 'string'
     || value.external_reference.length < 1 || value.external_reference.length > 128
@@ -45,7 +37,7 @@ function parsePreapproval(value, resourceId) {
   }
 
   const currency = value.auto_recurring.currency_id;
-  const amountCents = amountToCents(value.auto_recurring.transaction_amount);
+  const amountCents = cents(value.auto_recurring.transaction_amount);
   const providerUpdatedAt = parseProviderUpdatedAt(value.last_modified);
   if (typeof currency !== 'string' || !/^[A-Z]{3}$/.test(currency)
     || amountCents === null || providerUpdatedAt === null) {
@@ -324,6 +316,10 @@ export async function handleMercadoPagoWebhook(request, env, options = {}) {
     return json({ error: 'invalid-provider-response' }, 503);
   }
 
+  return reconcilePreapproval(db, preapproval, requestId, resourceId, receivedAt);
+}
+
+export async function reconcilePreapproval(db, preapproval, requestId, resourceId, receivedAt = new Date().toISOString()) {
   let intent;
   try {
     intent = await db.prepare(
