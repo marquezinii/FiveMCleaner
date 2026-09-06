@@ -9,6 +9,20 @@ namespace Ralven.Tests.App;
 
 public sealed class MainViewModelEmptyPlanTests
 {
+    [Theory]
+    [InlineData("en-US")]
+    [InlineData("pt-BR")]
+    [InlineData("es")]
+    public void GeneralOptimizerCopy_HasAnIndependentProductIdentity(string cultureName)
+    {
+        var localization = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo(cultureName));
+        var subtitle = localization.GetString("Optimizer.General.Subtitle");
+
+        Assert.DoesNotContain("FiveM", subtitle, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("GTA", subtitle, StringComparison.OrdinalIgnoreCase);
+    }
+
     [Fact]
     public void BeforeDiagnostic_NoProfileIsPresentedAsRecommended()
     {

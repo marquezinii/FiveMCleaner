@@ -131,11 +131,11 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private DispatcherTimer? operationTimer;
     private OptimizationReportDto? lastReport;
     private string reportSummaryLabel = string.Empty;
+    private string reportDetailSummaryLabel = string.Empty;
     private string reportRestartLabel = string.Empty;
     private bool isReportAvailable;
     private string profilePresentationBenefits = string.Empty;
     private string profilePresentationImpact = string.Empty;
-    private string profilePresentationCategories = string.Empty;
     private OptimizationComparisonResult? lastComparison;
     private Guid? lastTransactionId;
     private bool isComparisonAvailable;

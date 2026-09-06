@@ -20,7 +20,7 @@
   <data name="Games.FiveM.Action" xml:space="preserve"><value>Abrir optimizador de FiveM</value></data>
   <data name="Games.FiveM.ActionTooltip" xml:space="preserve"><value>Abrir diagnóstico y optimización de FiveM sobre GTAV Legacy</value></data>
   <data name="Safety.Active" xml:space="preserve"><value>Protección activa</value></data>
-  <data name="Safety.SnapshotRollback" xml:space="preserve"><value>Instantánea y reversión antes de los cambios.</value></data>
+  <data name="Safety.SnapshotRollback" xml:space="preserve"><value>La configuración se guarda antes de cambiar y puede restaurarse.</value></data>
   <data name="BugReport.Link" xml:space="preserve"><value>Reportar un error</value></data>
   <data name="BugReport.LinkTooltip" xml:space="preserve"><value>Abrir formulario de reporte de errores</value></data>
   <data name="Dashboard.Title" xml:space="preserve"><value>Resumen</value></data>
@@ -302,30 +302,35 @@
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Optimizar ahora</value></data>
   <data name="Optimizer.Title" xml:space="preserve"><value>Optimizador de FiveM</value></data>
   <data name="Optimizer.Subtitle" xml:space="preserve"><value>Prepara tu equipo para jugar con menos interrupciones, procesos innecesarios y problemas de caché.</value></data>
-  <data name="Optimizer.General.Title" xml:space="preserve"><value>Optimiza tu PC</value></data>
-  <data name="Optimizer.General.Subtitle" xml:space="preserve"><value>Revisa un plan transparente de Windows con acciones seguras que no requieren FiveM ni GTA V.</value></data>
+  <data name="Optimizer.General.Title" xml:space="preserve"><value>Optimizador general</value></data>
+  <data name="Optimizer.General.Subtitle" xml:space="preserve"><value>Elige un perfil y revisa qué cambiará antes de comenzar.</value></data>
   <data name="Optimizer.FiveM.Title" xml:space="preserve"><value>Optimizador de FiveM</value></data>
   <data name="Optimizer.FiveM.Subtitle" xml:space="preserve"><value>Prepara FiveM sobre GTAV Legacy con diagnósticos, ajustes y acciones reversibles dedicadas.</value></data>
   <data name="Optimizer.NoRemoteScripts" xml:space="preserve"><value>100% LOCAL</value></data>
   <data name="Optimizer.SystemReady" xml:space="preserve"><value>Sistema listo</value></data>
   <data name="Optimizer.Recommended" xml:space="preserve"><value>OPTIMIZACIÓN RECOMENDADA</value></data>
   <data name="Optimizer.Computer" xml:space="preserve"><value>Tu equipo</value></data>
-  <data name="Optimizer.Impact" xml:space="preserve"><value>IMPACTO ESPERADO</value></data>
-  <data name="Optimizer.Execution" xml:space="preserve"><value>EJECUCIÓN</value></data>
+  <data name="Optimizer.Impact" xml:space="preserve"><value>NIVEL DE CAMBIO</value></data>
+  <data name="Optimizer.Execution" xml:space="preserve"><value>ACCESO</value></data>
   <data name="Optimizer.ChangeMode" xml:space="preserve"><value>Cambiar modo</value></data>
   <data name="Optimizer.RunningTitle" xml:space="preserve"><value>Optimizando tu equipo</value></data>
-  <data name="Optimizer.ShowDetails" xml:space="preserve"><value>Mostrar detalles</value></data>
+  <data name="Optimizer.ShowDetails" xml:space="preserve"><value>Detalles técnicos</value></data>
   <data name="Optimizer.CompletedTitle" xml:space="preserve"><value>Optimización completada</value></data>
   <data name="Optimizer.Result.Failed" xml:space="preserve"><value>La optimización no se completó</value></data>
   <data name="Optimizer.Result.PartialTitle" xml:space="preserve"><value>Completado con errores</value></data>
   <data name="Optimizer.NextStep" xml:space="preserve"><value>SIGUIENTE PASO RECOMENDADO</value></data>
-  <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Plan de optimización</value></data>
+  <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Qué se ajustará</value></data>
   <data name="Optimizer.AutomaticAnalysis.Header" xml:space="preserve"><value>{0} comprobaciones automáticas</value></data>
-  <data name="Optimizer.AutomaticAnalysis.Description" xml:space="preserve"><value>Ralven comprueba estos elementos automáticamente durante la optimización para conocer el estado actual del equipo. No necesitas hacer nada.</value></data>
-  <data name="Optimizer.Details.Detection" xml:space="preserve"><value>CÓMO SE DETECTA</value></data>
-  <data name="Optimizer.Details.Confirmation" xml:space="preserve"><value>CÓMO SE CONFIRMA</value></data>
-  <data name="Optimizer.Details.Undo" xml:space="preserve"><value>CÓMO DESHACER</value></data>
-  <data name="Optimizer.Details.Limitations" xml:space="preserve"><value>RIESGOS Y LIMITACIONES</value></data>
+  <data name="Optimizer.AutomaticAnalysis.Description" xml:space="preserve"><value>Comprobaciones de hardware, controladores y estabilidad. No cambian tu PC.</value></data>
+  <data name="Optimizer.ExecutionDetails" xml:space="preserve"><value>Ver pasos completados</value></data>
+  <data name="Optimizer.ResultDetails" xml:space="preserve"><value>Detalles e informe técnico</value></data>
+  <data name="Optimizer.ResultActions" xml:space="preserve"><value>RESULTADO POR AJUSTE</value></data>
+  <data name="Optimizer.Details.Risk" xml:space="preserve"><value>RIESGO</value></data>
+  <data name="Optimizer.Details.Access" xml:space="preserve"><value>ACCESO Y RESTAURACIÓN</value></data>
+  <data name="Optimizer.Details.Detection" xml:space="preserve"><value>CÓMO SE COMPRUEBA</value></data>
+  <data name="Optimizer.Details.Confirmation" xml:space="preserve"><value>DESPUÉS DE APLICAR</value></data>
+  <data name="Optimizer.Details.Undo" xml:space="preserve"><value>CÓMO RESTAURAR</value></data>
+  <data name="Optimizer.Details.Limitations" xml:space="preserve"><value>LÍMITES</value></data>
   <data name="Optimizer.Table.Action" xml:space="preserve"><value>ACCIÓN</value></data>
   <data name="Optimizer.Table.Description" xml:space="preserve"><value>QUÉ HACE</value></data>
   <data name="Optimizer.Table.Risk" xml:space="preserve"><value>RIESGO</value></data>
@@ -333,7 +338,7 @@
   <data name="Optimizer.CurrentPlan" xml:space="preserve"><value>Plan actual</value></data>
   <data name="Optimizer.RunPlan" xml:space="preserve"><value>Ejecutar plan</value></data>
   <data name="Progress.Title" xml:space="preserve"><value>Progreso</value></data>
-  <data name="Progress.CancelAfterStep" xml:space="preserve"><value>Cancelar después de este paso</value></data>
+  <data name="Progress.CancelAfterStep" xml:space="preserve"><value>Detener de forma segura</value></data>
   <data name="Progress.Elapsed" xml:space="preserve"><value>Transcurrido: {0}</value></data>
   <data name="Progress.Remaining" xml:space="preserve"><value>Quedan aproximadamente {0}</value></data>
   <data name="Progress.Calculating" xml:space="preserve"><value>Calculando estimación...</value></data>
@@ -454,12 +459,12 @@
   <data name="Plan.CloseGtaV" xml:space="preserve"><value>Cierra GTA V primero</value></data>
   <data name="Plan.Unavailable" xml:space="preserve"><value>Plan no disponible</value></data>
   <data name="Plan.RunDiagnosisAgain" xml:space="preserve"><value>Ejecuta el diagnóstico de nuevo.</value></data>
-  <data name="Plan.Elevation.UacAtRun" xml:space="preserve"><value>UAC solo al ejecutar</value></data>
-  <data name="Plan.Elevation.None" xml:space="preserve"><value>sin elevación</value></data>
-  <data name="Plan.Elevation.OnePrompt" xml:space="preserve"><value>Windows mostrará una sola solicitud de UAC.</value></data>
-  <data name="Plan.Elevation.CurrentUser" xml:space="preserve"><value>Se ejecuta como el usuario actual.</value></data>
-  <data name="Plan.Safety.Mixed" xml:space="preserve"><value>Las limpiezas permanentes se identifican en el plan. Las configuraciones tienen reversión.</value></data>
-  <data name="Plan.Safety.Reversible" xml:space="preserve"><value>Todos los cambios de este plan pueden deshacerse.</value></data>
+  <data name="Plan.Elevation.UacAtRun" xml:space="preserve"><value>Confirmación de Windows</value></data>
+  <data name="Plan.Elevation.None" xml:space="preserve"><value>Sin acceso de administrador</value></data>
+  <data name="Plan.Elevation.OnePrompt" xml:space="preserve"><value>Se solicita una vez al comenzar.</value></data>
+  <data name="Plan.Elevation.CurrentUser" xml:space="preserve"><value>Sin confirmación adicional.</value></data>
+  <data name="Plan.Safety.Mixed" xml:space="preserve"><value>Las limpiezas permanentes se identifican. Los demás ajustes pueden deshacerse.</value></data>
+  <data name="Plan.Safety.Reversible" xml:space="preserve"><value>Todos los ajustes pueden deshacerse.</value></data>
   <data name="Plan.NoAdditionalWarnings" xml:space="preserve"><value>No hay advertencias adicionales para este plan.</value></data>
   <data name="Plan.Empty.Title" xml:space="preserve"><value>No hay acciones disponibles para este diagnóstico</value></data>
   <data name="Plan.Empty.Summary" xml:space="preserve"><value>No se realizará ningún cambio hasta que el diagnóstico encuentre acciones seguras.</value></data>
@@ -468,7 +473,7 @@
   <data name="Plan.Empty.GeneralNoSafeActions" xml:space="preserve"><value>Esta PC ya cumple los objetivos seguros de Windows disponibles para el perfil seleccionado.</value></data>
   <data name="Plan.Empty.DiagnosticInProgress" xml:space="preserve"><value>Espera a que termine el diagnóstico antes de preparar acciones.</value></data>
   <data name="Plan.Empty.DiagnosticUnavailable" xml:space="preserve"><value>No se pudo completar el diagnóstico. Vuelve a analizar tu computadora antes de preparar acciones.</value></data>
-  <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} ajustes • catálogo v{1}</value></data>
+  <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} ajustes</value></data>
   <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>{0} acciones completadas. {1}</value></data>
   <data name="Diagnosis.Partial" xml:space="preserve"><value>Diagnóstico parcial</value></data>
   <data name="Diagnosis.CouldNotScanAgain" xml:space="preserve"><value>No se pudo escanear de nuevo en este momento</value></data>
@@ -852,7 +857,7 @@
   <data name="Actions.fivem.legacy.crash-patterns.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no abre, elimina ni envía ningún volcado.</value></data>
   <data name="Actions.fivem.legacy.crash-patterns.diagnose.RiskLimitations" xml:space="preserve"><value>Es una búsqueda textual de patrones conocidos, no un análisis de volcados de memoria; que no aparezca un patrón no garantiza la ausencia del problema.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Name" xml:space="preserve"><value>Limpiar archivos temporales antiguos</value></data>
-  <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Elimina solo los archivos temporales del usuario más antiguos que el período de retención seleccionado por el perfil.</value></data>
+  <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Elimina archivos temporales antiguos que no están en uso.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.DetectionSummary" xml:space="preserve"><value>Recorre la carpeta Temp del usuario en busca de archivos que superen el período de retención.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.ConfirmationSummary" xml:space="preserve"><value>Confirma que los archivos antiguos seleccionados ya no existan después de la limpieza.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.UndoSummary" xml:space="preserve"><value>Irreversible: los archivos temporales antiguos no se conservan en cuarentena.</value></data>
@@ -888,7 +893,7 @@
   <data name="Actions.fivem.legacy.auth-data.repair.UndoSummary" xml:space="preserve"><value>Puede revertirse desde la cuarentena hasta la confirmación final de la optimización; después, FiveM solicita un nuevo inicio de sesión para regenerar los datos.</value></data>
   <data name="Actions.fivem.legacy.auth-data.repair.RiskLimitations" xml:space="preserve"><value>Es una excepción documentada en docs/safety.md: ros_id.dat y las titularidades normalmente nunca se eliminan automáticamente; esta acción solo existe para el caso específico de un error detectado, nunca forma parte de perfiles automáticos y siempre usa una cuarentena reversible.</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.Name" xml:space="preserve"><value>Habilitar Modo Juego</value></data>
-  <data name="Actions.windows.gaming.game-mode.enable.Description" xml:space="preserve"><value>Habilita la función de juegos de Windows que prioriza los recursos mientras los juegos se ejecutan.</value></data>
+  <data name="Actions.windows.gaming.game-mode.enable.Description" xml:space="preserve"><value>Ayuda a Windows a priorizar recursos mientras juegas.</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.DetectionSummary" xml:space="preserve"><value>Lee el valor AutoGameModeEnabled del registro del usuario actual.</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.ConfirmationSummary" xml:space="preserve"><value>Confirma que el Modo Juego haya quedado habilitado después de la escritura.</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.UndoSummary" xml:space="preserve"><value>Totalmente reversible: el valor anterior del registro se restaura durante la reversión.</value></data>
@@ -900,13 +905,13 @@
   <data name="Actions.windows.gaming.high-performance-gpu.prefer.UndoSummary" xml:space="preserve"><value>Totalmente reversible: la preferencia anterior se restaura durante la reversión.</value></data>
   <data name="Actions.windows.gaming.high-performance-gpu.prefer.RiskLimitations" xml:space="preserve"><value>Solo produce una diferencia en equipos con más de una GPU.</value></data>
   <data name="Actions.windows.gaming.background-capture.disable.Name" xml:space="preserve"><value>Deshabilitar captura en segundo plano</value></data>
-  <data name="Actions.windows.gaming.background-capture.disable.Description" xml:space="preserve"><value>Deshabilita la grabación continua en segundo plano de Windows sin eliminar Game Bar.</value></data>
+  <data name="Actions.windows.gaming.background-capture.disable.Description" xml:space="preserve"><value>Evita grabaciones automáticas en segundo plano sin eliminar Game Bar.</value></data>
   <data name="Actions.windows.gaming.background-capture.disable.DetectionSummary" xml:space="preserve"><value>Lee el valor de grabación en segundo plano (Game DVR) del registro del usuario.</value></data>
   <data name="Actions.windows.gaming.background-capture.disable.ConfirmationSummary" xml:space="preserve"><value>Confirma que la captura en segundo plano haya quedado deshabilitada.</value></data>
   <data name="Actions.windows.gaming.background-capture.disable.UndoSummary" xml:space="preserve"><value>Totalmente reversible: el valor anterior se restaura durante la reversión.</value></data>
   <data name="Actions.windows.gaming.background-capture.disable.RiskLimitations" xml:space="preserve"><value>No elimina Game Bar ni afecta las grabaciones manuales que inicies.</value></data>
   <data name="Actions.windows.power.performance-session.enable.Name" xml:space="preserve"><value>Activar un plan de energía de alto rendimiento</value></data>
-  <data name="Actions.windows.power.performance-session.enable.Description" xml:space="preserve"><value>Usa un plan de energía de rendimiento mientras está conectado y registra el estado anterior para reversión.</value></data>
+  <data name="Actions.windows.power.performance-session.enable.Description" xml:space="preserve"><value>Usa un modo de energía más potente mientras la PC está conectada.</value></data>
   <data name="Actions.windows.power.performance-session.enable.DetectionSummary" xml:space="preserve"><value>Lee el plan de energía activo y comprueba que el equipo esté conectado a la corriente.</value></data>
   <data name="Actions.windows.power.performance-session.enable.ConfirmationSummary" xml:space="preserve"><value>Confirma que el plan de rendimiento haya quedado activo.</value></data>
   <data name="Actions.windows.power.performance-session.enable.UndoSummary" xml:space="preserve"><value>Totalmente reversible: el plan anterior se restaura durante la reversión.</value></data>
@@ -1025,8 +1030,8 @@
   <data name="Actions.windows.gaming.hybrid-laptop.diagnose.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.windows.gaming.hybrid-laptop.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no modifica la energía ni la GPU, y tampoco instala ni elimina nada.</value></data>
   <data name="Actions.windows.gaming.hybrid-laptop.diagnose.RiskLimitations" xml:space="preserve"><value>No controla el conmutador MUX ni el BIOS mediante métodos genéricos no documentados; detectar la utilidad instalada del fabricante no confirma que la laptop tenga un conmutador MUX o una GPU dedicada.</value></data>
-  <data name="Actions.windows.power.pcie-aspm.adjust.Name" xml:space="preserve"><value>Ajustar la administración de energía del estado de enlace PCI Express</value></data>
-  <data name="Actions.windows.power.pcie-aspm.adjust.Description" xml:space="preserve"><value>Deshabilita el ahorro de energía de los enlaces PCI Express (ASPM) en el esquema activo. Esto evita transiciones de ahorro del enlace, pero el efecto perceptible depende del hardware y el consumo puede aumentar.</value></data>
+  <data name="Actions.windows.power.pcie-aspm.adjust.Name" xml:space="preserve"><value>Reducir el ahorro de energía del hardware</value></data>
+  <data name="Actions.windows.power.pcie-aspm.adjust.Description" xml:space="preserve"><value>Evita transiciones de ahorro de energía en conexiones internas. Puede aumentar el consumo y la temperatura.</value></data>
   <data name="Actions.windows.power.pcie-aspm.adjust.DetectionSummary" xml:space="preserve"><value>Lee los índices AC y DC de ASPM del esquema activo mediante las API nativas PowerReadACValueIndex y PowerReadDCValueIndex.</value></data>
   <data name="Actions.windows.power.pcie-aspm.adjust.ConfirmationSummary" xml:space="preserve"><value>Vuelve a leer AC y DC y confirma Off (0) después de reactivar el esquema.</value></data>
   <data name="Actions.windows.power.pcie-aspm.adjust.UndoSummary" xml:space="preserve"><value>Totalmente reversible: restaura y confirma por separado los valores AC y DC anteriores.</value></data>
@@ -1037,14 +1042,14 @@
   <data name="Actions.windows.gaming.mouse-polling-rate.guide.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.windows.gaming.mouse-polling-rate.guide.UndoSummary" xml:space="preserve"><value>Solo lectura: no modifica ninguna configuración del mouse ni del sistema.</value></data>
   <data name="Actions.windows.gaming.mouse-polling-rate.guide.RiskLimitations" xml:space="preserve"><value>No lee la tasa de sondeo real del mouse, porque no hay una API pública documentada para ello, ni correlaciona los tirones con el movimiento del mouse en tiempo real; la orientación siempre depende de la carga de CPU observada durante el diagnóstico.</value></data>
-  <data name="Actions.windows.appearance.visual-effects.reduce.Name" xml:space="preserve"><value>Reducir efectos visuales de Windows</value></data>
-  <data name="Actions.windows.appearance.visual-effects.reduce.Description" xml:space="preserve"><value>Reduce animaciones y transparencia mientras conserva la legibilidad y el suavizado de fuentes.</value></data>
+  <data name="Actions.windows.appearance.visual-effects.reduce.Name" xml:space="preserve"><value>Reducir animaciones de Windows</value></data>
+  <data name="Actions.windows.appearance.visual-effects.reduce.Description" xml:space="preserve"><value>Reduce animaciones y transparencias mientras conserva la legibilidad.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.DetectionSummary" xml:space="preserve"><value>Lee el estado actual de las animaciones y transparencias de Windows.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.ConfirmationSummary" xml:space="preserve"><value>Vuelve a leer el estado y confirma que se hayan reducido los efectos sin desactivar el suavizado de fuentes.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.UndoSummary" xml:space="preserve"><value>Totalmente reversible: el estado anterior de los efectos se restaura durante la reversión.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.RiskLimitations" xml:space="preserve"><value>Cambia la apariencia del escritorio; conserva la legibilidad y el suavizado de fuentes.</value></data>
-  <data name="Actions.windows.appearance.menu-show-delay.reduce.Name" xml:space="preserve"><value>Hacer más receptivos los menús de Windows</value></data>
-  <data name="Actions.windows.appearance.menu-show-delay.reduce.Description" xml:space="preserve"><value>Limita el retraso de apertura de los menús a 100 ms sin aumentar un valor que ya sea menor.</value></data>
+  <data name="Actions.windows.appearance.menu-show-delay.reduce.Name" xml:space="preserve"><value>Abrir menús con menos demora</value></data>
+  <data name="Actions.windows.appearance.menu-show-delay.reduce.Description" xml:space="preserve"><value>Agiliza los menús en cascada sin cambiar una elección que ya sea más rápida.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.DetectionSummary" xml:space="preserve"><value>Lee el retraso actual de apertura de los menús mediante la API oficial de Windows.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.ConfirmationSummary" xml:space="preserve"><value>Vuelve a leer la configuración y confirma que el retraso coincide con el objetivo aplicado.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.UndoSummary" xml:space="preserve"><value>Totalmente reversible: la reversión restaura el retraso anterior de apertura de los menús.</value></data>
@@ -1066,7 +1071,7 @@
   <data name="Runtime.BrokerRestoring" xml:space="preserve"><value>Restaurando configuración administrativa</value></data>
   <data name="Plan.Notice.DiagnosticsRetention" xml:space="preserve"><value>Los diagnósticos con más de {0} días serán eliminados permanentemente.</value></data>
   <data name="Plan.Notice.ServerCacheRepair" xml:space="preserve"><value>Las cachés del servidor se reconstruirán y la primera carga puede ser más lenta; limpiar server-cache-priv también puede hacer que clips más antiguos del Editor de Rockstar no estén disponibles.</value></data>
-  <data name="Plan.Notice.AcPower" xml:space="preserve"><value>El modo de energía de rendimiento se aplica solo mientras la computadora está conectada.</value></data>
+  <data name="Plan.Notice.AcPower" xml:space="preserve"><value>El modo de rendimiento solo funciona mientras la PC está conectada.</value></data>
   <data name="Plan.Notice.AggressiveWindows" xml:space="preserve"><value>El perfil Agresivo prioriza el rendimiento y la capacidad de respuesta de Windows y puede aumentar el consumo de energía.</value></data>
   <data name="Plan.Notice.AggressiveVisual" xml:space="preserve"><value>El perfil Agresivo prioriza el FPS y la capacidad de respuesta sobre la calidad visual.</value></data>
   <data name="Results.FiveMStopped" xml:space="preserve"><value>FiveM está cerrado; es seguro continuar.</value></data>
@@ -1177,6 +1182,11 @@
   <data name="Report.Failed" xml:space="preserve"><value>Falló</value></data>
   <data name="Report.RequiresRestart" xml:space="preserve"><value>Se necesita reiniciar</value></data>
   <data name="Report.RestorePossible" xml:space="preserve"><value>Restauración posible</value></data>
+  <data name="Report.Primary.Success" xml:space="preserve"><value>Se completaron {0} ajustes de forma segura.</value></data>
+  <data name="Report.Primary.NoChanges" xml:space="preserve"><value>Todo está listo. No fue necesario hacer cambios.</value></data>
+  <data name="Report.Primary.Partial" xml:space="preserve"><value>Se completaron {0} ajustes; otros necesitan atención.</value></data>
+  <data name="Report.Primary.Failed" xml:space="preserve"><value>No se completó ningún ajuste. Abre los detalles para saber por qué.</value></data>
+  <data name="Report.Primary.RollbackFailed" xml:space="preserve"><value>No se pudo confirmar la restauración. Revisa los detalles antes de intentarlo de nuevo.</value></data>
   <data name="Report.SummaryFormat" xml:space="preserve"><value>Verificado {0} · Cambiado {1} · Omitido {2} · Advertencias {3} · Falló {4}</value></data>
   <data name="Report.RestartNeeded" xml:space="preserve"><value>Se recomienda reiniciar Windows para aplicar completamente los cambios.</value></data>
   <data name="Report.RestartNotNeeded" xml:space="preserve"><value>No se requiere reiniciar.</value></data>
@@ -1223,15 +1233,15 @@
   <data name="Profiles.Presentation.Light.Benefits" xml:space="preserve"><value>Libera espacio y aplica ajustes ligeros con impacto mínimo, manteniendo la calidad visual casi intacta.</value></data>
   <data name="Profiles.Presentation.Balanced.Benefits" xml:space="preserve"><value>Equilibra la calidad visual, el uso de GPU y la estabilidad de fotogramas con ajustes moderados y totalmente reversibles.</value></data>
   <data name="Profiles.Presentation.Aggressive.Benefits" xml:space="preserve"><value>Prioriza el FPS y la capacidad de respuesta sobre la calidad visual, aplicando todos los ajustes seguros disponibles.</value></data>
-  <data name="Profiles.Presentation.GeneralWindows.Light.Benefits" xml:space="preserve"><value>Limpia archivos temporales antiguos y aplica ajustes ligeros de juegos de Windows, preservando la experiencia visual.</value></data>
-  <data name="Profiles.Presentation.GeneralWindows.Balanced.Benefits" xml:space="preserve"><value>Combina limpieza segura, ajustes de juegos de Windows y un plan de energía de rendimiento reversible.</value></data>
-  <data name="Profiles.Presentation.GeneralWindows.Aggressive.Benefits" xml:space="preserve"><value>Aplica todas las acciones compatibles de Windows, incluidas reducciones reversibles de efectos visuales para una PC más ágil.</value></data>
+  <data name="Profiles.Presentation.GeneralWindows.Light.Benefits" xml:space="preserve"><value>Realiza una limpieza ligera y activa funciones de juego sin cambiar la apariencia de Windows.</value></data>
+  <data name="Profiles.Presentation.GeneralWindows.Balanced.Benefits" xml:space="preserve"><value>Reduce la actividad en segundo plano y ajusta energía y respuesta, conservando la apariencia de Windows.</value></data>
+  <data name="Profiles.Presentation.GeneralWindows.Aggressive.Benefits" xml:space="preserve"><value>Incluye todos los ajustes del perfil Equilibrado y reduce animaciones para priorizar la respuesta.</value></data>
   <data name="Profiles.Presentation.FiveMLegacy.Light.Benefits" xml:space="preserve"><value>Libera espacio y aplica ajustes ligeros de FiveM, manteniendo casi intacta la calidad visual.</value></data>
   <data name="Profiles.Presentation.FiveMLegacy.Balanced.Benefits" xml:space="preserve"><value>Equilibra la calidad visual, el uso de GPU y la estabilidad de fotogramas en FiveM con ajustes moderados y totalmente reversibles.</value></data>
   <data name="Profiles.Presentation.FiveMLegacy.Aggressive.Benefits" xml:space="preserve"><value>Prioriza la capacidad de respuesta de FiveM sobre la calidad visual, aplicando todos los ajustes dedicados y seguros disponibles.</value></data>
-  <data name="Profiles.Presentation.Impact.Low" xml:space="preserve"><value>Impacto bajo</value></data>
-  <data name="Profiles.Presentation.Impact.Moderate" xml:space="preserve"><value>Impacto moderado</value></data>
-  <data name="Profiles.Presentation.Impact.High" xml:space="preserve"><value>Impacto alto</value></data>
+  <data name="Profiles.Presentation.Impact.Low" xml:space="preserve"><value>Bajo</value></data>
+  <data name="Profiles.Presentation.Impact.Moderate" xml:space="preserve"><value>Moderado</value></data>
+  <data name="Profiles.Presentation.Impact.High" xml:space="preserve"><value>Alto</value></data>
   <data name="Category.Safety" xml:space="preserve"><value>Seguridad</value></data>
   <data name="Category.Storage" xml:space="preserve"><value>Almacenamiento</value></data>
   <data name="Category.WindowsGaming" xml:space="preserve"><value>Juegos en Windows</value></data>
@@ -1450,7 +1460,7 @@
   <data name="Settings.Tools.Description" xml:space="preserve"><value>Acciones de mantenimiento y soporte para usar solo cuando sea necesario.</value></data>
   <data name="Settings.Account.CurrentPasswordLabel" xml:space="preserve"><value>Contraseña actual</value></data>
   <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Quitar</value></data>
-  <data name="Progress.CancelHelp" xml:space="preserve"><value>La cancelación se solicita de forma segura después de la acción actual.</value></data>
+  <data name="Progress.CancelHelp" xml:space="preserve"><value>El paso actual termina antes de detenerse.</value></data>
   <data name="Settings.Account.Security.Title" xml:space="preserve"><value>Seguridad</value></data>
   <data name="Settings.Account.Security.Description" xml:space="preserve"><value>Administra la credencial utilizada para acceder a tu cuenta.</value></data>
   <data name="Settings.Account.PasswordLabel" xml:space="preserve"><value>Contraseña</value></data>

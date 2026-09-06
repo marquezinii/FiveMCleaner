@@ -15,7 +15,7 @@ public sealed record ActionDisplayItem(
     string RiskLabel,
     string RiskBrushKey,
     string PrivilegeLabel,
-    bool RequiresElevation,
+    string PrimaryCautionLabel,
     string CategoryLabel);
 
 public sealed record HistoryDisplayItem(

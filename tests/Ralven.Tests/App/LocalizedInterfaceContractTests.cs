@@ -479,9 +479,11 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("IsBalancedRecommended", optimizer, StringComparison.Ordinal);
         Assert.Contains("IsAggressiveRecommended", optimizer, StringComparison.Ordinal);
         Assert.Contains(": -1;", optimizer, StringComparison.Ordinal);
-        // O ledger de execução (StepLedger) agora é exibido de verdade, com
-        // marca de resultado por ação, em vez de ficar populado sem uso.
+        // O ledger continua acessível, mas sob disclosure para não competir
+        // com a etapa atual e a imediatamente anterior.
         Assert.Contains("StepLedger", optimizer, StringComparison.Ordinal);
+        Assert.Contains("[Optimizer.ExecutionDetails]", optimizer, StringComparison.Ordinal);
+        Assert.Contains("[Optimizer.ResultDetails]", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("ActivityLog", optimizer, StringComparison.Ordinal);
         Assert.Contains("Binding ProgressPercent, Mode=OneWay", optimizer, StringComparison.Ordinal);
         Assert.Contains("PreviousProgressHeadline", optimizer, StringComparison.Ordinal);

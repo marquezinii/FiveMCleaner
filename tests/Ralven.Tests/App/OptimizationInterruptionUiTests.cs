@@ -47,7 +47,7 @@ public sealed class OptimizationInterruptionUiTests
     }
 
     [Fact]
-    public void OptimizerPlan_ShowsUserFacingRiskAndPrivilegeChips()
+    public void OptimizerPlan_UsesProgressiveDisclosureForTechnicalDetails()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -60,9 +60,20 @@ public sealed class OptimizationInterruptionUiTests
 
         Assert.Contains("Text=\"{Binding Name}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding Description}\"", source, StringComparison.Ordinal);
+        Assert.Contains("Text=\"{Binding PrimaryCautionLabel}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding RiskLabel}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding PrivilegeLabel}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding PlanHeader}\"", source, StringComparison.Ordinal);
+        Assert.Contains("[Optimizer.ShowDetails]", source, StringComparison.Ordinal);
+        Assert.Contains("[Optimizer.ExecutionDetails]", source, StringComparison.Ordinal);
+        Assert.Contains("[Optimizer.ResultDetails]", source, StringComparison.Ordinal);
+        Assert.Contains("ReportDetailSummaryLabel", source, StringComparison.Ordinal);
+        Assert.Contains("AutomationProperties.LiveSetting=\"Polite\"", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("[Optimizer.Table.Action]", source, StringComparison.Ordinal);
+
+        var detailsDisclosure = source.IndexOf("[Optimizer.ShowDetails]", StringComparison.Ordinal);
+        var riskDetail = source.IndexOf("Text=\"{Binding RiskLabel}\"", StringComparison.Ordinal);
+        Assert.True(detailsDisclosure >= 0 && riskDetail > detailsDisclosure);
         Assert.Contains("HasPlannedActions", source, StringComparison.Ordinal);
         Assert.Contains("EmptyPlanMessage", source, StringComparison.Ordinal);
         Assert.Contains("[Plan.Empty.Title], Source={StaticResource LocalizedStrings}, Mode=OneWay", source, StringComparison.Ordinal);
