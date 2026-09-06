@@ -787,7 +787,7 @@
   <data name="Actions.windows.gaming.session-settings.diagnose.RiskLimitations" xml:space="preserve"><value>Apenas relata o estado atual; para aplicar mudanças, use as ações correspondentes do perfil.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.Name" xml:space="preserve"><value>Diagnosticar sinais combinados de throttling</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.Description" xml:space="preserve"><value>Combina queda de frequência sob carga, eventos de erro de hardware (WHEA) e temperatura disponível para indicar "possível throttling", sem sensor direto por núcleo.</value></data>
-  <data name="Actions.safety.throttling-signal.diagnose.DetectionSummary" xml:space="preserve"><value>Combina Win32_Processor (clock), uma amostra de uso de CPU, eventos Kernel-WHEA recentes e a zona térmica ACPI, quando disponível.</value></data>
+  <data name="Actions.safety.throttling-signal.diagnose.DetectionSummary" xml:space="preserve"><value>Combina Win32_Processor (clock), uma amostra de uso de CPU, eventos WHEA recentes e a zona térmica ACPI, quando disponível.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.ConfirmationSummary" xml:space="preserve"><value>Sempre é concluída com uma mensagem informativa; nunca falha por si só.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.UndoSummary" xml:space="preserve"><value>Somente leitura: não altera plano de energia, afinidade nem prioridade.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.RiskLimitations" xml:space="preserve"><value>Sem sensor direto por núcleo, o resultado é sempre apresentado como 'possível', nunca como certeza.</value></data>

@@ -787,7 +787,7 @@
   <data name="Actions.windows.gaming.session-settings.diagnose.RiskLimitations" xml:space="preserve"><value>Only reports the current state; use the corresponding profile actions to apply changes.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.Name" xml:space="preserve"><value>Diagnose combined throttling signals</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.Description" xml:space="preserve"><value>Combines clock drop under load, hardware error events (WHEA) and available temperature to flag "possible throttling", without a direct per-core sensor.</value></data>
-  <data name="Actions.safety.throttling-signal.diagnose.DetectionSummary" xml:space="preserve"><value>Combines Win32_Processor (clock), a CPU usage sample, recent Kernel-WHEA events, and the ACPI thermal zone when available.</value></data>
+  <data name="Actions.safety.throttling-signal.diagnose.DetectionSummary" xml:space="preserve"><value>Combines Win32_Processor (clock), a CPU usage sample, recent WHEA events, and the ACPI thermal zone when available.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.ConfirmationSummary" xml:space="preserve"><value>An informational message always completes the action; it never fails on its own.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.UndoSummary" xml:space="preserve"><value>Read-only: does not change the power plan, affinity, or priority.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.RiskLimitations" xml:space="preserve"><value>Without a direct per-core sensor, the result is always presented as "possible," never as certain.</value></data>

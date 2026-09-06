@@ -242,7 +242,7 @@ public sealed partial class ActionCatalog
                 progressWeight: 3,
                 expectedImpact: "Sinaliza possível throttling mesmo quando não há sensor de temperatura confiável disponível.",
                 ActionOptionGate.Always,
-                detectionSummary: "Combina Win32_Processor (clock), uma amostra de uso de CPU, eventos Kernel-WHEA recentes e a zona térmica ACPI, quando disponível.",
+                detectionSummary: "Combina Win32_Processor (clock), uma amostra de uso de CPU, eventos WHEA recentes e a zona térmica ACPI, quando disponível.",
                 confirmationSummary: "Sempre é concluída com uma mensagem informativa; nunca falha por si só.",
                 undoSummary: "Somente leitura: não altera plano de energia, afinidade nem prioridade.",
                 riskLimitations: "Sem sensor direto por núcleo, o resultado é sempre apresentado como 'possível', nunca como certeza."),
