@@ -7,8 +7,8 @@ public sealed record SystemResourceSnapshot(
     long AvailableMemoryBytes,
     int LogicalProcessorCount,
     long SystemDriveFreeBytes,
-    long TotalPageFileBytes,
-    long AvailablePageFileBytes);
+    long CommitLimitBytes,
+    long AvailableCommitBytes);
 
 public interface ISystemResourceInspector
 {
@@ -17,9 +17,10 @@ public interface ISystemResourceInspector
 
 /// <summary>
 /// Reads passive, read-only capacity signals from the local machine: total and
-/// available physical memory, logical processor count and free space on the
-/// Windows system drive. It never writes anything and never starts an
-/// external process, PowerShell or WMI query.
+/// available physical memory, logical processor count, free space on the
+/// Windows system drive and the commit values exposed by GlobalMemoryStatusEx.
+/// It never writes anything and never starts an external process, PowerShell
+/// or WMI query.
 /// </summary>
 public sealed class WindowsSystemResourceInspector : ISystemResourceInspector
 {

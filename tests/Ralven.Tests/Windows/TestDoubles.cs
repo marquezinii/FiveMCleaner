@@ -299,8 +299,8 @@ internal sealed class FakeSystemResourceInspector : ISystemResourceInspector
         AvailableMemoryBytes: 8L * 1024 * 1024 * 1024,
         LogicalProcessorCount: 12,
         SystemDriveFreeBytes: 64L * 1024 * 1024 * 1024,
-        TotalPageFileBytes: 20L * 1024 * 1024 * 1024,
-        AvailablePageFileBytes: 16L * 1024 * 1024 * 1024);
+        CommitLimitBytes: 20L * 1024 * 1024 * 1024,
+        AvailableCommitBytes: 16L * 1024 * 1024 * 1024);
 
     public SystemResourceSnapshot GetSnapshot() => Snapshot;
 }

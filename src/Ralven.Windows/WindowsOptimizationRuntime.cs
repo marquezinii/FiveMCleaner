@@ -402,7 +402,6 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.SystemResources,
                 dependencies.ResourceUsage,
                 dependencies.Thermal,
-                dependencies.NetworkHealth,
                 dependencies.GpuDetails,
                 dependencies.BackgroundProcess),
             OptimizationActionIds.DiagnoseGtaVLaunchParameters => new GtaVLaunchParametersDiagnosisAction(

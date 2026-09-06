@@ -713,24 +713,24 @@
   <data name="Actions.safety.performance-diagnostics.guide.ConfirmationSummary" xml:space="preserve"><value>Always completes with the guidance message.</value></data>
   <data name="Actions.safety.performance-diagnostics.guide.UndoSummary" xml:space="preserve"><value>Read-only: there is nothing to undo.</value></data>
   <data name="Actions.safety.performance-diagnostics.guide.RiskLimitations" xml:space="preserve"><value>Does not inject an overlay or measure FPS through the application; FiveM itself performs the measurement.</value></data>
-  <data name="Actions.safety.network-health.diagnose.Name" xml:space="preserve"><value>Diagnose local network health</value></data>
-  <data name="Actions.safety.network-health.diagnose.Description" xml:space="preserve"><value>Reads link type, speed, and discarded or errored packet counters from the active network interface, without sending traffic to any server.</value></data>
-  <data name="Actions.safety.network-health.diagnose.DetectionSummary" xml:space="preserve"><value>Reads the type, speed, and Windows counters for the fastest active interface (discarded and errored packets).</value></data>
+  <data name="Actions.safety.network-health.diagnose.Name" xml:space="preserve"><value>Diagnose local network counters</value></data>
+  <data name="Actions.safety.network-health.diagnose.Description" xml:space="preserve"><value>Reads link type, speed, and cumulative discarded or errored packet counters from active interfaces, without sending traffic to any server.</value></data>
+  <data name="Actions.safety.network-health.diagnose.DetectionSummary" xml:space="preserve"><value>Reads the type, speed, and cumulative Windows counters for active interfaces (discarded and errored packets).</value></data>
   <data name="Actions.safety.network-health.diagnose.ConfirmationSummary" xml:space="preserve"><value>Always completes with an informational message; it never fails on its own.</value></data>
   <data name="Actions.safety.network-health.diagnose.UndoSummary" xml:space="preserve"><value>Read-only: does not send or receive network traffic.</value></data>
-  <data name="Actions.safety.network-health.diagnose.RiskLimitations" xml:space="preserve"><value>Adapter counters do not measure live application or server latency and do not replace an in-app network diagnostic.</value></data>
+  <data name="Actions.safety.network-health.diagnose.RiskLimitations" xml:space="preserve"><value>The counters do not show when each event occurred and do not measure latency, jitter, or loss along the path to an external service.</value></data>
   <data name="Actions.safety.thermal.diagnose.Name" xml:space="preserve"><value>Diagnose temperature and throttling</value></data>
   <data name="Actions.safety.thermal.diagnose.Description" xml:space="preserve"><value>Attempts to read the ACPI thermal zone exposed by Windows; most motherboards do not expose this without vendor software, and that is reported honestly.</value></data>
   <data name="Actions.safety.thermal.diagnose.DetectionSummary" xml:space="preserve"><value>Queries MSAcpi_ThermalZoneTemperature (WMI) and validates that the value is within a plausible range.</value></data>
   <data name="Actions.safety.thermal.diagnose.ConfirmationSummary" xml:space="preserve"><value>Always completes with an informational message; it never fails on its own.</value></data>
   <data name="Actions.safety.thermal.diagnose.UndoSummary" xml:space="preserve"><value>Read-only: there is nothing to undo.</value></data>
   <data name="Actions.safety.thermal.diagnose.RiskLimitations" xml:space="preserve"><value>Without motherboard or GPU vendor software, most systems do not expose this reading; the app never invents a value.</value></data>
-  <data name="Actions.safety.pagefile-commit.diagnose.Name" xml:space="preserve"><value>Diagnose pagefile and committed memory</value></data>
-  <data name="Actions.safety.pagefile-commit.diagnose.Description" xml:space="preserve"><value>Reads the total and available page file size to warn when the system is close to the commit limit, without resizing anything.</value></data>
-  <data name="Actions.safety.pagefile-commit.diagnose.DetectionSummary" xml:space="preserve"><value>Reads the total and available Windows page file capacity through GlobalMemoryStatusEx.</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.Name" xml:space="preserve"><value>Diagnose the memory commit limit</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.Description" xml:space="preserve"><value>Reads the commit limit and headroom available to the process, backed by RAM and the page file, without resizing anything.</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.DetectionSummary" xml:space="preserve"><value>Reads ullTotalPageFile and ullAvailPageFile through GlobalMemoryStatusEx; these fields represent commit limit and headroom, not page file size alone.</value></data>
   <data name="Actions.safety.pagefile-commit.diagnose.ConfirmationSummary" xml:space="preserve"><value>Always completes with an informational message; it never fails on its own.</value></data>
   <data name="Actions.safety.pagefile-commit.diagnose.UndoSummary" xml:space="preserve"><value>Read-only: never resizes or disables the page file.</value></data>
-  <data name="Actions.safety.pagefile-commit.diagnose.RiskLimitations" xml:space="preserve"><value>Windows already manages the page file automatically on most systems; the app does not change that management.</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.RiskLimitations" xml:space="preserve"><value>The value is the smaller limit for the system or process. Windows manages the page file on most systems; the app does not change that management.</value></data>
   <data name="Actions.fivem.legacy.cache-integrity.diagnose.Name" xml:space="preserve"><value>Diagnose cache index integrity</value></data>
   <data name="Actions.fivem.legacy.cache-integrity.diagnose.Description" xml:space="preserve"><value>Checks whether FiveM's cache index (content_index.xml) exists and is well-formed, recommending the existing repair when needed.</value></data>
   <data name="Actions.fivem.legacy.cache-integrity.diagnose.DetectionSummary" xml:space="preserve"><value>Attempts to open and parse the content_index.xml files in server-cache and server-cache-priv as XML, when present.</value></data>
@@ -755,12 +755,12 @@
   <data name="Actions.windows.gaming.gpu-details.diagnose.ConfirmationSummary" xml:space="preserve"><value>An informational message always completes the action; it never fails on its own.</value></data>
   <data name="Actions.windows.gaming.gpu-details.diagnose.UndoSummary" xml:space="preserve"><value>Read-only: does not write any registry values or driver profiles.</value></data>
   <data name="Actions.windows.gaming.gpu-details.diagnose.RiskLimitations" xml:space="preserve"><value>The integrated/discrete classification is an estimate based on the driver name, not a guaranteed hardware reading.</value></data>
-  <data name="Actions.safety.ram-details.diagnose.Name" xml:space="preserve"><value>Diagnose RAM frequency, channels and XMP/EXPO</value></data>
-  <data name="Actions.safety.ram-details.diagnose.Description" xml:space="preserve"><value>Reads configured and rated clock speed of each RAM module, estimating single-channel status and whether XMP/EXPO appears disabled.</value></data>
-  <data name="Actions.safety.ram-details.diagnose.DetectionSummary" xml:space="preserve"><value>Queries Win32_PhysicalMemory (WMI) for each module's capacity, ConfiguredClockSpeed, and Speed.</value></data>
+  <data name="Actions.safety.ram-details.diagnose.Name" xml:space="preserve"><value>Diagnose RAM modules and frequency</value></data>
+  <data name="Actions.safety.ram-details.diagnose.Description" xml:space="preserve"><value>Reads each RAM module's capacity and configured clock without inferring memory channels or XMP/EXPO state.</value></data>
+  <data name="Actions.safety.ram-details.diagnose.DetectionSummary" xml:space="preserve"><value>Queries Win32_PhysicalMemory (WMI) for each module's Capacity and ConfiguredClockSpeed.</value></data>
   <data name="Actions.safety.ram-details.diagnose.ConfirmationSummary" xml:space="preserve"><value>An informational message always completes the action; it never fails on its own.</value></data>
   <data name="Actions.safety.ram-details.diagnose.UndoSummary" xml:space="preserve"><value>Read-only: does not change the BIOS, memory profile, or frequency.</value></data>
-  <data name="Actions.safety.ram-details.diagnose.RiskLimitations" xml:space="preserve"><value>Channel and XMP/EXPO are heuristic estimates; exact confirmation depends on the BIOS/UEFI.</value></data>
+  <data name="Actions.safety.ram-details.diagnose.RiskLimitations" xml:space="preserve"><value>Win32_PhysicalMemory does not confirm channel topology or the active XMP/EXPO profile; those details require the BIOS/UEFI or a vendor tool.</value></data>
   <data name="Actions.fivem.legacy.storage-health.diagnose.Name" xml:space="preserve"><value>Diagnose drive type and health</value></data>
   <data name="Actions.fivem.legacy.storage-health.diagnose.Description" xml:space="preserve"><value>Identifies HDD, SSD or NVMe for each physical drive and reads predictive health status (SMART/NVMe Health), without repairing anything.</value></data>
   <data name="Actions.fivem.legacy.storage-health.diagnose.DetectionSummary" xml:space="preserve"><value>Queries MSFT_PhysicalDisk (Storage Management API), which covers SATA S.M.A.R.T. and NVMe Health without an additional driver.</value></data>
@@ -787,7 +787,7 @@
   <data name="Actions.windows.gaming.session-settings.diagnose.RiskLimitations" xml:space="preserve"><value>Only reports the current state; use the corresponding profile actions to apply changes.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.Name" xml:space="preserve"><value>Diagnose combined throttling signals</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.Description" xml:space="preserve"><value>Combines clock drop under load, hardware error events (WHEA) and available temperature to flag "possible throttling", without a direct per-core sensor.</value></data>
-  <data name="Actions.safety.throttling-signal.diagnose.DetectionSummary" xml:space="preserve"><value>Combines Win32_Processor (clock), a CPU usage sample, recent Kernel-WHEA events, and the ACPI thermal zone when available.</value></data>
+  <data name="Actions.safety.throttling-signal.diagnose.DetectionSummary" xml:space="preserve"><value>Combines Win32_Processor (clock), a CPU usage sample, recent WHEA events, and the ACPI thermal zone when available.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.ConfirmationSummary" xml:space="preserve"><value>An informational message always completes the action; it never fails on its own.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.UndoSummary" xml:space="preserve"><value>Read-only: does not change the power plan, affinity, or priority.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.RiskLimitations" xml:space="preserve"><value>Without a direct per-core sensor, the result is always presented as "possible," never as certain.</value></data>
@@ -805,16 +805,16 @@
   <data name="Actions.windows.gaming.pcie-link.diagnose.RiskLimitations" xml:space="preserve"><value>Not every driver or motherboard exposes these properties; when they are unavailable, the app reports that instead of guessing.</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.Name" xml:space="preserve"><value>Diagnose BIOS age and hardware stability</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.Description" xml:space="preserve"><value>Reads the BIOS release date and recent hardware error (WHEA) events from the Windows Event Log.</value></data>
-  <data name="Actions.safety.hardware-stability.diagnose.DetectionSummary" xml:space="preserve"><value>Queries Win32_BIOS (WMI) and events from the Microsoft-Windows-Kernel-WHEA source in the System log.</value></data>
+  <data name="Actions.safety.hardware-stability.diagnose.DetectionSummary" xml:space="preserve"><value>Queries Win32_BIOS (WMI) and events from the Microsoft-Windows-WHEA-Logger source in the System log.</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.ConfirmationSummary" xml:space="preserve"><value>An informational message always completes the action; it never fails on its own.</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.UndoSummary" xml:space="preserve"><value>Read-only: does not update the BIOS or clear the event log.</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.RiskLimitations" xml:space="preserve"><value>Resizable BAR/Above 4G/Smart Access Memory cannot be detected reliably without a manufacturer tool; the app reports this limitation instead of guessing.</value></data>
   <data name="Actions.safety.bottleneck-classification.diagnose.Name" xml:space="preserve"><value>Classify the likely bottleneck type</value></data>
-  <data name="Actions.safety.bottleneck-classification.diagnose.Description" xml:space="preserve"><value>Combines CPU/GPU/disk/network usage, memory, temperature and the top CPU-consuming process to point to the most likely limiting resource right now.</value></data>
-  <data name="Actions.safety.bottleneck-classification.diagnose.DetectionSummary" xml:space="preserve"><value>Combines readings already collected by other diagnostics (resource usage, temperature, network, and memory) with the process currently using the most CPU (Win32_PerfFormattedData_PerfProc_Process).</value></data>
+  <data name="Actions.safety.bottleneck-classification.diagnose.Description" xml:space="preserve"><value>Combines CPU/GPU/disk usage, memory, temperature and the top CPU-consuming process to point to the most likely limiting resource right now.</value></data>
+  <data name="Actions.safety.bottleneck-classification.diagnose.DetectionSummary" xml:space="preserve"><value>Combines resource usage, temperature, memory, available VRAM and the process currently using the most CPU (Win32_PerfFormattedData_PerfProc_Process).</value></data>
   <data name="Actions.safety.bottleneck-classification.diagnose.ConfirmationSummary" xml:space="preserve"><value>An informational message always completes the action; it never fails on its own.</value></data>
   <data name="Actions.safety.bottleneck-classification.diagnose.UndoSummary" xml:space="preserve"><value>Read-only: does not terminate or prioritize any process.</value></data>
-  <data name="Actions.safety.bottleneck-classification.diagnose.RiskLimitations" xml:space="preserve"><value>This is an elimination-based classification using local signals; an external limitation is inferred when no local resource stands out, not measured directly.</value></data>
+  <data name="Actions.safety.bottleneck-classification.diagnose.RiskLimitations" xml:space="preserve"><value>This is an elimination-based classification using local signals. It does not infer external causes or treat cumulative network counters as evidence of a current bottleneck.</value></data>
   <data name="Actions.gtav.legacy.launch-parameters.diagnose.Name" xml:space="preserve"><value>Diagnose GTA V launch parameters</value></data>
   <data name="Actions.gtav.legacy.launch-parameters.diagnose.Description" xml:space="preserve"><value>Reads standalone GTA V Legacy's commandline.txt (never FiveM, which ignores this file) and warns when repair parameters were left permanently active.</value></data>
   <data name="Actions.gtav.legacy.launch-parameters.diagnose.DetectionSummary" xml:space="preserve"><value>Reads commandline.txt from the standalone GTA V installation folder, if it exists.</value></data>
