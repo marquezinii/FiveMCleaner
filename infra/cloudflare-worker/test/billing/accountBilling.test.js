@@ -169,6 +169,68 @@ test('partial completed refund and chargeback revoke access from canonical provi
   assert.equal((await fetchAccountEntitlements(f.db, f.auth.uid)).tier, 'free');
 });
 
+test('manual reconciliation notices a chargeback when the payment status stays received', async t => {
+  const f = setup(t); await f.checkout();
+  await reconcilePayment(f.env, 'pay_1', null, f.options);
+  f.setChargeback('REQUESTED');
+  await reconcilePayment(f.env, 'pay_1', null, f.options);
+  assert.equal(f.sqlite.prepare("SELECT state FROM billing_payments WHERE provider_payment_id = 'pay_1'").get().state,
+    'charged_back');
+});
+
+test('account refresh bounds Asaas calls and audits one stale payment across a long subscription', async t => {
+  const f = setup(t); await f.checkout();
+  await reconcilePayment(f.env, 'pay_1', 'evt_current&1', f.options);
+  const historyIds = [];
+  for (let month = 0; month < 60; month++) {
+    const id = `pay_history_${String(month).padStart(2, '0')}`;
+    const periodStart = new Date(Date.UTC(2020, month, 1)).toISOString();
+    const periodEnd = new Date(Date.UTC(2020, month + 1, 1)).toISOString();
+    const providerUpdatedAt = new Date(Date.UTC(2020, month, 2)).toISOString();
+    const event = f.sqlite.prepare(`INSERT INTO billing_webhook_events
+      (provider, provider_request_id, resource_id, received_at, processing_outcome, processed_at)
+      VALUES ('asaas', ?, ?, ?, 'processed', ?)`).run(`evt_history_${month}`, id, providerUpdatedAt, providerUpdatedAt);
+    f.sqlite.prepare(`INSERT INTO billing_payments
+      (provider_payment_id, subscription_id, state, amount_cents, refunded_cents, currency,
+       period_start, period_end, provider_updated_at, last_event_id, updated_at)
+      VALUES (?, 'asaas:sub_1', 'approved', 1990, 0, 'BRL', ?, ?, ?, ?, ?)`)
+      .run(id, periodStart, periodEnd, providerUpdatedAt, Number(event.lastInsertRowid), providerUpdatedAt);
+    historyIds.push(id);
+  }
+  const baseline = f.calls.length;
+  const options = { fetchImpl: async (url, init) => {
+    const parsed = new URL(url);
+    const path = parsed.pathname.replace(/^\/v3/, '');
+    if (path === '/payments') {
+      await f.options.fetchImpl(url, init);
+      return Response.json({ data: [{ id: 'pay_1' }, ...historyIds.map(id => ({ id }))], hasMore: false });
+    }
+    const historical = /^\/payments\/(pay_history_(\d{2}))$/.exec(path);
+    if (historical) {
+      await f.options.fetchImpl(url, init);
+      const month = Number(historical[2]);
+      return Response.json({
+        object: 'payment', id: historical[1], checkoutSession: 'checkout-1', subscription: 'sub_1',
+        billingType: 'CREDIT_CARD', status: 'RECEIVED', value: 19.9,
+        confirmedDate: new Date(Date.UTC(2020, month, 1)).toISOString().slice(0, 10),
+        deleted: false, refunds: null, chargeback: month === 0 ? { status: 'REQUESTED' } : null,
+      });
+    }
+    return f.options.fetchImpl(url, init);
+  } };
+
+  await syncAccountBilling(f.env, f.auth, options);
+
+  const calls = f.calls.slice(baseline);
+  const list = calls.find(call => new URL(call.url).pathname.endsWith('/payments'));
+  assert.match(new URL(list.url).searchParams.get('dueDate[ge]'), /^\d{4}-\d{2}-\d{2}$/);
+  assert.deepEqual(calls.filter(call => /\/payments\/pay_/.test(new URL(call.url).pathname))
+    .map(call => new URL(call.url).pathname.split('/').at(-1)), ['pay_history_00']);
+  assert.equal(calls.filter(call => /\/subscriptions\//.test(new URL(call.url).pathname)).length, 1);
+  assert.equal(f.sqlite.prepare("SELECT state FROM billing_payments WHERE provider_payment_id = 'pay_history_00'").get().state,
+    'charged_back');
+});
+
 test('refresh reconciles a missed payment webhook and cancellation stops the subscription', async t => {
   const f = setup(t); await f.checkout();
   await syncAccountBilling(f.env, f.auth, f.options);
