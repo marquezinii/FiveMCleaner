@@ -23,7 +23,7 @@ public sealed class UpdaterDiagnostics
     /// updater-events endpoint (the App, the transactional Launcher, and this
     /// class's own validation below).
     /// </summary>
-    public const string TelemetryHost = "fivemcleaner-telemetry.felipemarquesini10.workers.dev";
+    public const string TelemetryHost = "api.vemryx.com";
 
     /// <summary>The one allowed endpoint for <see cref="RecordAsync"/>/<see cref="FlushPendingAsync"/>.</summary>
     public static readonly Uri UpdaterEventsEndpoint = new($"https://{TelemetryHost}/updater-events");

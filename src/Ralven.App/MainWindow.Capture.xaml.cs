@@ -23,6 +23,15 @@ public partial class MainWindow
         try
         {
             var outputPath = Path.GetFullPath(argument["--capture=".Length..].Trim('"'));
+            var language = arguments.FirstOrDefault(value => value.StartsWith("--capture-language=", StringComparison.OrdinalIgnoreCase))?
+                ["--capture-language=".Length..];
+            if (demoMode && language is not null)
+                LocalizationService.Current.SetLanguage(language switch
+                {
+                    "en" => AppLanguage.English,
+                    "es" => AppLanguage.Spanish,
+                    _ => AppLanguage.PortugueseBrazil,
+                });
 
             // O modo demo devolve AppSettings padrão de propósito (nunca lê
             // nem grava o arquivo do usuário), então o tema capturado sempre
@@ -66,16 +75,24 @@ public partial class MainWindow
                     "System" => (Element: (UIElement)SystemPage, Nav: SystemNav),
                     "Applications" => (Element: (UIElement)ApplicationsPage, Nav: ApplicationsNav),
                     "Games" => (Element: (UIElement)GamesPage, Nav: GamesNav),
+                    "Pro" => ConfigureProCapture(arguments),
                     "Ultra" => ConfigureUltraCapture(true, arguments),
                     "UltraLocked" => ConfigureUltraCapture(false, arguments),
                     "Optimizer" => ConfigureOptimizerCapture(OptimizationScope.GeneralWindows, OptimizerNav),
                     "FiveMOptimizer" => ConfigureOptimizerCapture(OptimizationScope.FiveMLegacy, GamesNav),
                     "History" => (HistoryPage, HistoryNav),
+                    "HistoryPopulated" => (HistoryPage, HistoryNav),
                     "Settings" => ConfigureSettingsCapture(arguments),
                     _ => (DashboardPage, DashboardNav)
                 };
                 ActivateNavItem(target.Nav);
                 Navigate(target.Element);
+                if (demoMode && tag == "HistoryPopulated")
+                {
+                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), "Windows · Personal", "06/09/2026 14:30", "6 · Committed", true));
+                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), "FiveM · Balanced", "05/09/2026 20:10", "4 · CommittedWithErrors", true));
+                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), "Windows · Light", "04/09/2026 10:00", "2 · RolledBack", false));
+                }
             }
 
             await Task.Delay(450);
@@ -132,6 +149,30 @@ public partial class MainWindow
             Dispatcher.InvokeAsync(expander.BringIntoView, System.Windows.Threading.DispatcherPriority.Loaded);
         }
         return target;
+    }
+
+    private (UIElement Element, Wpf.Ui.Controls.NavigationViewItem Nav) ConfigureProCapture(IReadOnlyList<string> arguments)
+    {
+        UpdateBillingSession();
+        var state = arguments.FirstOrDefault(value => value.StartsWith("--capture-billing-state=", StringComparison.OrdinalIgnoreCase))?
+            ["--capture-billing-state=".Length..];
+        if (demoMode && state is not null)
+        {
+            // Presentation fixtures only: the shell still refuses every billing operation in demoMode.
+            proViewModel.SetSession(true, false);
+            var offer = new BillingOffer("ralven_pro_monthly_1990", 1990, "BRL", 1);
+            proViewModel.SetSnapshot(state switch
+            {
+                "checkout" => new(offer, true, null),
+                "pending" => new(offer, true, new("pending", null, null, true)),
+                "paid" => new(offer, false, new("authorized", null, DateTimeOffset.UtcNow.AddDays(20), true)),
+                "cancelled" => new(offer, true, new("cancelled", null, DateTimeOffset.UtcNow.AddDays(20), false)),
+                _ => null,
+            });
+            if (state == "loading") proViewModel.SetBusy(true);
+            if (state == "error") proViewModel.ShowMessage("Pro.Error.Request");
+        }
+        return (ProPage, ProNav);
     }
 
     internal static bool TryParseCaptureSize(string value, out int width, out int height)

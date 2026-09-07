@@ -11,8 +11,8 @@
     "test": "node --test",
     "hash-admin-password": "node scripts/hash-admin-password.mjs",
     "dev": "wrangler dev",
-    "db:bootstrap:local": "wrangler d1 migrations apply fivemcleaner-telemetry --local",
-    "db:migrate:local": "wrangler d1 migrations apply fivemcleaner-telemetry --local",
+    "db:bootstrap:local": "wrangler d1 migrations apply TELEMETRY_DB --local",
+    "db:migrate:local": "wrangler d1 migrations apply TELEMETRY_DB --local",
     "test:migrations": "node --test test/migrations.test.js",
     "deploy": "wrangler deploy"
   },

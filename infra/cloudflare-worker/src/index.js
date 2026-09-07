@@ -22,7 +22,10 @@ import { createCsrfToken, isValidCsrfToken } from './auth/crypto.js';
 import { validateLiveAlertUpdate } from './liveAlert/validateSubmission.js';
 import { buildLiveAlertUpsert, toLiveAlertResponse } from './liveAlert/store.js';
 import { fetchAccountEntitlements } from './billing/entitlements.js';
-import { handleMercadoPagoWebhook } from './billing/mercadoPagoWebhook.js';
+import { handleAsaasWebhook, refreshEntitlementStatement, revokeEntitlementStatement } from './billing/asaasBilling.js';
+import { createAccountCheckout, cancelAccountBilling, fetchAccountBilling, syncAccountBilling } from './billing/accountBilling.js';
+import { BillingError } from './billing/asaasApi.js';
+import { billingReturnPage } from './billing/returnPage.js';
 
 const MAX_TELEMETRY_BODY_BYTES = 512 * 1024;
 const MAX_BUG_REPORT_BODY_BYTES = 128 * 1024;
@@ -42,8 +45,11 @@ const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 //   GET     /account/profile       -- read the caller's own username/first/last-name profile (requires a valid Firebase ID token)
 //   DELETE  /account/profile       -- delete the caller's own profile before its Firebase account is deleted
 //   GET     /account/entitlements  -- read the caller's server-authoritative access tier (requires a valid Firebase ID token)
+//   GET     /account/billing       -- offer and reconciled subscription status (Firebase ID token)
+//   POST    /account/billing/checkout -- hosted monthly checkout for the accepted server offer
+//   POST    /account/billing/cancel -- stop future renewals after provider confirmation
 //   GET     /account/username-available -- advisory "is this username free?" probe for the registration form (no auth; rate limited per IP)
-//   POST    /billing/mercado-pago/webhook -- verify and reconcile one Mercado Pago subscription notification
+//   POST    /billing/asaas/webhook -- authenticate and reconcile one Asaas billing event
 //   POST    /admin/login           -- { password } -> session cookie
 //   POST    /admin/logout          -- clears the session cookie
 //   GET     /admin/csrf            -- session-bound CSRF token (requires a valid session)
@@ -113,6 +119,7 @@ export default {
 };
 
 async function route(request, env, url) {
+  if (request.method === 'GET' && url.pathname === '/billing/return') return billingReturnPage();
   if (request.method === 'POST'
     && url.pathname.startsWith('/admin/')
     && !isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
@@ -147,6 +154,10 @@ async function route(request, env, url) {
   if (request.method === 'GET' && url.pathname === '/account/entitlements') {
     return handleAccountEntitlementsGet(request, env);
   }
+  if ((request.method === 'GET' && url.pathname === '/account/billing')
+    || (request.method === 'POST' && ['/account/billing/checkout', '/account/billing/cancel'].includes(url.pathname))) {
+    return handleAccountBilling(request, env, url.pathname);
+  }
   if (request.method === 'GET' && url.pathname === '/account/username-available') {
     return handleUsernameAvailability(request, env, url);
   }
@@ -156,8 +167,8 @@ async function route(request, env, url) {
   if (request.method === 'POST' && url.pathname === '/admin/live-alert') {
     return handleLiveAlertUpdate(request, env);
   }
-  if (request.method === 'POST' && url.pathname === '/billing/mercado-pago/webhook') {
-    return handleMercadoPagoWebhook(request, env);
+  if (request.method === 'POST' && url.pathname === '/billing/asaas/webhook') {
+    return handleAsaasWebhook(request, env);
   }
 
   if (request.method === 'GET' && url.pathname === '/admin/csrf') {
@@ -336,9 +347,42 @@ async function handleAccountEntitlementsGet(request, env) {
   if (!auth.authorized) return auth.response;
 
   try {
+    const now = new Date().toISOString();
+    await env.TELEMETRY_DB.batch([
+      refreshEntitlementStatement(env.TELEMETRY_DB, auth.uid, now),
+      revokeEntitlementStatement(env.TELEMETRY_DB, auth.uid, now),
+    ]);
     return jsonResponse(await fetchAccountEntitlements(env.TELEMETRY_DB, auth.uid));
   } catch {
     return jsonResponse({ error: 'entitlements-unavailable' }, 500);
+  }
+}
+
+async function handleAccountBilling(request, env, path) {
+  const auth = await requireFirebaseUser(request);
+  if (!auth.authorized) return auth.response;
+  try {
+    if (request.method === 'GET') {
+      if (!await withinRequiredRateLimit(env.BILLING_READ_LIMITER, `billing:${auth.uid}`)) {
+        return jsonResponse({ error: 'billing-rate-limited' }, 429);
+      }
+      await syncAccountBilling(env, auth);
+      return jsonResponse(await fetchAccountBilling(env, auth.uid));
+    }
+    if (!await withinRequiredRateLimit(env.BILLING_WRITE_LIMITER, `billing:${auth.uid}`)) {
+      return jsonResponse({ error: 'billing-rate-limited' }, 429);
+    }
+    if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(request.headers.get('Content-Type') ?? '')) {
+      return jsonResponse({ error: 'invalid-content-type' }, 415);
+    }
+    const payload = await readBoundedJson(request, 1024);
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return jsonResponse({ error: 'invalid-request' }, 400);
+    if (path.endsWith('/checkout')) return jsonResponse(await createAccountCheckout(env, auth, payload));
+    if (Object.keys(payload).length !== 0) return jsonResponse({ error: 'invalid-request' }, 400);
+    return jsonResponse(await cancelAccountBilling(env, auth));
+  } catch (error) {
+    return jsonResponse({ error: error instanceof BillingError ? error.code : 'billing-temporarily-unavailable' },
+      error instanceof BillingError ? error.status : 503);
   }
 }
 

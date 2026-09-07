@@ -53,6 +53,7 @@
         </Style>
     </UserControl.Resources>
 
+    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
     <Grid Margin="28,24,28,28">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -124,9 +125,9 @@
         </Border>
 
         <!-- ===================== Corpo ===================== -->
-        <Grid Grid.Row="2" MinWidth="924">
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" MinWidth="600" />
+                <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="16" />
                 <ColumnDefinition Width="308" />
             </Grid.ColumnDefinitions>
@@ -235,7 +236,8 @@
                             <StackPanel Grid.Row="1" Grid.Column="2" Width="220" Margin="18,0,0,0" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
                                 <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
                                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                    <TextBlock Text="{Binding ReadinessScore, Mode=OneWay}" FontFamily="{StaticResource AppFontMono}" FontSize="52" FontWeight="SemiBold" LineHeight="58" LineStackingStrategy="BlockLineHeight" Foreground="{DynamicResource TextPrimaryBrush}" Typography.NumeralAlignment="Tabular" />
+                                    <!-- Reserva os três dígitos de 0–100 para não recortar a atualização da nota. -->
+                                    <TextBlock MinWidth="100" Text="{Binding ReadinessScore, Mode=OneWay}" FontFamily="{StaticResource AppFontMono}" FontSize="52" FontWeight="SemiBold" LineHeight="58" LineStackingStrategy="BlockLineHeight" Foreground="{DynamicResource TextPrimaryBrush}" Typography.NumeralAlignment="Tabular" />
                                     <TextBlock Text="/100" Style="{StaticResource TickLabelText}" VerticalAlignment="Bottom" Margin="8,0,0,11" />
                                 </StackPanel>
                                 <TextBlock Text="{Binding ReadinessLevelLabel}" Style="{StaticResource BodyStrongText}" Foreground="{DynamicResource AccentTextBrush}" Margin="0,2,0,14" />
@@ -271,25 +273,25 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,18,24,18" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding [Dashboard.Kpi.Pressure.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding [Dashboard.Kpi.Pressure.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding PerformancePressureLabel}" Style="{StaticResource MetricSmallText}" Margin="0,6,0,0"
                                                Foreground="{Binding PerformancePressureBrushKey, Converter={StaticResource BrushKeyConverter}}" />
                                 </StackPanel>
                                 <Border Grid.Column="1" Style="{StaticResource VerticalHairlineDivider}" Margin="0,18" />
                                 <StackPanel Grid.Column="2" Margin="24,18" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding [Dashboard.Kpi.Cores.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding [Dashboard.Kpi.Cores.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding LogicalProcessorLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,0" />
                                     <TextBlock Text="{Binding LogicalProcessorDetail}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <Border Grid.Column="3" Style="{StaticResource VerticalHairlineDivider}" Margin="0,18" />
                                 <StackPanel Grid.Column="4" Margin="24,18" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding [Dashboard.Kpi.Memory.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding [Dashboard.Kpi.Memory.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding AvailableMemoryLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,0" />
                                     <TextBlock Text="{Binding AvailableMemoryDetail}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
                                 <Border Grid.Column="5" Style="{StaticResource VerticalHairlineDivider}" Margin="0,18" />
                                 <StackPanel Grid.Column="6" Margin="24,18,0,18" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding [Dashboard.Kpi.Cache.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding [Dashboard.Kpi.Cache.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding LegacyCacheLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,0" />
                                     <TextBlock Text="{Binding LegacyCacheDetail}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
@@ -560,4 +562,5 @@
             </Border>
         </Grid>
     </Grid>
+    </ScrollViewer>
 </UserControl>

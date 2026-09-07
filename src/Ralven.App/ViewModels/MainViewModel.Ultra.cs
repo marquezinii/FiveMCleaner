@@ -20,6 +20,52 @@ public sealed partial class MainViewModel
     private bool refreshingUltra;
     private string ultraStatus = string.Empty;
     private string measurementContext = string.Empty;
+    private int selectedMeasurementIndex = -1;
+    private int baselineMeasurementIndex = -1;
+
+    public bool ShowPersonalUpgrade => !hasProAccess;
+    public bool HasPersonalMeasurements => personalWorkspace.Measurements.Count > 0;
+    public bool HasNoPersonalMeasurements => !HasPersonalMeasurements;
+    public bool HasPersonalRecords => personalWorkspace.Measurements.Count > 0 || personalWorkspace.Changes.Count > 0;
+    public string PersonalHistorySummary => localization.Format("Personal.History.Count", personalWorkspace.Measurements.Count, personalWorkspace.Changes.Count);
+    public string PersonalChangeSummary => personalWorkspace.Changes.LastOrDefault() is { } change
+        ? localization.Format("Personal.Tracking.Latest", localization.GetString($"Ultra.Change.{change.Kind}"), change.CapturedAt.ToLocalTime().ToString("g", localization.CurrentCulture))
+        : localization.GetString("Ultra.Tracking.NoChanges");
+    public IReadOnlyList<string> PersonalMeasurementChoices => personalWorkspace.Measurements.Select(item =>
+        $"{item.CapturedAt.ToLocalTime().ToString("g", localization.CurrentCulture)} · {item.Context} · {localization.GetString($"Ultra.Usage.{item.Usage}")}").ToArray();
+    public ObservableCollection<PersonalMetricDisplay> PersonalMetricRows { get; } = [];
+    public int SelectedPersonalMeasurementIndex
+    {
+        get => selectedMeasurementIndex;
+        set
+        {
+            if (refreshingUltra || value < 0 || value >= personalWorkspace.Measurements.Count || selectedMeasurementIndex == value) return;
+            selectedMeasurementIndex = value;
+            baselineMeasurementIndex = FindBaseline(value);
+            RefreshPersonalComparison();
+        }
+    }
+    public int BaselinePersonalMeasurementIndex
+    {
+        get => baselineMeasurementIndex;
+        set
+        {
+            if (refreshingUltra || value < 0 || value >= personalWorkspace.Measurements.Count || baselineMeasurementIndex == value) return;
+            baselineMeasurementIndex = value;
+            RefreshPersonalComparison();
+        }
+    }
+
+    private int FindBaseline(int selected) => selected < 0 ? -1 :
+        Enumerable.Range(0, selected).LastOrDefault(index => PersonalWorkspaceService.CanCompare(
+            personalWorkspace.Measurements[index], personalWorkspace.Measurements[selected]), -1);
+
+    public Task<string> ExportPersonalWorkspaceAsync(CancellationToken cancellationToken = default) =>
+        personalWorkspaceService.ExportAsync(cancellationToken);
+
+    public void ReportPersonalExportResult(bool succeeded) =>
+        UltraStatus = localization.GetString(succeeded ? "Personal.Export.Saved" : "Personal.Export.Failed");
+
 
     public bool IsUltraSelected => isUltraSelected && IsGeneralWindowsOptimization;
     public bool HasProAccess => hasProAccess;
@@ -97,10 +143,13 @@ public sealed partial class MainViewModel
     {
         get
         {
-            if (personalWorkspace.Measurements.LastOrDefault() is not { } latest)
+            if (selectedMeasurementIndex < 0 || selectedMeasurementIndex >= personalWorkspace.Measurements.Count)
                 return localization.GetString("Ultra.Measure.Empty");
-            var previous = personalWorkspace.Measurements.SkipLast(1).LastOrDefault(item => PersonalWorkspaceService.CanCompare(item, latest));
-            if (previous is null) return localization.GetString("Ultra.Measure.NeedMatch");
+            var latest = personalWorkspace.Measurements[selectedMeasurementIndex];
+            if (baselineMeasurementIndex < 0 || baselineMeasurementIndex >= selectedMeasurementIndex)
+                return localization.GetString("Ultra.Measure.NeedMatch");
+            var previous = personalWorkspace.Measurements[baselineMeasurementIndex];
+            if (!PersonalWorkspaceService.CanCompare(previous, latest)) return localization.GetString("Ultra.Measure.NeedMatch");
             return localization.Format("Ultra.Measure.Difference",
                 previous.CapturedAt.ToLocalTime().ToString("g", localization.CurrentCulture),
                 latest.CapturedAt.ToLocalTime().ToString("g", localization.CurrentCulture),
@@ -208,6 +257,7 @@ public sealed partial class MainViewModel
         var progress = new Progress<int>(count => UltraStatus = localization.Format("Ultra.Measure.Progress", count));
         personalWorkspace = await personalWorkspaceService.MeasureAsync(
             personalPreferences.Usage, MeasurementContext, observation, progress, cancellationToken);
+        selectedMeasurementIndex = -1;
         UltraStatus = localization.GetString("Ultra.Measure.Saved");
     });
 
@@ -255,6 +305,27 @@ public sealed partial class MainViewModel
         ? (second - first).ToString("+0.0;-0.0;0.0", localization.CurrentCulture)
         : localization.GetString("Ultra.Unavailable");
 
+    private void RefreshPersonalComparison()
+    {
+        OnPropertyChanged(nameof(SelectedPersonalMeasurementIndex));
+        OnPropertyChanged(nameof(BaselinePersonalMeasurementIndex));
+        OnPropertyChanged(nameof(PersonalComparisonSummary));
+        PersonalMetricRows.Clear();
+        if (selectedMeasurementIndex < 0 || selectedMeasurementIndex >= personalWorkspace.Measurements.Count) return;
+        var current = personalWorkspace.Measurements[selectedMeasurementIndex];
+        var baseline = baselineMeasurementIndex >= 0 && baselineMeasurementIndex < selectedMeasurementIndex
+            ? personalWorkspace.Measurements[baselineMeasurementIndex] : null;
+        if (baseline is not null && !PersonalWorkspaceService.CanCompare(baseline, current)) baseline = null;
+        void Add(string name, double? before, double? after) => PersonalMetricRows.Add(new(
+            localization.GetString(name), Metric(after), Metric(before), before.HasValue && after.HasValue
+                ? localization.Format("Personal.Measure.Delta", Difference(before, after))
+                : localization.GetString("Ultra.Unavailable")));
+        Add("Personal.Metric.Cpu", baseline?.CpuPercent, current.CpuPercent);
+        Add("Personal.Metric.Gpu", baseline?.GpuPercent, current.GpuPercent);
+        Add("Personal.Metric.Memory", baseline?.MemoryPercent, current.MemoryPercent);
+        Add("Personal.Metric.Disk", baseline?.DiskPercent, current.DiskPercent);
+    }
+
     private void RefreshUltraPresentation()
     {
         refreshingUltra = true;
@@ -269,16 +340,29 @@ public sealed partial class MainViewModel
             nameof(SelectedProfileLabel), nameof(IsSelectedProfileRecommended), nameof(IsLightSelected), nameof(IsBalancedSelected), nameof(IsAggressiveSelected)
         }) OnPropertyChanged(property);
         refreshingUltra = false;
+        foreach (var property in new[] { nameof(ShowPersonalUpgrade), nameof(HasPersonalRecords), nameof(HasPersonalMeasurements), nameof(HasNoPersonalMeasurements), nameof(PersonalHistorySummary), nameof(PersonalChangeSummary) })
+            OnPropertyChanged(property);
+        if (selectedMeasurementIndex < 0 || selectedMeasurementIndex >= personalWorkspace.Measurements.Count)
+        {
+            selectedMeasurementIndex = personalWorkspace.Measurements.Count - 1;
+            baselineMeasurementIndex = FindBaseline(selectedMeasurementIndex);
+        }
+        refreshingUltra = true;
+        OnPropertyChanged(nameof(PersonalMeasurementChoices));
+        refreshingUltra = false;
+        RefreshPersonalComparison();
         PersonalChanges.Clear();
-        foreach (var change in personalWorkspace.Changes.TakeLast(8).Reverse())
+        foreach (var change in personalWorkspace.Changes.Reverse())
             PersonalChanges.Add(change.CapturedAt.ToLocalTime().ToString("g", localization.CurrentCulture)
                 + " · " + localization.GetString($"Ultra.Change.{change.Kind}"));
         if (PersonalChanges.Count == 0) PersonalChanges.Add(localization.GetString("Ultra.Tracking.NoChanges"));
         PersonalMeasurements.Clear();
-        foreach (var measurement in personalWorkspace.Measurements.TakeLast(6).Reverse())
+        foreach (var measurement in personalWorkspace.Measurements.Reverse())
             PersonalMeasurements.Add(localization.Format("Ultra.Measure.Record",
                 measurement.Context, localization.GetString($"Ultra.Usage.{measurement.Usage}"),
                 measurement.CapturedAt.ToLocalTime().ToString("g", localization.CurrentCulture),
                 Metric(measurement.CpuPercent), Metric(measurement.GpuPercent), Metric(measurement.MemoryPercent), Metric(measurement.DiskPercent)));
     }
 }
+
+public sealed record PersonalMetricDisplay(string Name, string Current, string Baseline, string Difference);

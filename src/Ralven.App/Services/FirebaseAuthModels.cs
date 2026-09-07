@@ -34,7 +34,8 @@ public sealed record AuthenticationSnapshot(AuthenticationState State, FirebaseU
 
 public sealed record FirebaseAuthResult(AuthenticationState State, FirebaseUser? User, string? Error = null)
 {
-    public bool Succeeded => Error is null && User is not null;
+    public bool AccountDeleted { get; init; }
+    public bool Succeeded => Error is null && (User is not null || (AccountDeleted && State == AuthenticationState.SignedOut));
 }
 
 /// <summary>

@@ -1,39 +1,9 @@
-# Objetivo da tarefa
+# Ralven Pro e apresentação pública
 
-## Identificação
-
-- Agente: Codex
-- Branch: `feat/general-optimizer-ux`
-- PR de destino: `dev/proxima-versao`
-
-## Objetivo
-
-Simplificar e fortalecer a experiência da aba Otimizador Geral, preservando a
-linguagem visual de cards e mantendo detalhes técnicos acessíveis sob demanda.
-
-## Escopo
-
-- Inclui: hierarquia visual, microcopy, perfis, plano, progresso, resultado,
-  acessibilidade e localização do Otimizador Geral.
-- Exclui: alterações nas ações de otimização, no restante do produto e na
-  lógica de sistema. Componentes compartilhados foram ajustados somente quando
-  necessário para preservar a experiência e os contratos existentes.
-
-## Critérios de conclusão
-
-- Usuários comuns conseguem escolher um perfil e entender o impacto antes de
-  executar, sem precisar ler detalhes do Windows.
-- Riscos materiais, necessidade de confirmação e reinicialização continuam
-  visíveis quando relevantes.
-- Risco, rollback, verificação e diagnóstico técnico continuam acessíveis por
-  disclosure.
-- A interface renderiza corretamente nos temas claro e escuro, inclusive em
-  janela menor, e a validação automatizada aplicável passa.
-
-## Resultado entregue
-
-O Otimizador Geral passou a priorizar benefício e impacto prático, com detalhes
-técnicos, etapas concluídas e relatório completo recolhidos por padrão.
-Referências desnecessárias a FiveM/GTA foram removidas do contexto geral.
-Build Release, 1.372 testes, verificação de formato, diff e capturas reais nos
-temas claro e escuro foram aprovados.
+- **Agente:** Codex.
+- **Objetivo:** entregar uma experiência Free/Pro coerente e apresentável, com assinatura recorrente via checkout hospedado do Asaas, autorização de acesso confiável e gestão da assinatura no aplicativo.
+- **Escopo:** auditoria das superfícies do produto; cobrança no Worker/D1; integração WPF localizada; melhorias de personalização, rotinas e acompanhamento que aproveitem capacidades existentes; documentação e validação. Preservar diagnóstico, perfis gratuitos, histórico, rollback e invariantes de segurança. Não inclui publicação oficial, cobrança real, deploy público, alteração da versão nem integração automática em dev/main.
+- **Critérios de conclusão:** checkout autenticado com preço definido no servidor; Pro depende de pagamento aprovado; processamento idempotente; cancelamento verificável; estados de erro claros; experiência em inglês, português e espanhol; testes de regressão e build aplicáveis; inspeção visual possível no ambiente; atalho de desenvolvimento atualizado; commit e PR para integração.
+- **Resultado entregue:** página Ralven Pro localizada com oferta mensal de R$ 19,90 controlada pelo servidor, consentimento recorrente, checkout hospedado, atualização e cancelamento. Worker com ledger por pagamento, reconciliação, validação de notificações e migration D1 `0009`. Espaço Pessoal com quatro rotinas, comparação de medições, histórico completo e exportação local preservada após o término do Pro. Corrigidos exclusão de conta e cortes visuais no histórico, visão geral e seletor de perfis. API pública migrada para `api.vemryx.com` e atalho de desenvolvimento reconstruído.
+- **Validação:** build Release com zero avisos/erros; 1.398 testes .NET, 239 testes Worker e 54 testes do dashboard aprovados; `dotnet format --verify-no-changes`, `Verify-Safety.ps1 -SkipTests`, migrations D1 locais e auditoria npm sem falhas. Telas WPF renderizadas nos temas claro/escuro, incluindo janela de 1040×720 e textos PT/EN/ES; página de retorno inspecionada no navegador local.
+- **Limitações:** vendas permanecem desativadas; nenhuma cobrança real, migration remota ou publicação foi realizada. A chave exclusiva, o token do webhook e o domínio `api.vemryx.com` foram configurados na produção; o webhook `Ralven Billing` permanece desativado até a publicação e homologação do fluxo descrito em `docs/asaas-setup.md`. Validação visual usou dados de demonstração; não comprova desempenho em FiveM real. Assinatura Authenticode pública continua como limitação de distribuição já existente.

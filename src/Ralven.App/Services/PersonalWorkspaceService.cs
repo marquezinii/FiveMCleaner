@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Text.Json;
+using System.Text;
 using Ralven.Contracts;
 using Ralven.Core.Planning;
 using Ralven.Windows.Infrastructure;
@@ -98,6 +99,31 @@ public sealed class PersonalWorkspaceService
         await gate.WaitAsync(cancellationToken).ConfigureAwait(false);
         try { return await ReadAsync(cancellationToken).ConfigureAwait(false); }
         finally { gate.Release(); }
+    }
+
+    public async Task<string> ExportAsync(CancellationToken cancellationToken = default)
+    {
+        // Existing records belong to the user, including after a subscription expires.
+        var state = await LoadAsync(cancellationToken).ConfigureAwait(false);
+        var report = new StringBuilder(localization.GetString("Personal.Export.Title"));
+        report.AppendLine().AppendLine(localization.GetString("Ultra.Measure.Help"));
+        report.AppendLine().AppendLine(localization.GetString("Ultra.Tracking.Title"));
+        foreach (var change in state.Changes)
+            report.AppendLine($"{change.CapturedAt.ToLocalTime().ToString("g", localization.CurrentCulture)} · {localization.GetString($"Ultra.Change.{change.Kind}")}");
+        report.AppendLine().AppendLine(localization.GetString("Ultra.Measure.Title"));
+        foreach (var measurement in state.Measurements)
+        {
+            string Metric(double? value) => value is { } number
+                ? number.ToString("0.0", localization.CurrentCulture) + "%"
+                : localization.GetString("Ultra.Unavailable");
+            report.AppendLine(localization.Format("Ultra.Measure.Record", measurement.Context,
+                localization.GetString($"Ultra.Usage.{measurement.Usage}"),
+                measurement.CapturedAt.ToLocalTime().ToString("g", localization.CurrentCulture),
+                Metric(measurement.CpuPercent), Metric(measurement.GpuPercent),
+                Metric(measurement.MemoryPercent), Metric(measurement.DiskPercent)));
+        }
+        // Do not export hardware identifiers, raw workspace data or account information.
+        return ReportSanitizer.Sanitize(report.ToString());
     }
 
     public Task<PersonalWorkspace> SaveProfileAsync(PersonalOptimizationPreferencesDto profile, CancellationToken cancellationToken = default)

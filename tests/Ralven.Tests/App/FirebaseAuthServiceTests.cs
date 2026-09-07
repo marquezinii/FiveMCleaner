@@ -224,6 +224,31 @@ public sealed class FirebaseAuthServiceTests
     }
 
     [Fact]
+    public async Task DeleteAccountAsync_SuccessIsExplicitAfterSessionIsCleared()
+    {
+        var requests = new List<string>();
+        using var service = CreateService(requests, request => request.RequestUri!.AbsolutePath switch
+        {
+            "/v1/accounts:signInWithPassword" => Json("""{"localId":"uid-1","idToken":"id-1","refreshToken":"refresh-1","expiresIn":"3600"}"""),
+            "/v1/accounts:lookup" => Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true}]}"""),
+            "/v1/accounts:delete" => Json("{}"),
+            _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+        });
+        await service.SignInAsync("person@example.com", "0123456789ab", keepSignedIn: false,
+            cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+
+        var result = await service.DeleteAccountAsync("0123456789ab", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.True(result.Succeeded);
+        Assert.True(result.AccountDeleted);
+        Assert.Equal(AuthenticationState.SignedOut, result.State);
+        Assert.Null(result.User);
+        Assert.Null(service.Current.User);
+        Assert.Contains("/v1/accounts:delete", requests);
+        Assert.False(new FirebaseAuthResult(AuthenticationState.SignedOut, null).Succeeded);
+    }
+
+    [Fact]
     public async Task DeleteAccountAsync_ProfileDeletionFailure_DoesNotDeleteFirebaseAccount()
     {
         var requests = new List<string>();
@@ -244,6 +269,7 @@ public sealed class FirebaseAuthServiceTests
         var result = await service.DeleteAccountAsync("0123456789ab", global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(FirebaseAuthService.ProfileDeletionFailedError, result.Error);
+        Assert.False(result.AccountDeleted);
         Assert.DoesNotContain("/v1/accounts:delete", requests);
     }
 

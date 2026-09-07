@@ -14,6 +14,55 @@ public sealed class PersonalWorkspaceTests
         "Windows 11", 40, WindowsGamingSettingState.Enabled, WindowsGamingSettingState.Disabled);
 
     [Fact]
+    public async Task FullHistoryAndComparisonRemainAvailableAfterExpiryWithoutAuthorizingNewWork()
+    {
+        using var directory = new TemporaryDirectory();
+        var measurements = Enumerable.Range(0, 30).Select(index => new PersonalMeasurement(
+            DateTimeOffset.UtcNow.AddMinutes(index), PersonalUsage.Gaming,
+            index == 1 ? "Other activity" : @"C:\Users\PrivateName\scene", new string('a', 64),
+            "Windows 11", 30, 30, index, null, 50, 10)).ToArray();
+        var workspace = new PersonalWorkspace
+        {
+            Measurements = measurements,
+            Changes = Enumerable.Range(0, 60).Select(index => new PcChange(
+                DateTimeOffset.UtcNow.AddMinutes(index), PcChangeKind.GameMode)).ToArray()
+        };
+        await File.WriteAllTextAsync(directory.Combine("workspace.json"),
+            System.Text.Json.JsonSerializer.Serialize(workspace, RalvenJson.Options), Token);
+        var authorizationCalls = 0;
+        var store = new PersonalWorkspaceService(_ => { authorizationCalls++; return Task.FromResult(false); }, directory: directory.Path);
+        using var viewModel = new MainViewModel(new FakeAppOptimizationService(new AppSettings(), false), personalWorkspaceService: store);
+        await viewModel.InitializeAsync();
+
+        Assert.True(viewModel.ShowPersonalUpgrade);
+        Assert.True(viewModel.HasPersonalRecords);
+        Assert.True(viewModel.HasPersonalMeasurements);
+        Assert.False(viewModel.HasNoPersonalMeasurements);
+        Assert.False(viewModel.CanSavePersonalProfile);
+        Assert.Equal(60, viewModel.PersonalChanges.Count);
+        Assert.Equal(30, viewModel.PersonalMeasurements.Count);
+        Assert.Equal(30, viewModel.PersonalMeasurementChoices.Count);
+        Assert.Equal(29, viewModel.SelectedPersonalMeasurementIndex);
+        Assert.Equal(28, viewModel.BaselinePersonalMeasurementIndex);
+        Assert.Equal(4, viewModel.PersonalMetricRows.Count);
+        Assert.Contains("+1", viewModel.PersonalMetricRows[0].Difference, StringComparison.Ordinal);
+        Assert.DoesNotContain("%", viewModel.PersonalMetricRows[1].Current, StringComparison.Ordinal);
+
+        viewModel.BaselinePersonalMeasurementIndex = 1;
+        Assert.DoesNotContain("%", viewModel.PersonalMetricRows[0].Baseline, StringComparison.Ordinal);
+        viewModel.BaselinePersonalMeasurementIndex = 29;
+        Assert.DoesNotContain("%", viewModel.PersonalMetricRows[0].Baseline, StringComparison.Ordinal);
+        viewModel.SelectedPersonalMeasurementIndex = 0;
+        Assert.Equal(-1, viewModel.BaselinePersonalMeasurementIndex);
+
+        var exported = await viewModel.ExportPersonalWorkspaceAsync(Token);
+        Assert.DoesNotContain("PrivateName", exported, StringComparison.Ordinal);
+        Assert.DoesNotContain(new string('a', 64), exported, StringComparison.Ordinal);
+        Assert.Contains("Other activity", exported, StringComparison.Ordinal);
+        Assert.Equal(0, authorizationCalls);
+    }
+
+    [Fact]
     public async Task SavedRoutinesSurviveRestartAndExpiryOnlyBlocksNewPaidWork()
     {
         using var directory = new TemporaryDirectory();
@@ -161,6 +210,8 @@ public sealed class PersonalWorkspaceTests
         using var viewModel = new MainViewModel(new FakeAppOptimizationService(new AppSettings(), false),
             personalWorkspaceService: store);
         await viewModel.InitializeAsync();
+        Assert.True(viewModel.HasNoPersonalMeasurements);
+        Assert.False(viewModel.HasPersonalMeasurements);
         foreach (var profile in Enum.GetValues<OptimizationProfile>())
         {
             viewModel.SelectProfile(profile);

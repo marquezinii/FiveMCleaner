@@ -196,7 +196,7 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
             return Fail(response.Error);
         }
         await LogoutAsync(cancellationToken).ConfigureAwait(false);
-        return Result();
+        return Result() with { AccountDeleted = true };
     }
 
     public async Task<string?> GetIdTokenAsync(CancellationToken cancellationToken = default)

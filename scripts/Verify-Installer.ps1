@@ -187,7 +187,7 @@ if (-not [string]::IsNullOrWhiteSpace($PublishDirectory)) {
         throw 'Release payload diagnostics environment is not Production.'
     }
     if ($productionConfig.telemetryEndpoint -ne
-        'https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry') {
+        'https://api.vemryx.com/telemetry') {
         throw 'Release payload telemetry endpoint is not the allowlisted production endpoint.'
     }
     $sentryDsn = $null

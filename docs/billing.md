@@ -1,89 +1,115 @@
 # Cobrança e acesso pago
 
-## Estado atual
+O Ralven Pro custa **R$ 19,90 por mês** e usa o checkout recorrente hospedado do
+Asaas. O cartão e os dados cadastrais são informados na página do Asaas e nunca
+passam pelo aplicativo. Diagnóstico, perfis padrão, histórico básico e rollback
+continuam Free; segurança e restauração nunca dependem de assinatura.
 
-O repositório contém a **fundação de cobrança**, ainda sem checkout público e
-sem concessão automática do plano Pro. Nenhuma versão distribuída cobra o
-usuário enquanto preço, cancelamento, reembolso e confirmação do primeiro
-pagamento não estiverem fechados e testados no ambiente de teste do provedor.
+Vendas permanecem desativadas por padrão. Código e testes locais não substituem
+homologação no Sandbox, migrations remotas, webhook público e um teste completo
+antes de habilitar produção.
 
-O aplicativo já consulta `GET /account/entitlements` após o login e permite
-atualizar o status em Configurações, mostrando Gratuito, Pro com validade ou
-indisponível. Esse snapshot fica somente em memória e apresenta a disponibilidade
-[dos recursos Ultra](ultra.md). Os serviços revalidam o Pro antes de cada nova
-operação paga; falha de leitura nunca concede acesso. Isso não cria checkout.
+## Contratos
 
-O primeiro provedor previsto é o Mercado Pago, com valores em BRL. A modelagem
-interna continua neutra o suficiente para que identidade de conta e autorização
-de acesso não dependam de IDs ou e-mail do provedor.
-
-## Fronteiras de confiança
-
-- O aplicativo autentica `GET /account/entitlements` com ID token Firebase. O
-  Worker valida o token e consulta somente o Firebase UID verificado.
-- O cliente nunca decide se uma conta é Pro e nunca envia UID, preço ou estado
-  de assinatura para serem aceitos como autoridade.
-- `POST /billing/mercado-pago/webhook` exige `data.id`, `x-request-id` e
-  `x-signature`. Depois de validar o HMAC, o Worker busca a assinatura em
-  `GET /preapproval/{id}` usando um Access Token armazenado como secret.
-- Referência externa, moeda e valor retornados pelo Mercado Pago devem coincidir
-  com um checkout intent criado pelo servidor. O corpo do webhook não concede
-  acesso e não é persistido.
-- A fundação reconcilia checkout intent, evento e assinatura de forma
-  idempotente, mas não altera `account_entitlements`. A liberação do Pro deverá
-  depender de uma cobrança aprovada, não apenas de uma assinatura com estado
-  `authorized`.
-- Enquanto existir um checkout ou uma assinatura vinculada,
-  `DELETE /account/profile` responde `409 billing-cancellation-required`. A
-  conta não perde o vínculo local antes de existir um cancelamento confirmado
-  no provedor.
-
-O D1 guarda apenas identificadores opacos, valores em centavos, estados
-normalizados e timestamps necessários à reconciliação. Não guarda token,
-assinatura HMAC, corpo de webhook, URL de checkout, senha ou e-mail do pagador.
-
-## Contratos disponíveis
+Todas as rotas de conta usam o Firebase UID validado no Worker. O cliente não
+define preço, periodicidade, provedor, IDs nem estado de pagamento.
 
 | Rota | Contrato |
 | --- | --- |
-| `GET /account/entitlements` | Autenticada; retorna `free` quando não existe acesso vigente e nunca expõe IDs do provedor. |
-| `POST /billing/mercado-pago/webhook` | Valida origem, refaz a leitura autoritativa no Mercado Pago e reconcilia o estado sem conceder Pro. |
+| `GET /billing/return` | Página informativa; não concede acesso. |
+| `GET /account/billing` | Oferta, disponibilidade e estado normalizado da assinatura. |
+| `POST /account/billing/checkout` | Recebe somente `{ offerKey }` e devolve a URL hospedada. |
+| `POST /account/billing/cancel` | Recebe `{}` e interrompe a recorrência no Asaas. |
+| `GET /account/entitlements` | Retorna o acesso server-authoritative da conta. |
+| `POST /billing/asaas/webhook` | Autentica, deduplica e reconcilia eventos do Asaas. |
 
-As credenciais são exclusivamente secrets do Worker:
+A chave da oferta inclui o preço, como `ralven_pro_monthly_1990`. Um consentimento
+antigo não aceita silenciosamente um preço novo. Há no máximo um checkout aberto
+por conta.
+
+## Checkout e reconciliação
+
+O Worker cria `POST /v3/checkouts` com `CREDIT_CARD`, `RECURRENT`, ciclo `MONTHLY`,
+expiração de 60 minutos e uma referência interna aleatória. A URL aceita pelo
+desktop precisa ser exatamente
+`https://asaas.com/checkoutSession/show?id=<id-opaco>`.
+
+A API de Checkout não documenta uma chave de idempotência para criação. Por isso,
+o Worker registra a tentativa antes da chamada e nunca recria automaticamente
+quando há timeout sem ID confirmado. O estado exige reconciliação operacional,
+evitando assinatura ou cobrança duplicada.
+
+O retorno do navegador não prova pagamento. O Pro só é concedido depois que o
+Worker consulta `GET /v3/payments/{id}` e `GET /v3/subscriptions/{id}` e confirma:
+
+- cobrança de cartão, valor de R$ 19,90 e assinatura mensal;
+- vínculo ao checkout opaco da conta ou a uma assinatura já vinculada;
+- estado `CONFIRMED` ou `RECEIVED`;
+- ausência de estorno concluído ou chargeback.
+
+O ledger usa o ID único da cobrança. O período inicia na data canônica de
+confirmação/pagamento e termina um mês depois, preservando o último dia possível.
+Eventos repetidos não somam validade. Qualquer estorno `DONE`, inclusive parcial,
+ou chargeback retira o acesso daquele período. Uma atualização manual reconcilia
+cobranças do checkout e recupera webhook perdido sem polling contínuo.
+
+O webhook valida `asaas-access-token` em tempo constante antes de ler o JSON.
+O `id` do evento garante idempotência; o corpo serve para localizar o recurso e
+campos novos são ignorados. Dados usados para conceder acesso são relidos da API.
+Eventos de exclusão só podem reduzir acesso. Falhas temporárias retornam erro para
+o Asaas repetir a entrega.
+
+## Cancelamento e exclusão
+
+Checkout pendente é cancelado em `POST /v3/checkouts/{id}/cancel`. Assinatura
+existente é encerrada em `DELETE /v3/subscriptions/{id}`. O período já pago segue
+válido até sua data final e o cancelamento não faz reembolso. Exclusão de conta
+fica bloqueada enquanto houver vínculo de cobrança ainda aberto.
+
+## Configuração
+
+Secrets exclusivos do Worker:
 
 ```powershell
-wrangler secret put MERCADO_PAGO_ACCESS_TOKEN
-wrangler secret put MERCADO_PAGO_WEBHOOK_SECRET
+wrangler secret put ASAAS_ACCESS_TOKEN
+wrangler secret put ASAAS_WEBHOOK_TOKEN
 ```
 
-Credenciais de produção nunca pertencem a `.dev.vars`, `wrangler.toml`, logs,
-testes ou commits. Em desenvolvimento, use somente credenciais e usuários de
-teste em um `.dev.vars` ignorado pelo Git.
+Variáveis não secretas:
 
-## Bloqueadores antes de ativar vendas
+```text
+ASAAS_BILLING_ENABLED=false
+ASAAS_ENVIRONMENT=production
+ASAAS_AMOUNT_CENTS=1990
+ASAAS_RETURN_URL=https://api.vemryx.com/billing/return
+```
 
-1. Definir oferta, preço em BRL, periodicidade, política de cancelamento,
-   reembolso e eventual carência.
-2. Criar o checkout intent no Worker e só então criar a assinatura no Mercado
-   Pago com referência externa opaca e URL de notificação explícita.
-3. Reconciliar o primeiro e os próximos pagamentos aprovados antes de emitir ou
-   renovar `ralven_pro`; falha, estorno e cancelamento precisam reduzir acesso
-   segundo a política definida.
-4. Implementar o cancelamento externo e só então liberar a exclusão de conta;
-   até lá, o Worker bloqueia a exclusão quando encontra um checkout ou uma
-   assinatura local.
-5. Validar a oferta Ultra em piloto, preservando as funções gratuitas e a
-   transparência do plano. O gating de rotinas, acompanhamento e medições já
-   está implementado; disposição a pagar e retenção ainda precisam ser medidas.
-6. Executar testes completos com credenciais de teste, reenvio, evento fora de
-   ordem, timeout após commit, cancelamento, estorno e indisponibilidade do
-   provedor antes de aplicar a migration e configurar secrets em produção.
+`ASAAS_ENVIRONMENT` aceita somente `sandbox` ou `production`, e o prefixo da
+chave precisa corresponder ao ambiente. `ASAAS_WEBHOOK_TOKEN` tem de ser distinto
+da chave de API, sem espaços e com 32 a 255 caracteres. Ausência ou inconsistência
+mantém o checkout desativado.
 
-Migração, secrets e deploy remoto são operações separadas do desenvolvimento
-desta fundação e não acontecem automaticamente.
+Aplicar as migrations até `0009` junto ao código. Se uma base antiga tiver mais
+de um checkout aberto para a mesma conta, investigue no provedor antes de migrar.
+Credenciais nunca pertencem a `.dev.vars`, logs, testes, commits ou ao desktop.
 
-## Referências do provedor
+## Homologação
 
-- [Consultar uma assinatura (`GET /preapproval/{id}`)](https://www.mercadopago.com.br/developers/pt/reference/online-payments/subscriptions/get-preapproval/get)
-- [Validar Webhooks de assinaturas](https://www.mercadopago.com.br/developers/pt/docs/subscriptions/additional-content/your-integrations/notifications/webhooks)
-- [Confirmar pagamentos autorizados](https://www.mercadopago.com.br/developers/pt/docs/subscriptions/integration-configuration/subscription-no-associated-plan/authorized-payments)
+Antes de habilitar vendas, validar no Sandbox: aprovação e recusa, renovação,
+webhooks repetidos e fora de ordem, retorno visual, timeout de criação, pagamento
+perdido recuperado por atualização, cancelamento, estorno parcial/total,
+chargeback e indisponibilidade do provedor. Depois repetir um fluxo controlado em
+produção e publicar preço, recorrência, cancelamento, reembolso e atendimento.
+
+Consulte [Configuração Asaas](asaas-setup.md) para o procedimento operacional.
+
+## Referências oficiais
+
+- [Autenticação](https://docs.asaas.com/docs/autenticacao-1)
+- [Checkout recorrente](https://docs.asaas.com/docs/checkout-com-assinatura-recorrente)
+- [Lista de cobranças e filtro por checkout](https://docs.asaas.com/reference/listar-cobrancas)
+- [Eventos de cobrança](https://docs.asaas.com/docs/webhook-para-cobrancas)
+- [Eventos de assinatura](https://docs.asaas.com/docs/eventos-para-assinaturas)
+- [Eventos de Checkout](https://docs.asaas.com/docs/eventos-para-checkout)
+- [Estornos](https://docs.asaas.com/docs/estornos)
+- [Remover assinatura](https://docs.asaas.com/reference/remove-subscription)

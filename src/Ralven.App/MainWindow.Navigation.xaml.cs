@@ -57,6 +57,12 @@ public partial class MainWindow
             return;
         }
 
+        if (tag == "Pro")
+        {
+            RequestNavigateToPro();
+            return;
+        }
+
         ActivateNavItem(item);
         Navigate(tag switch
         {
@@ -78,6 +84,7 @@ public partial class MainWindow
         GamesNav.IsActive = ReferenceEquals(selected, GamesNav);
         HistoryNav.IsActive = ReferenceEquals(selected, HistoryNav);
         SettingsNav.IsActive = ReferenceEquals(selected, SettingsNav);
+        ProNav.IsActive = ReferenceEquals(selected, ProNav);
     }
 
     private void Navigate(UIElement page)
@@ -104,6 +111,7 @@ public partial class MainWindow
             historyPage.Visibility = Visibility.Collapsed;
         }
         SettingsPage.Visibility = Visibility.Collapsed;
+        if (proPage is not null) proPage.Visibility = Visibility.Collapsed;
         page.Visibility = Visibility.Visible;
         viewModel.SetLiveMetricsEnabled(ReferenceEquals(page, DashboardPage));
     }

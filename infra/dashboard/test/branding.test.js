@@ -19,8 +19,8 @@ test("keeps the dashboard on the Ralven public brand", async () => {
   assert.match(brandStyles, /--surface:\s*#111214/i);
   assert.match(brandStyles, /--text:\s*#FFFFFF/i);
   assert.match(brandStyles, /fonts\/InterVariable\.woff2/);
-  assert.match(headers, /connect-src 'self' https:\/\/fivemcleaner-telemetry\.felipemarquesini10\.workers\.dev/);
-  assert.match(app, /DEFAULT_API_BASE = 'https:\/\/fivemcleaner-telemetry\.felipemarquesini10\.workers\.dev'/);
+  assert.match(headers, /connect-src 'self' https:\/\/api\.vemryx\.com/);
+  assert.match(app, /DEFAULT_API_BASE = 'https:\/\/api\.vemryx\.com'/);
   assert.match(readme, /--project-name=ralven-dashboard/);
   assert.match(readme, /https:\/\/ralven-dashboard\.pages\.dev/);
   assert.match(diagnostics, /DashboardUrl = 'https:\/\/ralven-dashboard\.pages\.dev'/);

@@ -108,18 +108,18 @@ export async function createAccountProfile(db, uid, profile) {
   }
 }
 
-/** Deletes the verified UID's profile only when no billing flow is linked. */
+/** Deletes only after every linked mandate has been confirmed cancelled. */
 export async function deleteAccountProfile(db, uid) {
   await db.prepare(
     `DELETE FROM account_profiles
      WHERE uid = ?
        AND NOT EXISTS (
-         SELECT 1 FROM billing_checkout_intents WHERE account_uid = ?
+         SELECT 1 FROM billing_checkout_intents WHERE account_uid = ? AND state <> 'cancelled'
        )`,
   ).bind(uid, uid).run();
 
   const billing = await db.prepare(
-    'SELECT 1 AS blocked FROM billing_checkout_intents WHERE account_uid = ? LIMIT 1',
+    "SELECT 1 AS blocked FROM billing_checkout_intents WHERE account_uid = ? AND state <> 'cancelled' LIMIT 1",
   ).bind(uid).first();
   return billing === null;
 }

@@ -269,6 +269,7 @@ public partial class MainWindow
 
     private void ApplyAccountEntitlementPresentation()
     {
+        proViewModel.Refresh();
         viewModel.SetProAccess(demoMode || IsEffectiveProEntitlement(accountEntitlement, TimeProvider.System.GetUtcNow()));
         var localization = LocalizationService.Current;
         switch (accountEntitlement.Tier)
@@ -591,6 +592,7 @@ public partial class MainWindow
     private async void AccountService_StateChanged(object? sender, AuthenticationSnapshot snapshot)
     {
         Dispatcher.Invoke(UpdateAccountButton);
+        Dispatcher.Invoke(UpdateBillingSession);
         if (snapshot.State != AuthenticationState.SignedIn || snapshot.User is null)
         {
             Dispatcher.Invoke(() =>
