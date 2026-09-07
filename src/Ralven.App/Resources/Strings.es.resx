@@ -1738,7 +1738,7 @@ Media CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Pro.FreeName" xml:space="preserve"><value>Free</value></data>
   <data name="Pro.ProName" xml:space="preserve"><value>Pro</value></data>
   <data name="Pro.Comparison.Diagnostics" xml:space="preserve"><value>Diagnóstico del PC y comprobaciones de salud del sistema</value></data>
-  <data name="Pro.Comparison.Profiles" xml:space="preserve"><value>Perfiles de optimización Ligero, Medio y Agresivo</value></data>
+  <data name="Pro.Comparison.Profiles" xml:space="preserve"><value>Perfiles de optimización Ligero, Equilibrado y Agresivo</value></data>
   <data name="Pro.Comparison.FiveM" xml:space="preserve"><value>Herramientas seguras para FiveM sobre GTAV Legacy</value></data>
   <data name="Pro.Comparison.Safety" xml:space="preserve"><value>Revisión del plan, historial básico, informes y restauración</value></data>
   <data name="Pro.Comparison.Personal" xml:space="preserve"><value>Rutinas personales guardadas y recomendaciones según tu uso</value></data>
