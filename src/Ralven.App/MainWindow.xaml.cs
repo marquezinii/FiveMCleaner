@@ -381,6 +381,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
         billingLifetime.Cancel();
+        billingLifetime.Dispose();
         Activated -= BillingWindow_Activated;
         applicationsPage?.Dispose();
         viewModel.Dispose();
