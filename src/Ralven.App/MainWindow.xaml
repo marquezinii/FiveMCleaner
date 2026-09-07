@@ -181,7 +181,7 @@
                 <ui:NavigationViewItem x:Name="SettingsNav" Content="{Binding [Navigation.Settings], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon Settings24}" Tag="Settings" Click="NavItem_Click" />
             </ui:NavigationView.MenuItems>
             <ui:NavigationView.FooterMenuItems>
-                <ui:NavigationViewItem x:Name="ProNav" Content="{Binding [Pro.Title], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon Premium24}" Tag="Pro" Click="NavItem_Click" />
+                <ui:NavigationViewItem x:Name="ProNav" Content="{Binding [Pro.Discover], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon ArrowRight24}" Tag="Pro" Click="NavItem_Click" />
                 <ui:NavigationViewItem IsEnabled="False" Icon="{ui:SymbolIcon Shield24}" ToolTip="{Binding [Safety.SnapshotRollback], Source={StaticResource LocalizedStrings}}">
                     <ui:NavigationViewItem.Content>
                         <StackPanel Margin="0,4,0,4" Visibility="{Binding IsPaneOpen, ElementName=RootNavigationView, Converter={StaticResource BooleanToVisibilityConverter}}">

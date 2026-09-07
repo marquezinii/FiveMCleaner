@@ -1670,17 +1670,26 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Ultra.Operation.Failed" xml:space="preserve"><value>This operation could not be completed. Check the PC diagnosis and access to local storage, then try again. No success was recorded.</value></data>
   <data name="Optimizer.PrepareAgain" xml:space="preserve"><value>Prepare another optimization</value></data>
   <data name="Pro.Title" xml:space="preserve"><value>Ralven Pro</value></data>
-  <data name="Pro.Headline" xml:space="preserve"><value>Your PC, ready for your routine.</value></data>
-  <data name="Pro.Subtitle" xml:space="preserve"><value>Save your preferences, notice what changed and compare your everyday workloads. More control over your PC, with every change explained.</value></data>
-  <data name="Pro.Benefits.Title" xml:space="preserve"><value>A personal workspace for your PC</value></data>
-  <data name="Pro.Routines.Title" xml:space="preserve"><value>One routine for each part of your day</value></data>
-  <data name="Pro.Routines.Description" xml:space="preserve"><value>Keep separate preferences for gaming, streaming, work and everyday use. Review a recommendation based on your latest PC analysis before applying it.</value></data>
-  <data name="Pro.Tracking.Title" xml:space="preserve"><value>Know when your setup changes</value></data>
+  <data name="Pro.Headline" xml:space="preserve"><value>The essentials are already free. Pro makes your routine simpler.</value></data>
+  <data name="Pro.Subtitle" xml:space="preserve"><value>Diagnose, optimize and restore your PC with Free. Choose Pro to spend less time repeating settings and more time using the setup that fits your day.</value></data>
+  <data name="Pro.Free.Tagline" xml:space="preserve"><value>For diagnosing and optimizing with full control</value></data>
+  <data name="Pro.Free.Price" xml:space="preserve"><value>R$ 0</value></data>
+  <data name="Pro.Free.PerMonth" xml:space="preserve"><value>No subscription</value></data>
+  <data name="Pro.Free.Status" xml:space="preserve"><value>Everything below remains available without paying.</value></data>
+  <data name="Pro.Free.Continue" xml:space="preserve"><value>Continue with Free</value></data>
+  <data name="Pro.Pro.Tagline" xml:space="preserve"><value>For a more practical, personalized routine</value></data>
+  <data name="Pro.Badge" xml:space="preserve"><value>RECOMMENDED</value></data>
+  <data name="Pro.Benefits.Title" xml:space="preserve"><value>Everything in Free, plus:</value></data>
+  <data name="Pro.Ai.Title" xml:space="preserve"><value>Ask Ralven AI about your PC</value></data>
+  <data name="Pro.Ai.Description" xml:space="preserve"><value>Get a plain-language explanation of your diagnosis and a safe profile recommendation to review before anything is applied.</value></data>
+  <data name="Pro.Routines.Title" xml:space="preserve"><value>Save a routine for each part of your day</value></data>
+  <data name="Pro.Routines.Description" xml:space="preserve"><value>Keep different preferences for gaming, streaming, work and everyday use, with recommendations based on your latest analysis.</value></data>
+  <data name="Pro.Tracking.Title" xml:space="preserve"><value>Notice changes without checking everything again</value></data>
   <data name="Pro.Tracking.Description" xml:space="preserve"><value>Opt in to local checks while Ralven is open. See changes to gaming settings, pointer response and low disk space, without automatic adjustments.</value></data>
-  <data name="Pro.Measurements.Title" xml:space="preserve"><value>Compare with context, keep your results</value></data>
-  <data name="Pro.Measurements.Description" xml:space="preserve"><value>Record 30-second samples of CPU, GPU, memory and disk usage. Choose compatible measurements and export your local history.</value></data>
-  <data name="Pro.Honesty" xml:space="preserve"><value>Results depend on your hardware and workload. Resource usage is not an FPS benchmark, and Pro does not promise universal performance gains.</value></data>
-  <data name="Pro.Explore" xml:space="preserve"><value>Explore personal workspace</value></data>
+  <data name="Pro.Measurements.Title" xml:space="preserve"><value>Compare what really changed</value></data>
+  <data name="Pro.Measurements.Description" xml:space="preserve"><value>Record comparable 30-second CPU, GPU, memory and disk samples, then keep or export your local history.</value></data>
+  <data name="Pro.Honesty" xml:space="preserve"><value>Pro adds context and convenience, not magic tweaks. Results still depend on your hardware and workload, and resource usage is not an FPS benchmark.</value></data>
+  <data name="Pro.Explore" xml:space="preserve"><value>See Pro tools in the Optimizer</value></data>
   <data name="Pro.PlanName" xml:space="preserve"><value>Ralven Pro · monthly</value></data>
   <data name="Pro.PerMonth" xml:space="preserve"><value>per month · recurring billing in BRL</value></data>
   <data name="Pro.Price.Unavailable" xml:space="preserve"><value>Check availability</value></data>
@@ -1704,28 +1713,32 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Pro.Loading" xml:space="preserve"><value>Checking subscription</value></data>
   <data name="Pro.SignIn" xml:space="preserve"><value>Sign in to see plans</value></data>
   <data name="Pro.Checkout.Consent" xml:space="preserve"><value>I understand the recurring charge of {0} per month and that I can cancel future renewals here.</value></data>
-  <data name="Pro.Checkout" xml:space="preserve"><value>Continue to Asaas</value></data>
+  <data name="Pro.Checkout" xml:space="preserve"><value>Continue to payment</value></data>
   <data name="Pro.Checkout.Security" xml:space="preserve"><value>Your browser opens Asaas. Ralven never receives your card details.</value></data>
   <data name="Pro.Checkout.Opened" xml:space="preserve"><value>Checkout opened in your browser. Complete it there, then refresh to check confirmation. Do not pay again if the confirmation is still pending.</value></data>
   <data name="Pro.Refresh" xml:space="preserve"><value>Refresh subscription</value></data>
   <data name="Pro.Cancel" xml:space="preserve"><value>Cancel renewal</value></data>
   <data name="Pro.Manage" xml:space="preserve"><value>Plans and subscription</value></data>
+  <data name="Pro.Discover" xml:space="preserve"><value>Discover Ralven Pro</value></data>
   <data name="Pro.Cancel.Title" xml:space="preserve"><value>Cancel future renewals?</value></data>
   <data name="Pro.Cancel.Message" xml:space="preserve"><value>Asaas will stop future recurring charges. Your confirmed paid access remains until its end date. Cancelling does not refund past charges. Your local history and restore options remain available.</value></data>
   <data name="Pro.Cancel.Keep" xml:space="preserve"><value>Keep subscription</value></data>
   <data name="Pro.Cancel.Confirm" xml:space="preserve"><value>Cancel renewal</value></data>
   <data name="Pro.Cancel.Success" xml:space="preserve"><value>Cancellation confirmed. No new renewals will be requested for this subscription.</value></data>
-  <data name="Pro.Comparison.Title" xml:space="preserve"><value>Choose what fits your routine</value></data>
+  <data name="Pro.Comparison.Title" xml:space="preserve"><value>Already included with Free:</value></data>
   <data name="Pro.FreeName" xml:space="preserve"><value>Free</value></data>
   <data name="Pro.ProName" xml:space="preserve"><value>Pro</value></data>
-  <data name="Pro.Comparison.Diagnostics" xml:space="preserve"><value>PC diagnosis, Free optimization profiles and FiveM Legacy tools</value></data>
-  <data name="Pro.Comparison.Safety" xml:space="preserve"><value>Plan review, history, reports and restore options</value></data>
+  <data name="Pro.Comparison.Diagnostics" xml:space="preserve"><value>PC diagnosis and system health checks</value></data>
+  <data name="Pro.Comparison.Profiles" xml:space="preserve"><value>Light, Balanced and Aggressive optimization profiles</value></data>
+  <data name="Pro.Comparison.FiveM" xml:space="preserve"><value>Safe tools for FiveM on GTAV Legacy</value></data>
+  <data name="Pro.Comparison.Safety" xml:space="preserve"><value>Plan review, basic history, reports and restore options</value></data>
   <data name="Pro.Comparison.Personal" xml:space="preserve"><value>Saved personal routines and tailored recommendations</value></data>
   <data name="Pro.Comparison.Tracking" xml:space="preserve"><value>New local change checks and guided measurements</value></data>
   <data name="Pro.Included" xml:space="preserve"><value>Included</value></data>
   <data name="Pro.NotIncluded" xml:space="preserve"><value>—</value></data>
   <data name="Pro.Preview" xml:space="preserve"><value>Preview</value></data>
   <data name="Pro.CancellationPolicy" xml:space="preserve"><value>Cancel future renewals here at any time. Paid access continues until the confirmed end date; refunds and disputes affect the refunded period. Saved records and restore options remain accessible after expiry. For billing help or a refund request, use our support channel; do not post card details or passwords.</value></data>
+  <data name="Pro.Trust.Title" xml:space="preserve"><value>The same safety. More convenience.</value></data>
   <data name="Pro.Support" xml:space="preserve"><value>Open support on Discord</value></data>
   <data name="Pro.Error.RateLimited" xml:space="preserve"><value>Too many requests. Wait a moment and refresh your subscription.</value></data>
   <data name="Pro.Error.Existing" xml:space="preserve"><value>This account already has a subscription. Refresh its status to manage it.</value></data>
