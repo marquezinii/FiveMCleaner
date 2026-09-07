@@ -195,3 +195,11 @@ Windows, em `Personal/workspace.json`, sem sincronização remota. O acompanhame
 assinatura de hardware e valores das medições não ampliam os payloads de
 telemetria, crash reporting ou relatos. A validação do entitlement usa apenas o
 endpoint autenticado já existente; não envia os dados do workspace.
+
+## Ralven AI não é telemetria
+
+O envio interativo do Ralven AI ocorre somente após uma pergunta do usuário e
+segue contrato, finalidade e retenção próprios descritos em
+[`docs/ralven-ai.md`](ralven-ai.md). Perguntas, respostas e snapshots não entram
+nos eventos de telemetria nem são armazenados no D1; somente metadados de uso e
+custo são registrados para impor os limites mensais.

@@ -192,6 +192,18 @@ lookup (`LIVE_ALERT_LIMITER`, 30/60s per IP) — it is read-only, unauthenticate
 by necessity (every installed app reads it), and never exposes anything more
 sensitive than the one message an admin chose to broadcast.
 
+## Ralven AI
+
+`POST /ai/message` is an authenticated, verified-email, Pro-only route. It
+validates a bounded allowlisted diagnostic summary, applies a required rate
+limit per Firebase UID and reserves monthly budget in D1 before calling the
+OpenAI Responses API. It exposes no tools and returns only an answer plus one
+standard profile name. See [`docs/ralven-ai.md`](../../docs/ralven-ai.md).
+
+Activation requires migration `0010_ralven_ai_usage.sql` and the Worker secret
+`OPENAI_API_KEY`. The non-secret model, price and budget values are declared in
+`wrangler.toml`; missing limits or limiter bindings fail closed.
+
 ## Billing and recurring subscriptions
 
 `GET /account/entitlements` uses the same verified Firebase UID as the profile

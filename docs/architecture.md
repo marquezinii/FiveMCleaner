@@ -153,6 +153,11 @@ exclusão do perfil pode remover o vínculo. Uma criação incerta continua bloq
 
 ## Fronteira de confiança
 
+O fluxo remoto opcional do Ralven AI está documentado em
+[`docs/ralven-ai.md`](ralven-ai.md). O modelo produz apenas texto e a escolha de
+um perfil padrão; nunca produz um plano executável nem atravessa diretamente a
+fronteira privilegiada.
+
 ```mermaid
 flowchart LR
   U["Usuário"] --> A["App WPF · usuário padrão"]

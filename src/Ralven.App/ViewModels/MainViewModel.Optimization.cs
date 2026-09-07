@@ -479,43 +479,10 @@ public sealed partial class MainViewModel
 
     private void RefreshPlan()
     {
-        var edition = optimizationScope == OptimizationScope.FiveMLegacy
-            ? diagnostic?.Edition ?? FiveMEdition.Unknown
-            : FiveMEdition.Unknown;
-        var options = new OptimizationOptionsDto
-        {
-            CleanUserTemporaryFiles = true,
-            TemporaryFileMinimumAgeDays = selectedProfile switch
-            {
-                OptimizationProfile.Light => 30,
-                OptimizationProfile.Balanced => 14,
-                _ => 7
-            },
-            RemoveOldFiveMCrashDumps = optimizationScope == OptimizationScope.FiveMLegacy,
-            DiagnosticRetentionDays = selectedProfile == OptimizationProfile.Aggressive ? 7 : 14,
-            ServerCacheRepair = CacheRepairPolicy.Off,
-            ServerCacheThresholdGiB = 8,
-            EnableGameMode = true,
-            PreferHighPerformanceGpu = optimizationScope == OptimizationScope.FiveMLegacy,
-            DisableBackgroundCapture = true,
-            UseSessionPerformancePowerPlan = selectedProfile != OptimizationProfile.Light,
-            ApplyLegacyGraphicsPreset = optimizationScope == OptimizationScope.FiveMLegacy,
-            ApplyGtaVGraphicsPreset = optimizationScope == OptimizationScope.FiveMLegacy
-                && diagnostic?.GtaVDetected == true,
-            ReduceWindowsVisualEffects = selectedProfile == OptimizationProfile.Aggressive,
-            ReduceMenuShowDelay = selectedProfile != OptimizationProfile.Light
-        };
-
-        currentPlan = PlanBuilder.Build(
-            new OptimizationPlanRequestDto
-            {
-                Profile = selectedProfile,
-                Scope = optimizationScope,
-                Edition = edition,
-                Options = options,
-                PersonalPreferences = IsUltraSelected ? personalPreferences : null
-            },
-            PlanBuildContext.New(TimeProvider.System));
+        currentPlan = BuildPlan(
+            selectedProfile,
+            optimizationScope,
+            IsUltraSelected ? personalPreferences : null);
 
         PlannedActions.Clear();
         PlannedAdjustments.Clear();
@@ -546,6 +513,87 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(OptimizerSubtitle));
         RefreshProfilePresentation();
         RaiseCommandState();
+    }
+
+    private OptimizationPlanDto BuildPlan(
+        OptimizationProfile profile,
+        OptimizationScope scope,
+        PersonalOptimizationPreferencesDto? preferences = null)
+    {
+        var edition = scope == OptimizationScope.FiveMLegacy
+            ? diagnostic?.Edition ?? FiveMEdition.Unknown
+            : FiveMEdition.Unknown;
+        var options = new OptimizationOptionsDto
+        {
+            CleanUserTemporaryFiles = true,
+            TemporaryFileMinimumAgeDays = profile switch
+            {
+                OptimizationProfile.Light => 30,
+                OptimizationProfile.Balanced => 14,
+                _ => 7
+            },
+            RemoveOldFiveMCrashDumps = scope == OptimizationScope.FiveMLegacy,
+            DiagnosticRetentionDays = profile == OptimizationProfile.Aggressive ? 7 : 14,
+            ServerCacheRepair = CacheRepairPolicy.Off,
+            ServerCacheThresholdGiB = 8,
+            EnableGameMode = true,
+            PreferHighPerformanceGpu = scope == OptimizationScope.FiveMLegacy,
+            DisableBackgroundCapture = true,
+            UseSessionPerformancePowerPlan = profile != OptimizationProfile.Light,
+            ApplyLegacyGraphicsPreset = scope == OptimizationScope.FiveMLegacy,
+            ApplyGtaVGraphicsPreset = scope == OptimizationScope.FiveMLegacy
+                && diagnostic?.GtaVDetected == true,
+            ReduceWindowsVisualEffects = profile == OptimizationProfile.Aggressive,
+            ReduceMenuShowDelay = profile != OptimizationProfile.Light
+        };
+
+        return PlanBuilder.Build(
+            new OptimizationPlanRequestDto
+            {
+                Profile = profile,
+                Scope = scope,
+                Edition = edition,
+                Options = options,
+                PersonalPreferences = preferences
+            },
+            PlanBuildContext.New(TimeProvider.System));
+    }
+
+    public RalvenAiPcContext? CreateRalvenAiContext()
+    {
+        if (diagnostic is null)
+        {
+            return null;
+        }
+
+        var profiles = Enum.GetValues<OptimizationProfile>()
+            .Select(profile => new RalvenAiProfileContext(
+                profile.ToString().ToLowerInvariant(),
+                BuildPlan(profile, OptimizationScope.GeneralWindows).Actions
+                    .Select(action => new RalvenAiActionContext(
+                        action.Metadata.Id,
+                        action.Metadata.Name,
+                        action.Metadata.ExpectedImpact,
+                        action.Metadata.Risk.ToString(),
+                        action.Metadata.Reversibility is ActionReversibility.ReadOnly
+                            or ActionReversibility.FullyReversible
+                            or ActionReversibility.SessionScoped))
+                    .ToArray()))
+            .ToArray();
+
+        return new RalvenAiPcContext(
+            diagnostic.CpuName,
+            diagnostic.GpuName,
+            diagnostic.TotalMemoryGiB,
+            diagnostic.AvailableMemoryGiB,
+            diagnostic.LogicalProcessorCount,
+            diagnostic.FreeDiskGiB,
+            diagnostic.OsLabel,
+            diagnostic.SystemArchitecture,
+            diagnostic.ReadinessScore,
+            diagnostic.PerformancePressure.ToString().ToLowerInvariant(),
+            diagnostic.RecommendedProfile.ToString().ToLowerInvariant(),
+            profiles);
     }
 
     private void RefreshProfilePresentation()

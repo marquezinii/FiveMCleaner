@@ -6,12 +6,36 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Navigation.Section" xml:space="preserve"><value>NAVIGATION</value></data>
   <data name="Navigation.Overview" xml:space="preserve"><value>Overview</value></data>
+  <data name="Navigation.RalvenAi" xml:space="preserve"><value>Ralven AI</value></data>
   <data name="Navigation.System" xml:space="preserve"><value>System</value></data>
   <data name="Navigation.Applications" xml:space="preserve"><value>Applications</value></data>
   <data name="Navigation.Games" xml:space="preserve"><value>Games</value></data>
   <data name="Navigation.Optimizer" xml:space="preserve"><value>Optimize</value></data>
   <data name="Navigation.History" xml:space="preserve"><value>History</value></data>
   <data name="Navigation.Settings" xml:space="preserve"><value>Settings</value></data>
+  <data name="RalvenAi.Title" xml:space="preserve"><value>Ralven AI</value></data>
+  <data name="RalvenAi.Subtitle" xml:space="preserve"><value>Contextual guidance based on this PC's local diagnosis and Ralven's supported plans.</value></data>
+  <data name="RalvenAi.Empty.Title" xml:space="preserve"><value>Ask about this PC</value></data>
+  <data name="RalvenAi.Empty.Detail" xml:space="preserve"><value>Understand bottlenecks, compare the standard profiles, or ask which safe plan is the best fit.</value></data>
+  <data name="RalvenAi.Privacy.Title" xml:space="preserve"><value>What is sent</value></data>
+  <data name="RalvenAi.Privacy.Detail" xml:space="preserve"><value>Your question, a limited hardware summary, the actions already supported by Ralven, and a pseudonymous safety identifier are sent to OpenAI for this reply. Paths, files, credentials, and directly identifying account data are excluded. The conversation is not saved by Ralven. Do not enter personal or secret information.</value></data>
+  <data name="RalvenAi.ProOnly.Title" xml:space="preserve"><value>Ralven AI requires Pro</value></data>
+  <data name="RalvenAi.ProOnly.Detail" xml:space="preserve"><value>Sign in with an account that has an active Pro entitlement to use contextual guidance.</value></data>
+  <data name="RalvenAi.InputPlaceholder" xml:space="preserve"><value>Write a question about this PC. Press Ctrl+Enter to send.</value></data>
+  <data name="RalvenAi.Send" xml:space="preserve"><value>Send</value></data>
+  <data name="RalvenAi.Sending" xml:space="preserve"><value>Reviewing the diagnosis...</value></data>
+  <data name="RalvenAi.You" xml:space="preserve"><value>You</value></data>
+  <data name="RalvenAi.Assistant" xml:space="preserve"><value>Ralven AI</value></data>
+  <data name="RalvenAi.Recommendation.Title" xml:space="preserve"><value>RECOMMENDED STANDARD PROFILE</value></data>
+  <data name="RalvenAi.ReviewPlan" xml:space="preserve"><value>Review plan</value></data>
+  <data name="RalvenAi.DemoReply" xml:space="preserve"><value>The Balanced profile is a sensible starting point for this diagnosis. It keeps the plan inside Ralven's supported actions and lets you review every change before anything runs.</value></data>
+  <data name="RalvenAi.Error.DiagnosticUnavailable" xml:space="preserve"><value>The local diagnosis is not ready. Refresh the diagnosis and try again.</value></data>
+  <data name="RalvenAi.Error.Unavailable" xml:space="preserve"><value>Ralven AI is unavailable right now. No change was made.</value></data>
+  <data name="RalvenAi.Error.Unauthorized" xml:space="preserve"><value>Your session could not be verified. Sign in again and retry.</value></data>
+  <data name="RalvenAi.Error.ProRequired" xml:space="preserve"><value>An active Pro entitlement is required.</value></data>
+  <data name="RalvenAi.Error.RateLimited" xml:space="preserve"><value>Too many requests. Wait a moment and try again.</value></data>
+  <data name="RalvenAi.Error.BudgetExhausted" xml:space="preserve"><value>The monthly Ralven AI allowance has been reached.</value></data>
+  <data name="RalvenAi.Error.InvalidResponse" xml:space="preserve"><value>The reply did not pass Ralven's safety checks. No change was made.</value></data>
   <data name="Games.Title" xml:space="preserve"><value>Games</value></data>
   <data name="Games.Subtitle" xml:space="preserve"><value>Choose a supported game to open its dedicated diagnostics and optimization experience.</value></data>
   <data name="Games.FiveM.Title" xml:space="preserve"><value>FiveM</value></data>

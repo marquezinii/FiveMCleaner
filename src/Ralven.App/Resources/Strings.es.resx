@@ -6,12 +6,36 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Navigation.Section" xml:space="preserve"><value>NAVEGACIÓN</value></data>
   <data name="Navigation.Overview" xml:space="preserve"><value>Resumen</value></data>
+  <data name="Navigation.RalvenAi" xml:space="preserve"><value>Ralven AI</value></data>
   <data name="Navigation.System" xml:space="preserve"><value>Sistema</value></data>
   <data name="Navigation.Applications" xml:space="preserve"><value>Aplicaciones</value></data>
   <data name="Navigation.Games" xml:space="preserve"><value>Juegos</value></data>
   <data name="Navigation.Optimizer" xml:space="preserve"><value>Optimizar</value></data>
   <data name="Navigation.History" xml:space="preserve"><value>Historial</value></data>
   <data name="Navigation.Settings" xml:space="preserve"><value>Configuración</value></data>
+  <data name="RalvenAi.Title" xml:space="preserve"><value>Ralven AI</value></data>
+  <data name="RalvenAi.Subtitle" xml:space="preserve"><value>Orientación contextual basada en el diagnóstico local de este PC y en los planes compatibles con Ralven.</value></data>
+  <data name="RalvenAi.Empty.Title" xml:space="preserve"><value>Pregunta sobre este PC</value></data>
+  <data name="RalvenAi.Empty.Detail" xml:space="preserve"><value>Comprende los cuellos de botella, compara los perfiles estándar o pregunta qué plan seguro es el más adecuado.</value></data>
+  <data name="RalvenAi.Privacy.Title" xml:space="preserve"><value>Qué se envía</value></data>
+  <data name="RalvenAi.Privacy.Detail" xml:space="preserve"><value>Tu pregunta, un resumen limitado del hardware, las acciones ya compatibles con Ralven y un identificador seudónimo de seguridad se envían a OpenAI para esta respuesta. Se excluyen rutas, archivos, credenciales y datos que identifican directamente la cuenta. Ralven no guarda la conversación. No introduzcas información personal ni secreta.</value></data>
+  <data name="RalvenAi.ProOnly.Title" xml:space="preserve"><value>Ralven AI requiere Pro</value></data>
+  <data name="RalvenAi.ProOnly.Detail" xml:space="preserve"><value>Inicia sesión con una cuenta que tenga acceso Pro activo para usar la orientación contextual.</value></data>
+  <data name="RalvenAi.InputPlaceholder" xml:space="preserve"><value>Escribe una pregunta sobre este PC. Presiona Ctrl+Enter para enviar.</value></data>
+  <data name="RalvenAi.Send" xml:space="preserve"><value>Enviar</value></data>
+  <data name="RalvenAi.Sending" xml:space="preserve"><value>Revisando el diagnóstico...</value></data>
+  <data name="RalvenAi.You" xml:space="preserve"><value>Tú</value></data>
+  <data name="RalvenAi.Assistant" xml:space="preserve"><value>Ralven AI</value></data>
+  <data name="RalvenAi.Recommendation.Title" xml:space="preserve"><value>PERFIL ESTÁNDAR RECOMENDADO</value></data>
+  <data name="RalvenAi.ReviewPlan" xml:space="preserve"><value>Revisar plan</value></data>
+  <data name="RalvenAi.DemoReply" xml:space="preserve"><value>El perfil Equilibrado es un punto de partida sensato para este diagnóstico. Mantiene el plan dentro de las acciones compatibles con Ralven y permite revisar cada cambio antes de ejecutar nada.</value></data>
+  <data name="RalvenAi.Error.DiagnosticUnavailable" xml:space="preserve"><value>El diagnóstico local aún no está listo. Actualiza el diagnóstico e inténtalo de nuevo.</value></data>
+  <data name="RalvenAi.Error.Unavailable" xml:space="preserve"><value>Ralven AI no está disponible ahora. No se realizó ningún cambio.</value></data>
+  <data name="RalvenAi.Error.Unauthorized" xml:space="preserve"><value>No se pudo verificar tu sesión. Inicia sesión de nuevo y vuelve a intentarlo.</value></data>
+  <data name="RalvenAi.Error.ProRequired" xml:space="preserve"><value>Se requiere acceso Pro activo.</value></data>
+  <data name="RalvenAi.Error.RateLimited" xml:space="preserve"><value>Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.</value></data>
+  <data name="RalvenAi.Error.BudgetExhausted" xml:space="preserve"><value>Se alcanzó el límite mensual de Ralven AI.</value></data>
+  <data name="RalvenAi.Error.InvalidResponse" xml:space="preserve"><value>La respuesta no superó las comprobaciones de seguridad de Ralven. No se realizó ningún cambio.</value></data>
   <data name="Games.Title" xml:space="preserve"><value>Juegos</value></data>
   <data name="Games.Subtitle" xml:space="preserve"><value>Elige un juego compatible para abrir su experiencia dedicada de diagnóstico y optimización.</value></data>
   <data name="Games.FiveM.Title" xml:space="preserve"><value>FiveM</value></data>
