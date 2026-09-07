@@ -12,6 +12,12 @@ const PAYMENT_EVENTS = new Set([
   'PAYMENT_REFUNDED', 'PAYMENT_PARTIALLY_REFUNDED', 'PAYMENT_REFUND_IN_PROGRESS', 'PAYMENT_REFUND_DENIED',
   'PAYMENT_CHARGEBACK_REQUESTED', 'PAYMENT_CHARGEBACK_DISPUTE', 'PAYMENT_AWAITING_CHARGEBACK_REVERSAL',
 ]);
+const DAY_MS = 24 * 60 * 60 * 1000;
+const CHECKOUT_RECONCILIATION_WINDOW_MS = 180 * DAY_MS;
+const PAYMENT_RECHECK_INTERVAL_MS = 15 * 60 * 1000;
+const HISTORICAL_RECHECK_INTERVAL_MS = 30 * DAY_MS;
+// ponytail: ten details plus one list cap at 21 calls; queue reconciliation if a checkout legitimately exceeds that budget.
+const MAX_PAYMENT_RECONCILIATIONS = 10;
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
@@ -186,8 +192,16 @@ export async function reconcilePayment(env, paymentId, requestId = null, options
   if (payment.id !== paymentId || payment.billingType !== 'CREDIT_CARD' || !PROVIDER_ID.test(payment.subscription ?? '')) {
     throw new BillingError('invalid-provider-response');
   }
+  const refundedCents = completedRefundCents(payment);
+  const state = paymentState(payment, refundedCents);
+  const periodStart = providerDate(payment.confirmedDate ?? payment.paymentDate ?? payment.clientPaymentDate ?? payment.dueDate);
+  const periodEnd = periodStart && monthlyPeriodEnd(periodStart);
+  if (refundedCents === null || state === null || periodStart === null || periodEnd === null) {
+    throw new BillingError('invalid-provider-response');
+  }
   const intent = await intentForPayment(env.TELEMETRY_DB, payment, expectedIntent);
-  const key = requestId ?? await eventKey('asaas-payment-sync', `${payment.id}:${payment.status}:${JSON.stringify(payment.refunds ?? null)}`);
+  const key = requestId ?? await eventKey('asaas-payment-sync',
+    `${payment.id}:${state}:${refundedCents}:${periodStart}:${periodEnd}`);
   const now = new Date().toISOString();
   if (!intent) {
     if (await startEvent(env.TELEMETRY_DB, key, paymentId, now)) await finishEvent(env.TELEMETRY_DB, key, paymentId, 'ignored', now);
@@ -197,7 +211,12 @@ export async function reconcilePayment(env, paymentId, requestId = null, options
     || (payment.checkoutSession && payment.checkoutSession !== intent.provider_checkout_id)) {
     throw new BillingError('billing-payment-mismatch', 409);
   }
-  if (!await startEvent(env.TELEMETRY_DB, key, paymentId, now)) return true;
+  if (refundedCents > intent.amount_cents) throw new BillingError('invalid-provider-response');
+  if (!await startEvent(env.TELEMETRY_DB, key, paymentId, now)) {
+    await env.TELEMETRY_DB.prepare(`UPDATE billing_payments SET provider_updated_at = ?, updated_at = ?
+      WHERE provider_payment_id = ?`).bind(now, now, paymentId).run();
+    return true;
+  }
   const subscription = await asaasApi(env, `/subscriptions/${encodeURIComponent(payment.subscription)}`, options);
   const subscriptionId = await persistSubscription(env.TELEMETRY_DB, intent, subscription, key, paymentId, now);
   const paymentOwner = await env.TELEMETRY_DB.prepare(
@@ -205,12 +224,6 @@ export async function reconcilePayment(env, paymentId, requestId = null, options
   if (paymentOwner && paymentOwner.subscription_id !== subscriptionId) {
     throw new BillingError('billing-payment-mismatch', 409);
   }
-  const refundedCents = completedRefundCents(payment);
-  const state = paymentState(payment, refundedCents);
-  const periodStart = providerDate(payment.confirmedDate ?? payment.paymentDate ?? payment.clientPaymentDate ?? payment.dueDate);
-  const periodEnd = periodStart && monthlyPeriodEnd(periodStart);
-  if (refundedCents === null || state === null || periodStart === null || periodEnd === null
-    || refundedCents > intent.amount_cents) throw new BillingError('invalid-provider-response');
   const lastEventId = await eventRowId(env.TELEMETRY_DB, key, paymentId);
   await env.TELEMETRY_DB.batch([
     env.TELEMETRY_DB.prepare(`INSERT INTO billing_payments
@@ -235,11 +248,38 @@ export async function reconcilePayment(env, paymentId, requestId = null, options
 
 export async function reconcileCheckout(env, intent, options = {}) {
   if (!PROVIDER_ID.test(intent.provider_checkout_id ?? '')) throw new BillingError('invalid-provider-response');
-  const result = await asaasApi(env, `/payments?checkoutSession=${encodeURIComponent(intent.provider_checkout_id)}&limit=100&offset=0`, options);
+  const now = Date.now();
+  const windowStart = new Date(now - CHECKOUT_RECONCILIATION_WINDOW_MS).toISOString();
+  const recentRecheckAfter = now - PAYMENT_RECHECK_INTERVAL_MS;
+  const historicalRecheckBefore = new Date(now - HISTORICAL_RECHECK_INTERVAL_MS).toISOString();
+  const result = await asaasApi(env, `/payments?checkoutSession=${encodeURIComponent(intent.provider_checkout_id)}`
+    + `&dueDate%5Bge%5D=${windowStart.slice(0, 10)}&limit=100&offset=0`, options);
   if (!Array.isArray(result.data) || result.hasMore === true) throw new BillingError('billing-checkout-reconciliation-required', 409);
+  let remaining = MAX_PAYMENT_RECONCILIATIONS;
   for (const item of result.data) {
     if (!PROVIDER_ID.test(item?.id ?? '')) throw new BillingError('invalid-provider-response');
+    if (remaining === 0) continue;
+    const existing = await env.TELEMETRY_DB.prepare(`SELECT p.period_end, p.provider_updated_at
+      FROM billing_payments p JOIN billing_subscriptions s ON s.id = p.subscription_id
+      WHERE p.provider_payment_id = ? AND s.checkout_intent_id = ? AND s.account_uid = ?`)
+      .bind(item.id, intent.id, intent.account_uid).first();
+    const periodEnd = Date.parse(existing?.period_end ?? '');
+    const providerUpdatedAt = Date.parse(existing?.provider_updated_at ?? '');
+    if ((Number.isFinite(periodEnd) && periodEnd < Date.parse(windowStart))
+      || (Number.isFinite(providerUpdatedAt) && providerUpdatedAt >= recentRecheckAfter)) continue;
     await reconcilePayment(env, item.id, null, options, intent);
+    remaining--;
+  }
+  if (remaining > 0) {
+    const historical = await env.TELEMETRY_DB.prepare(`SELECT p.provider_payment_id
+      FROM billing_payments p JOIN billing_subscriptions s ON s.id = p.subscription_id
+      WHERE s.checkout_intent_id = ? AND s.account_uid = ? AND p.period_end < ? AND p.provider_updated_at < ?
+      ORDER BY p.provider_updated_at, p.provider_payment_id LIMIT 1`)
+      .bind(intent.id, intent.account_uid, windowStart, historicalRecheckBefore).first();
+    if (historical) {
+      if (!PROVIDER_ID.test(historical.provider_payment_id ?? '')) throw new BillingError('invalid-provider-response');
+      await reconcilePayment(env, historical.provider_payment_id, null, options, intent);
+    }
   }
   return result.data.length;
 }

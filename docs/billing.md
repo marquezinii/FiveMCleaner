@@ -51,7 +51,12 @@ O ledger usa o ID único da cobrança. O período inicia na data canônica de
 confirmação/pagamento e termina um mês depois, preservando o último dia possível.
 Eventos repetidos não somam validade. Qualquer estorno `DONE`, inclusive parcial,
 ou chargeback retira o acesso daquele período. Uma atualização manual reconcilia
-cobranças do checkout e recupera webhook perdido sem polling contínuo.
+cobranças recentes do checkout e recupera webhook perdido sem polling contínuo.
+O Worker limita a busca aos últimos 180 dias de vencimento, evita reler por 15
+minutos um pagamento recém-consultado e processa no máximo dez cobranças por
+requisição. Para não abandonar alterações tardias, uma cobrança histórica vencida
+e sem consulta há 30 dias é auditada por atualização; webhooks continuam sendo a
+fonte primária e não usam essas janelas.
 
 O webhook valida `asaas-access-token` em tempo constante antes de ler o JSON.
 O `id` do evento garante idempotência; o corpo serve para localizar o recurso e
