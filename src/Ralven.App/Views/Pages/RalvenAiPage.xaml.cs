@@ -85,10 +85,11 @@ public partial class RalvenAiPage : UserControl, IDisposable
                 {
                     throw new RalvenAiException(RalvenAiError.Unauthorized);
                 }
+                var cultureName = LocalizationService.Current.CurrentCulture.Name;
                 reply = await service.AskAsync(
                     token,
                     text,
-                    LocalizationService.Current.CurrentCulture.Name,
+                    string.IsNullOrWhiteSpace(cultureName) ? "en-US" : cultureName,
                     context,
                     history,
                     lifetime.Token);
@@ -141,7 +142,11 @@ public partial class RalvenAiPage : UserControl, IDisposable
 
     private static string Localize(string key) => LocalizationService.Current.GetString(key);
 
-    public void Dispose() => lifetime.Cancel();
+    public void Dispose()
+    {
+        lifetime.Cancel();
+        lifetime.Dispose();
+    }
 
     private sealed record ChatMessage(string Author, string Text, bool IsUser);
 }

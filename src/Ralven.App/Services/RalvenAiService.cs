@@ -104,6 +104,7 @@ public sealed class RalvenAiService
                     .Select(turn => turn with { Text = ReportSanitizer.Sanitize(turn.Text) })
                     .ToArray()), options: JsonOptions)
         };
+        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", idToken);
 
         HttpResponseMessage response;

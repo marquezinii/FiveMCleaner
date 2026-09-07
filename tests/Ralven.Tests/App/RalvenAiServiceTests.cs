@@ -32,6 +32,7 @@ public sealed class RalvenAiServiceTests
 
         Assert.Equal(OptimizationProfile.Balanced, reply.RecommendedProfile);
         Assert.Equal("https://example.com/ai/message", captured!.RequestUri!.AbsoluteUri);
+        Assert.Equal("application/json", captured.Content!.Headers.ContentType!.ToString());
         Assert.Equal("Bearer", captured.Headers.Authorization!.Scheme);
         Assert.Equal("id-token", captured.Headers.Authorization.Parameter);
         using var json = JsonDocument.Parse(body!);

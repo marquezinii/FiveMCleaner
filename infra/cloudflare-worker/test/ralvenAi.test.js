@@ -176,3 +176,18 @@ test('Ralven AI keeps the reservation when provider usage is missing', async () 
   assert.equal(response.status, 200);
   assert.deepEqual(db.calls[1].params.slice(1, 4), [null, null, null]);
 });
+
+test('Ralven AI does not permanently burn the budget on a provider failure', async () => {
+  const db = fakeDb();
+  const response = await handleRalvenAi(request(), env(db), {
+    requireUser: verifiedUser,
+    fetchEntitlements: pro,
+    fetch: async () => { throw new Error('network down'); },
+  });
+
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, 'provider-unavailable');
+  const [state, actualCost] = db.calls[1].params;
+  assert.equal(state, 'failed');
+  assert.equal(actualCost, 0);
+});

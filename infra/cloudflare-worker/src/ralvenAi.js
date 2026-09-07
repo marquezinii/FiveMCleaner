@@ -164,9 +164,11 @@ async function finishUsage(db, requestId, state, usage, env) {
     && Number.isSafeInteger(usage?.output_tokens) && usage.output_tokens >= 0;
   const inputTokens = hasUsage ? usage.input_tokens : null;
   const outputTokens = hasUsage ? usage.output_tokens : null;
-  const actual = hasUsage && inputPrice !== null && outputPrice !== null
-    ? Math.ceil((inputTokens * inputPrice + outputTokens * outputPrice) / 1_000_000)
-    : null;
+  const actual = state === 'failed'
+    ? 0
+    : hasUsage && inputPrice !== null && outputPrice !== null
+      ? Math.ceil((inputTokens * inputPrice + outputTokens * outputPrice) / 1_000_000)
+      : null;
   await db.prepare(
     `UPDATE ralven_ai_usage
      SET state = ?, actual_cost_microusd = ?, input_tokens = ?, output_tokens = ?, completed_at = ?
