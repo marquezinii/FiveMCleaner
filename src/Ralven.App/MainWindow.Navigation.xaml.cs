@@ -17,6 +17,21 @@ public partial class MainWindow
     private GamesPage GamesPage => gamesPage ??= CreateDeferredPage<GamesPage>();
     private OptimizerPage OptimizerPage => optimizerPage ??= CreateDeferredPage<OptimizerPage>();
     private HistoryPage HistoryPage => historyPage ??= CreateDeferredPage<HistoryPage>();
+    private RalvenAiPage RalvenAiPage => ralvenAiPage ??= CreateRalvenAiPage();
+
+    private RalvenAiPage CreateRalvenAiPage()
+    {
+        var page = new RalvenAiPage(
+            ralvenAiService,
+            cancellationToken => accountService?.GetIdTokenAsync(cancellationToken)
+                ?? Task.FromResult<string?>(null),
+            demoMode)
+        {
+            Visibility = Visibility.Collapsed
+        };
+        PageContentHost.Children.Add(page);
+        return page;
+    }
 
     private ApplicationsPage CreateApplicationsPage()
     {
@@ -67,6 +82,7 @@ public partial class MainWindow
         Navigate(tag switch
         {
             "System" => SystemPage,
+            "RalvenAi" => RalvenAiPage,
             "Applications" => ApplicationsPage,
             "Games" => GamesPage,
             "History" => HistoryPage,
@@ -78,6 +94,7 @@ public partial class MainWindow
     private void ActivateNavItem(Wpf.Ui.Controls.NavigationViewItem selected)
     {
         DashboardNav.IsActive = ReferenceEquals(selected, DashboardNav);
+        RalvenAiNav.IsActive = ReferenceEquals(selected, RalvenAiNav);
         OptimizerNav.IsActive = ReferenceEquals(selected, OptimizerNav);
         SystemNav.IsActive = ReferenceEquals(selected, SystemNav);
         ApplicationsNav.IsActive = ReferenceEquals(selected, ApplicationsNav);
@@ -110,6 +127,10 @@ public partial class MainWindow
         {
             historyPage.Visibility = Visibility.Collapsed;
         }
+        if (ralvenAiPage is not null)
+        {
+            ralvenAiPage.Visibility = Visibility.Collapsed;
+        }
         SettingsPage.Visibility = Visibility.Collapsed;
         if (proPage is not null) proPage.Visibility = Visibility.Collapsed;
         page.Visibility = Visibility.Visible;
@@ -140,6 +161,14 @@ public partial class MainWindow
     {
         ActivateNavItem(HistoryNav);
         Navigate(HistoryPage);
+    }
+
+    internal void RequestReviewRalvenAiPlan(OptimizationProfile profile)
+    {
+        viewModel.SetOptimizationScope(OptimizationScope.GeneralWindows);
+        viewModel.SelectProfile(profile);
+        ActivateNavItem(OptimizerNav);
+        Navigate(OptimizerPage);
     }
 
     internal async Task RequestStartOptimizationAsync()

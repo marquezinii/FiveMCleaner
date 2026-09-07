@@ -168,6 +168,11 @@
                             Background="Transparent">
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem x:Name="DashboardNav" Content="{Binding [Navigation.Overview], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon Home24}" Tag="Dashboard" Click="NavItem_Click" />
+                <ui:NavigationViewItem x:Name="RalvenAiNav" Content="{Binding [Navigation.RalvenAi], Source={StaticResource LocalizedStrings}}" Tag="RalvenAi" Click="NavItem_Click">
+                    <ui:NavigationViewItem.Icon>
+                        <ui:ImageIcon Source="{DynamicResource RalvenAiLogoImage}" Width="20" Height="20" />
+                    </ui:NavigationViewItem.Icon>
+                </ui:NavigationViewItem>
                 <ui:NavigationViewItem x:Name="OptimizerNav" Content="{Binding [Navigation.Optimizer], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon Rocket24}" Tag="Optimizer" Click="NavItem_Click" />
                 <ui:NavigationViewItem x:Name="SystemNav" Content="{Binding [Navigation.System], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon DesktopPulse24}" Tag="System" Click="NavItem_Click" />
                 <ui:NavigationViewItem x:Name="ApplicationsNav" Content="{Binding [Navigation.Applications], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon Apps24}" Tag="Applications" Click="NavItem_Click" />

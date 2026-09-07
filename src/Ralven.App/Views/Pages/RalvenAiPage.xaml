@@ -1,0 +1,132 @@
+<UserControl x:Class="Ralven.App.Views.Pages.RalvenAiPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="820">
+    <Grid Margin="28,24,28,28">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Border Grid.Row="0" Style="{StaticResource TitleBlockSurface}">
+            <StackPanel>
+                <TextBlock Text="{Binding [RalvenAi.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" />
+                <Rectangle Style="{StaticResource TitleAccentRule}" Margin="0,10,0,0" />
+                <TextBlock Text="{Binding [RalvenAi.Subtitle], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,12,0,0" />
+            </StackPanel>
+        </Border>
+
+        <Grid Grid.Row="1">
+            <Grid.Style>
+                <Style TargetType="Grid">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasProAccess}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Grid.Style>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="320" />
+            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="*" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <Border Grid.Row="0" Grid.Column="0" Margin="0,0,18,16" Background="{DynamicResource Surface1Brush}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusLg}">
+                <Grid>
+                    <ScrollViewer x:Name="ConversationScrollViewer" Padding="22" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl x:Name="ConversationItems">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border MaxWidth="680" Padding="16,12" Margin="0,0,0,12" CornerRadius="{StaticResource RadiusMd}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="HorizontalAlignment" Value="Left" />
+                                                <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsUser}" Value="True">
+                                                        <Setter Property="HorizontalAlignment" Value="Right" />
+                                                        <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel>
+                                            <TextBlock Text="{Binding Author}" Style="{StaticResource OverlineText}" />
+                                            <TextBlock Text="{Binding Text}" Style="{StaticResource BodyText}" TextWrapping="Wrap" Margin="0,5,0,0" />
+                                        </StackPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520">
+                        <Image Source="{DynamicResource RalvenAiLogoImage}"
+                               Width="104"
+                               Height="104"
+                               Stretch="Uniform"
+                               Focusable="False"
+                               IsHitTestVisible="False"
+                               Margin="0,0,0,22" />
+                        <TextBlock Text="{Binding [RalvenAi.Empty.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" TextAlignment="Center" />
+                        <TextBlock Text="{Binding [RalvenAi.Empty.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" Background="{DynamicResource Surface2Brush}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusLg}" Padding="20">
+                <StackPanel>
+                    <TextBlock Text="{Binding [RalvenAi.Privacy.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" />
+                    <TextBlock Text="{Binding [RalvenAi.Privacy.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,10,0,0" />
+                    <Border x:Name="RecommendationPanel" Visibility="Collapsed" Margin="0,24,0,0" Padding="16" Background="{DynamicResource AccentSoftBrush}" CornerRadius="{StaticResource RadiusMd}">
+                        <StackPanel>
+                            <TextBlock Text="{Binding [RalvenAi.Recommendation.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                            <TextBlock x:Name="RecommendationProfileText" Style="{StaticResource SectionText}" Margin="0,7,0,0" />
+                            <Button Content="{Binding [RalvenAi.ReviewPlan], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,16,0,0" HorizontalAlignment="Stretch" Click="ReviewPlan_Click" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,18,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+                <TextBox x:Name="MessageTextBox" Grid.Row="0" Grid.Column="0" MinHeight="46" MaxLength="1000" Padding="14,11" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" KeyDown="MessageTextBox_KeyDown"
+                         ToolTip="{Binding [RalvenAi.InputPlaceholder], Source={StaticResource LocalizedStrings}}"
+                         AutomationProperties.Name="{Binding [RalvenAi.InputPlaceholder], Source={StaticResource LocalizedStrings}}" />
+                <Button x:Name="SendButton" Grid.Row="0" Grid.Column="1" Content="{Binding [RalvenAi.Send], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="116" Margin="12,0,0,0" Click="Send_Click" />
+                <TextBlock x:Name="StatusText" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource CaptionText}" Margin="2,7,0,0" TextWrapping="Wrap" />
+            </Grid>
+        </Grid>
+
+        <Border Grid.Row="1" Padding="28" Background="{DynamicResource Surface2Brush}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusLg}">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Visibility" Value="Visible" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasProAccess}" Value="True">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+            <StackPanel MaxWidth="620" HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="{Binding [RalvenAi.ProOnly.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" TextAlignment="Center" />
+                <TextBlock Text="{Binding [RalvenAi.ProOnly.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,0" />
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

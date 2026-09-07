@@ -76,6 +76,7 @@ public partial class MainWindow
                     "Applications" => (Element: (UIElement)ApplicationsPage, Nav: ApplicationsNav),
                     "Games" => (Element: (UIElement)GamesPage, Nav: GamesNav),
                     "Pro" => ConfigureProCapture(arguments),
+                    "RalvenAi" => ConfigureRalvenAiCapture(),
                     "Ultra" => ConfigureUltraCapture(true, arguments),
                     "UltraLocked" => ConfigureUltraCapture(false, arguments),
                     "Optimizer" => ConfigureOptimizerCapture(OptimizationScope.GeneralWindows, OptimizerNav),
@@ -173,6 +174,12 @@ public partial class MainWindow
             if (state == "error") proViewModel.ShowMessage("Pro.Error.Request");
         }
         return (ProPage, ProNav);
+    }
+
+    private (UIElement Element, Wpf.Ui.Controls.NavigationViewItem Nav) ConfigureRalvenAiCapture()
+    {
+        if (demoMode) viewModel.SetProAccess(true);
+        return (RalvenAiPage, RalvenAiNav);
     }
 
     internal static bool TryParseCaptureSize(string value, out int width, out int height)

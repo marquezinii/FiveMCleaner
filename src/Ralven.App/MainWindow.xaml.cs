@@ -40,9 +40,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private GamesPage? gamesPage;
     private OptimizerPage? optimizerPage;
     private HistoryPage? historyPage;
+    private RalvenAiPage? ralvenAiPage;
     private readonly IFirebaseAuthService? accountService;
     private readonly IAccountProfileService profileService;
     private readonly CloudflareAccountEntitlementService? entitlementService;
+    private readonly RalvenAiService? ralvenAiService;
     private readonly IGoogleOAuthClient googleOAuth;
     private HwndSource? windowSource;
     private bool allowClose;
@@ -81,11 +83,14 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             profileService = new CloudflareAccountProfileService(profileEndpoint);
             entitlementService = new CloudflareAccountEntitlementService(profileEndpoint);
             billingService = new CloudflareBillingService(profileEndpoint);
+            ralvenAiService = new RalvenAiService(profileEndpoint);
         }
         else
         {
             profileService = new DisabledAccountProfileService();
             entitlementService = null;
+            billingService = null;
+            ralvenAiService = null;
         }
 
         // Demo runs never poll the live alert -- same trade as telemetry below.
@@ -384,6 +389,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         billingLifetime.Dispose();
         Activated -= BillingWindow_Activated;
         applicationsPage?.Dispose();
+        ralvenAiPage?.Dispose();
         viewModel.Dispose();
         windowSource?.RemoveHook(WindowMessageHook);
         System.Windows.Application.Current.SessionEnding -= Application_SessionEnding;

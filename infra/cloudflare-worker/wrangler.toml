@@ -36,6 +36,7 @@
 ##                         cancellation and canonical reads
 ##   ASAAS_WEBHOOK_TOKEN -- distinct 32-255 character token sent by Asaas in
 ##                          the asaas-access-token header
+##   OPENAI_API_KEY -- credencial server-side usada somente por POST /ai/message
 ##
 ## DASHBOARD_ORIGIN below is a plain, non-secret var -- the exact comma-separated
 ## origins the dashboard is served from, so CORS headers are only ever sent back
@@ -58,6 +59,14 @@ ASAAS_ENVIRONMENT = "production"
 ASAAS_AMOUNT_CENTS = "1990"
 ASAAS_RETURN_URL = "https://api.vemryx.com/billing/return"
 DASHBOARD_ORIGIN = "https://ralven-dashboard.pages.dev,https://dashboard.vemryx.com,https://fivemcleaner-dashboard.pages.dev"
+RALVEN_AI_MODEL = "gpt-5.6-luna"
+# Tetos fail-closed da V1. Revise-os antes do primeiro deploy com a rota ativa.
+RALVEN_AI_USER_MONTHLY_BUDGET_MICROUSD = "350000"
+RALVEN_AI_GLOBAL_MONTHLY_BUDGET_MICROUSD = "20000000"
+RALVEN_AI_RESERVED_COST_MICROUSD = "6000"
+# Preços do modelo acima em 2026-09-06; atualizar junto com uma mudança de modelo/preço.
+RALVEN_AI_INPUT_PRICE_MICROUSD_PER_MILLION = "200000"
+RALVEN_AI_OUTPUT_PRICE_MICROUSD_PER_MILLION = "1200000"
 
 [[ratelimits]]
 name = "BILLING_WRITE_LIMITER"
@@ -112,3 +121,10 @@ simple = { limit = 60, period = 60 }
 name = "LIVE_ALERT_LIMITER"
 namespace_id = "1005"
 simple = { limit = 30, period = 60 }
+
+# Aplicado por Firebase UID depois da validação do token. Ausência ou falha
+# do binding bloqueia a rota para não expor custo ilimitado ao provedor.
+[[ratelimits]]
+name = "RALVEN_AI_LIMITER"
+namespace_id = "1008"
+simple = { limit = 10, period = 60 }

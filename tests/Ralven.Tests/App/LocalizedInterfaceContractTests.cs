@@ -43,6 +43,7 @@ public sealed partial class LocalizedInterfaceContractTests
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "SystemPage.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "ApplicationsPage.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "GamesPage.xaml"),
+            Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "RalvenAiPage.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "OptimizerPage.xaml")
         };
         var keys = sources

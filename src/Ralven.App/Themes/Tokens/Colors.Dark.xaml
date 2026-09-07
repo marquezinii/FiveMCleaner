@@ -21,6 +21,10 @@
     <Color x:Key="RalvenLightGrayColor">#A6A7AC</Color>
     <Color x:Key="RalvenWhiteColor">#FFFFFF</Color>
 
+    <BitmapImage x:Key="RalvenAiLogoImage"
+                 UriSource="/Ralven;component/Assets/RalvenAi.White.png"
+                 DecodePixelWidth="192" />
+
     <Color x:Key="CanvasBaseColor">#0A0A0B</Color>
     <Color x:Key="CanvasSunkenColor">#0A0A0B</Color>
     <Color x:Key="Surface1Color">#111214</Color>
