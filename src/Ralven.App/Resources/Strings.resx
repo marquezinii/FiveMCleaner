@@ -1722,12 +1722,13 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Pro.Loading" xml:space="preserve"><value>Checking subscription</value></data>
   <data name="Pro.SignIn" xml:space="preserve"><value>Sign in to see plans</value></data>
   <data name="Pro.Checkout.Consent" xml:space="preserve"><value>I understand the recurring charge of {0} per month and that I can cancel future renewals here.</value></data>
-  <data name="Pro.Checkout" xml:space="preserve"><value>Continue to Asaas</value></data>
+  <data name="Pro.Checkout" xml:space="preserve"><value>Continue to payment</value></data>
   <data name="Pro.Checkout.Security" xml:space="preserve"><value>Your browser opens Asaas. Ralven never receives your card details.</value></data>
   <data name="Pro.Checkout.Opened" xml:space="preserve"><value>Checkout opened in your browser. Complete it there, then refresh to check confirmation. Do not pay again if the confirmation is still pending.</value></data>
   <data name="Pro.Refresh" xml:space="preserve"><value>Refresh subscription</value></data>
   <data name="Pro.Cancel" xml:space="preserve"><value>Cancel renewal</value></data>
   <data name="Pro.Manage" xml:space="preserve"><value>Plans and subscription</value></data>
+  <data name="Pro.Discover" xml:space="preserve"><value>Discover Ralven Pro</value></data>
   <data name="Pro.Cancel.Title" xml:space="preserve"><value>Cancel future renewals?</value></data>
   <data name="Pro.Cancel.Message" xml:space="preserve"><value>Asaas will stop future recurring charges. Your confirmed paid access remains until its end date. Cancelling does not refund past charges. Your local history and restore options remain available.</value></data>
   <data name="Pro.Cancel.Keep" xml:space="preserve"><value>Keep subscription</value></data>

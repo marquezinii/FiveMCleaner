@@ -1722,12 +1722,13 @@ Media CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Pro.Loading" xml:space="preserve"><value>Consultando suscripción</value></data>
   <data name="Pro.SignIn" xml:space="preserve"><value>Entrar para ver planes</value></data>
   <data name="Pro.Checkout.Consent" xml:space="preserve"><value>Entiendo el cobro recurrente de {0} al mes y que puedo cancelar las próximas renovaciones aquí.</value></data>
-  <data name="Pro.Checkout" xml:space="preserve"><value>Continuar en Asaas</value></data>
+  <data name="Pro.Checkout" xml:space="preserve"><value>Continuar al pago</value></data>
   <data name="Pro.Checkout.Security" xml:space="preserve"><value>Tu navegador abrirá Asaas. Ralven no recibe los datos de tu tarjeta.</value></data>
   <data name="Pro.Checkout.Opened" xml:space="preserve"><value>Checkout abierto en el navegador. Complétalo allí y actualiza para comprobar la confirmación. No vuelvas a pagar si la confirmación sigue pendiente.</value></data>
   <data name="Pro.Refresh" xml:space="preserve"><value>Actualizar suscripción</value></data>
   <data name="Pro.Cancel" xml:space="preserve"><value>Cancelar renovación</value></data>
   <data name="Pro.Manage" xml:space="preserve"><value>Planes y suscripción</value></data>
+  <data name="Pro.Discover" xml:space="preserve"><value>Conoce Ralven Pro</value></data>
   <data name="Pro.Cancel.Title" xml:space="preserve"><value>¿Cancelar las próximas renovaciones?</value></data>
   <data name="Pro.Cancel.Message" xml:space="preserve"><value>Asaas detendrá los próximos cobros recurrentes. Tu acceso pagado confirmado permanece hasta su fecha final. Cancelar no reembolsa cobros anteriores. Tu historial local y las opciones de restauración siguen disponibles.</value></data>
   <data name="Pro.Cancel.Keep" xml:space="preserve"><value>Mantener suscripción</value></data>
