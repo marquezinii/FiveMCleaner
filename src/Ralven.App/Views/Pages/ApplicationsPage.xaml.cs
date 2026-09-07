@@ -36,10 +36,12 @@ public partial class ApplicationsPage : UserControl, IDisposable
         DataContext = viewModel;
 
         // Setting IsChecked in XAML fires Checked while named siblings are
-        // still being created. Select the initial surface after the document
-        // has been initialized instead.
+        // still being created. Select both independent surfaces after the
+        // document has been initialized instead.
         UpdatesTab.IsChecked = true;
-        ShowInventory(ApplicationUpdatesPanel);
+        InstalledTab.IsChecked = true;
+        ShowPackagePanel(ApplicationUpdatesPanel);
+        ShowInventoryPanel(InstalledApplicationsPanel);
     }
 
     private async void ApplicationsPage_Loaded(object sender, RoutedEventArgs e)
@@ -58,39 +60,25 @@ public partial class ApplicationsPage : UserControl, IDisposable
         await RefreshAllAsync();
     }
 
-    private void InventoryTab_Checked(object sender, RoutedEventArgs e)
+    private void PackageTab_Checked(object sender, RoutedEventArgs e)
     {
-        if (InstalledApplicationsPanel is null
-            || StartupApplicationsPanel is null
-            || DiscoverPackagesPanel is null
+        if (DiscoverPackagesPanel is null
             || ManagedPackagesPanel is null
             || ApplicationUpdatesPanel is null)
         {
             return;
         }
 
-        ShowInventory(sender switch
+        ShowPackagePanel(sender switch
         {
             _ when ReferenceEquals(sender, DiscoverTab) => DiscoverPackagesPanel,
-            _ when ReferenceEquals(sender, UpdatesTab) => ApplicationUpdatesPanel,
             _ when ReferenceEquals(sender, ManagedTab) => ManagedPackagesPanel,
-            _ when ReferenceEquals(sender, StartupTab) => StartupApplicationsPanel,
-            _ => InstalledApplicationsPanel
+            _ => ApplicationUpdatesPanel
         });
     }
 
-    private void ShowInventory(UIElement selected)
+    private void ShowPackagePanel(UIElement selected)
     {
-        InstalledApplicationsPanel.Visibility = ReferenceEquals(
-            selected,
-            InstalledApplicationsPanel)
-            ? Visibility.Visible
-            : Visibility.Collapsed;
-        StartupApplicationsPanel.Visibility = ReferenceEquals(
-            selected,
-            StartupApplicationsPanel)
-            ? Visibility.Visible
-            : Visibility.Collapsed;
         ApplicationUpdatesPanel.Visibility = ReferenceEquals(
             selected,
             ApplicationUpdatesPanel)
@@ -100,6 +88,32 @@ public partial class ApplicationsPage : UserControl, IDisposable
             ? Visibility.Visible
             : Visibility.Collapsed;
         ManagedPackagesPanel.Visibility = ReferenceEquals(selected, ManagedPackagesPanel)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+    }
+
+    private void InventoryTab_Checked(object sender, RoutedEventArgs e)
+    {
+        if (InstalledApplicationsPanel is null || StartupApplicationsPanel is null)
+        {
+            return;
+        }
+
+        ShowInventoryPanel(ReferenceEquals(sender, StartupTab)
+            ? StartupApplicationsPanel
+            : InstalledApplicationsPanel);
+    }
+
+    private void ShowInventoryPanel(UIElement selected)
+    {
+        InstalledApplicationsPanel.Visibility = ReferenceEquals(
+            selected,
+            InstalledApplicationsPanel)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        StartupApplicationsPanel.Visibility = ReferenceEquals(
+            selected,
+            StartupApplicationsPanel)
             ? Visibility.Visible
             : Visibility.Collapsed;
     }

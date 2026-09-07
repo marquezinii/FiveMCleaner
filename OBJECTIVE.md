@@ -1,7 +1,7 @@
-# Reconciliação limitada do histórico de cobrança
+# Objetivo da tarefa
 
-- **Agente:** Codex.
-- **Objetivo:** impedir que a leitura da página de billing refaça chamadas à Asaas para todo o histórico de uma assinatura, preservando recuperação de estornos e chargebacks tardios.
-- **Escopo:** reconciliação Asaas no Worker, teste de regressão com muitos pagamentos mensais e documentação do comportamento. Não inclui deploy, migration, alteração de preço ou mudança no contrato público das rotas.
-- **Critérios de conclusão:** custo de chamadas externas limitado por requisição; pagamentos recentes não relidos em atualizações consecutivas; webhook continua processando qualquer pagamento; ao menos um pagamento histórico elegível continua sendo auditado; chargeback tardio altera o ledger; testes Worker e verificações aplicáveis aprovados.
-- **Resultado entregue:** reconciliação limitada a 180 dias e dez pagamentos por requisição, com intervalo de 15 minutos para itens recentes e auditoria rotativa de um item histórico após 30 dias. A deduplicação sintética agora reconhece mudanças semânticas de estorno/chargeback. Testes focados (13) e suíte Worker completa (247) aprovados; `npm audit` sem vulnerabilidades. Nenhum deploy ou migration foi realizado.
+- **Agente:** Codex
+- **Objetivo:** reconstruir a experiência da aba Aplicativos para que instalação, atualização e remoção sejam claras para usuários comuns, com detalhes técnicos disponíveis apenas sob demanda.
+- **Escopo:** interface, navegação, estados e textos públicos da aba Aplicativos; preservação dos contratos e limites de segurança existentes. Não inclui criar um desinstalador profundo, ampliar operações privilegiadas, alterar a cadeia de atualização do próprio Ralven ou adicionar novos gerenciadores de pacotes.
+- **Critérios de conclusão:** fluxo principal compreensível sem conhecimento técnico; hierarquia visual consistente com o Ralven; estados de carregamento, vazio, erro e seleção claros; tema, teclado, foco e localização preservados; build e testes aplicáveis aprovados; interface renderizada e inspecionada no ambiente local.
+- **Resultado entregue:** a aba Aplicativos foi reduzida a três fluxos principais — atualizar, instalar e desinstalar — com informações técnicas sob demanda e inventário/atalhos do Windows recolhidos em Mais opções. A interface foi validada renderizada nos temas claro e escuro, na janela mínima e com dados vazios e preenchidos. Build Release aprovado sem avisos, 1.400 testes aprovados e atalho de desenvolvimento reconstruído.

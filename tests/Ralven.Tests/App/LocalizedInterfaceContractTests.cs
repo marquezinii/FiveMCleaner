@@ -114,6 +114,9 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("ItemsSource=\"{Binding InstalledApplications}\"", applicationsView, StringComparison.Ordinal);
         Assert.Contains("ItemsSource=\"{Binding StartupItems}\"", applicationsView, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding SearchText", applicationsView, StringComparison.Ordinal);
+        Assert.Contains("GroupName=\"ApplicationPackageTab\"", applicationsView, StringComparison.Ordinal);
+        Assert.Contains("AdvancedOptionsExpander", applicationsView, StringComparison.Ordinal);
+        Assert.Contains("[Applications.TechnicalDetails]", applicationsView, StringComparison.Ordinal);
         Assert.Contains("ms-settings:appsfeatures", applicationsPage, StringComparison.Ordinal);
         Assert.Contains("ms-windows-store://downloadsandupdates", applicationsPage, StringComparison.Ordinal);
         Assert.DoesNotContain("UninstallString", inspector, StringComparison.OrdinalIgnoreCase);

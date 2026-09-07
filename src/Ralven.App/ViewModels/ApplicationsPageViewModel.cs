@@ -119,6 +119,7 @@ internal sealed class ApplicationsPageViewModel : BindableBase, IDisposable
     private bool isPackageOperationRunning;
     private bool inventoryUnavailable;
     private bool showIgnoredUpdates;
+    private bool showTechnicalDetails;
     private bool ignoreStoreLoaded;
     private bool ignoreStoreUnavailable;
     private BugCode? inventoryBugCode;
@@ -179,6 +180,8 @@ internal sealed class ApplicationsPageViewModel : BindableBase, IDisposable
     public bool IsSearchingPackages => isSearchingPackages;
 
     public bool IsPackageOperationRunning => isPackageOperationRunning;
+
+    public bool IsBusy => !CanRefreshApplications;
 
     public bool CanRefreshApplications => !isInventoryLoading
         && !isLoadingManagedPackages
@@ -255,6 +258,12 @@ internal sealed class ApplicationsPageViewModel : BindableBase, IDisposable
                 ApplyFilter();
             }
         }
+    }
+
+    public bool ShowTechnicalDetails
+    {
+        get => showTechnicalDetails;
+        set => SetProperty(ref showTechnicalDetails, value);
     }
 
     public string SearchText
@@ -1201,6 +1210,7 @@ internal sealed class ApplicationsPageViewModel : BindableBase, IDisposable
     private void NotifyBusyState()
     {
         OnPropertyChanged(nameof(CanRefreshApplications));
+        OnPropertyChanged(nameof(IsBusy));
         OnPropertyChanged(nameof(CanSearchPackages));
         OnPropertyChanged(nameof(CanRunPackageOperation));
         OnPropertyChanged(nameof(CanUpdateSelected));
