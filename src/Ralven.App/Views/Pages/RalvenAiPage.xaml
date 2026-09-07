@@ -68,6 +68,13 @@
                     </ScrollViewer>
 
                     <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520">
+                        <Image Source="{DynamicResource RalvenAiLogoImage}"
+                               Width="104"
+                               Height="104"
+                               Stretch="Uniform"
+                               Focusable="False"
+                               IsHitTestVisible="False"
+                               Margin="0,0,0,22" />
                         <TextBlock Text="{Binding [RalvenAi.Empty.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" TextAlignment="Center" />
                         <TextBlock Text="{Binding [RalvenAi.Empty.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,0" />
                     </StackPanel>

@@ -39,9 +39,9 @@ ao modelo acesso direto ao Windows ou a comandos arbitrários.
 
 ## Resultado entregue
 
-- Página localizada do Ralven AI para contas Pro, com contexto derivado do
-  diagnóstico, conversa apenas em memória e revisão explícita do perfil no
-  planejador transacional existente.
+- Página localizada e com identidade visual própria do Ralven AI para contas
+  Pro, com contexto derivado do diagnóstico, conversa apenas em memória e
+  revisão explícita do perfil no planejador transacional existente.
 - Rota `POST /ai/message` autenticada e fail-closed para entitlement, rate
   limit e orçamento, com credencial somente no Worker, saída estruturada e
   ledger D1 sem conteúdo da conversa.
