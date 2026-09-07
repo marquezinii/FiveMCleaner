@@ -127,24 +127,16 @@
   <data name="System.Gaming.RestoreConfirm.Title" xml:space="preserve"><value>¿Restaurar los ajustes anteriores?</value></data>
   <data name="System.Gaming.RestoreConfirm.Message" xml:space="preserve"><value>Ralven intentará restaurar solamente los valores modificados por esta operación. Un valor cambiado después por otro programa no será sobrescrito.</value></data>
   <data name="Applications.Title" xml:space="preserve"><value>Aplicaciones</value></data>
-  <data name="Applications.Subtitle" xml:space="preserve"><value>Instala, actualiza o elimina aplicaciones compatibles, o consulta lo que ya existe en este PC. Cada área explica su origen, alcance y posibles cambios.</value></data>
-  <data name="Applications.Navigation.Title" xml:space="preserve"><value>Elige lo que quieres hacer</value></data>
-  <data name="Applications.Navigation.Description" xml:space="preserve"><value>Las acciones de paquetes de Ralven están separadas de la información local de solo lectura y de los controles nativos de Windows.</value></data>
-  <data name="Applications.Navigation.Manage" xml:space="preserve"><value>Instalar y mantener</value></data>
-  <data name="Applications.Navigation.Review" xml:space="preserve"><value>Consultar este PC</value></data>
-  <data name="Applications.Navigation.RefreshAll" xml:space="preserve"><value>Actualizar todos los datos</value></data>
-  <data name="Applications.Filter.Current" xml:space="preserve"><value>Filtrar esta lista</value></data>
-  <data name="Applications.Installed.Title" xml:space="preserve"><value>Aplicaciones instaladas</value></data>
-  <data name="Applications.Installed.Description" xml:space="preserve"><value>Consulta nombres, fabricantes, versiones y tamaños estimados. Para cambios completos, usa los controles de Windows de abajo.</value></data>
+  <data name="Applications.Subtitle" xml:space="preserve"><value>Actualiza, instala o elimina aplicaciones compatibles en un solo lugar. Ralven confirma cada cambio contigo.</value></data>
+  <data name="Applications.Navigation.RefreshAll" xml:space="preserve"><value>Actualizar</value></data>
+  <data name="Applications.Filter.Current" xml:space="preserve"><value>Buscar en esta lista</value></data>
+  <data name="Applications.TechnicalDetails" xml:space="preserve"><value>Mostrar detalles técnicos</value></data>
+  <data name="Applications.Loading" xml:space="preserve"><value>Procesando tu solicitud de aplicaciones</value></data>
+  <data name="Applications.Advanced.Title" xml:space="preserve"><value>Más opciones</value></data>
+  <data name="Applications.Advanced.Description" xml:space="preserve"><value>Inventario local y accesos directos a los controles de Windows.</value></data>
   <data name="Applications.Installed.Action" xml:space="preserve"><value>Abrir controles de aplicaciones de Windows</value></data>
-  <data name="Applications.Startup.Title" xml:space="preserve"><value>Aplicaciones de inicio</value></data>
-  <data name="Applications.Startup.Description" xml:space="preserve"><value>Consulta qué elementos se inician con Windows. Para activarlos o desactivarlos, usa los controles de Windows de abajo.</value></data>
   <data name="Applications.Startup.Action" xml:space="preserve"><value>Abrir controles de inicio de Windows</value></data>
-  <data name="Applications.StoreUpdates.Title" xml:space="preserve"><value>Actualizaciones de Microsoft Store</value></data>
-  <data name="Applications.StoreUpdates.Description" xml:space="preserve"><value>Microsoft Store controla las actualizaciones de la biblioteca y mantiene el flujo confiable de confirmación para instalarlas.</value></data>
   <data name="Applications.StoreUpdates.Action" xml:space="preserve"><value>Abrir actualizaciones de Store</value></data>
-  <data name="Applications.Defaults.Title" xml:space="preserve"><value>Aplicaciones predeterminadas</value></data>
-  <data name="Applications.Defaults.Description" xml:space="preserve"><value>Windows protege las elecciones de aplicaciones predeterminadas y exige su propia pantalla de confirmación.</value></data>
   <data name="Applications.Defaults.Action" xml:space="preserve"><value>Revisar aplicaciones predeterminadas</value></data>
   <data name="Applications.Inventory.Status.Title" xml:space="preserve"><value>Inventario local</value></data>
   <data name="Applications.Inventory.Status.Loading" xml:space="preserve"><value>Leyendo aplicaciones instaladas y de inicio…</value></data>
@@ -181,7 +173,7 @@
   <data name="Applications.Packages.Count" xml:space="preserve"><value>paquetes administrados</value></data>
   <data name="Applications.Packages.Tab" xml:space="preserve"><value>Desinstalar</value></data>
   <data name="Applications.Packages.Title" xml:space="preserve"><value>Aplicaciones administradas</value></data>
-  <data name="Applications.Packages.Description" xml:space="preserve"><value>Elimina aplicaciones reconocidas por WinGet o Microsoft Store. Las demás siguen disponibles en los controles de Windows.</value></data>
+  <data name="Applications.Packages.Description" xml:space="preserve"><value>Selecciona una aplicación para eliminar. Para las demás, usa las opciones de Windows de abajo.</value></data>
   <data name="Applications.Packages.Status.Loading" xml:space="preserve"><value>Leyendo paquetes administrados por WinGet y Microsoft Store…</value></data>
   <data name="Applications.Packages.Status.Ready" xml:space="preserve"><value>Paquetes administrados cargados desde los orígenes confiables.</value></data>
   <data name="Applications.Packages.Status.Empty" xml:space="preserve"><value>No se encontró ningún paquete administrado en los orígenes confiables.</value></data>
@@ -225,10 +217,10 @@
   <data name="Applications.Packages.Uninstall.Confirm.Action" xml:space="preserve"><value>Desinstalar aplicación</value></data>
   <data name="Applications.Discover.Tab" xml:space="preserve"><value>Instalar</value></data>
   <data name="Applications.Discover.Title" xml:space="preserve"><value>Instalar aplicaciones</value></data>
-  <data name="Applications.Discover.Description" xml:space="preserve"><value>Busca en los catálogos confiables de WinGet y Microsoft Store y revisa el paquete exacto antes de instalar.</value></data>
-  <data name="Applications.Discover.Search" xml:space="preserve"><value>Buscar en WinGet y Microsoft Store</value></data>
+  <data name="Applications.Discover.Description" xml:space="preserve"><value>Escribe el nombre de una aplicación y confirma el resultado antes de instalar.</value></data>
+  <data name="Applications.Discover.Search" xml:space="preserve"><value>Nombre de la aplicación</value></data>
   <data name="Applications.Discover.SearchAction" xml:space="preserve"><value>Buscar</value></data>
-  <data name="Applications.Discover.Status.Ready" xml:space="preserve"><value>Busca en los catálogos confiables por nombre de aplicación o ID de paquete.</value></data>
+  <data name="Applications.Discover.Status.Ready" xml:space="preserve"><value>Escribe el nombre de la aplicación que quieres instalar.</value></data>
   <data name="Applications.Discover.Status.Searching" xml:space="preserve"><value>Buscando en los catálogos confiables de aplicaciones…</value></data>
   <data name="Applications.Discover.Status.Results" xml:space="preserve"><value>Aplicaciones encontradas. Revisa el paquete exacto y el origen antes de instalar.</value></data>
   <data name="Applications.Discover.Status.NoResults" xml:space="preserve"><value>Ninguna aplicación coincidió con la búsqueda en los orígenes confiables disponibles.</value></data>
@@ -241,7 +233,7 @@
   <data name="Applications.Updates.Count" xml:space="preserve"><value>actualizaciones disponibles</value></data>
   <data name="Applications.Updates.Tab" xml:space="preserve"><value>Actualizaciones</value></data>
   <data name="Applications.Updates.Title" xml:space="preserve"><value>Actualizaciones de aplicaciones</value></data>
-  <data name="Applications.Updates.Description" xml:space="preserve"><value>Compara las versiones instalada y disponible y actualiza solo las aplicaciones que selecciones.</value></data>
+  <data name="Applications.Updates.Description" xml:space="preserve"><value>Elige qué actualizar ahora. Ralven muestra las versiones y confirma tu selección antes de empezar.</value></data>
   <data name="Applications.Updates.Status.Checking" xml:space="preserve"><value>Buscando actualizaciones en los catálogos confiables de aplicaciones…</value></data>
   <data name="Applications.Updates.Status.Available" xml:space="preserve"><value>Se encontraron actualizaciones. Revisa cada versión y origen antes de instalar.</value></data>
   <data name="Applications.Updates.Status.Current" xml:space="preserve"><value>No se encontraron actualizaciones para las aplicaciones compatibles.</value></data>
@@ -279,7 +271,6 @@
   <data name="Applications.Updates.BatchConfirm.Cancel" xml:space="preserve"><value>Ahora no</value></data>
   <data name="Applications.Updates.BatchConfirm.Action" xml:space="preserve"><value>Actualizar seleccionadas</value></data>
   <data name="Applications.Platform.Title" xml:space="preserve"><value>Más controles de Windows</value></data>
-  <data name="Applications.Platform.Description" xml:space="preserve"><value>Estas acciones abren las pantallas nativas responsables de configuraciones que Ralven solo consulta o no administra.</value></data>
   <data name="Greeting.Morning.WithName" xml:space="preserve"><value>Buenos días, {0}. ¿Qué haremos hoy?</value></data>
   <data name="Greeting.Morning.NoName" xml:space="preserve"><value>Buenos días. ¿Qué haremos hoy?</value></data>
   <data name="Greeting.Afternoon.WithName" xml:space="preserve"><value>Buenas tardes, {0}. ¿Qué haremos hoy?</value></data>

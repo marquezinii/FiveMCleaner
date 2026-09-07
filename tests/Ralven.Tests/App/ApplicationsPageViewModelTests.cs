@@ -32,6 +32,8 @@ public sealed class ApplicationsPageViewModelTests
 
         await viewModel.RefreshAsync(TestContext.Current.CancellationToken);
         viewModel.SearchText = "Vendor B";
+        Assert.False(viewModel.ShowTechnicalDetails);
+        viewModel.ShowTechnicalDetails = true;
 
         Assert.Equal(2, viewModel.InstalledApplicationCount);
         Assert.Equal(1, viewModel.StartupItemCount);
@@ -42,6 +44,7 @@ public sealed class ApplicationsPageViewModelTests
         Assert.Equal("Beta", application.Name);
         Assert.Equal("1.5 GB", application.EstimatedSize);
         Assert.Empty(viewModel.StartupItems);
+        Assert.True(viewModel.ShowTechnicalDetails);
         Assert.Equal(
             localization.GetString("Applications.Inventory.NoMatches.Startup"),
             viewModel.StartupEmptyMessage);
