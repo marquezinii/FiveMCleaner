@@ -128,27 +128,15 @@
   <data name="System.Gaming.RestoreConfirm.Message" xml:space="preserve"><value>Ralven will attempt to restore only the values changed by this operation. A value modified afterward by another program will not be overwritten.</value></data>
   <data name="Applications.Title" xml:space="preserve"><value>Applications</value></data>
   <data name="Applications.Subtitle" xml:space="preserve"><value>Update, install or remove supported applications in one place. Ralven confirms every change with you.</value></data>
-  <data name="Applications.Navigation.Title" xml:space="preserve"><value>Choose what you want to do</value></data>
-  <data name="Applications.Navigation.Description" xml:space="preserve"><value>Ralven package actions are separated from local read-only information and native Windows controls.</value></data>
-  <data name="Applications.Navigation.Manage" xml:space="preserve"><value>Install and maintain</value></data>
-  <data name="Applications.Navigation.Review" xml:space="preserve"><value>Review this PC</value></data>
   <data name="Applications.Navigation.RefreshAll" xml:space="preserve"><value>Refresh</value></data>
   <data name="Applications.Filter.Current" xml:space="preserve"><value>Search this list</value></data>
   <data name="Applications.TechnicalDetails" xml:space="preserve"><value>Show technical details</value></data>
   <data name="Applications.Loading" xml:space="preserve"><value>Working on your application request</value></data>
   <data name="Applications.Advanced.Title" xml:space="preserve"><value>More options</value></data>
   <data name="Applications.Advanced.Description" xml:space="preserve"><value>Local inventory and shortcuts to Windows controls.</value></data>
-  <data name="Applications.Installed.Title" xml:space="preserve"><value>Installed applications</value></data>
-  <data name="Applications.Installed.Description" xml:space="preserve"><value>Review names, publishers, versions and estimated sizes. Use the Windows controls below for complete changes.</value></data>
   <data name="Applications.Installed.Action" xml:space="preserve"><value>Open Windows app controls</value></data>
-  <data name="Applications.Startup.Title" xml:space="preserve"><value>Startup applications</value></data>
-  <data name="Applications.Startup.Description" xml:space="preserve"><value>See which items start with Windows. Use the Windows controls below to enable or disable them.</value></data>
   <data name="Applications.Startup.Action" xml:space="preserve"><value>Open Windows startup controls</value></data>
-  <data name="Applications.StoreUpdates.Title" xml:space="preserve"><value>Microsoft Store updates</value></data>
-  <data name="Applications.StoreUpdates.Description" xml:space="preserve"><value>Microsoft Store owns library updates and keeps the trusted confirmation flow for installing them.</value></data>
   <data name="Applications.StoreUpdates.Action" xml:space="preserve"><value>Open Store updates</value></data>
-  <data name="Applications.Defaults.Title" xml:space="preserve"><value>Default applications</value></data>
-  <data name="Applications.Defaults.Description" xml:space="preserve"><value>Windows protects default-app choices and requires its own confirmation surface.</value></data>
   <data name="Applications.Defaults.Action" xml:space="preserve"><value>Review default applications</value></data>
   <data name="Applications.Inventory.Status.Title" xml:space="preserve"><value>Local inventory</value></data>
   <data name="Applications.Inventory.Status.Loading" xml:space="preserve"><value>Reading installed and startup applications…</value></data>
@@ -283,7 +271,6 @@
   <data name="Applications.Updates.BatchConfirm.Cancel" xml:space="preserve"><value>Not now</value></data>
   <data name="Applications.Updates.BatchConfirm.Action" xml:space="preserve"><value>Update selected</value></data>
   <data name="Applications.Platform.Title" xml:space="preserve"><value>More Windows controls</value></data>
-  <data name="Applications.Platform.Description" xml:space="preserve"><value>These actions open the native Windows surfaces responsible for settings that Ralven only reads or does not manage.</value></data>
   <data name="Greeting.Morning.WithName" xml:space="preserve"><value>Good morning, {0}. What shall we do today?</value></data>
   <data name="Greeting.Morning.NoName" xml:space="preserve"><value>Good morning. What shall we do today?</value></data>
   <data name="Greeting.Afternoon.WithName" xml:space="preserve"><value>Good afternoon, {0}. What shall we do today?</value></data>

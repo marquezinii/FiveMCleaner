@@ -32,6 +32,7 @@ public sealed class ApplicationsPageViewModelTests
 
         await viewModel.RefreshAsync(TestContext.Current.CancellationToken);
         viewModel.SearchText = "Vendor B";
+        Assert.False(viewModel.ShowTechnicalDetails);
         viewModel.ShowTechnicalDetails = true;
 
         Assert.Equal(2, viewModel.InstalledApplicationCount);
