@@ -37,12 +37,33 @@
   <data name="RalvenAi.Error.BudgetExhausted" xml:space="preserve"><value>The monthly Ralven AI allowance has been reached.</value></data>
   <data name="RalvenAi.Error.InvalidResponse" xml:space="preserve"><value>The reply did not pass Ralven's safety checks. No change was made.</value></data>
   <data name="Games.Title" xml:space="preserve"><value>Games</value></data>
-  <data name="Games.Subtitle" xml:space="preserve"><value>Choose a supported game to open its dedicated diagnostics and optimization experience.</value></data>
+  <data name="Games.Subtitle" xml:space="preserve"><value>Choose a supported game to open its dedicated tools.</value></data>
   <data name="Games.FiveM.Title" xml:space="preserve"><value>FiveM</value></data>
   <data name="Games.FiveM.Edition" xml:space="preserve"><value>GTAV Legacy</value></data>
-  <data name="Games.FiveM.Description" xml:space="preserve"><value>Detect the local environment, review a transparent plan and apply conservative, reversible optimizations for FiveM on GTAV Legacy.</value></data>
-  <data name="Games.FiveM.Action" xml:space="preserve"><value>Open FiveM optimizer</value></data>
-  <data name="Games.FiveM.ActionTooltip" xml:space="preserve"><value>Open diagnostics and optimization for FiveM on GTAV Legacy</value></data>
+  <data name="Games.FiveM.Description" xml:space="preserve"><value>Open a dedicated space for FiveM diagnostics, optimization, Windows preparation and recovery.</value></data>
+  <data name="Games.FiveM.Action" xml:space="preserve"><value>Open FiveM</value></data>
+  <data name="Games.FiveM.ActionTooltip" xml:space="preserve"><value>Open the FiveM tools for GTAV Legacy</value></data>
+  <data name="FiveMHub.BackToGames" xml:space="preserve"><value>Back to games</value></data>
+  <data name="FiveMHub.Title" xml:space="preserve"><value>FiveM</value></data>
+  <data name="FiveMHub.Subtitle" xml:space="preserve"><value>A dedicated place to prepare, diagnose and maintain FiveM on GTAV Legacy.</value></data>
+  <data name="FiveMHub.HeroTitle" xml:space="preserve"><value>Your FiveM tools, organized by purpose</value></data>
+  <data name="FiveMHub.HeroDescription" xml:space="preserve"><value>Use the game optimizer for FiveM and GTA V settings, prepare Windows separately and review every recorded change from one place.</value></data>
+  <data name="FiveMHub.Scopes.Title" xml:space="preserve"><value>One PC, two optimization scopes</value></data>
+  <data name="FiveMHub.Scopes.Description" xml:space="preserve"><value>Each run checks the current state first. Settings already at their target are verified without being applied again; restoration remains tied to the transaction that changed them.</value></data>
+  <data name="FiveMHub.Actions.Title" xml:space="preserve"><value>What do you want to do?</value></data>
+  <data name="FiveMHub.Actions.Description" xml:space="preserve"><value>Choose the area that matches your goal. No action starts until you review and confirm its plan.</value></data>
+  <data name="FiveMHub.Optimizer.Title" xml:space="preserve"><value>Optimize FiveM</value></data>
+  <data name="FiveMHub.Optimizer.Description" xml:space="preserve"><value>Analyze the detected Legacy installation and review the game-specific diagnostics, settings and reversible actions.</value></data>
+  <data name="FiveMHub.Optimizer.Scope" xml:space="preserve"><value>FiveM and GTA V Legacy scope</value></data>
+  <data name="FiveMHub.Optimizer.Action" xml:space="preserve"><value>Open FiveM optimizer</value></data>
+  <data name="FiveMHub.Windows.Title" xml:space="preserve"><value>Prepare Windows</value></data>
+  <data name="FiveMHub.Windows.Description" xml:space="preserve"><value>Review the general PC plan for supported Windows settings, power, responsiveness and local diagnostics.</value></data>
+  <data name="FiveMHub.Windows.Scope" xml:space="preserve"><value>General Windows scope</value></data>
+  <data name="FiveMHub.Windows.Action" xml:space="preserve"><value>Open general optimizer</value></data>
+  <data name="FiveMHub.History.Title" xml:space="preserve"><value>History and restore</value></data>
+  <data name="FiveMHub.History.Description" xml:space="preserve"><value>Review completed FiveM and Windows runs, their real outcomes and the changes that can still be restored.</value></data>
+  <data name="FiveMHub.History.Scope" xml:space="preserve"><value>Shared Ralven history</value></data>
+  <data name="FiveMHub.History.Action" xml:space="preserve"><value>Open history</value></data>
   <data name="Safety.Active" xml:space="preserve"><value>Protection active</value></data>
   <data name="Safety.SnapshotRollback" xml:space="preserve"><value>Settings are saved before changes and can be restored.</value></data>
   <data name="BugReport.Link" xml:space="preserve"><value>Report a bug</value></data>

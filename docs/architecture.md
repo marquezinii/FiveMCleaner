@@ -18,10 +18,13 @@ Este documento descreve a arquitetura-alvo e os limites entre componentes. Uma c
 O shell separa a experiência em **Visão geral**, **Otimizar**, **Sistema**,
 **Aplicativos** e **Jogos**. Otimizar usa o escopo `GeneralWindows`: funciona
 sem FiveM ou GTA V e seleciona exclusivamente ações declaradas para o PC geral.
-Jogos abre o catálogo de títulos e configura o mesmo motor no escopo
-`FiveMLegacy`; somente esse escopo aceita ações de instalação, cache, processo,
-configuração ou gráficos do FiveM/GTA V Legacy. GTAV Enhanced bloqueia o escopo
-especializado, mas nunca bloqueia uma análise geral do Windows.
+Jogos abre o catálogo de títulos. O card do FiveM leva a um hub dedicado que
+mantém Jogos como categoria ativa e separa os acessos ao otimizador do jogo, ao
+otimizador geral e ao histórico/restauração. O otimizador especializado configura
+o mesmo motor no escopo `FiveMLegacy`; somente esse escopo aceita ações de
+instalação, cache, processo, configuração ou gráficos do FiveM/GTA V Legacy.
+GTAV Enhanced bloqueia o escopo especializado, mas nunca bloqueia uma análise
+geral do Windows.
 
 Aplicativos organiza o software em cinco superfícies: **Descobrir**,
 **Atualizações**, **Gerenciados**, **Inventário** e **Inicialização**. As três
@@ -32,10 +35,7 @@ mutação exige confirmação explícita e mostra identidade, origem e limitaç�
 rollback. Inventário continua sendo a leitura local dos programas registrados,
 e Inicialização permanece somente leitura. Busca, contagens e resultados
 parciais ficam na própria página; as superfícies nativas do Windows permanecem
-como ações secundárias. Jogos abre um
-catálogo interno que hoje contém somente FiveM sobre GTAV Legacy; o card leva ao
-otimizador especializado existente e mantém Jogos como a categoria ativa.
-Sistema apresenta internamente apenas as informações essenciais do hardware já
+como ações secundárias. Sistema apresenta internamente apenas as informações essenciais do hardware já
 coletado pelo aplicativo e consulta, somente para leitura, a proteção de
 antivírus, firewall e configuração de atualizações automáticas pela API nativa
 da Central de Segurança do Windows. A página não abre superfícies externas:

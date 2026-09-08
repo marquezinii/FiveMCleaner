@@ -37,12 +37,33 @@
   <data name="RalvenAi.Error.BudgetExhausted" xml:space="preserve"><value>O limite mensal do Ralven AI foi atingido.</value></data>
   <data name="RalvenAi.Error.InvalidResponse" xml:space="preserve"><value>A resposta não passou pelas verificações de segurança do Ralven. Nenhuma alteração foi feita.</value></data>
   <data name="Games.Title" xml:space="preserve"><value>Jogos</value></data>
-  <data name="Games.Subtitle" xml:space="preserve"><value>Escolha um jogo compatível para abrir sua experiência dedicada de diagnóstico e otimização.</value></data>
+  <data name="Games.Subtitle" xml:space="preserve"><value>Escolha um jogo compatível para abrir suas ferramentas dedicadas.</value></data>
   <data name="Games.FiveM.Title" xml:space="preserve"><value>FiveM</value></data>
   <data name="Games.FiveM.Edition" xml:space="preserve"><value>GTAV Legacy</value></data>
-  <data name="Games.FiveM.Description" xml:space="preserve"><value>Detecte o ambiente local, revise um plano transparente e aplique otimizações conservadoras e reversíveis para FiveM sobre GTAV Legacy.</value></data>
-  <data name="Games.FiveM.Action" xml:space="preserve"><value>Abrir otimizador do FiveM</value></data>
-  <data name="Games.FiveM.ActionTooltip" xml:space="preserve"><value>Abrir diagnóstico e otimização do FiveM sobre GTAV Legacy</value></data>
+  <data name="Games.FiveM.Description" xml:space="preserve"><value>Abra um espaço dedicado a diagnóstico, otimização, preparação do Windows e recuperação para o FiveM.</value></data>
+  <data name="Games.FiveM.Action" xml:space="preserve"><value>Abrir FiveM</value></data>
+  <data name="Games.FiveM.ActionTooltip" xml:space="preserve"><value>Abrir as ferramentas do FiveM para GTAV Legacy</value></data>
+  <data name="FiveMHub.BackToGames" xml:space="preserve"><value>Voltar para Jogos</value></data>
+  <data name="FiveMHub.Title" xml:space="preserve"><value>FiveM</value></data>
+  <data name="FiveMHub.Subtitle" xml:space="preserve"><value>Um espaço dedicado para preparar, diagnosticar e manter o FiveM sobre GTAV Legacy.</value></data>
+  <data name="FiveMHub.HeroTitle" xml:space="preserve"><value>Suas ferramentas do FiveM, organizadas por objetivo</value></data>
+  <data name="FiveMHub.HeroDescription" xml:space="preserve"><value>Use o otimizador do jogo para configurações do FiveM e GTA V, prepare o Windows separadamente e revise todas as alterações registradas em um só lugar.</value></data>
+  <data name="FiveMHub.Scopes.Title" xml:space="preserve"><value>Um PC, dois escopos de otimização</value></data>
+  <data name="FiveMHub.Scopes.Description" xml:space="preserve"><value>Cada execução verifica primeiro o estado atual. Configurações que já estão no alvo são verificadas sem nova aplicação; a restauração continua vinculada à transação que realmente as alterou.</value></data>
+  <data name="FiveMHub.Actions.Title" xml:space="preserve"><value>O que você quer fazer?</value></data>
+  <data name="FiveMHub.Actions.Description" xml:space="preserve"><value>Escolha a área que corresponde ao seu objetivo. Nenhuma ação começa antes da revisão e confirmação do plano.</value></data>
+  <data name="FiveMHub.Optimizer.Title" xml:space="preserve"><value>Otimizar FiveM</value></data>
+  <data name="FiveMHub.Optimizer.Description" xml:space="preserve"><value>Analise a instalação Legacy detectada e revise diagnósticos, configurações e ações reversíveis específicas do jogo.</value></data>
+  <data name="FiveMHub.Optimizer.Scope" xml:space="preserve"><value>Escopo FiveM e GTA V Legacy</value></data>
+  <data name="FiveMHub.Optimizer.Action" xml:space="preserve"><value>Abrir otimizador do FiveM</value></data>
+  <data name="FiveMHub.Windows.Title" xml:space="preserve"><value>Preparar o Windows</value></data>
+  <data name="FiveMHub.Windows.Description" xml:space="preserve"><value>Revise o plano geral do PC para configurações suportadas do Windows, energia, responsividade e diagnósticos locais.</value></data>
+  <data name="FiveMHub.Windows.Scope" xml:space="preserve"><value>Escopo geral do Windows</value></data>
+  <data name="FiveMHub.Windows.Action" xml:space="preserve"><value>Abrir otimizador geral</value></data>
+  <data name="FiveMHub.History.Title" xml:space="preserve"><value>Histórico e restauração</value></data>
+  <data name="FiveMHub.History.Description" xml:space="preserve"><value>Revise execuções concluídas do FiveM e do Windows, seus resultados reais e as alterações que ainda podem ser restauradas.</value></data>
+  <data name="FiveMHub.History.Scope" xml:space="preserve"><value>Histórico compartilhado do Ralven</value></data>
+  <data name="FiveMHub.History.Action" xml:space="preserve"><value>Abrir histórico</value></data>
   <data name="Safety.Active" xml:space="preserve"><value>Proteção ativa</value></data>
   <data name="Safety.SnapshotRollback" xml:space="preserve"><value>As configurações são salvas antes de mudar e podem ser restauradas.</value></data>
   <data name="BugReport.Link" xml:space="preserve"><value>Relatar um bug</value></data>
