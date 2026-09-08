@@ -194,15 +194,19 @@ sensitive than the one message an admin chose to broadcast.
 
 ## Ralven AI
 
-`POST /ai/message` is an authenticated, verified-email, Pro-only route. It
-validates a bounded allowlisted diagnostic summary, applies a required rate
-limit per Firebase UID and reserves monthly budget in D1 before calling the
+`POST /ai/message` is an authenticated, verified-email route that requires both
+`ralven_pro` and the separate `ralven_ai` entitlement. It validates a bounded
+allowlisted diagnostic summary, applies a required rate limit per Firebase UID,
+deduplicates client requests and reserves budget in D1 before calling the
 OpenAI Responses API. It exposes no tools and returns only an answer plus one
 standard profile name. See [`docs/ralven-ai.md`](../../docs/ralven-ai.md).
 
-Activation requires migration `0010_ralven_ai_usage.sql` and the Worker secret
-`OPENAI_API_KEY`. The non-secret model, price and budget values are declared in
-`wrangler.toml`; missing limits or limiter bindings fail closed.
+Activation requires migrations through `0011_ralven_ai_foundation.sql`, the
+distinct Worker secrets `OPENAI_API_KEY` and
+`RALVEN_AI_SAFETY_IDENTIFIER_SECRET`, and an explicit
+`RALVEN_AI_ENABLED=true`. The non-secret model, price and budget values are
+declared in `wrangler.toml`; missing or inconsistent limits and limiter
+bindings fail closed.
 
 ## Billing and recurring subscriptions
 
@@ -215,7 +219,8 @@ returned.
 deduplicates the event ID, and fetches the canonical payment and subscription
 with a Worker-only API key. Only a `CONFIRMED` or `RECEIVED` card payment
 linked to the server checkout, without completed refund or chargeback, grants
-its monthly period. Checkout or subscription status alone never grants Pro.
+the independent `ralven_pro` and `ralven_ai` keys for its monthly period.
+Checkout or subscription status alone never grants either entitlement.
 Both required credentials are Worker secrets:
 
 ```bash
@@ -231,7 +236,7 @@ does not document an idempotency key, an ambiguous create is never retried.
 Cancellation stops the checkout or subscription, preserves already paid access
 and permits account deletion only after the provider accepts it.
 
-Apply migrations through `0009_billing_checkout_payments.sql` with this code.
+Apply migrations through `0011_ralven_ai_foundation.sql` with this code.
 `ASAAS_BILLING_ENABLED` remains `false` in the committed configuration;
 activation requires the two secrets, `ASAAS_RETURN_URL` (HTTPS),
 `ASAAS_ENVIRONMENT`, `ASAAS_AMOUNT_CENTS` (default 1990, monthly BRL), and the required

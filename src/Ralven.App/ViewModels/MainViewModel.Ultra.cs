@@ -16,6 +16,7 @@ public sealed partial class MainViewModel
     private PersonalOptimizationPreferencesDto personalPreferences = new();
     private bool isUltraSelected;
     private bool hasProAccess;
+    private bool hasRalvenAiAccess;
     private bool isPersonalBusy;
     private bool refreshingUltra;
     private string ultraStatus = string.Empty;
@@ -69,6 +70,7 @@ public sealed partial class MainViewModel
 
     public bool IsUltraSelected => isUltraSelected && IsGeneralWindowsOptimization;
     public bool HasProAccess => hasProAccess;
+    public bool HasRalvenAiAccess => hasRalvenAiAccess;
     public bool IsPersonalBusy => isPersonalBusy;
     public bool CanEditPersonalPreferences => !IsBusy && !isPersonalBusy && !isWindowsGamingBusy;
     public bool CanSavePersonalProfile => hasProAccess && CanEditPersonalPreferences;
@@ -177,9 +179,16 @@ public sealed partial class MainViewModel
     public void SetProAccess(bool available)
     {
         hasProAccess = available;
+        if (!available)
+        {
+            SetRalvenAiAccess(false);
+        }
         RefreshUltraPresentation();
         RaiseCommandState();
     }
+
+    public void SetRalvenAiAccess(bool available) =>
+        SetProperty(ref hasRalvenAiAccess, available && hasProAccess);
 
     private void UpdatePersonalPreferences(PersonalOptimizationPreferencesDto preferences)
     {

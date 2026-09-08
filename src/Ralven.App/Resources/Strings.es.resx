@@ -19,8 +19,8 @@
   <data name="RalvenAi.Empty.Detail" xml:space="preserve"><value>Comprende los cuellos de botella, compara los perfiles estándar o pregunta qué plan seguro es el más adecuado.</value></data>
   <data name="RalvenAi.Privacy.Title" xml:space="preserve"><value>Qué se envía</value></data>
   <data name="RalvenAi.Privacy.Detail" xml:space="preserve"><value>Tu pregunta, un resumen limitado del hardware, las acciones ya compatibles con Ralven y un identificador seudónimo de seguridad se envían a OpenAI para esta respuesta. Se excluyen rutas, archivos, credenciales y datos que identifican directamente la cuenta. Ralven no guarda la conversación. No introduzcas información personal ni secreta.</value></data>
-  <data name="RalvenAi.ProOnly.Title" xml:space="preserve"><value>Ralven AI requiere Pro</value></data>
-  <data name="RalvenAi.ProOnly.Detail" xml:space="preserve"><value>Inicia sesión con una cuenta que tenga acceso Pro activo para usar la orientación contextual.</value></data>
+  <data name="RalvenAi.AccessRequired.Title" xml:space="preserve"><value>Se requiere acceso a Ralven AI</value></data>
+  <data name="RalvenAi.AccessRequired.Detail" xml:space="preserve"><value>Esta cuenta no tiene acceso a Ralven AI en este momento. Actualiza el estado del plan o inténtalo de nuevo más tarde.</value></data>
   <data name="RalvenAi.InputPlaceholder" xml:space="preserve"><value>Escribe una pregunta sobre este PC. Presiona Ctrl+Enter para enviar.</value></data>
   <data name="RalvenAi.Send" xml:space="preserve"><value>Enviar</value></data>
   <data name="RalvenAi.Sending" xml:space="preserve"><value>Revisando el diagnóstico...</value></data>
@@ -33,8 +33,10 @@
   <data name="RalvenAi.Error.Unavailable" xml:space="preserve"><value>Ralven AI no está disponible ahora. No se realizó ningún cambio.</value></data>
   <data name="RalvenAi.Error.Unauthorized" xml:space="preserve"><value>No se pudo verificar tu sesión. Inicia sesión de nuevo y vuelve a intentarlo.</value></data>
   <data name="RalvenAi.Error.ProRequired" xml:space="preserve"><value>Se requiere acceso Pro activo.</value></data>
+  <data name="RalvenAi.Error.AiAccessRequired" xml:space="preserve"><value>Esta cuenta no tiene acceso activo a Ralven AI.</value></data>
   <data name="RalvenAi.Error.RateLimited" xml:space="preserve"><value>Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.</value></data>
   <data name="RalvenAi.Error.BudgetExhausted" xml:space="preserve"><value>Se alcanzó el límite mensual de Ralven AI.</value></data>
+  <data name="RalvenAi.Error.RequestReplayed" xml:space="preserve"><value>Esta solicitud ya fue recibida, por lo que no se realizó una segunda llamada de IA. Espera un momento y envía una nueva pregunta.</value></data>
   <data name="RalvenAi.Error.InvalidResponse" xml:space="preserve"><value>La respuesta no superó las comprobaciones de seguridad de Ralven. No se realizó ningún cambio.</value></data>
   <data name="Games.Title" xml:space="preserve"><value>Juegos</value></data>
   <data name="Games.Subtitle" xml:space="preserve"><value>Elige un juego compatible para abrir sus herramientas dedicadas.</value></data>

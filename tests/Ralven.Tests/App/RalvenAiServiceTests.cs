@@ -39,6 +39,9 @@ public sealed class RalvenAiServiceTests
         Assert.Equal(
             @"Check %USERPROFILE%\secret.txt",
             json.RootElement.GetProperty("message").GetString());
+        var requestId = json.RootElement.GetProperty("requestId").GetString();
+        Assert.True(Guid.TryParseExact(requestId, "D", out _));
+        Assert.Equal('4', requestId![14]);
         Assert.False(body!.Contains("Alice", StringComparison.Ordinal));
 
         var invalid = new RalvenAiService(
@@ -52,21 +55,55 @@ public sealed class RalvenAiServiceTests
         Assert.Equal(RalvenAiError.InvalidResponse, exception.Error);
     }
 
-    [Fact]
-    public async Task AskAsync_MapsMonthlyBudgetWithoutExposingRemoteDetails()
+    [Theory]
+    [InlineData(HttpStatusCode.Forbidden, "ai-access-required", RalvenAiError.AiAccessRequired)]
+    [InlineData(HttpStatusCode.Conflict, "request-already-processed", RalvenAiError.RequestReplayed)]
+    [InlineData(HttpStatusCode.TooManyRequests, "budget-exhausted", RalvenAiError.BudgetExhausted)]
+    public async Task AskAsync_MapsWorkerErrorsWithoutExposingRemoteDetails(
+        HttpStatusCode status,
+        string error,
+        RalvenAiError expected)
     {
         var service = new RalvenAiService(
             new HttpClient(new StubHandler(_ => Json(
-                HttpStatusCode.TooManyRequests,
-                """{"error":"budget-exhausted","detail":"provider secret"}"""))),
+                status,
+                $$"""{"error":"{{error}}","detail":"provider secret"}"""))),
             new Uri("https://example.com/account/profile"));
 
         var exception = await Assert.ThrowsAsync<RalvenAiException>(() => service.AskAsync(
             "id-token", "question", "pt-BR", Context(), [],
             global::Xunit.TestContext.Current.CancellationToken));
 
-        Assert.Equal(RalvenAiError.BudgetExhausted, exception.Error);
+        Assert.Equal(expected, exception.Error);
         Assert.DoesNotContain("provider secret", exception.Message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task AskAsync_RetriesTransportOnceWithTheSameRequestId()
+    {
+        var calls = 0;
+        var requestIds = new List<string>();
+        var service = new RalvenAiService(
+            new HttpClient(new StubHandler(request =>
+            {
+                using var body = JsonDocument.Parse(request.Content!.ReadAsStringAsync().GetAwaiter().GetResult());
+                requestIds.Add(body.RootElement.GetProperty("requestId").GetString()!);
+                if (calls++ == 0)
+                {
+                    throw new HttpRequestException("connection reset");
+                }
+                return Json(HttpStatusCode.OK, """{"answer":"Safe answer.","recommendedProfile":"none"}""");
+            })),
+            new Uri("https://example.com/account/profile"));
+
+        var reply = await service.AskAsync(
+            "id-token", "question", "en-US", Context(), [],
+            global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Equal("Safe answer.", reply.Answer);
+        Assert.Equal(2, calls);
+        Assert.Equal(2, requestIds.Count);
+        Assert.Equal(requestIds[0], requestIds[1]);
     }
 
     private static RalvenAiPcContext Context() => new(

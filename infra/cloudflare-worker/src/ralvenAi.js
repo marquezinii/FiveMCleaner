@@ -4,9 +4,13 @@ import { withinRequiredRateLimit } from './rateLimit.js';
 import { hasExactJsonContentType, readBoundedJson } from './requestSecurity.js';
 
 const MAX_BODY_BYTES = 64 * 1024;
+const MAX_OUTPUT_TOKENS = 700;
+const PROMPT_VERSION = 1;
+const AI_ENTITLEMENT = 'ralven_ai';
 const PROFILE_NAMES = new Set(['light', 'balanced', 'aggressive']);
 const REPLY_PROFILES = new Set(['none', ...PROFILE_NAMES]);
 const ROLES = new Set(['user', 'assistant']);
+const REQUEST_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 
 function json(body, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -40,7 +44,8 @@ function finiteNumber(value, minimum, maximum) {
 }
 
 export function validateRalvenAiRequest(payload) {
-  if (!hasExactKeys(payload, ['message', 'language', 'context', 'history'])
+  if (!hasExactKeys(payload, ['requestId', 'message', 'language', 'context', 'history'])
+    || !boundedText(payload.requestId, 36, REQUEST_ID)
     || !boundedText(payload.message?.trim(), 1_000)
     || !boundedText(payload.language, 16, /^[A-Za-z]{2,3}(?:-[A-Za-z]{2,4})?$/u)
     || !Array.isArray(payload.history)
@@ -111,6 +116,7 @@ export function validateRalvenAiRequest(payload) {
   }
 
   return {
+    requestId: payload.requestId,
     message: payload.message.trim(),
     language: payload.language,
     context: { ...context, profiles },
@@ -123,17 +129,55 @@ function positiveInteger(value) {
   return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
-async function reserveMonthlyBudget(db, uid, env, now = new Date()) {
-  const reserved = positiveInteger(env.RALVEN_AI_RESERVED_COST_MICROUSD);
-  const perUser = positiveInteger(env.RALVEN_AI_USER_MONTHLY_BUDGET_MICROUSD);
-  const global = positiveInteger(env.RALVEN_AI_GLOBAL_MONTHLY_BUDGET_MICROUSD);
-  if (reserved === null || perUser === null || global === null || reserved > perUser || reserved > global) {
-    return { configured: false };
+function aiConfiguration(env) {
+  if (env.RALVEN_AI_ENABLED !== 'true') return { enabled: false };
+  const config = {
+    enabled: true,
+    model: env.RALVEN_AI_MODEL,
+    apiKey: env.OPENAI_API_KEY,
+    identifierSecret: env.RALVEN_AI_SAFETY_IDENTIFIER_SECRET,
+    reserved: positiveInteger(env.RALVEN_AI_RESERVED_COST_MICROUSD),
+    perUser: positiveInteger(env.RALVEN_AI_USER_MONTHLY_BUDGET_MICROUSD),
+    global: positiveInteger(env.RALVEN_AI_GLOBAL_MONTHLY_BUDGET_MICROUSD),
+    inputPrice: positiveInteger(env.RALVEN_AI_INPUT_PRICE_MICROUSD_PER_MILLION),
+    cachedInputPrice: positiveInteger(env.RALVEN_AI_CACHED_INPUT_PRICE_MICROUSD_PER_MILLION),
+    cacheWritePrice: positiveInteger(env.RALVEN_AI_CACHE_WRITE_PRICE_MICROUSD_PER_MILLION),
+    outputPrice: positiveInteger(env.RALVEN_AI_OUTPUT_PRICE_MICROUSD_PER_MILLION),
+  };
+  const secretsAreValid = boundedText(config.apiKey, 512) && config.apiKey.length >= 32
+    && boundedText(config.identifierSecret, 512) && config.identifierSecret.length >= 32
+    && config.apiKey !== config.identifierSecret;
+  const prices = [config.inputPrice, config.cachedInputPrice, config.cacheWritePrice, config.outputPrice];
+  if (!boundedText(config.model, 64, /^[a-z0-9.-]+$/u)
+    || !secretsAreValid
+    || prices.includes(null)
+    || config.reserved === null
+    || config.perUser === null
+    || config.global === null
+    || config.reserved > config.perUser
+    || config.reserved > config.global) {
+    return null;
   }
 
-  const requestId = crypto.randomUUID();
-  const billingPeriod = now.toISOString().slice(0, 7);
+  // The body limit plus a fixed prompt/schema allowance bounds the maximum
+  // number of input bytes, while max_output_tokens bounds all visible and reasoning output.
+  const maximumInputPrice = Math.max(config.inputPrice, config.cachedInputPrice, config.cacheWritePrice);
+  const minimumSafeReservation = Math.ceil(
+    ((MAX_BODY_BYTES + 8_192) * maximumInputPrice + MAX_OUTPUT_TOKENS * config.outputPrice) / 1_000_000,
+  );
+  return config.reserved >= minimumSafeReservation ? config : null;
+}
+
+function monthBounds(now) {
+  const start = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+  const end = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
+  return [start.toISOString(), end.toISOString()];
+}
+
+async function reserveMonthlyBudget(db, uid, cycleStart, requestId, config, now = new Date()) {
+  const billingPeriod = cycleStart.slice(0, 7);
   const createdAt = now.toISOString();
+  const [globalPeriodStart, globalPeriodEnd] = monthBounds(now);
   const result = await db.prepare(
     `INSERT INTO ralven_ai_usage
        (request_id, account_uid, billing_period, state, reserved_cost_microusd, created_at)
@@ -144,44 +188,79 @@ async function reserveMonthlyBudget(db, uid, env, now = new Date()) {
      ), 0) + ? <= ?
        AND COALESCE((
        SELECT SUM(COALESCE(actual_cost_microusd, reserved_cost_microusd))
-       FROM ralven_ai_usage WHERE billing_period = ?
-     ), 0) + ? <= ?`,
+       FROM ralven_ai_usage WHERE created_at >= ? AND created_at < ?
+     ), 0) + ? <= ?
+     ON CONFLICT(request_id) DO NOTHING`,
   ).bind(
-    requestId, uid, billingPeriod, reserved, createdAt,
-    uid, billingPeriod, reserved, perUser,
-    billingPeriod, reserved, global,
+    requestId, uid, billingPeriod, config.reserved, createdAt,
+    uid, billingPeriod, config.reserved, config.perUser,
+    globalPeriodStart, globalPeriodEnd, config.reserved, config.global,
   ).run();
 
-  return result.meta?.changes === 1
-    ? { configured: true, reserved: true, requestId }
-    : { configured: true, reserved: false };
+  if (result.meta?.changes === 1) return { reserved: true, requestId };
+  const existing = await db.prepare(
+    'SELECT account_uid, state FROM ralven_ai_usage WHERE request_id = ?',
+  ).bind(requestId).first();
+  return existing?.account_uid === uid
+    ? { reserved: false, duplicate: true, state: existing.state }
+    : { reserved: false, duplicate: false };
 }
 
-async function finishUsage(db, requestId, state, usage, env) {
-  const inputPrice = positiveInteger(env.RALVEN_AI_INPUT_PRICE_MICROUSD_PER_MILLION);
-  const outputPrice = positiveInteger(env.RALVEN_AI_OUTPUT_PRICE_MICROUSD_PER_MILLION);
-  const hasUsage = Number.isSafeInteger(usage?.input_tokens) && usage.input_tokens >= 0
-    && Number.isSafeInteger(usage?.output_tokens) && usage.output_tokens >= 0;
-  const inputTokens = hasUsage ? usage.input_tokens : null;
-  const outputTokens = hasUsage ? usage.output_tokens : null;
-  const actual = state === 'failed'
-    ? 0
-    : hasUsage && inputPrice !== null && outputPrice !== null
-      ? Math.ceil((inputTokens * inputPrice + outputTokens * outputPrice) / 1_000_000)
-      : null;
+function measuredUsage(usage, pricing) {
+  const inputTokens = usage?.input_tokens;
+  const outputTokens = usage?.output_tokens;
+  const cachedInputTokens = usage?.input_tokens_details?.cached_tokens ?? 0;
+  const cacheWriteTokens = usage?.input_tokens_details?.cache_write_tokens ?? 0;
+  const reasoningTokens = usage?.output_tokens_details?.reasoning_tokens ?? 0;
+  const counts = [inputTokens, outputTokens, cachedInputTokens, cacheWriteTokens, reasoningTokens];
+  const prices = [pricing.inputPrice, pricing.cachedInputPrice, pricing.cacheWritePrice, pricing.outputPrice];
+  if (!counts.every(value => Number.isSafeInteger(value) && value >= 0)
+    || !prices.every(value => Number.isSafeInteger(value) && value > 0)
+    || cachedInputTokens + cacheWriteTokens > inputTokens
+    || reasoningTokens > outputTokens) {
+    return null;
+  }
+  const uncachedInputTokens = inputTokens - cachedInputTokens - cacheWriteTokens;
+  const numerator = BigInt(uncachedInputTokens) * BigInt(pricing.inputPrice)
+    + BigInt(cachedInputTokens) * BigInt(pricing.cachedInputPrice)
+    + BigInt(cacheWriteTokens) * BigInt(pricing.cacheWritePrice)
+    + BigInt(outputTokens) * BigInt(pricing.outputPrice);
+  const actualCost = Number((numerator + 999_999n) / 1_000_000n);
+  return Number.isSafeInteger(actualCost) ? {
+    actualCost, inputTokens, cachedInputTokens, cacheWriteTokens, outputTokens, reasoningTokens,
+  } : null;
+}
+
+export function calculateUsageCostMicroUsd(usage, pricing) {
+  return measuredUsage(usage, pricing)?.actualCost ?? null;
+}
+
+async function finishUsage(db, requestId, state, usage, config, releaseWithoutUsage = false) {
+  const measured = measuredUsage(usage, config);
+  const actual = measured?.actualCost ?? (releaseWithoutUsage ? 0 : null);
   await db.prepare(
     `UPDATE ralven_ai_usage
-     SET state = ?, actual_cost_microusd = ?, input_tokens = ?, output_tokens = ?, completed_at = ?
+     SET state = ?, actual_cost_microusd = ?, input_tokens = ?, cached_input_tokens = ?,
+       cache_write_tokens = ?, output_tokens = ?, reasoning_tokens = ?, completed_at = ?
      WHERE request_id = ? AND state = 'reserved'`,
-  ).bind(state, actual, inputTokens, outputTokens, new Date().toISOString(), requestId).run();
+  ).bind(
+    state, actual, measured?.inputTokens ?? null, measured?.cachedInputTokens ?? null,
+    measured?.cacheWriteTokens ?? null, measured?.outputTokens ?? null,
+    measured?.reasoningTokens ?? null, new Date().toISOString(), requestId,
+  ).run();
 }
 
-async function safetyIdentifier(uid) {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(uid));
-  return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, '0')).join('');
+async function opaqueIdentifier(secret, value) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    'raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'],
+  );
+  const digest = await crypto.subtle.sign('HMAC', key, encoder.encode(value));
+  return [...new Uint8Array(digest)].map(byte => byte.toString(16).padStart(2, '0')).join('');
 }
 
 export function buildOpenAiRequest(input, model, identifier) {
+  const { requestId: _requestId, ...providerInput } = input;
   return {
     model,
     instructions: [
@@ -193,12 +272,15 @@ export function buildOpenAiRequest(input, model, identifier) {
       'You may recommend only none, light, balanced, or aggressive. Ralven itself owns preview, confirmation, execution, verification, and rollback.',
       'Keep the answer concise and explain uncertainty.',
     ].join(' '),
-    input: JSON.stringify(input),
+    input: JSON.stringify(providerInput),
     reasoning: { effort: 'low' },
-    max_output_tokens: 700,
+    max_output_tokens: MAX_OUTPUT_TOKENS,
     store: false,
+    prompt_cache_key: `ralven-ai-v${PROMPT_VERSION}`,
     safety_identifier: identifier,
+    tools: [],
     text: {
+      verbosity: 'low',
       format: {
         type: 'json_schema',
         name: 'ralven_ai_reply',
@@ -249,8 +331,12 @@ export async function handleRalvenAi(request, env, dependencies = {}) {
   const requireUser = dependencies.requireUser ?? requireFirebaseUser;
   const fetchEntitlements = dependencies.fetchEntitlements ?? fetchAccountEntitlements;
   const fetchImpl = dependencies.fetch ?? globalThis.fetch.bind(globalThis);
+  const now = (dependencies.now ?? (() => new Date()))();
 
   if (!hasExactJsonContentType(request)) return json({ error: 'unsupported-media-type' }, 415);
+  const config = aiConfiguration(env);
+  if (config?.enabled === false) return json({ error: 'ai-disabled' }, 503);
+  if (config === null) return json({ error: 'server-misconfigured' }, 503);
   const auth = await requireUser(request);
   if (!auth.authorized) return auth.response;
   if (!auth.emailVerified) return json({ error: 'email-verification-required' }, 403);
@@ -265,26 +351,42 @@ export async function handleRalvenAi(request, env, dependencies = {}) {
     return json({ error: 'entitlements-unavailable' }, 503);
   }
   if (entitlement.tier !== 'pro') return json({ error: 'pro-required' }, 403);
+  const aiValidFrom = Date.parse(entitlement.aiValidFrom ?? '');
+  const aiValidUntil = Date.parse(entitlement.aiValidUntil ?? '');
+  if (!entitlement.entitlements?.includes(AI_ENTITLEMENT)
+    || !Number.isFinite(aiValidFrom)
+    || !Number.isFinite(aiValidUntil)
+    || aiValidFrom > now.getTime()
+    || aiValidUntil <= now.getTime()) {
+    return json({ error: 'ai-access-required' }, 403);
+  }
 
   const payload = await readBoundedJson(request, MAX_BODY_BYTES);
   const input = validateRalvenAiRequest(payload);
   if (input === null) return json({ error: 'invalid-request' }, 400);
 
-  if (!boundedText(env.OPENAI_API_KEY, 512)
-    || !boundedText(env.RALVEN_AI_MODEL, 64, /^[a-z0-9.-]+$/u)
-    || positiveInteger(env.RALVEN_AI_INPUT_PRICE_MICROUSD_PER_MILLION) === null
-    || positiveInteger(env.RALVEN_AI_OUTPUT_PRICE_MICROUSD_PER_MILLION) === null) {
-    return json({ error: 'server-misconfigured' }, 503);
-  }
-
   let budget;
   try {
-    budget = await reserveMonthlyBudget(env.TELEMETRY_DB, auth.uid, env);
+    const requestId = await opaqueIdentifier(
+      config.identifierSecret,
+      `request\0${auth.uid}\0${input.requestId}`,
+    );
+    budget = await reserveMonthlyBudget(
+      env.TELEMETRY_DB,
+      auth.uid,
+      entitlement.aiValidFrom,
+      requestId,
+      config,
+      now,
+    );
   } catch {
     return json({ error: 'usage-unavailable' }, 503);
   }
-  if (!budget.configured) return json({ error: 'server-misconfigured' }, 503);
-  if (!budget.reserved) return json({ error: 'budget-exhausted' }, 429);
+  if (!budget.reserved) {
+    return budget.duplicate
+      ? json({ error: budget.state === 'reserved' ? 'request-in-progress' : 'request-already-processed' }, 409)
+      : json({ error: 'budget-exhausted' }, 429);
+  }
 
   let providerResponse;
   let providerBody;
@@ -292,29 +394,34 @@ export async function handleRalvenAi(request, env, dependencies = {}) {
     providerResponse = await fetchImpl('https://api.openai.com/v1/responses', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${env.OPENAI_API_KEY}`,
+        Authorization: `Bearer ${config.apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(buildOpenAiRequest(
         input,
-        env.RALVEN_AI_MODEL,
-        await safetyIdentifier(auth.uid),
+        config.model,
+        await opaqueIdentifier(config.identifierSecret, `safety\0${auth.uid}`),
       )),
     });
     providerBody = await providerResponse.json();
   } catch {
-    await finishUsage(env.TELEMETRY_DB, budget.requestId, 'failed', null, env);
+    await finishUsage(env.TELEMETRY_DB, budget.requestId, 'failed', null, config);
     return json({ error: 'provider-unavailable' }, 503);
   }
 
   const reply = providerResponse.ok ? parseRalvenAiReply(providerBody) : null;
-  await finishUsage(
-    env.TELEMETRY_DB,
-    budget.requestId,
-    reply === null ? 'failed' : 'completed',
-    providerBody?.usage,
-    env,
-  );
+  try {
+    await finishUsage(
+      env.TELEMETRY_DB,
+      budget.requestId,
+      reply === null ? 'failed' : 'completed',
+      providerBody?.usage,
+      config,
+      !providerResponse.ok,
+    );
+  } catch {
+    return json({ error: 'usage-unavailable' }, 503);
+  }
   return reply === null
     ? json({ error: 'invalid-provider-response' }, 503)
     : json(reply);

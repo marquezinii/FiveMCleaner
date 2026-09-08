@@ -13,16 +13,20 @@ function fakeDb(rows = []) {
         bind(...params) {
           calls.push({ sql, params });
           return {
-            async first() {
-              const [uid, entitlementKey, validFromCutoff, validUntilCutoff] = params;
-              const row = rows.find(candidate => candidate.account_uid === uid
-                && candidate.entitlement_key === entitlementKey
-                && ['active', 'grace_period'].includes(candidate.state)
-                && candidate.valid_from <= validFromCutoff
-                && candidate.valid_until > validUntilCutoff);
-              return row === undefined
-                ? null
-                : { entitlement_key: row.entitlement_key, valid_until: row.valid_until };
+            async all() {
+              const [uid, proKey, aiKey, validFromCutoff, validUntilCutoff] = params;
+              return {
+                results: rows.filter(candidate => candidate.account_uid === uid
+                  && [proKey, aiKey].includes(candidate.entitlement_key)
+                  && ['active', 'grace_period'].includes(candidate.state)
+                  && candidate.valid_from <= validFromCutoff
+                  && candidate.valid_until > validUntilCutoff)
+                  .map(row => ({
+                    entitlement_key: row.entitlement_key,
+                    valid_from: row.valid_from,
+                    valid_until: row.valid_until,
+                  })),
+              };
             },
           };
         },
@@ -43,28 +47,50 @@ function entitlement(overrides = {}) {
   };
 }
 
-test('fetchAccountEntitlements grants only current active or grace-period Ralven Pro access', async () => {
+test('fetchAccountEntitlements grants current Pro and reports AI independently', async () => {
   for (const state of ['active', 'grace_period']) {
-    const db = fakeDb([entitlement({ state })]);
+    const db = fakeDb([
+      entitlement({ state }),
+      entitlement({ state, entitlement_key: 'ralven_ai' }),
+    ]);
     assert.deepEqual(await fetchAccountEntitlements(db, 'firebase-uid-123', NOW), {
       tier: 'pro',
-      entitlements: ['ralven_pro'],
+      entitlements: ['ralven_pro', 'ralven_ai'],
+      validFrom: '2026-08-01T00:00:00.000Z',
       validUntil: '2026-09-01T00:00:00.000Z',
+      aiValidFrom: '2026-08-01T00:00:00.000Z',
+      aiValidUntil: '2026-09-01T00:00:00.000Z',
     });
 
     const [{ sql, params }] = db.calls;
-    assert.match(sql, /entitlement_key = \?/);
+    assert.match(sql, /entitlement_key IN \(\?, \?\)/);
     assert.match(sql, /state IN \('active', 'grace_period'\)/);
     assert.match(sql, /valid_from <= \?/);
     assert.match(sql, /valid_until > \?/);
     assert.doesNotMatch(sql, /provider|subscription/i);
-    assert.deepEqual(params, ['firebase-uid-123', 'ralven_pro', NOW, NOW]);
+    assert.deepEqual(params, ['firebase-uid-123', 'ralven_pro', 'ralven_ai', NOW, NOW]);
   }
 });
 
-test('fetchAccountEntitlements returns free for absent, revoked, expired, or not-yet-valid access', async () => {
+test('fetchAccountEntitlements does not infer AI access from Pro', async () => {
+  assert.deepEqual(await fetchAccountEntitlements(
+    fakeDb([entitlement()]),
+    'firebase-uid-123',
+    NOW,
+  ), {
+    tier: 'pro',
+    entitlements: ['ralven_pro'],
+    validFrom: '2026-08-01T00:00:00.000Z',
+    validUntil: '2026-09-01T00:00:00.000Z',
+    aiValidFrom: null,
+    aiValidUntil: null,
+  });
+});
+
+test('fetchAccountEntitlements returns free for absent, orphaned AI, or invalid Pro access', async () => {
   const cases = [
     [],
+    [entitlement({ entitlement_key: 'ralven_ai' })],
     [entitlement({ state: 'revoked' })],
     [entitlement({ state: 'expired' })],
     [entitlement({ valid_until: NOW })],
@@ -77,18 +103,23 @@ test('fetchAccountEntitlements returns free for absent, revoked, expired, or not
     assert.deepEqual(await fetchAccountEntitlements(fakeDb(rows), 'firebase-uid-123', NOW), {
       tier: 'free',
       entitlements: [],
+      validFrom: null,
       validUntil: null,
+      aiValidFrom: null,
+      aiValidUntil: null,
     });
   }
 });
 
-test('fetchAccountEntitlements treats valid_from equal to now as active and exposes no provider data', async () => {
+test('fetchAccountEntitlements exposes no provider data', async () => {
   const result = await fetchAccountEntitlements(
     fakeDb([entitlement({ valid_from: NOW })]),
     'firebase-uid-123',
     NOW,
   );
 
-  assert.deepEqual(Object.keys(result).sort(), ['entitlements', 'tier', 'validUntil']);
+  assert.deepEqual(Object.keys(result).sort(), [
+    'aiValidFrom', 'aiValidUntil', 'entitlements', 'tier', 'validFrom', 'validUntil',
+  ]);
   assert.equal(JSON.stringify(result).includes('must-never-leak'), false);
 });

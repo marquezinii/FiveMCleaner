@@ -58,6 +58,11 @@ requisição. Para não abandonar alterações tardias, uma cobrança histórica
 e sem consulta há 30 dias é auditada por atualização; webhooks continuam sendo a
 fonte primária e não usam essas janelas.
 
+Cada período pago canônico materializa dois entitlements independentes com a
+mesma validade: `ralven_pro` e `ralven_ai`. Isso permite desligar a IA sem
+rebaixar o restante do Pro. Um grant Pro sem pagamento canônico permanece
+Pro-only; o cliente e `POST /ai/message` não inferem acesso à IA a partir do tier.
+
 O webhook valida `asaas-access-token` em tempo constante antes de ler o JSON.
 O `id` do evento garante idempotência; o corpo serve para localizar o recurso e
 campos novos são ignorados. Dados usados para conceder acesso são relidos da API.
@@ -94,7 +99,7 @@ chave precisa corresponder ao ambiente. `ASAAS_WEBHOOK_TOKEN` tem de ser distint
 da chave de API, sem espaços e com 32 a 255 caracteres. Ausência ou inconsistência
 mantém o checkout desativado.
 
-Aplicar as migrations até `0009` junto ao código. Se uma base antiga tiver mais
+Aplicar as migrations até `0011` junto ao código. Se uma base antiga tiver mais
 de um checkout aberto para a mesma conta, investigue no provedor antes de migrar.
 Credenciais nunca pertencem a `.dev.vars`, logs, testes, commits ou ao desktop.
 
