@@ -50,81 +50,72 @@
   <data name="Dashboard.Title" xml:space="preserve"><value>Visão geral</value></data>
   <data name="Dashboard.Subtitle" xml:space="preserve"><value>Desempenho, clareza e controle para o seu PC.</value></data>
   <data name="System.Title" xml:space="preserve"><value>Sistema</value></data>
-  <data name="System.Subtitle" xml:space="preserve"><value>Revise ajustes de jogos, saúde de segurança e informações do PC sem sair do Ralven.</value></data>
-  <data name="System.WindowsUpdate.Title" xml:space="preserve"><value>Windows Update</value></data>
-  <data name="System.WindowsUpdate.Description" xml:space="preserve"><value>Confira atualizações do sistema e de segurança diretamente nas Configurações do Windows.</value></data>
-  <data name="System.WindowsUpdate.Action" xml:space="preserve"><value>Abrir Windows Update</value></data>
+  <data name="System.Subtitle" xml:space="preserve"><value>Veja o essencial do seu PC, proteção e jogos. Tudo fica dentro do Ralven.</value></data>
+  <data name="System.Refresh" xml:space="preserve"><value>Atualizar tudo</value></data>
   <data name="System.Storage.Title" xml:space="preserve"><value>Armazenamento</value></data>
   <data name="System.Storage.Description" xml:space="preserve"><value>Revise o uso do disco e as recomendações de armazenamento do Windows antes de remover qualquer coisa.</value></data>
   <data name="System.Storage.Action" xml:space="preserve"><value>Revisar armazenamento</value></data>
-  <data name="System.Security.Title" xml:space="preserve"><value>Segurança do Windows</value></data>
-  <data name="System.Security.Description" xml:space="preserve"><value>Veja o estado de proteção informado pelo Windows sem alterar as configurações de segurança.</value></data>
-  <data name="System.Security.Action" xml:space="preserve"><value>Abrir Segurança do Windows</value></data>
-  <data name="System.About.Title" xml:space="preserve"><value>Informações do PC</value></data>
-  <data name="System.About.Description" xml:space="preserve"><value>Consulte detalhes do Windows, processador, vídeo, memória e armazenamento coletados localmente pelo Ralven.</value></data>
-  <data name="System.About.Action" xml:space="preserve"><value>Ver informações do PC</value></data>
-  <data name="System.Health.Title" xml:space="preserve"><value>Saúde do Windows</value></data>
-  <data name="System.Health.Description" xml:space="preserve"><value>Leia a saúde agregada informada pela Central de Segurança do Windows. O Ralven não altera configurações de segurança ou atualização.</value></data>
+  <data name="System.About.Title" xml:space="preserve"><value>Seu PC</value></data>
+  <data name="System.About.Description" xml:space="preserve"><value>Veja as principais informações do Windows e do computador.</value></data>
+  <data name="System.Health.Title" xml:space="preserve"><value>Proteção do Windows</value></data>
+  <data name="System.Health.Description" xml:space="preserve"><value>Veja o estado do antivírus, firewall e atualizações automáticas.</value></data>
   <data name="System.Health.Antivirus" xml:space="preserve"><value>Antivírus</value></data>
   <data name="System.Health.Firewall" xml:space="preserve"><value>Firewall</value></data>
-  <data name="System.Health.AutomaticUpdates" xml:space="preserve"><value>Configuração de atualizações automáticas</value></data>
-  <data name="System.Health.Refresh" xml:space="preserve"><value>Atualizar saúde</value></data>
-  <data name="System.Health.Status.Loading" xml:space="preserve"><value>Aguardando a primeira leitura local.</value></data>
-  <data name="System.Health.Status.Reading" xml:space="preserve"><value>Lendo a saúde informada pela Central de Segurança do Windows...</value></data>
-  <data name="System.Health.Status.Ready" xml:space="preserve"><value>A Central de Segurança do Windows forneceu as três leituras de saúde.</value></data>
-  <data name="System.Health.Status.Partial" xml:space="preserve"><value>O Windows informou somente parte destes dados. Áreas indisponíveis não foram tratadas como seguras ou inseguras.</value></data>
-  <data name="System.Health.Status.Unavailable" xml:space="preserve"><value>A Central de Segurança do Windows não pôde fornecer estas informações.</value></data>
-  <data name="System.Health.Updated.Pending" xml:space="preserve"><value>Nenhuma leitura de saúde ainda</value></data>
-  <data name="System.Health.UpdatedAt" xml:space="preserve"><value>Saúde lida às {0}</value></data>
-  <data name="System.Health.State.Waiting" xml:space="preserve"><value>Aguardando</value></data>
-  <data name="System.Health.State.Good" xml:space="preserve"><value>Saudável</value></data>
-  <data name="System.Health.State.Attention" xml:space="preserve"><value>Requer atenção</value></data>
-  <data name="System.Health.State.NotMonitored" xml:space="preserve"><value>Não monitorado</value></data>
-  <data name="System.Health.State.Snoozed" xml:space="preserve"><value>Adiado</value></data>
-  <data name="System.Health.State.Unavailable" xml:space="preserve"><value>Indisponível</value></data>
+  <data name="System.Health.AutomaticUpdates" xml:space="preserve"><value>Atualizações automáticas</value></data>
+  <data name="System.Health.Status.Loading" xml:space="preserve"><value>Aguardando a primeira verificação.</value></data>
+  <data name="System.Health.Status.Reading" xml:space="preserve"><value>Verificando a proteção do Windows...</value></data>
+  <data name="System.Health.Status.Ready" xml:space="preserve"><value>O Windows informou o estado das três proteções.</value></data>
+  <data name="System.Health.Status.Partial" xml:space="preserve"><value>O Windows só conseguiu verificar parte destas informações. Itens indisponíveis não são tratados como protegidos.</value></data>
+  <data name="System.Health.Status.Unavailable" xml:space="preserve"><value>O Ralven não conseguiu verificar estas informações com o Windows.</value></data>
+  <data name="System.Health.Updated.Pending" xml:space="preserve"><value>Ainda não verificado</value></data>
+  <data name="System.Health.UpdatedAt" xml:space="preserve"><value>Verificado às {0}</value></data>
+  <data name="System.Health.State.Waiting" xml:space="preserve"><value>Verificando</value></data>
+  <data name="System.Health.State.Good" xml:space="preserve"><value>Tudo certo</value></data>
+  <data name="System.Health.State.Attention" xml:space="preserve"><value>Verifique</value></data>
+  <data name="System.Health.State.NotMonitored" xml:space="preserve"><value>Sem monitoramento</value></data>
+  <data name="System.Health.State.Snoozed" xml:space="preserve"><value>Pausado</value></data>
+  <data name="System.Health.State.Unavailable" xml:space="preserve"><value>Não foi possível verificar</value></data>
   <data name="System.Pc.Windows" xml:space="preserve"><value>Windows</value></data>
   <data name="System.Pc.Cpu" xml:space="preserve"><value>Processador</value></data>
   <data name="System.Pc.Gpu" xml:space="preserve"><value>Vídeo</value></data>
   <data name="System.Pc.Memory" xml:space="preserve"><value>Memória instalada</value></data>
   <data name="System.Pc.Disk" xml:space="preserve"><value>Armazenamento disponível</value></data>
   <data name="System.Pc.LogicalProcessors" xml:space="preserve"><value>Processadores lógicos</value></data>
-  <data name="System.Pc.Refresh" xml:space="preserve"><value>Atualizar informações do PC</value></data>
   <data name="System.Pc.Status.Loading" xml:space="preserve"><value>Coletando informações locais do PC...</value></data>
   <data name="System.Pc.Status.Refreshing" xml:space="preserve"><value>Atualizando informações locais do PC...</value></data>
-  <data name="System.Pc.Status.Ready" xml:space="preserve"><value>Estas informações foram coletadas localmente pelo Ralven.</value></data>
+  <data name="System.Pc.Status.Ready" xml:space="preserve"><value>Informações atualizadas neste PC.</value></data>
   <data name="System.Pc.Status.Stale" xml:space="preserve"><value>A atualização falhou. As informações coletadas anteriormente continuam visíveis.</value></data>
   <data name="System.Pc.Status.Unavailable" xml:space="preserve"><value>O Ralven não conseguiu coletar as informações do PC.</value></data>
-  <data name="System.Gaming.Title" xml:space="preserve"><value>Jogos do Windows</value></data>
-  <data name="System.Gaming.Description" xml:space="preserve"><value>Analise e aplique localmente dois ajustes de jogos compatíveis do Windows, sem depender do FiveM ou de acesso administrativo.</value></data>
+  <data name="System.Gaming.Title" xml:space="preserve"><value>Preparar o Windows para jogos</value></data>
+  <data name="System.Gaming.Description" xml:space="preserve"><value>O Ralven pode ativar o Modo de Jogo e impedir gravações automáticas em segundo plano sem sair do aplicativo.</value></data>
   <data name="System.Gaming.GameMode" xml:space="preserve"><value>Modo de Jogo</value></data>
-  <data name="System.Gaming.BackgroundCapture" xml:space="preserve"><value>Gravação histórica em segundo plano</value></data>
-  <data name="System.Gaming.Target.Enabled" xml:space="preserve"><value>Destino recomendado: ativado</value></data>
-  <data name="System.Gaming.Target.Disabled" xml:space="preserve"><value>Destino recomendado: desativado</value></data>
-  <data name="System.Gaming.Refresh" xml:space="preserve"><value>Atualizar estado</value></data>
-  <data name="System.Gaming.Apply" xml:space="preserve"><value>Aplicar ajustes</value></data>
-  <data name="System.Gaming.Restore" xml:space="preserve"><value>Restaurar</value></data>
+  <data name="System.Gaming.BackgroundCapture" xml:space="preserve"><value>Gravações em segundo plano</value></data>
+  <data name="System.Gaming.Target.Enabled" xml:space="preserve"><value>O Ralven recomenda manter ativado.</value></data>
+  <data name="System.Gaming.Target.Disabled" xml:space="preserve"><value>O Ralven recomenda desativar gravações automáticas.</value></data>
+  <data name="System.Gaming.Apply" xml:space="preserve"><value>Preparar para jogar</value></data>
+  <data name="System.Gaming.Restore" xml:space="preserve"><value>Desfazer</value></data>
   <data name="System.Gaming.State.Unknown" xml:space="preserve"><value>Aguardando leitura</value></data>
   <data name="System.Gaming.State.Enabled" xml:space="preserve"><value>Ativado</value></data>
   <data name="System.Gaming.State.Disabled" xml:space="preserve"><value>Desativado</value></data>
-  <data name="System.Gaming.State.NotConfigured" xml:space="preserve"><value>Não configurado explicitamente</value></data>
-  <data name="System.Gaming.State.Unavailable" xml:space="preserve"><value>Leitura indisponível</value></data>
-  <data name="System.Gaming.Status.Reading" xml:space="preserve"><value>Lendo os ajustes atuais do Windows...</value></data>
-  <data name="System.Gaming.Status.Ready" xml:space="preserve"><value>Revise os estados detectados antes de aplicar. Não há promessa de ganho universal de desempenho.</value></data>
-  <data name="System.Gaming.Status.Configured" xml:space="preserve"><value>Os dois ajustes já estão nos destinos recomendados.</value></data>
-  <data name="System.Gaming.Status.Unavailable" xml:space="preserve"><value>O Ralven não conseguiu ler um ou mais valores com segurança. Nenhuma alteração está disponível.</value></data>
+  <data name="System.Gaming.State.NotConfigured" xml:space="preserve"><value>Padrão do Windows</value></data>
+  <data name="System.Gaming.State.Unavailable" xml:space="preserve"><value>Não foi possível verificar</value></data>
+  <data name="System.Gaming.Status.Reading" xml:space="preserve"><value>Verificando os ajustes atuais...</value></data>
+  <data name="System.Gaming.Status.Ready" xml:space="preserve"><value>O Windows ainda não está com os dois ajustes recomendados.</value></data>
+  <data name="System.Gaming.Status.Configured" xml:space="preserve"><value>O Windows já está com os dois ajustes recomendados.</value></data>
+  <data name="System.Gaming.Status.Unavailable" xml:space="preserve"><value>O Ralven não conseguiu verificar um ou mais ajustes com segurança. Nada foi alterado.</value></data>
   <data name="System.Gaming.Status.FiveMRunning" xml:space="preserve"><value>Feche o FiveM antes de aplicar ou restaurar estes ajustes. O Ralven verifica novamente logo antes de alterar o Windows.</value></data>
   <data name="System.Gaming.Status.ProcessCheckFailed" xml:space="preserve"><value>O Ralven não conseguiu confirmar que o FiveM está fechado. Nenhum ajuste do Windows será alterado.</value></data>
-  <data name="System.Gaming.Status.Applying" xml:space="preserve"><value>Aplicando os dois ajustes compatíveis e registrando os valores atuais...</value></data>
-  <data name="System.Gaming.Status.Applied" xml:space="preserve"><value>Ajustes aplicados. Você pode pedir a restauração aqui ou pelo Histórico; um valor alterado depois por outro programa não será sobrescrito.</value></data>
+  <data name="System.Gaming.Status.Applying" xml:space="preserve"><value>Preparando o Windows e salvando os ajustes anteriores...</value></data>
+  <data name="System.Gaming.Status.Applied" xml:space="preserve"><value>O Windows está pronto com estes ajustes. Você pode desfazê-los aqui ou pelo Histórico.</value></data>
   <data name="System.Gaming.Status.Failed" xml:space="preserve"><value>Não foi possível confirmar os ajustes. O Ralven tentou desfazer qualquer alteração parcial; consulte o resultado no Histórico.</value></data>
-  <data name="System.Gaming.Status.Restoring" xml:space="preserve"><value>Tentando restaurar os valores anteriores...</value></data>
-  <data name="System.Gaming.Status.Restored" xml:space="preserve"><value>Os ajustes anteriores de jogos do Windows foram restaurados.</value></data>
+  <data name="System.Gaming.Status.Restoring" xml:space="preserve"><value>Desfazendo estes ajustes...</value></data>
+  <data name="System.Gaming.Status.Restored" xml:space="preserve"><value>Os ajustes anteriores foram restaurados.</value></data>
   <data name="System.Gaming.Status.RestoreFailed" xml:space="preserve"><value>Não foi possível restaurar totalmente os ajustes anteriores. Consulte os detalhes no Histórico; um valor conflitante não foi sobrescrito.</value></data>
-  <data name="System.Gaming.Confirm.Title" xml:space="preserve"><value>Aplicar ajustes de jogos do Windows?</value></data>
-  <data name="System.Gaming.Confirm.Message" xml:space="preserve"><value>O Modo de Jogo será ativado e a gravação histórica em segundo plano será desativada. Os valores anteriores serão registrados localmente para que o Ralven possa tentar restaurá-los. A Game Bar e as gravações manuais não serão removidas.</value></data>
+  <data name="System.Gaming.Confirm.Title" xml:space="preserve"><value>Preparar o Windows para jogos?</value></data>
+  <data name="System.Gaming.Confirm.Message" xml:space="preserve"><value>O Ralven ativará o Modo de Jogo e desativará as gravações automáticas em segundo plano. Os ajustes anteriores ficam salvos neste PC para que você possa desfazer a mudança. As gravações manuais continuam disponíveis.</value></data>
   <data name="System.Gaming.Confirm.Cancel" xml:space="preserve"><value>Cancelar</value></data>
-  <data name="System.Gaming.Confirm.Apply" xml:space="preserve"><value>Aplicar ajustes</value></data>
-  <data name="System.Gaming.RestoreConfirm.Title" xml:space="preserve"><value>Restaurar ajustes anteriores?</value></data>
+  <data name="System.Gaming.Confirm.Apply" xml:space="preserve"><value>Preparar</value></data>
+  <data name="System.Gaming.RestoreConfirm.Title" xml:space="preserve"><value>Desfazer estes ajustes?</value></data>
   <data name="System.Gaming.RestoreConfirm.Message" xml:space="preserve"><value>O Ralven tentará restaurar somente os valores alterados por esta operação. Um valor modificado depois por outro programa não será sobrescrito.</value></data>
   <data name="Applications.Title" xml:space="preserve"><value>Aplicativos</value></data>
   <data name="Applications.Subtitle" xml:space="preserve"><value>Atualize, instale ou remova aplicativos compatíveis em um só lugar. O Ralven confirma cada mudança com você.</value></data>
