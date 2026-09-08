@@ -42,6 +42,25 @@ compatibilidade legada, migração, release passada ou outro contexto histórico
 não esteja suficientemente explicado pelo código, pelo Git recente ou pela
 documentação atual. Se a tarefa não exige arqueologia, não o leia.
 
+## Roadmap público
+
+`docs/public-roadmap.json` é a fonte de verdade do Roadmap da próxima versão em
+`https://vemryx.com/Ralven/`. Ele é publicado automaticamente pelo workflow após
+uma alteração integrada em `dev/proxima-versao`; nunca depende de pedido manual
+do usuário ou de uma release.
+
+Ao concluir uma capacidade que será integrada e possa ser comunicada
+publicamente, o agente responsável deve atualizar esse arquivo no **mesmo Pull
+Request**, com textos precisos em PT e EN, sem solicitar confirmação adicional.
+O integrador deve conferir essa atualização antes de integrar a tarefa. Se a
+mudança não tiver impacto público claro — por exemplo, refatoração, dependência,
+teste, infraestrutura ou experimento — o arquivo deve permanecer inalterado.
+
+Nunca infira itens a partir de mensagens de commit nem prometa recursos, datas,
+resultados ou desempenho. Inclua somente comportamento real que o Pull Request
+integrará ou que já esteja integrado, e preserve o `id` estável e o status
+definidos em `docs/public-roadmap.md`.
+
 Código-fonte e testes vigentes prevalecem sobre documentação desatualizada. Entre
 os documentos de estado, `PROJECT_STATE.md` representa a visão canônica atual;
 `PROJECT_HISTORY.md` nunca deve sobrescrever uma decisão atual apenas por conter

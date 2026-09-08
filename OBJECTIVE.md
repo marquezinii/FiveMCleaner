@@ -1,7 +1,8 @@
 # Objetivo da tarefa
 
-- **Agente:** Codex
-- **Objetivo:** reconstruir a experiência da aba Aplicativos para que instalação, atualização e remoção sejam claras para usuários comuns, com detalhes técnicos disponíveis apenas sob demanda.
-- **Escopo:** interface, navegação, estados e textos públicos da aba Aplicativos; preservação dos contratos e limites de segurança existentes. Não inclui criar um desinstalador profundo, ampliar operações privilegiadas, alterar a cadeia de atualização do próprio Ralven ou adicionar novos gerenciadores de pacotes.
-- **Critérios de conclusão:** fluxo principal compreensível sem conhecimento técnico; hierarquia visual consistente com o Ralven; estados de carregamento, vazio, erro e seleção claros; tema, teclado, foco e localização preservados; build e testes aplicáveis aprovados; interface renderizada e inspecionada no ambiente local.
-- **Resultado entregue:** a aba Aplicativos foi reduzida a três fluxos principais — atualizar, instalar e desinstalar — com informações técnicas sob demanda e inventário/atalhos do Windows recolhidos em Mais opções. A interface foi validada renderizada nos temas claro e escuro, na janela mínima e com dados vazios e preenchidos. Build Release aprovado sem avisos, 1.400 testes aprovados, atalho de desenvolvimento reconstruído; 13 chaves de localização órfãs removidas e reforçado o teste de busca/filtro na revisão de integração.
+- **Objetivo:** tornar obrigatória a manutenção do Roadmap público por agentes
+  quando uma capacidade comunicável for integrada na próxima versão.
+- **Escopo:** somente a governança em `AI_RULES.md`; não altera código do
+  aplicativo, a versão, a release ou `main`.
+- **Critérios de conclusão:** regra clara sobre quando atualizar a fonte do
+  Roadmap, quando não alterar e como evitar promessas imprecisas.
