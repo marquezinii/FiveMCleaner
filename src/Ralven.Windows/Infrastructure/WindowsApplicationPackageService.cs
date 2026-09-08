@@ -79,15 +79,10 @@ public sealed partial class WinGetApplicationPackageService : IWindowsApplicatio
         string? winGetExecutable)
     {
         this.commandRunner = commandRunner ?? throw new ArgumentNullException(nameof(commandRunner));
-        if (winGetExecutable is not null
-            && (!Path.IsPathFullyQualified(winGetExecutable)
-                || !string.Equals(
-                    Path.GetFileName(winGetExecutable),
-                    "winget.exe",
-                    StringComparison.OrdinalIgnoreCase)))
+        if (winGetExecutable is not null && !IsOfficialWinGetExecutable(winGetExecutable))
         {
             throw new ArgumentException(
-                "WinGet must use an absolute path to winget.exe.",
+                "WinGet must use the official user alias.",
                 nameof(winGetExecutable));
         }
 
@@ -413,6 +408,30 @@ public sealed partial class WinGetApplicationPackageService : IWindowsApplicatio
         var windowsApps = Path.GetFullPath(Path.Combine(localAppData, "Microsoft", "WindowsApps"));
         var candidate = Path.GetFullPath(Path.Combine(windowsApps, "winget.exe"));
         return File.Exists(candidate) ? candidate : null;
+    }
+
+    private static bool IsOfficialWinGetExecutable(string path)
+    {
+        if (!Path.IsPathFullyQualified(path))
+        {
+            return false;
+        }
+
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        if (string.IsNullOrWhiteSpace(localAppData))
+        {
+            return false;
+        }
+
+        var alias = Path.GetFullPath(Path.Combine(
+            localAppData,
+            "Microsoft",
+            "WindowsApps",
+            "winget.exe"));
+        return string.Equals(
+            Path.GetFullPath(path),
+            alias,
+            StringComparison.OrdinalIgnoreCase);
     }
 
     [GeneratedRegex(@"^[A-Za-z0-9][A-Za-z0-9._+\-]{0,255}$", RegexOptions.CultureInvariant)]
