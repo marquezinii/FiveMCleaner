@@ -1,0 +1,42 @@
+name: Sync public roadmap
+
+on:
+  push:
+    branches: [dev/proxima-versao]
+    paths: [docs/public-roadmap.json]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  notify-site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Checkout the integrated roadmap
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Validate roadmap JSON syntax
+        run: python -m json.tool docs/public-roadmap.json > /dev/null
+
+      - name: Require the site dispatch token
+        env:
+          TOKEN: ${{ secrets.VEMRYX_SITE_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$TOKEN" ]; then
+            echo "::error::Set VEMRYX_SITE_DISPATCH_TOKEN before enabling public-roadmap sync."
+            exit 1
+          fi
+
+      - name: Notify the Vemryx site
+        env:
+          TOKEN: ${{ secrets.VEMRYX_SITE_DISPATCH_TOKEN }}
+          SHA: ${{ github.sha }}
+        run: |
+          curl --fail-with-body --silent --show-error \
+            --request POST \
+            --url https://api.github.com/repos/marquezinii/vemryx-site/dispatches \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            --data "{\"event_type\":\"ralven-roadmap-updated\",\"client_payload\":{\"schema_version\":1,\"source_sha\":\"$SHA\"}}"
