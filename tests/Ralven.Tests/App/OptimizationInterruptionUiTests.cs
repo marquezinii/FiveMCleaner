@@ -87,12 +87,19 @@ public sealed class OptimizationInterruptionUiTests
         var mainWindow = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "MainWindow.xaml"));
         var navigation = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "MainWindow.Navigation.xaml.cs"));
         var games = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "GamesPage.xaml.cs"));
+        var fiveM = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "FiveMPage.xaml.cs"));
         var capture = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "MainWindow.Capture.xaml.cs"));
 
         Assert.Contains("x:Name=\"OptimizerNav\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Tag=\"Optimizer\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.GeneralWindows)", navigation, StringComparison.Ordinal);
-        Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.FiveMLegacy)", games, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToFiveM()", games, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.FiveMLegacy)", fiveM, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.GeneralWindows)", fiveM, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToHistory()", fiveM, StringComparison.Ordinal);
+        Assert.Contains("internal void RequestNavigateToFiveM()", navigation, StringComparison.Ordinal);
+        Assert.Contains("Navigate(FiveMPage)", navigation, StringComparison.Ordinal);
+        Assert.Contains("\"FiveM\" => (Element: (UIElement)FiveMPage, Nav: GamesNav)", capture, StringComparison.Ordinal);
         Assert.Contains("\"FiveMOptimizer\"", capture, StringComparison.Ordinal);
     }
 

@@ -1,0 +1,242 @@
+<UserControl x:Class="Ralven.App.Views.Pages.FiveMPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="820">
+    <ScrollViewer x:Name="PageScrollViewer"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <StackPanel Margin="28,24,12,28">
+            <Border Style="{StaticResource TitleBlockSurface}">
+                <StackPanel>
+                    <Button Content="{Binding [FiveMHub.BackToGames], Source={StaticResource LocalizedStrings}}"
+                            Style="{StaticResource LinkButtonStyle}"
+                            HorizontalAlignment="Left"
+                            Margin="-6,0,0,12"
+                            Click="BackToGames_Click" />
+                    <TextBlock Text="{Binding [FiveMHub.Title], Source={StaticResource LocalizedStrings}}"
+                               Style="{StaticResource PageTitleText}"
+                               AutomationProperties.HeadingLevel="Level1" />
+                    <Rectangle Style="{StaticResource TitleAccentRule}" Margin="0,10,0,0" />
+                    <TextBlock Text="{Binding [FiveMHub.Subtitle], Source={StaticResource LocalizedStrings}}"
+                               Style="{StaticResource SecondaryText}"
+                               Margin="0,12,0,0"
+                               TextWrapping="Wrap"
+                               MaxWidth="760"
+                               HorizontalAlignment="Left" />
+                </StackPanel>
+            </Border>
+
+            <Border Style="{StaticResource FiveMGameCardSurface}"
+                    MinHeight="220"
+                    Margin="0,0,16,18"
+                    AutomationProperties.Name="{Binding [FiveMHub.Title], Source={StaticResource LocalizedStrings}}">
+                <Grid Margin="28">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="156" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Background="{DynamicResource FiveMGameTileArtworkBrush}"
+                            CornerRadius="{StaticResource RadiusLg}"
+                            Width="132"
+                            Height="132"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center">
+                        <Image Source="/Ralven;component/Assets/FiveM.png"
+                               Stretch="Uniform"
+                               Margin="24"
+                               SnapsToDevicePixels="True"
+                               RenderOptions.BitmapScalingMode="HighQuality" />
+                    </Border>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="8,0,0,0">
+                        <Border Background="{DynamicResource FiveMGameTileLabelBrush}"
+                                BorderBrush="{DynamicResource FiveMGameTileBorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="{StaticResource RadiusSm}"
+                                Padding="12,7"
+                                HorizontalAlignment="Left">
+                            <TextBlock Text="{Binding [Games.FiveM.Edition], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource OverlineText}" />
+                        </Border>
+                        <TextBlock Text="{Binding [FiveMHub.HeroTitle], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource DisplayText}"
+                                   Margin="0,14,0,0"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding [FiveMHub.HeroDescription], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   Margin="0,8,0,0"
+                                   TextWrapping="Wrap"
+                                   MaxWidth="720"
+                                   HorizontalAlignment="Left" />
+                        <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                            <Path Margin="0,0,8,0">
+                                <Path.Style>
+                                    <Style TargetType="Path" BasedOn="{StaticResource Icon16}">
+                                        <Setter Property="Data" Value="{StaticResource IconClose}" />
+                                        <Setter Property="Stroke" Value="{DynamicResource WarningBaseBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True">
+                                                <Setter Property="Data" Value="{StaticResource IconCheck}" />
+                                                <Setter Property="Stroke" Value="{DynamicResource SuccessBaseBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Path.Style>
+                            </Path>
+                            <TextBlock Text="{Binding EditionLabel}"
+                                       Style="{StaticResource BodyStrongText}"
+                                       TextWrapping="Wrap"
+                                       AutomationProperties.LiveSetting="Polite" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <Border Style="{StaticResource AlertRowInfoStyle}" Margin="0,0,16,24">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Path Style="{StaticResource Icon20}"
+                          Data="{StaticResource IconInfo}"
+                          Stroke="{DynamicResource AccentTextBrush}"
+                          Margin="0,1,12,0"
+                          VerticalAlignment="Top" />
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding [FiveMHub.Scopes.Title], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource BodyStrongText}" />
+                        <TextBlock Text="{Binding [FiveMHub.Scopes.Description], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   Margin="0,5,0,0"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <TextBlock Text="{Binding [FiveMHub.Actions.Title], Source={StaticResource LocalizedStrings}}"
+                       Style="{StaticResource SectionText}"
+                       AutomationProperties.HeadingLevel="Level2" />
+            <TextBlock Text="{Binding [FiveMHub.Actions.Description], Source={StaticResource LocalizedStrings}}"
+                       Style="{StaticResource SecondaryText}"
+                       Margin="0,6,16,16"
+                       TextWrapping="Wrap" />
+
+            <WrapPanel>
+                <Border Style="{StaticResource FeatureCardSurface}"
+                        Width="330"
+                        MinHeight="268"
+                        Margin="0,0,16,16"
+                        AutomationProperties.Name="{Binding [FiveMHub.Optimizer.Title], Source={StaticResource LocalizedStrings}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Style="{StaticResource FeatureIconSurface}">
+                            <Path Style="{StaticResource Icon20}"
+                                  Data="{StaticResource IconGame}"
+                                  Stroke="{DynamicResource AccentTextBrush}" />
+                        </Border>
+                        <StackPanel Grid.Row="1" Margin="0,16,0,18">
+                            <TextBlock Text="{Binding [FiveMHub.Optimizer.Title], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SectionText}"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding [FiveMHub.Optimizer.Description], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SecondaryText}"
+                                       Margin="0,7,0,0"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding [FiveMHub.Optimizer.Scope], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="0,10,0,0"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Row="2"
+                                Content="{Binding [FiveMHub.Optimizer.Action], Source={StaticResource LocalizedStrings}}"
+                                Style="{StaticResource PrimaryButtonStyle}"
+                                HorizontalAlignment="Stretch"
+                                Click="OpenFiveMOptimizer_Click" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource FeatureCardSurface}"
+                        Width="330"
+                        MinHeight="268"
+                        Margin="0,0,16,16"
+                        AutomationProperties.Name="{Binding [FiveMHub.Windows.Title], Source={StaticResource LocalizedStrings}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Style="{StaticResource FeatureIconSurface}">
+                            <Path Style="{StaticResource Icon20}"
+                                  Data="{StaticResource IconWindows}"
+                                  Stroke="{DynamicResource AccentTextBrush}" />
+                        </Border>
+                        <StackPanel Grid.Row="1" Margin="0,16,0,18">
+                            <TextBlock Text="{Binding [FiveMHub.Windows.Title], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SectionText}"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding [FiveMHub.Windows.Description], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SecondaryText}"
+                                       Margin="0,7,0,0"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding [FiveMHub.Windows.Scope], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="0,10,0,0"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Row="2"
+                                Content="{Binding [FiveMHub.Windows.Action], Source={StaticResource LocalizedStrings}}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                HorizontalAlignment="Stretch"
+                                Click="OpenWindowsOptimizer_Click" />
+                    </Grid>
+                </Border>
+
+                <Border Style="{StaticResource FeatureCardSurface}"
+                        Width="330"
+                        MinHeight="268"
+                        Margin="0,0,16,16"
+                        AutomationProperties.Name="{Binding [FiveMHub.History.Title], Source={StaticResource LocalizedStrings}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Style="{StaticResource FeatureIconSurface}">
+                            <Path Style="{StaticResource Icon20}"
+                                  Data="{StaticResource IconHistory}"
+                                  Stroke="{DynamicResource AccentTextBrush}" />
+                        </Border>
+                        <StackPanel Grid.Row="1" Margin="0,16,0,18">
+                            <TextBlock Text="{Binding [FiveMHub.History.Title], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SectionText}"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding [FiveMHub.History.Description], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SecondaryText}"
+                                       Margin="0,7,0,0"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding [FiveMHub.History.Scope], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="0,10,0,0"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Row="2"
+                                Content="{Binding [FiveMHub.History.Action], Source={StaticResource LocalizedStrings}}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                HorizontalAlignment="Stretch"
+                                Click="OpenHistory_Click" />
+                    </Grid>
+                </Border>
+            </WrapPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

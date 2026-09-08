@@ -15,6 +15,7 @@ public partial class MainWindow
     private SystemPage SystemPage => systemPage ??= CreateDeferredPage<SystemPage>();
     private ApplicationsPage ApplicationsPage => applicationsPage ??= CreateApplicationsPage();
     private GamesPage GamesPage => gamesPage ??= CreateDeferredPage<GamesPage>();
+    private FiveMPage FiveMPage => fiveMPage ??= CreateDeferredPage<FiveMPage>();
     private OptimizerPage OptimizerPage => optimizerPage ??= CreateDeferredPage<OptimizerPage>();
     private HistoryPage HistoryPage => historyPage ??= CreateDeferredPage<HistoryPage>();
     private RalvenAiPage RalvenAiPage => ralvenAiPage ??= CreateRalvenAiPage();
@@ -119,6 +120,10 @@ public partial class MainWindow
         {
             gamesPage.Visibility = Visibility.Collapsed;
         }
+        if (fiveMPage is not null)
+        {
+            fiveMPage.Visibility = Visibility.Collapsed;
+        }
         if (optimizerPage is not null)
         {
             optimizerPage.Visibility = Visibility.Collapsed;
@@ -143,6 +148,18 @@ public partial class MainWindow
     // janela. Só as ações abaixo — que fecham o app, mostram diálogos de
     // confirmação nativos ou cruzam para outra página — precisam voltar para
     // o shell, que continua sendo o único dono desse estado.
+
+    internal void RequestNavigateToGames()
+    {
+        ActivateNavItem(GamesNav);
+        Navigate(GamesPage);
+    }
+
+    internal void RequestNavigateToFiveM()
+    {
+        ActivateNavItem(GamesNav);
+        Navigate(FiveMPage);
+    }
 
     internal void RequestNavigateToOptimizer(OptimizationScope scope = OptimizationScope.GeneralWindows)
     {

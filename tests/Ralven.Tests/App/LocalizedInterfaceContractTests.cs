@@ -43,6 +43,7 @@ public sealed partial class LocalizedInterfaceContractTests
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "SystemPage.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "ApplicationsPage.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "GamesPage.xaml"),
+            Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "FiveMPage.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "RalvenAiPage.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "OptimizerPage.xaml")
         };
@@ -75,6 +76,9 @@ public sealed partial class LocalizedInterfaceContractTests
         var navigation = File.ReadAllText(Path.Combine(appDirectory, "MainWindow.Navigation.xaml.cs"));
         var capture = File.ReadAllText(Path.Combine(appDirectory, "MainWindow.Capture.xaml.cs"));
         var gamesPage = File.ReadAllText(Path.Combine(appDirectory, "Views", "Pages", "GamesPage.xaml"));
+        var gamesPageCode = File.ReadAllText(Path.Combine(appDirectory, "Views", "Pages", "GamesPage.xaml.cs"));
+        var fiveMPage = File.ReadAllText(Path.Combine(appDirectory, "Views", "Pages", "FiveMPage.xaml"));
+        var fiveMPageCode = File.ReadAllText(Path.Combine(appDirectory, "Views", "Pages", "FiveMPage.xaml.cs"));
         var systemPage = File.ReadAllText(Path.Combine(appDirectory, "Views", "Pages", "SystemPage.xaml.cs"));
         var systemMarkup = File.ReadAllText(Path.Combine(appDirectory, "Views", "Pages", "SystemPage.xaml"));
         var applicationsView = File.ReadAllText(Path.Combine(appDirectory, "Views", "Pages", "ApplicationsPage.xaml"));
@@ -92,12 +96,19 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("Tag=\"Optimizer\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("[Navigation.Games]", mainWindow, StringComparison.Ordinal);
         Assert.Contains("\"Games\" => GamesPage", navigation, StringComparison.Ordinal);
+        Assert.Contains("private FiveMPage FiveMPage", navigation, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToFiveM()", gamesPageCode, StringComparison.Ordinal);
+        Assert.Contains("[FiveMHub.Actions.Title]", fiveMPage, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.FiveMLegacy)", fiveMPageCode, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.GeneralWindows)", fiveMPageCode, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToHistory()", fiveMPageCode, StringComparison.Ordinal);
         Assert.Contains("OptimizationScope.FiveMLegacy ? GamesNav : OptimizerNav", navigation, StringComparison.Ordinal);
         Assert.Contains("Games.FiveM.Action", gamesPage, StringComparison.Ordinal);
         Assert.Contains("FiveMGameCardSurface", gamesPage, StringComparison.Ordinal);
         Assert.Contains("Assets/FiveM.png", gamesPage, StringComparison.Ordinal);
         Assert.Contains("Height=\"570\"", gamesPage, StringComparison.Ordinal);
         Assert.Contains("\"Games\" => (Element: (UIElement)GamesPage, Nav: GamesNav)", capture, StringComparison.Ordinal);
+        Assert.Contains("\"FiveM\" => (Element: (UIElement)FiveMPage, Nav: GamesNav)", capture, StringComparison.Ordinal);
         Assert.Contains("\"Optimizer\" => ConfigureOptimizerCapture(OptimizationScope.GeneralWindows, OptimizerNav)", capture, StringComparison.Ordinal);
         Assert.Contains("\"FiveMOptimizer\" => ConfigureOptimizerCapture(OptimizationScope.FiveMLegacy, GamesNav)", capture, StringComparison.Ordinal);
         Assert.Contains("ms-settings:windowsupdate", systemPage, StringComparison.Ordinal);
@@ -568,6 +579,7 @@ public sealed partial class LocalizedInterfaceContractTests
         var appDirectory = Path.Combine(root, "src", "Ralven.App");
         var pageDirectory = Path.Combine(appDirectory, "Views", "Pages");
         var games = File.ReadAllText(Path.Combine(pageDirectory, "GamesPage.xaml"));
+        var fiveM = File.ReadAllText(Path.Combine(pageDirectory, "FiveMPage.xaml"));
         var history = File.ReadAllText(Path.Combine(pageDirectory, "HistoryPage.xaml"));
         var selector = XDocument.Load(Path.Combine(appDirectory, "Controls", "SpectrumSelector.xaml"));
         XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
@@ -575,6 +587,8 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("VerticalScrollBarVisibility=\"Auto\"", games, StringComparison.Ordinal);
         Assert.Contains("TextWrapping=\"Wrap\"", games, StringComparison.Ordinal);
+        Assert.Contains("VerticalScrollBarVisibility=\"Auto\"", fiveM, StringComparison.Ordinal);
+        Assert.Contains("TextWrapping=\"Wrap\"", fiveM, StringComparison.Ordinal);
         Assert.Contains("DataContext.IsBusy", history, StringComparison.Ordinal);
         Assert.DoesNotContain("IsEnabled=\"{Binding CanRollback}\"", history, StringComparison.Ordinal);
 

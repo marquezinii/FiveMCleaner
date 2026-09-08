@@ -75,6 +75,7 @@ public partial class MainWindow
                     "System" => (Element: (UIElement)SystemPage, Nav: SystemNav),
                     "Applications" => (Element: (UIElement)ApplicationsPage, Nav: ApplicationsNav),
                     "Games" => (Element: (UIElement)GamesPage, Nav: GamesNav),
+                    "FiveM" => (Element: (UIElement)FiveMPage, Nav: GamesNav),
                     "Pro" => ConfigureProCapture(arguments),
                     "RalvenAi" => ConfigureRalvenAiCapture(),
                     "Ultra" => ConfigureUltraCapture(true, arguments),

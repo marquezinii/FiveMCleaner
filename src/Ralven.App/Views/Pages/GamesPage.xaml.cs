@@ -1,5 +1,4 @@
 using System.Windows;
-using Ralven.Contracts;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Ralven.App.Views.Pages;
@@ -12,7 +11,7 @@ public partial class GamesPage : UserControl
     {
         if (Window.GetWindow(this) is MainWindow shell)
         {
-            shell.RequestNavigateToOptimizer(OptimizationScope.FiveMLegacy);
+            shell.RequestNavigateToFiveM();
         }
     }
 }

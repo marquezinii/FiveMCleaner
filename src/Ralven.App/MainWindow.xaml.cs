@@ -38,6 +38,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private SystemPage? systemPage;
     private ApplicationsPage? applicationsPage;
     private GamesPage? gamesPage;
+    private FiveMPage? fiveMPage;
     private OptimizerPage? optimizerPage;
     private HistoryPage? historyPage;
     private RalvenAiPage? ralvenAiPage;
