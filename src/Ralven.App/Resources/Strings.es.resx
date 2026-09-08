@@ -64,7 +64,6 @@
   <data name="FiveMHub.History.Description" xml:space="preserve"><value>Revisa las ejecuciones de FiveM y Windows, sus resultados reales y los cambios que todavía pueden restaurarse.</value></data>
   <data name="FiveMHub.History.Scope" xml:space="preserve"><value>Historial compartido de Ralven</value></data>
   <data name="FiveMHub.History.Action" xml:space="preserve"><value>Abrir historial</value></data>
-  <data name="Safety.Active" xml:space="preserve"><value>Protección activa</value></data>
   <data name="Safety.SnapshotRollback" xml:space="preserve"><value>La configuración se guarda antes de cambiar y puede restaurarse.</value></data>
   <data name="BugReport.Link" xml:space="preserve"><value>Reportar un error</value></data>
   <data name="BugReport.LinkTooltip" xml:space="preserve"><value>Abrir formulario de reporte de errores</value></data>
