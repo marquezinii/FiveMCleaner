@@ -34,14 +34,14 @@ e Inicialização permanece somente leitura. Busca, contagens e resultados
 parciais ficam na própria página; as superfícies nativas do Windows permanecem
 como ações secundárias. Jogos abre um
 catálogo interno que hoje contém somente FiveM sobre GTAV Legacy; o card leva ao
-otimizador especializado existente e mantém Jogos como a categoria ativa. Sistema apresenta internamente o diagnóstico de
-hardware já coletado pelo aplicativo e consulta, somente para leitura, a saúde
-agregada de antivírus, firewall e configuração de atualizações automáticas pela
-API nativa da Central de Segurança do Windows. Os atalhos para as superfícies
-nativas permanecem como ações secundárias. A mesma área oferece um painel
-dedicado de jogos do Windows: ele lê o Modo de Jogo e a gravação histórica em
-segundo plano e, com confirmação explícita, aplica somente as duas ações tipadas
-já existentes.
+otimizador especializado existente e mantém Jogos como a categoria ativa.
+Sistema apresenta internamente apenas as informações essenciais do hardware já
+coletado pelo aplicativo e consulta, somente para leitura, a proteção de
+antivírus, firewall e configuração de atualizações automáticas pela API nativa
+da Central de Segurança do Windows. A página não abre superfícies externas:
+mostra apenas dados lidos no próprio Ralven e o painel de jogos do Windows, que
+lê o Modo de Jogo e a gravação histórica em segundo plano e, com confirmação
+explícita, aplica somente as duas ações tipadas já existentes.
 
 `WindowsSystemHealthInspector` faz três consultas independentes e preserva
 resultados parciais. Falha da API ou serviço indisponível resulta em estado

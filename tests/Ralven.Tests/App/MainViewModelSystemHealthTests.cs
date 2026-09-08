@@ -22,11 +22,11 @@ public sealed class MainViewModelSystemHealthTests
         await viewModel.InitializeAsync();
         await viewModel.RefreshWindowsSystemHealthAsync();
 
-        Assert.Equal("Healthy", viewModel.WindowsAntivirusHealthLabel);
-        Assert.Equal("Attention needed", viewModel.WindowsFirewallHealthLabel);
-        Assert.Equal("Snoozed", viewModel.WindowsAutomaticUpdatesHealthLabel);
+        Assert.Equal("All good", viewModel.WindowsAntivirusHealthLabel);
+        Assert.Equal("Check this", viewModel.WindowsFirewallHealthLabel);
+        Assert.Equal("Paused", viewModel.WindowsAutomaticUpdatesHealthLabel);
         Assert.Equal(
-            "Windows Security Center provided all three health readings.",
+            "Windows reported the status of all three protections.",
             viewModel.WindowsSystemHealthStatusMessage);
     }
 
@@ -45,10 +45,10 @@ public sealed class MainViewModelSystemHealthTests
         await viewModel.InitializeAsync();
         await viewModel.RefreshWindowsSystemHealthAsync();
 
-        Assert.Equal("Unavailable", viewModel.WindowsFirewallHealthLabel);
+        Assert.Equal("Could not verify", viewModel.WindowsFirewallHealthLabel);
         Assert.Equal("Not monitored", viewModel.WindowsAutomaticUpdatesHealthLabel);
         Assert.StartsWith(
-            "Windows reported only part",
+            "Windows could only verify part",
             viewModel.WindowsSystemHealthStatusMessage,
             StringComparison.Ordinal);
     }
@@ -61,9 +61,9 @@ public sealed class MainViewModelSystemHealthTests
         await viewModel.InitializeAsync();
         await viewModel.RefreshWindowsSystemHealthAsync();
 
-        Assert.Equal("Unavailable", viewModel.WindowsAntivirusHealthLabel);
+        Assert.Equal("Could not verify", viewModel.WindowsAntivirusHealthLabel);
         Assert.Equal(
-            "Windows Security Center could not provide this health information. — Error code: SEC_HEALTH_QUERY",
+            "Ralven could not verify this information with Windows. — Error code: SEC_HEALTH_QUERY",
             viewModel.WindowsSystemHealthStatusMessage);
         Assert.True(viewModel.CanRefreshWindowsSystemHealth);
     }
@@ -84,7 +84,7 @@ public sealed class MainViewModelSystemHealthTests
         Assert.Equal("Test GPU", viewModel.GpuDetail);
         Assert.Equal("Windows 11", viewModel.WindowsLabel);
         Assert.Equal(
-            "These details were collected locally by Ralven.",
+            "Information updated on this PC.",
             viewModel.SystemPcStatusMessage);
     }
 

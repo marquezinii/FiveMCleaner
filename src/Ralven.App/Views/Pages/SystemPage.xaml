@@ -3,29 +3,268 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="820"
+             mc:Ignorable="d"
+             d:DesignWidth="1400"
+             d:DesignHeight="820"
              IsVisibleChanged="SystemPage_IsVisibleChanged">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <Grid Margin="28,24,28,28">
+    <ScrollViewer x:Name="PageScrollViewer"
+                  VerticalScrollBarVisibility="Auto"
+                  HorizontalScrollBarVisibility="Disabled">
+        <Grid MinHeight="{Binding ViewportHeight, ElementName=PageScrollViewer}"
+              Margin="28,24,28,28"
+              MaxWidth="1280"
+              HorizontalAlignment="Stretch">
             <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0" Style="{StaticResource TitleBlockSurface}">
-                <StackPanel>
-                    <TextBlock Text="{Binding [System.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" />
-                    <Rectangle Style="{StaticResource TitleAccentRule}" Margin="0,10,0,0" />
-                    <TextBlock Text="{Binding [System.Subtitle], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,12,0,0" />
-                </StackPanel>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Margin="0,0,24,0">
+                        <TextBlock Text="{Binding [System.Title], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource PageTitleText}" />
+                        <Rectangle Style="{StaticResource TitleAccentRule}" Margin="0,10,0,0" />
+                        <TextBlock Text="{Binding [System.Subtitle], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   MaxWidth="760"
+                                   HorizontalAlignment="Left"
+                                   Margin="0,12,0,0"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <Button Grid.Column="1"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            VerticalAlignment="Top"
+                            IsEnabled="{Binding CanRefreshWindowsGamingSettings}"
+                            AutomationProperties.Name="{Binding [System.Refresh], Source={StaticResource LocalizedStrings}}"
+                            Click="RefreshSystem_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <Path Data="{StaticResource IconRefresh}" Style="{StaticResource Icon16}" />
+                            <TextBlock Text="{Binding [System.Refresh], Source={StaticResource LocalizedStrings}}" Margin="8,0,0,0" />
+                        </StackPanel>
+                    </Button>
+                </Grid>
             </Border>
 
-            <Border Grid.Row="1"
-                    Style="{StaticResource FeatureCardSurface}"
-                    Margin="0,0,0,16"
-                    VerticalAlignment="Top"
+            <Grid Grid.Row="1" Margin="0,0,0,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.15*" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0"
+                        Style="{StaticResource PanelSurface}"
+                        Padding="24"
+                        Margin="0,0,8,0"
+                        AutomationProperties.Name="{Binding [System.About.Title], Source={StaticResource LocalizedStrings}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource FeatureIconSurface}">
+                                <Path Style="{StaticResource Icon20}"
+                                      Data="{StaticResource IconInfo}"
+                                      Stroke="{DynamicResource AccentTextBrush}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding [System.About.Title], Source={StaticResource LocalizedStrings}}"
+                                           Style="{StaticResource SectionText}" />
+                                <TextBlock Text="{Binding [System.About.Description], Source={StaticResource LocalizedStrings}}"
+                                           Style="{StaticResource SecondaryText}"
+                                           Margin="0,6,0,0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Grid.Row="1" Style="{StaticResource HairlineDivider}" Margin="0,20,0,18" />
+
+                        <Grid Grid.Row="2">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,18">
+                                <TextBlock Text="{Binding [System.Pc.Windows], Source={StaticResource LocalizedStrings}}"
+                                           Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="{Binding WindowsLabel}"
+                                           Style="{StaticResource BodyStrongText}"
+                                           Margin="0,4,0,0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,18,18">
+                                <TextBlock Text="{Binding [System.Pc.Cpu], Source={StaticResource LocalizedStrings}}"
+                                           Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="{Binding CpuName}"
+                                           Style="{StaticResource BodyStrongText}"
+                                           Margin="0,4,0,0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="18,0,0,18">
+                                <TextBlock Text="{Binding [System.Pc.Gpu], Source={StaticResource LocalizedStrings}}"
+                                           Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="{Binding GpuDetail}"
+                                           Style="{StaticResource BodyStrongText}"
+                                           Margin="0,4,0,0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Grid.Column="0" Margin="0,0,18,0">
+                                <TextBlock Text="{Binding [System.Pc.Memory], Source={StaticResource LocalizedStrings}}"
+                                           Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="{Binding RamLabel}"
+                                           Style="{StaticResource BodyStrongText}"
+                                           Margin="0,4,0,0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                            <StackPanel Grid.Row="2" Grid.Column="1" Margin="18,0,0,0">
+                                <TextBlock Text="{Binding [System.Pc.Disk], Source={StaticResource LocalizedStrings}}"
+                                           Style="{StaticResource CaptionText}" />
+                                <TextBlock Text="{Binding DiskLabel}"
+                                           Style="{StaticResource BodyStrongText}"
+                                           Margin="0,4,0,0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+
+                        <StackPanel Grid.Row="3" Margin="0,20,0,0">
+                            <TextBlock Text="{Binding SystemPcStatusMessage}"
+                                       Style="{StaticResource SecondaryText}"
+                                       TextWrapping="Wrap"
+                                       AutomationProperties.LiveSetting="Polite" />
+                            <TextBlock Text="{Binding LastScanLabel}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="1"
+                        Style="{StaticResource PanelSurface}"
+                        Padding="24"
+                        Margin="8,0,0,0"
+                        AutomationProperties.Name="{Binding [System.Health.Title], Source={StaticResource LocalizedStrings}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+                            <Border Style="{StaticResource FeatureIconSurface}">
+                                <Path Style="{StaticResource Icon20}"
+                                      Data="{StaticResource IconShield}"
+                                      Stroke="{DynamicResource AccentTextBrush}"
+                                      HorizontalAlignment="Center"
+                                      VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding [System.Health.Title], Source={StaticResource LocalizedStrings}}"
+                                           Style="{StaticResource SectionText}" />
+                                <TextBlock Text="{Binding [System.Health.Description], Source={StaticResource LocalizedStrings}}"
+                                           Style="{StaticResource SecondaryText}"
+                                           Margin="0,6,0,0"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                        </Grid>
+
+                        <Border Grid.Row="1" Style="{StaticResource HairlineDivider}" Margin="0,20,0,0" />
+
+                        <StackPanel Grid.Row="2">
+                            <Border Style="{StaticResource SettingRowStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding [System.Health.Antivirus], Source={StaticResource LocalizedStrings}}"
+                                               Style="{StaticResource BodyText}"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding WindowsAntivirusHealthLabel}"
+                                               Style="{StaticResource BodyStrongText}"
+                                               Margin="16,0,0,0"
+                                               VerticalAlignment="Center"
+                                               AutomationProperties.LiveSetting="Polite" />
+                                </Grid>
+                            </Border>
+                            <Border Style="{StaticResource SettingRowStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding [System.Health.Firewall], Source={StaticResource LocalizedStrings}}"
+                                               Style="{StaticResource BodyText}"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding WindowsFirewallHealthLabel}"
+                                               Style="{StaticResource BodyStrongText}"
+                                               Margin="16,0,0,0"
+                                               VerticalAlignment="Center"
+                                               AutomationProperties.LiveSetting="Polite" />
+                                </Grid>
+                            </Border>
+                            <Border Style="{StaticResource SettingRowStyle}" BorderThickness="0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <TextBlock Text="{Binding [System.Health.AutomaticUpdates], Source={StaticResource LocalizedStrings}}"
+                                               Style="{StaticResource BodyText}"
+                                               TextWrapping="Wrap"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding WindowsAutomaticUpdatesHealthLabel}"
+                                               Style="{StaticResource BodyStrongText}"
+                                               Margin="16,0,0,0"
+                                               VerticalAlignment="Center"
+                                               AutomationProperties.LiveSetting="Polite" />
+                                </Grid>
+                            </Border>
+                        </StackPanel>
+
+                        <StackPanel Grid.Row="3" Margin="0,14,0,0">
+                            <TextBlock Text="{Binding WindowsSystemHealthStatusMessage}"
+                                       Style="{StaticResource SecondaryText}"
+                                       TextWrapping="Wrap"
+                                       AutomationProperties.LiveSetting="Polite" />
+                            <TextBlock Text="{Binding WindowsSystemHealthUpdatedLabel}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Border Grid.Row="2"
+                    Style="{StaticResource PanelSurface}"
+                    Padding="24"
                     AutomationProperties.Name="{Binding [System.Gaming.Title], Source={StaticResource LocalizedStrings}}">
                 <Grid>
                     <Grid.RowDefinitions>
@@ -39,42 +278,74 @@
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
                         <Border Style="{StaticResource FeatureIconSurface}">
-                            <Path Style="{StaticResource Icon20}" Data="{StaticResource IconGame}" Stroke="{DynamicResource AccentTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            <Path Style="{StaticResource Icon20}"
+                                  Data="{StaticResource IconGame}"
+                                  Stroke="{DynamicResource AccentTextBrush}"
+                                  HorizontalAlignment="Center"
+                                  VerticalAlignment="Center" />
                         </Border>
                         <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding [System.Gaming.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" />
-                            <TextBlock Text="{Binding [System.Gaming.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,6,0,0" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding [System.Gaming.Title], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SectionText}" />
+                            <TextBlock Text="{Binding [System.Gaming.Description], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SecondaryText}"
+                                       Margin="0,6,0,0"
+                                       MaxWidth="860"
+                                       HorizontalAlignment="Left"
+                                       TextWrapping="Wrap" />
                         </StackPanel>
                     </Grid>
 
-                    <Border Grid.Row="1" Style="{StaticResource AlertRowInfoStyle}" Margin="0,18,0,0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Margin="0,0,12,0">
-                                <TextBlock Text="{Binding [System.Gaming.GameMode], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
-                                <TextBlock Text="{Binding WindowsGameModeStateLabel}"
-                                           Style="{StaticResource BodyText}"
-                                           FontWeight="SemiBold"
-                                           Margin="0,4,0,0"
+                    <Grid Grid.Row="1" Margin="0,20,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Style="{StaticResource SettingsCardStyle}" Margin="0,0,8,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,18,0">
+                                    <TextBlock Text="{Binding [System.Gaming.GameMode], Source={StaticResource LocalizedStrings}}"
+                                               Style="{StaticResource BodyStrongText}" />
+                                    <TextBlock Text="{Binding [System.Gaming.Target.Enabled], Source={StaticResource LocalizedStrings}}"
+                                               Style="{StaticResource CaptionText}"
+                                               Margin="0,5,0,0"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding WindowsGameModeStateLabel}"
+                                           Style="{StaticResource BodyStrongText}"
+                                           VerticalAlignment="Center"
                                            AutomationProperties.LiveSetting="Polite" />
-                                <TextBlock Text="{Binding [System.Gaming.Target.Enabled], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,3,0,0" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Margin="12,0,0,0">
-                                <TextBlock Text="{Binding [System.Gaming.BackgroundCapture], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
-                                <TextBlock Text="{Binding WindowsBackgroundCaptureStateLabel}"
-                                           Style="{StaticResource BodyText}"
-                                           FontWeight="SemiBold"
-                                           Margin="0,4,0,0"
+                            </Grid>
+                        </Border>
+                        <Border Grid.Column="1" Style="{StaticResource SettingsCardStyle}" Margin="8,0,0,0">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Margin="0,0,18,0">
+                                    <TextBlock Text="{Binding [System.Gaming.BackgroundCapture], Source={StaticResource LocalizedStrings}}"
+                                               Style="{StaticResource BodyStrongText}" />
+                                    <TextBlock Text="{Binding [System.Gaming.Target.Disabled], Source={StaticResource LocalizedStrings}}"
+                                               Style="{StaticResource CaptionText}"
+                                               Margin="0,5,0,0"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding WindowsBackgroundCaptureStateLabel}"
+                                           Style="{StaticResource BodyStrongText}"
+                                           VerticalAlignment="Center"
                                            AutomationProperties.LiveSetting="Polite" />
-                                <TextBlock Text="{Binding [System.Gaming.Target.Disabled], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,3,0,0" TextWrapping="Wrap" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
+                            </Grid>
+                        </Border>
+                    </Grid>
 
-                    <Grid Grid.Row="2" Margin="0,14,0,0">
+                    <Grid Grid.Row="2" Margin="0,10,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
@@ -83,191 +354,24 @@
                                    Style="{StaticResource SecondaryText}"
                                    TextWrapping="Wrap"
                                    VerticalAlignment="Center"
-                                   Margin="0,0,20,0"
+                                   Margin="0,0,24,0"
                                    AutomationProperties.LiveSetting="Polite" />
-                        <WrapPanel Grid.Column="1" HorizontalAlignment="Right">
-                            <Button Content="{Binding [System.Gaming.Refresh], Source={StaticResource LocalizedStrings}}"
-                                    Style="{StaticResource SecondaryButtonStyle}"
-                                    MinHeight="40"
-                                    Padding="14,0"
-                                    Margin="0,0,8,0"
-                                    IsEnabled="{Binding CanRefreshWindowsGamingSettings}"
-                                    Click="RefreshWindowsGaming_Click" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <Button Content="{Binding [System.Gaming.Apply], Source={StaticResource LocalizedStrings}}"
                                     Style="{StaticResource PrimaryButtonStyle}"
                                     MinHeight="40"
-                                    Padding="14,0"
+                                    Padding="16,0"
                                     Margin="0,0,8,0"
                                     IsEnabled="{Binding CanApplyWindowsGamingSettings}"
                                     Click="ApplyWindowsGaming_Click" />
                             <Button Content="{Binding [System.Gaming.Restore], Source={StaticResource LocalizedStrings}}"
                                     Style="{StaticResource SecondaryButtonStyle}"
                                     MinHeight="40"
-                                    Padding="14,0"
+                                    Padding="16,0"
                                     IsEnabled="{Binding CanRestoreWindowsGamingSettings}"
                                     Click="RestoreWindowsGaming_Click" />
-                        </WrapPanel>
-                    </Grid>
-                </Grid>
-            </Border>
-
-            <Border Grid.Row="2"
-                    Style="{StaticResource FeatureCardSurface}"
-                    Margin="0,0,0,16"
-                    AutomationProperties.Name="{Binding [System.Health.Title], Source={StaticResource LocalizedStrings}}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Border Style="{StaticResource FeatureIconSurface}">
-                            <Path Style="{StaticResource Icon20}" Data="{StaticResource IconShield}" Stroke="{DynamicResource AccentTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding [System.Health.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" />
-                            <TextBlock Text="{Binding [System.Health.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,6,0,0" TextWrapping="Wrap" />
                         </StackPanel>
                     </Grid>
-
-                    <Border Grid.Row="1" Style="{StaticResource AlertRowInfoStyle}" Margin="0,18,0,0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <StackPanel Margin="0,0,12,0">
-                                <TextBlock Text="{Binding [System.Health.Antivirus], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
-                                <TextBlock Text="{Binding WindowsAntivirusHealthLabel}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,4,0,0" AutomationProperties.LiveSetting="Polite" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Margin="12,0">
-                                <TextBlock Text="{Binding [System.Health.Firewall], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
-                                <TextBlock Text="{Binding WindowsFirewallHealthLabel}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,4,0,0" AutomationProperties.LiveSetting="Polite" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Margin="12,0,0,0">
-                                <TextBlock Text="{Binding [System.Health.AutomaticUpdates], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
-                                <TextBlock Text="{Binding WindowsAutomaticUpdatesHealthLabel}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,4,0,0" AutomationProperties.LiveSetting="Polite" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <StackPanel Grid.Row="2" Margin="0,14,0,0">
-                        <TextBlock Text="{Binding WindowsSystemHealthStatusMessage}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
-                        <TextBlock Text="{Binding WindowsSystemHealthUpdatedLabel}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" />
-                    </StackPanel>
-
-                    <WrapPanel Grid.Row="3" Margin="0,14,0,0">
-                        <Button Content="{Binding [System.Health.Refresh], Source={StaticResource LocalizedStrings}}"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                MinHeight="40"
-                                Padding="14,0"
-                                Margin="0,0,8,8"
-                                IsEnabled="{Binding CanRefreshWindowsSystemHealth}"
-                                Click="RefreshWindowsSystemHealth_Click" />
-                        <Button Content="{Binding [System.Security.Action], Source={StaticResource LocalizedStrings}}"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                MinHeight="40"
-                                Padding="14,0"
-                                Margin="0,0,8,8"
-                                Click="OpenSecurity_Click" />
-                        <Button Content="{Binding [System.WindowsUpdate.Action], Source={StaticResource LocalizedStrings}}"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                MinHeight="40"
-                                Padding="14,0"
-                                Margin="0,0,0,8"
-                                Click="OpenWindowsUpdate_Click" />
-                    </WrapPanel>
-                </Grid>
-            </Border>
-
-            <Border Grid.Row="3"
-                    Style="{StaticResource FeatureCardSurface}"
-                    AutomationProperties.Name="{Binding [System.About.Title], Source={StaticResource LocalizedStrings}}">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto" />
-                            <ColumnDefinition Width="*" />
-                        </Grid.ColumnDefinitions>
-                        <Border Style="{StaticResource FeatureIconSurface}">
-                            <Path Style="{StaticResource Icon20}" Data="{StaticResource IconInfo}" Stroke="{DynamicResource AccentTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <StackPanel Grid.Column="1" Margin="16,0,0,0" VerticalAlignment="Center">
-                            <TextBlock Text="{Binding [System.About.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" />
-                            <TextBlock Text="{Binding [System.About.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,6,0,0" TextWrapping="Wrap" />
-                        </StackPanel>
-                    </Grid>
-
-                    <Border Grid.Row="1" Style="{StaticResource AlertRowInfoStyle}" Margin="0,18,0,0">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
-                            <StackPanel Margin="0,0,16,14">
-                                <TextBlock Text="{Binding [System.Pc.Windows], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
-                                <TextBlock Text="{Binding WindowsLabel}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,4,0,0" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Margin="16,0,0,14">
-                                <TextBlock Text="{Binding [System.Pc.Cpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
-                                <TextBlock Text="{Binding CpuName}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,4,0,0" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <StackPanel Grid.Row="1" Margin="0,0,16,14">
-                                <TextBlock Text="{Binding [System.Pc.Gpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
-                                <TextBlock Text="{Binding GpuDetail}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,4,0,0" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="16,0,0,14">
-                                <TextBlock Text="{Binding [System.Pc.Memory], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
-                                <TextBlock Text="{Binding RamLabel}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,4,0,0" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <StackPanel Grid.Row="2" Margin="0,0,16,0">
-                                <TextBlock Text="{Binding [System.Pc.Disk], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
-                                <TextBlock Text="{Binding DiskLabel}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,4,0,0" TextWrapping="Wrap" />
-                            </StackPanel>
-                            <StackPanel Grid.Row="2" Grid.Column="1" Margin="16,0,0,0">
-                                <TextBlock Text="{Binding [System.Pc.LogicalProcessors], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" />
-                                <TextBlock Text="{Binding LogicalProcessorLabel}" Style="{StaticResource BodyText}" FontWeight="SemiBold" Margin="0,4,0,0" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-
-                    <StackPanel Grid.Row="2" Margin="0,14,0,0">
-                        <TextBlock Text="{Binding SystemPcStatusMessage}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
-                        <TextBlock Text="{Binding LastScanLabel}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" />
-                    </StackPanel>
-
-                    <WrapPanel Grid.Row="3" Margin="0,14,0,0">
-                        <Button Content="{Binding [System.Pc.Refresh], Source={StaticResource LocalizedStrings}}"
-                                Style="{StaticResource PrimaryButtonStyle}"
-                                MinHeight="40"
-                                Padding="14,0"
-                                Margin="0,0,8,0"
-                                IsEnabled="{Binding CanRefresh}"
-                                Click="RefreshDiagnostic_Click" />
-                        <Button Content="{Binding [System.About.Action], Source={StaticResource LocalizedStrings}}"
-                                Style="{StaticResource SecondaryButtonStyle}"
-                                MinHeight="40"
-                                Padding="14,0"
-                                Click="OpenAbout_Click" />
-                    </WrapPanel>
                 </Grid>
             </Border>
         </Grid>

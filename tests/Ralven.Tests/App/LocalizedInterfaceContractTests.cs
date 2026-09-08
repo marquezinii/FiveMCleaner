@@ -100,7 +100,9 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("\"Games\" => (Element: (UIElement)GamesPage, Nav: GamesNav)", capture, StringComparison.Ordinal);
         Assert.Contains("\"Optimizer\" => ConfigureOptimizerCapture(OptimizationScope.GeneralWindows, OptimizerNav)", capture, StringComparison.Ordinal);
         Assert.Contains("\"FiveMOptimizer\" => ConfigureOptimizerCapture(OptimizationScope.FiveMLegacy, GamesNav)", capture, StringComparison.Ordinal);
-        Assert.Contains("ms-settings:windowsupdate", systemPage, StringComparison.Ordinal);
+        Assert.DoesNotContain("ms-settings:", systemPage, StringComparison.Ordinal);
+        Assert.DoesNotContain("Process.Start", systemPage, StringComparison.Ordinal);
+        Assert.Contains("RefreshSystem_Click", systemPage, StringComparison.Ordinal);
         Assert.Contains("ApplyWindowsGamingSettingsAsync", systemPage, StringComparison.Ordinal);
         Assert.Contains("RestoreWindowsGamingSettingsAsync", systemPage, StringComparison.Ordinal);
         Assert.Contains("WindowsAntivirusHealthLabel", systemMarkup, StringComparison.Ordinal);

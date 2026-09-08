@@ -104,13 +104,15 @@ estado de atualização automática não comprova que o Windows está atualizado
 o painel não busca, baixa, instala ou aprova atualizações. Essas leituras não
 usam broker, elevação, PowerShell, linha de comando ou acesso de rede.
 
-As ações que abrem Segurança do Windows, Windows Update e Sobre continuam
-secundárias e delegam qualquer alteração às superfícies protegidas do próprio
-sistema operacional.
+A página Sistema não abre Segurança do Windows, Windows Update ou Sobre. Ela
+mostra somente os dados que o Ralven consegue ler com segurança e oferece apenas
+as ações tipadas de jogos implementadas dentro do aplicativo. Um estado de
+proteção que exige atenção permanece informativo; ele não autoriza correção
+automática, alteração de antivírus, firewall ou Windows Update.
 
-O painel **Sistema > Jogos do Windows** é uma exceção explícita ao antigo
-comportamento somente de atalhos da página Sistema, não uma autorização para
-alterações genéricas no Windows. Seu escopo é fixo:
+O painel **Sistema > Preparar o Windows para jogos** é uma exceção explícita ao
+antigo comportamento somente de atalhos da página Sistema, não uma autorização
+para alterações genéricas no Windows. Seu escopo é fixo:
 
 - lê e altera somente `HKCU\Software\Microsoft\GameBar\AutoGameModeEnabled`
   e `HKCU\Software\Microsoft\Windows\CurrentVersion\GameDVR\HistoricalCaptureEnabled`;

@@ -1,8 +1,15 @@
 # Objetivo da tarefa
 
-- **Agente:** Codex
-- **Objetivo:** validar e endurecer os fluxos da aba Aplicativos sem ampliar o escopo do produto.
-- **Escopo:** descoberta, inventário, inicialização somente leitura, pesquisa, instalação, atualização, desinstalação e preferências de atualizações ignoradas por WinGet.
-- **Fora do escopo:** outras abas, otimizações, broker, updater, instalador, fontes fora de `winget`/`msstore` e mudanças de release.
-- **Critérios de conclusão:** fluxos rastreados de UI a serviço Windows; entradas e operações validadas; correções mínimas cobertas por testes; build e testes relevantes executados.
-- **Resultado entregue:** o serviço WinGet agora recusa executáveis fora do alias oficial do usuário; teste de regressão adicionado e a simulação do caminho oficial foi tornada independente do perfil local.
+- **Agente:** Codex.
+- **Objetivo:** simplificar a aba Sistema para usuários comuns, mantendo nela
+  informações essenciais e ações executadas pelo próprio Ralven.
+- **Escopo:** reorganização da interface e dos textos públicos da aba Sistema,
+  reutilizando diagnóstico, controles e segurança existentes; não inclui novos
+  tweaks, suporte a GTAV Enhanced nem operações administrativas genéricas.
+- **Critérios de conclusão:** somente informações básicas na leitura principal,
+  ações internas claramente identificadas, localização equivalente em PT-BR,
+  inglês e espanhol, testes e build aplicáveis aprovados.
+- **Resultado entregue:** aba reorganizada em três blocos de leitura simples,
+  com atualização única, sem atalhos para telas do Windows e com os ajustes de
+  jogos existentes preservados dentro do fluxo transacional do Ralven. Textos,
+  documentação e contrato de interface foram atualizados nos três idiomas.
