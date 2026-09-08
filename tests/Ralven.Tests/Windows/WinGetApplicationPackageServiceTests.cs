@@ -5,8 +5,11 @@ namespace Ralven.Tests.Windows;
 
 public sealed class WinGetApplicationPackageServiceTests
 {
-    private const string WinGetPath =
-        @"C:\Users\tester\AppData\Local\Microsoft\WindowsApps\winget.exe";
+    private static readonly string WinGetPath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+        "Microsoft",
+        "WindowsApps",
+        "winget.exe");
 
     [Fact]
     public void ParseUpdates_ParsesTheFixedWidthTableAndRejectsTruncatedIds()
@@ -113,6 +116,14 @@ public sealed class WinGetApplicationPackageServiceTests
             TestContext.Current.CancellationToken));
 
         Assert.Empty(runner.Calls);
+    }
+
+    [Fact]
+    public void Constructor_RejectsExecutableOutsideTheOfficialWinGetAlias()
+    {
+        Assert.Throws<ArgumentException>(() => new WinGetApplicationPackageService(
+            new RecordingCommandRunner(),
+            Path.Combine(Path.GetTempPath(), "winget.exe")));
     }
 
     [Fact]
