@@ -21,7 +21,6 @@ com a permissão de repositório **Contents: write**, e salve-o no repositório
 Ralven como `VEMRYX_SITE_DISPATCH_TOKEN`. Esse é o único acesso entre os dois
 repositórios; ele só pode disparar o evento de sincronização.
 
-No repositório do site, configure `CLOUDFLARE_API_TOKEN` e
-`CLOUDFLARE_ACCOUNT_ID` como GitHub Actions secrets. O token do Cloudflare deve
-ser restrito à conta e ao Worker do site. Sem esses secrets, os workflows falham
-antes de publicar e não expõem nenhuma credencial.
+O site valida o JSON antes de fazer um commit automático somente quando o
+conteúdo mudou. A integração Cloudflare–GitHub já conectada ao `main` publica
+esse commit; não há token do Cloudflare no workflow do Roadmap.
