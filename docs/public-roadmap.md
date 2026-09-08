@@ -8,10 +8,11 @@ Atualize-o no mesmo pull request que integra uma capacidade pronta para ser
 comunicada publicamente na próxima versão. Cada item exige `id` estável e
 textos não vazios em PT e EN para `status`, `title` e `description`.
 
-Somente inclua mudanças já integradas em `dev/proxima-versao`, sem datas,
-promessas de desempenho ou recursos especulativos. Ao ser alterado nessa
-branch, o workflow `Sync public roadmap` notifica o repositório do site para
-validar e publicar a cópia estática.
+Inclua somente capacidades que o mesmo Pull Request integrará em
+`dev/proxima-versao` ou que já estejam nessa branch, sem datas, promessas de
+desempenho ou recursos especulativos. Ao ser alterado nessa branch, o workflow
+`Sync public roadmap` notifica o repositório do site para validar e publicar a
+cópia estática.
 
 ## Configuração inicial
 
