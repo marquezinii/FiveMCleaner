@@ -237,6 +237,54 @@
                     </Grid>
                 </Border>
             </WrapPanel>
+
+            <Border Style="{StaticResource FeatureCardSurface}"
+                    Margin="0,0,16,0"
+                    AutomationProperties.Name="{Binding [FiveMHub.ReShade.Title], Source={StaticResource LocalizedStrings}}">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="84" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <Border Width="64"
+                            Height="64"
+                            Background="{DynamicResource Surface3Brush}"
+                            BorderBrush="{DynamicResource BorderStrongBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource RadiusLg}"
+                            HorizontalAlignment="Left"
+                            VerticalAlignment="Center">
+                        <Image Source="/Ralven;component/Assets/ReShade.png"
+                               Width="48"
+                               Height="48"
+                               Stretch="Uniform"
+                               SnapsToDevicePixels="True"
+                               RenderOptions.BitmapScalingMode="HighQuality" />
+                    </Border>
+
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center" Margin="0,0,28,0">
+                        <TextBlock Text="{Binding [FiveMHub.ReShade.Title], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SectionText}" />
+                        <TextBlock Text="{Binding [FiveMHub.ReShade.Description], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   Margin="0,7,0,0"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding [FiveMHub.ReShade.Note], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource CaptionText}"
+                                   Margin="0,9,0,0"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <Button Grid.Column="2"
+                            Content="{Binding [FiveMHub.ReShade.Action], Source={StaticResource LocalizedStrings}}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            MinWidth="168"
+                            VerticalAlignment="Center"
+                            Click="InstallReShade_Click" />
+                </Grid>
+            </Border>
         </StackPanel>
     </ScrollViewer>
 </UserControl>
