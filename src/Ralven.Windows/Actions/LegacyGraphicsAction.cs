@@ -265,19 +265,13 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
         IReadOnlyDictionary<string, string> preset,
         GraphicsPresetDirection direction)
     {
-        this.settingsPath = Path.GetFullPath(settingsPath);
+        this.settingsPath = GraphicsSettingsFile.ValidatePath(
+            settingsPath,
+            target,
+            "gráfico",
+            nameof(settingsPath));
         this.target = target;
         this.direction = direction;
-        var expectedFileName = target == GraphicsSettingsTarget.FiveM
-            ? "gta5_settings.xml"
-            : "settings.xml";
-        if (!Path.GetFileName(this.settingsPath).Equals(expectedFileName, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException(
-                $"O alvo gráfico deve apontar para {expectedFileName}.",
-                nameof(settingsPath));
-        }
-
         this.gameRoot = string.IsNullOrWhiteSpace(gameRoot)
             ? null
             : SafePath.Normalize(gameRoot);
@@ -312,11 +306,7 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
                 "A instalação do GTA V Legacy não foi confirmada; o settings.xml não será alterado."));
         }
 
-        try
-        {
-            _ = File.GetAttributes(settingsPath);
-        }
-        catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
+        if (!GraphicsSettingsFile.Exists(settingsPath))
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
                 target == GraphicsSettingsTarget.FiveM
@@ -377,10 +367,7 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
             }
 
             verified++;
-            var shouldChange = direction == GraphicsPresetDirection.LowerOnly
-                ? ShouldLowerValue(setting.Key, attribute.Value, setting.Value)
-                : ShouldRaiseValue(setting.Key, attribute.Value, setting.Value);
-            if (!shouldChange)
+            if (!ShouldChangeValue(direction, setting.Key, attribute.Value, setting.Value))
             {
                 continue;
             }
@@ -450,15 +437,27 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
         };
     }
 
-    private static bool ShouldLowerValue(string name, string currentValue, string desiredValue)
+    /// <summary>
+    /// Um preset só toca um valor que se move na direção declarada:
+    /// <see cref="GraphicsPresetDirection.LowerOnly"/> reduz (true → false,
+    /// número maior → menor) e a direção oposta só aumenta. Valores que não
+    /// forem reconhecidos como booleano ou decimal invariante permanecem
+    /// intocados em ambas as direções.
+    /// </summary>
+    private static bool ShouldChangeValue(
+        GraphicsPresetDirection direction,
+        string name,
+        string currentValue,
+        string desiredValue)
     {
         ValidatePresetValue(name, desiredValue);
+        var lowering = direction == GraphicsPresetDirection.LowerOnly;
         if (IsBooleanSetting(name))
         {
             return bool.TryParse(currentValue, out var current)
                 && bool.TryParse(desiredValue, out var desired)
-                && current
-                && !desired;
+                && current != desired
+                && current == lowering;
         }
 
         return decimal.TryParse(
@@ -471,31 +470,9 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
                 NumberStyles.Number,
                 CultureInfo.InvariantCulture,
                 out var desiredNumber)
-            && currentNumber > desiredNumber;
-    }
-
-    private static bool ShouldRaiseValue(string name, string currentValue, string desiredValue)
-    {
-        ValidatePresetValue(name, desiredValue);
-        if (IsBooleanSetting(name))
-        {
-            return bool.TryParse(currentValue, out var current)
-                && bool.TryParse(desiredValue, out var desired)
-                && !current
-                && desired;
-        }
-
-        return decimal.TryParse(
-                   currentValue,
-                   NumberStyles.Number,
-                   CultureInfo.InvariantCulture,
-                   out var currentNumber)
-            && decimal.TryParse(
-                desiredValue,
-                NumberStyles.Number,
-                CultureInfo.InvariantCulture,
-                out var desiredNumber)
-            && currentNumber < desiredNumber;
+            && (lowering
+                ? currentNumber > desiredNumber
+                : currentNumber < desiredNumber);
     }
 
     private static bool IsCompatibleCurrentValue(string name, string value)

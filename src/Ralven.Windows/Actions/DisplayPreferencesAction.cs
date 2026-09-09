@@ -48,18 +48,12 @@ public sealed class DisplayPreferencesAction : WindowsOptimizationAction
         IFiveMProcessInspector processInspector,
         IGtaVProcessInspector gtaVProcessInspector)
     {
-        this.settingsPath = Path.GetFullPath(settingsPath);
+        this.settingsPath = GraphicsSettingsFile.ValidatePath(
+            settingsPath,
+            target,
+            "de exibição",
+            nameof(settingsPath));
         this.target = target;
-        var expectedFileName = target == GraphicsSettingsTarget.FiveM
-            ? "gta5_settings.xml"
-            : "settings.xml";
-        if (!Path.GetFileName(this.settingsPath).Equals(expectedFileName, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new ArgumentException(
-                $"O alvo de exibição deve apontar para {expectedFileName}.",
-                nameof(settingsPath));
-        }
-
         this.gameRoot = string.IsNullOrWhiteSpace(gameRoot) ? null : SafePath.Normalize(gameRoot);
         processGuard = new GraphicsTargetProcessGuard(
             target,
@@ -95,11 +89,7 @@ public sealed class DisplayPreferencesAction : WindowsOptimizationAction
                 "A instalação do GTA V Legacy não foi confirmada; o settings.xml não será alterado."));
         }
 
-        try
-        {
-            _ = File.GetAttributes(settingsPath);
-        }
-        catch (Exception exception) when (exception is FileNotFoundException or DirectoryNotFoundException)
+        if (!GraphicsSettingsFile.Exists(settingsPath))
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
                 target == GraphicsSettingsTarget.FiveM
