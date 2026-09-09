@@ -4,14 +4,11 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
-using Ralven.Contracts;
-
 namespace Ralven.UpdateRuntime;
 
 public sealed record UpdaterEvent(
     string EventId, string Stage, string Outcome, string ErrorCode,
-    string? PreviousVersion, string CandidateVersion, string Environment,
-    BugCode? BugCode = null);
+    string? PreviousVersion, string CandidateVersion, string Environment);
 
 public sealed class UpdaterDiagnostics
 {

@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import { validateUpdaterEvent } from '../../src/updaterEvents/validateSubmission.js';
 
 test('accepts a closed updater event and rejects free text', () => {
-  const valid = { eventId: 'a'.repeat(32), stage: 'rollback', outcome: 'rolled-back', errorCode: 'health-timeout', previousVersion: '1.1.3', candidateVersion: '1.2.0', environment: 'Production' };
+  const valid = { eventId: 'a'.repeat(32), stage: 'rollback', outcome: 'rolled-back', errorCode: 'u501', previousVersion: '1.1.3', candidateVersion: '1.2.0', environment: 'Production' };
   assert.deepEqual(validateUpdaterEvent(valid), valid);
   assert.equal(validateUpdaterEvent({ ...valid, details: 'personal path' }), null);
+  assert.equal(validateUpdaterEvent({ ...valid, errorCode: 'e6x7g' }), null);
+  assert.deepEqual(validateUpdaterEvent({ ...valid, errorCode: 'health-timeout' }), { ...valid, errorCode: 'health-timeout' });
 });
 
 test('rejects an event without a string errorCode', () => {

@@ -304,7 +304,7 @@ async function main() {
   }
 
   function renderUpdaterEvents(rows) {
-    renderTableBody(updaterEventsBody, rows, toUpdaterEventRow, 7);
+    renderTableBody(updaterEventsBody, rows, toUpdaterEventRow, 8);
   }
 
   function openFailureDetails(row) {

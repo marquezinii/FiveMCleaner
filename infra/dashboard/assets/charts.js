@@ -193,9 +193,10 @@ export function formatActionIds(value) {
 export function toUpdaterEventRow(row) {
   return [
     formatTimestamp(row.received_at),
+    fallback(row.error_id ?? row.error_code?.toUpperCase()),
+    fallback(row.error_name),
     fallback(row.stage),
     fallback(row.outcome),
-    fallback(row.error_code),
     formatAppVersion(row.previous_version),
     formatAppVersion(row.candidate_version),
     fallback(row.environment),

@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
+using Ralven.UpdateRuntime;
 
 namespace Ralven.App.Services;
 
@@ -131,7 +132,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
     {
         if (string.IsNullOrWhiteSpace(update.InstallerPath) || !Path.IsPathFullyQualified(update.InstallerPath))
         {
-            throw new UpdateSecurityException("O caminho do instalador da atualização não é absoluto.");
+            throw new UpdateSecurityException("O caminho do instalador da atualização não é absoluto.", UpdaterEventCodes.InstallerPathRejected);
         }
 
         var fullPath = Path.GetFullPath(update.InstallerPath);
@@ -142,7 +143,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             || update.SizeBytes <= 0
             || !IsSha256(update.Sha256Hex))
         {
-            throw new UpdateSecurityException("O instalador verificado ou seus metadados de integridade não são válidos.");
+            throw new UpdateSecurityException("O instalador verificado ou seus metadados de integridade não são válidos.", UpdaterEventCodes.InstallerMetadataInvalid);
         }
     }
 
@@ -165,7 +166,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             // before it ever occupies the path we are about to execute.
             if (!ComputeSha256(temporary).Equals(sourceHash, StringComparison.OrdinalIgnoreCase))
             {
-                throw new UpdateSecurityException("A cópia local do atualizador independente falhou na verificação de integridade.");
+                throw new UpdateSecurityException("A cópia local do atualizador independente falhou na verificação de integridade.", UpdaterEventCodes.UpdaterCopyIntegrityFailed);
             }
             File.Move(temporary, destination, overwrite: true);
             var lease = new FileStream(
@@ -175,7 +176,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
                 var destinationHash = Convert.ToHexString(SHA256.HashData(lease));
                 if (!destinationHash.Equals(sourceHash, StringComparison.OrdinalIgnoreCase))
                 {
-                    throw new UpdateSecurityException("O atualizador independente foi alterado após a cópia local.");
+                    throw new UpdateSecurityException("O atualizador independente foi alterado após a cópia local.", UpdaterEventCodes.UpdaterCopyIntegrityFailed);
                 }
 
                 integrityLease = lease;
