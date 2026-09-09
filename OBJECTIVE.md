@@ -1,10 +1,25 @@
-# Logo interativa do Ralven AI
+# Objetivo da tarefa
 
-- **Agente:** Codex.
-- **Objetivo:** animar discretamente a logo principal do Ralven AI por idle e clique.
-- **Escopo:** componente WPF reutilizável, PNGs/temas existentes, intervalo configurável, acessibilidade e ciclo de vida; sem mudar navegação, acesso ao AI ou backend.
-- **Critérios de conclusão:** repouso entre giros de 10–20 segundos, clique/teclado e cliques repetidos seguros, pausa fora de exibição, build e testes aplicáveis, atalho de desenvolvimento reconstruído.
-- **Resultado entregue:** `AnimatedRalvenLogo` integrado ao estado vazio, giro de 720 ms e escala sutil, pausas configuráveis de 10–20 s, fila limitada a uma repetição, clique/teclado, PNGs por tema e localização EN/PT-BR/ES. Animações e timer pausam fora da janela ativa ou da exibição; inscrições são removidas ao descarregar.
-- **Validação:** restore e build Release sem avisos/erros; 1.435 testes aprovados, incluindo regressão WPF de 50 cliques, idle, repouso, ocultação e recarga; capturas reais da página em tema escuro (1440×900 DIP) e claro (1100×760 DIP), em modo sintético. Atalho reconstruído e destino confirmado; o cache do espelho exigiu um build `--no-incremental` antes do script padrão.
-- **Integração:** pronto para integração; o PR #149 redesenha a mesma página. Preservar o componente no local da logo central durante a combinação. Não houve merge nem release; validação visual usou dados sintéticos, sem backend real.
-- **Correção de integração:** a amostra ao vivo só é publicada após atualizar o histórico correspondente, evitando estado transitório incoerente e flakiness no teste de restauração rápida.
+## Agente
+
+Codex
+
+## Objetivo
+
+Redesenhar visualmente a aba Ralven AI como uma experiência de conversa clara e acolhedora, preservando a identidade e a logo existentes.
+
+## Escopo
+
+- Atualizar a página, seus controles e textos localizados do Ralven AI.
+- Preservar o fluxo, as proteções de acesso, a privacidade e o contrato remoto já existentes.
+- Não alterar o Worker, entitlements, telemetria ou a execução de otimizações.
+
+## Critérios de conclusão
+
+- Estado inicial apresenta orientações variadas e sugestões de início de conversa.
+- Campo de mensagem, histórico e estados de envio continuam acessíveis e funcionais.
+- Build e testes aplicáveis concluídos sem regressões introduzidas.
+
+## Resultado entregue
+
+Redesenho completo da aba Ralven AI entregue: abertura conversacional com cinco saudações alternadas, sugestões de início, compositor de mensagem integrado e histórico redesenhado. Foram preservados o contrato, a privacidade, o acesso e a revisão local de perfil existentes. Build Release, suíte de 1.434 testes e capturas em tema claro/escuro (incluindo a largura mínima da janela) concluídos com êxito.

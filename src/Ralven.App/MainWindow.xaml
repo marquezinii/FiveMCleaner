@@ -141,17 +141,28 @@
                         <Path Style="{StaticResource Icon20}" Data="{StaticResource IconDiscord}" Stroke="{x:Null}" Fill="{DynamicResource TextSecondaryBrush}" />
                     </Button>
                     <Border Style="{StaticResource VerticalHairlineDivider}" Height="22" Margin="8,0" VerticalAlignment="Center" />
-                    <Button x:Name="AccountButton" Style="{StaticResource IconButtonStyle}" Width="Auto" Padding="8,0,14,0" Click="Account_Click"
+                    <Button x:Name="AccountButton" Style="{StaticResource IconButtonStyle}" Width="Auto" Padding="4,0,10,0" Click="Account_Click"
                             ToolTip="{Binding [Account.TitleBar.SignInPrompt], Source={StaticResource LocalizedStrings}}"
                             AutomationProperties.Name="{Binding [Account.TitleBar.SignInPrompt], Source={StaticResource LocalizedStrings}}">
                         <StackPanel Orientation="Horizontal">
-                            <Border Width="26" Height="26" CornerRadius="{StaticResource RadiusPill}">
+                            <Border Width="32" Height="32"
+                                    Background="{DynamicResource Surface2Brush}"
+                                    BorderBrush="{DynamicResource BorderDefaultBrush}"
+                                    BorderThickness="1"
+                                    CornerRadius="{StaticResource RadiusPill}">
                                 <Grid>
                                     <ui:SymbolIcon x:Name="AccountFallbackIcon" Symbol="Person20" Width="20" Height="20" Foreground="{DynamicResource TextPrimaryBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                                    <Ellipse x:Name="AccountAvatarEllipse" Width="26" Height="26" Visibility="Collapsed" />
+                                    <Ellipse x:Name="AccountAvatarEllipse" Width="28" Height="28" Visibility="Collapsed" />
                                 </Grid>
                             </Border>
-                            <TextBlock x:Name="AccountLabel" Text="{Binding [Account.TitleBar.SignInPrompt], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyText}" VerticalAlignment="Center" Margin="10,0,0,0" />
+                            <TextBlock x:Name="AccountLabel"
+                                       Text="{Binding [Account.TitleBar.SignInPrompt], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource BodyStrongText}"
+                                       VerticalAlignment="Center"
+                                       Margin="9,0,0,0"
+                                       MaxWidth="160"
+                                       TextTrimming="CharacterEllipsis"
+                                       TextWrapping="NoWrap" />
                         </StackPanel>
                     </Button>
                 </StackPanel>
