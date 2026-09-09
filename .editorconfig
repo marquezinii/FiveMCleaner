@@ -6,6 +6,12 @@ end_of_line = crlf
 insert_final_newline = true
 trim_trailing_whitespace = true
 
+# Keep all analyzer findings visible to the editor without turning the current
+# codebase into a noisy or failing build. Raise individual rules deliberately
+# after their existing findings are addressed.
+dotnet_analyzer_diagnostic.severity = suggestion
+dotnet_analyzer_diagnostic.category-Style.severity = suggestion
+
 [*.{cs,csproj,props,slnx,xaml}]
 indent_style = space
 indent_size = 4
