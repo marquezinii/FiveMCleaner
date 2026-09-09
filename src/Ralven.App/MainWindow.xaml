@@ -182,14 +182,25 @@
             </ui:NavigationView.MenuItems>
             <ui:NavigationView.FooterMenuItems>
                 <ui:NavigationViewItem x:Name="ProNav" Content="{Binding [Pro.Discover], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon ArrowRight24}" Tag="Pro" Click="NavItem_Click" />
-                <ui:NavigationViewItem IsEnabled="False" Icon="{ui:SymbolIcon Shield24}" ToolTip="{Binding [Safety.SnapshotRollback], Source={StaticResource LocalizedStrings}}">
+                <ui:NavigationViewItem IsHitTestVisible="False"
+                                       Focusable="False"
+                                       IsTabStop="False"
+                                       HorizontalContentAlignment="Stretch"
+                                       AutomationProperties.Name="{Binding AboutVersionDeveloper}"
+                                       Visibility="{Binding IsPaneOpen, ElementName=RootNavigationView, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <ui:NavigationViewItem.Content>
-                        <StackPanel Margin="0,4,0,4" Visibility="{Binding IsPaneOpen, ElementName=RootNavigationView, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <TextBlock Text="{Binding [Safety.Active], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyText}" />
-                            <TextBlock Style="{StaticResource CaptionText}" Margin="0,2,0,0">
-                                <Run Text="{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding AppVersion, Mode=OneWay}" FontFamily="{StaticResource AppFontMono}" />
-                            </TextBlock>
-                        </StackPanel>
+                        <Border Style="{StaticResource FieldSurface}" Padding="12,8" Margin="0,4">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}, Mode=OneWay}"
+                                           Style="{StaticResource OverlineText}"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding AppVersion, Mode=OneWay}"
+                                           Style="{StaticResource BodyStrongText}"
+                                           FontFamily="{StaticResource AppFontMono}"
+                                           Margin="12,0,0,0"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
                     </ui:NavigationViewItem.Content>
                 </ui:NavigationViewItem>
             </ui:NavigationView.FooterMenuItems>
