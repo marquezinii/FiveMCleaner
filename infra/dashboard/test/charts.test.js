@@ -18,6 +18,7 @@ import {
   formatAppVersion,
   toDistributionRows,
   formatActionIds,
+  limitFeedRows,
 } from '../assets/charts.js';
 import { DONUT_COLORS } from '../assets/rendering.js';
 
@@ -267,6 +268,13 @@ test('toBugReportRow shows a placeholder for a missing exact code', () => {
 
   const cells = toBugReportRow(row);
   assert.equal(cells[1], '—');
+});
+
+test('limitFeedRows keeps feeds compact until expanded', () => {
+  const rows = [1, 2, 3, 4, 5, 6];
+
+  assert.deepEqual(limitFeedRows(rows, false), [1, 2, 3, 4, 5]);
+  assert.deepEqual(limitFeedRows(rows, true), rows);
 });
 
 test('toUpdaterEventRow shows the compact code and its diagnostic name', () => {

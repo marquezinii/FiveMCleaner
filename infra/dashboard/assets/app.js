@@ -14,6 +14,7 @@ import {
   toBugReportRow,
   toUpdaterEventRow,
   formatActionIds,
+  limitFeedRows,
 } from './charts.js';
 import { drawBarChart, drawDonutChart, drawLineChart, DONUT_COLORS, CHART_COLORS } from './rendering.js';
 
@@ -61,9 +62,12 @@ async function main() {
   const filterForm = document.getElementById('filter-form');
   const recentFailuresBody = document.getElementById('recent-failures-body');
   const recentFailuresCsvLink = document.getElementById('csv-recent-failures');
+  const recentFailuresToggle = document.getElementById('recent-failures-toggle');
   const bugReportsBody = document.getElementById('bug-reports-body');
   const bugReportsCsvLink = document.getElementById('csv-bug-reports');
+  const bugReportsToggle = document.getElementById('bug-reports-toggle');
   const updaterEventsBody = document.getElementById('updater-events-body');
+  const updaterEventsToggle = document.getElementById('updater-events-toggle');
   const refreshStatus = document.getElementById('refresh-status');
   const liveAlertForm = document.getElementById('live-alert-form');
   const liveAlertMessage = document.getElementById('live-alert-message');
@@ -307,6 +311,35 @@ async function main() {
     renderTableBody(updaterEventsBody, rows, toUpdaterEventRow, 8);
   }
 
+  const feeds = {
+    recentFailures: { rows: [], expanded: false, button: recentFailuresToggle, render: renderRecentFailures, label: 'eventos recentes' },
+    bugReports: { rows: [], expanded: false, button: bugReportsToggle, render: renderBugReports, label: 'bugs reportados' },
+    updaterEvents: { rows: [], expanded: false, button: updaterEventsToggle, render: renderUpdaterEvents, label: 'bugs do updater' },
+  };
+
+  function renderFeed(name) {
+    const feed = feeds[name];
+    feed.render(limitFeedRows(feed.rows, feed.expanded));
+    const canToggle = feed.rows.length > 5;
+    feed.button.hidden = !canToggle;
+    feed.button.textContent = feed.expanded ? '−' : '+';
+    feed.button.title = feed.expanded ? 'Mostrar somente os 5 mais recentes' : 'Mostrar todos';
+    feed.button.setAttribute('aria-label', `${feed.expanded ? 'Mostrar somente os 5 mais recentes' : 'Mostrar todos os'} ${feed.label}`);
+    feed.button.setAttribute('aria-expanded', String(feed.expanded));
+  }
+
+  function setFeedRows(name, rows) {
+    feeds[name].rows = rows ?? [];
+    renderFeed(name);
+  }
+
+  Object.entries(feeds).forEach(([name, feed]) => {
+    feed.button.addEventListener('click', () => {
+      feed.expanded = !feed.expanded;
+      renderFeed(name);
+    });
+  });
+
   function openFailureDetails(row) {
     const actions = formatActionIds(row.action_ids);
     showDetails({
@@ -445,9 +478,9 @@ async function main() {
       return;
     }
 
-    renderBugReports(bugReports.unauthorized || bugReports.error ? [] : bugReports.data);
+    setFeedRows('bugReports', bugReports.unauthorized || bugReports.error ? [] : bugReports.data);
     bugReportsCsvLink.href = buildBugsCsvUrl(API_BASE, filters);
-    renderUpdaterEvents(updaterEvents.unauthorized || updaterEvents.error ? [] : updaterEvents.data);
+    setFeedRows('updaterEvents', updaterEvents.unauthorized || updaterEvents.error ? [] : updaterEvents.data);
 
     document.getElementById('tile-total-runs').textContent = sumBy(runsPerDay.data, 'runs');
     document.getElementById('tile-success-rate').textContent = formatPercent(
@@ -458,7 +491,7 @@ async function main() {
       ? '—'
       : sumBy(errorCategories.data, 'occurrences');
 
-    renderRecentFailures(recentFailures.unauthorized || recentFailures.error ? [] : recentFailures.data);
+    setFeedRows('recentFailures', recentFailures.unauthorized || recentFailures.error ? [] : recentFailures.data);
     recentFailuresCsvLink.href = buildCsvUrl(API_BASE, 'recent-failures', filters);
 
     CHART_DEFINITIONS.forEach((definition, index) => {

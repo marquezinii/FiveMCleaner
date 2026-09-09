@@ -79,6 +79,11 @@ export function topN(series, n) {
   return (series ?? []).slice(0, n);
 }
 
+/** Shows the five newest feed rows until its compact toggle is expanded. */
+export function limitFeedRows(rows, expanded) {
+  return expanded ? (rows ?? []) : (rows ?? []).slice(0, 5);
+}
+
 /**
  * `successRate` query returns `{completed, total}`; converts that into a
  * percentage, or `null` when there is no data yet (never divides by zero).
