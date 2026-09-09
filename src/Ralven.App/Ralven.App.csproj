@@ -20,6 +20,14 @@
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
     <AssemblyName>Ralven</AssemblyName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(RalvenPerformanceProbe)' == 'true'">
+    <StartupObject>Program</StartupObject>
+    <OutputType>Exe</OutputType>
+    <OutputPath>../../artifacts/performance-probe/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(RalvenPerformanceProbe)' == 'true'">
+    <Compile Include="../../scripts/PerformanceProbe.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Management" />
     <PackageReference Include="Sentry" />

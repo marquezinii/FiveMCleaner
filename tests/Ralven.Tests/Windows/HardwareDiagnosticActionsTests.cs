@@ -632,7 +632,7 @@ public sealed class HardwareInspectorSmokeTests
     [Fact]
     public void WindowsResourceUsageInspector_NeverThrows()
     {
-        Assert.NotNull(new WindowsResourceUsageInspector().GetSnapshot());
+        Assert.NotNull(new WindowsResourceUsageInspector().GetSnapshot(TestContext.Current.CancellationToken));
     }
 
     [Fact]

@@ -22,7 +22,7 @@ public interface ILiveSystemMetricsProvider
 public sealed class WindowsLiveSystemMetricsProvider : ILiveSystemMetricsProvider, IDisposable
 {
     private readonly ISystemResourceInspector systemInspector = new WindowsSystemResourceInspector();
-    private readonly IResourceUsageInspector resourceInspector = new WindowsResourceUsageInspector();
+    private readonly WindowsResourceUsageInspector resourceInspector = new();
 
     public Task<LiveSystemMetricsSnapshot> CaptureAsync(CancellationToken cancellationToken = default) =>
         Task.Run(() => Capture(cancellationToken), cancellationToken);
@@ -30,7 +30,8 @@ public sealed class WindowsLiveSystemMetricsProvider : ILiveSystemMetricsProvide
     private LiveSystemMetricsSnapshot Capture(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var usage = resourceInspector.GetSnapshot();
+        var usage = resourceInspector.GetSnapshot(cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
         return CreateSnapshot(usage, systemInspector.GetSnapshot(), DateTimeOffset.UtcNow);
     }
 

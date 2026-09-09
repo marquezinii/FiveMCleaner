@@ -13,6 +13,9 @@ namespace Ralven.App.ViewModels;
 
 public sealed partial class MainViewModel
 {
+    private CancellationTokenSource? liveMetricsCancellation;
+    private bool disposed;
+
     public double CpuUsagePercent { get => cpuUsagePercent; private set => SetProperty(ref cpuUsagePercent, value); }
 
     public double GpuUsagePercent { get => gpuUsagePercent; private set => SetProperty(ref gpuUsagePercent, value); }
@@ -86,11 +89,17 @@ public sealed partial class MainViewModel
 
     public void SetLiveMetricsEnabled(bool enabled)
     {
+        if (disposed || liveMetricsEnabled == enabled)
+        {
+            return;
+        }
+
         IsLiveMetricsActive = enabled;
         NotifyLivePerformanceStateChanged();
         if (!enabled)
         {
             liveMetricsTimer?.Stop();
+            liveMetricsCancellation?.Cancel();
             return;
         }
 
@@ -98,6 +107,7 @@ public sealed partial class MainViewModel
         // um timer próprio: ela muda no máximo três vezes por dia, então não
         // vale a pena um relógio dedicado para isso.
         RefreshGreeting();
+        RefreshFiveMSessionMonitorPresentation();
 
         liveMetricsTimer ??= new DispatcherTimer(DispatcherPriority.Background)
         {
@@ -119,10 +129,12 @@ public sealed partial class MainViewModel
         }
 
         liveMetricsCaptureInProgress = true;
+        using var cancellation = new CancellationTokenSource();
+        liveMetricsCancellation = cancellation;
         try
         {
-            var snapshot = await liveSystemMetricsProvider.CaptureAsync();
-            if (!liveMetricsEnabled)
+            var snapshot = await liveSystemMetricsProvider.CaptureAsync(cancellation.Token);
+            if (!liveMetricsEnabled || cancellation.IsCancellationRequested)
             {
                 return;
             }
@@ -132,10 +144,14 @@ public sealed partial class MainViewModel
             ApplyLiveMetrics(snapshot);
             NotifyLivePerformanceStateChanged();
         }
+        catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
+        {
+            // Hiding the surface is a normal pause, not a failed measurement.
+        }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            if (liveMetricsEnabled)
+            if (liveMetricsEnabled && !cancellation.IsCancellationRequested)
             {
                 liveMetricsUnavailable = true;
                 LiveMetricsUpdatedLabel = localization.GetString("Dashboard.LivePerformance.Unavailable");
@@ -145,6 +161,11 @@ public sealed partial class MainViewModel
         finally
         {
             liveMetricsCaptureInProgress = false;
+            liveMetricsCancellation = null;
+            if (cancellation.IsCancellationRequested && liveMetricsEnabled && !disposed)
+            {
+                _ = CaptureLiveMetricsAsync();
+            }
         }
     }
 

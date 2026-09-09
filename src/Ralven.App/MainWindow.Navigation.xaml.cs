@@ -139,7 +139,7 @@ public partial class MainWindow
         SettingsPage.Visibility = Visibility.Collapsed;
         if (proPage is not null) proPage.Visibility = Visibility.Collapsed;
         page.Visibility = Visibility.Visible;
-        viewModel.SetLiveMetricsEnabled(ReferenceEquals(page, DashboardPage));
+        RefreshLiveMetricsActivity();
     }
 
     // ===================== Pontes para as páginas extraídas =====================
