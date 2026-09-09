@@ -98,6 +98,25 @@ Nova ação de sistema precisa ter risco, pré-condições, efeito, privilégio,
 
 O repositório usa .NET 10, nullable habilitado, implicit usings e C# `latest`.
 
+### SharpLens MCP
+
+SharpLens está configurado localmente para `Ralven.slnx`. Para C#, prefira sua
+análise semântica à busca textual quando a decisão depender de símbolos,
+sobrecargas, referências, herança, callers/callees ou impacto:
+
+- use `search_symbols`, `get_symbol_info`, `find_references`,
+  `find_implementations`, `find_callers` e `get_call_graph` antes de mudar uma
+  API ou fluxo relevante;
+- rode `health_check` antes de uma refatoração ampla; se o carregamento estiver
+  parcial ou apresentar `loadFailures`, resolva isso antes de inferir impacto;
+- antes de aplicar refactorings mutáveis do SharpLens, gere e revise o
+  `preview: true`; preserve comportamento observável e não crie abstrações
+  especulativas;
+- após editar, criar ou apagar arquivos `.cs` por ferramentas externas ao MCP,
+  execute `sync_documents` para esses caminhos (ou sem argumentos após lote);
+- após alterar `.csproj`, `Directory.Build.*`, `Directory.Packages.props` ou a
+  solution, rode `load_solution` novamente antes da próxima consulta semântica.
+
 - Respeite `.editorconfig`: 4 espaços em C#/XAML/MSBuild; 2 em Markdown/JSON/YAML; CRLF e newline final.
 - Investigue warnings novos; não os esconda.
 - Evite `async void`, exceto handlers apropriados.
