@@ -58,8 +58,4 @@ public partial class OverviewPage : UserControl
         (Window.GetWindow(this) as MainWindow)?.RequestNavigateToHistory();
     }
 
-    private void ToggleFiveMSessionMonitor_Click(object sender, RoutedEventArgs e)
-    {
-        ViewModel?.ToggleFiveMSessionMonitor();
-    }
 }

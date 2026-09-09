@@ -86,6 +86,11 @@ public sealed class SignedManifestUpdateServiceDownloadTests
 
         await Assert.ThrowsAsync<UpdateSecurityException>(() =>
             service.DownloadUpdateAsync(update, cancellationToken: TestContext.Current.CancellationToken));
+
+        var diagnostic = await File.ReadAllTextAsync(
+            Path.Combine(temporaryData.Path, "Logs", "updater.jsonl"),
+            TestContext.Current.CancellationToken);
+        Assert.Contains("\"ErrorCode\":\"u201\"", diagnostic, StringComparison.Ordinal);
     }
 
     private sealed class PayloadHandler(byte[] payload) : HttpMessageHandler

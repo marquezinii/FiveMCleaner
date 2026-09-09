@@ -19,8 +19,8 @@
   <data name="RalvenAi.Empty.Detail" xml:space="preserve"><value>Entenda gargalos, compare os perfis padrão ou pergunte qual plano seguro combina melhor com a máquina.</value></data>
   <data name="RalvenAi.Privacy.Title" xml:space="preserve"><value>O que é enviado</value></data>
   <data name="RalvenAi.Privacy.Detail" xml:space="preserve"><value>Sua pergunta, um resumo limitado do hardware, as ações já suportadas pelo Ralven e um identificador pseudônimo de segurança são enviados à OpenAI para esta resposta. Paths, arquivos, credenciais e dados que identificam diretamente a conta ficam de fora. A conversa não é salva pelo Ralven. Não digite informações pessoais ou secretas.</value></data>
-  <data name="RalvenAi.ProOnly.Title" xml:space="preserve"><value>O Ralven AI requer o Pro</value></data>
-  <data name="RalvenAi.ProOnly.Detail" xml:space="preserve"><value>Entre com uma conta que tenha acesso Pro ativo para usar a orientação contextual.</value></data>
+  <data name="RalvenAi.AccessRequired.Title" xml:space="preserve"><value>Acesso ao Ralven AI necessário</value></data>
+  <data name="RalvenAi.AccessRequired.Detail" xml:space="preserve"><value>Esta conta não tem acesso ao Ralven AI no momento. Atualize o status do plano ou tente novamente mais tarde.</value></data>
   <data name="RalvenAi.InputPlaceholder" xml:space="preserve"><value>Escreva uma pergunta sobre este PC. Pressione Ctrl+Enter para enviar.</value></data>
   <data name="RalvenAi.Send" xml:space="preserve"><value>Enviar</value></data>
   <data name="RalvenAi.Sending" xml:space="preserve"><value>Analisando o diagnóstico...</value></data>
@@ -33,8 +33,10 @@
   <data name="RalvenAi.Error.Unavailable" xml:space="preserve"><value>O Ralven AI está indisponível agora. Nenhuma alteração foi feita.</value></data>
   <data name="RalvenAi.Error.Unauthorized" xml:space="preserve"><value>Não foi possível verificar sua sessão. Entre novamente e tente outra vez.</value></data>
   <data name="RalvenAi.Error.ProRequired" xml:space="preserve"><value>É necessário ter acesso Pro ativo.</value></data>
+  <data name="RalvenAi.Error.AiAccessRequired" xml:space="preserve"><value>Esta conta não tem acesso ativo ao Ralven AI.</value></data>
   <data name="RalvenAi.Error.RateLimited" xml:space="preserve"><value>Muitas solicitações. Aguarde um momento e tente novamente.</value></data>
   <data name="RalvenAi.Error.BudgetExhausted" xml:space="preserve"><value>O limite mensal do Ralven AI foi atingido.</value></data>
+  <data name="RalvenAi.Error.RequestReplayed" xml:space="preserve"><value>Esta solicitação já foi recebida, então nenhuma segunda chamada de IA foi feita. Aguarde um momento e envie uma nova pergunta.</value></data>
   <data name="RalvenAi.Error.InvalidResponse" xml:space="preserve"><value>A resposta não passou pelas verificações de segurança do Ralven. Nenhuma alteração foi feita.</value></data>
   <data name="Games.Title" xml:space="preserve"><value>Jogos</value></data>
   <data name="Games.Subtitle" xml:space="preserve"><value>Escolha um jogo compatível para abrir suas ferramentas dedicadas.</value></data>
@@ -64,7 +66,6 @@
   <data name="FiveMHub.History.Description" xml:space="preserve"><value>Revise execuções concluídas do FiveM e do Windows, seus resultados reais e as alterações que ainda podem ser restauradas.</value></data>
   <data name="FiveMHub.History.Scope" xml:space="preserve"><value>Histórico compartilhado do Ralven</value></data>
   <data name="FiveMHub.History.Action" xml:space="preserve"><value>Abrir histórico</value></data>
-  <data name="Safety.Active" xml:space="preserve"><value>Proteção ativa</value></data>
   <data name="Safety.SnapshotRollback" xml:space="preserve"><value>As configurações são salvas antes de mudar e podem ser restauradas.</value></data>
   <data name="BugReport.Link" xml:space="preserve"><value>Relatar um bug</value></data>
   <data name="BugReport.LinkTooltip" xml:space="preserve"><value>Abrir formulário de relato</value></data>

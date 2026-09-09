@@ -79,6 +79,11 @@ export function topN(series, n) {
   return (series ?? []).slice(0, n);
 }
 
+/** Shows the five newest feed rows until its compact toggle is expanded. */
+export function limitFeedRows(rows, expanded) {
+  return expanded ? (rows ?? []) : (rows ?? []).slice(0, 5);
+}
+
 /**
  * `successRate` query returns `{completed, total}`; converts that into a
  * percentage, or `null` when there is no data yet (never divides by zero).
@@ -193,9 +198,10 @@ export function formatActionIds(value) {
 export function toUpdaterEventRow(row) {
   return [
     formatTimestamp(row.received_at),
+    fallback(row.error_id ?? row.error_code?.toUpperCase()),
+    fallback(row.error_name),
     fallback(row.stage),
     fallback(row.outcome),
-    fallback(row.error_code),
     formatAppVersion(row.previous_version),
     formatAppVersion(row.candidate_version),
     fallback(row.environment),

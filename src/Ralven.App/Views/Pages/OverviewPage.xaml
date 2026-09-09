@@ -7,28 +7,6 @@
              xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
              mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="820">
-    <!--
-        VISÃO GERAL — direção Ralven.
-
-        A página não é mais uma folha emoldurada contendo cabeçalho
-        emoldurado contendo cartões. São TRÊS painéis irmãos sobre o chão da
-        interface, e o cabeçalho fica direto sobre esse plano:
-
-          diagnóstico  — a conclusão e a prontidão, com a faixa de
-                         instrumentos que sustenta a recomendação;
-          ao vivo      — as cinco leituras e o gráfico, em linha "*", então
-                         o painel termina exatamente na borda da janela em
-                         qualquer resolução;
-          notas        — máquina, última execução, prontidão para transmitir.
-
-        O que saiu daqui por ser redundante para um usuário comum: a linha
-        "eyebrow" acima/abaixo do próprio título; a legenda "análise local"
-        repetida sob um indicador; o parágrafo que descrevia o que é uma
-        lista de especificações; a segunda cópia da explicação da nota
-        (permanece como tooltip da própria escala); o parágrafo que explicava
-        o que é um gráfico ao vivo; e o aviso de privacidade, que agora existe
-        uma vez, em Configurações › Privacidade.
-    -->
     <UserControl.Resources>
         <DataTemplate x:Key="StreamingRowTemplate">
             <Border Style="{StaticResource LedgerRowStyle}" Padding="0,11">
@@ -148,10 +126,6 @@
                         </Grid.RowDefinitions>
 
                         <Grid Grid.Row="0" Margin="28,26,28,26">
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
@@ -159,49 +133,10 @@
                             </Grid.ColumnDefinitions>
 
                             <!-- A linha de luz: marca de onde a leitura começa. -->
-                            <Rectangle Grid.RowSpan="2" Style="{StaticResource HeroAccentRule}" />
+                            <Rectangle Style="{StaticResource HeroAccentRule}" />
 
-                            <!-- Selos de detecção usam toda a largura e podem
-                                 quebrar sem disputar espaço com a prontidão. -->
-                            <WrapPanel Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" Margin="22,0,0,18">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,14,6">
-                                    <Path Margin="0,0,7,0">
-                                        <Path.Style>
-                                            <Style TargetType="Path" BasedOn="{StaticResource Icon16}">
-                                                <Setter Property="Data" Value="{StaticResource IconClose}" />
-                                                <Setter Property="Stroke" Value="{DynamicResource DangerBaseBrush}" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsFiveMLegacyDetected}" Value="True">
-                                                        <Setter Property="Data" Value="{StaticResource IconCheck}" />
-                                                        <Setter Property="Stroke" Value="{DynamicResource SuccessBaseBrush}" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Path.Style>
-                                    </Path>
-                                    <TextBlock Text="{Binding EditionLabel}" Style="{StaticResource SecondaryText}" VerticalAlignment="Center" />
-                                </StackPanel>
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                                    <Path Margin="0,0,7,0">
-                                        <Path.Style>
-                                            <Style TargetType="Path" BasedOn="{StaticResource Icon16}">
-                                                <Setter Property="Data" Value="{StaticResource IconClose}" />
-                                                <Setter Property="Stroke" Value="{DynamicResource DangerBaseBrush}" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsGtaVLegacyDetected}" Value="True">
-                                                        <Setter Property="Data" Value="{StaticResource IconCheck}" />
-                                                        <Setter Property="Stroke" Value="{DynamicResource SuccessBaseBrush}" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Path.Style>
-                                    </Path>
-                                    <TextBlock Text="{Binding GtaStatusLabel}" Style="{StaticResource SecondaryText}" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </WrapPanel>
-
-                            <StackPanel Grid.Row="1" Grid.Column="1" Margin="22,0,0,0" VerticalAlignment="Center">
-                                <TextBlock Text="{Binding RecommendationTitle}" Style="{StaticResource DisplayText}" Margin="0,16,0,0" TextWrapping="Wrap" />
+                            <StackPanel Grid.Column="1" Margin="22,0,0,0" VerticalAlignment="Center">
+                                <TextBlock Text="{Binding RecommendationTitle}" Style="{StaticResource DisplayText}" TextWrapping="Wrap" />
                                 <TextBlock Text="{Binding RecommendationText}" Style="{StaticResource SecondaryText}" Margin="0,10,0,0" TextWrapping="Wrap" MaxWidth="660" HorizontalAlignment="Left" />
 
                                 <WrapPanel Margin="0,24,0,0">
@@ -233,7 +168,7 @@
                                 O ToolTip continua aqui só como atalho extra
                                 para quem usa mouse.
                             -->
-                            <StackPanel Grid.Row="1" Grid.Column="2" Width="220" Margin="18,0,0,0" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
+                            <StackPanel Grid.Column="2" Width="220" Margin="18,0,0,0" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
                                 <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
                                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                                     <!-- Reserva os três dígitos de 0–100 para não recortar a atualização da nota. -->
@@ -257,15 +192,13 @@
                             </StackPanel>
                         </Grid>
 
-                        <!-- Faixa de instrumentos: os quatro fatos da varredura
+                        <!-- Faixa de instrumentos: os três fatos da varredura
                              que sustentam a recomendação acima. Fica DENTRO do
                              mesmo painel, separada por traço — não é um segundo
                              cartão. -->
                         <Border Grid.Row="1" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,1,0,0" Padding="28,4">
                             <Grid>
                                 <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
@@ -288,12 +221,6 @@
                                     <TextBlock Text="{Binding [Dashboard.Kpi.Memory.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding AvailableMemoryLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,0" />
                                     <TextBlock Text="{Binding AvailableMemoryDetail}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
-                                </StackPanel>
-                                <Border Grid.Column="5" Style="{StaticResource VerticalHairlineDivider}" Margin="0,18" />
-                                <StackPanel Grid.Column="6" Margin="24,18,0,18" VerticalAlignment="Center">
-                                    <TextBlock Text="{Binding [Dashboard.Kpi.Cache.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" TextWrapping="Wrap" />
-                                    <TextBlock Text="{Binding LegacyCacheLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,0" />
-                                    <TextBlock Text="{Binding LegacyCacheDetail}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
                             </Grid>
                         </Border>
@@ -506,44 +433,6 @@
                             <Button Style="{StaticResource LinkButtonStyle}" HorizontalAlignment="Left" Margin="-6,10,0,0"
                                     Visibility="{Binding HasLastOptimization, Converter={StaticResource BooleanToVisibilityConverter}}" Click="OpenHistory_Click"
                                     Content="{Binding [Dashboard.OpenHistory], Source={StaticResource LocalizedStrings}}" />
-                        </StackPanel>
-
-                        <Border Style="{StaticResource HairlineDivider}" Margin="0,22" />
-
-                        <!-- Monitor manual, local e somente leitura. Continua
-                             ativo quando a janela está na bandeja, mas não
-                             persiste nem tenta controlar o processo. -->
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal">
-                                <Path Style="{StaticResource Icon16}" Data="{StaticResource IconGame}"
-                                      Stroke="{Binding FiveMSessionStatusBrushKey, Converter={StaticResource BrushKeyConverter}}"
-                                      VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding [Dashboard.SessionMonitor.Title], Source={StaticResource LocalizedStrings}}"
-                                           Style="{StaticResource SubsectionText}" Margin="11,0,0,0"
-                                           TextWrapping="Wrap" VerticalAlignment="Center" />
-                            </StackPanel>
-                            <TextBlock Text="{Binding [Dashboard.SessionMonitor.Description], Source={StaticResource LocalizedStrings}}"
-                                       Style="{StaticResource CaptionText}" Margin="0,6,0,0" TextWrapping="Wrap" />
-                            <Border Style="{StaticResource TagChipStyle}" HorizontalAlignment="Left" Margin="0,14,0,0">
-                                <StackPanel Orientation="Horizontal">
-                                    <Ellipse Width="7" Height="7" VerticalAlignment="Center"
-                                             Fill="{Binding FiveMSessionStatusBrushKey, Converter={StaticResource BrushKeyConverter}}" />
-                                    <TextBlock Text="{Binding FiveMSessionStatusLabel}" Style="{StaticResource OverlineText}"
-                                               Foreground="{Binding FiveMSessionStatusBrushKey, Converter={StaticResource BrushKeyConverter}}"
-                                               Margin="8,0,0,0" />
-                                </StackPanel>
-                            </Border>
-                            <TextBlock Text="{Binding FiveMSessionDetailLabel}" Style="{StaticResource SecondaryText}"
-                                       Margin="0,10,0,0" TextWrapping="Wrap" />
-                            <Button Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Left" Margin="0,14,0,0"
-                                    IsEnabled="{Binding CanToggleFiveMSessionMonitor}"
-                                    Click="ToggleFiveMSessionMonitor_Click">
-                                <StackPanel Orientation="Horizontal">
-                                    <Path Style="{StaticResource Icon16}" Data="{StaticResource IconEye}"
-                                          Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
-                                    <TextBlock Text="{Binding FiveMSessionActionLabel}" Margin="10,0,0,0" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </Button>
                         </StackPanel>
 
                         <Border Style="{StaticResource HairlineDivider}" Margin="0,22" />

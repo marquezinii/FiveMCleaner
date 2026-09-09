@@ -3,6 +3,7 @@ import { validateBugReport } from './bugReports/validateSubmission.js';
 import { MAX_BUG_REPORT_LIMIT, recentBugReports } from './bugReports/queries.js';
 import { validateUpdaterEvent } from './updaterEvents/validateSubmission.js';
 import { recentUpdaterEvents } from './updaterEvents/queries.js';
+import { describeUpdaterEventCode } from './updaterEvents/catalog.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
 import { requireFirebaseUser } from './auth/firebaseIdToken.js';
 import {
@@ -49,7 +50,7 @@ const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 //   GET     /account/billing       -- offer and reconciled subscription status (Firebase ID token)
 //   POST    /account/billing/checkout -- hosted monthly checkout for the accepted server offer
 //   POST    /account/billing/cancel -- stop future renewals after provider confirmation
-//   POST    /ai/message            -- Pro-only contextual guidance over a bounded diagnostic summary
+//   POST    /ai/message            -- Pro + Ralven AI contextual guidance over a bounded diagnostic summary
 //   GET     /account/username-available -- advisory "is this username free?" probe for the registration form (no auth; rate limited per IP)
 //   POST    /billing/asaas/webhook -- authenticate and reconcile one Asaas billing event
 //   POST    /admin/login           -- { password } -> session cookie
@@ -400,7 +401,7 @@ async function handleUpdaterEventsList(request, env, url) {
   }, url.searchParams.get('limit'));
   try {
     const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-    return jsonResponse(results);
+    return jsonResponse(results.map((event) => ({ ...event, ...describeUpdaterEventCode(event.error_code) })));
   } catch (err) {
     return jsonResponse({ error: 'Database query failed' }, 500);
   }
