@@ -139,9 +139,9 @@ public sealed partial class MainViewModel
                 return;
             }
 
-            lastLiveMetrics = snapshot;
             liveMetricsUnavailable = false;
             ApplyLiveMetrics(snapshot);
+            lastLiveMetrics = snapshot;
             NotifyLivePerformanceStateChanged();
         }
         catch (OperationCanceledException) when (cancellation.IsCancellationRequested)
