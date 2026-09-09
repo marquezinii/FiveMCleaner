@@ -21,6 +21,8 @@ test('production config keeps the existing Cloudflare resource identifiers', asy
   assert.match(config, /^DASHBOARD_ORIGIN = "https:\/\/ralven-dashboard\.pages\.dev,https:\/\/dashboard\.vemryx\.com,https:\/\/fivemcleaner-dashboard\.pages\.dev"\r?$/m);
   assert.match(config, /^database_name = "fivemcleaner-telemetry"\r?$/m);
   assert.match(config, /^database_id = "fe276121-a71a-4ba4-ab62-81cccdf601c6"\r?$/m);
+  assert.match(config, /^RALVEN_AI_ENABLED = "false"\r?$/m);
+  assert.doesNotMatch(config, /^(?:OPENAI_API_KEY|RALVEN_AI_SAFETY_IDENTIFIER_SECRET)\s*=/m);
 });
 
 function run(args, { expectSuccess = true } = {}) {
@@ -186,6 +188,85 @@ test('D1 migrations adopt the historical schema.sql bootstrap before applying ne
   const currentConfig = await createFixture(root, 'current', migrationNames);
   apply(currentConfig, stateDirectory);
   execute(currentConfig, stateDirectory, workerSchemaSmoke);
+});
+
+test('AI foundation backfills only payment-backed Pro access', async (t) => {
+  assert.equal(migrationNames.at(-1), '0011_ralven_ai_foundation.sql');
+  const root = await mkdtemp(join(tmpdir(), 'Ralven-d1-ai-foundation-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+
+  const stateDirectory = join(root, 'state');
+  const priorConfig = await createFixture(root, 'prior', migrationNames.slice(0, -1));
+  apply(priorConfig, stateDirectory);
+  execute(priorConfig, stateDirectory, `
+    INSERT INTO account_profiles
+      (uid, username, username_normalized, first_name, last_name, terms_version, terms_accepted_at, created_at)
+    VALUES
+      ('paid-user', 'PaidUser', 'paiduser', 'Paid', 'User', 'v1',
+       '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z'),
+      ('manual-user', 'ManualUser', 'manualuser', 'Manual', 'User', 'v1',
+       '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
+    INSERT INTO billing_checkout_intents
+      (id, account_uid, provider, external_reference, offer_key, amount_cents, currency,
+       provider_checkout_id, state, created_at, updated_at)
+    VALUES
+      ('paid-checkout', 'paid-user', 'asaas', 'paid-reference', 'ralven_pro_monthly',
+       1490, 'BRL', 'paid-provider-checkout', 'completed',
+       '2026-01-01T00:00:00.000Z', '2026-01-01T00:01:00.000Z'),
+      ('manual-checkout', 'manual-user', 'asaas', 'manual-reference', 'ralven_pro_monthly',
+       1490, 'BRL', 'manual-provider-checkout', 'completed',
+       '2026-01-01T00:00:00.000Z', '2026-01-01T00:01:00.000Z');
+    INSERT INTO billing_webhook_events
+      (provider, provider_request_id, resource_id, received_at, processing_outcome, processed_at)
+    VALUES ('asaas', 'paid-event', 'paid-payment', '2026-01-01T00:01:00.000Z',
+      'processed', '2026-01-01T00:01:01.000Z');
+    INSERT INTO billing_subscriptions
+      (id, account_uid, checkout_intent_id, provider, provider_subscription_id,
+       offer_key, state, provider_updated_at, created_at, updated_at)
+    VALUES
+      ('paid-subscription', 'paid-user', 'paid-checkout', 'asaas', 'paid-provider-subscription',
+       'ralven_pro_monthly', 'authorized', '2026-01-01T00:01:00.000Z',
+       '2026-01-01T00:00:00.000Z', '2026-01-01T00:01:00.000Z'),
+      ('manual-subscription', 'manual-user', 'manual-checkout', 'asaas', 'manual-provider-subscription',
+       'ralven_pro_monthly', 'authorized', '2026-01-01T00:01:00.000Z',
+       '2026-01-01T00:00:00.000Z', '2026-01-01T00:01:00.000Z');
+    INSERT INTO billing_payments
+      (provider_payment_id, subscription_id, state, amount_cents, refunded_cents,
+       currency, period_start, period_end, provider_updated_at, last_event_id, updated_at)
+    VALUES ('paid-payment', 'paid-subscription', 'approved', 1490, 0, 'BRL',
+      '2026-01-01T00:00:00.000Z', '2026-02-01T00:00:00.000Z',
+      '2026-01-01T00:01:00.000Z',
+      (SELECT id FROM billing_webhook_events WHERE provider_request_id = 'paid-event'),
+      '2026-01-01T00:01:00.000Z');
+    INSERT INTO account_entitlements
+      (account_uid, entitlement_key, state, subscription_id, valid_from, valid_until,
+       provider_updated_at, updated_at)
+    VALUES
+      ('paid-user', 'ralven_pro', 'active', 'paid-subscription',
+       '2026-01-01T00:00:00.000Z', '2026-02-01T00:00:00.000Z',
+       '2026-01-01T00:01:00.000Z', '2026-01-01T00:01:00.000Z'),
+      ('manual-user', 'ralven_pro', 'active', 'manual-subscription',
+       '2026-01-01T00:00:00.000Z', '2026-02-01T00:00:00.000Z',
+       '2026-01-01T00:01:00.000Z', '2026-01-01T00:01:00.000Z');
+  `);
+
+  const currentConfig = await createFixture(root, 'current', migrationNames);
+  apply(currentConfig, stateDirectory);
+  const result = execute(currentConfig, stateDirectory, `
+    SELECT account_uid, entitlement_key FROM account_entitlements
+      ORDER BY account_uid, entitlement_key;
+    SELECT name FROM pragma_table_info('ralven_ai_usage')
+      WHERE name IN ('cached_input_tokens', 'cache_write_tokens', 'reasoning_tokens')
+      ORDER BY name;
+  `);
+  assert.deepEqual(result.at(-2).results, [
+    { account_uid: 'manual-user', entitlement_key: 'ralven_pro' },
+    { account_uid: 'paid-user', entitlement_key: 'ralven_ai' },
+    { account_uid: 'paid-user', entitlement_key: 'ralven_pro' },
+  ]);
+  assert.deepEqual(result.at(-1).results.map(({ name }) => name), [
+    'cache_write_tokens', 'cached_input_tokens', 'reasoning_tokens',
+  ]);
 });
 
 test('billing migration enforces ownership, deduplicates events, and cascades account deletion', async (t) => {

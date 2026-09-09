@@ -43,7 +43,7 @@ public partial class RalvenAiPage : UserControl, IDisposable
 
     private async Task SendAsync()
     {
-        if (sending || DataContext is not MainViewModel { HasProAccess: true } viewModel)
+        if (sending || DataContext is not MainViewModel { HasRalvenAiAccess: true } viewModel)
         {
             return;
         }

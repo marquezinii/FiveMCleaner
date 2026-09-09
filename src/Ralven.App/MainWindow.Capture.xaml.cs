@@ -179,7 +179,11 @@ public partial class MainWindow
 
     private (UIElement Element, Wpf.Ui.Controls.NavigationViewItem Nav) ConfigureRalvenAiCapture()
     {
-        if (demoMode) viewModel.SetProAccess(true);
+        if (demoMode)
+        {
+            viewModel.SetProAccess(true);
+            viewModel.SetRalvenAiAccess(true);
+        }
         return (RalvenAiPage, RalvenAiNav);
     }
 

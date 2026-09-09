@@ -49,7 +49,7 @@ const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 //   GET     /account/billing       -- offer and reconciled subscription status (Firebase ID token)
 //   POST    /account/billing/checkout -- hosted monthly checkout for the accepted server offer
 //   POST    /account/billing/cancel -- stop future renewals after provider confirmation
-//   POST    /ai/message            -- Pro-only contextual guidance over a bounded diagnostic summary
+//   POST    /ai/message            -- Pro + Ralven AI contextual guidance over a bounded diagnostic summary
 //   GET     /account/username-available -- advisory "is this username free?" probe for the registration form (no auth; rate limited per IP)
 //   POST    /billing/asaas/webhook -- authenticate and reconcile one Asaas billing event
 //   POST    /admin/login           -- { password } -> session cookie
