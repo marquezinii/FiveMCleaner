@@ -66,9 +66,7 @@ public sealed partial class MainViewModel
 
     private string GetLocalizedActionName(string actionId, string fallback)
     {
-        var key = $"Actions.{actionId}.Name";
-        var value = localization.GetString(key);
-        return value == key ? fallback : value;
+        return localization.GetStringOrFallback($"Actions.{actionId}.Name", fallback);
     }
 
     private (string Label, string Glyph, string BrushKey) DescribeOutcome(ActionExecutionOutcome outcome)

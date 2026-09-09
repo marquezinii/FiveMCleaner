@@ -33,6 +33,25 @@ public interface ILocalizationService
 }
 
 /// <summary>
+/// Resolução de recurso com fallback. <see cref="ILocalizationService.GetString"/>
+/// devolve a própria chave quando ela não existe no catálogo do idioma atual;
+/// quase toda a apresentação precisa, nesse caso, cair para o texto que já veio
+/// do catálogo de ações ou dos metadados. Concentrar a convenção aqui evita que
+/// cada tela reimplemente a comparação "valor == chave".
+/// </summary>
+internal static class LocalizationFallback
+{
+    public static string GetStringOrFallback(
+        this ILocalizationService localization,
+        string key,
+        string fallback)
+    {
+        var value = localization.GetString(key);
+        return value == key ? fallback : value;
+    }
+}
+
+/// <summary>
 /// Runtime localization facade. It deliberately owns its culture instead of
 /// mutating process-wide CultureInfo state, so background operations and logs
 /// keep deterministic formatting.

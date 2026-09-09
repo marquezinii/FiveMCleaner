@@ -126,7 +126,9 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
             // Run independent I/O-bound operations concurrently to reduce total diagnosis time
             var installationTask = Task.Run(() => DetectFiveMInstallation(), cancellationToken);
-            var memoryStatusTask = Task.Run(() => NativeMemoryStatus.Query(), cancellationToken);
+            var systemResourcesTask = Task.Run(
+                () => new WindowsSystemResourceInspector().GetSnapshot(),
+                cancellationToken);
             var gpuDetailsTask = Task.Run(
                 () => new WindowsGpuDetailsInspector().GetSnapshot(),
                 cancellationToken);
@@ -146,8 +148,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 ? installation.Root
                 : null;
 
-            var memoryStatus = await memoryStatusTask.ConfigureAwait(false);
-            var systemDrive = new DriveInfo(Path.GetPathRoot(Environment.SystemDirectory)!);
+            var systemResources = await systemResourcesTask.ConfigureAwait(false);
             var cacheBytes = installation.Edition == FiveMEdition.Legacy && installation.Root is not null
                 ? GetLegacyServerCacheBytes(installation.Root, cancellationToken)
                 : 0L;
@@ -165,10 +166,10 @@ public sealed class AppOptimizationService : IAppOptimizationService
                 : localization.GetString("Diagnosis.GpuFallback");
 
             var streamingSoftware = DetectStreamingSoftware(cancellationToken);
-            var memoryGiB = memoryStatus.TotalPhysical / 1024d / 1024d / 1024d;
-            var availableMemoryGiB = memoryStatus.AvailablePhysical / 1024d / 1024d / 1024d;
-            var logicalProcessorCount = Math.Max(1, Environment.ProcessorCount);
-            var freeDiskGiB = systemDrive.AvailableFreeSpace / 1024d / 1024d / 1024d;
+            var memoryGiB = systemResources.TotalMemoryBytes / 1024d / 1024d / 1024d;
+            var availableMemoryGiB = systemResources.AvailableMemoryBytes / 1024d / 1024d / 1024d;
+            var logicalProcessorCount = systemResources.LogicalProcessorCount;
+            var freeDiskGiB = systemResources.SystemDriveFreeBytes / 1024d / 1024d / 1024d;
             var running = IsFiveMRunning();
 
             var assessment = HardwareProfileAdvisor.Assess(
@@ -1312,9 +1313,7 @@ public sealed class AppOptimizationService : IAppOptimizationService
 
     private string GetLocalizedActionName(string actionId, string fallback)
     {
-        var key = $"Actions.{actionId}.Name";
-        var value = localization.GetString(key);
-        return value == key ? fallback : value;
+        return localization.GetStringOrFallback($"Actions.{actionId}.Name", fallback);
     }
 
     private static string GetArchitectureLabel() => RuntimeInformation.OSArchitecture switch

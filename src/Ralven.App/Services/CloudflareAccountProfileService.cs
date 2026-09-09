@@ -15,7 +15,9 @@ namespace Ralven.App.Services;
 /// </summary>
 public sealed class CloudflareAccountProfileService : IAccountProfileService
 {
-    private static readonly HttpClient SharedClient = CreateClient();
+    private static readonly HttpClient SharedClient =
+        CloudflareTransportDefaults.CreateClient(TimeSpan.FromSeconds(20));
+
     private readonly HttpClient httpClient;
     private readonly Uri endpoint;
     private readonly ILocalizationService localization;
@@ -28,13 +30,9 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
     internal CloudflareAccountProfileService(HttpClient httpClient, Uri endpoint, ILocalizationService? localization = null)
     {
         this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        ArgumentNullException.ThrowIfNull(endpoint);
-        if (endpoint.Scheme != Uri.UriSchemeHttps)
-        {
-            throw new ArgumentException("Endpoint de perfil de conta inválido.", nameof(endpoint));
-        }
-
-        this.endpoint = endpoint;
+        this.endpoint = CloudflareTransportDefaults.ValidateHttpsEndpoint(
+            endpoint,
+            "Endpoint de perfil de conta inválido.");
         this.localization = localization ?? LocalizationService.Current;
     }
 
@@ -266,14 +264,4 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
         [property: JsonPropertyName("firstName")] string? FirstName,
         [property: JsonPropertyName("lastName")] string? LastName,
         [property: JsonPropertyName("termsVersion")] string? TermsVersion);
-
-    private static HttpClient CreateClient()
-    {
-        var handler = new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-        };
-        return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(20) };
-    }
 }
