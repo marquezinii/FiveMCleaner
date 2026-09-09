@@ -1103,21 +1103,12 @@ public sealed class WindowsTransactionEngine
         catch (OperationCanceledException cancellationException) when (
             cancellationToken.IsCancellationRequested)
         {
-            var recoveryErrors = new List<Exception>();
-            try
-            {
-                await IsolatedRollbackSelfAsync(journal, item, context, commitStarted)
-                    .ConfigureAwait(false);
-            }
-            catch (Exception rollbackPipelineException) when (
-                rollbackPipelineException is not StackOverflowException)
-            {
-                recoveryErrors.Add(rollbackPipelineException);
-                recoveryErrors.AddRange(await RollbackWithoutPersistenceAsync(
-                    [item],
-                    context with { IsImmediateFailureRecovery = true }).ConfigureAwait(false));
-            }
-
+            var recoveryErrors = await RecoverIsolatedItemAsync(
+                journal,
+                item,
+                context,
+                commitStarted,
+                persistEntryBeforeRollback: false).ConfigureAwait(false);
             if (recoveryErrors.Count > 0)
             {
                 item.Entry.Error = new AggregateException(
@@ -1150,22 +1141,12 @@ public sealed class WindowsTransactionEngine
             item.Entry.BugCode = BugCodeClassifier.ClassifyOptimizationException(
                 exception, item.Action.Metadata.Id);
             item.Entry.CompletedAtUtc = DateTimeOffset.UtcNow;
-            var recoveryErrors = new List<Exception>();
-            try
-            {
-                await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
-                await IsolatedRollbackSelfAsync(journal, item, context, commitStarted)
-                    .ConfigureAwait(false);
-            }
-            catch (Exception rollbackPipelineException) when (
-                rollbackPipelineException is not StackOverflowException)
-            {
-                recoveryErrors.Add(rollbackPipelineException);
-                recoveryErrors.AddRange(await RollbackWithoutPersistenceAsync(
-                    [item],
-                    context with { IsImmediateFailureRecovery = true }).ConfigureAwait(false));
-            }
-
+            var recoveryErrors = await RecoverIsolatedItemAsync(
+                journal,
+                item,
+                context,
+                commitStarted,
+                persistEntryBeforeRollback: true).ConfigureAwait(false);
             if (recoveryErrors.Count > 0)
             {
                 item.Entry.Error = new AggregateException(
@@ -1176,6 +1157,44 @@ public sealed class WindowsTransactionEngine
             return item.Action.Metadata.IsCritical
                 ? IsolatedItemResult.FailedCritical
                 : IsolatedItemResult.Failed;
+        }
+    }
+
+    /// <summary>
+    /// Recuperação de uma ação isolada que não pôde concluir: tenta o rollback
+    /// persistido da própria ação e, se o pipeline de rollback falhar, cai
+    /// para o rollback sem persistência marcado como recuperação imediata. A
+    /// lista devolvida fica vazia quando a recuperação foi limpa; o chamador é
+    /// quem decide como reportar os erros acumulados.
+    /// </summary>
+    private async Task<List<Exception>> RecoverIsolatedItemAsync(
+        WindowsTransactionJournal journal,
+        (IWindowsOptimizationAction Action, WindowsActionJournalEntry Entry) item,
+        WindowsActionContext context,
+        bool commitStarted,
+        bool persistEntryBeforeRollback)
+    {
+        try
+        {
+            if (persistEntryBeforeRollback)
+            {
+                await journalStore.SaveAsync(journal, CancellationToken.None).ConfigureAwait(false);
+            }
+
+            await IsolatedRollbackSelfAsync(journal, item, context, commitStarted)
+                .ConfigureAwait(false);
+            return [];
+        }
+        catch (Exception rollbackPipelineException) when (
+            rollbackPipelineException is not StackOverflowException)
+        {
+            return
+            [
+                rollbackPipelineException,
+                .. await RollbackWithoutPersistenceAsync(
+                    [item],
+                    context with { IsImmediateFailureRecovery = true }).ConfigureAwait(false)
+            ];
         }
     }
 

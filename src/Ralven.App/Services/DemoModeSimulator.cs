@@ -117,8 +117,6 @@ internal sealed class DemoModeSimulator
 
     private string GetLocalizedActionName(ActionMetadataDto action)
     {
-        var key = $"Actions.{action.Id}.Name";
-        var value = localization.GetString(key);
-        return value == key ? action.Name : value;
+        return localization.GetStringOrFallback($"Actions.{action.Id}.Name", action.Name);
     }
 }
