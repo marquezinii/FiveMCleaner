@@ -1,4 +1,5 @@
 using System.Windows;
+using Ralven.App.ViewModels;
 using Ralven.Contracts;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -10,6 +11,8 @@ public partial class FiveMPage : UserControl
 
     private MainWindow? Shell => Window.GetWindow(this) as MainWindow;
 
+    private MainViewModel? ViewModel => DataContext as MainViewModel;
+
     private void BackToGames_Click(object sender, RoutedEventArgs e) => Shell?.RequestNavigateToGames();
 
     private void OpenFiveMOptimizer_Click(object sender, RoutedEventArgs e) =>
@@ -19,4 +22,7 @@ public partial class FiveMPage : UserControl
         Shell?.RequestNavigateToOptimizer(OptimizationScope.GeneralWindows);
 
     private void OpenHistory_Click(object sender, RoutedEventArgs e) => Shell?.RequestNavigateToHistory();
+
+    private void ToggleFiveMSessionMonitor_Click(object sender, RoutedEventArgs e) =>
+        ViewModel?.ToggleFiveMSessionMonitor();
 }
