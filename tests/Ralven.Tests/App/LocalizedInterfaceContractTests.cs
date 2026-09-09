@@ -119,6 +119,9 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.FiveMLegacy)", fiveMPageCode, StringComparison.Ordinal);
         Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.GeneralWindows)", fiveMPageCode, StringComparison.Ordinal);
         Assert.Contains("RequestNavigateToHistory()", fiveMPageCode, StringComparison.Ordinal);
+        Assert.Contains("[Dashboard.SessionMonitor.Title]", fiveMPage, StringComparison.Ordinal);
+        Assert.Contains("ToggleFiveMSessionMonitor_Click", fiveMPage, StringComparison.Ordinal);
+        Assert.Contains("ToggleFiveMSessionMonitor()", fiveMPageCode, StringComparison.Ordinal);
         Assert.Contains("OptimizationScope.FiveMLegacy ? GamesNav : OptimizerNav", navigation, StringComparison.Ordinal);
         Assert.Contains("Games.FiveM.Action", gamesPage, StringComparison.Ordinal);
         Assert.Contains("FiveMGameCardSurface", gamesPage, StringComparison.Ordinal);
