@@ -47,4 +47,40 @@ Não pertence à tarefa:
 
 ## Resultado entregue
 
-A preencher ao concluir.
+Sete consolidações, nenhuma mudança de comportamento observável:
+
+- `GameBooleanRegistryAction` passa a concentrar as regras que
+  `GameModeRegistryAction` e `GameDvrRegistryAction` repetiam integralmente;
+- `GraphicsSettingsFile` concentra o nome de arquivo aceito por alvo e a
+  sondagem de arquivo inexistente, antes duplicados entre
+  `DisplayPreferencesAction` e `LegacyGraphicsPresetAction`;
+- `ShouldLowerValue`/`ShouldRaiseValue` viram `ShouldChangeValue`, com teste
+  que fixa a simetria das duas direções;
+- `RecoverIsolatedItemAsync` remove o pipeline de recuperação duplicado nos
+  dois `catch` de `ApplyIsolatedItemAsync`, preservando a gravação prévia do
+  journal exclusiva do caminho de falha;
+- `NativeMemoryStatus` foi removido: o diagnóstico usa o
+  `WindowsSystemResourceInspector` já existente, tirando P/Invoke da camada de
+  apresentação;
+- `CloudflareAccountProfileService` passa a usar `CloudflareTransportDefaults`
+  como os outros seis serviços Cloudflare;
+- `LocalizationFallback.GetStringOrFallback` substitui quatro implementações
+  privadas e seis repetições inline em `ToDisplayItem`;
+- `AppOptimizationService` foi dividido em `partial class` por
+  responsabilidade (principal, `Settings`, `Diagnostics`, `History`), sem
+  adicionar, remover ou alterar nenhum membro.
+
+Validação executada na branch:
+
+- `dotnet build Ralven.slnx --configuration Release`: sucesso, 0 avisos;
+- suíte .NET: **1.434 testes aprovados**, 0 falhas (baseline era 1.432; os
+  2 novos cobrem a simetria das direções do preset gráfico);
+- `dotnet format Ralven.slnx --verify-no-changes`: limpo;
+- `scripts\Verify-Safety.ps1`: aprovado;
+- `git diff --check`: limpo;
+- `scripts\Install-DevelopmentShortcut.ps1 -Build`: atalho reconstruído.
+
+Limitação real: o SharpLens MCP citado em `CLAUDE.md` não estava conectado
+nesta sessão, então a análise semântica foi feita com compilador, LSP local,
+busca estrutural e a suíte de testes, e não com `find_references`/
+`get_call_graph`.
