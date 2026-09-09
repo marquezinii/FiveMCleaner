@@ -172,9 +172,11 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
         CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(update);
+        UpdatePathSafety.EnsureNoReparsePoints(updatesRoot);
         PruneStaleDownloads(update.Version.CoreVersion);
         var directory = Path.Combine(updatesRoot, update.Version.CoreVersion);
         Directory.CreateDirectory(directory);
+        UpdatePathSafety.EnsureNoReparsePoints(directory);
         var finalPath = Path.Combine(directory, update.AssetName);
         if (await MatchesAsync(finalPath, update, cancellationToken))
             return new DownloadedUpdate(update.Version, finalPath, update.SizeBytes, update.Sha256Hex, true);
@@ -218,6 +220,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
                 }
                 finally { ArrayPool<byte>.Shared.Return(buffer, true); }
             }
+            UpdatePathSafety.EnsureNoReparsePoints(finalPath);
             File.Move(temporary, finalPath, true);
             return new DownloadedUpdate(update.Version, finalPath, update.SizeBytes, update.Sha256Hex, false);
         }
@@ -296,12 +299,17 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
     {
         try
         {
+            UpdatePathSafety.EnsureNoReparsePoints(updatesRoot);
             foreach (var directory in Directory.EnumerateDirectories(updatesRoot))
             {
                 var version = Path.GetFileName(directory);
                 if (version.Equals(currentVersion, StringComparison.OrdinalIgnoreCase)
                     || !Version.TryParse(version, out _)) continue;
-                try { Directory.Delete(directory, recursive: true); }
+                try
+                {
+                    UpdatePathSafety.EnsureNoReparsePoints(directory);
+                    Directory.Delete(directory, recursive: true);
+                }
                 catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
                 {
                     // A próxima atualização tenta novamente a pasta bloqueada.

@@ -33,17 +33,23 @@ public sealed class UpdaterDiagnostics
 
     public UpdaterDiagnostics(string dataRoot)
     {
-        logPath = Path.Combine(Path.GetFullPath(dataRoot), "Logs", "updater.jsonl");
-        pendingRoot = Path.Combine(Path.GetFullPath(dataRoot), "UpdaterTelemetry", "pending");
+        var root = UpdatePathSafety.EnsureNoReparsePoints(dataRoot);
+        logPath = Path.Combine(root, "Logs", "updater.jsonl");
+        pendingRoot = Path.Combine(root, "UpdaterTelemetry", "pending");
     }
 
     public async Task RecordAsync(UpdaterEvent value, string? localDetail, bool telemetryAuthorized)
     {
         try
         {
+            UpdatePathSafety.EnsureNoReparsePoints(logPath);
             Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
+            UpdatePathSafety.EnsureNoReparsePoints(logPath);
             if (File.Exists(logPath) && new FileInfo(logPath).Length > 2 * 1024 * 1024)
+            {
+                UpdatePathSafety.EnsureNoReparsePoints(logPath + ".1");
                 File.Move(logPath, logPath + ".1", true);
+            }
             await File.AppendAllTextAsync(
                 logPath,
                 JsonSerializer.Serialize(new { updaterEvent = value, detail = localDetail, timestamp = DateTimeOffset.UtcNow }) + Environment.NewLine)
@@ -57,7 +63,9 @@ public sealed class UpdaterDiagnostics
         }
         try
         {
+            EnsurePendingRootSafe();
             Directory.CreateDirectory(pendingRoot);
+            EnsurePendingRootSafe();
             var pendingPath = Path.Combine(pendingRoot, $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}-{Guid.NewGuid():N}.json");
             // Escrita atômica (temp + replace): o App e o Launcher podem ler/
             // esvaziar este mesmo diretório concorrentemente, e um leitor não
@@ -82,11 +90,16 @@ public sealed class UpdaterDiagnostics
             TryDeletePending();
             return;
         }
+        EnsurePendingRootSafe();
         if (!Directory.Exists(pendingRoot)) return;
         foreach (var file in Directory.EnumerateFiles(pendingRoot, "*.json").OrderBy(path => path).Take(20))
         {
             UpdaterEvent? value;
-            try { value = JsonSerializer.Deserialize<UpdaterEvent>(await File.ReadAllTextAsync(file).ConfigureAwait(false)); }
+            try
+            {
+                UpdatePathSafety.EnsureNoReparsePoints(file);
+                value = JsonSerializer.Deserialize<UpdaterEvent>(await File.ReadAllTextAsync(file).ConfigureAwait(false));
+            }
             catch (Exception exception) when (exception is IOException or JsonException)
             {
                 TryDelete(file);
@@ -128,7 +141,9 @@ public sealed class UpdaterDiagnostics
     {
         try
         {
-            using var document = JsonDocument.Parse(File.ReadAllText(Path.Combine(dataRoot, "settings.json")));
+            var settingsPath = Path.Combine(UpdatePathSafety.EnsureNoReparsePoints(dataRoot), "settings.json");
+            UpdatePathSafety.EnsureNoReparsePoints(settingsPath);
+            using var document = JsonDocument.Parse(File.ReadAllText(settingsPath));
             var root = document.RootElement;
             return root.TryGetProperty("privacyConsentVersion", out var version)
                 && version.GetInt32() >= MinimumEssentialDiagnosticsNoticeVersion;
@@ -143,6 +158,7 @@ public sealed class UpdaterDiagnostics
 
     private void PrunePending()
     {
+        EnsurePendingRootSafe();
         foreach (var file in Directory.EnumerateFiles(pendingRoot, "*.json")
                      .OrderByDescending(path => path).Skip(100))
             TryDelete(file);
@@ -152,6 +168,7 @@ public sealed class UpdaterDiagnostics
     {
         try
         {
+            EnsurePendingRootSafe();
             if (!Directory.Exists(pendingRoot)) return;
             foreach (var file in Directory.EnumerateFiles(pendingRoot, "*.json")) TryDelete(file);
         }
@@ -160,7 +177,13 @@ public sealed class UpdaterDiagnostics
 
     private static void TryDelete(string path)
     {
-        try { File.Delete(path); }
+        try
+        {
+            UpdatePathSafety.EnsureNoReparsePoints(path);
+            File.Delete(path);
+        }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }
+
+    private void EnsurePendingRootSafe() => UpdatePathSafety.EnsureNoReparsePoints(pendingRoot);
 }

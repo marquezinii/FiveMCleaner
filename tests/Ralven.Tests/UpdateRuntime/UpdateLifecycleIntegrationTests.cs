@@ -41,6 +41,31 @@ public sealed class UpdateLifecycleIntegrationTests : IDisposable
         Assert.False(new UpdateRecoveryJournal(runtimeRoot).TryRead(out _));
     }
 
+    [Fact]
+    public void RuntimeUpdateLease_RejectsASecondLauncherWhileTheFirstSupervisesHealth()
+    {
+        var runtimeRoot = Path.Combine(root, "Runtime");
+        using var first = RuntimeUpdateLease.TryAcquire(runtimeRoot);
+        Assert.NotNull(first);
+
+        RuntimeUpdateLease? second = null;
+        Exception? failure = null;
+        using var completed = new ManualResetEventSlim();
+        var contender = new Thread(() =>
+        {
+            try { second = RuntimeUpdateLease.TryAcquire(runtimeRoot); }
+            catch (Exception exception) { failure = exception; }
+            finally { completed.Set(); }
+        })
+        { IsBackground = true };
+        contender.Start();
+
+        completed.Wait(TestContext.Current.CancellationToken);
+        contender.Join();
+        Assert.Null(failure);
+        Assert.Null(second);
+    }
+
     private UpdateTransaction StageActivateAndLaunch(
         string runtimeRoot,
         string previousVersion,

@@ -5,7 +5,8 @@ namespace Ralven.UpdateRuntime;
 public sealed class UpdateHealthReceiptStore
 {
     private readonly string path;
-    public UpdateHealthReceiptStore(string runtimeRoot) => path = Path.Combine(Path.GetFullPath(runtimeRoot), "health.json");
+    public UpdateHealthReceiptStore(string runtimeRoot) =>
+        path = Path.Combine(UpdatePathSafety.EnsureNoReparsePoints(runtimeRoot), "health.json");
 
     public void Confirm(UpdateTransaction transaction)
     {
@@ -18,13 +19,16 @@ public sealed class UpdateHealthReceiptStore
         if (transactionId.Length != 32 || !transactionId.All(char.IsAsciiHexDigit)
             || !Version.TryParse(version, out _) || nonce.Length != 64 || !nonce.All(char.IsAsciiHexDigit))
             throw new ArgumentException("Recibo de saúde inválido.");
+        UpdatePathSafety.EnsureNoReparsePoints(path);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        UpdatePathSafety.EnsureNoReparsePoints(path);
         var receipt = new HealthReceipt(transactionId, version, nonce, DateTimeOffset.UtcNow);
         AtomicFile.WriteText(path, JsonSerializer.Serialize(receipt));
     }
 
     public bool Confirms(UpdateTransaction transaction)
     {
+        UpdatePathSafety.EnsureNoReparsePoints(path);
         if (!File.Exists(path)) return false;
         try
         {
@@ -50,7 +54,11 @@ public sealed class UpdateHealthReceiptStore
     /// </summary>
     public void Invalidate()
     {
-        try { File.Delete(path); }
+        try
+        {
+            UpdatePathSafety.EnsureNoReparsePoints(path);
+            File.Delete(path);
+        }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }
 
