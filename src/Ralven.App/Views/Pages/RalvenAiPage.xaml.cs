@@ -4,12 +4,22 @@ using System.Windows.Input;
 using Ralven.App.Services;
 using Ralven.App.ViewModels;
 using Ralven.Contracts;
+using Button = System.Windows.Controls.Button;
 using UserControl = System.Windows.Controls.UserControl;
 
 namespace Ralven.App.Views.Pages;
 
 public partial class RalvenAiPage : UserControl, IDisposable
 {
+    private static readonly string[] welcomeGreetingKeys =
+    [
+        "RalvenAi.Welcome.Greeting1",
+        "RalvenAi.Welcome.Greeting2",
+        "RalvenAi.Welcome.Greeting3",
+        "RalvenAi.Welcome.Greeting4",
+        "RalvenAi.Welcome.Greeting5"
+    ];
+
     private readonly RalvenAiService? service;
     private readonly Func<CancellationToken, Task<string?>> getIdToken;
     private readonly bool demoMode;
@@ -28,6 +38,7 @@ public partial class RalvenAiPage : UserControl, IDisposable
         this.demoMode = demoMode;
         InitializeComponent();
         ConversationItems.ItemsSource = messages;
+        WelcomeText.Text = Localize(welcomeGreetingKeys[Random.Shared.Next(welcomeGreetingKeys.Length)]);
     }
 
     private async void Send_Click(object sender, RoutedEventArgs e) => await SendAsync();
@@ -39,6 +50,18 @@ public partial class RalvenAiPage : UserControl, IDisposable
             e.Handled = true;
             await SendAsync();
         }
+    }
+
+    private void Suggestion_Click(object sender, RoutedEventArgs e)
+    {
+        if (sender is not Button { Tag: string key })
+        {
+            return;
+        }
+
+        MessageTextBox.Text = Localize(key);
+        MessageTextBox.CaretIndex = MessageTextBox.Text.Length;
+        MessageTextBox.Focus();
     }
 
     private async Task SendAsync()
