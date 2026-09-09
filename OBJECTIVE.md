@@ -1,7 +1,7 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** transformar o card do FiveM em uma entrada para um hub dedicado dentro de Jogos, mantendo o otimizador especializado como uma das capacidades do módulo e deixando clara a relação com a otimização geral do Windows.
-- **Escopo:** adicionar a página e a navegação do hub FiveM, reutilizar os fluxos existentes de otimização e histórico, atualizar localização EN/PT-BR/ES, documentação pública afetada e testes de contrato da interface. Não inclui instalar ou configurar ReShade nesta entrega, nem alterar as ações ou a política transacional dos otimizadores.
-- **Critérios de conclusão:** o card em Jogos abre o hub FiveM; o hub oferece acessos distintos ao otimizador FiveM, ao otimizador geral e ao histórico; Jogos permanece como item ativo dentro do hub e do otimizador FiveM; textos públicos estão localizados; testes, build e validações aplicáveis passam; o atalho de desenvolvimento é reconstruído.
-- **Resultado entregue:** hub FiveM implementado com os três acessos previstos, localização e documentação atualizadas, testes de contrato adicionados, suíte completa e verificação de segurança aprovadas, renderização conferida em tamanhos e temas diferentes e atalho de desenvolvimento reconstruído.
+- **Objetivo:** Auditar e endurecer a cadeia automática de atualização sem ampliar o escopo de execução ou reduzir as garantias de integridade e recuperação.
+- **Escopo:** Launcher, Updater, UpdateRuntime, ReleaseTool, instalador, scripts, workflows e testes diretamente ligados a download, validação, staging, ativação, health-check e rollback.
+- **Critérios de conclusão:** Problemas reais identificados têm correções mínimas e testes de regressão; build e testes aplicáveis são executados; a revisão final confirma o escopo.
+- **Resultado entregue:** Corrigidas uma corrida de supervisão que podia reverter um candidato saudável e validações ausentes de reparse points nos caminhos mutáveis do update. Foram adicionadas regressões; build Release, suíte completa, verificação de segurança e contrato do instalador foram aprovados.
