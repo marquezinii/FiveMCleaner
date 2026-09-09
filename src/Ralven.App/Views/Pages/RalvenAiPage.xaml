@@ -3,20 +3,67 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="820">
-    <Grid Margin="28,24,28,28">
+             mc:Ignorable="d"
+             d:DesignWidth="1400"
+             d:DesignHeight="820">
+    <UserControl.Resources>
+        <Style x:Key="PromptSuggestionButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource SecondaryButtonStyle}">
+            <Setter Property="Height" Value="Auto" />
+            <Setter Property="MinHeight" Value="44" />
+            <Setter Property="Padding" Value="14,9" />
+            <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+
+        <Style x:Key="ChatComposerTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="FontFamily" Value="{StaticResource AppFontBody}" />
+            <Setter Property="FontSize" Value="14" />
+            <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}" />
+            <Setter Property="SelectionOpacity" Value="0.35" />
+            <Setter Property="VerticalContentAlignment" Value="Top" />
+            <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <ScrollViewer x:Name="PART_ContentHost"
+                                      Margin="{TemplateBinding Padding}"
+                                      VerticalScrollBarVisibility="Auto"
+                                      HorizontalScrollBarVisibility="Disabled" />
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <Grid Margin="36,24,36,28">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Border Grid.Row="0" Style="{StaticResource TitleBlockSurface}">
-            <StackPanel>
-                <TextBlock Text="{Binding [RalvenAi.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" />
-                <Rectangle Style="{StaticResource TitleAccentRule}" Margin="0,10,0,0" />
-                <TextBlock Text="{Binding [RalvenAi.Subtitle], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,12,0,0" />
+        <Grid Grid.Row="0" Margin="0,0,0,12">
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                <Image Source="{DynamicResource RalvenAiLogoImage}"
+                       Width="28"
+                       Height="28"
+                       Stretch="Uniform"
+                       Focusable="False"
+                       IsHitTestVisible="False" />
+                <TextBlock Text="{Binding [RalvenAi.Title], Source={StaticResource LocalizedStrings}}"
+                           Style="{StaticResource BodyStrongText}"
+                           Margin="10,0,0,0"
+                           VerticalAlignment="Center" />
             </StackPanel>
-        </Border>
+        </Grid>
 
         <Grid Grid.Row="1">
             <Grid.Style>
@@ -29,92 +76,242 @@
                     </Style.Triggers>
                 </Style>
             </Grid.Style>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="320" />
-            </Grid.ColumnDefinitions>
-            <Grid.RowDefinitions>
-                <RowDefinition Height="*" />
-                <RowDefinition Height="Auto" />
-            </Grid.RowDefinitions>
 
-            <Border Grid.Row="0" Grid.Column="0" Margin="0,0,18,16" Background="{DynamicResource Surface1Brush}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusLg}">
-                <Grid>
-                    <ScrollViewer x:Name="ConversationScrollViewer" Padding="22" VerticalScrollBarVisibility="Auto">
-                        <ItemsControl x:Name="ConversationItems">
-                            <ItemsControl.ItemTemplate>
-                                <DataTemplate>
-                                    <Border MaxWidth="680" Padding="16,12" Margin="0,0,0,12" CornerRadius="{StaticResource RadiusMd}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1">
-                                        <Border.Style>
-                                            <Style TargetType="Border">
-                                                <Setter Property="HorizontalAlignment" Value="Left" />
-                                                <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsUser}" Value="True">
-                                                        <Setter Property="HorizontalAlignment" Value="Right" />
-                                                        <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </Border.Style>
-                                        <StackPanel>
-                                            <TextBlock Text="{Binding Author}" Style="{StaticResource OverlineText}" />
-                                            <TextBlock Text="{Binding Text}" Style="{StaticResource BodyText}" TextWrapping="Wrap" Margin="0,5,0,0" />
+            <ScrollViewer x:Name="ConversationScrollViewer"
+                          Padding="0,8,0,20"
+                          VerticalScrollBarVisibility="Auto"
+                          HorizontalScrollBarVisibility="Disabled">
+                <StackPanel MaxWidth="820" HorizontalAlignment="Center">
+                    <ItemsControl x:Name="ConversationItems">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border MaxWidth="760" Margin="0,0,0,18">
+                                    <Border.Style>
+                                        <Style TargetType="Border">
+                                            <Setter Property="HorizontalAlignment" Value="Left" />
+                                            <Setter Property="Padding" Value="0,3,80,3" />
+                                            <Setter Property="Background" Value="Transparent" />
+                                            <Setter Property="BorderThickness" Value="0" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsUser}" Value="True">
+                                                    <Setter Property="HorizontalAlignment" Value="Right" />
+                                                    <Setter Property="Padding" Value="16,12" />
+                                                    <Setter Property="Background" Value="{DynamicResource Surface3Brush}" />
+                                                    <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
+                                                    <Setter Property="BorderThickness" Value="1" />
+                                                    <Setter Property="CornerRadius" Value="{StaticResource RadiusMd}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Border.Style>
+                                    <StackPanel>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Image Source="{DynamicResource RalvenAiLogoImage}"
+                                                   Width="20"
+                                                   Height="20"
+                                                   Stretch="Uniform"
+                                                   Focusable="False"
+                                                   IsHitTestVisible="False"
+                                                   Margin="0,0,8,0">
+                                                <Image.Style>
+                                                    <Style TargetType="Image">
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsUser}" Value="True">
+                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Image.Style>
+                                            </Image>
+                                            <TextBlock Text="{Binding Author}"
+                                                       Style="{StaticResource OverlineText}"
+                                                       VerticalAlignment="Center" />
                                         </StackPanel>
-                                    </Border>
-                                </DataTemplate>
-                            </ItemsControl.ItemTemplate>
-                        </ItemsControl>
-                    </ScrollViewer>
+                                        <TextBlock Text="{Binding Text}"
+                                                   Style="{StaticResource BodyText}"
+                                                   TextWrapping="Wrap"
+                                                   Margin="0,7,0,0" />
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
-                    <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" MaxWidth="520">
-                        <Image Source="{DynamicResource RalvenAiLogoImage}"
-                               Width="104"
-                               Height="104"
-                               Stretch="Uniform"
-                               Focusable="False"
-                               IsHitTestVisible="False"
-                               Margin="0,0,0,22" />
-                        <TextBlock Text="{Binding [RalvenAi.Empty.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" TextAlignment="Center" />
-                        <TextBlock Text="{Binding [RalvenAi.Empty.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,0" />
-                    </StackPanel>
-                </Grid>
-            </Border>
-
-            <Border Grid.Row="0" Grid.Column="1" Grid.RowSpan="2" Background="{DynamicResource Surface2Brush}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusLg}" Padding="20">
-                <StackPanel>
-                    <TextBlock Text="{Binding [RalvenAi.Privacy.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" />
-                    <TextBlock Text="{Binding [RalvenAi.Privacy.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,10,0,0" />
-                    <Border x:Name="RecommendationPanel" Visibility="Collapsed" Margin="0,24,0,0" Padding="16" Background="{DynamicResource AccentSoftBrush}" CornerRadius="{StaticResource RadiusMd}">
+                    <Border x:Name="RecommendationPanel"
+                            Visibility="Collapsed"
+                            Style="{StaticResource FieldSurface}"
+                            Margin="0,0,0,18"
+                            Padding="18">
                         <StackPanel>
-                            <TextBlock Text="{Binding [RalvenAi.Recommendation.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                            <TextBlock x:Name="RecommendationProfileText" Style="{StaticResource SectionText}" Margin="0,7,0,0" />
-                            <Button Content="{Binding [RalvenAi.ReviewPlan], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,16,0,0" HorizontalAlignment="Stretch" Click="ReviewPlan_Click" />
+                            <TextBlock Text="{Binding [RalvenAi.Recommendation.Title], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource OverlineText}" />
+                            <TextBlock x:Name="RecommendationProfileText"
+                                       Style="{StaticResource SectionText}"
+                                       Margin="0,7,0,0" />
+                            <Button Content="{Binding [RalvenAi.ReviewPlan], Source={StaticResource LocalizedStrings}}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Margin="0,16,0,0"
+                                    HorizontalAlignment="Left"
+                                    Click="ReviewPlan_Click" />
                         </StackPanel>
                     </Border>
                 </StackPanel>
-            </Border>
+            </ScrollViewer>
 
-            <Grid Grid.Row="1" Grid.Column="0" Margin="0,0,18,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Grid.RowDefinitions>
-                    <RowDefinition Height="Auto" />
-                    <RowDefinition Height="Auto" />
-                </Grid.RowDefinitions>
-                <TextBox x:Name="MessageTextBox" Grid.Row="0" Grid.Column="0" MinHeight="46" MaxLength="1000" Padding="14,11" TextWrapping="Wrap" AcceptsReturn="True" VerticalScrollBarVisibility="Auto" KeyDown="MessageTextBox_KeyDown"
-                         ToolTip="{Binding [RalvenAi.InputPlaceholder], Source={StaticResource LocalizedStrings}}"
-                         AutomationProperties.Name="{Binding [RalvenAi.InputPlaceholder], Source={StaticResource LocalizedStrings}}" />
-                <Button x:Name="SendButton" Grid.Row="0" Grid.Column="1" Content="{Binding [RalvenAi.Send], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="116" Margin="12,0,0,0" Click="Send_Click" />
-                <TextBlock x:Name="StatusText" Grid.Row="1" Grid.ColumnSpan="2" Style="{StaticResource CaptionText}" Margin="2,7,0,0" TextWrapping="Wrap" />
-            </Grid>
+            <StackPanel x:Name="EmptyState"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        MaxWidth="720"
+                        Margin="0,0,0,42">
+                <Image Source="{DynamicResource RalvenAiLogoImage}"
+                       Width="72"
+                       Height="72"
+                       Stretch="Uniform"
+                       Focusable="False"
+                       IsHitTestVisible="False"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,20" />
+                <TextBlock x:Name="WelcomeText"
+                           Style="{StaticResource DisplayText}"
+                           TextAlignment="Center" />
+                <TextBlock Text="{Binding [RalvenAi.Empty.Detail], Source={StaticResource LocalizedStrings}}"
+                           Style="{StaticResource SecondaryText}"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           Margin="0,10,0,0" />
+                <WrapPanel HorizontalAlignment="Center" Margin="0,24,0,0" ItemWidth="220" ItemHeight="Auto">
+                    <Button Style="{StaticResource PromptSuggestionButtonStyle}"
+                            Margin="4"
+                            Tag="RalvenAi.Suggestion.Bottleneck"
+                            Click="Suggestion_Click"
+                            AutomationProperties.Name="{Binding [RalvenAi.Suggestion.Bottleneck], Source={StaticResource LocalizedStrings}}">
+                        <TextBlock Text="{Binding [RalvenAi.Suggestion.Bottleneck], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   TextWrapping="Wrap" />
+                    </Button>
+                    <Button Style="{StaticResource PromptSuggestionButtonStyle}"
+                            Margin="4"
+                            Tag="RalvenAi.Suggestion.Profiles"
+                            Click="Suggestion_Click"
+                            AutomationProperties.Name="{Binding [RalvenAi.Suggestion.Profiles], Source={StaticResource LocalizedStrings}}">
+                        <TextBlock Text="{Binding [RalvenAi.Suggestion.Profiles], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   TextWrapping="Wrap" />
+                    </Button>
+                    <Button Style="{StaticResource PromptSuggestionButtonStyle}"
+                            Margin="4"
+                            Tag="RalvenAi.Suggestion.Start"
+                            Click="Suggestion_Click"
+                            AutomationProperties.Name="{Binding [RalvenAi.Suggestion.Start], Source={StaticResource LocalizedStrings}}">
+                        <TextBlock Text="{Binding [RalvenAi.Suggestion.Start], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   TextWrapping="Wrap" />
+                    </Button>
+                </WrapPanel>
+            </StackPanel>
         </Grid>
 
-        <Border Grid.Row="1" Padding="28" Background="{DynamicResource Surface2Brush}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusLg}">
+        <StackPanel Grid.Row="2"
+                    Width="820"
+                    HorizontalAlignment="Center"
+                    Margin="0,8,0,0">
+            <StackPanel.Style>
+                <Style TargetType="StackPanel">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasRalvenAiAccess}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </StackPanel.Style>
+            <Border x:Name="MessageComposer"
+                    Background="{DynamicResource Surface2Brush}"
+                    BorderBrush="{DynamicResource BorderDefaultBrush}"
+                    BorderThickness="1"
+                    CornerRadius="{StaticResource RadiusLg}"
+                    Padding="16,12,10,12">
+                <Border.Style>
+                    <Style TargetType="Border">
+                        <Style.Triggers>
+                            <Trigger Property="IsKeyboardFocusWithin" Value="True">
+                                <Setter Property="BorderBrush" Value="{DynamicResource FocusRingBrush}" />
+                                <Setter Property="BorderThickness" Value="2" />
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Border.Style>
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Grid Grid.Column="0" Margin="0,0,12,0">
+                        <TextBox x:Name="MessageTextBox"
+                                 Style="{StaticResource ChatComposerTextBoxStyle}"
+                                 MinHeight="26"
+                                 MaxHeight="112"
+                                 MaxLength="1000"
+                                 TextWrapping="Wrap"
+                                 AcceptsReturn="True"
+                                 VerticalScrollBarVisibility="Auto"
+                                 KeyDown="MessageTextBox_KeyDown"
+                                 ToolTip="{Binding [RalvenAi.InputPlaceholder], Source={StaticResource LocalizedStrings}}"
+                                 AutomationProperties.Name="{Binding [RalvenAi.InputPlaceholder], Source={StaticResource LocalizedStrings}}" />
+                        <TextBlock Text="{Binding [RalvenAi.InputPlaceholder], Source={StaticResource LocalizedStrings}}"
+                                   Foreground="{DynamicResource TextTertiaryBrush}"
+                                   IsHitTestVisible="False"
+                                   VerticalAlignment="Top">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource BodyText}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding Text, ElementName=MessageTextBox}" Value="">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                    <Button x:Name="SendButton"
+                            Grid.Column="1"
+                            Content="{Binding [RalvenAi.Send], Source={StaticResource LocalizedStrings}}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            MinWidth="92"
+                            Click="Send_Click" />
+                </Grid>
+            </Border>
+            <TextBlock x:Name="StatusText"
+                       Style="{StaticResource CaptionText}"
+                       Margin="4,7,4,0"
+                       TextWrapping="Wrap" />
+        </StackPanel>
+
+        <TextBlock Grid.Row="3"
+                   Text="{Binding [RalvenAi.Privacy.Detail], Source={StaticResource LocalizedStrings}}"
+                   TextWrapping="Wrap"
+                   TextAlignment="Center"
+                   MaxWidth="820"
+                   HorizontalAlignment="Center"
+                   Margin="0,12,0,0">
+            <TextBlock.Style>
+                <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
+                    <Setter Property="Visibility" Value="Collapsed" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding HasRalvenAiAccess}" Value="True">
+                            <Setter Property="Visibility" Value="Visible" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </TextBlock.Style>
+        </TextBlock>
+
+        <Border Grid.Row="1"
+                Grid.RowSpan="3"
+                Padding="28">
             <Border.Style>
-                <Style TargetType="Border">
+                <Style TargetType="Border" BasedOn="{StaticResource PanelSurface}">
                     <Setter Property="Visibility" Value="Visible" />
                     <Style.Triggers>
                         <DataTrigger Binding="{Binding HasRalvenAiAccess}" Value="True">
@@ -124,8 +321,22 @@
                 </Style>
             </Border.Style>
             <StackPanel MaxWidth="620" HorizontalAlignment="Center" VerticalAlignment="Center">
-                <TextBlock Text="{Binding [RalvenAi.AccessRequired.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" TextAlignment="Center" />
-                <TextBlock Text="{Binding [RalvenAi.AccessRequired.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" TextAlignment="Center" Margin="0,10,0,0" />
+                <Image Source="{DynamicResource RalvenAiLogoImage}"
+                       Width="68"
+                       Height="68"
+                       Stretch="Uniform"
+                       Focusable="False"
+                       IsHitTestVisible="False"
+                       HorizontalAlignment="Center"
+                       Margin="0,0,0,20" />
+                <TextBlock Text="{Binding [RalvenAi.AccessRequired.Title], Source={StaticResource LocalizedStrings}}"
+                           Style="{StaticResource SectionText}"
+                           TextAlignment="Center" />
+                <TextBlock Text="{Binding [RalvenAi.AccessRequired.Detail], Source={StaticResource LocalizedStrings}}"
+                           Style="{StaticResource SecondaryText}"
+                           TextWrapping="Wrap"
+                           TextAlignment="Center"
+                           Margin="0,10,0,0" />
             </StackPanel>
         </Border>
     </Grid>
