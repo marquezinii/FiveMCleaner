@@ -97,10 +97,10 @@ URL), authentication is a small, self-contained system:
   Worker secret — the real IP itself is never stored). Five failed attempts
   within 15 minutes locks that IP out for 15 minutes; the counter resets once
   the window passes.
-- **Sessions**: server-side, revocable (`admin_sessions`, `src/auth/
+- **Sessions**: server-side, revocable and persisted for 30 days (`admin_sessions`, `src/auth/
   sessionStore.js`) — a random 256-bit session ID is the *only* thing stored
   in the browser cookie (`__Host-`, `HttpOnly`, `Secure`, `SameSite=None`), so logout
-  or manually clearing the table actually invalidates it immediately, unlike
+  or manually clearing the site data or the table actually invalidates it immediately, unlike
   a stateless signed token that can only be waited out. `SameSite=None`
   (not `Strict`/`Lax`) is required because the dashboard (`*.pages.dev`) and
   this Worker (`*.workers.dev`) are genuinely different registrable
