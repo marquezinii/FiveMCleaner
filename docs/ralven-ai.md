@@ -44,9 +44,11 @@ próprio; e-mail, nome, UUID do cliente e token Firebase não são enviados.
 
 O orçamento do usuário é indexado pelo mês em que começa seu período pago; o
 teto global usa o mês UTC real da chamada. A reserva é feita antes do provedor e
-liquidada pelo uso reportado. Se uma falha de transporte tornar o custo
-incerto, a reserva permanece contabilizada em vez de liberar limite que pode já
-ter sido consumido.
+liquidada pelo uso reportado. Falha de transporte, timeout, resposta 5xx ou
+resposta inválida sem uso mensurável mantêm a reserva contabilizada em vez de
+liberar limite que pode já ter sido consumido. Apenas rejeição 4xx determinística
+antes do processamento libera uma reserva sem uso reportado. A resposta do
+provedor também é limitada a 64 KiB e validada por tipo antes de ser percorrida.
 
 ## Configuração operacional
 

@@ -4,6 +4,7 @@ import { withinRequiredRateLimit } from './rateLimit.js';
 import { hasExactJsonContentType, readBoundedJson } from './requestSecurity.js';
 
 const MAX_BODY_BYTES = 64 * 1024;
+const MAX_PROVIDER_BODY_BYTES = 64 * 1024;
 const MAX_OUTPUT_TOKENS = 700;
 const PROMPT_VERSION = 1;
 const AI_ENTITLEMENT = 'ralven_ai';
@@ -24,8 +25,9 @@ function isPlainObject(value) {
 }
 
 function hasExactKeys(value, keys) {
-  return isPlainObject(value)
-    && Object.keys(value).sort().join('\0') === [...keys].sort().join('\0');
+  if (!isPlainObject(value)) return false;
+  const actual = Object.keys(value);
+  return actual.length === keys.length && keys.every(key => Object.hasOwn(value, key));
 }
 
 function boundedText(value, maximum, pattern = null) {
@@ -44,9 +46,10 @@ function finiteNumber(value, minimum, maximum) {
 }
 
 export function validateRalvenAiRequest(payload) {
+  const message = typeof payload?.message === 'string' ? payload.message.trim() : '';
   if (!hasExactKeys(payload, ['requestId', 'message', 'language', 'context', 'history'])
     || !boundedText(payload.requestId, 36, REQUEST_ID)
-    || !boundedText(payload.message?.trim(), 1_000)
+    || !boundedText(message, 1_000)
     || !boundedText(payload.language, 16, /^[A-Za-z]{2,3}(?:-[A-Za-z]{2,4})?$/u)
     || !Array.isArray(payload.history)
     || payload.history.length > 6) {
@@ -55,12 +58,13 @@ export function validateRalvenAiRequest(payload) {
 
   const history = [];
   for (const turn of payload.history) {
+    const text = typeof turn?.text === 'string' ? turn.text.trim() : '';
     if (!hasExactKeys(turn, ['role', 'text'])
       || !ROLES.has(turn.role)
-      || !boundedText(turn.text?.trim(), 2_000)) {
+      || !boundedText(text, 2_000)) {
       return null;
     }
-    history.push({ role: turn.role, text: turn.text.trim() });
+    history.push({ role: turn.role, text });
   }
 
   const context = payload.context;
@@ -117,7 +121,7 @@ export function validateRalvenAiRequest(payload) {
 
   return {
     requestId: payload.requestId,
-    message: payload.message.trim(),
+    message,
     language: payload.language,
     context: { ...context, profiles },
     history,
@@ -301,8 +305,10 @@ export function buildOpenAiRequest(input, model, identifier) {
 
 function extractOutputText(response) {
   if (typeof response?.output_text === 'string') return response.output_text;
-  for (const item of response?.output ?? []) {
-    for (const content of item?.content ?? []) {
+  if (!Array.isArray(response?.output)) return null;
+  for (const item of response.output) {
+    if (!Array.isArray(item?.content)) continue;
+    for (const content of item.content) {
       if (content?.type === 'output_text' && typeof content.text === 'string') return content.text;
     }
   }
@@ -318,13 +324,14 @@ export function parseRalvenAiReply(response) {
   } catch {
     return null;
   }
+  const answer = typeof reply?.answer === 'string' ? reply.answer.trim() : '';
   if (!hasExactKeys(reply, ['answer', 'recommendedProfile'])
-    || !boundedText(reply.answer?.trim(), 2_000)
+    || !boundedText(answer, 2_000)
     || !REPLY_PROFILES.has(reply.recommendedProfile)
-    || /```|https?:\/\/|\b(?:powershell|cmd\.exe|reg\.exe|disable\s+(?:defender|firewall|uac)|bypass\s+anti-?cheat)\b/iu.test(reply.answer)) {
+    || /```|https?:\/\/|\b(?:powershell|cmd\.exe|reg\.exe|disable\s+(?:defender|firewall|uac)|bypass\s+anti-?cheat)\b/iu.test(answer)) {
     return null;
   }
-  return { answer: reply.answer.trim(), recommendedProfile: reply.recommendedProfile };
+  return { answer, recommendedProfile: reply.recommendedProfile };
 }
 
 export async function handleRalvenAi(request, env, dependencies = {}) {
@@ -402,14 +409,18 @@ export async function handleRalvenAi(request, env, dependencies = {}) {
         config.model,
         await opaqueIdentifier(config.identifierSecret, `safety\0${auth.uid}`),
       )),
+      redirect: 'error',
     });
-    providerBody = await providerResponse.json();
+    providerBody = await readBoundedJson(providerResponse, MAX_PROVIDER_BODY_BYTES);
   } catch {
     await finishUsage(env.TELEMETRY_DB, budget.requestId, 'failed', null, config);
     return json({ error: 'provider-unavailable' }, 503);
   }
 
   const reply = providerResponse.ok ? parseRalvenAiReply(providerBody) : null;
+  const rejectedBeforeProcessing = providerResponse.status >= 400
+    && providerResponse.status < 500
+    && providerResponse.status !== 408;
   try {
     await finishUsage(
       env.TELEMETRY_DB,
@@ -417,7 +428,7 @@ export async function handleRalvenAi(request, env, dependencies = {}) {
       reply === null ? 'failed' : 'completed',
       providerBody?.usage,
       config,
-      !providerResponse.ok,
+      rejectedBeforeProcessing,
     );
   } catch {
     return json({ error: 'usage-unavailable' }, 503);

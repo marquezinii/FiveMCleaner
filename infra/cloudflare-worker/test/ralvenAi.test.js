@@ -106,6 +106,13 @@ test('Ralven AI validates the closed request and rejects unsafe provider text', 
   assert.notEqual(validateRalvenAiRequest(payload()), null);
   assert.equal(validateRalvenAiRequest({ ...payload(), path: 'C:\\Users\\Alice' }), null);
   assert.equal(validateRalvenAiRequest({ ...payload(), requestId: crypto.randomUUID().toUpperCase() }), null);
+  assert.equal(validateRalvenAiRequest({ ...payload(), message: {} }), null);
+  assert.equal(validateRalvenAiRequest({ ...payload(), history: [{ role: 'user', text: [] }] }), null);
+  assert.equal(parseRalvenAiReply({ output: {} }), null);
+  assert.equal(parseRalvenAiReply({ output: [{ content: {} }] }), null);
+  assert.equal(parseRalvenAiReply({
+    output_text: JSON.stringify({ answer: {}, recommendedProfile: 'balanced' }),
+  }), null);
   assert.equal(parseRalvenAiReply({
     output_text: JSON.stringify({
       answer: 'Run PowerShell to disable Defender.',
@@ -192,6 +199,7 @@ test('Ralven AI sends structured no-store request and persists usage only', asyn
     fetchEntitlements: pro,
     now,
     fetch: async (_url, options) => {
+      assert.equal(options.redirect, 'error');
       providerRequest = JSON.parse(options.body);
       return new Response(JSON.stringify({
         output: [{
@@ -267,6 +275,40 @@ test('Ralven AI keeps the reservation when provider delivery is ambiguous', asyn
   const [state, actualCost] = db.calls[1].params;
   assert.equal(state, 'failed');
   assert.equal(actualCost, null);
+});
+
+test('Ralven AI keeps the reservation for malformed or ambiguous provider responses', async () => {
+  for (const providerResponse of [
+    new Response(JSON.stringify({ output: {} }), { status: 200 }),
+    new Response(JSON.stringify({ error: 'temporary' }), { status: 500 }),
+    new Response(`{"padding":"${'x'.repeat(64 * 1024)}"}`, { status: 200 }),
+  ]) {
+    const db = fakeDb();
+    const response = await handleRalvenAi(request(), env(db), {
+      requireUser: verifiedUser,
+      fetchEntitlements: pro,
+      now,
+      fetch: async () => providerResponse,
+    });
+
+    assert.equal(response.status, 503);
+    assert.equal((await response.json()).error, 'invalid-provider-response');
+    assert.deepEqual(db.calls[1].params.slice(0, 2), ['failed', null]);
+  }
+});
+
+test('Ralven AI releases the reservation for a deterministic provider rejection', async () => {
+  const db = fakeDb();
+  const response = await handleRalvenAi(request(), env(db), {
+    requireUser: verifiedUser,
+    fetchEntitlements: pro,
+    now,
+    fetch: async () => new Response(JSON.stringify({ error: 'bad request' }), { status: 400 }),
+  });
+
+  assert.equal(response.status, 503);
+  assert.equal((await response.json()).error, 'invalid-provider-response');
+  assert.deepEqual(db.calls[1].params.slice(0, 2), ['failed', 0]);
 });
 
 test('Ralven AI accounts provider usage even when the reply fails safety validation', async () => {

@@ -199,7 +199,9 @@ sensitive than the one message an admin chose to broadcast.
 allowlisted diagnostic summary, applies a required rate limit per Firebase UID,
 deduplicates client requests and reserves budget in D1 before calling the
 OpenAI Responses API. It exposes no tools and returns only an answer plus one
-standard profile name. See [`docs/ralven-ai.md`](../../docs/ralven-ai.md).
+standard profile name. Provider responses are capped at 64 KiB; ambiguous
+failures retain the reservation when measured usage is unavailable. See
+[`docs/ralven-ai.md`](../../docs/ralven-ai.md).
 
 Activation requires migrations through `0011_ralven_ai_foundation.sql`, the
 distinct Worker secrets `OPENAI_API_KEY` and
