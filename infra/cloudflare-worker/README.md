@@ -3,9 +3,10 @@
 **Deployed** at
 `https://api.vemryx.com`.
 
-The legacy `workers.dev` route, Cloudflare Worker name, D1 database name/ID and
-Firebase project ID remain as compatibility identifiers until a separately
-provisioned migration exists. Public clients use the Ralven domain above.
+The Cloudflare Worker name, D1 database name/ID and Firebase project ID remain
+as compatibility identifiers until a separately provisioned migration exists.
+The legacy `workers.dev` route is disabled; public clients use only the Ralven
+domain above.
 
 This is the Cloudflare Worker + D1 backend for the anonymous telemetry
 pipeline described in [`docs/telemetry.md`](../../docs/telemetry.md) and the
@@ -97,10 +98,10 @@ URL), authentication is a small, self-contained system:
   Worker secret — the real IP itself is never stored). Five failed attempts
   within 15 minutes locks that IP out for 15 minutes; the counter resets once
   the window passes.
-- **Sessions**: server-side, revocable (`admin_sessions`, `src/auth/
+- **Sessions**: server-side, revocable and persisted for 30 days (`admin_sessions`, `src/auth/
   sessionStore.js`) — a random 256-bit session ID is the *only* thing stored
   in the browser cookie (`__Host-`, `HttpOnly`, `Secure`, `SameSite=None`), so logout
-  or manually clearing the table actually invalidates it immediately, unlike
+  or manually clearing the site data or the table actually invalidates it immediately, unlike
   a stateless signed token that can only be waited out. `SameSite=None`
   (not `Strict`/`Lax`) is required because the dashboard (`*.pages.dev`) and
   this Worker (`*.workers.dev`) are genuinely different registrable
@@ -194,15 +195,21 @@ sensitive than the one message an admin chose to broadcast.
 
 ## Ralven AI
 
-`POST /ai/message` is an authenticated, verified-email, Pro-only route. It
-validates a bounded allowlisted diagnostic summary, applies a required rate
-limit per Firebase UID and reserves monthly budget in D1 before calling the
+`POST /ai/message` is an authenticated, verified-email route that requires both
+`ralven_pro` and the separate `ralven_ai` entitlement. It validates a bounded
+allowlisted diagnostic summary, applies a required rate limit per Firebase UID,
+deduplicates client requests and reserves budget in D1 before calling the
 OpenAI Responses API. It exposes no tools and returns only an answer plus one
-standard profile name. See [`docs/ralven-ai.md`](../../docs/ralven-ai.md).
+standard profile name. Provider responses are capped at 64 KiB; ambiguous
+failures retain the reservation when measured usage is unavailable. See
+[`docs/ralven-ai.md`](../../docs/ralven-ai.md).
 
-Activation requires migration `0010_ralven_ai_usage.sql` and the Worker secret
-`OPENAI_API_KEY`. The non-secret model, price and budget values are declared in
-`wrangler.toml`; missing limits or limiter bindings fail closed.
+Activation requires migrations through `0011_ralven_ai_foundation.sql`, the
+distinct Worker secrets `OPENAI_API_KEY` and
+`RALVEN_AI_SAFETY_IDENTIFIER_SECRET`, and an explicit
+`RALVEN_AI_ENABLED=true`. The non-secret model, price and budget values are
+declared in `wrangler.toml`; missing or inconsistent limits and limiter
+bindings fail closed.
 
 ## Billing and recurring subscriptions
 
@@ -215,7 +222,8 @@ returned.
 deduplicates the event ID, and fetches the canonical payment and subscription
 with a Worker-only API key. Only a `CONFIRMED` or `RECEIVED` card payment
 linked to the server checkout, without completed refund or chargeback, grants
-its monthly period. Checkout or subscription status alone never grants Pro.
+the independent `ralven_pro` and `ralven_ai` keys for its monthly period.
+Checkout or subscription status alone never grants either entitlement.
 Both required credentials are Worker secrets:
 
 ```bash
@@ -231,7 +239,7 @@ does not document an idempotency key, an ambiguous create is never retried.
 Cancellation stops the checkout or subscription, preserves already paid access
 and permits account deletion only after the provider accepts it.
 
-Apply migrations through `0009_billing_checkout_payments.sql` with this code.
+Apply migrations through `0011_ralven_ai_foundation.sql` with this code.
 `ASAAS_BILLING_ENABLED` remains `false` in the committed configuration;
 activation requires the two secrets, `ASAAS_RETURN_URL` (HTTPS),
 `ASAAS_ENVIRONMENT`, `ASAAS_AMOUNT_CENTS` (default 1990, monthly BRL), and the required

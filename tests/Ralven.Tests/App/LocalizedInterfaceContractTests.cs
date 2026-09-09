@@ -915,8 +915,6 @@ public sealed partial class LocalizedInterfaceContractTests
             "Themes",
             "Controls.xaml"));
 
-        Assert.Contains("ToolTip=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
-        Assert.DoesNotContain("Text=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Text=\"{Binding [Settings.Subtitle]", mainWindow, StringComparison.Ordinal);
         Assert.Contains("<ui:TitleBar", mainWindow, StringComparison.Ordinal);
 
@@ -935,12 +933,10 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("Content=\"{Binding SelectedValue, RelativeSource={RelativeSource AncestorType=ComboBox}}\"", controls, StringComparison.Ordinal);
         Assert.Contains("SelectedValuePath=\"Content\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
-        Assert.DoesNotContain("&#xEA18;", mainWindow, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void SupportCard_AlignsItsStatusAndShowsTheInstalledVersion()
+    public void VersionCard_RemovesProtectionStatusAndShowsTheInstalledVersion()
     {
         var root = TestHelpers.FindRepositoryRoot();
         var mainWindow = File.ReadAllText(Path.Combine(
@@ -948,21 +944,15 @@ public sealed partial class LocalizedInterfaceContractTests
             "src",
             "Ralven.App",
             "MainWindow.xaml"));
-        var controls = File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "Ralven.App",
-            "Themes",
-            "Controls.xaml"));
-
-        Assert.Contains("VerticalAlignment=\"Center\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Safety.Active", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Safety.SnapshotRollback", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource FieldSurface}\" Padding=\"12,8\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding AppVersion, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
-        // A hierarquia de texto agora vem da escala tipográfica (Overline/
-        // Caption/Body), não de um Foreground fixo por elemento.
-        Assert.Contains("Style=\"{StaticResource CaptionText}\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Padding=\"{TemplateBinding Padding}\"", controls, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource OverlineText}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource BodyStrongText}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("AutomationProperties.Name=\"{Binding AboutVersionDeveloper}\"", mainWindow, StringComparison.Ordinal);
     }
 
     /// <summary>

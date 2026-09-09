@@ -270,7 +270,9 @@ public partial class MainWindow
     private void ApplyAccountEntitlementPresentation()
     {
         proViewModel.Refresh();
-        viewModel.SetProAccess(demoMode || IsEffectiveProEntitlement(accountEntitlement, TimeProvider.System.GetUtcNow()));
+        var hasProAccess = IsEffectiveProEntitlement(accountEntitlement, TimeProvider.System.GetUtcNow());
+        viewModel.SetProAccess(demoMode || hasProAccess);
+        viewModel.SetRalvenAiAccess(demoMode || (hasProAccess && accountEntitlement.HasRalvenAi));
         var localization = LocalizationService.Current;
         switch (accountEntitlement.Tier)
         {

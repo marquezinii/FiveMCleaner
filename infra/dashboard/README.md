@@ -55,8 +55,9 @@ npm test
 ## Authentication
 
 The dashboard has no login logic of its own — it just posts the password to
-the Worker's `/admin/login` and relies on the `HttpOnly` session cookie the
-Worker sets. See
+the Worker's `/admin/login` and relies on the 30-day `HttpOnly` session cookie
+the Worker sets. It never stores the password; logging out or clearing the
+site data ends access. See
 [`infra/cloudflare-worker/README.md`](../cloudflare-worker/README.md) for the
 full auth design (custom password + PBKDF2 hash + brute-force lockout +
 server-side revocable sessions — no Google/GitHub OAuth, no Cloudflare

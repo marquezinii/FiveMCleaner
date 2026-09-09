@@ -223,9 +223,13 @@ public sealed class PersonalWorkspaceTests
         Assert.False(viewModel.IsAggressiveSelected);
         Assert.False(viewModel.CanStart);
         viewModel.SetProAccess(true);
+        Assert.False(viewModel.HasRalvenAiAccess);
+        viewModel.SetRalvenAiAccess(true);
+        Assert.True(viewModel.HasRalvenAiAccess);
         Assert.True(viewModel.CanStart);
         await viewModel.SavePersonalProfileAsync();
         Assert.False(viewModel.HasProAccess);
+        Assert.False(viewModel.HasRalvenAiAccess);
         Assert.Empty((await store.LoadAsync(Token)).Profiles);
         viewModel.SelectProfile(OptimizationProfile.Aggressive);
         Assert.False(viewModel.IsUltraSelected);

@@ -1,9 +1,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Cryptography;
-using Ralven.Contracts;
 using Ralven.UpdateRuntime;
-using Ralven.Windows.Diagnostics;
 
 namespace Ralven.Launcher;
 
@@ -19,6 +17,8 @@ internal static class Program
                 && !argument.StartsWith("--wait-for-start=", StringComparison.OrdinalIgnoreCase))
             .ToArray();
         var runtimeRoot = Path.Combine(AppContext.BaseDirectory, "Runtime");
+        using var lifecycleLease = RuntimeUpdateLease.TryAcquire(runtimeRoot);
+        if (lifecycleLease is null) return 0;
         var dataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ralven");
         var diagnostics = new UpdaterDiagnostics(dataRoot);
         var telemetryAuthorized = UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot);
@@ -37,7 +37,7 @@ internal static class Program
             var recovery = new RecoveryCoordinator(runtimeRoot);
             var initialDecision = recovery.Reconcile(DateTimeOffset.UtcNow, HealthTimeout);
             if (initialDecision == RecoveryDecision.RolledBack && currentTransaction is not null)
-                await RecordAsync(diagnostics, currentTransaction, "rollback", "rolled-back", "health-timeout", null, dataRoot, telemetryAuthorized);
+                await RecordAsync(diagnostics, currentTransaction, "rollback", "rolled-back", UpdaterEventCodes.HealthCheckTimeout, null, dataRoot, telemetryAuthorized);
             var activation = new RuntimeActivationStore(runtimeRoot);
             var version = activation.ReadActiveVersion();
             var floor = new VersionFloorStore(dataRoot).Read(version);
@@ -51,6 +51,7 @@ internal static class Program
             if (!journal.TryRead(out _))
                 activation.PruneInactiveVersions();
             var executable = Path.Combine(activation.VersionsRoot, version, "Ralven.exe");
+            UpdatePathSafety.EnsureNoReparsePoints(executable);
             if (!File.Exists(executable)) throw new FileNotFoundException("A versão ativa não contém o aplicativo.", executable);
 
             var hasCandidate = journal.TryRead(out var transaction) && transaction.CandidateVersion == version;
@@ -74,7 +75,7 @@ internal static class Program
             {
                 if (!receipt.Confirms(transaction)) return false;
                 recovery.Reconcile(DateTimeOffset.UtcNow, HealthTimeout);
-                await RecordAsync(diagnostics, transaction, "health-check", "completed", "healthy", null, dataRoot, telemetryAuthorized);
+                await RecordAsync(diagnostics, transaction, "health-check", "completed", UpdaterEventCodes.HealthConfirmed, null, dataRoot, telemetryAuthorized);
                 return true;
             }
 
@@ -85,7 +86,7 @@ internal static class Program
             }
             if (await TryConfirmHealthAsync()) return 0;
             recovery.Reconcile(DateTimeOffset.UtcNow, TimeSpan.Zero);
-            await RecordAsync(diagnostics, transaction, "rollback", "rolled-back", "health-timeout", null, dataRoot, telemetryAuthorized);
+            await RecordAsync(diagnostics, transaction, "rollback", "rolled-back", UpdaterEventCodes.HealthCheckTimeout, null, dataRoot, telemetryAuthorized);
             MessageBox.Show(
                 "A nova versão não confirmou uma inicialização saudável. A versão anterior foi restaurada e será usada na próxima abertura.",
                 "Recuperação do Ralven", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -142,7 +143,7 @@ internal static class Program
         string outcome, string code, string? detail, string dataRoot, bool telemetryAuthorized) =>
         diagnostics.RecordAsync(
             new UpdaterEvent(transaction.Id, stage, outcome, code, transaction.PreviousVersion,
-                transaction.CandidateVersion, "Production", BugCodeClassifier.ClassifyUpdaterException(new Exception(code), stage)),
+                transaction.CandidateVersion, UpdaterDiagnostics.ResolveEnvironment()),
             detail,
             telemetryAuthorized);
 
@@ -164,11 +165,13 @@ internal static class Program
 
     private static string Classify(Exception exception) => exception switch
     {
-        CryptographicException => "signature-invalid",
-        InvalidDataException => "invalid-data",
-        UnauthorizedAccessException => "access-denied",
-        IOException => "io",
-        _ => "unexpected",
+        TimeoutException => UpdaterEventCodes.ParentExitTimeout,
+        CryptographicException => UpdaterEventCodes.ActiveRuntimeInvalid,
+        InvalidDataException or FileNotFoundException => UpdaterEventCodes.ActiveRuntimeInvalid,
+        UnauthorizedAccessException => UpdaterEventCodes.AccessDenied,
+        IOException => UpdaterEventCodes.LocalIoFailed,
+        InvalidOperationException => UpdaterEventCodes.LauncherStartFailed,
+        _ => UpdaterEventCodes.Unexpected,
     };
 
     private static string DescribeFailure(Exception exception) => exception switch

@@ -142,11 +142,13 @@ export function refreshEntitlementStatement(db, uid, now) {
   return db.prepare(`INSERT INTO account_entitlements
     (account_uid, entitlement_key, state, subscription_id, valid_from, valid_until,
      provider_updated_at, last_event_id, updated_at)
-    SELECT s.account_uid, 'ralven_pro', 'active', s.id, p.period_start, p.period_end,
+    SELECT s.account_uid, entitlement.entitlement_key, 'active', s.id, p.period_start, p.period_end,
       p.provider_updated_at, p.last_event_id, ?
     FROM billing_payments p JOIN billing_subscriptions s ON s.id = p.subscription_id
+    CROSS JOIN (SELECT 'ralven_pro' AS entitlement_key UNION ALL SELECT 'ralven_ai') entitlement
     WHERE s.account_uid = ? AND p.state = 'approved' AND p.refunded_cents = 0
-      AND p.period_start <= ? AND p.period_end > ? ORDER BY p.period_end DESC LIMIT 1
+      AND p.period_start <= ? AND p.period_end > ?
+    ORDER BY p.period_end DESC, p.provider_payment_id DESC, entitlement.entitlement_key LIMIT 2
     ON CONFLICT(account_uid, entitlement_key) DO UPDATE SET state = 'active',
       subscription_id = excluded.subscription_id, valid_from = excluded.valid_from,
       valid_until = excluded.valid_until, provider_updated_at = excluded.provider_updated_at,
@@ -156,7 +158,7 @@ export function refreshEntitlementStatement(db, uid, now) {
 
 export function revokeEntitlementStatement(db, uid, now) {
   return db.prepare(`UPDATE account_entitlements SET state = 'revoked', updated_at = ?
-    WHERE account_uid = ? AND entitlement_key = 'ralven_pro' AND state <> 'revoked'
+    WHERE account_uid = ? AND entitlement_key IN ('ralven_pro', 'ralven_ai') AND state <> 'revoked'
       AND NOT EXISTS (SELECT 1 FROM billing_payments p JOIN billing_subscriptions s ON s.id = p.subscription_id
         WHERE s.account_uid = ? AND p.state = 'approved' AND p.refunded_cents = 0
           AND p.period_start <= ? AND p.period_end > ?)`)
