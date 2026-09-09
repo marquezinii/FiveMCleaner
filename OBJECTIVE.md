@@ -1,7 +1,7 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** simplificar o rodapé da navegação removendo o selo "Proteção ativa" e destacando apenas a versão do aplicativo em um card compacto e minimalista.
-- **Escopo:** alterar somente a apresentação do rodapé da janela principal, reutilizando recursos visuais e localização existentes. Não inclui mudanças em diagnóstico, segurança, versão publicada ou comportamento funcional.
-- **Critérios de conclusão:** o selo e o texto de proteção deixam de aparecer; a versão permanece visível em um card discreto; temas claro e escuro continuam coerentes; build, testes e validações aplicáveis passam; o atalho de desenvolvimento é reconstruído.
-- **Resultado entregue:** selo de proteção removido; versão apresentada em card compacto com tokens existentes de superfície e tipografia; contrato de UI e recursos localizados ajustados; build Release sem avisos, 1.401 testes, formatação e verificação de segurança aprovados; renderização real conferida e atalho de desenvolvimento reconstruído.
+- **Objetivo:** Auditar e endurecer a cadeia automática de atualização sem ampliar o escopo de execução ou reduzir as garantias de integridade e recuperação.
+- **Escopo:** Launcher, Updater, UpdateRuntime, ReleaseTool, instalador, scripts, workflows e testes diretamente ligados a download, validação, staging, ativação, health-check e rollback.
+- **Critérios de conclusão:** Problemas reais identificados têm correções mínimas e testes de regressão; build e testes aplicáveis são executados; a revisão final confirma o escopo.
+- **Resultado entregue:** Corrigidas uma corrida de supervisão que podia reverter um candidato saudável e validações ausentes de reparse points nos caminhos mutáveis do update. Foram adicionadas regressões; build Release, suíte completa, verificação de segurança e contrato do instalador foram aprovados.

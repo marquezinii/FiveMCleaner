@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Security.Cryptography;
+using Ralven.UpdateRuntime;
 
 namespace Ralven.App.Services;
 
@@ -47,7 +48,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
         this.updatesRootDirectory = RequireAbsoluteDirectory(updatesRootDirectory, nameof(updatesRootDirectory));
         this.updaterRuntimeDirectory = RequireAbsoluteDirectory(updaterRuntimeDirectory, nameof(updaterRuntimeDirectory));
         ArgumentException.ThrowIfNullOrWhiteSpace(updaterSourcePath);
-        this.updaterSourcePath = Path.GetFullPath(updaterSourcePath);
+        this.updaterSourcePath = UpdatePathSafety.EnsureNoReparsePoints(updaterSourcePath);
         this.logDirectory = logDirectory;
         this.launcher = launcher ?? new ProcessUpdateLauncher();
     }
@@ -110,7 +111,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             throw new ArgumentException("O caminho precisa ser absoluto.", parameterName);
         }
 
-        return Path.TrimEndingDirectorySeparator(Path.GetFullPath(value));
+        return Path.TrimEndingDirectorySeparator(UpdatePathSafety.EnsureNoReparsePoints(value));
     }
 
     private string? TryPrepareLogDirectory()
@@ -118,7 +119,9 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
         if (string.IsNullOrWhiteSpace(logDirectory)) return null;
         try
         {
+            UpdatePathSafety.EnsureNoReparsePoints(logDirectory);
             Directory.CreateDirectory(logDirectory);
+            UpdatePathSafety.EnsureNoReparsePoints(logDirectory);
             return logDirectory;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
@@ -134,7 +137,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             throw new UpdateSecurityException("O caminho do instalador da atualização não é absoluto.");
         }
 
-        var fullPath = Path.GetFullPath(update.InstallerPath);
+        var fullPath = UpdatePathSafety.EnsureNoReparsePoints(update.InstallerPath);
         var requiredPrefix = updatesRootDirectory + Path.DirectorySeparatorChar;
         if (!fullPath.StartsWith(requiredPrefix, StringComparison.OrdinalIgnoreCase)
             || !fullPath.EndsWith(".exe", StringComparison.OrdinalIgnoreCase)
@@ -148,6 +151,8 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
 
     private string CopyUpdaterOutsideInstallDirectory(out FileStream integrityLease)
     {
+        UpdatePathSafety.EnsureNoReparsePoints(updaterSourcePath);
+        UpdatePathSafety.EnsureNoReparsePoints(updaterRuntimeDirectory);
         if (!File.Exists(updaterSourcePath)
             || !Path.GetFileName(updaterSourcePath).Equals(UpdaterFileName, StringComparison.OrdinalIgnoreCase))
         {
@@ -156,6 +161,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
 
         var sourceHash = ComputeSha256(updaterSourcePath);
         Directory.CreateDirectory(updaterRuntimeDirectory);
+        UpdatePathSafety.EnsureNoReparsePoints(updaterRuntimeDirectory);
         var destination = Path.Combine(updaterRuntimeDirectory, UpdaterFileName);
         var temporary = Path.Combine(updaterRuntimeDirectory, $"{UpdaterFileName}.{Guid.NewGuid():N}.new");
         try
@@ -167,6 +173,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             {
                 throw new UpdateSecurityException("A cópia local do atualizador independente falhou na verificação de integridade.");
             }
+            UpdatePathSafety.EnsureNoReparsePoints(destination);
             File.Move(temporary, destination, overwrite: true);
             var lease = new FileStream(
                 destination, FileMode.Open, FileAccess.Read, FileShare.Read);
