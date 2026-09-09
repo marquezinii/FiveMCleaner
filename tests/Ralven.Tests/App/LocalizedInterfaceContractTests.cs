@@ -68,6 +68,23 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void Overview_SeparatesWindowsFromTheFiveMExperience()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var overview = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "Ralven.App",
+            "Views",
+            "Pages",
+            "OverviewPage.xaml"));
+
+        Assert.DoesNotContain("FiveM", overview, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Gta", overview, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("LegacyCache", overview, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void GeneralExpansion_UsesInternalCatalogsAndTrustedWindowsActions()
     {
         var root = TestHelpers.FindRepositoryRoot();
@@ -548,12 +565,12 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("StartOptimization_Click", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("ProfilePresentationBenefits", dashboard, StringComparison.Ordinal);
 
-        // A faixa de indicadores explica a recomendação com números da própria
-        // varredura local, em vez de deixar o espaço vazio abaixo do medidor.
+        // A faixa de indicadores explica a recomendação com números úteis da
+        // própria varredura local, sem puxar dados do fluxo separado de FiveM.
         Assert.Contains("PerformancePressureLabel", dashboard, StringComparison.Ordinal);
         Assert.Contains("LogicalProcessorLabel", dashboard, StringComparison.Ordinal);
         Assert.Contains("AvailableMemoryLabel", dashboard, StringComparison.Ordinal);
-        Assert.Contains("LegacyCacheLabel", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("LegacyCacheLabel", dashboard, StringComparison.Ordinal);
         // Média e pico saem das mesmas amostras desenhadas no gráfico.
         Assert.Contains("CpuTrendLabel", dashboard, StringComparison.Ordinal);
         Assert.Contains("GpuTrendLabel", dashboard, StringComparison.Ordinal);
@@ -658,11 +675,6 @@ public sealed partial class LocalizedInterfaceContractTests
         // os fallbacks existem apenas para design-time e builds parciais.
         Assert.Contains("/Ralven;component/Assets/Fonts/#Inter", typography, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"10\"", styles, StringComparison.Ordinal);
-        // O selo de detecção (FiveM/GTA V) continua com um check vetorial
-        // quando detectado e um X quando não, composto inline via DataTrigger
-        // em vez de um estilo nomeado dedicado — mas o traçado em si continua
-        // vindo do dicionário compartilhado de ícones. Ele existe só na Visão
-        // geral: o Otimizador removeu sua cópia duplicada do mesmo selo.
         var icons = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -672,8 +684,6 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("x:Key=\"IconCheck\"", icons, StringComparison.Ordinal);
         Assert.Contains("x:Key=\"IconClose\"", icons, StringComparison.Ordinal);
-        Assert.Contains("{StaticResource IconCheck}", overview, StringComparison.Ordinal);
-        Assert.Contains("{StaticResource IconClose}", overview, StringComparison.Ordinal);
         Assert.DoesNotContain("{StaticResource IconCheck}", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("{StaticResource IconClose}", optimizer, StringComparison.Ordinal);
     }
