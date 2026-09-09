@@ -15,8 +15,8 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
 
     public AtomicUpdateInstaller(string runtimeRoot, string launcherPath)
     {
-        this.runtimeRoot = Path.GetFullPath(runtimeRoot);
-        this.launcherPath = Path.GetFullPath(launcherPath);
+        this.runtimeRoot = UpdatePathSafety.EnsureNoReparsePoints(runtimeRoot);
+        this.launcherPath = UpdatePathSafety.EnsureNoReparsePoints(launcherPath);
         dataRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ralven");
         diagnostics = new UpdaterDiagnostics(dataRoot);
@@ -32,6 +32,7 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
+            UpdatePathSafety.EnsureNoReparsePoints(launcherPath);
             if (!File.Exists(launcherPath)) throw new FileNotFoundException("O launcher transacional não foi encontrado.", launcherPath);
             previous = activation.ReadActiveVersion();
             // Hash do pacote inteiro + extração do ZIP + reverificação de

@@ -20,6 +20,7 @@ function setup(t) {
     prepare(sql) {
       return { bind(...args) { return {
         first: async () => sqlite.prepare(sql).get(...args) ?? null,
+        all: async () => ({ results: sqlite.prepare(sql).all(...args) }),
         run: async () => ({ meta: { changes: Number(sqlite.prepare(sql).run(...args).changes) } }),
       }; } };
     },
@@ -151,6 +152,7 @@ test('canonical confirmed payment grants Pro; duplicate event is idempotent', as
   assert.equal((await handleAsaasWebhook(request(), f.env, f.options)).status, 200);
   const paid = await fetchAccountEntitlements(f.db, f.auth.uid);
   assert.equal(paid.tier, 'pro');
+  assert.deepEqual(paid.entitlements, ['ralven_pro', 'ralven_ai']);
   const callCount = f.calls.length;
   assert.equal((await handleAsaasWebhook(request(), f.env, f.options)).status, 200);
   assert.equal(f.calls.length, callCount);

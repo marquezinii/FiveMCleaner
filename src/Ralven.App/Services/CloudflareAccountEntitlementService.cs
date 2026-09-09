@@ -16,7 +16,8 @@ public enum AccountEntitlementTier
 
 public sealed record AccountEntitlementSnapshot(
     AccountEntitlementTier Tier,
-    DateTimeOffset? ValidUntil = null);
+    DateTimeOffset? ValidUntil = null,
+    bool HasRalvenAi = false);
 
 /// <summary>
 /// Reads the caller's server-authoritative access snapshot. It never grants
@@ -25,6 +26,7 @@ public sealed record AccountEntitlementSnapshot(
 public sealed class CloudflareAccountEntitlementService
 {
     private const string ProEntitlement = "ralven_pro";
+    private const string AiEntitlement = "ralven_ai";
     private static readonly HttpClient SharedClient =
         CloudflareTransportDefaults.CreateClient(TimeSpan.FromSeconds(20));
 
@@ -112,7 +114,10 @@ public sealed class CloudflareAccountEntitlementService
                     out var validUntil)
                 && validUntil > timeProvider.GetUtcNow())
             {
-                return new AccountEntitlementSnapshot(AccountEntitlementTier.Pro, validUntil);
+                return new AccountEntitlementSnapshot(
+                    AccountEntitlementTier.Pro,
+                    validUntil,
+                    body.Entitlements.Contains(AiEntitlement, StringComparer.Ordinal));
             }
 
             return Unavailable();

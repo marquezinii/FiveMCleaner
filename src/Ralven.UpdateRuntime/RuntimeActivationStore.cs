@@ -10,7 +10,7 @@ public sealed class RuntimeActivationStore
     public RuntimeActivationStore(string runtimeRoot)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(runtimeRoot);
-        this.runtimeRoot = Path.GetFullPath(runtimeRoot);
+        this.runtimeRoot = UpdatePathSafety.EnsureNoReparsePoints(runtimeRoot);
     }
 
     public string VersionsRoot => Path.Combine(runtimeRoot, "versions");
@@ -20,6 +20,7 @@ public sealed class RuntimeActivationStore
     {
         if (!Version.TryParse(version, out _)) throw new ArgumentException("Versão inválida.", nameof(version));
         var versionPath = Path.Combine(VersionsRoot, version);
+        UpdatePathSafety.EnsureNoReparsePoints(versionPath);
         if (!Directory.Exists(versionPath)) throw new DirectoryNotFoundException("A versão candidata não está estagiada.");
 
         Directory.CreateDirectory(runtimeRoot);
@@ -28,11 +29,14 @@ public sealed class RuntimeActivationStore
 
     public string ReadActiveVersion()
     {
+        UpdatePathSafety.EnsureNoReparsePoints(PointerPath);
         var active = JsonSerializer.Deserialize<ActiveRuntime>(
             TransientRetry.Read(() => File.ReadAllText(PointerPath)))
             ?? throw new InvalidDataException("Ponteiro de runtime inválido.");
-        if (!Version.TryParse(active.Version, out _) || !Directory.Exists(Path.Combine(VersionsRoot, active.Version)))
+        var versionPath = Path.Combine(VersionsRoot, active.Version);
+        if (!Version.TryParse(active.Version, out _) || !Directory.Exists(versionPath))
             throw new InvalidDataException("Ponteiro aponta para versão indisponível.");
+        UpdatePathSafety.EnsureNoReparsePoints(versionPath);
         return active.Version;
     }
 
@@ -51,7 +55,11 @@ public sealed class RuntimeActivationStore
             {
                 var version = Path.GetFileName(directory);
                 if (preserved.Contains(version) || !Version.TryParse(version, out _)) continue;
-                try { Directory.Delete(directory, recursive: true); }
+                try
+                {
+                    UpdatePathSafety.EnsureNoReparsePoints(directory);
+                    Directory.Delete(directory, recursive: true);
+                }
                 catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
                 {
                     // A próxima atualização tenta novamente a pasta bloqueada.
@@ -78,6 +86,7 @@ public sealed class RuntimeActivationStore
             foreach (var directory in Directory.EnumerateDirectories(VersionsRoot))
             {
                 var name = Path.GetFileName(directory);
+                UpdatePathSafety.EnsureNoReparsePoints(directory);
                 if (!Version.TryParse(name, out var version)
                     || version >= activeVersion
                     || predecessorVersion is not null && version <= predecessorVersion) continue;

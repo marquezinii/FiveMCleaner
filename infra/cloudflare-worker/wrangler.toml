@@ -37,6 +37,8 @@
 ##   ASAAS_WEBHOOK_TOKEN -- distinct 32-255 character token sent by Asaas in
 ##                          the asaas-access-token header
 ##   OPENAI_API_KEY -- credencial server-side usada somente por POST /ai/message
+##   RALVEN_AI_SAFETY_IDENTIFIER_SECRET -- segredo distinto usado para derivar
+##                          identificadores opacos; nunca enviado ao provedor
 ##
 ## DASHBOARD_ORIGIN below is a plain, non-secret var -- the exact comma-separated
 ## origins the dashboard is served from, so CORS headers are only ever sent back
@@ -64,12 +66,16 @@ ASAAS_AMOUNT_CENTS = "1990"
 ASAAS_RETURN_URL = "https://api.vemryx.com/billing/return"
 DASHBOARD_ORIGIN = "https://ralven-dashboard.pages.dev,https://dashboard.vemryx.com,https://fivemcleaner-dashboard.pages.dev"
 RALVEN_AI_MODEL = "gpt-5.6-luna"
-# Tetos fail-closed da V1. Revise-os antes do primeiro deploy com a rota ativa.
-RALVEN_AI_USER_MONTHLY_BUDGET_MICROUSD = "350000"
+# A chave sozinha não ativa a rota. Revise tudo e altere explicitamente no deploy.
+RALVEN_AI_ENABLED = "false"
+# Tetos fail-closed da V1. US$0,25 equivale ao teto de R$1,50 com câmbio contábil de R$6/US$.
+RALVEN_AI_USER_MONTHLY_BUDGET_MICROUSD = "250000"
 RALVEN_AI_GLOBAL_MONTHLY_BUDGET_MICROUSD = "20000000"
-RALVEN_AI_RESERVED_COST_MICROUSD = "6000"
-# Preços do modelo acima em 2026-09-06; atualizar junto com uma mudança de modelo/preço.
+RALVEN_AI_RESERVED_COST_MICROUSD = "20000"
+# Preços do modelo acima em 2026-09-08; atualizar junto com uma mudança de modelo/preço.
 RALVEN_AI_INPUT_PRICE_MICROUSD_PER_MILLION = "200000"
+RALVEN_AI_CACHED_INPUT_PRICE_MICROUSD_PER_MILLION = "20000"
+RALVEN_AI_CACHE_WRITE_PRICE_MICROUSD_PER_MILLION = "250000"
 RALVEN_AI_OUTPUT_PRICE_MICROUSD_PER_MILLION = "1200000"
 
 [[ratelimits]]

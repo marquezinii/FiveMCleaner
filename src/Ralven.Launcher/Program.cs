@@ -17,6 +17,8 @@ internal static class Program
                 && !argument.StartsWith("--wait-for-start=", StringComparison.OrdinalIgnoreCase))
             .ToArray();
         var runtimeRoot = Path.Combine(AppContext.BaseDirectory, "Runtime");
+        using var lifecycleLease = RuntimeUpdateLease.TryAcquire(runtimeRoot);
+        if (lifecycleLease is null) return 0;
         var dataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ralven");
         var diagnostics = new UpdaterDiagnostics(dataRoot);
         var telemetryAuthorized = UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot);
@@ -49,6 +51,7 @@ internal static class Program
             if (!journal.TryRead(out _))
                 activation.PruneInactiveVersions();
             var executable = Path.Combine(activation.VersionsRoot, version, "Ralven.exe");
+            UpdatePathSafety.EnsureNoReparsePoints(executable);
             if (!File.Exists(executable)) throw new FileNotFoundException("A versão ativa não contém o aplicativo.", executable);
 
             var hasCandidate = journal.TryRead(out var transaction) && transaction.CandidateVersion == version;

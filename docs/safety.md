@@ -514,9 +514,10 @@ Uma exceção de antivírus recomendada pelo suporte do FiveM para um erro espec
 
 O Ralven AI é um fluxo remoto explícito e separado da telemetria. Ele não pode
 receber paths do diagnóstico, arquivos, credenciais, tokens ou dados que
-identifiquem diretamente a conta, nem executar a saída do modelo. Um
-identificador de segurança pseudônimo derivado do UID é o único vínculo de
-conta enviado ao provedor. O contrato e os limites estão em
+identifiquem diretamente a conta, nem executar a saída do modelo. O modelo não
+recebe tools. Um identificador HMAC pseudônimo, com segredo exclusivo do Worker
+e separação de domínio, é o único vínculo de conta enviado ao provedor. O UUID
+de idempotência do cliente não é encaminhado. O contrato e os limites estão em
 [`docs/ralven-ai.md`](ralven-ai.md).
 
 O diagnóstico permanece local por padrão. Relatórios exportados devem:

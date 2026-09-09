@@ -43,8 +43,10 @@ public enum RalvenAiError
     Unavailable,
     Unauthorized,
     ProRequired,
+    AiAccessRequired,
     RateLimited,
     BudgetExhausted,
+    RequestReplayed,
     InvalidResponse
 }
 
@@ -94,69 +96,81 @@ public sealed class RalvenAiService
         ArgumentNullException.ThrowIfNull(context);
         ArgumentNullException.ThrowIfNull(history);
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
-        {
-            Content = JsonContent.Create(new RequestDto(
-                ReportSanitizer.Sanitize(message.Trim()),
-                language,
-                context,
-                history.TakeLast(6)
-                    .Select(turn => turn with { Text = ReportSanitizer.Sanitize(turn.Text) })
-                    .ToArray()), options: JsonOptions)
-        };
-        request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", idToken);
+        var payload = new RequestDto(
+            Guid.NewGuid().ToString("D"),
+            ReportSanitizer.Sanitize(message.Trim()),
+            language,
+            context,
+            history.TakeLast(6)
+                .Select(turn => turn with { Text = ReportSanitizer.Sanitize(turn.Text) })
+                .ToArray());
 
-        HttpResponseMessage response;
-        try
+        for (var attempt = 0; ; attempt++)
         {
-            response = await httpClient.SendAsync(
-                request,
-                HttpCompletionOption.ResponseHeadersRead,
-                cancellationToken).ConfigureAwait(false);
-        }
-        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-        {
-            throw;
-        }
-        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
-        {
-            throw new RalvenAiException(RalvenAiError.Unavailable);
-        }
-
-        using (response)
-        {
-            if (!response.IsSuccessStatusCode)
+            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint)
             {
-                throw new RalvenAiException(await MapErrorAsync(response, cancellationToken).ConfigureAwait(false));
-            }
+                Content = JsonContent.Create(payload, options: JsonOptions)
+            };
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", idToken);
 
-            ResponseDto? body;
+            HttpResponseMessage response;
             try
             {
-                await using var stream = await ReadBoundedAsync(response.Content, cancellationToken).ConfigureAwait(false);
-                body = await JsonSerializer.DeserializeAsync<ResponseDto>(stream, JsonOptions, cancellationToken)
-                    .ConfigureAwait(false);
+                response = await httpClient.SendAsync(
+                    request,
+                    HttpCompletionOption.ResponseHeadersRead,
+                    cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception exception) when (exception is JsonException or InvalidDataException)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
-                throw new RalvenAiException(RalvenAiError.InvalidResponse);
+                throw;
+            }
+            catch (Exception exception) when (
+                attempt == 0 && exception is (HttpRequestException or TaskCanceledException))
+            {
+                await Task.Delay(TimeSpan.FromMilliseconds(200), cancellationToken).ConfigureAwait(false);
+                continue;
+            }
+            catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+            {
+                throw new RalvenAiException(RalvenAiError.Unavailable);
             }
 
-            if (body is null || string.IsNullOrWhiteSpace(body.Answer) || body.Answer.Length > 2_000)
+            using (response)
             {
-                throw new RalvenAiException(RalvenAiError.InvalidResponse);
-            }
+                if (!response.IsSuccessStatusCode)
+                {
+                    throw new RalvenAiException(await MapErrorAsync(response, cancellationToken).ConfigureAwait(false));
+                }
 
-            OptimizationProfile? profile = body.RecommendedProfile?.ToLowerInvariant() switch
-            {
-                "light" => OptimizationProfile.Light,
-                "balanced" => OptimizationProfile.Balanced,
-                "aggressive" => OptimizationProfile.Aggressive,
-                null or "none" => null,
-                _ => throw new RalvenAiException(RalvenAiError.InvalidResponse)
-            };
-            return new RalvenAiReply(body.Answer.Trim(), profile);
+                ResponseDto? body;
+                try
+                {
+                    await using var stream = await ReadBoundedAsync(response.Content, cancellationToken).ConfigureAwait(false);
+                    body = await JsonSerializer.DeserializeAsync<ResponseDto>(stream, JsonOptions, cancellationToken)
+                        .ConfigureAwait(false);
+                }
+                catch (Exception exception) when (exception is JsonException or InvalidDataException)
+                {
+                    throw new RalvenAiException(RalvenAiError.InvalidResponse);
+                }
+
+                if (body is null || string.IsNullOrWhiteSpace(body.Answer) || body.Answer.Length > 2_000)
+                {
+                    throw new RalvenAiException(RalvenAiError.InvalidResponse);
+                }
+
+                OptimizationProfile? profile = body.RecommendedProfile?.ToLowerInvariant() switch
+                {
+                    "light" => OptimizationProfile.Light,
+                    "balanced" => OptimizationProfile.Balanced,
+                    "aggressive" => OptimizationProfile.Aggressive,
+                    null or "none" => null,
+                    _ => throw new RalvenAiException(RalvenAiError.InvalidResponse)
+                };
+                return new RalvenAiReply(body.Answer.Trim(), profile);
+            }
         }
     }
 
@@ -173,12 +187,16 @@ public sealed class RalvenAiService
         }
         catch (Exception exception) when (exception is JsonException or InvalidDataException)
         {
+            return RalvenAiError.Unavailable;
         }
 
         return (response.StatusCode, body?.Error) switch
         {
             (HttpStatusCode.Unauthorized, _) => RalvenAiError.Unauthorized,
             (HttpStatusCode.Forbidden, "pro-required") => RalvenAiError.ProRequired,
+            (HttpStatusCode.Forbidden, "ai-access-required") => RalvenAiError.AiAccessRequired,
+            (HttpStatusCode.Conflict, "request-in-progress" or "request-already-processed") =>
+                RalvenAiError.RequestReplayed,
             (HttpStatusCode.TooManyRequests, "budget-exhausted") => RalvenAiError.BudgetExhausted,
             (HttpStatusCode.TooManyRequests, _) => RalvenAiError.RateLimited,
             _ => RalvenAiError.Unavailable
@@ -215,6 +233,7 @@ public sealed class RalvenAiService
     }
 
     private sealed record RequestDto(
+        [property: JsonPropertyName("requestId")] string RequestId,
         [property: JsonPropertyName("message")] string Message,
         [property: JsonPropertyName("language")] string Language,
         [property: JsonPropertyName("context")] RalvenAiPcContext Context,
