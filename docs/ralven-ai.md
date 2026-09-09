@@ -17,6 +17,27 @@ Ficam fora da V1: shell ou ferramentas do modelo, ações arbitrárias, execuç�
 automática, memória persistente de conversa, streaming, roteamento entre
 modelos e novos ajustes de Windows/FiveM.
 
+## Logo interativa
+
+O estado vazio usa `AnimatedRalvenLogo` (`Ralven.App/Controls`), com os PNGs
+claro/escuro existentes e um giro de 720 ms com escala sutil. Clique, Enter ou
+Espaço acionam o giro; cliques durante a animação reservam no máximo um giro
+adicional. Após terminar, o controle sorteia outra pausa de 10–20 segundos.
+Não indica processamento nem progresso da IA.
+
+`IdleMinimum` e `IdleMaximum` são dependency properties `TimeSpan` configuráveis
+em XAML, por exemplo `IdleMinimum="0:0:10" IdleMaximum="0:0:20"`. Devem ser
+positivas e caber em `int.MaxValue` milissegundos; se o máximo for menor que o
+mínimo durante uma atualização, o mínimo prevalece. A animação pausa fora da
+janela ativa, quando oculto/descarregado/desabilitado ou quando o Windows
+desativa animações da área cliente. O controle remove clocks e inscrições ao sair.
+
+`Source` aceita `ImageSource`, inclusive PNG e `DrawingImage`. Se houver o vetor
+original da marca, a melhor evolução para WPF é convertê-lo em geometria XAML
+(`DrawingImage`/`GeometryDrawing`) para manter nitidez em qualquer DPI sem
+dependência SVG ou vídeo/3D. Não redesenhar automaticamente o PNG: isso pode
+alterar a identidade da marca.
+
 ## Fluxo e fronteiras
 
 1. O app conclui o diagnóstico local e monta um objeto fechado com CPU, GPU,

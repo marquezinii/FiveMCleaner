@@ -16,12 +16,20 @@
   <data name="RalvenAi.Title" xml:space="preserve"><value>Ralven AI</value></data>
   <data name="RalvenAi.Subtitle" xml:space="preserve"><value>Contextual guidance based on this PC's local diagnosis and Ralven's supported plans.</value></data>
   <data name="RalvenAi.Empty.Title" xml:space="preserve"><value>Ask about this PC</value></data>
-  <data name="RalvenAi.Empty.Detail" xml:space="preserve"><value>Understand bottlenecks, compare the standard profiles, or ask which safe plan is the best fit.</value></data>
+  <data name="RalvenAi.Empty.Detail" xml:space="preserve"><value>Choose a starting point or write your own question.</value></data>
   <data name="RalvenAi.Privacy.Title" xml:space="preserve"><value>What is sent</value></data>
   <data name="RalvenAi.Privacy.Detail" xml:space="preserve"><value>Your question, a limited hardware summary, the actions already supported by Ralven, and a pseudonymous safety identifier are sent to OpenAI for this reply. Paths, files, credentials, and directly identifying account data are excluded. The conversation is not saved by Ralven. Do not enter personal or secret information.</value></data>
   <data name="RalvenAi.AccessRequired.Title" xml:space="preserve"><value>Ralven AI access required</value></data>
   <data name="RalvenAi.AccessRequired.Detail" xml:space="preserve"><value>This account does not currently have Ralven AI access. Refresh your plan status or try again later.</value></data>
-  <data name="RalvenAi.InputPlaceholder" xml:space="preserve"><value>Write a question about this PC. Press Ctrl+Enter to send.</value></data>
+  <data name="RalvenAi.InputPlaceholder" xml:space="preserve"><value>Message Ralven AI</value></data>
+  <data name="RalvenAi.Welcome.Greeting1" xml:space="preserve"><value>Where should we begin?</value></data>
+  <data name="RalvenAi.Welcome.Greeting2" xml:space="preserve"><value>What would you like to improve today?</value></data>
+  <data name="RalvenAi.Welcome.Greeting3" xml:space="preserve"><value>Let's understand this PC.</value></data>
+  <data name="RalvenAi.Welcome.Greeting4" xml:space="preserve"><value>Ready to review your setup?</value></data>
+  <data name="RalvenAi.Welcome.Greeting5" xml:space="preserve"><value>How can Ralven AI help?</value></data>
+  <data name="RalvenAi.Suggestion.Bottleneck" xml:space="preserve"><value>Find the main bottleneck</value></data>
+  <data name="RalvenAi.Suggestion.Profiles" xml:space="preserve"><value>Compare the safe profiles</value></data>
+  <data name="RalvenAi.Suggestion.Start" xml:space="preserve"><value>Where should I start?</value></data>
   <data name="RalvenAi.Send" xml:space="preserve"><value>Send</value></data>
   <data name="RalvenAi.Sending" xml:space="preserve"><value>Reviewing the diagnosis...</value></data>
   <data name="RalvenAi.You" xml:space="preserve"><value>You</value></data>
@@ -1785,4 +1793,5 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Personal.Export.Saved" xml:space="preserve"><value>Personal history exported. Review the file before sharing.</value></data>
   <data name="Personal.Export.Failed" xml:space="preserve"><value>Could not export the history. Check the selected location and try again.</value></data>
   <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>You enter the payer information on the secure Asaas page. Ralven stores billing references, amounts, statuses and dates; never card details. Any completed refund, including a partial refund, removes access for the related paid period.</value></data>
+  <data name="RalvenAi.Logo.Animate" xml:space="preserve"><value>Animate Ralven AI logo</value></data>
 </root>

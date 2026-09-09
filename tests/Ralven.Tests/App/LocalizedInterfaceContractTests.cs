@@ -287,6 +287,37 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void AccountHeader_UsesCompactUsernameAndRejectsForeignProfileResponses()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var appDirectory = Path.Combine(root, "src", "Ralven.App");
+        var mainWindowPath = Path.Combine(appDirectory, "MainWindow.xaml");
+        var mainWindow = File.ReadAllText(mainWindowPath);
+        var accountCode = File.ReadAllText(Path.Combine(appDirectory, "MainWindow.Account.xaml.cs"));
+        var captureCode = File.ReadAllText(Path.Combine(appDirectory, "MainWindow.Capture.xaml.cs"));
+        var document = XDocument.Load(mainWindowPath);
+        XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml";
+        var fallback = document.Descendants().Single(element => (string?)element.Attribute(xaml + "Name") == "AccountFallbackIcon");
+        var avatar = document.Descendants().Single(element => (string?)element.Attribute(xaml + "Name") == "AccountAvatarEllipse");
+        var firstUser = new FirebaseUser("uid-1", "first@example.com", true);
+        var secondUser = new FirebaseUser("uid-2", "second@example.com", true);
+
+        Assert.Same(fallback.Parent, avatar.Parent);
+        Assert.Equal("{StaticResource RadiusPill}", (string?)fallback.Parent?.Parent?.Attribute("CornerRadius"));
+        Assert.Matches("x:Name=\"AccountAvatarEllipse\"[^>]*Width=\"28\"[^>]*Height=\"28\"", mainWindow);
+        Assert.Matches("x:Name=\"AccountLabel\"[\\s\\S]*?MaxWidth=\"160\"[\\s\\S]*?TextTrimming=\"CharacterEllipsis\"", mainWindow);
+        Assert.Contains("ApplyAccountSettingsUsername(result.Username);", accountCode, StringComparison.Ordinal);
+        Assert.DoesNotContain("profile?.DisplayName", accountCode, StringComparison.Ordinal);
+        Assert.Contains("AccountLabel.MaxWidth = profile is null ? 160 : 120;", accountCode, StringComparison.Ordinal);
+        Assert.Contains("demoMode && accountUsername is not null", captureCode, StringComparison.Ordinal);
+        Assert.Equal("@ralven_user", MainWindow.FormatAccountUsername("ralven_user"));
+        Assert.Empty(MainWindow.FormatAccountUsername(" "));
+        Assert.True(MainWindow.IsCurrentAccountProfileResponse(firstUser.Uid, new(AuthenticationState.SignedIn, firstUser)));
+        Assert.False(MainWindow.IsCurrentAccountProfileResponse(firstUser.Uid, new(AuthenticationState.SignedIn, secondUser)));
+        Assert.False(MainWindow.IsCurrentAccountProfileResponse(firstUser.Uid, new(AuthenticationState.SignedOut, null)));
+    }
+
+    [Fact]
     public void AccountPlan_ProAccessExpiresAtTheServerValidityBoundary()
     {
         var validUntil = DateTimeOffset.Parse(
