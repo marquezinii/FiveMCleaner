@@ -52,6 +52,10 @@
 name = "fivemcleaner-telemetry"
 main = "src/index.js"
 compatibility_date = "2026-08-11"
+# The configured custom domain api.vemryx.com is the only public Worker
+# origin. Keep the historical Worker name for its already-provisioned D1
+# resources, but do not expose it through a fivemcleaner-*.workers.dev URL.
+workers_dev = false
 
 [vars]
 ASAAS_BILLING_ENABLED = "false"

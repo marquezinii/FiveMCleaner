@@ -3,9 +3,10 @@
 **Deployed** at
 `https://api.vemryx.com`.
 
-The legacy `workers.dev` route, Cloudflare Worker name, D1 database name/ID and
-Firebase project ID remain as compatibility identifiers until a separately
-provisioned migration exists. Public clients use the Ralven domain above.
+The Cloudflare Worker name, D1 database name/ID and Firebase project ID remain
+as compatibility identifiers until a separately provisioned migration exists.
+The legacy `workers.dev` route is disabled; public clients use only the Ralven
+domain above.
 
 This is the Cloudflare Worker + D1 backend for the anonymous telemetry
 pipeline described in [`docs/telemetry.md`](../../docs/telemetry.md) and the

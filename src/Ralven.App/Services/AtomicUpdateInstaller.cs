@@ -91,7 +91,7 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
         diagnostics.RecordAsync(
             new UpdaterEvent(
                 Guid.NewGuid().ToString("N"), stage, "failed", code,
-                previous, update.Version.CoreVersion, "Production",
+                previous, update.Version.CoreVersion, UpdaterDiagnostics.ResolveEnvironment(),
                 BugCodeClassifier.ClassifyUpdaterException(exception, stage)),
             exception.ToString(),
             telemetryAuthorized: UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));

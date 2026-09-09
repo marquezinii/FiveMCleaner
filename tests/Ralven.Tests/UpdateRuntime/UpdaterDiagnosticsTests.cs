@@ -9,6 +9,14 @@ public sealed class UpdaterDiagnosticsTests : IDisposable
         Path.GetTempPath(), "RalvenUpdaterDiagnostics", Guid.NewGuid().ToString("N"));
 
     [Fact]
+    public void ResolveEnvironment_UsesTheExplicitProcessEnvironment()
+    {
+        Assert.Equal("Development", UpdaterDiagnostics.ResolveEnvironment(_ => "development"));
+        Assert.Equal("Production", UpdaterDiagnostics.ResolveEnvironment(_ => "production"));
+        Assert.Equal("Production", UpdaterDiagnostics.ResolveEnvironment(_ => "unexpected"));
+    }
+
+    [Fact]
     public async Task RevokedConsent_RemovesQueuedEventsButKeepsTheLocalLog()
     {
         var pending = Path.Combine(root, "UpdaterTelemetry", "pending");

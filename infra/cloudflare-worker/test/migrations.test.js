@@ -18,6 +18,7 @@ test('production config keeps the existing Cloudflare resource identifiers', asy
   const config = await readFile(join(workerRoot, 'wrangler.toml'), 'utf8');
 
   assert.match(config, /^name = "fivemcleaner-telemetry"\r?$/m);
+  assert.match(config, /^workers_dev = false\r?$/m);
   assert.match(config, /^DASHBOARD_ORIGIN = "https:\/\/ralven-dashboard\.pages\.dev,https:\/\/dashboard\.vemryx\.com,https:\/\/fivemcleaner-dashboard\.pages\.dev"\r?$/m);
   assert.match(config, /^database_name = "fivemcleaner-telemetry"\r?$/m);
   assert.match(config, /^database_id = "fe276121-a71a-4ba4-ab62-81cccdf601c6"\r?$/m);

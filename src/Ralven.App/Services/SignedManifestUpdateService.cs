@@ -233,7 +233,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
         diagnostics.RecordAsync(
             new UpdaterEvent(
                 Guid.NewGuid().ToString("N"), stage, "failed", Classify(exception),
-                previous, candidate, "Production",
+                previous, candidate, UpdaterDiagnostics.ResolveEnvironment(),
                 BugCodeClassifier.ClassifyUpdaterException(exception, stage)),
             exception.ToString(),
             telemetryAuthorized: UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
