@@ -18,6 +18,7 @@ namespace Ralven.Tests.App;
 /// repeat-password check — so a regression fails the build instead of
 /// shipping.
 /// </summary>
+[Collection(WpfApplicationCollection.Name)]
 public sealed class AccountWindowTests
 {
     [Fact]
