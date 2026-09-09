@@ -1,86 +1,58 @@
 # Objetivo da tarefa
 
-- **Agente**: Claude Code
-- **Objetivo**: reduzir duplicação, complexidade e fragmentação de
-  responsabilidades no código .NET do Ralven, sem alterar comportamento
-  funcional, contratos persistidos, segurança, rollback ou limites de
-  privilégio.
+- **Agente**: Codex
+- **Objetivo**: identificar a conta autenticada no cabeçalho pelo username do
+  perfil, com avatar circular valorizado e apresentação compacta coerente com o
+  design system existente.
 
 ## Escopo
 
 Pertence à tarefa:
 
-- consolidar ações de registro HKCU quase idênticas em `Ralven.Windows`;
-- unificar regras duplicadas do arquivo de configurações gráficas do
-  GTA V/FiveM entre as duas ações que o editam;
-- unificar as duas comparações de preset gráfico que diferem apenas pela
-  direção;
-- remover o pipeline de recuperação duplicado nos dois `catch` da execução
-  isolada do motor transacional;
-- eliminar o P/Invoke de memória duplicado em `Ralven.App` reutilizando o
-  inspetor já existente em `Ralven.Windows`;
-- fazer `CloudflareAccountProfileService` usar o transporte compartilhado já
-  adotado pelos demais serviços Cloudflare;
-- centralizar a resolução "string localizada com fallback", hoje repetida em
-  quatro arquivos da camada de apresentação;
-- dividir `AppOptimizationService` em `partial class` por responsabilidade,
-  seguindo a convenção já usada em `MainWindow`/`MainViewModel`.
+- substituir o e-mail pelo username do perfil quando houver sessão autenticada;
+- reutilizar o carregamento de perfil e o avatar local existentes;
+- impedir que resposta assíncrona antiga de perfil seja aplicada a outra sessão;
+- ajustar somente o componente de conta do cabeçalho, incluindo truncamento,
+  forma circular, moldura, temas e acessibilidade;
+- preservar o fallback de avatar e o convite de autenticação atuais;
+- adicionar o menor teste de regressão útil para o comportamento alterado.
 
 Não pertence à tarefa:
 
-- mudança de comportamento observável, de mensagens ao usuário, de contratos
-  persistidos (journal, snapshot, settings, plano do broker) ou de invariantes
-  de segurança/rollback;
-- reformatação massiva, renomeações cosméticas ou novas abstrações
-  especulativas;
-- alteração de superfícies remotas (Worker, dashboard, site) ou do fluxo de
-  instalador/updater.
+- redesign global ou varredura estética do aplicativo;
+- alterações em autenticação, backend, contratos remotos ou armazenamento de
+  avatar;
+- novas dependências, abstrações especulativas ou mudança de versão/release.
 
 ## Critérios de conclusão
 
-- build Release sem avisos novos;
-- suíte .NET com o mesmo número de testes aprovados do baseline (1.432) ou
-  superior, sem testes enfraquecidos ou removidos;
-- `dotnet format --verify-no-changes` limpo;
-- `scripts\Verify-Safety.ps1` aprovado;
-- diff revisado, restrito ao escopo acima.
+- cabeçalho autenticado mostra username compacto, nunca e-mail;
+- nome longo não amplia o cabeçalho e avatar/fallback usam o mesmo círculo;
+- troca de sessão durante o fetch não mistura usernames;
+- estado desautenticado e card de Configurações permanecem funcionais;
+- build Release, suíte .NET e validações aplicáveis aprovam;
+- inspeção visual em claro/escuro e autenticado/desautenticado é executada
+  quando o ambiente permitir.
 
 ## Resultado entregue
 
-Sete consolidações, nenhuma mudança de comportamento observável:
+- O cabeçalho autenticado reutiliza o username retornado pelo fetch de perfil,
+  nunca o `DisplayName`/e-mail do Firebase, e descarta respostas de outro UID.
+- Username longo usa elipse em 120 px; o convite deslogado preserva 160 px.
+- Avatar salvo e fallback existente compartilham um círculo de 32 px, com foto
+  de 28 px, superfície e borda vindas dos tokens claro/escuro.
+- O nome acessível do controle acompanha a ação localizada de entrar ou ver a
+  conta.
+- O harness de captura ganhou fixture de username restrita a demo/captura para
+  validar deterministicamente os estados visuais sem credenciais reais.
 
-- `GameBooleanRegistryAction` passa a concentrar as regras que
-  `GameModeRegistryAction` e `GameDvrRegistryAction` repetiam integralmente;
-- `GraphicsSettingsFile` concentra o nome de arquivo aceito por alvo e a
-  sondagem de arquivo inexistente, antes duplicados entre
-  `DisplayPreferencesAction` e `LegacyGraphicsPresetAction`;
-- `ShouldLowerValue`/`ShouldRaiseValue` viram `ShouldChangeValue`, com teste
-  que fixa a simetria das duas direções;
-- `RecoverIsolatedItemAsync` remove o pipeline de recuperação duplicado nos
-  dois `catch` de `ApplyIsolatedItemAsync`, preservando a gravação prévia do
-  journal exclusiva do caminho de falha;
-- `NativeMemoryStatus` foi removido: o diagnóstico usa o
-  `WindowsSystemResourceInspector` já existente, tirando P/Invoke da camada de
-  apresentação;
-- `CloudflareAccountProfileService` passa a usar `CloudflareTransportDefaults`
-  como os outros seis serviços Cloudflare;
-- `LocalizationFallback.GetStringOrFallback` substitui quatro implementações
-  privadas e seis repetições inline em `ToDisplayItem`;
-- `AppOptimizationService` foi dividido em `partial class` por
-  responsabilidade (principal, `Settings`, `Diagnostics`, `History`), sem
-  adicionar, remover ou alterar nenhum membro.
+Validação executada:
 
-Validação executada na branch:
-
-- `dotnet build Ralven.slnx --configuration Release`: sucesso, 0 avisos;
-- suíte .NET: **1.434 testes aprovados**, 0 falhas (baseline era 1.432; os
-  2 novos cobrem a simetria das direções do preset gráfico);
-- `dotnet format Ralven.slnx --verify-no-changes`: limpo;
+- teste focado: 1 aprovado, 0 falhas;
+- build Release: sucesso, 0 avisos;
+- suíte .NET: 1.435 aprovados, 0 falhas;
+- `dotnet format Ralven.slnx --verify-no-changes --no-restore`: limpo;
 - `scripts\Verify-Safety.ps1`: aprovado;
 - `git diff --check`: limpo;
+- capturas inspecionadas em claro/escuro, autenticado/desautenticado;
 - `scripts\Install-DevelopmentShortcut.ps1 -Build`: atalho reconstruído.
-
-Limitação real: o SharpLens MCP citado em `CLAUDE.md` não estava conectado
-nesta sessão, então a análise semântica foi feita com compilador, LSP local,
-busca estrutural e a suíte de testes, e não com `find_references`/
-`get_call_graph`.

@@ -25,6 +25,8 @@ public partial class MainWindow
     private AccountEntitlementSnapshot accountEntitlement = new(AccountEntitlementTier.Unavailable);
     private DispatcherTimer? accountEntitlementExpiryTimer;
     private int accountEntitlementSyncVersion;
+    private string? accountProfileUid;
+    private string? accountUsername;
 
     private void OpenAccountFromSettings_Click(object sender, RoutedEventArgs e) => OpenAccountWindow();
 
@@ -60,9 +62,9 @@ public partial class MainWindow
         AccountSettingsSignedOutPanel.Visibility = user is null && !profileUnavailable ? Visibility.Visible : Visibility.Collapsed;
         AccountSettingsSignedInPanel.Visibility = user is null ? Visibility.Collapsed : Visibility.Visible;
 
-        // Signed in, the header button is just the avatar/initials -- the
-        // "Entrar / Cadastre-se" prompt only makes sense while signed out.
-        AccountLabel.Visibility = currentUser is null ? Visibility.Visible : Visibility.Collapsed;
+        AccountLabel.Visibility = currentUser is null || accountUsername is not null
+            ? Visibility.Visible
+            : Visibility.Collapsed;
 
         if (user is null)
         {
@@ -295,9 +297,15 @@ public partial class MainWindow
         }
     }
 
-    /// <summary>Sets <paramref name="username"/> on the Settings card once <see cref="SyncAccountFirstNameAsync"/> has read the profile.</summary>
-    private void ApplyAccountSettingsUsername(string? username) =>
-        AccountSettingsUsernameText.Text = string.IsNullOrWhiteSpace(username) ? string.Empty : $"@{username}";
+    /// <summary>Sets <paramref name="username"/> on the account surfaces once <see cref="SyncAccountFirstNameAsync"/> has read the profile.</summary>
+    private void ApplyAccountSettingsUsername(string? username)
+    {
+        accountUsername = string.IsNullOrWhiteSpace(username) ? null : username;
+        AccountSettingsUsernameText.Text = FormatAccountUsername(accountUsername);
+    }
+
+    internal static string FormatAccountUsername(string? username) =>
+        string.IsNullOrWhiteSpace(username) ? string.Empty : $"@{username}";
 
     private static void ApplyAvatar(BitmapImage? avatar, System.Windows.Shapes.Ellipse ellipse, Wpf.Ui.Controls.SymbolIcon fallback)
     {
@@ -583,8 +591,20 @@ public partial class MainWindow
     private void UpdateAccountButton()
     {
         var profile = accountService?.Current.User;
-        AccountLabel.Text = profile?.DisplayName ?? LocalizationService.Current.GetString("Account.SignInButton");
-        AccountButton.ToolTip = profile is null ? LocalizationService.Current.GetString("Account.SignInTooltip") : LocalizationService.Current.GetString("Account.ViewTooltip");
+        if (profile is null || !string.Equals(profile.Uid, accountProfileUid, StringComparison.Ordinal))
+        {
+            accountProfileUid = null;
+            ApplyAccountSettingsUsername(null);
+        }
+
+        AccountLabel.Text = profile is null
+            ? LocalizationService.Current.GetString("Account.SignInButton")
+            : FormatAccountUsername(accountUsername);
+        AccountLabel.MaxWidth = profile is null ? 160 : 120;
+        var accountAction = LocalizationService.Current.GetString(
+            profile is null ? "Account.SignInTooltip" : "Account.ViewTooltip");
+        AccountButton.ToolTip = accountAction;
+        AutomationProperties.SetName(AccountButton, accountAction);
         // Also sets AccountInitials/avatar for both the header and the
         // Settings card, so a direct assignment here would just be
         // immediately overwritten.
@@ -607,7 +627,7 @@ public partial class MainWindow
         }
 
         await Task.WhenAll(
-            SyncAccountFirstNameAsync(),
+            SyncAccountFirstNameAsync(snapshot.User.Uid),
             SyncAccountEntitlementAsync(snapshot.User.Uid));
     }
 
@@ -617,7 +637,7 @@ public partial class MainWindow
     /// Worker's profile table; this is why login and quiet session restore
     /// both need a read call instead of getting it for free off the token.
     /// </summary>
-    private async Task SyncAccountFirstNameAsync()
+    private async Task SyncAccountFirstNameAsync(string expectedUid)
     {
         if (accountService is null)
         {
@@ -637,8 +657,15 @@ public partial class MainWindow
             {
                 Dispatcher.Invoke(() =>
                 {
+                    if (!IsCurrentAccountProfileResponse(expectedUid, accountService.Current))
+                    {
+                        return;
+                    }
+
+                    accountProfileUid = expectedUid;
                     viewModel.SetAccountFirstName(result.FirstName);
                     ApplyAccountSettingsUsername(result.Username);
+                    UpdateAccountButton();
                 });
             }
         }
@@ -649,4 +676,10 @@ public partial class MainWindow
             // fica sem o nome até a próxima sincronização bem-sucedida.
         }
     }
+
+    internal static bool IsCurrentAccountProfileResponse(
+        string expectedUid,
+        AuthenticationSnapshot? current) =>
+        current is { State: AuthenticationState.SignedIn, User: { } user }
+        && string.Equals(user.Uid, expectedUid, StringComparison.Ordinal);
 }

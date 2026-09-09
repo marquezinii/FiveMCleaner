@@ -50,6 +50,16 @@ public partial class MainWindow
                     : AppThemePreference.Dark);
             }
 
+            var accountUsername = arguments
+                .FirstOrDefault(value => value.StartsWith("--capture-account-username=", StringComparison.OrdinalIgnoreCase));
+            if (demoMode && accountUsername is not null)
+            {
+                AccountLabel.Text = FormatAccountUsername(
+                    accountUsername["--capture-account-username=".Length..].Trim('"'));
+                AccountLabel.MaxWidth = 120;
+                AccountLabel.Visibility = Visibility.Visible;
+            }
+
             var size = arguments
                 .FirstOrDefault(value => value.StartsWith("--capture-size=", StringComparison.OrdinalIgnoreCase));
             if (size is not null
