@@ -11,6 +11,7 @@ using Xunit;
 
 namespace Ralven.Tests.App;
 
+[Collection(WpfApplicationCollection.Name)]
 public sealed class AnimatedRalvenLogoTests
 {
     [Fact]
@@ -27,8 +28,14 @@ public sealed class AnimatedRalvenLogoTests
                 var logo = new AnimatedRalvenLogo { Width = 104, Height = 104 };
                 window = new Window
                 {
-                    Content = logo, Width = 240, Height = 240, ShowInTaskbar = false, Style = null,
-                    ShowActivated = false, Left = -10000, Top = -10000,
+                    Content = logo,
+                    Width = 240,
+                    Height = 240,
+                    ShowInTaskbar = false,
+                    Style = null,
+                    ShowActivated = false,
+                    Left = -10000,
+                    Top = -10000,
                 };
                 // Simulate focus without stealing the desktop or depending on other apps/parallel tests.
                 var activeKey = (DependencyPropertyKey)typeof(Window)
