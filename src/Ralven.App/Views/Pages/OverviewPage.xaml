@@ -118,7 +118,12 @@
                 </Grid.RowDefinitions>
 
                 <!-- ============ Painel de diagnóstico ============ -->
-                <Border Grid.Row="0" Style="{StaticResource PanelSurface}">
+                <Border Grid.Row="0"
+                        Style="{StaticResource HeroSurface}"
+                        Padding="0"
+                        BorderThickness="0"
+                        CornerRadius="{StaticResource RadiusXl}"
+                        Effect="{DynamicResource Elevation1Shadow}">
                     <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
@@ -194,15 +199,13 @@
 
                         <!-- Faixa de instrumentos: os três fatos da varredura
                              que sustentam a recomendação acima. Fica DENTRO do
-                             mesmo painel, separada por traço — não é um segundo
-                             cartão. -->
-                        <Border Grid.Row="1" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,1,0,0" Padding="28,4">
+                             mesmo painel e usa respiro, não divisórias nem um
+                             segundo cartão. -->
+                        <Border Grid.Row="1" Padding="28,0,28,8">
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <StackPanel Grid.Column="0" Margin="0,18,24,18" VerticalAlignment="Center">
@@ -210,14 +213,12 @@
                                     <TextBlock Text="{Binding PerformancePressureLabel}" Style="{StaticResource MetricSmallText}" Margin="0,6,0,0"
                                                Foreground="{Binding PerformancePressureBrushKey, Converter={StaticResource BrushKeyConverter}}" />
                                 </StackPanel>
-                                <Border Grid.Column="1" Style="{StaticResource VerticalHairlineDivider}" Margin="0,18" />
-                                <StackPanel Grid.Column="2" Margin="24,18" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="1" Margin="24,18" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding [Dashboard.Kpi.Cores.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding LogicalProcessorLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,0" />
                                     <TextBlock Text="{Binding LogicalProcessorDetail}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                 </StackPanel>
-                                <Border Grid.Column="3" Style="{StaticResource VerticalHairlineDivider}" Margin="0,18" />
-                                <StackPanel Grid.Column="4" Margin="24,18" VerticalAlignment="Center">
+                                <StackPanel Grid.Column="2" Margin="24,18,0,18" VerticalAlignment="Center">
                                     <TextBlock Text="{Binding [Dashboard.Kpi.Memory.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" TextWrapping="Wrap" />
                                     <TextBlock Text="{Binding AvailableMemoryLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,0" />
                                     <TextBlock Text="{Binding AvailableMemoryDetail}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
@@ -227,11 +228,11 @@
                     </Grid>
                 </Border>
 
-                <!-- ============ Painel ao vivo ============ -->
-                <!-- Linha "*": o gráfico consome a altura restante, então o
-                     painel termina na borda da janela em qualquer resolução. -->
-                <Border Grid.Row="2" Style="{StaticResource PanelSurface}">
-                    <Grid Margin="28,24,28,24">
+                <!-- ============ Desempenho ao vivo ============ -->
+                <!-- Linha "*": o gráfico consome a altura restante, enquanto
+                     a seção aberta evita outra moldura grande na página. -->
+                <Border Grid.Row="2" Background="Transparent">
+                    <Grid Margin="4,8,4,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />

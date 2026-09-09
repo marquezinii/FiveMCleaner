@@ -1,25 +1,7 @@
 # Objetivo da tarefa
 
-## Agente
-
-Codex
-
-## Objetivo
-
-Redesenhar visualmente a aba Ralven AI como uma experiência de conversa clara e acolhedora, preservando a identidade e a logo existentes.
-
-## Escopo
-
-- Atualizar a página, seus controles e textos localizados do Ralven AI.
-- Preservar o fluxo, as proteções de acesso, a privacidade e o contrato remoto já existentes.
-- Não alterar o Worker, entitlements, telemetria ou a execução de otimizações.
-
-## Critérios de conclusão
-
-- Estado inicial apresenta orientações variadas e sugestões de início de conversa.
-- Campo de mensagem, histórico e estados de envio continuam acessíveis e funcionais.
-- Build e testes aplicáveis concluídos sem regressões introduzidas.
-
-## Resultado entregue
-
-Redesenho completo da aba Ralven AI entregue: abertura conversacional com cinco saudações alternadas, sugestões de início, compositor de mensagem integrado e histórico redesenhado. Foram preservados o contrato, a privacidade, o acesso e a revisão local de perfil existentes. Build Release, suíte de 1.434 testes e capturas em tema claro/escuro (incluindo a largura mínima da janela) concluídos com êxito.
+- **Agente:** Codex
+- **Objetivo:** suavizar a hierarquia visual da tela Visão Geral com um recorte pequeno, sóbrio e coerente nos temas claro e escuro.
+- **Escopo:** ajustar somente o Overview e, se indispensável, estilos de superfície que ele já usa; não alterar cabeçalho/conta, autenticação, navegação, comportamento funcional ou textos.
+- **Critérios de conclusão:** reduzir caixas e divisórias duras nos pontos de maior impacto, reutilizar tokens existentes, preservar responsividade/acessibilidade e validar build, testes e renderização em tema claro e escuro quando o ambiente permitir.
+- **Resultado entregue:** o diagnóstico principal usa a superfície hero existente com raio amplo e sem contorno; os três KPIs são agrupados por espaço, sem divisórias; o monitor ao vivo fica aberto sobre o fundo e preserva o gráfico como poço funcional. O XAML foi inspecionado em tema escuro e claro, maximizado e em 1600×1000. Foram aprovados 78 testes focados de localização/tokens, o build Release da solução (0 avisos) e a suíte completa (1.434 testes).
