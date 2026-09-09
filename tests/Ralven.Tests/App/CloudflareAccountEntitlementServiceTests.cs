@@ -27,6 +27,7 @@ public sealed class CloudflareAccountEntitlementServiceTests
 
         Assert.Equal(AccountEntitlementTier.Free, result.Tier);
         Assert.Null(result.ValidUntil);
+        Assert.False(result.HasRalvenAi);
         Assert.Equal(HttpMethod.Get, captured!.Method);
         Assert.Equal("https://example.com/account/entitlements", captured.RequestUri!.AbsoluteUri);
         Assert.Equal("Bearer", captured.Headers.Authorization!.Scheme);
@@ -38,7 +39,7 @@ public sealed class CloudflareAccountEntitlementServiceTests
     {
         var service = CreateService(_ => Json(
             HttpStatusCode.OK,
-            """{"tier":"pro","entitlements":["ralven_pro"],"validUntil":"2026-09-30T12:00:00.000Z"}"""));
+            """{"tier":"pro","entitlements":["ralven_pro","ralven_ai"],"validUntil":"2026-09-30T12:00:00.000Z"}"""));
 
         var result = await service.FetchAsync(
             "id-token-1",
@@ -48,6 +49,22 @@ public sealed class CloudflareAccountEntitlementServiceTests
         Assert.Equal(
             DateTimeOffset.Parse("2026-09-30T12:00:00.000Z", System.Globalization.CultureInfo.InvariantCulture),
             result.ValidUntil);
+        Assert.True(result.HasRalvenAi);
+    }
+
+    [Fact]
+    public async Task FetchAsync_ProDoesNotImplyRalvenAiAccess()
+    {
+        var service = CreateService(_ => Json(
+            HttpStatusCode.OK,
+            """{"tier":"pro","entitlements":["ralven_pro"],"validUntil":"2026-09-30T12:00:00.000Z"}"""));
+
+        var result = await service.FetchAsync(
+            "id-token-1",
+            global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Equal(AccountEntitlementTier.Pro, result.Tier);
+        Assert.False(result.HasRalvenAi);
     }
 
     [Fact]
@@ -70,6 +87,7 @@ public sealed class CloudflareAccountEntitlementServiceTests
 
             Assert.Equal(AccountEntitlementTier.Unavailable, result.Tier);
             Assert.Null(result.ValidUntil);
+            Assert.False(result.HasRalvenAi);
         }
     }
 

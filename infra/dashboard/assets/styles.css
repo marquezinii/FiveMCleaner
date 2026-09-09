@@ -314,6 +314,12 @@ a {
   letter-spacing: -0.015em;
 }
 
+.section-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .refresh-status {
   margin: 0;
   color: var(--muted);
@@ -793,6 +799,12 @@ a {
   height: 34px;
   font-size: 22px;
   line-height: 1;
+}
+
+.feed-toggle {
+  width: 25px;
+  height: 25px;
+  font-size: 18px;
 }
 
 .detail-meta {

@@ -278,7 +278,10 @@ CREATE TABLE IF NOT EXISTS ralven_ai_usage (
     reserved_cost_microusd INTEGER NOT NULL CHECK (reserved_cost_microusd > 0),
     actual_cost_microusd INTEGER CHECK (actual_cost_microusd IS NULL OR actual_cost_microusd >= 0),
     input_tokens INTEGER CHECK (input_tokens IS NULL OR input_tokens >= 0),
+    cached_input_tokens INTEGER CHECK (cached_input_tokens IS NULL OR cached_input_tokens >= 0),
+    cache_write_tokens INTEGER CHECK (cache_write_tokens IS NULL OR cache_write_tokens >= 0),
     output_tokens INTEGER CHECK (output_tokens IS NULL OR output_tokens >= 0),
+    reasoning_tokens INTEGER CHECK (reasoning_tokens IS NULL OR reasoning_tokens >= 0),
     created_at TEXT NOT NULL,
     completed_at TEXT,
     CHECK (
@@ -291,3 +294,5 @@ CREATE INDEX IF NOT EXISTS idx_ralven_ai_usage_account_period
     ON ralven_ai_usage (account_uid, billing_period);
 CREATE INDEX IF NOT EXISTS idx_ralven_ai_usage_period
     ON ralven_ai_usage (billing_period);
+CREATE INDEX IF NOT EXISTS idx_ralven_ai_usage_created_at
+    ON ralven_ai_usage (created_at);

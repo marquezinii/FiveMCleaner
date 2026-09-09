@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Windows;
 using Ralven.App.Services;
+using Ralven.App.ViewModels;
 using Ralven.Contracts;
 using UserControl = System.Windows.Controls.UserControl;
 
@@ -13,6 +14,8 @@ public partial class FiveMPage : UserControl
     public FiveMPage() => InitializeComponent();
 
     private MainWindow? Shell => Window.GetWindow(this) as MainWindow;
+
+    private MainViewModel? ViewModel => DataContext as MainViewModel;
 
     private void BackToGames_Click(object sender, RoutedEventArgs e) => Shell?.RequestNavigateToGames();
 
@@ -29,4 +32,7 @@ public partial class FiveMPage : UserControl
         {
             UseShellExecute = true
         }));
+
+    private void ToggleFiveMSessionMonitor_Click(object sender, RoutedEventArgs e) =>
+        ViewModel?.ToggleFiveMSessionMonitor();
 }

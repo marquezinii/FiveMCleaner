@@ -236,6 +236,49 @@
                                 Click="OpenHistory_Click" />
                     </Grid>
                 </Border>
+
+                <Border Style="{StaticResource FeatureCardSurface}"
+                        Width="330"
+                        MinHeight="268"
+                        Margin="0,0,16,16"
+                        AutomationProperties.Name="{Binding [Dashboard.SessionMonitor.Title], Source={StaticResource LocalizedStrings}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <Border Style="{StaticResource FeatureIconSurface}">
+                            <Path Style="{StaticResource Icon20}"
+                                  Data="{StaticResource IconEye}"
+                                  Stroke="{Binding FiveMSessionStatusBrushKey, Converter={StaticResource BrushKeyConverter}}" />
+                        </Border>
+                        <StackPanel Grid.Row="1" Margin="0,16,0,18">
+                            <TextBlock Text="{Binding [Dashboard.SessionMonitor.Title], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SectionText}"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding [Dashboard.SessionMonitor.Description], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SecondaryText}"
+                                       Margin="0,7,0,0"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding FiveMSessionStatusLabel}"
+                                       Style="{StaticResource OverlineText}"
+                                       Foreground="{Binding FiveMSessionStatusBrushKey, Converter={StaticResource BrushKeyConverter}}"
+                                       Margin="0,10,0,0"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding FiveMSessionDetailLabel}"
+                                       Style="{StaticResource CaptionText}"
+                                       Margin="0,4,0,0"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <Button Grid.Row="2"
+                                Content="{Binding FiveMSessionActionLabel}"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                HorizontalAlignment="Stretch"
+                                IsEnabled="{Binding CanToggleFiveMSessionMonitor}"
+                                Click="ToggleFiveMSessionMonitor_Click" />
+                    </Grid>
+                </Border>
             </WrapPanel>
 
             <Border Style="{StaticResource FeatureCardSurface}"

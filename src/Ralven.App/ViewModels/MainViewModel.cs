@@ -359,6 +359,8 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
 
     public void Dispose()
     {
+        SetLiveMetricsEnabled(false);
+        disposed = true;
         personalLifetime.Cancel();
         personalTrackingTimer?.Stop();
         personalTrackingTimer = null;

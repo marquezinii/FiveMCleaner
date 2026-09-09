@@ -68,6 +68,23 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void Overview_SeparatesWindowsFromTheFiveMExperience()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var overview = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "Ralven.App",
+            "Views",
+            "Pages",
+            "OverviewPage.xaml"));
+
+        Assert.DoesNotContain("FiveM", overview, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("Gta", overview, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("LegacyCache", overview, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void GeneralExpansion_UsesInternalCatalogsAndTrustedWindowsActions()
     {
         var root = TestHelpers.FindRepositoryRoot();
@@ -113,6 +130,9 @@ public sealed partial class LocalizedInterfaceContractTests
             fiveMDocument.Descendants(presentation + "Button"),
             button => (string?)button.Attribute("Click") == "InstallReShade_Click");
         Assert.Equal("{StaticResource PrimaryButtonStyle}", (string?)reShadeButton.Attribute("Style"));
+        Assert.Contains("[Dashboard.SessionMonitor.Title]", fiveMPage, StringComparison.Ordinal);
+        Assert.Contains("ToggleFiveMSessionMonitor_Click", fiveMPage, StringComparison.Ordinal);
+        Assert.Contains("ToggleFiveMSessionMonitor()", fiveMPageCode, StringComparison.Ordinal);
         Assert.Contains("OptimizationScope.FiveMLegacy ? GamesNav : OptimizerNav", navigation, StringComparison.Ordinal);
         Assert.Contains("Games.FiveM.Action", gamesPage, StringComparison.Ordinal);
         Assert.Contains("FiveMGameCardSurface", gamesPage, StringComparison.Ordinal);
@@ -559,12 +579,12 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("StartOptimization_Click", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("ProfilePresentationBenefits", dashboard, StringComparison.Ordinal);
 
-        // A faixa de indicadores explica a recomendação com números da própria
-        // varredura local, em vez de deixar o espaço vazio abaixo do medidor.
+        // A faixa de indicadores explica a recomendação com números úteis da
+        // própria varredura local, sem puxar dados do fluxo separado de FiveM.
         Assert.Contains("PerformancePressureLabel", dashboard, StringComparison.Ordinal);
         Assert.Contains("LogicalProcessorLabel", dashboard, StringComparison.Ordinal);
         Assert.Contains("AvailableMemoryLabel", dashboard, StringComparison.Ordinal);
-        Assert.Contains("LegacyCacheLabel", dashboard, StringComparison.Ordinal);
+        Assert.DoesNotContain("LegacyCacheLabel", dashboard, StringComparison.Ordinal);
         // Média e pico saem das mesmas amostras desenhadas no gráfico.
         Assert.Contains("CpuTrendLabel", dashboard, StringComparison.Ordinal);
         Assert.Contains("GpuTrendLabel", dashboard, StringComparison.Ordinal);
@@ -669,11 +689,6 @@ public sealed partial class LocalizedInterfaceContractTests
         // os fallbacks existem apenas para design-time e builds parciais.
         Assert.Contains("/Ralven;component/Assets/Fonts/#Inter", typography, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"10\"", styles, StringComparison.Ordinal);
-        // O selo de detecção (FiveM/GTA V) continua com um check vetorial
-        // quando detectado e um X quando não, composto inline via DataTrigger
-        // em vez de um estilo nomeado dedicado — mas o traçado em si continua
-        // vindo do dicionário compartilhado de ícones. Ele existe só na Visão
-        // geral: o Otimizador removeu sua cópia duplicada do mesmo selo.
         var icons = File.ReadAllText(Path.Combine(
             root,
             "src",
@@ -683,8 +698,6 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("x:Key=\"IconCheck\"", icons, StringComparison.Ordinal);
         Assert.Contains("x:Key=\"IconClose\"", icons, StringComparison.Ordinal);
-        Assert.Contains("{StaticResource IconCheck}", overview, StringComparison.Ordinal);
-        Assert.Contains("{StaticResource IconClose}", overview, StringComparison.Ordinal);
         Assert.DoesNotContain("{StaticResource IconCheck}", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("{StaticResource IconClose}", optimizer, StringComparison.Ordinal);
     }
@@ -913,8 +926,6 @@ public sealed partial class LocalizedInterfaceContractTests
             "Themes",
             "Controls.xaml"));
 
-        Assert.Contains("ToolTip=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
-        Assert.DoesNotContain("Text=\"{Binding [Safety.SnapshotRollback]", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Text=\"{Binding [Settings.Subtitle]", mainWindow, StringComparison.Ordinal);
         Assert.Contains("<ui:TitleBar", mainWindow, StringComparison.Ordinal);
 
@@ -933,12 +944,10 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("Content=\"{Binding SelectedValue, RelativeSource={RelativeSource AncestorType=ComboBox}}\"", controls, StringComparison.Ordinal);
         Assert.Contains("SelectedValuePath=\"Content\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
-        Assert.DoesNotContain("&#xEA18;", mainWindow, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void SupportCard_AlignsItsStatusAndShowsTheInstalledVersion()
+    public void VersionCard_RemovesProtectionStatusAndShowsTheInstalledVersion()
     {
         var root = TestHelpers.FindRepositoryRoot();
         var mainWindow = File.ReadAllText(Path.Combine(
@@ -946,21 +955,15 @@ public sealed partial class LocalizedInterfaceContractTests
             "src",
             "Ralven.App",
             "MainWindow.xaml"));
-        var controls = File.ReadAllText(Path.Combine(
-            root,
-            "src",
-            "Ralven.App",
-            "Themes",
-            "Controls.xaml"));
-
-        Assert.Contains("VerticalAlignment=\"Center\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Safety.Active", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Safety.SnapshotRollback", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource FieldSurface}\" Padding=\"12,8\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding AppVersion, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
-        // A hierarquia de texto agora vem da escala tipográfica (Overline/
-        // Caption/Body), não de um Foreground fixo por elemento.
-        Assert.Contains("Style=\"{StaticResource CaptionText}\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Padding=\"{TemplateBinding Padding}\"", controls, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource OverlineText}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource BodyStrongText}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("AutomationProperties.Name=\"{Binding AboutVersionDeveloper}\"", mainWindow, StringComparison.Ordinal);
     }
 
     /// <summary>

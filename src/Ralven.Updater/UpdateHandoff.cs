@@ -1,4 +1,5 @@
 using System.Globalization;
+using Ralven.UpdateRuntime;
 
 namespace Ralven.Updater;
 
@@ -50,13 +51,20 @@ public sealed record UpdateHandoff(
 
     private static bool IsUnderLocalData(string directoryName, string path)
     {
-        if (!Path.IsPathFullyQualified(path)) return false;
-        var root = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Ralven",
-            directoryName);
-        var fullRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
-        var fullPath = Path.GetFullPath(path);
-        return fullPath.StartsWith(fullRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        try
+        {
+            if (!Path.IsPathFullyQualified(path)) return false;
+            var root = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Ralven",
+                directoryName);
+            var fullRoot = Path.TrimEndingDirectorySeparator(UpdatePathSafety.EnsureNoReparsePoints(root));
+            var fullPath = UpdatePathSafety.EnsureNoReparsePoints(path);
+            return fullPath.StartsWith(fullRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 }
