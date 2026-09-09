@@ -3,6 +3,7 @@ import { validateBugReport } from './bugReports/validateSubmission.js';
 import { MAX_BUG_REPORT_LIMIT, recentBugReports } from './bugReports/queries.js';
 import { validateUpdaterEvent } from './updaterEvents/validateSubmission.js';
 import { recentUpdaterEvents } from './updaterEvents/queries.js';
+import { describeUpdaterEventCode } from './updaterEvents/catalog.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
 import { requireFirebaseUser } from './auth/firebaseIdToken.js';
 import {
@@ -400,7 +401,7 @@ async function handleUpdaterEventsList(request, env, url) {
   }, url.searchParams.get('limit'));
   try {
     const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-    return jsonResponse(results);
+    return jsonResponse(results.map((event) => ({ ...event, ...describeUpdaterEventCode(event.error_code) })));
   } catch (err) {
     return jsonResponse({ error: 'Database query failed' }, 500);
   }

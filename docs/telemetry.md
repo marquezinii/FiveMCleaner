@@ -65,6 +65,20 @@ mas nunca incluem número de série, MAC ou GUID de hardware. O transporte é o 
 acima. O FormSubmit foi removido por completo do app: não existe mais
 código nem configuração que envie telemetria de uso para ele.
 
+## Diagnósticos do updater
+
+Falhas e resultados do updater usam uma lista fechada de códigos curtos e estáveis,
+como `U101` para “Manifesto: origem ou resposta recusada”. O painel mostra tanto o
+código quanto o diagnóstico; o código torna a busca e a correlação com suporte mais
+rápidas sem enviar mensagens de exceção, caminhos, stack traces ou outros textos
+locais. As faixas atuais são: `U1xx` manifesto, `U2xx` download, `U3xx` preparação,
+`U4xx` ativação, `U5xx` recuperação, `U6xx` sistema, `U7xx` rede e `U999` falha não
+classificada. Códigos enviados por clientes anteriores continuam visíveis como
+**Legado**, mas não recebem uma causa retroativa que não foi transmitida na época.
+
+O Worker aceita somente esse catálogo e os códigos legados conhecidos. Assim, um
+cliente não pode inserir texto livre ou um código arbitrário no painel.
+
 ## Dados que o aplicativo nunca envia nessa telemetria
 
 - arquivos, imagens, documentos ou seus conteúdos;

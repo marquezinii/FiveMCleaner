@@ -14,9 +14,11 @@ import {
   toRecentFailureRow,
   truncate,
   toBugReportRow,
+  toUpdaterEventRow,
   formatAppVersion,
   toDistributionRows,
   formatActionIds,
+  limitFeedRows,
 } from '../assets/charts.js';
 import { DONUT_COLORS } from '../assets/rendering.js';
 
@@ -266,6 +268,36 @@ test('toBugReportRow shows a placeholder for a missing exact code', () => {
 
   const cells = toBugReportRow(row);
   assert.equal(cells[1], '—');
+});
+
+test('limitFeedRows keeps feeds compact until expanded', () => {
+  const rows = [1, 2, 3, 4, 5, 6];
+
+  assert.deepEqual(limitFeedRows(rows, false), [1, 2, 3, 4, 5]);
+  assert.deepEqual(limitFeedRows(rows, true), rows);
+});
+
+test('toUpdaterEventRow shows the compact code and its diagnostic name', () => {
+  const cells = toUpdaterEventRow({
+    received_at: '2026-09-09T12:00:00.000Z',
+    error_id: 'U101',
+    error_name: 'Manifesto: origem ou resposta recusada',
+    stage: 'manifest',
+    outcome: 'failed',
+    previous_version: '1.2.0',
+    candidate_version: '1.2.0',
+    environment: 'Production',
+  });
+
+  assert.deepEqual(cells.slice(1), [
+    'U101',
+    'Manifesto: origem ou resposta recusada',
+    'manifest',
+    'failed',
+    '1.2.0',
+    '1.2.0',
+    'Production',
+  ]);
 });
 
 test('formatActionIds turns the database aggregate into a clean list', () => {

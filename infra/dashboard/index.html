@@ -137,7 +137,7 @@
         </section>
 
         <section class="dashboard-section panel incident-panel" aria-labelledby="recent-errors-title">
-          <div class="section-heading"><h2 id="recent-errors-title">Eventos recentes</h2><a id="csv-recent-failures" class="csv-link" download>Exportar CSV</a></div>
+          <div class="section-heading"><h2 id="recent-errors-title">Eventos recentes</h2><div class="section-actions"><a id="csv-recent-failures" class="csv-link" download>Exportar CSV</a><button id="recent-failures-toggle" class="icon-button feed-toggle" type="button" aria-controls="recent-failures-body" aria-expanded="false" aria-label="Mostrar todos os eventos recentes" title="Mostrar todos" hidden>+</button></div></div>
           <div class="table-scroll">
             <table class="data-table">
               <thead><tr><th>Quando</th><th>Código</th><th>Categoria</th><th>Versão</th><th>Perfil</th><th>Ambiente</th><th><span class="visually-hidden">Detalhes</span></th></tr></thead>
@@ -149,7 +149,7 @@
 
       <div class="dashboard-grid operations-grid">
         <section class="dashboard-section panel" aria-labelledby="bug-reports-title">
-          <div class="section-heading"><h2 id="bug-reports-title">Bugs reportados</h2><a id="csv-bug-reports" class="csv-link" download>Exportar CSV</a></div>
+          <div class="section-heading"><h2 id="bug-reports-title">Bugs reportados</h2><div class="section-actions"><a id="csv-bug-reports" class="csv-link" download>Exportar CSV</a><button id="bug-reports-toggle" class="icon-button feed-toggle" type="button" aria-controls="bug-reports-body" aria-expanded="false" aria-label="Mostrar todos os bugs reportados" title="Mostrar todos" hidden>+</button></div></div>
           <div class="table-scroll">
             <table class="data-table">
               <thead><tr><th>Quando</th><th>Código</th><th>Resumo</th><th>Categoria</th><th>Versão</th><th><span class="visually-hidden">Detalhes</span></th></tr></thead>
@@ -159,11 +159,11 @@
         </section>
 
         <section class="dashboard-section panel" aria-labelledby="updater-events-title">
-          <div class="section-heading"><h2 id="updater-events-title">Bugs do updater</h2></div>
+          <div class="section-heading"><h2 id="updater-events-title">Bugs do updater</h2><button id="updater-events-toggle" class="icon-button feed-toggle" type="button" aria-controls="updater-events-body" aria-expanded="false" aria-label="Mostrar todos os bugs do updater" title="Mostrar todos" hidden>+</button></div>
           <div class="table-scroll">
             <table class="data-table">
-              <thead><tr><th>Quando</th><th>Etapa</th><th>Resultado</th><th>Código</th><th>Versão anterior</th><th>Versão candidata</th><th>Ambiente</th></tr></thead>
-              <tbody id="updater-events-body"><tr><td colspan="7" class="empty-row">Sem dados ainda</td></tr></tbody>
+              <thead><tr><th>Quando</th><th>Código</th><th>Diagnóstico</th><th>Etapa</th><th>Resultado</th><th>Versão anterior</th><th>Versão candidata</th><th>Ambiente</th></tr></thead>
+              <tbody id="updater-events-body"><tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr></tbody>
             </table>
           </div>
         </section>

@@ -12,7 +12,6 @@ using System.Text.Json.Serialization;
 using Ralven.App.Services;
 using Ralven.Contracts;
 using Ralven.UpdateRuntime;
-using Ralven.Windows.Diagnostics;
 
 namespace Ralven.App.Services;
 
@@ -76,6 +75,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
         CancellationToken cancellationToken = default)
     {
         try { return await CheckForUpdateCoreAsync(currentVersion, cancellationToken); }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
@@ -95,9 +95,9 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
         if (response.StatusCode != HttpStatusCode.OK
             || response.RequestMessage?.RequestUri is not { } effectiveUri
             || !effectiveUri.Equals(manifestUri))
-            throw new UpdateSecurityException($"A fonte assinada respondeu com HTTP {(int)response.StatusCode}.");
+            throw new UpdateSecurityException($"A fonte assinada respondeu com HTTP {(int)response.StatusCode}.", UpdaterEventCodes.ManifestSourceRejected);
         if (response.Content.Headers.ContentLength is > 65_536)
-            throw new UpdateSecurityException("O manifesto assinado excede 64 KiB.");
+            throw new UpdateSecurityException("O manifesto assinado excede 64 KiB.", UpdaterEventCodes.ManifestTooLarge);
 
         await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
         using var limited = new MemoryStream();
@@ -105,7 +105,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
         int read;
         while ((read = await source.ReadAsync(buffer, cancellationToken)) != 0)
         {
-            if (limited.Length + read > 65_536) throw new UpdateSecurityException("O manifesto assinado excede 64 KiB.");
+            if (limited.Length + read > 65_536) throw new UpdateSecurityException("O manifesto assinado excede 64 KiB.", UpdaterEventCodes.ManifestTooLarge);
             limited.Write(buffer, 0, read);
         }
         var manifestBytes = limited.ToArray();
@@ -119,7 +119,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
                 || document.RootElement.EnumerateObject().Count() != allowed.Count
                 || document.RootElement.EnumerateObject().Any(property => !allowed.Remove(property.Name))
                 || allowed.Count != 0)
-                throw new UpdateSecurityException("O contrato do manifesto assinado é inválido.");
+                throw new UpdateSecurityException("O contrato do manifesto assinado é inválido.", UpdaterEventCodes.ManifestSchemaInvalid);
         }
         var manifest = JsonSerializer.Deserialize<SignedReleaseManifest>(
             manifestBytes,
@@ -127,13 +127,13 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
             {
                 PropertyNameCaseInsensitive = true,
                 UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow,
-            }) ?? throw new UpdateSecurityException("O manifesto assinado é inválido.");
+            }) ?? throw new UpdateSecurityException("O manifesto assinado é inválido.", UpdaterEventCodes.ManifestSchemaInvalid);
         var floor = StableSemanticVersion.Parse(versionFloor.Read(currentVersion.CoreVersion));
         var highest = floor.CompareTo(currentVersion) > 0 ? floor : currentVersion;
         try { ReleaseTrustPolicy.Verify(manifest, publicKey, highest.CoreVersion); }
         catch (Exception exception) when (exception is InvalidDataException or CryptographicException)
         {
-            throw new UpdateSecurityException(exception.Message);
+            throw new UpdateSecurityException(exception.Message, UpdaterEventCodes.ManifestTrustInvalid);
         }
         var version = StableSemanticVersion.Parse(manifest.Version);
         if (version.CompareTo(currentVersion) <= 0) return null;
@@ -158,6 +158,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
         CancellationToken cancellationToken = default)
     {
         try { return await DownloadUpdateCoreAsync(update, progress, cancellationToken); }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
@@ -189,9 +190,9 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
                 update.Version,
                 cancellationToken);
             if (response.StatusCode != HttpStatusCode.OK)
-                throw new HttpRequestException($"O download respondeu com HTTP {(int)response.StatusCode}.");
+                throw new UpdateSecurityException($"O download respondeu com HTTP {(int)response.StatusCode}.", UpdaterEventCodes.PackageResponseRejected);
             if (response.Content.Headers.ContentLength is long length && length != update.SizeBytes)
-                throw new UpdateSecurityException("O tamanho HTTP do pacote difere do manifesto.");
+                throw new UpdateSecurityException("O tamanho HTTP do pacote difere do manifesto.", UpdaterEventCodes.PackageSizeMismatch);
             await using var source = await response.Content.ReadAsStreamAsync(cancellationToken);
             // O handle do .part precisa estar fechado antes do File.Move: ele é
             // aberto com FileShare.None, então um `await using` de método inteiro
@@ -207,14 +208,14 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
                     while ((read = await source.ReadAsync(buffer, cancellationToken)) != 0)
                     {
                         total = checked(total + read);
-                        if (total > update.SizeBytes) throw new UpdateSecurityException("O pacote excede o tamanho assinado.");
+                        if (total > update.SizeBytes) throw new UpdateSecurityException("O pacote excede o tamanho assinado.", UpdaterEventCodes.PackageSizeMismatch);
                         hash.AppendData(buffer, 0, read);
                         await destination.WriteAsync(buffer.AsMemory(0, read), cancellationToken);
                         progress?.Report(new UpdateDownloadProgress(total, update.SizeBytes));
                     }
                     if (total != update.SizeBytes
                         || !Convert.ToHexString(hash.GetHashAndReset()).Equals(update.Sha256Hex, StringComparison.OrdinalIgnoreCase))
-                        throw new UpdateSecurityException("A integridade do pacote baixado falhou.");
+                        throw new UpdateSecurityException("A integridade do pacote baixado falhou.", UpdaterEventCodes.PackageHashMismatch);
                     await destination.FlushAsync(cancellationToken);
                     destination.Flush(true);
                 }
@@ -236,19 +237,19 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
         diagnostics.RecordAsync(
             new UpdaterEvent(
                 Guid.NewGuid().ToString("N"), stage, "failed", Classify(exception),
-                previous, candidate, "Production",
-                BugCodeClassifier.ClassifyUpdaterException(exception, stage)),
+                previous, candidate, UpdaterDiagnostics.ResolveEnvironment()),
             exception.ToString(),
             telemetryAuthorized: UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
 
     private static string Classify(Exception exception) => exception switch
     {
-        CryptographicException => "signature-invalid",
-        UpdateSecurityException => "security-policy",
-        HttpRequestException => "network",
-        TimeoutException => "timeout",
-        IOException => "io",
-        _ => "unexpected",
+        UpdateSecurityException security => security.DiagnosticCode,
+        JsonException or FormatException => UpdaterEventCodes.ManifestSchemaInvalid,
+        CryptographicException => UpdaterEventCodes.ManifestTrustInvalid,
+        HttpRequestException => UpdaterEventCodes.NetworkFailed,
+        TaskCanceledException or TimeoutException => UpdaterEventCodes.RequestTimedOut,
+        IOException => UpdaterEventCodes.LocalIoFailed,
+        _ => UpdaterEventCodes.Unexpected,
     };
 
     private async Task<HttpResponseMessage> SendDownloadAsync(
@@ -268,10 +269,10 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
                 return response;
             var location = response.Headers.Location;
             response.Dispose();
-            if (location is null || redirects == 5) throw new UpdateSecurityException("Redirecionamento de download inválido.");
+            if (location is null || redirects == 5) throw new UpdateSecurityException("Redirecionamento de download inválido.", UpdaterEventCodes.PackageRedirectRejected);
             current = location.IsAbsoluteUri ? location : new Uri(current, location);
         }
-        throw new UpdateSecurityException("Redirecionamentos demais.");
+        throw new UpdateSecurityException("Redirecionamentos demais.", UpdaterEventCodes.PackageRedirectRejected);
     }
 
     private void ValidateDownloadUri(Uri uri, StableSemanticVersion version)
@@ -284,7 +285,7 @@ public sealed class SignedManifestUpdateService : IReleaseUpdateService, IDispos
             || !uri.AbsolutePath.Equals(expectedPath, StringComparison.Ordinal)
             || !string.IsNullOrEmpty(uri.Query)
             || !string.IsNullOrEmpty(uri.Fragment))
-            throw new UpdateSecurityException("O download saiu da rota oficial permitida.");
+            throw new UpdateSecurityException("O download saiu da rota oficial permitida.", UpdaterEventCodes.PackageSourceRejected);
     }
 
     private static async Task<bool> MatchesAsync(string path, ReleaseUpdate update, CancellationToken token)

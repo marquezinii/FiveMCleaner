@@ -4,18 +4,16 @@ using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 
-using Ralven.Contracts;
-
 namespace Ralven.UpdateRuntime;
 
 public sealed record UpdaterEvent(
     string EventId, string Stage, string Outcome, string ErrorCode,
-    string? PreviousVersion, string CandidateVersion, string Environment,
-    BugCode? BugCode = null);
+    string? PreviousVersion, string CandidateVersion, string Environment);
 
 public sealed class UpdaterDiagnostics
 {
     private const int MinimumEssentialDiagnosticsNoticeVersion = 8;
+    private const string EnvironmentVariableName = "RALVEN_ENVIRONMENT";
 
     /// <summary>
     /// Host of the Cloudflare Worker that receives updater diagnostics events.
@@ -27,6 +25,31 @@ public sealed class UpdaterDiagnostics
 
     /// <summary>The one allowed endpoint for <see cref="RecordAsync"/>/<see cref="FlushPendingAsync"/>.</summary>
     public static readonly Uri UpdaterEventsEndpoint = new($"https://{TelemetryHost}/updater-events");
+
+    /// <summary>
+    /// Resolves the environment for updater diagnostics independently of the
+    /// WPF application, which the launcher and updater do not reference.
+    /// </summary>
+    public static string ResolveEnvironment(Func<string, string?>? environmentVariableReader = null)
+    {
+        var reader = environmentVariableReader ?? Environment.GetEnvironmentVariable;
+        var value = reader(EnvironmentVariableName);
+        if (string.Equals(value, "Development", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Development";
+        }
+
+        if (string.Equals(value, "Production", StringComparison.OrdinalIgnoreCase))
+        {
+            return "Production";
+        }
+
+#if DEBUG
+        return "Development";
+#else
+        return "Production";
+#endif
+    }
 
     private readonly string logPath;
     private readonly string pendingRoot;
