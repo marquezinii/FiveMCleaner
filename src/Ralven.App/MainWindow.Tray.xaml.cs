@@ -7,6 +7,12 @@ public partial class MainWindow
 {
     private void LiveAlertDismiss_Click(object sender, RoutedEventArgs e) => viewModel.DismissLiveAlert();
 
+    private void MainWindow_ActivityChanged(object? sender, EventArgs e) => RefreshLiveMetricsActivity();
+
+    private void RefreshLiveMetricsActivity() => viewModel.SetLiveMetricsEnabled(
+        IsVisible && IsActive && WindowState != WindowState.Minimized
+        && DashboardPage.Visibility == Visibility.Visible);
+
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
     {
         if (viewModel.IsWindowsGamingBusy && !systemSessionEnding)
@@ -71,7 +77,7 @@ public partial class MainWindow
         }
 
         Activate();
-        viewModel.SetLiveMetricsEnabled(DashboardPage.Visibility == Visibility.Visible);
+        RefreshLiveMetricsActivity();
     }
 
     private void TrayIcon_ExitRequested(object? sender, EventArgs e)

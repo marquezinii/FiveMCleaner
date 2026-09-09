@@ -328,6 +328,21 @@ O parser XML altera apenas chaves presentes. Um arquivo inválido gera ação de
 
 ### Monitor local de sessão FiveM
 
+A coleta de métricas ao vivo só roda com a Visão geral selecionada e a janela
+visível, ativa e não minimizada. Navegação, minimização, perda de foco e bandeja
+pausam o timer e cancelam a amostra em curso; a retomada descarta resultados
+antigos e obtém uma amostra nova sem sobrepor coletas. A leitura da GPU consulta
+a categoria de contadores em lote, pareando as duas amostras pelo nome da
+instância. Instâncias sem par não viram utilização inventada.
+
+Essa suspensão é exclusiva das métricas de apresentação. O monitor de sessão
+continua consultando a presença a cada cinco segundos; mudanças de estado
+atualizam as restrições do otimizador mesmo com a janela oculta. Rodadas sem
+mudança não recalculam apresentação oculta. Ao reabrir, a duração é atualizada
+a partir do início registrado. Resultados de uma execução anterior do monitor
+são descartados após parar/reiniciar. Procedimento e limites de medição em
+[Desempenho do aplicativo](app-performance.md).
+
 O monitor da Visão geral é iniciado manualmente e permanece ativo enquanto o
 Ralven estiver aberto, inclusive na bandeja. Ele usa exclusivamente a raiz
 Legacy já diagnosticada e só confirma uma sessão quando o nome allowlisted e o

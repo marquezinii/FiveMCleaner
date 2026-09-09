@@ -10,6 +10,18 @@
   },
   "items": [
     {
+      "id": "background-efficiency",
+      "status": { "pt": "Em desenvolvimento", "en": "In development" },
+      "title": {
+        "pt": "Coleta de métricas sob demanda",
+        "en": "On-demand resource monitoring"
+      },
+      "description": {
+        "pt": "As métricas ao vivo pausam quando a janela perde o foco, é minimizada ou vai para a bandeja, e retomam ao voltar à Visão geral. O monitor local de sessão continua funcionando quando ativado.",
+        "en": "Live metrics pause when the window loses focus, is minimized or moves to the tray, and resume when returning to Overview. The local session monitor keeps running when enabled."
+      }
+    },
+    {
       "id": "experience",
       "status": { "pt": "Em desenvolvimento", "en": "In development" },
       "title": {

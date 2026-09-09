@@ -159,6 +159,10 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
         Activated += BillingWindow_Activated;
+        Activated += MainWindow_ActivityChanged;
+        Deactivated += MainWindow_ActivityChanged;
+        StateChanged += MainWindow_ActivityChanged;
+        IsVisibleChanged += (_, _) => RefreshLiveMetricsActivity();
         System.Windows.Application.Current.SessionEnding += Application_SessionEnding;
     }
 

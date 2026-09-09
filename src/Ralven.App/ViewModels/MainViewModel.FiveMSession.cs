@@ -13,6 +13,7 @@ public sealed partial class MainViewModel
     private readonly FiveMSessionStateTracker fiveMSessionTracker = new();
     private DispatcherTimer? fiveMSessionTimer;
     private bool fiveMSessionProbeInProgress;
+    private int fiveMSessionGeneration;
     private string? fiveMSessionRoot;
     private FiveMSessionPresence? lastFiveMSessionPresence;
     private bool isFiveMSessionMonitoring;
@@ -106,10 +107,12 @@ public sealed partial class MainViewModel
         }
 
         fiveMSessionProbeInProgress = true;
+        var generation = fiveMSessionGeneration;
+        var previousState = (lastFiveMSessionPresence, fiveMSessionTracker.IsActive, fiveMSessionTracker.IsEndConfirmationPending);
         try
         {
             var presence = await Task.Run(() => fiveMSessionProbe(root));
-            if (!isFiveMSessionMonitoring)
+            if (!isFiveMSessionMonitoring || generation != fiveMSessionGeneration)
             {
                 return;
             }
@@ -120,7 +123,7 @@ public sealed partial class MainViewModel
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            if (!isFiveMSessionMonitoring)
+            if (!isFiveMSessionMonitoring || generation != fiveMSessionGeneration)
             {
                 return;
             }
@@ -131,13 +134,22 @@ public sealed partial class MainViewModel
         finally
         {
             fiveMSessionProbeInProgress = false;
+            if (isFiveMSessionMonitoring && generation != fiveMSessionGeneration)
+            {
+                _ = ProbeFiveMSessionAsync();
+            }
         }
 
-        RefreshFiveMSessionMonitorPresentation();
+        if (liveMetricsEnabled
+            || previousState != (lastFiveMSessionPresence, fiveMSessionTracker.IsActive, fiveMSessionTracker.IsEndConfirmationPending))
+        {
+            RefreshFiveMSessionMonitorPresentation();
+        }
     }
 
     private void StopFiveMSessionMonitor()
     {
+        fiveMSessionGeneration++;
         fiveMSessionTimer?.Stop();
         fiveMSessionRoot = null;
         lastFiveMSessionPresence = null;
