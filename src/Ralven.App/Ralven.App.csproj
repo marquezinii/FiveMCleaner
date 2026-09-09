@@ -41,12 +41,14 @@
   <ItemGroup>
     <Resource Include="Assets/Ralven.png" />
     <Resource Include="Assets/FiveM.png" />
+    <Resource Include="Assets/ReShade.png" />
     <Resource Include="Assets/RalvenAi.Black.png" />
     <Resource Include="Assets/RalvenAi.White.png" />
     <Resource Include="../../assets/brand/fonts/inter-4.1/InterVariable.ttf" Link="Assets/Fonts/InterVariable.ttf" />
     <Resource Include="../../assets/brand/fonts/inter-4.1/InterVariable-Italic.ttf" Link="Assets/Fonts/InterVariable-Italic.ttf" />
     <EmbeddedResource Include="Assets/update-manifest-public-key.pem" />
     <EmbeddedResource Include="Assets/broker-integrity-public-key.pem" />
+    <None Update="Assets/ReShade.LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config/appsettings.json;Config/appsettings.Development.json;Config/appsettings.Production.json">

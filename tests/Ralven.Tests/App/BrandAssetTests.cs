@@ -7,6 +7,20 @@ namespace Ralven.Tests.App;
 public sealed class BrandAssetTests
 {
     [Fact]
+    public void ReShadeCard_UsesAHighResolutionLicensedAsset()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var assetPath = Path.Combine(root, "src", "Ralven.App", "Assets", "ReShade.png");
+        var image = BitmapDecoder.Create(
+            new Uri(assetPath),
+            BitmapCreateOptions.PreservePixelFormat,
+            BitmapCacheOption.OnLoad).Frames.Single();
+
+        Assert.Equal((256, 256), (image.PixelWidth, image.PixelHeight));
+        Assert.True(File.Exists(Path.Combine(root, "src", "Ralven.App", "Assets", "ReShade.LICENSE.txt")));
+    }
+
+    [Fact]
     public void OfficialBrandSourcesAndExportsStaySynchronized()
     {
         var root = TestHelpers.FindRepositoryRoot();

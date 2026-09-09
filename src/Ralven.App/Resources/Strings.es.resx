@@ -66,6 +66,10 @@
   <data name="FiveMHub.History.Description" xml:space="preserve"><value>Revisa las ejecuciones de FiveM y Windows, sus resultados reales y los cambios que todavía pueden restaurarse.</value></data>
   <data name="FiveMHub.History.Scope" xml:space="preserve"><value>Historial compartido de Ralven</value></data>
   <data name="FiveMHub.History.Action" xml:space="preserve"><value>Abrir historial</value></data>
+  <data name="FiveMHub.ReShade.Title" xml:space="preserve"><value>ReShade</value></data>
+  <data name="FiveMHub.ReShade.Description" xml:space="preserve"><value>Añade efectos de posprocesamiento a FiveM con el instalador oficial de ReShade.</value></data>
+  <data name="FiveMHub.ReShade.Note" xml:space="preserve"><value>Abre la página oficial de descarga de la versión más reciente. Consulta las reglas del servidor antes de instalar.</value></data>
+  <data name="FiveMHub.ReShade.Action" xml:space="preserve"><value>Instalar ReShade</value></data>
   <data name="Safety.SnapshotRollback" xml:space="preserve"><value>La configuración se guarda antes de cambiar y puede restaurarse.</value></data>
   <data name="BugReport.Link" xml:space="preserve"><value>Reportar un error</value></data>
   <data name="BugReport.LinkTooltip" xml:space="preserve"><value>Abrir formulario de reporte de errores</value></data>

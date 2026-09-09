@@ -119,6 +119,17 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.FiveMLegacy)", fiveMPageCode, StringComparison.Ordinal);
         Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.GeneralWindows)", fiveMPageCode, StringComparison.Ordinal);
         Assert.Contains("RequestNavigateToHistory()", fiveMPageCode, StringComparison.Ordinal);
+        Assert.Contains("Assets/ReShade.png", fiveMPage, StringComparison.Ordinal);
+        Assert.Contains("[FiveMHub.ReShade.Action]", fiveMPage, StringComparison.Ordinal);
+        Assert.Contains("InstallReShade_Click", fiveMPage, StringComparison.Ordinal);
+        Assert.Contains("https://reshade.me/#download", fiveMPageCode, StringComparison.Ordinal);
+        Assert.Contains("ExternalLauncher.TryOpen", fiveMPageCode, StringComparison.Ordinal);
+        var fiveMDocument = XDocument.Parse(fiveMPage);
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+        var reShadeButton = Assert.Single(
+            fiveMDocument.Descendants(presentation + "Button"),
+            button => (string?)button.Attribute("Click") == "InstallReShade_Click");
+        Assert.Equal("{StaticResource PrimaryButtonStyle}", (string?)reShadeButton.Attribute("Style"));
         Assert.Contains("[Dashboard.SessionMonitor.Title]", fiveMPage, StringComparison.Ordinal);
         Assert.Contains("ToggleFiveMSessionMonitor_Click", fiveMPage, StringComparison.Ordinal);
         Assert.Contains("ToggleFiveMSessionMonitor()", fiveMPageCode, StringComparison.Ordinal);
