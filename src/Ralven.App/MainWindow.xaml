@@ -6,6 +6,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:controls="clr-namespace:Ralven.App.Controls"
         xmlns:pages="clr-namespace:Ralven.App.Views.Pages"
+        xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
         xmlns:services="clr-namespace:Ralven.App.Services"
         mc:Ignorable="d"
         Title="{Binding [Brand.ProductName], Source={StaticResource LocalizedStrings}}"
@@ -93,19 +94,15 @@
                                 <Run Text="{Binding [Optimizer.Stage.Run], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /><Run Text="  " /><Run Text="{Binding ProgressPercentLabel, Mode=OneWay}" FontFamily="{StaticResource AppFontMono}" />
                             </TextBlock>
                         </StackPanel>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Visibility="{Binding IsUpdateBannerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                            <StackPanel.Style>
-                                <Style TargetType="StackPanel">
-                                    <Setter Property="Visibility" Value="Visible" />
-                                    <Style.Triggers>
-                                        <DataTrigger Binding="{Binding IsBusy}" Value="True"><Setter Property="Visibility" Value="Collapsed" /></DataTrigger>
-                                    </Style.Triggers>
-                                </Style>
-                            </StackPanel.Style>
-                            <Ellipse Width="7" Height="7" Fill="{DynamicResource InfoBaseBrush}" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding UpdateBannerTitle}" Style="{StaticResource CaptionText}" Foreground="{DynamicResource InfoBaseBrush}" Margin="9,0,0,0" VerticalAlignment="Center" />
-                        </StackPanel>
-                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Visibility="{Binding IsLiveAlertBannerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <Button Style="{StaticResource LinkButtonStyle}" Padding="8,3" VerticalAlignment="Center" Visibility="{Binding IsUpdateAttentionVisible, Converter={StaticResource BooleanToVisibilityConverter}}" Click="ShowUpdateBanner_Click"
+                                ToolTip="{Binding [Update.Reopen], Source={StaticResource LocalizedStrings}}"
+                                AutomationProperties.Name="{Binding [Update.Reopen], Source={StaticResource LocalizedStrings}}">
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7" Height="7" Fill="{DynamicResource InfoBaseBrush}" VerticalAlignment="Center" />
+                                <TextBlock Text="{Binding UpdateBannerTitle}" Style="{StaticResource CaptionText}" Foreground="{DynamicResource InfoBaseBrush}" Margin="9,0,0,0" VerticalAlignment="Center" MaxWidth="260" TextTrimming="CharacterEllipsis" />
+                            </StackPanel>
+                        </Button>
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Visibility="{Binding IsLiveAlertStatusVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel.Style>
                                 <Style TargetType="StackPanel">
                                     <Setter Property="Visibility" Value="Visible" />
@@ -130,9 +127,10 @@
                     <Button x:Name="LiveAlertIconButton"
                             Style="{StaticResource IconButtonStyle}"
                             Visibility="{Binding IsLiveAlertIconVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
-                            ToolTip="{Binding LiveAlertMessage}"
-                            AutomationProperties.Name="{Binding LiveAlertMessage}">
-                        <Path Style="{StaticResource Icon20}" Data="{StaticResource IconAlertTriangle}" Stroke="{DynamicResource WarningBaseBrush}" />
+                            Click="ShowLiveAlertNotification_Click"
+                            ToolTip="{Binding [LiveAlert.Reopen], Source={StaticResource LocalizedStrings}}"
+                            AutomationProperties.Name="{Binding [LiveAlert.Reopen], Source={StaticResource LocalizedStrings}}">
+                        <Path Style="{StaticResource Icon20}" Data="{Binding LiveAlertIconKey, Converter={StaticResource GeometryKeyConverter}}" Stroke="{Binding LiveAlertToneBrushKey, Converter={StaticResource BrushKeyConverter}}" />
                     </Button>
                     <Button x:Name="DiscordButton"
                             Style="{StaticResource IconButtonStyle}"
@@ -662,6 +660,41 @@
                             </StackPanel>
                         </ScrollViewer>
                     </Grid>
+                    <Border HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            Width="392"
+                            Margin="0,18,24,0"
+                            Padding="16"
+                            Panel.ZIndex="20"
+                            Background="{Binding LiveAlertSurfaceBrushKey, Converter={StaticResource BrushKeyConverter}}"
+                            BorderBrush="{Binding LiveAlertBorderBrushKey, Converter={StaticResource BrushKeyConverter}}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource RadiusLg}"
+                            Effect="{DynamicResource Elevation2Shadow}"
+                            Visibility="{Binding IsLiveAlertNotificationVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
+                            AutomationProperties.Name="{Binding LiveAlertTitle}"
+                            AutomationProperties.HelpText="{Binding LiveAlertMessage}"
+                            automation:AutomationProperties.LiveSetting="Polite">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Border Width="36" Height="36" CornerRadius="{StaticResource RadiusMd}" Background="{DynamicResource Surface1Brush}" VerticalAlignment="Top">
+                                <Path Style="{StaticResource Icon20}" Data="{Binding LiveAlertIconKey, Converter={StaticResource GeometryKeyConverter}}" Stroke="{Binding LiveAlertToneBrushKey, Converter={StaticResource BrushKeyConverter}}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <StackPanel Grid.Column="1" Margin="12,0,10,0">
+                                <TextBlock Text="{Binding LiveAlertTitle}" Style="{StaticResource BodyStrongText}" Foreground="{Binding LiveAlertToneBrushKey, Converter={StaticResource BrushKeyConverter}}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding LiveAlertMessage}" Style="{StaticResource SecondaryText}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                            </StackPanel>
+                            <Button Grid.Column="2" Style="{StaticResource IconButtonStyle}" Width="32" Height="32" VerticalAlignment="Top" Click="LiveAlertDismiss_Click"
+                                    ToolTip="{Binding [LiveAlert.Dismiss], Source={StaticResource LocalizedStrings}}"
+                                    AutomationProperties.Name="{Binding [LiveAlert.Dismiss], Source={StaticResource LocalizedStrings}}">
+                                <Path Style="{StaticResource Icon16}" Data="{StaticResource IconClose}" Stroke="{DynamicResource TextSecondaryBrush}" />
+                            </Button>
+                        </Grid>
+                    </Border>
                 </Grid>
             </ui:NavigationView.ContentOverlay>
         </ui:NavigationView>

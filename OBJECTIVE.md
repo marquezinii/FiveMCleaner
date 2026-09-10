@@ -1,7 +1,7 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** transformar o painel de desempenho ao vivo da Visão Geral em uma leitura diagnóstica clara, acessível e responsiva, preservando baixo custo de CPU, GPU e memória.
-- **Escopo:** aprimorar seleção e apresentação das métricas locais existentes, estados ao vivo/pausado, escala temporal, resumo, acessibilidade e testes; não adicionar hooks, injeção, telemetria remota, FPS estimado nem mutações no sistema.
-- **Critérios de conclusão:** manter coleta suspensa quando a Visão Geral não estiver ativa, evitar trabalho gráfico desnecessário em segundo plano/bandeja, preservar temas e localização PT-BR/EN/ES, cobrir o comportamento alterado com testes e validar build, suíte aplicável e renderização real.
-- **Resultado entregue:** o painel agora oferece alvos Sistema/FiveM, cinco métricas selecionáveis com minigráficos, escala correta por unidade, histórico real de 60 segundos, média/pico, estados ao vivo/pausado/indisponível e navegação por teclado. A coleta FiveM é somente leitura e limitada a CPU/working set de processos verificados; a coleta visual continua suspensa sem foco, minimizada e na bandeja. A nota de prontidão mantém espaço para três dígitos sem separar o valor de `/100`. Foram validados os temas claro e escuro em 1600×1000, o probe de seis fases (zero amostras fora do primeiro plano), o build Release sem avisos e 1.444 testes.
+- **Objetivo:** Refinar a experiência de atualização disponível e avisos ao vivo, incluindo uma notificação interna discreta, acessível e acionável.
+- **Escopo:** Interface, estados, dashboard administrativo e contrato allowlisted diretamente relacionados aos avisos de atualização e comunicados; não inclui mudança no mecanismo de instalação nem release/publicação.
+- **Critérios de conclusão:** Hierarquia e ações claras; descarte e reexibição coerentes; teclado, foco e DPI preservados; fluxos cobertos por validação focada e build aplicável.
+- **Resultado entregue:** Aviso de atualização refinado com CTA, detalhes e descarte/reabertura por sessão; avisos ao vivo tipados por impacto no dashboard e exibidos como notificação in-app reabrível, com cobertura de testes e migração compatível. O painel de desempenho ao vivo integrado mantém a coleta de processos FiveM somente leitura e suspensa fora do primeiro plano.

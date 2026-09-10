@@ -44,9 +44,9 @@ public partial class OverviewPage : UserControl
         (Window.GetWindow(this) as MainWindow)?.RequestOpenReleaseNotes();
     }
 
-    private void DismissCompletedUpdate_Click(object sender, RoutedEventArgs e)
+    private void DismissUpdate_Click(object sender, RoutedEventArgs e)
     {
-        ViewModel?.DismissCompletedUpdateBanner();
+        ViewModel?.DismissUpdateBanner();
     }
 
     private void OpenOptimizer_Click(object sender, RoutedEventArgs e)

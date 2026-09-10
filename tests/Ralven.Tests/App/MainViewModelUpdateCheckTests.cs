@@ -95,6 +95,22 @@ public sealed class MainViewModelUpdateCheckTests
     }
 
     [Fact]
+    public async Task DismissUpdateBanner_HidesOnlyTheCurrentSessionAndCanBeReopened()
+    {
+        var viewModel = new MainViewModel(
+            new FakeAppOptimizationService(new AppSettings(), settingsFileExists: false),
+            releaseUpdateService: new FakeReleaseUpdateService(updateToReturn: FakeReleaseUpdateService.CreateUpdate("99.0.0")));
+        await viewModel.CheckForUpdatesManuallyAsync();
+
+        viewModel.DismissUpdateBanner();
+        Assert.False(viewModel.IsUpdateBannerVisible);
+        Assert.True(viewModel.IsUpdateAttentionVisible);
+
+        viewModel.ShowUpdateBanner();
+        Assert.True(viewModel.IsUpdateBannerVisible);
+    }
+
+    [Fact]
     public async Task CheckForUpdatesManuallyAsync_AlreadyKnownUpdate_StillPerformsAFreshCheckUnlikeTheSilentVariant()
     {
         var update = FakeReleaseUpdateService.CreateUpdate("99.0.0");

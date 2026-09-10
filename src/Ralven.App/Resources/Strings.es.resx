@@ -313,6 +313,10 @@
   <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Abrir Discord</value></data>
   <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Únete a nuestro Discord oficial</value></data>
   <data name="LiveAlert.Dismiss" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="LiveAlert.Reopen" xml:space="preserve"><value>Abrir aviso activo</value></data>
+  <data name="LiveAlert.Title.Info" xml:space="preserve"><value>Información de Ralven</value></data>
+  <data name="LiveAlert.Title.Important" xml:space="preserve"><value>Aviso importante de Ralven</value></data>
+  <data name="LiveAlert.Title.Critical" xml:space="preserve"><value>Aviso crítico de Ralven</value></data>
   <data name="Account.TitleBar.SignInPrompt" xml:space="preserve"><value>Iniciar sesión / Registrarse</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Escanear PC de nuevo</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Optimizar PC</value></data>
@@ -1156,6 +1160,8 @@
   <data name="Update.Completed.Detail" xml:space="preserve"><value>La actualización se instaló y verificó. No hace falta nada más.</value></data>
   <data name="Update.BlockedWhileBusy" xml:space="preserve"><value>Termina o cancela la optimización actual antes de actualizar.</value></data>
   <data name="Update.ReleaseNotes" xml:space="preserve"><value>Ver cambios</value></data>
+  <data name="Update.Dismiss" xml:space="preserve"><value>Cerrar por ahora</value></data>
+  <data name="Update.Reopen" xml:space="preserve"><value>Mostrar actualización disponible</value></data>
   <data name="Update.Failed.Title" xml:space="preserve"><value>La actualización no se descargó</value></data>
   <data name="Update.Failed.Detail" xml:space="preserve"><value>No se instaló nada. {0}</value></data>
   <data name="Dialog.UpdateInstall.Title" xml:space="preserve"><value>Instalar actualización verificada</value></data>
