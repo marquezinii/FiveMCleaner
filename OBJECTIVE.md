@@ -1,7 +1,8 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** suavizar a hierarquia visual da tela Visão Geral com um recorte pequeno, sóbrio e coerente nos temas claro e escuro.
-- **Escopo:** ajustar somente o Overview e, se indispensável, estilos de superfície que ele já usa; não alterar cabeçalho/conta, autenticação, navegação, comportamento funcional ou textos.
-- **Critérios de conclusão:** reduzir caixas e divisórias duras nos pontos de maior impacto, reutilizar tokens existentes, preservar responsividade/acessibilidade e validar build, testes e renderização em tema claro e escuro quando o ambiente permitir.
-- **Resultado entregue:** o diagnóstico principal usa a superfície hero existente com raio amplo e sem contorno; os três KPIs são agrupados por espaço, sem divisórias; o monitor ao vivo fica aberto sobre o fundo e preserva o gráfico como poço funcional. O XAML foi inspecionado em tema escuro e claro, maximizado e em 1600×1000. Foram aprovados 78 testes focados de localização/tokens, o build Release da solução (0 avisos) e a suíte completa (1.434 testes).
+- **Objetivo:** Preservar suporte completo e previsível ao Windows 10 no Ralven, inclusive diante das funcionalidades em desenvolvimento.
+- **Escopo:** Revisar `dev/proxima-versao` e worktrees ativas em busca de dependências ou comportamentos exclusivos do Windows 11; corrigir incompatibilidades comprovadas e adicionar cobertura proporcional.
+- **Fora de escopo:** Alterar suporte a GTAV Enhanced, publicar release ou integrar branches de outros trabalhos.
+- **Critérios de conclusão:** APIs e comportamentos incompatíveis identificados possuem fallback seguro ou indisponibilidade explícita; validações automatizadas aplicáveis passam; pontos nativos remanescentes ficam claros para validação manual no Windows 10.
+- **Resultado entregue:** O fallback de backdrop centralizado preserva Mica no Windows 11 e usa Acrylic no Windows 10; todas as janelas Fluent usam a política e um teste impede regressão. A revisão da `dev` e das worktrees ativas não encontrou outra API Windows 11-only sem tratamento. Build Release e 1.441 testes passaram; o aceite nativo está documentado em `docs/windows10-validation.md`.
