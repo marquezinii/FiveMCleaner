@@ -152,6 +152,9 @@ public partial class RalvenAiPage : UserControl, IDisposable
         shell.RequestReviewRalvenAiPlan(profile);
     }
 
+    private void ViewPro_Click(object sender, RoutedEventArgs e) =>
+        (Window.GetWindow(this) as MainWindow)?.RequestNavigateToPro();
+
     private void SetSending(bool value)
     {
         sending = value;
