@@ -24,7 +24,6 @@
   <data name="RalvenAi.AccessRequired.Free.Plan" xml:space="preserve"><value>TU PLAN ACTUAL: FREE</value></data>
   <data name="RalvenAi.AccessRequired.Free.Title" xml:space="preserve"><value>Ralven AI forma parte de Pro</value></data>
   <data name="RalvenAi.AccessRequired.Free.Detail" xml:space="preserve"><value>Habla sobre el diagnóstico de tu PC y recibe una recomendación segura de perfil para revisar antes de aplicarla.</value></data>
-  <data name="RalvenAi.AccessRequired.Free.Safety" xml:space="preserve"><value>Free sigue incluyendo diagnóstico, perfiles estándar, historial y restauración. No se modifica nada automáticamente.</value></data>
   <data name="RalvenAi.AccessRequired.ViewPro" xml:space="preserve"><value>Conocer Ralven Pro</value></data>
   <data name="RalvenAi.InputPlaceholder" xml:space="preserve"><value>Mensaje para Ralven AI</value></data>
   <data name="RalvenAi.Welcome.Greeting1" xml:space="preserve"><value>¿Por dónde empezamos?</value></data>
