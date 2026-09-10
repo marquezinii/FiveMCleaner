@@ -40,6 +40,20 @@
   <data name="RalvenAi.Assistant" xml:space="preserve"><value>Ralven AI</value></data>
   <data name="RalvenAi.Recommendation.Title" xml:space="preserve"><value>PERFIL ESTÁNDAR RECOMENDADO</value></data>
   <data name="RalvenAi.ReviewPlan" xml:space="preserve"><value>Revisar plan</value></data>
+  <data name="RalvenAi.Sources.Title" xml:space="preserve"><value>FUENTES UTILIZADAS EN ESTA RESPUESTA</value></data>
+  <data name="RalvenAi.Sources.LocalDiagnostic" xml:space="preserve"><value>Diagnóstico local actual</value></data>
+  <data name="RalvenAi.Sources.SupportedPlans" xml:space="preserve"><value>Catálogo de planes compatibles</value></data>
+  <data name="RalvenAi.Tool.RefreshDiagnostic" xml:space="preserve"><value>Actualizar diagnóstico local</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Light" xml:space="preserve"><value>Revisar plan Ligero</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Balanced" xml:space="preserve"><value>Revisar plan Equilibrado</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Aggressive" xml:space="preserve"><value>Revisar plan Agresivo</value></data>
+  <data name="RalvenAi.Tool.OpenOverview" xml:space="preserve"><value>Abrir Resumen</value></data>
+  <data name="RalvenAi.Tool.OpenSystem" xml:space="preserve"><value>Abrir Sistema</value></data>
+  <data name="RalvenAi.Tool.OpenApplications" xml:space="preserve"><value>Abrir Aplicaciones</value></data>
+  <data name="RalvenAi.Tool.OpenGames" xml:space="preserve"><value>Abrir Juegos</value></data>
+  <data name="RalvenAi.Tool.OpenFiveM" xml:space="preserve"><value>Abrir FiveM</value></data>
+  <data name="RalvenAi.Tool.OpenHistory" xml:space="preserve"><value>Abrir Historial</value></data>
+  <data name="RalvenAi.Tool.Completed" xml:space="preserve"><value>La acción se abrió en Ralven. No se aplicó ningún cambio sin tu confirmación.</value></data>
   <data name="RalvenAi.DemoReply" xml:space="preserve"><value>El perfil Equilibrado es un punto de partida sensato para este diagnóstico. Mantiene el plan dentro de las acciones compatibles con Ralven y permite revisar cada cambio antes de ejecutar nada.</value></data>
   <data name="RalvenAi.Error.DiagnosticUnavailable" xml:space="preserve"><value>El diagnóstico local aún no está listo. Actualiza el diagnóstico e inténtalo de nuevo.</value></data>
   <data name="RalvenAi.Error.Unavailable" xml:space="preserve"><value>Ralven AI no está disponible ahora. No se realizó ningún cambio.</value></data>

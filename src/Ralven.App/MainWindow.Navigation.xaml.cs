@@ -188,6 +188,43 @@ public partial class MainWindow
         Navigate(OptimizerPage);
     }
 
+    internal async Task RequestExecuteRalvenAiToolAsync(RalvenAiToolRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        switch (request.Tool)
+        {
+            case RalvenAiTool.RefreshDiagnostic:
+                await viewModel.RefreshDiagnosticAsync();
+                return;
+            case RalvenAiTool.ReviewProfile when request.Profile is { } profile:
+                RequestReviewRalvenAiPlan(profile);
+                return;
+            case RalvenAiTool.OpenOverview:
+                ActivateNavItem(DashboardNav);
+                Navigate(DashboardPage);
+                return;
+            case RalvenAiTool.OpenSystem:
+                ActivateNavItem(SystemNav);
+                Navigate(SystemPage);
+                return;
+            case RalvenAiTool.OpenApplications:
+                ActivateNavItem(ApplicationsNav);
+                Navigate(ApplicationsPage);
+                return;
+            case RalvenAiTool.OpenGames:
+                RequestNavigateToGames();
+                return;
+            case RalvenAiTool.OpenFiveM:
+                RequestNavigateToFiveM();
+                return;
+            case RalvenAiTool.OpenHistory:
+                RequestNavigateToHistory();
+                return;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(request));
+        }
+    }
+
     internal async Task RequestStartOptimizationAsync()
     {
         ActivateNavItem(viewModel.OptimizationScope == OptimizationScope.FiveMLegacy ? GamesNav : OptimizerNav);

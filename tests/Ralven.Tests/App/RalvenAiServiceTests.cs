@@ -18,7 +18,7 @@ public sealed class RalvenAiServiceTests
         {
             captured = request;
             body = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
-            return Json(HttpStatusCode.OK, """{"answer":"Review the balanced plan.","recommendedProfile":"balanced"}""");
+            return Json(HttpStatusCode.OK, """{"answer":"Review the balanced plan.","recommendedProfile":"balanced","sources":["diagnostic","supported_plans"],"toolRequests":[{"tool":"review_profile","profile":"balanced"}]}""");
         }));
         var service = new RalvenAiService(client, new Uri("https://example.com/account/profile"));
 
@@ -31,6 +31,8 @@ public sealed class RalvenAiServiceTests
             global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.Equal(OptimizationProfile.Balanced, reply.RecommendedProfile);
+        Assert.Equal([RalvenAiSource.LocalDiagnostic, RalvenAiSource.SupportedPlans], reply.Sources);
+        Assert.Equal(new RalvenAiToolRequest(RalvenAiTool.ReviewProfile, OptimizationProfile.Balanced), Assert.Single(reply.ToolRequests));
         Assert.Equal("https://example.com/ai/message", captured!.RequestUri!.AbsoluteUri);
         Assert.Equal("application/json", captured.Content!.Headers.ContentType!.ToString());
         Assert.Equal("Bearer", captured.Headers.Authorization!.Scheme);
@@ -47,7 +49,7 @@ public sealed class RalvenAiServiceTests
         var invalid = new RalvenAiService(
             new HttpClient(new StubHandler(_ => Json(
                 HttpStatusCode.OK,
-                """{"answer":"No.","recommendedProfile":"ultra"}"""))),
+                """{"answer":"No.","recommendedProfile":"ultra","sources":["diagnostic"],"toolRequests":[]}"""))),
             new Uri("https://example.com/account/profile"));
         var exception = await Assert.ThrowsAsync<RalvenAiException>(() => invalid.AskAsync(
             "id-token", "question", "en-US", Context(), [],
@@ -92,7 +94,7 @@ public sealed class RalvenAiServiceTests
                 {
                     throw new HttpRequestException("connection reset");
                 }
-                return Json(HttpStatusCode.OK, """{"answer":"Safe answer.","recommendedProfile":"none"}""");
+                return Json(HttpStatusCode.OK, """{"answer":"Safe answer.","recommendedProfile":"none","sources":["diagnostic"],"toolRequests":[]}""");
             })),
             new Uri("https://example.com/account/profile"));
 

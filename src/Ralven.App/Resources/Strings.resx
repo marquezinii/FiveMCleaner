@@ -40,6 +40,20 @@
   <data name="RalvenAi.Assistant" xml:space="preserve"><value>Ralven AI</value></data>
   <data name="RalvenAi.Recommendation.Title" xml:space="preserve"><value>RECOMMENDED STANDARD PROFILE</value></data>
   <data name="RalvenAi.ReviewPlan" xml:space="preserve"><value>Review plan</value></data>
+  <data name="RalvenAi.Sources.Title" xml:space="preserve"><value>SOURCES USED IN THIS REPLY</value></data>
+  <data name="RalvenAi.Sources.LocalDiagnostic" xml:space="preserve"><value>Current local diagnosis</value></data>
+  <data name="RalvenAi.Sources.SupportedPlans" xml:space="preserve"><value>Supported-plan catalog</value></data>
+  <data name="RalvenAi.Tool.RefreshDiagnostic" xml:space="preserve"><value>Refresh local diagnosis</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Light" xml:space="preserve"><value>Review Light plan</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Balanced" xml:space="preserve"><value>Review Balanced plan</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Aggressive" xml:space="preserve"><value>Review Aggressive plan</value></data>
+  <data name="RalvenAi.Tool.OpenOverview" xml:space="preserve"><value>Open Overview</value></data>
+  <data name="RalvenAi.Tool.OpenSystem" xml:space="preserve"><value>Open System</value></data>
+  <data name="RalvenAi.Tool.OpenApplications" xml:space="preserve"><value>Open Applications</value></data>
+  <data name="RalvenAi.Tool.OpenGames" xml:space="preserve"><value>Open Games</value></data>
+  <data name="RalvenAi.Tool.OpenFiveM" xml:space="preserve"><value>Open FiveM</value></data>
+  <data name="RalvenAi.Tool.OpenHistory" xml:space="preserve"><value>Open History</value></data>
+  <data name="RalvenAi.Tool.Completed" xml:space="preserve"><value>Action opened in Ralven. No change was applied without your confirmation.</value></data>
   <data name="RalvenAi.DemoReply" xml:space="preserve"><value>The Balanced profile is a sensible starting point for this diagnosis. It keeps the plan inside Ralven's supported actions and lets you review every change before anything runs.</value></data>
   <data name="RalvenAi.Error.DiagnosticUnavailable" xml:space="preserve"><value>The local diagnosis is not ready. Refresh the diagnosis and try again.</value></data>
   <data name="RalvenAi.Error.Unavailable" xml:space="preserve"><value>Ralven AI is unavailable right now. No change was made.</value></data>

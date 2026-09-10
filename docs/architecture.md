@@ -197,9 +197,11 @@ exclusão do perfil pode remover o vínculo. Uma criação incerta continua bloq
 ## Fronteira de confiança
 
 O fluxo remoto opcional do Ralven AI está documentado em
-[`docs/ralven-ai.md`](ralven-ai.md). O modelo produz apenas texto e a escolha de
-um perfil padrão; nunca produz um plano executável nem atravessa diretamente a
-fronteira privilegiada.
+[`docs/ralven-ai.md`](ralven-ai.md). O modelo produz texto, a escolha de um
+perfil padrão e no máximo uma solicitação de ferramenta local fechada. O App
+revalida essa solicitação, que só pode atualizar diagnóstico, navegar para uma
+tela existente ou preparar a revisão de um plano; ela nunca produz um plano
+executável nem atravessa diretamente a fronteira privilegiada.
 
 ```mermaid
 flowchart LR

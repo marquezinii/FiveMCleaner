@@ -125,9 +125,31 @@ test('Ralven AI validates the closed request and rejects unsafe provider text', 
   assert.equal(provider.reasoning.effort, 'low');
   assert.equal(provider.text.verbosity, 'low');
   assert.equal(provider.text.format.strict, true);
-  assert.equal(provider.prompt_cache_key, 'ralven-ai-v1');
-  assert.deepEqual(provider.tools, []);
+  assert.equal(provider.prompt_cache_key, 'ralven-ai-v2');
+  assert.deepEqual(provider.text.format.schema.required, [
+    'answer', 'recommendedProfile', 'sources', 'toolRequests',
+  ]);
   assert.equal(JSON.parse(provider.input).requestId, undefined);
+
+  assert.deepEqual(parseRalvenAiReply({
+    output_text: JSON.stringify({
+      answer: 'I can open the System view so you can inspect the current health details.',
+      recommendedProfile: 'none',
+      sources: ['diagnostic'],
+      toolRequests: [{ tool: 'open_system', profile: null }],
+    }),
+  }), {
+    answer: 'I can open the System view so you can inspect the current health details.',
+    recommendedProfile: 'none',
+    sources: ['diagnostic'],
+    toolRequests: [{ tool: 'open_system', profile: null }],
+  });
+  assert.equal(parseRalvenAiReply({
+    output_text: JSON.stringify({
+      answer: 'I can help.', recommendedProfile: 'none', sources: ['diagnostic'],
+      toolRequests: [{ tool: 'review_profile', profile: null }],
+    }),
+  }), null);
 });
 
 test('Ralven AI calculates cached, cache-write, and output usage exactly', () => {
@@ -209,6 +231,8 @@ test('Ralven AI sends structured no-store request and persists usage only', asyn
             text: JSON.stringify({
               answer: 'The Balanced profile is the safest fit for the current pressure.',
               recommendedProfile: 'balanced',
+              sources: ['diagnostic', 'supported_plans'],
+              toolRequests: [{ tool: 'review_profile', profile: 'balanced' }],
             }),
           }],
         }],
@@ -226,6 +250,8 @@ test('Ralven AI sends structured no-store request and persists usage only', asyn
   assert.deepEqual(await response.json(), {
     answer: 'The Balanced profile is the safest fit for the current pressure.',
     recommendedProfile: 'balanced',
+    sources: ['diagnostic', 'supported_plans'],
+    toolRequests: [{ tool: 'review_profile', profile: 'balanced' }],
   });
   assert.equal(providerRequest.model, 'gpt-5.6-luna');
   assert.equal(providerRequest.store, false);
@@ -251,7 +277,12 @@ test('Ralven AI keeps the reservation when provider usage is missing', async () 
         type: 'message',
         content: [{
           type: 'output_text',
-          text: JSON.stringify({ answer: 'Review the Balanced profile.', recommendedProfile: 'balanced' }),
+          text: JSON.stringify({
+            answer: 'Review the Balanced profile.',
+            recommendedProfile: 'balanced',
+            sources: ['diagnostic', 'supported_plans'],
+            toolRequests: [],
+          }),
         }],
       }],
     }), { status: 200, headers: { 'Content-Type': 'application/json' } }),
