@@ -56,6 +56,25 @@ public sealed class FirebaseAuthServiceTests
     }
 
     [Fact]
+    public async Task RegisterAsync_ReportsVerificationDeliveryFailureWithoutLosingTheAccount()
+    {
+        using var service = CreateService([], request => request.RequestUri!.AbsolutePath switch
+        {
+            "/v1/accounts:signUp" => Json("""{"localId":"uid-1","email":"person@example.com","idToken":"id-1","refreshToken":"refresh-1","expiresIn":"3600"}"""),
+            "/v1/accounts:lookup" => Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":false,"providerUserInfo":[{"providerId":"password"}]}]}"""),
+            "/v1/accounts:sendOobCode" => Json("""{"error":{"message":"NETWORK_REQUEST_FAILED"}}""", HttpStatusCode.ServiceUnavailable),
+            _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+        });
+
+        var result = await service.RegisterAsync("person@example.com", "0123456789ab", false, global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.False(result.Succeeded);
+        Assert.Equal(AuthenticationState.EmailVerificationRequired, result.State);
+        Assert.Equal("uid-1", result.User?.Uid);
+        Assert.Equal(LocalizationService.Current.GetString("Account.Verification.SendFailed"), result.Error);
+    }
+
+    [Fact]
     public async Task SignInAsync_DoesNotRevealWhetherEmailExists()
     {
         using var service = CreateService([], _ => Json("""{"error":{"message":"EMAIL_NOT_FOUND"}}""", HttpStatusCode.BadRequest));
@@ -65,6 +84,8 @@ public sealed class FirebaseAuthServiceTests
         Assert.False(result.Succeeded);
         Assert.DoesNotContain("e-mail", result.Error!, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("existe", result.Error!, StringComparison.OrdinalIgnoreCase);
+        Assert.Equal(AuthenticationState.SignedOut, result.State);
+        Assert.Equal(AuthenticationState.SignedOut, service.Current.State);
     }
 
     [Fact]
@@ -244,7 +265,7 @@ public sealed class FirebaseAuthServiceTests
         Assert.Equal(AuthenticationState.SignedOut, result.State);
         Assert.Null(result.User);
         Assert.Null(service.Current.User);
-        Assert.Contains("/v1/accounts:delete", requests);
+        Assert.DoesNotContain("/v1/accounts:delete", requests);
         Assert.False(new FirebaseAuthResult(AuthenticationState.SignedOut, null).Succeeded);
     }
 
@@ -330,6 +351,7 @@ public sealed class FirebaseAuthServiceTests
         Assert.Equal(AuthenticationState.SignedIn, federated.Result.State);
         Assert.Equal("uid-g", federated.Result.User!.Uid);
         Assert.False(federated.Result.User.HasPassword);
+        Assert.True(federated.Result.User.HasGoogle);
         Assert.True(federated.IsNewUser);
         Assert.Equal("João", federated.FirstName);
         Assert.Equal("Silva", federated.LastName);
@@ -372,7 +394,7 @@ public sealed class FirebaseAuthServiceTests
         string? requestBody = null;
         using var service = CreateService([], request =>
         {
-            if (request.RequestUri!.AbsolutePath == "/v1/accounts:update")
+            if (request.RequestUri!.AbsolutePath == "/v1/accounts:signUp")
             {
                 requestBody = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
             }
@@ -382,7 +404,7 @@ public sealed class FirebaseAuthServiceTests
                 "/v1/accounts:lookup" => Json(passwordCreated
                     ? """{"users":[{"localId":"uid-g","email":"person@gmail.com","emailVerified":true,"providerUserInfo":[{"providerId":"google.com"},{"providerId":"password"}]}]}"""
                     : """{"users":[{"localId":"uid-g","email":"person@gmail.com","emailVerified":true,"providerUserInfo":[{"providerId":"google.com"}]}]}"""),
-                "/v1/accounts:update" => SetPasswordCreated(),
+                "/v1/accounts:signUp" => SetPasswordCreated(),
                 _ => new HttpResponseMessage(HttpStatusCode.NotFound),
             };
         }, path);
@@ -403,9 +425,93 @@ public sealed class FirebaseAuthServiceTests
         Assert.True(created.Succeeded);
         Assert.True(created.User!.HasPassword);
         Assert.NotNull(requestBody);
+        Assert.Contains("idToken", requestBody, StringComparison.Ordinal);
         Assert.Contains("person@gmail.com", requestBody, StringComparison.Ordinal);
         Assert.Contains("0123456789ab", requestBody, StringComparison.Ordinal);
         Assert.False(File.Exists(path));
+    }
+
+    [Fact]
+    public async Task SignInAsync_MfaTotpChallenge_RequiresAndCompletesSecondFactor()
+    {
+        var requests = new List<string>();
+        using var service = CreateService(requests, request => request.RequestUri!.AbsolutePath switch
+        {
+            "/v1/accounts:signInWithPassword" => Json("""{"localId":"uid-1","mfaPendingCredential":"pending-secret","mfaInfo":[{"mfaEnrollmentId":"totp-1","displayName":"Authenticator","enrolledAt":"2026-09-10T12:00:00Z","totpInfo":{}}]}"""),
+            "/v2/accounts/mfaSignIn:finalize" => Json("""{"idToken":"id-mfa","refreshToken":"refresh-mfa"}"""),
+            "/v1/accounts:lookup" => Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true,"providerUserInfo":[{"providerId":"password"}],"mfaInfo":[{"mfaEnrollmentId":"totp-1","displayName":"Authenticator","totpInfo":{}}]}]}"""),
+            _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+        });
+
+        var firstFactor = await service.SignInAsync("person@example.com", "0123456789ab", false, global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.False(firstFactor.Succeeded);
+        Assert.Equal(AuthenticationState.MfaChallengeRequired, firstFactor.State);
+        Assert.Equal("pending-secret", firstFactor.MfaChallenge?.PendingCredential);
+        Assert.Equal(FirebaseMfaFactorType.Totp, firstFactor.MfaChallenge?.Enrollments.Single().FactorType);
+
+        var completed = await service.CompleteMfaSignInAsync("totp-1", "123456", false, global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.True(completed.Succeeded);
+        Assert.Equal(AuthenticationState.SignedIn, completed.State);
+        Assert.Single(completed.User!.Factors);
+        Assert.Contains("/v2/accounts/mfaSignIn:finalize", requests);
+    }
+
+    [Fact]
+    public async Task ChangeEmailAsync_SendsVerifyBeforeChangeWithoutMutatingAccountImmediately()
+    {
+        var requests = new List<string>();
+        string? changeBody = null;
+        using var service = CreateService(requests, request =>
+        {
+            if (request.RequestUri!.AbsolutePath == "/v1/accounts:sendOobCode") changeBody = request.Content!.ReadAsStringAsync().GetAwaiter().GetResult();
+            return request.RequestUri.AbsolutePath switch
+            {
+                "/v1/accounts:signInWithPassword" => Json("""{"localId":"uid-1","idToken":"id-1","refreshToken":"refresh-1","expiresIn":"3600"}"""),
+                "/v1/accounts:lookup" => Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true,"providerUserInfo":[{"providerId":"password"}]}]}"""),
+                "/v1/accounts:sendOobCode" => Json("{}"),
+                _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+            };
+        });
+        await service.SignInAsync("person@example.com", "current-password", false, global::Xunit.TestContext.Current.CancellationToken);
+
+        var result = await service.ChangeEmailAsync("current-password", "new@example.com", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.True(result.Succeeded);
+        Assert.DoesNotContain("/v1/accounts:update", requests);
+        Assert.Contains("VERIFY_AND_CHANGE_EMAIL", changeBody!);
+        Assert.Contains("new@example.com", changeBody!);
+        Assert.Equal("person@example.com", service.Current.User!.Email);
+    }
+
+    [Fact]
+    public async Task TotpEnrollment_UsesFirebaseV2AndRefreshesFactorState()
+    {
+        var enrolled = false;
+        var requests = new List<string>();
+        using var service = CreateService(requests, request => request.RequestUri!.AbsolutePath switch
+        {
+            "/v1/accounts:signInWithPassword" => Json("""{"localId":"uid-1","idToken":"id-1","refreshToken":"refresh-1","expiresIn":"3600"}"""),
+            "/v1/accounts:lookup" => Json(enrolled
+                ? """{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true,"providerUserInfo":[{"providerId":"password"}],"mfaInfo":[{"mfaEnrollmentId":"totp-1","totpInfo":{}}]}]}"""
+                : """{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true,"providerUserInfo":[{"providerId":"password"}]}]}"""),
+            "/v2/accounts/mfaEnrollment:start" => Json("""{"totpSessionInfo":{"sharedSecretKey":"JBSWY3DPEHPK3PXP","verificationCodeLength":6,"hashingAlgorithm":"SHA1","periodSec":30,"sessionInfo":"session-1","finalizeEnrollmentTime":"2026-09-10T13:00:00Z"}}"""),
+            "/v2/accounts/mfaEnrollment:finalize" => Enroll(),
+            _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+        });
+        HttpResponseMessage Enroll() { enrolled = true; return Json("""{"idToken":"id-2","refreshToken":"refresh-2"}"""); }
+        await service.SignInAsync("person@example.com", "current-password", false, global::Xunit.TestContext.Current.CancellationToken);
+
+        var start = await service.StartTotpEnrollmentAsync(global::Xunit.TestContext.Current.CancellationToken);
+        var finish = await service.FinalizeTotpEnrollmentAsync(start.SessionInfo!, "123456", cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.True(start.Succeeded);
+        Assert.Equal(30, start.PeriodSeconds);
+        Assert.True(finish.Succeeded);
+        Assert.Single(finish.User!.Factors);
+        Assert.Contains("/v2/accounts/mfaEnrollment:start", requests);
+        Assert.Contains("/v2/accounts/mfaEnrollment:finalize", requests);
     }
 
     [Fact]
@@ -428,7 +534,7 @@ public sealed class FirebaseAuthServiceTests
         var result = await service.ReauthenticateWithGoogleAsync("other-token", global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
-        Assert.Equal("GOOGLE_ACCOUNT_MISMATCH", result.Error);
+        Assert.Equal(LocalizationService.Current.GetString("PasswordSecurity.Validation.GoogleAccountMismatch"), result.Error);
         Assert.Equal(AuthenticationState.SignedIn, service.Current.State);
         Assert.Equal("uid-g", service.Current.User!.Uid);
     }
@@ -454,9 +560,141 @@ public sealed class FirebaseAuthServiceTests
         var result = await service.ChangePasswordAsync("wrong-password", "0123456789ab", global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
-        Assert.Equal("CURRENT_PASSWORD_INVALID", result.Error);
+        Assert.Equal(LocalizationService.Current.GetString("PasswordSecurity.Validation.CurrentPasswordInvalid"), result.Error);
         Assert.Equal(AuthenticationState.SignedIn, service.Current.State);
         Assert.DoesNotContain("/v1/accounts:update", requests);
+    }
+
+    [Fact]
+    public async Task ReauthenticateWithPasswordAsync_DoesNotDependOnProfileReadiness()
+    {
+        using var client = new HttpClient(new StubHandler(request => request.RequestUri!.AbsolutePath switch
+        {
+            "/v1/accounts:signInWithPassword" => Json("""{"localId":"uid-1","idToken":"id-1","refreshToken":"refresh-1","expiresIn":"3600"}"""),
+            "/v1/accounts:lookup" => Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true,"providerUserInfo":[{"providerId":"password"}]}]}"""),
+            _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+        }));
+        using var service = new FirebaseAuthService(
+            client,
+            "test-firebase-api-key-1234567890",
+            new SecureFirebaseSessionStore(Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session")),
+            new FailingProfileService());
+        await service.SignInAsync("person@example.com", "current-password", false, global::Xunit.TestContext.Current.CancellationToken);
+
+        var result = await service.ReauthenticateWithPasswordAsync("current-password", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.True(result.Succeeded);
+        Assert.Equal(AuthenticationState.ProfileUnavailable, service.Current.State);
+    }
+
+    [Fact]
+    public async Task CompleteMfaReauthenticationAsync_PreservesTheExistingSignedInAccount()
+    {
+        var passwordRequests = 0;
+        var updateRequests = 0;
+        using var service = CreateService([], request => request.RequestUri!.AbsolutePath switch
+        {
+            "/v1/accounts:signInWithPassword" when passwordRequests++ == 0 =>
+                Json("""{"localId":"uid-1","idToken":"id-1","refreshToken":"refresh-1","expiresIn":"3600"}"""),
+            "/v1/accounts:signInWithPassword" =>
+                Json("""{"mfaPendingCredential":"pending-reauth","mfaInfo":[{"mfaEnrollmentId":"totp-1","totpInfo":{}}]}"""),
+            "/v1/accounts:lookup" =>
+                Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true,"providerUserInfo":[{"providerId":"password"}],"mfaInfo":[{"mfaEnrollmentId":"totp-1","totpInfo":{}}]}]}"""),
+            "/v2/accounts/mfaSignIn:finalize" =>
+                Json("""{"idToken":"id-2","refreshToken":"refresh-2"}"""),
+            "/v1/accounts:update" when updateRequests++ == 0 =>
+                Json("""{"localId":"uid-1","idToken":"id-3","refreshToken":"refresh-3","expiresIn":"3600"}"""),
+            _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+        });
+        await service.SignInAsync("person@example.com", "current-password", false, global::Xunit.TestContext.Current.CancellationToken);
+
+        var challenge = await service.ReauthenticateWithPasswordAsync("current-password", global::Xunit.TestContext.Current.CancellationToken);
+        var completed = await service.CompleteMfaReauthenticationAsync("totp-1", "123456", global::Xunit.TestContext.Current.CancellationToken);
+        var changed = await service.UpdatePasswordAfterReauthenticationAsync("new-password-123", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Equal(AuthenticationState.MfaChallengeRequired, challenge.State);
+        Assert.Equal("pending-reauth", challenge.MfaChallenge!.PendingCredential);
+        Assert.Equal(AuthenticationState.SignedIn, service.Current.State);
+        Assert.True(completed.Succeeded);
+        Assert.True(changed.Succeeded);
+        Assert.Equal(1, updateRequests);
+        Assert.Equal(AuthenticationState.SignedIn, service.Current.State);
+        Assert.Equal("uid-1", service.Current.User!.Uid);
+        Assert.Equal("id-3", await service.GetIdTokenAsync(global::Xunit.TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task DeleteAccountAsync_AllowsMissingProfileAndDelegatesRemoteDeletionToProfileService()
+    {
+        var requests = new List<string>();
+        using var client = new HttpClient(new StubHandler(request =>
+        {
+            requests.Add(request.RequestUri!.AbsolutePath);
+            return request.RequestUri.AbsolutePath switch
+            {
+                "/v1/accounts:signInWithPassword" => Json("""{"localId":"uid-1","idToken":"id-1","refreshToken":"refresh-1","expiresIn":"3600"}"""),
+                "/v1/accounts:lookup" => Json("""{"users":[{"localId":"uid-1","email":"person@example.com","emailVerified":true,"providerUserInfo":[{"providerId":"password"}]}]}"""),
+                _ => new HttpResponseMessage(HttpStatusCode.NotFound),
+            };
+        }));
+        using var service = new FirebaseAuthService(
+            client,
+            "test-firebase-api-key-1234567890",
+            new SecureFirebaseSessionStore(Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session")),
+            new MissingProfileService());
+        await service.SignInAsync("person@example.com", "current-password", false, global::Xunit.TestContext.Current.CancellationToken);
+
+        var result = await service.DeleteAccountAsync("current-password", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.True(result.AccountDeleted);
+        Assert.Equal(AuthenticationState.SignedOut, service.Current.State);
+        Assert.DoesNotContain("/v1/accounts:delete", requests);
+    }
+
+    [Fact]
+    public async Task ConcurrentSignIns_DoNotAllowOlderLookupToReplaceNewerSession()
+    {
+        var firstLookupStarted = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        var releaseFirstLookup = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+        using var client = new HttpClient(new AsyncStubHandler(async (request, cancellationToken) =>
+        {
+            var path = request.RequestUri!.AbsolutePath;
+            var body = request.Content is null
+                ? string.Empty
+                : await request.Content.ReadAsStringAsync(cancellationToken);
+            if (path == "/v1/accounts:signInWithPassword")
+            {
+                return body.Contains("first@example.com", StringComparison.Ordinal)
+                    ? Json("""{"localId":"uid-first","idToken":"id-first","refreshToken":"refresh-first","expiresIn":"3600"}""")
+                    : Json("""{"localId":"uid-second","idToken":"id-second","refreshToken":"refresh-second","expiresIn":"3600"}""");
+            }
+            if (path == "/v1/accounts:lookup" && body.Contains("id-first", StringComparison.Ordinal))
+            {
+                firstLookupStarted.TrySetResult();
+                await releaseFirstLookup.Task.WaitAsync(cancellationToken);
+                return Json("""{"users":[{"localId":"uid-first","email":"first@example.com","emailVerified":true,"providerUserInfo":[{"providerId":"password"}]}]}""");
+            }
+            if (path == "/v1/accounts:lookup")
+            {
+                return Json("""{"users":[{"localId":"uid-second","email":"second@example.com","emailVerified":true,"providerUserInfo":[{"providerId":"password"}]}]}""");
+            }
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        }));
+        using var service = new FirebaseAuthService(
+            client,
+            "test-firebase-api-key-1234567890",
+            new SecureFirebaseSessionStore(Path.Combine(Path.GetTempPath(), $"firebase-{Guid.NewGuid():N}.session")),
+            new ReadyProfileService());
+
+        var first = service.SignInAsync("first@example.com", "first-password", false, global::Xunit.TestContext.Current.CancellationToken);
+        await firstLookupStarted.Task.WaitAsync(global::Xunit.TestContext.Current.CancellationToken);
+        var second = await service.SignInAsync("second@example.com", "second-password", false, global::Xunit.TestContext.Current.CancellationToken);
+        releaseFirstLookup.TrySetResult();
+        await first;
+
+        Assert.True(second.Succeeded);
+        Assert.Equal("uid-second", service.Current.User!.Uid);
+        Assert.Equal("id-second", await service.GetIdTokenAsync(global::Xunit.TestContext.Current.CancellationToken));
     }
 
     private static FirebaseAuthService CreateService(List<string> requests, Func<HttpRequestMessage, HttpResponseMessage> send, string? sessionPath = null)
@@ -499,5 +737,11 @@ public sealed class FirebaseAuthServiceTests
     {
         public override Task<AccountProfileDeletionResult> DeleteAsync(string idToken, CancellationToken cancellationToken = default) =>
             Task.FromResult(new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Failed));
+    }
+
+    private sealed class AsyncStubHandler(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> send) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            send(request, cancellationToken);
     }
 }

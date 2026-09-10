@@ -279,6 +279,48 @@
                     </Border>
                 </StackPanel>
 
+                <!-- ==================== Segundo fator ==================== -->
+                <StackPanel x:Name="MfaPanel" Visibility="Collapsed">
+                    <Border Style="{StaticResource PanelSurface}">
+                        <StackPanel>
+                            <TextBlock Text="{Binding [Account.Mfa.Challenge.Description], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource SecondaryText}"
+                                       TextWrapping="Wrap" />
+                            <TextBlock Margin="0,16,0,6"
+                                       Text="{Binding [Account.Mfa.CodeLabel], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource FieldLabelStyle}" />
+                            <TextBox x:Name="MfaCodeBox"
+                                     Style="{StaticResource FormTextBoxStyle}"
+                                     MaxLength="6"
+                                     InputMethod.IsInputMethodEnabled="False"
+                                     AutomationProperties.Name="{Binding [Account.Mfa.CodeLabel], Source={StaticResource LocalizedStrings}}" />
+                            <Button x:Name="VerifyMfaButton" Margin="0,14,0,0"
+                                    Content="{Binding [Account.Mfa.Verify], Source={StaticResource LocalizedStrings}}"
+                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Click="VerifyMfa_Click" />
+                            <Button x:Name="ShowRecoveryCodeButton"
+                                    Margin="0,10,0,0"
+                                    HorizontalAlignment="Left"
+                                    Content="{Binding [Account.Mfa.UseRecoveryCode], Source={StaticResource LocalizedStrings}}"
+                                    Style="{StaticResource LinkButtonStyle}"
+                                    Click="ShowRecoveryCode_Click" />
+                            <StackPanel x:Name="RecoveryCodePanel" Margin="0,14,0,0" Visibility="Collapsed">
+                                <TextBlock Text="{Binding [Account.Mfa.RecoveryCodeLabel], Source={StaticResource LocalizedStrings}}"
+                                           Style="{StaticResource FieldLabelStyle}" />
+                                <TextBox x:Name="RecoveryCodeBox"
+                                         Margin="0,6,0,0"
+                                         Style="{StaticResource FormTextBoxStyle}"
+                                         MaxLength="16"
+                                         AutomationProperties.Name="{Binding [Account.Mfa.RecoveryCodeLabel], Source={StaticResource LocalizedStrings}}" />
+                                <Button x:Name="RecoverMfaButton" Margin="0,12,0,0"
+                                        Content="{Binding [Account.Mfa.Recover], Source={StaticResource LocalizedStrings}}"
+                                        Style="{StaticResource SecondaryButtonStyle}"
+                                        Click="RecoverMfa_Click" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+
                 <!-- ==================== Mensagem de status ==================== -->
                 <Border x:Name="StatusPanel"
                         Visibility="Collapsed"

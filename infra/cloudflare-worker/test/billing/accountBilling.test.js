@@ -6,7 +6,7 @@ import { createAccountCheckout, cancelAccountBilling, fetchAccountBilling, syncA
 import { billingConfig, validateCheckoutUrl } from '../../src/billing/asaasApi.js';
 import { handleAsaasWebhook, reconcilePayment } from '../../src/billing/asaasBilling.js';
 import { fetchAccountEntitlements } from '../../src/billing/entitlements.js';
-import { deleteAccountProfile } from '../../src/auth/accountProfile.js';
+import { deleteAccountProfile, isAccountDeletionBlocked } from '../../src/auth/accountProfile.js';
 import worker from '../../src/index.js';
 
 function setup(t) {
@@ -240,7 +240,8 @@ test('refresh reconciles a missed payment webhook and cancellation stops the sub
   const result = await cancelAccountBilling(f.env, f.auth, f.options);
   assert.equal(result.subscription.state, 'cancelled');
   assert.ok(f.calls.some(call => call.method === 'DELETE' && call.url.endsWith('/v3/subscriptions/sub_1')));
-  assert.equal(await deleteAccountProfile(f.db, f.auth.uid), true);
+  assert.equal(await isAccountDeletionBlocked(f.db, f.auth.uid), false);
+  await deleteAccountProfile(f.db, f.auth.uid);
 });
 
 test('pending checkout cancellation calls the Asaas checkout endpoint', async t => {

@@ -165,7 +165,7 @@ public sealed class CloudflareAccountProfileServiceTests
     }
 
     [Fact]
-    public async Task DeleteAsync_UsesTheAuthenticatedProfileRoute()
+    public async Task DeleteAsync_UsesTheAuthenticatedAccountRoute()
     {
         HttpRequestMessage? captured = null;
         var service = CreateService(request =>
@@ -178,8 +178,44 @@ public sealed class CloudflareAccountProfileServiceTests
 
         Assert.Equal(AccountProfileDeletionOutcome.Deleted, result.Outcome);
         Assert.Equal(HttpMethod.Delete, captured!.Method);
+        Assert.Equal("https://example.com/account", captured.RequestUri!.AbsoluteUri);
         Assert.Equal("Bearer", captured.Headers.Authorization!.Scheme);
         Assert.Equal("id-token-1", captured.Headers.Authorization!.Parameter);
+    }
+
+    [Theory]
+    [InlineData(HttpStatusCode.Conflict, "billing-cancellation-required", AccountProfileDeletionOutcome.BillingCancellationRequired)]
+    [InlineData(HttpStatusCode.Unauthorized, "reauthentication-required", AccountProfileDeletionOutcome.ReauthenticationRequired)]
+    [InlineData(HttpStatusCode.TooManyRequests, "account-rate-limited", AccountProfileDeletionOutcome.RateLimited)]
+    [InlineData(HttpStatusCode.ServiceUnavailable, "account-deletion-unavailable", AccountProfileDeletionOutcome.Unavailable)]
+    public async Task DeleteAsync_PreservesServerFailureReason(
+        HttpStatusCode status,
+        string error,
+        AccountProfileDeletionOutcome expected)
+    {
+        var service = CreateService(_ => Json(status, $$"""{"error":"{{error}}"}"""));
+
+        var result = await service.DeleteAsync(
+            "id-token-1",
+            cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Equal(expected, result.Outcome);
+        Assert.Equal(error, result.ErrorCode);
+    }
+
+    [Fact]
+    public async Task DeleteAsync_PropagatesCallerCancellationAndMapsTransportFailure()
+    {
+        var unavailable = await CreateService(_ => throw new HttpRequestException("fixture failure"))
+            .DeleteAsync("id-token-1", global::Xunit.TestContext.Current.CancellationToken);
+
+        using var cancelled = new CancellationTokenSource();
+        cancelled.Cancel();
+
+        Assert.Equal(AccountProfileDeletionOutcome.Unavailable, unavailable.Outcome);
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() =>
+            CreateService(_ => throw new OperationCanceledException(cancelled.Token))
+                .DeleteAsync("id-token-1", cancelled.Token));
     }
 
     [Fact]

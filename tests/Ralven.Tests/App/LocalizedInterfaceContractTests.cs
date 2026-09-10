@@ -37,6 +37,7 @@ public sealed partial class LocalizedInterfaceContractTests
             Path.Combine(root, "src", "Ralven.App", "Views", "PrivacyConsentWindow.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "ReleaseNotesWindow.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "PasswordSecurityWindow.xaml"),
+            Path.Combine(root, "src", "Ralven.App", "Views", "TwoFactorSecurityWindow.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "TermsOfUseWindow.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "OptimizationConfirmationWindow.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "OverviewPage.xaml"),

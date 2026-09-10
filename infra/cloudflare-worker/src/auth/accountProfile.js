@@ -108,20 +108,57 @@ export async function createAccountProfile(db, uid, profile) {
   }
 }
 
-/** Deletes only after every linked mandate has been confirmed cancelled. */
-export async function deleteAccountProfile(db, uid) {
-  await db.prepare(
-    `DELETE FROM account_profiles
-     WHERE uid = ?
-       AND NOT EXISTS (
-         SELECT 1 FROM billing_checkout_intents WHERE account_uid = ? AND state <> 'cancelled'
-       )`,
-  ).bind(uid, uid).run();
-
+/** Account deletion is blocked until every linked billing flow is cancelled. */
+export async function isAccountDeletionBlocked(db, uid) {
   const billing = await db.prepare(
     "SELECT 1 AS blocked FROM billing_checkout_intents WHERE account_uid = ? AND state <> 'cancelled' LIMIT 1",
   ).bind(uid).first();
-  return billing === null;
+  return billing !== null;
+}
+
+/** Called only after Firebase has confirmed deletion of the account. */
+export async function deleteAccountProfile(db, uid) {
+  await db.prepare('DELETE FROM account_profiles WHERE uid = ?').bind(uid).run();
+}
+
+export async function deleteAccount(db, uid, deleteFirebase) {
+  if (await isAccountDeletionBlocked(db, uid)) return { ok: false, code: 'billing-cancellation-required' };
+  const now = new Date();
+  const validAfter = Math.floor(now.getTime() / 1000);
+  await db.prepare(
+    `INSERT INTO account_auth_cutoffs (account_uid, valid_after, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT(account_uid) DO UPDATE SET valid_after = excluded.valid_after, updated_at = excluded.updated_at`,
+  ).bind(uid, validAfter, now.toISOString()).run();
+  await db.prepare(
+    `INSERT INTO account_deletion_jobs (account_uid, requested_at) VALUES (?, ?)
+     ON CONFLICT(account_uid) DO NOTHING`,
+  ).bind(uid, now.toISOString()).run();
+
+  try {
+    await completeAccountDeletion(db, uid, deleteFirebase);
+    return { ok: true, pending: false };
+  } catch {
+    return { ok: true, pending: true };
+  }
+}
+
+export async function completeAccountDeletion(db, uid, deleteFirebase) {
+  await deleteFirebase(uid);
+  await deleteAccountProfile(db, uid);
+  await db.prepare('DELETE FROM account_deletion_jobs WHERE account_uid = ?').bind(uid).run();
+}
+
+export async function resumeAccountDeletions(db, deleteFirebase, limit = 20) {
+  const rows = await db.prepare(
+    'SELECT account_uid FROM account_deletion_jobs ORDER BY requested_at LIMIT ?',
+  ).bind(limit).all();
+  for (const row of rows.results ?? []) {
+    try {
+      await completeAccountDeletion(db, row.account_uid, deleteFirebase);
+    } catch {
+      // The durable job remains for the next scheduled retry.
+    }
+  }
 }
 
 /**

@@ -1,0 +1,76 @@
+<ui:FluentWindow x:Class="Ralven.App.Views.TwoFactorSecurityWindow"
+                 xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                 xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                 xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+                 xmlns:controls="clr-namespace:Ralven.App.Controls"
+                 Title="{Binding [TwoFactor.Title], Source={StaticResource LocalizedStrings}}"
+                 Icon="/Ralven;component/Assets/Ralven.png"
+                 Width="560" SizeToContent="Height" MaxHeight="760"
+                 WindowStartupLocation="CenterOwner" ResizeMode="NoResize"
+                 ShowInTaskbar="False" ExtendsContentIntoTitleBar="True"
+                 WindowBackdropType="Mica" FontFamily="{StaticResource AppFontBody}"
+                 Background="{DynamicResource CanvasBaseBrush}">
+    <Border Style="{StaticResource FloatingSurface}" Padding="0">
+        <Grid>
+            <Grid.RowDefinitions><RowDefinition Height="56" /><RowDefinition Height="Auto" /><RowDefinition Height="70" /></Grid.RowDefinitions>
+            <ui:TitleBar ShowMaximize="False" ShowMinimize="False" Background="{DynamicResource SurfaceRailBrush}">
+                <ui:TitleBar.Header>
+                    <TextBlock Margin="18,0,0,0" Text="{Binding [TwoFactor.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                </ui:TitleBar.Header>
+            </ui:TitleBar>
+
+            <ScrollViewer Grid.Row="1" MaxHeight="620" VerticalScrollBarVisibility="Auto">
+                <StackPanel Margin="28,24,28,26">
+                    <TextBlock Text="{Binding [TwoFactor.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+
+                    <Border x:Name="StatusPanel" Style="{StaticResource AlertRowStyle}" Visibility="Collapsed" Margin="0,18,0,0">
+                        <TextBlock x:Name="StatusText" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" AutomationProperties.LiveSetting="Assertive" />
+                    </Border>
+
+                    <StackPanel x:Name="PasswordConfirmationPanel" Margin="0,18,0,0">
+                        <TextBlock Text="{Binding [Settings.Account.CurrentPasswordLabel], Source={StaticResource LocalizedStrings}}" Style="{StaticResource FieldLabelStyle}" />
+                        <controls:RevealPasswordBox x:Name="CurrentPasswordField" MaxLength="128" Placeholder="{Binding [Settings.Account.CurrentPasswordPlaceholder], Source={StaticResource LocalizedStrings}}" />
+                    </StackPanel>
+
+                    <TextBlock x:Name="GoogleConfirmationText" Margin="0,18,0,0" Text="{Binding [TwoFactor.GoogleConfirmation], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Visibility="Collapsed" />
+
+                    <StackPanel x:Name="CurrentMfaPanel" Margin="0,18,0,0" Visibility="Collapsed">
+                        <TextBlock Text="{Binding [TwoFactor.CurrentCodeLabel], Source={StaticResource LocalizedStrings}}" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox x:Name="CurrentMfaCodeBox" Style="{StaticResource FormTextBoxStyle}" MaxLength="6" InputMethod.IsInputMethodEnabled="False" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="DisabledActionsPanel" Margin="0,22,0,0">
+                        <Button x:Name="EnableButton" Content="{Binding [TwoFactor.Enable], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Click="Enable_Click" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="EnabledActionsPanel" Margin="0,22,0,0" Visibility="Collapsed">
+                        <TextBlock Text="{Binding [TwoFactor.EnabledDescription], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                        <Button x:Name="RegenerateButton" Margin="0,14,0,0" Content="{Binding [TwoFactor.RegenerateCodes], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Click="Regenerate_Click" />
+                        <Button x:Name="DisableButton" Margin="0,10,0,0" Content="{Binding [TwoFactor.Disable], Source={StaticResource LocalizedStrings}}" Style="{StaticResource DangerGhostButtonStyle}" Click="Disable_Click" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="EnrollmentPanel" Margin="0,22,0,0" Visibility="Collapsed">
+                        <TextBlock Text="{Binding [TwoFactor.Setup.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SubsectionText}" />
+                        <TextBlock Margin="0,8,0,0" Text="{Binding [TwoFactor.Setup.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                        <TextBox x:Name="SharedSecretBox" Margin="0,12,0,0" Style="{StaticResource FormTextBoxStyle}" IsReadOnly="True" />
+                        <Button Margin="0,8,0,0" HorizontalAlignment="Left" Content="{Binding [TwoFactor.CopySecret], Source={StaticResource LocalizedStrings}}" Style="{StaticResource LinkButtonStyle}" Click="CopySecret_Click" />
+                        <TextBlock Margin="0,14,0,6" Text="{Binding [TwoFactor.NewCodeLabel], Source={StaticResource LocalizedStrings}}" Style="{StaticResource FieldLabelStyle}" />
+                        <TextBox x:Name="EnrollmentCodeBox" Style="{StaticResource FormTextBoxStyle}" MaxLength="6" InputMethod.IsInputMethodEnabled="False" />
+                        <Button x:Name="ConfirmEnrollmentButton" Margin="0,14,0,0" Content="{Binding [TwoFactor.Confirm], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Click="ConfirmEnrollment_Click" />
+                    </StackPanel>
+
+                    <StackPanel x:Name="RecoveryCodesPanel" Margin="0,22,0,0" Visibility="Collapsed">
+                        <TextBlock Text="{Binding [TwoFactor.RecoveryCodes.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SubsectionText}" />
+                        <TextBlock Margin="0,8,0,0" Text="{Binding [TwoFactor.RecoveryCodes.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                        <TextBox x:Name="RecoveryCodesBox" Margin="0,12,0,0" MinHeight="116" Style="{StaticResource FormTextBoxStyle}" IsReadOnly="True" AcceptsReturn="True" TextWrapping="Wrap" />
+                        <Button Margin="0,8,0,0" HorizontalAlignment="Left" Content="{Binding [TwoFactor.CopyCodes], Source={StaticResource LocalizedStrings}}" Style="{StaticResource LinkButtonStyle}" Click="CopyCodes_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <Border Grid.Row="2" Background="{DynamicResource SurfaceRailBrush}" BorderBrush="{DynamicResource BorderSubtleBrush}" BorderThickness="0,1,0,0">
+                <Button Content="{Binding [Common.Close], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="0,0,18,0" IsCancel="True" />
+            </Border>
+        </Grid>
+    </Border>
+</ui:FluentWindow>

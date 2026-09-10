@@ -82,6 +82,7 @@ public sealed class AccountSignUpFlowTests
 
         Assert.True(result.Succeeded);
         Assert.Equal(AuthenticationState.EmailVerificationRequired, result.State);
+        Assert.Null(result.Error);
         Assert.Equal("uid-1", result.User!.Uid);
         Assert.Contains("/v1/accounts:signUp", requests);
         Assert.Contains("/v1/accounts:lookup", requests);
@@ -119,7 +120,7 @@ public sealed class AccountSignUpFlowTests
         var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
-        Assert.Equal(AuthenticationState.SigningIn, result.State);
+        Assert.Equal(AuthenticationState.SignedOut, result.State);
         Assert.Contains(expectedFragment, result.Error!, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -159,8 +160,9 @@ public sealed class AccountSignUpFlowTests
 
         var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
-        Assert.True(result.Succeeded);
+        Assert.False(result.Succeeded);
         Assert.Equal(AuthenticationState.EmailVerificationRequired, result.State);
+        Assert.Equal(LocalizationService.Current.GetString("Account.Verification.SendFailed"), result.Error);
     }
 
     [Fact]

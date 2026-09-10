@@ -188,6 +188,20 @@ test('verifyFirebaseIdToken rejects expired tokens outside skew', async () => {
   );
 });
 
+test('verifyFirebaseIdToken requires an issued-at claim', async () => {
+  const { privateKey, publicKey } = await generateRsaKeyPair();
+  const kid = 'test-kid-missing-iat';
+  const jwk = await publicJwk(publicKey, kid);
+  const payload = validPayload();
+  delete payload.iat;
+  const token = await signToken(privateKey, { alg: 'RS256', kid }, payload);
+
+  await assert.rejects(
+    () => verifyFirebaseIdToken(token, { fetch: mockJwksFetch({ [kid]: jwk }) }),
+    /bad-iat/,
+  );
+});
+
 test('verifyFirebaseIdToken rejects non-RS256 headers', async () => {
   const { privateKey, publicKey } = await generateRsaKeyPair();
   const kid = 'test-kid-alg';
@@ -332,6 +346,7 @@ test('requireFirebaseUser returns uid for a valid Bearer token', async () => {
   assert.equal(result.authorized, true);
   assert.equal(result.uid, 'firebase-uid-abc123');
   assert.equal(result.emailVerified, false);
+  assert.equal(result.issuedAt, result.authTime);
 });
 
 test('requireFirebaseUser exposes a verified e-mail claim only when Firebase asserted it', async () => {

@@ -39,6 +39,11 @@
 ##   OPENAI_API_KEY -- credencial server-side usada somente por POST /ai/message
 ##   RALVEN_AI_SAFETY_IDENTIFIER_SECRET -- segredo distinto usado para derivar
 ##                          identificadores opacos; nunca enviado ao provedor
+##   FIREBASE_WEB_API_KEY -- validates pending MFA credentials
+##   FIREBASE_ADMIN_CLIENT_EMAIL -- least-privilege service account identity
+##   FIREBASE_ADMIN_PRIVATE_KEY -- PKCS#8 service account private key
+##   MFA_RECOVERY_CODE_HMAC_SECRET -- distinct random secret (32+ characters)
+##                          for recovery-code and lookup HMACs
 ##
 ## DASHBOARD_ORIGIN below is a plain, non-secret var -- the exact comma-separated
 ## origins the dashboard is served from, so CORS headers are only ever sent back
@@ -58,6 +63,9 @@ compatibility_date = "2026-08-11"
 # origin. Keep the historical Worker name for its already-provisioned D1
 # resources, but do not expose it through a fivemcleaner-*.workers.dev URL.
 workers_dev = false
+
+[triggers]
+crons = ["*/15 * * * *"]
 
 [vars]
 ASAAS_BILLING_ENABLED = "false"
@@ -87,6 +95,18 @@ simple = { limit = 10, period = 60 }
 name = "BILLING_READ_LIMITER"
 namespace_id = "1007"
 simple = { limit = 20, period = 60 }
+
+# Mandatory per-UID budget shared by authenticated /account routes.
+[[ratelimits]]
+name = "ACCOUNT_ROUTE_LIMITER"
+namespace_id = "1009"
+simple = { limit = 60, period = 60 }
+
+# The opaque pending credential is HMACed before it becomes the limiter key.
+[[ratelimits]]
+name = "ACCOUNT_RECOVERY_LIMITER"
+namespace_id = "1010"
+simple = { limit = 5, period = 60 }
 
 [[d1_databases]]
 binding = "TELEMETRY_DB"

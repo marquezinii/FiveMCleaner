@@ -9,11 +9,33 @@ import { requireFirebaseUser } from './auth/firebaseIdToken.js';
 import {
   validateAccountProfile,
   createAccountProfile,
-  deleteAccountProfile,
+  deleteAccount,
   fetchAccountProfile,
   normalizeUsername,
   isUsernameAvailable,
+  resumeAccountDeletions,
 } from './auth/accountProfile.js';
+import {
+  completeRecovery,
+  deleteRecoveryCodes,
+  findRecoveryCode,
+  generateRecoveryCodes,
+  isRecentAuthentication,
+  recoveryRateLimitKey,
+  releaseRecoveryCode,
+  replaceRecoveryCodes,
+  reserveRecoveryCode,
+  tokenPassesAccountCutoff,
+  validateEnrollmentId,
+  validateRecoveryRequest,
+} from './auth/accountSecurity.js';
+import {
+  accountHasTotpEnrollment,
+  accountSessionIsCurrent,
+  deleteFirebaseAccount,
+  provePendingTotpEnrollment,
+  removeMfaAndRevokeSessions,
+} from './auth/firebaseAdmin.js';
 import { rateLimitKey, withinRateLimit, withinRequiredRateLimit } from './rateLimit.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
@@ -33,6 +55,7 @@ const MAX_TELEMETRY_BODY_BYTES = 512 * 1024;
 const MAX_BUG_REPORT_BODY_BYTES = 128 * 1024;
 const MAX_UPDATER_EVENT_BODY_BYTES = 4 * 1024;
 const MAX_ACCOUNT_PROFILE_BODY_BYTES = 4 * 1024;
+const MAX_ACCOUNT_SECURITY_BODY_BYTES = 8 * 1024;
 const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 
 // Ralven anonymous telemetry + bug reports + admin dashboard API
@@ -45,7 +68,9 @@ const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 //   POST    /bugs                  -- ingest one bug report, text-only (no auth; validated server-side)
 //   POST    /account/profile       -- create the username/first/last-name profile for a Firebase account (requires a valid Firebase ID token)
 //   GET     /account/profile       -- read the caller's own username/first/last-name profile (requires a valid Firebase ID token)
-//   DELETE  /account/profile       -- delete the caller's own profile before its Firebase account is deleted
+//   DELETE  /account               -- delete Firebase first, then the caller's D1 data
+//   POST    /account/mfa/recovery-codes -- generate one-time TOTP recovery codes after recent authentication
+//   POST    /account/mfa/recover   -- recover a TOTP-blocked sign-in without returning Firebase tokens
 //   GET     /account/entitlements  -- read the caller's server-authoritative access tier (requires a valid Firebase ID token)
 //   GET     /account/billing       -- offer and reconciled subscription status (Firebase ID token)
 //   POST    /account/billing/checkout -- hosted monthly checkout for the accepted server offer
@@ -119,6 +144,12 @@ export default {
     const response = await route(request, env, url);
     return withCorsHeaders(response, corsHeaders);
   },
+  async scheduled(_controller, env, ctx) {
+    ctx.waitUntil(resumeAccountDeletions(
+      env.TELEMETRY_DB,
+      (uid) => deleteFirebaseAccount(env, uid),
+    ));
+  },
 };
 
 async function route(request, env, url) {
@@ -146,7 +177,9 @@ async function route(request, env, url) {
     return handleUpdaterEventIngest(request, env);
   }
   if (request.method === 'POST' && url.pathname === '/ai/message') {
-    return handleRalvenAi(request, env);
+    return handleRalvenAi(request, env, {
+      requireUser: (candidate) => requireAccountUser(candidate, env),
+    });
   }
   if (request.method === 'POST' && url.pathname === '/account/profile') {
     return handleAccountProfileCreate(request, env);
@@ -155,7 +188,19 @@ async function route(request, env, url) {
     return handleAccountProfileGet(request, env);
   }
   if (request.method === 'DELETE' && url.pathname === '/account/profile') {
-    return handleAccountProfileDelete(request, env);
+    return jsonResponse({ error: 'use-account-deletion' }, 410);
+  }
+  if (request.method === 'DELETE' && url.pathname === '/account') {
+    return handleAccountDelete(request, env);
+  }
+  if (request.method === 'POST' && url.pathname === '/account/mfa/recovery-codes') {
+    return handleRecoveryCodesCreate(request, env);
+  }
+  if (request.method === 'DELETE' && url.pathname === '/account/mfa/recovery-codes') {
+    return handleRecoveryCodesDelete(request, env);
+  }
+  if (request.method === 'POST' && url.pathname === '/account/mfa/recover') {
+    return handleMfaRecovery(request, env);
   }
   if (request.method === 'GET' && url.pathname === '/account/entitlements') {
     return handleAccountEntitlementsGet(request, env);
@@ -304,7 +349,7 @@ async function handleAdminCsrfToken(request, env) {
 // server-side, see auth/firebaseIdToken.js) -- the uid is always taken from
 // the verified token, never from the request body.
 async function handleAccountProfileCreate(request, env) {
-  const auth = await requireFirebaseUser(request);
+  const auth = await requireAccountUser(request, env);
   if (!auth.authorized) return auth.response;
   if (!auth.emailVerified) return jsonResponse({ error: 'email-verification-required' }, 403);
 
@@ -326,7 +371,7 @@ async function handleAccountProfileCreate(request, env) {
 }
 
 async function handleAccountProfileGet(request, env) {
-  const auth = await requireFirebaseUser(request);
+  const auth = await requireAccountUser(request, env);
   if (!auth.authorized) return auth.response;
 
   const profile = await fetchAccountProfile(env.TELEMETRY_DB, auth.uid);
@@ -337,19 +382,150 @@ async function handleAccountProfileGet(request, env) {
   return jsonResponse(profile);
 }
 
-async function handleAccountProfileDelete(request, env) {
-  const auth = await requireFirebaseUser(request);
+async function handleAccountDelete(request, env) {
+  const auth = await requireAccountUser(request, env, true);
   if (!auth.authorized) return auth.response;
 
-  const deleted = await deleteAccountProfile(env.TELEMETRY_DB, auth.uid);
-  if (!deleted) {
-    return jsonResponse({ error: 'billing-cancellation-required' }, 409);
+  try {
+    const result = await deleteAccount(
+      env.TELEMETRY_DB,
+      auth.uid,
+      (uid) => deleteFirebaseAccount(env, uid),
+    );
+    if (!result.ok) return jsonResponse({ error: result.code }, 409);
+    return result.pending
+      ? jsonResponse({ status: 'deletion-pending' }, 202)
+      : new Response(null, { status: 204 });
+  } catch {
+    return jsonResponse({ error: 'account-deletion-unavailable' }, 503);
   }
-  return new Response(null, { status: 204 });
+}
+
+async function requireAccountUser(request, env, recent = false) {
+  const auth = await requireFirebaseUser(request);
+  if (!auth.authorized) return auth;
+  if (!await withinRequiredRateLimit(env.ACCOUNT_ROUTE_LIMITER, `account:${auth.uid}`)) {
+    return { authorized: false, response: jsonResponse({ error: 'account-rate-limited' }, 429) };
+  }
+  try {
+    if (!await accountSessionIsCurrent(env, auth.uid, auth.issuedAt)) {
+      return { authorized: false, response: jsonResponse({ error: 'unauthorized' }, 401) };
+    }
+    if (!await tokenPassesAccountCutoff(env.TELEMETRY_DB, auth)) {
+      return { authorized: false, response: jsonResponse({ error: 'unauthorized' }, 401) };
+    }
+  } catch {
+    return { authorized: false, response: jsonResponse({ error: 'account-security-unavailable' }, 503) };
+  }
+  if (recent && !isRecentAuthentication(auth)) {
+    return { authorized: false, response: jsonResponse({ error: 'reauthentication-required' }, 401) };
+  }
+  return auth;
+}
+
+async function handleRecoveryCodesCreate(request, env) {
+  const auth = await requireAccountUser(request, env, true);
+  if (!auth.authorized) return auth.response;
+  if (!hasExactJsonContentType(request)) return jsonResponse({ error: 'invalid-content-type' }, 415);
+  const payload = await readBoundedJson(request, MAX_ACCOUNT_SECURITY_BODY_BYTES);
+  const enrollmentId = validateEnrollmentId(payload?.mfaEnrollmentId);
+  if (enrollmentId === null || !payload || typeof payload !== 'object' || Array.isArray(payload)
+    || Object.keys(payload).length !== 1) {
+    return jsonResponse({ error: 'invalid-request' }, 400);
+  }
+
+  try {
+    if (!await accountHasTotpEnrollment(env, auth.uid, enrollmentId)) {
+      return jsonResponse({ error: 'mfa-enrollment-not-found' }, 404);
+    }
+    const recoveryCodes = generateRecoveryCodes();
+    await replaceRecoveryCodes(
+      env.TELEMETRY_DB,
+      auth.uid,
+      enrollmentId,
+      env.MFA_RECOVERY_CODE_HMAC_SECRET,
+      recoveryCodes,
+    );
+    return jsonResponse({ recoveryCodes });
+  } catch {
+    return jsonResponse({ error: 'recovery-codes-unavailable' }, 503);
+  }
+}
+
+async function handleRecoveryCodesDelete(request, env) {
+  const auth = await requireAccountUser(request, env, true);
+  if (!auth.authorized) return auth.response;
+  if (!hasExactJsonContentType(request)) return jsonResponse({ error: 'invalid-content-type' }, 415);
+  const payload = await readBoundedJson(request, MAX_ACCOUNT_SECURITY_BODY_BYTES);
+  const enrollmentId = validateEnrollmentId(payload?.mfaEnrollmentId);
+  if (enrollmentId === null || !payload || typeof payload !== 'object' || Array.isArray(payload)
+    || Object.keys(payload).length !== 1) {
+    return jsonResponse({ error: 'invalid-request' }, 400);
+  }
+  try {
+    await deleteRecoveryCodes(
+      env.TELEMETRY_DB,
+      auth.uid,
+      enrollmentId,
+      env.MFA_RECOVERY_CODE_HMAC_SECRET,
+    );
+    return new Response(null, { status: 204 });
+  } catch {
+    return jsonResponse({ error: 'recovery-codes-unavailable' }, 503);
+  }
+}
+
+async function handleMfaRecovery(request, env) {
+  if (!hasExactJsonContentType(request)) return jsonResponse({ error: 'invalid-content-type' }, 415);
+  const payload = validateRecoveryRequest(await readBoundedJson(request, MAX_ACCOUNT_SECURITY_BODY_BYTES));
+  if (payload === null) return jsonResponse({ error: 'invalid-request' }, 400);
+
+  try {
+    const limitKey = await recoveryRateLimitKey(
+      env.MFA_RECOVERY_CODE_HMAC_SECRET,
+      payload.mfaEnrollmentId,
+      rateLimitKey(request),
+    );
+    if (!await withinRequiredRateLimit(env.ACCOUNT_RECOVERY_LIMITER, limitKey)) {
+      return jsonResponse({ error: 'account-rate-limited' }, 429);
+    }
+    const proof = await provePendingTotpEnrollment(
+      env,
+      payload.mfaPendingCredential,
+      payload.mfaEnrollmentId,
+    );
+    if (!proof.valid) return jsonResponse({ error: 'invalid-recovery-proof' }, 401);
+
+    const recovery = await findRecoveryCode(
+      env.TELEMETRY_DB,
+      payload.mfaEnrollmentId,
+      payload.recoveryCode,
+      env.MFA_RECOVERY_CODE_HMAC_SECRET,
+    );
+    if (!recovery) return jsonResponse({ error: 'invalid-recovery-code' }, 401);
+    if (proof.uid !== null && proof.uid !== recovery.uid) {
+      return jsonResponse({ error: 'invalid-recovery-proof' }, 401);
+    }
+    if (!await reserveRecoveryCode(env.TELEMETRY_DB, recovery.id)) {
+      return jsonResponse({ error: 'recovery-in-progress' }, 409);
+    }
+
+    const validAfter = Math.floor(Date.now() / 1000);
+    try {
+      await removeMfaAndRevokeSessions(env, recovery.uid, validAfter);
+    } catch {
+      await releaseRecoveryCode(env.TELEMETRY_DB, recovery.id);
+      return jsonResponse({ error: 'recovery-unavailable' }, 503);
+    }
+    await completeRecovery(env.TELEMETRY_DB, recovery.id, recovery.uid, validAfter);
+    return jsonResponse({ success: true });
+  } catch {
+    return jsonResponse({ error: 'recovery-unavailable' }, 503);
+  }
 }
 
 async function handleAccountEntitlementsGet(request, env) {
-  const auth = await requireFirebaseUser(request);
+  const auth = await requireAccountUser(request, env);
   if (!auth.authorized) return auth.response;
 
   try {
@@ -365,7 +541,7 @@ async function handleAccountEntitlementsGet(request, env) {
 }
 
 async function handleAccountBilling(request, env, path) {
-  const auth = await requireFirebaseUser(request);
+  const auth = await requireAccountUser(request, env, request.method === 'POST');
   if (!auth.authorized) return auth.response;
   try {
     if (request.method === 'GET') {
