@@ -8,8 +8,10 @@ enfraquecer os invariantes de segurança definidos aqui ou em `docs/safety.md`.
 
 ## 1. Missão
 
-O Ralven é uma aplicação Windows para diagnóstico, manutenção e otimização
-transparente, conservadora e reversível de **FiveM sobre GTAV Legacy**.
+O Ralven é uma plataforma Windows de gerenciamento, manutenção e otimização
+assistida por IA, transparente, conservadora e reversível. **FiveM sobre GTAV
+Legacy** é uma integração especializada da área de Jogos, não a identidade
+principal do produto.
 
 O objetivo não é acumular “tweaks”. Uma mudança só pertence ao produto quando
 tem escopo conhecido, justificativa técnica, efeito explicável, validação,
@@ -78,7 +80,7 @@ Preserve as responsabilidades atuais:
 | `src/Ralven.App` | WPF, navegação, apresentação, interação e serviços de aplicação |
 | `src/Ralven.Contracts` | DTOs, IDs, estados, erros e contratos compartilhados |
 | `src/Ralven.Core` | casos de uso, políticas, perfis, planejamento, transação e rollback |
-| `src/Ralven.Windows` | descoberta e integrações específicas de Windows/FiveM |
+| `src/Ralven.Windows` | descoberta e integrações específicas de Windows e Jogos |
 | `src/Ralven.Broker` | operações administrativas tipadas e allowlisted |
 | `src/Ralven.Launcher` | inicialização e supervisão de saúde pós-update |
 | `src/Ralven.Updater` | staging, ativação e rollback de atualização |
@@ -107,9 +109,9 @@ Evite dependências circulares e não mova lógica entre camadas apenas para
 
 ## 5. Invariantes do produto
 
-### FiveM Legacy somente
+### Integração FiveM Legacy
 
-- O fluxo atual suporta FiveM sobre GTAV Legacy.
+- A integração de Jogos atual suporta FiveM sobre GTAV Legacy.
 - GTAV Enhanced deve resultar em bloqueio seguro.
 - Nunca tente Enhanced como Legacy por fallback.
 - Suporte futuro a Enhanced deve nascer como adaptador separado, com pesquisa,
