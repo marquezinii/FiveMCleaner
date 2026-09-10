@@ -74,30 +74,34 @@
         </Border>
 
         <!-- Slot de alerta condicional: só existe quando há algo real a dizer. -->
-        <Border Grid.Row="1" Style="{StaticResource AlertRowInfoStyle}" Visibility="{Binding IsUpdateBannerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+        <Border Grid.Row="1" Background="{DynamicResource Surface1Brush}" BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="1" CornerRadius="{StaticResource RadiusLg}" Margin="0,0,0,18" Effect="{DynamicResource Elevation1Shadow}" Visibility="{Binding IsUpdateBannerVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Path Style="{StaticResource Icon20}" Data="{StaticResource IconDownload}" Stroke="{DynamicResource InfoBaseBrush}" VerticalAlignment="Top" Margin="0,1,0,0" />
-                <StackPanel Grid.Column="1" Margin="14,0,16,0">
+                <Border Width="4" Background="{Binding UpdateBannerToneBrushKey, Converter={StaticResource BrushKeyConverter}}" CornerRadius="{StaticResource RadiusXs}" />
+                <Border Width="40" Height="40" Margin="20,16,0,16" Background="{DynamicResource Surface2Brush}" CornerRadius="{StaticResource RadiusMd}" VerticalAlignment="Top">
+                    <Path Style="{StaticResource Icon20}" Data="{Binding UpdateBannerIconKey, Converter={StaticResource GeometryKeyConverter}}" Stroke="{Binding UpdateBannerToneBrushKey, Converter={StaticResource BrushKeyConverter}}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+                </Border>
+                <StackPanel Grid.Column="1" Margin="16,16,24,16" VerticalAlignment="Center">
                     <TextBlock Text="{Binding UpdateBannerTitle}" Style="{StaticResource BodyStrongText}" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding UpdateBannerDetail}" Style="{StaticResource SecondaryText}" Margin="0,4,0,0" />
+                    <TextBlock Text="{Binding UpdateBannerDetail}" Style="{StaticResource SecondaryText}" Margin="0,5,0,0" TextWrapping="Wrap" />
                     <ProgressBar Height="4" Margin="0,10,0,0" Value="{Binding UpdateDownloadPercent, Mode=OneWay}"
                                  Visibility="{Binding IsUpdateDownloading, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </StackPanel>
-                <StackPanel Grid.Column="2" VerticalAlignment="Top" Visibility="{Binding IsUpdateActionVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Button Content="{Binding UpdateActionLabel}" Style="{StaticResource PrimaryButtonStyle}" Height="34" Padding="16,0"
+                <StackPanel Grid.Column="2" VerticalAlignment="Center" Margin="0,16,52,16" Visibility="{Binding IsUpdateActionVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <Button Content="{Binding UpdateActionLabel}" Style="{StaticResource PrimaryButtonStyle}" MinWidth="156" Height="40" Padding="16,0"
                             IsEnabled="{Binding CanDownloadUpdate}" Click="DownloadUpdate_Click" />
-                    <Button Content="{Binding UpdateReleaseNotesLabel}" Style="{StaticResource LinkButtonStyle}" HorizontalAlignment="Center" Margin="0,8,0,0"
+                    <Button Content="{Binding UpdateReleaseNotesLabel}" Style="{StaticResource LinkButtonStyle}" HorizontalAlignment="Center" Margin="0,7,0,0"
                             IsEnabled="{Binding CanOpenReleaseNotes}" Click="OpenReleaseNotes_Click" />
                 </StackPanel>
-                <Button Grid.Column="2" Style="{StaticResource IconButtonStyle}" Width="28" Height="28" VerticalAlignment="Top" HorizontalAlignment="Right"
-                        Visibility="{Binding IsUpdateCompletedBannerVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
-                        Click="DismissCompletedUpdate_Click">
-                    <Path Style="{StaticResource Icon16}" Data="{StaticResource IconClose}" />
+                <Button Grid.Column="2" Style="{StaticResource IconButtonStyle}" Width="36" Height="36" Margin="0,10,12,0" VerticalAlignment="Top" HorizontalAlignment="Right"
+                        ToolTip="{Binding [Update.Dismiss], Source={StaticResource LocalizedStrings}}"
+                        AutomationProperties.Name="{Binding [Update.Dismiss], Source={StaticResource LocalizedStrings}}"
+                        Click="DismissUpdate_Click">
+                    <Path Style="{StaticResource Icon16}" Data="{StaticResource IconClose}" Stroke="{DynamicResource TextSecondaryBrush}" />
                 </Button>
             </Grid>
         </Border>

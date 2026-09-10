@@ -71,6 +71,7 @@ async function main() {
   const refreshStatus = document.getElementById('refresh-status');
   const liveAlertForm = document.getElementById('live-alert-form');
   const liveAlertMessage = document.getElementById('live-alert-message');
+  const liveAlertSeverity = document.getElementById('live-alert-severity');
   const liveAlertCounter = document.getElementById('live-alert-counter');
   const liveAlertStatus = document.getElementById('live-alert-status');
   const liveAlertError = document.getElementById('live-alert-error');
@@ -159,16 +160,18 @@ async function main() {
   liveAlertForm.querySelectorAll('.chip').forEach((chip) => {
     chip.addEventListener('click', () => {
       liveAlertMessage.value = chip.dataset.template;
+      liveAlertSeverity.value = chip.dataset.severity || 'important';
       updateLiveAlertCounter();
       liveAlertMessage.focus();
     });
   });
 
-  function formatLiveAlertStatus(active, id) {
+  function formatLiveAlertStatus(active, id, severity) {
     if (!active) return 'Inativo';
     const when = id ? new Date(id) : null;
     const stamp = when && !Number.isNaN(when.getTime()) ? ` desde ${when.toLocaleString('pt-BR')}` : '';
-    return `Ativo${stamp}`;
+    const label = { info: 'Informativo', important: 'Importante', critical: 'Crítico' }[severity] || 'Importante';
+    return `Ativo · ${label}${stamp}`;
   }
 
   async function loadLiveAlertStatus() {
@@ -179,11 +182,13 @@ async function main() {
       return;
     }
 
-    const { message, active, id } = result.data;
+    const { message, active, id, severity } = result.data;
     liveAlertMessage.value = active ? message || '' : '';
+    liveAlertSeverity.value = severity || 'important';
     updateLiveAlertCounter();
-    liveAlertStatus.textContent = formatLiveAlertStatus(active, id);
+    liveAlertStatus.textContent = formatLiveAlertStatus(active, id, severity);
     liveAlertStatus.classList.toggle('live-alert-status-active', active);
+    liveAlertStatus.dataset.severity = active ? severity || 'important' : '';
   }
 
   liveAlertForm.addEventListener('submit', async (event) => {
@@ -195,7 +200,7 @@ async function main() {
       return;
     }
 
-    const result = await setLiveAlert(API_BASE, { message, active: true }, csrfToken);
+    const result = await setLiveAlert(API_BASE, { message, active: true, severity: liveAlertSeverity.value }, csrfToken);
     if (result.error || result.unauthorized) {
       liveAlertError.textContent = 'Erro ao enviar o aviso.';
       return;
@@ -206,7 +211,7 @@ async function main() {
 
   liveAlertDeactivate.addEventListener('click', async () => {
     liveAlertError.textContent = '';
-    const result = await setLiveAlert(API_BASE, { message: '', active: false }, csrfToken);
+    const result = await setLiveAlert(API_BASE, { message: '', active: false, severity: liveAlertSeverity.value }, csrfToken);
     if (result.error || result.unauthorized) {
       liveAlertError.textContent = 'Erro ao desativar o aviso.';
       return;

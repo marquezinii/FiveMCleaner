@@ -13,9 +13,12 @@ namespace Ralven.App.ViewModels;
 
 public sealed partial class MainViewModel
 {
-    public bool IsUpdateBannerVisible => availableUpdate is not null
+    public bool IsUpdateBannerVisible => !isUpdateBannerDismissed && (availableUpdate is not null
         || updatePresentationState == UpdatePresentationState.Failed
-        || JustUpdatedToVersion is not null;
+        || JustUpdatedToVersion is not null);
+
+    public bool IsUpdateAttentionVisible => availableUpdate is not null
+        || updatePresentationState == UpdatePresentationState.Failed;
 
     public bool IsUpdateDownloading
     {
@@ -85,6 +88,20 @@ public sealed partial class MainViewModel
         get => updateBannerDetail;
         private set => SetProperty(ref updateBannerDetail, value);
     }
+
+    public string UpdateBannerToneBrushKey => updatePresentationState switch
+    {
+        UpdatePresentationState.Failed => "DangerBaseBrush",
+        _ when JustUpdatedToVersion is not null => "SuccessBaseBrush",
+        _ => "InfoBaseBrush",
+    };
+
+    public string UpdateBannerIconKey => updatePresentationState switch
+    {
+        UpdatePresentationState.Failed => "IconAlertTriangle",
+        _ when JustUpdatedToVersion is not null => "IconInfo",
+        _ => "IconDownload",
+    };
 
     /// <summary>
     /// The post-update confirmation banner has nothing left to act on, so the
@@ -211,6 +228,7 @@ public sealed partial class MainViewModel
     private void ApplyDetectedUpdate(ReleaseUpdate update)
     {
         availableUpdate = update;
+        isUpdateBannerDismissed = false;
         updatePresentationState = UpdatePresentationState.Available;
         RefreshUpdatePresentation();
         UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
@@ -343,6 +361,7 @@ public sealed partial class MainViewModel
         }
 
         JustUpdatedToVersion = installedVersion;
+        isUpdateBannerDismissed = false;
         availableUpdate = null;
         updatePresentationState = UpdatePresentationState.None;
         UpdateBannerTitle = localization.Format("Update.Completed.Title", installedVersion);
@@ -352,25 +371,50 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(CanDownloadUpdate));
         OnPropertyChanged(nameof(IsUpdateActionVisible));
         OnPropertyChanged(nameof(IsUpdateCompletedBannerVisible));
+        OnPropertyChanged(nameof(UpdateBannerToneBrushKey));
+        OnPropertyChanged(nameof(UpdateBannerIconKey));
     }
 
     /// <summary>
-    /// Hides the post-update confirmation banner after the user dismisses it.
+    /// Hides the current update surface for this session only. Available
+    /// updates remain discoverable through the title-bar indicator and return
+    /// on the next launch instead of being silently ignored forever.
     /// </summary>
-    public void DismissCompletedUpdateBanner()
+    public void DismissUpdateBanner()
     {
-        if (JustUpdatedToVersion is null)
+        if (!IsUpdateBannerVisible)
         {
             return;
         }
 
-        JustUpdatedToVersion = null;
-        UpdateBannerTitle = string.Empty;
-        UpdateBannerDetail = string.Empty;
-        OnPropertyChanged(nameof(JustUpdatedToVersion));
+        if (JustUpdatedToVersion is not null)
+        {
+            JustUpdatedToVersion = null;
+            UpdateBannerTitle = string.Empty;
+            UpdateBannerDetail = string.Empty;
+            OnPropertyChanged(nameof(JustUpdatedToVersion));
+        }
+        else
+        {
+            isUpdateBannerDismissed = true;
+        }
+
         OnPropertyChanged(nameof(IsUpdateBannerVisible));
         OnPropertyChanged(nameof(IsUpdateActionVisible));
         OnPropertyChanged(nameof(IsUpdateCompletedBannerVisible));
+    }
+
+    public void DismissCompletedUpdateBanner() => DismissUpdateBanner();
+
+    public void ShowUpdateBanner()
+    {
+        if (!IsUpdateAttentionVisible || !isUpdateBannerDismissed)
+        {
+            return;
+        }
+
+        isUpdateBannerDismissed = false;
+        OnPropertyChanged(nameof(IsUpdateBannerVisible));
     }
 
     private void RefreshUpdatePresentation()
@@ -418,6 +462,9 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(CanDownloadUpdate));
         OnPropertyChanged(nameof(ReleaseNotesUri));
         OnPropertyChanged(nameof(CanOpenReleaseNotes));
+        OnPropertyChanged(nameof(UpdateBannerToneBrushKey));
+        OnPropertyChanged(nameof(UpdateBannerIconKey));
+        OnPropertyChanged(nameof(IsUpdateAttentionVisible));
     }
 
     private string FormatBytes(long bytes)

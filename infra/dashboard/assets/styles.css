@@ -156,6 +156,34 @@ a {
   color: var(--text);
 }
 
+.live-alert-hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.live-alert-severity-label {
+  display: grid;
+  gap: 5px;
+  color: var(--text-soft);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.live-alert-severity-label select {
+  height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--charcoal);
+  color: var(--text);
+  padding: 7px 10px;
+}
+
+.live-alert-status-active[data-severity="critical"] { color: #F04438; }
+.live-alert-status-active[data-severity="important"] { color: #F5B942; }
+.live-alert-status-active[data-severity="info"] { color: #7DD3FC; }
+
 .login-card input {
   padding: 11px;
 }

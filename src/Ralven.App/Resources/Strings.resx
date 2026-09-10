@@ -313,6 +313,10 @@
   <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Open Discord</value></data>
   <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Join our official Discord</value></data>
   <data name="LiveAlert.Dismiss" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="LiveAlert.Reopen" xml:space="preserve"><value>Open active notice</value></data>
+  <data name="LiveAlert.Title.Info" xml:space="preserve"><value>Information from Ralven</value></data>
+  <data name="LiveAlert.Title.Important" xml:space="preserve"><value>Important Ralven notice</value></data>
+  <data name="LiveAlert.Title.Critical" xml:space="preserve"><value>Critical Ralven notice</value></data>
   <data name="Account.TitleBar.SignInPrompt" xml:space="preserve"><value>Sign in / Register</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Scan PC again</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Optimize PC</value></data>
@@ -1144,6 +1148,8 @@
   <data name="Update.Completed.Detail" xml:space="preserve"><value>The update was installed and verified. Nothing else is needed.</value></data>
   <data name="Update.BlockedWhileBusy" xml:space="preserve"><value>Finish or cancel the current optimization before updating.</value></data>
   <data name="Update.ReleaseNotes" xml:space="preserve"><value>View changes</value></data>
+  <data name="Update.Dismiss" xml:space="preserve"><value>Dismiss for now</value></data>
+  <data name="Update.Reopen" xml:space="preserve"><value>Show available update</value></data>
   <data name="Update.Failed.Title" xml:space="preserve"><value>Update was not downloaded</value></data>
   <data name="Update.Failed.Detail" xml:space="preserve"><value>Nothing was installed. {0}</value></data>
   <data name="Dialog.UpdateInstall.Title" xml:space="preserve"><value>Install verified update</value></data>

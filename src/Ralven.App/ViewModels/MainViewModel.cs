@@ -123,6 +123,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private double updateDownloadPercent;
     private string updateBannerTitle = string.Empty;
     private string updateBannerDetail = string.Empty;
+    private bool isUpdateBannerDismissed;
     private bool isCheckingForUpdatesManually;
     private string? manualUpdateCheckMessage;
     private long settingsRevision;
@@ -150,6 +151,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private bool isLiveAlertBannerVisible;
     private bool isLiveAlertIconVisible;
     private string liveAlertMessage = string.Empty;
+    private LiveAlertSeverity liveAlertSeverity = LiveAlertSeverity.Important;
 
     public MainViewModel(
         IAppOptimizationService service,

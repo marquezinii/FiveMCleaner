@@ -261,6 +261,7 @@ CREATE TABLE IF NOT EXISTS live_alert (
     id INTEGER PRIMARY KEY,
     message TEXT NOT NULL DEFAULT '',
     active INTEGER NOT NULL DEFAULT 0,
+    severity TEXT NOT NULL DEFAULT 'important' CHECK (severity IN ('info', 'important', 'critical')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
