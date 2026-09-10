@@ -30,6 +30,10 @@ $publishDirectory = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'Ral
 $installerOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer'))
 $installerArtworkLight = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-artwork\Ralven-wizard-side-light.png'))
 $installerArtworkDark = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-artwork\Ralven-wizard-side-dark.png'))
+$installerDocuments = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-documents'))
+$installerLicense = Join-Path $installerDocuments 'license.rtf'
+$installerInfoEnglish = Join-Path $installerDocuments 'install-info.en.rtf'
+$installerInfoPortuguese = Join-Path $installerDocuments 'install-info.pt-BR.rtf'
 $stagingOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot ".installer-staging-$([Guid]::NewGuid().ToString('N'))"))
 $innoVersion = '7.0.2'
 $innoAssetName = "innosetup-$innoVersion-x64.exe"
@@ -168,10 +172,20 @@ Assert-UnderArtifacts $publishDirectory
 Assert-UnderArtifacts $installerOutput
 Assert-UnderArtifacts $installerArtworkLight
 Assert-UnderArtifacts $installerArtworkDark
+Assert-UnderArtifacts $installerDocuments
+Assert-UnderArtifacts $installerLicense
+Assert-UnderArtifacts $installerInfoEnglish
+Assert-UnderArtifacts $installerInfoPortuguese
 Assert-UnderArtifacts $stagingOutput
 New-Item -ItemType Directory -Force -Path $artifactsRoot, $installerOutput, $stagingOutput | Out-Null
 
 try {
+    & (Join-Path $PSScriptRoot 'New-InstallerDocuments.ps1') `
+        -LicensePath (Join-Path $workspace 'LICENSE') `
+        -EnglishInfoPath (Join-Path $workspace 'installer\install-info.en.txt') `
+        -PortugueseInfoPath (Join-Path $workspace 'installer\install-info.pt-BR.txt') `
+        -OutputDirectory $installerDocuments
+
     & (Join-Path $PSScriptRoot 'Verify-Installer.ps1') -ScriptOnly
 
     $gitStatusProbe = @(& git -C $workspace status --porcelain=v1 --untracked-files=all)
@@ -232,6 +246,9 @@ try {
         "/DRepositoryRoot=$workspace",
         "/DInstallerArtworkPath=$installerArtworkLight",
         "/DInstallerArtworkPathDark=$installerArtworkDark",
+        "/DInstallerLicensePath=$installerLicense",
+        "/DInstallerInfoEnglishPath=$installerInfoEnglish",
+        "/DInstallerInfoPortuguesePath=$installerInfoPortuguese",
         $installerScript
     )
     & $compiler @arguments

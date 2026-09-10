@@ -10,6 +10,8 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $workspace = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
+$artifactsRoot = [System.IO.Path]::GetFullPath((Join-Path $workspace 'artifacts'))
+. (Join-Path $PSScriptRoot 'Installer.Common.ps1')
 $installerScript = Join-Path $workspace 'installer\Ralven.iss'
 
 if (-not (Test-Path -LiteralPath $installerScript -PathType Leaf)) {
@@ -30,10 +32,21 @@ $requiredPatterns = [ordered]@{
     'stable shortcut app identity'  = '#define AppUserModelId "Ralven\.Ralven"[\s\S]*AppUserModelID: "\{#AppUserModelId\}"'
     'proportional wizard artwork'   = 'WizardImageFile=\{#InstallerArtworkPath\}'
     'dark wizard artwork'           = 'WizardImageFileDynamicDark=\{#InstallerArtworkPathDark\}'
+    'comfortable wizard size'       = 'WizardSizePercent=140,135'
+    'formatted complete license'    = 'LicenseFile=\{#InstallerLicensePath\}'
+    'formatted localized info'      = 'InfoBeforeFile: "\{#InstallerInfo'
+    'real native progress'          = 'procedure CurInstallProgressChanged\(CurProgress, MaxProgress: Integer\)'
+    'details hidden by default'     = 'TechnicalDetailsVisible := False'
+    'optional live details'         = 'TechnicalDetailsButton\.Caption := CustomMessage\(''ShowDetails''\)'
+    'wrapped live details'          = 'TechnicalDetailsMemo\.WordWrap := True'
+    'native activity details'       = 'NativeStatus := WizardForm\.StatusLabel\.Caption'
+    'native file details'           = 'NativeFilename := WizardForm\.FilenameLabel\.Caption'
+    'real shortcut stage boundary'  = 'BeforeInstall: BeginShellConfiguration'
+    'mnemonic stripping fallback'   = "StringChangeEx\(Result, '&', '', True\)"
     'ultra lzma compression'        = 'Compression=lzma2/ultra'
     'localized finished label'      = '(?im)^\s*en\.FinishedLabel='
     'localized uninstall shortcut'  = 'Name: "\{group\}\\\{cm:UninstallShortcut\}"'
-    'english app comments metadata' = 'AppComments=Transparent and reversible optimization'
+    'english app comments metadata' = 'AppComments=Transparent and reversible Windows management for diagnostics, maintenance and optimization\.'
     'Windows language detection'    = 'LanguageDetectionMethod=uilanguage'
     'fresh language detection'      = 'UsePreviousLanguage=no'
     'offline embedded payload'      = 'Source: "\{#SourceDir\}\\\*"'
@@ -43,7 +56,7 @@ $requiredPatterns = [ordered]@{
     'no automatic reboot after run' = 'RestartIfNeededByRun=no'
     'concurrent setup guard'        = 'SetupMutex=Ralven\.Setup\.'
     'desktop shortcut enabled by default' = 'Name: "desktopicon"; Description: "\{cm:DesktopIcon\}"; GroupDescription:'
-    'startup enabled by default'    = '(?m)^Name: "startup"; Description: "\{cm:StartWithWindows\}"; GroupDescription: "\{cm:AdditionalShortcuts\}:"\s*$'
+    'startup enabled by default'    = '(?m)^Name: "startup"; Description: "\{cm:StartWithWindowsTask\}"; GroupDescription: "\{cm:AdditionalShortcuts\}:"\s*$'
     'startup ownership cleanup'     = 'ValueName: "Ralven"; Flags: deletevalue uninsdeletevalue; Tasks: not startup'
     'no launch in silent installs'  = 'Flags: nowait postinstall skipifsilent'
     'auto-update relaunch gated'    = 'Check: IsAutomaticUpdateRelaunch'
@@ -72,6 +85,8 @@ $forbiddenPatterns = [ordered]@{
     'broad install deletion'  = '(?im)^\s*Type\s*:\s*filesandordirs\b'
     'unchecked desktop shortcut' = 'Name: "desktopicon";.*Flags: unchecked'
     'unchecked startup' = 'Name: "startup";.*Flags: unchecked'
+    'mnemonics in native captions' = '(?im)^\s*(?:en|ptbr)\.(?:ButtonBack|ButtonNext|ButtonInstall|ButtonFinish|ButtonBrowse|ButtonWizardBrowse|ButtonNewFolder|ButtonYes|ButtonNo|LicenseAccepted|LicenseNotAccepted)=.*&'
+    'mnemonics in task captions' = '(?im)^\s*(?:en|ptbr)\.(?:AdditionalShortcuts|DesktopIcon|StartWithWindowsTask|LaunchProgram|UninstallShortcut)=.*&'
 }
 
 foreach ($entry in $forbiddenPatterns.GetEnumerator()) {
@@ -104,6 +119,29 @@ foreach ($infoRelative in @(
         if ($infoText -notmatch [regex]::Escape($needle)) {
             throw "Installer info contract missing '$needle' in $infoRelative."
         }
+    }
+}
+
+$documentProbe = Join-Path $artifactsRoot ('.installer-documents-verify-' + [Guid]::NewGuid().ToString('N'))
+Assert-UnderArtifacts -Path $documentProbe
+try {
+    & (Join-Path $PSScriptRoot 'New-InstallerDocuments.ps1') `
+        -LicensePath (Join-Path $workspace 'LICENSE') `
+        -EnglishInfoPath (Join-Path $workspace 'installer\install-info.en.txt') `
+        -PortugueseInfoPath (Join-Path $workspace 'installer\install-info.pt-BR.txt') `
+        -OutputDirectory $documentProbe
+
+    foreach ($documentName in @('license.rtf', 'install-info.en.rtf', 'install-info.pt-BR.rtf')) {
+        $documentPath = Join-Path $documentProbe $documentName
+        $rtf = Get-Content -LiteralPath $documentPath -Raw
+        if (-not $rtf.StartsWith('{\rtf1', [StringComparison]::Ordinal)) {
+            throw "Installer document is not valid RTF: $documentName"
+        }
+    }
+}
+finally {
+    if (Test-Path -LiteralPath $documentProbe) {
+        Remove-Item -LiteralPath $documentProbe -Recurse -Force
     }
 }
 

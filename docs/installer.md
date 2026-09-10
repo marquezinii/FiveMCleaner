@@ -27,14 +27,25 @@ Windows realmente for executada.
 ## Experiência do instalador
 
 - português do Brasil e inglês, escolhidos pela interface do Windows;
-- tema moderno que acompanha o modo claro/escuro do sistema, com arte lateral
-  clara e escura gerada a partir do ícone oficial;
-- ícone e imagem oficiais do Ralven;
+- entrada limpa com a marca do Ralven, explicação breve e uma ação principal;
+- tema moderno que acompanha o modo claro/escuro do sistema, com ícone oficial,
+  tipografia Segoe UI e dimensões confortáveis para Windows 10 e 11;
+- licença e informações completas convertidas para RTF no build. Títulos,
+  listas, destaques, caracteres Unicode e links são preservados, e o texto
+  extraído do RTF é comparado semanticamente com a fonte antes da compilação;
+- instalação apresentada em quatro etapas reais: preparação, cópia do pacote,
+  criação dos atalhos/preferências e finalização. O percentual exibido vem do
+  progresso nativo do Inno, sem atraso ou valor simulado;
+- detalhes técnicos recolhidos por padrão e exibidos, sem trocar de página,
+  somente quando a pessoa escolhe **Mostrar detalhes**;
+- etapas distinguem pendente, em andamento e concluído; falhas interrompem o
+  fluxo e permanecem evidentes nos diálogos nativos do instalador;
 - atalhos do menu Iniciar e desinstalação completa, com rótulos localizados;
 - identidade de shell estável `Ralven.Ralven` nos atalhos, mantendo nome e ícone
   oficiais independentemente do caminho de instalação;
 - atalhos da Área de Trabalho e de inicialização com o Windows habilitados por
-  padrão (ambos alteráveis na instalação e depois em Configurações);
+  padrão em instalações novas, ambos podendo ser desmarcados pela pessoa e
+  alterados depois em Configurações;
 - página final lembra que atualizações futuras vêm pelo app, com confirmação;
 - compressão `lzma2/ultra` no pacote offline self-contained;
 - upgrade no mesmo diretório por meio de um `AppId` estável;
@@ -70,14 +81,15 @@ $installer = Resolve-Path .\artifacts\installer\Ralven-Setup-1.0.0-win-x64.exe
 Para uma simulação de release, `-Harden` é obrigatório; sem esse switch o build
 é deliberadamente limpo e serve apenas ao desenvolvimento. O script primeiro
 executa a verificação de segurança e o publish self-contained protegido,
-depois compila o instalador, gera SHA-256 e um manifesto de release. Se o Inno
+gera e valida os documentos RTF, depois compila o instalador, gera SHA-256 e um
+manifesto de release. Se o Inno
 Setup 7.0.2 x64 não estiver instalado, o build baixa a release imutável oficial para
 um cache dentro de `artifacts/.tools`, exige o SHA-256 fixado no script e valida
 a assinatura Authenticode de `Pyrsys B.V.` antes de executar o compilador.
 
 O teste instala silenciosamente em uma pasta temporária sob `artifacts`, confere
-byte a byte todo o payload, valida o padrão desktop-on/startup-on, o opt-out da
-inicialização, o handoff `/AUTOUPDATE=yes`, a preservação de
+byte a byte todo o payload, valida o padrão desktop-on/startup-on e o opt-out
+individual de cada task, o handoff `/AUTOUPDATE=yes`, a preservação de
 dados em `%LOCALAPPDATA%\Ralven` no uninstall silencioso, executa a
 desinstalação e confirma a remoção. Ele se recusa a rodar se encontrar uma
 instalação real ou uma entrada de inicialização existente. Somente para uma
