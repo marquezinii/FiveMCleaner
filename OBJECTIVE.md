@@ -1,8 +1,7 @@
 # Objetivo da tarefa
 
-- **Agente:** Codex
-- **Objetivo:** transformar o dashboard administrativo do Ralven em um centro de comando para acompanhamento, diagnóstico e operação do produto.
-- **Escopo:** auditoria das branches e worktrees ativas; métricas agregadas de telemetria, contas, updater, cobrança e Ralven AI; navegação, filtros, busca, drill-down, alertas operacionais, comunicação ao vivo, responsividade, acessibilidade, testes e documentação do dashboard/Worker.
-- **Fora do escopo:** ampliar coleta de dados pessoais, expor registros individuais de contas ou cobrança, alterar autenticação do dashboard, publicar infraestrutura ou integrar a branch na `dev/proxima-versao`.
-- **Critérios de conclusão:** nenhuma nova coleta do cliente; endpoints administrativos retornam somente agregados; ações sensíveis exigem confirmação; frontend funciona em desktop e telas estreitas; testes do dashboard e Worker, build aplicável e inspeção visual passam.
-- **Resultado entregue:** dashboard reorganizado como centro de comando com cinco áreas, 14 visualizações, comparação de confiabilidade por versão, busca e drill-down de incidentes, sinais operacionais, métricas agregadas de contas/IA/cobrança/updater e fluxo de aviso ao vivo protegido. A auditoria incluiu `dev/proxima-versao`, branches remotas, PRs abertas e todas as worktrees ativas; trabalhos ainda isolados de performance local, Ralven AI, conta e observabilidade foram considerados sem copiar contratos incompletos. Testes do dashboard (60/60) e Worker (263/263), sintaxe, diff e inspeção visual em 2560 px, 768 px e 390 px passaram; nenhuma publicação foi feita.
+- **Agente**: Codex
+- **Objetivo**: Tornar explícita a exigência de criar uma nova branch e uma nova worktree exclusivas para cada tarefa com alterações, mesmo quando já existir uma branch ou worktree semelhante.
+- **Escopo**: Alterar somente a governança Git/worktree em `AI_RULES.md`; não modificar código, estado do projeto ou branches de integração.
+- **Critérios de conclusão**: A regra deve estar explícita e coerente com o fluxo de preparação de tarefas; a alteração deve ser revisada, commitada e enviada em PR para `dev/proxima-versao`.
+- **Resultado entregue**: `AI_RULES.md` agora exige uma nova branch e uma nova worktree por tarefa, sem reutilizar worktrees semelhantes; PR destinado a `dev/proxima-versao`.
