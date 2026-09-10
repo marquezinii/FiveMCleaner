@@ -111,25 +111,34 @@ public sealed partial class MainViewModel
         var previousState = (lastFiveMSessionPresence, fiveMSessionTracker.IsActive, fiveMSessionTracker.IsEndConfirmationPending);
         try
         {
-            var presence = await Task.Run(() => fiveMSessionProbe(root));
-            if (!isFiveMSessionMonitoring || generation != fiveMSessionGeneration)
+            try
             {
-                return;
+                var presence = await Task.Run(() => fiveMSessionProbe(root));
+                if (!isFiveMSessionMonitoring || generation != fiveMSessionGeneration)
+                {
+                    return;
+                }
+
+                lastFiveMSessionPresence = presence;
+                fiveMSessionTracker.Observe(presence, DateTimeOffset.UtcNow);
+            }
+            catch (Exception exception) when (exception is not (
+                OutOfMemoryException or StackOverflowException or AccessViolationException))
+            {
+                if (!isFiveMSessionMonitoring || generation != fiveMSessionGeneration)
+                {
+                    return;
+                }
+
+                lastFiveMSessionPresence = FiveMSessionPresence.Indeterminate;
+                fiveMSessionTracker.Observe(FiveMSessionPresence.Indeterminate, DateTimeOffset.UtcNow);
             }
 
-            lastFiveMSessionPresence = presence;
-            fiveMSessionTracker.Observe(presence, DateTimeOffset.UtcNow);
-        }
-        catch (Exception exception) when (exception is not (
-            OutOfMemoryException or StackOverflowException or AccessViolationException))
-        {
-            if (!isFiveMSessionMonitoring || generation != fiveMSessionGeneration)
+            if (liveMetricsEnabled
+                || previousState != (lastFiveMSessionPresence, fiveMSessionTracker.IsActive, fiveMSessionTracker.IsEndConfirmationPending))
             {
-                return;
+                RefreshFiveMSessionMonitorPresentation();
             }
-
-            lastFiveMSessionPresence = FiveMSessionPresence.Indeterminate;
-            fiveMSessionTracker.Observe(FiveMSessionPresence.Indeterminate, DateTimeOffset.UtcNow);
         }
         finally
         {
@@ -138,12 +147,6 @@ public sealed partial class MainViewModel
             {
                 _ = ProbeFiveMSessionAsync();
             }
-        }
-
-        if (liveMetricsEnabled
-            || previousState != (lastFiveMSessionPresence, fiveMSessionTracker.IsActive, fiveMSessionTracker.IsEndConfirmationPending))
-        {
-            RefreshFiveMSessionMonitorPresentation();
         }
     }
 
