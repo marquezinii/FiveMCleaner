@@ -5,7 +5,7 @@
 | Área | Linguagem/runtime | Gerenciador e build | Evidência |
 | --- | --- | --- | --- |
 | Aplicativo Windows | C# 14, .NET SDK 10.0.303, `net10.0-windows10.0.19041.0` | NuGet com versões centralizadas; MSBuild/Solution XML | `global.json`, `Directory.Build.props`, `Directory.Packages.props`, `Ralven.slnx` |
-| Worker e dashboard | JavaScript ES modules, Node.js 24.19.0 | npm com lockfiles; runtime Cloudflare Workers/Pages | `.node-version`, `infra/cloudflare-worker/package.json`, `infra/dashboard/package.json` |
+| Worker, dashboard e site | JavaScript/TypeScript, Node.js 24.19.0 | npm com lockfiles; Cloudflare Workers/Pages e export estático Next | `.node-version` e os três `package.json` |
 
 O desktop é a aplicação principal; Worker, dashboard e site são superfícies implantáveis separadamente.
 
@@ -20,7 +20,9 @@ O desktop é a aplicação principal; Worker, dashboard e site são superfícies
 | `ProtectedData` | 10.0.11 | DPAPI para sessão e estado sensível local | `Directory.Packages.props`, `src/Ralven.UpdateRuntime/Ralven.UpdateRuntime.csproj` |
 | Cloudflare Workers + D1 | plataforma | API, autenticação administrativa, telemetria, bugs e manifestos | `infra/cloudflare-worker/wrangler.toml`, `infra/cloudflare-worker/src/index.js` |
 
-O Worker e o dashboard não têm dependências npm de produção; usam APIs nativas da plataforma e do navegador.
+O Worker e o dashboard não têm dependências npm de produção; usam APIs nativas
+da plataforma e do navegador. O site usa Next e React nas versões fixadas em
+`website/package.json`.
 
 ## 3) Ferramentas de desenvolvimento
 
@@ -29,7 +31,7 @@ O Worker e o dashboard não têm dependências npm de produção; usam APIs nati
 | Microsoft.Testing.Platform + xUnit v3 | Suíte .NET | `global.json`, `tests/Ralven.Tests/Ralven.Tests.csproj` |
 | coverlet.MTP | Cobertura .NET na CI | `Directory.Packages.props`, `.github/workflows/ci.yml` |
 | `node:test` | Testes do Worker e dashboard | manifests em `infra/` |
-| Wrangler 4.127 | Desenvolvimento, migrations e deploy do Worker | `infra/cloudflare-worker/package.json` |
+| Wrangler 4.129 | Desenvolvimento, migrations e deploy do Worker | `infra/cloudflare-worker/package.json` |
 | Obfuscar / SBOM Tool | Hardening e SBOM dos artefatos | `.config/dotnet-tools.json`, `.github/workflows/ci.yml` |
 | PowerShell / Inno Setup | Build, verificações e instalador | `scripts/`, `installer/Ralven.iss` |
 

@@ -140,21 +140,24 @@ anterior. Logs detalhados ficam locais; eventos essenciais sanitizados chegam à
 
 ## Publicação no GitHub
 
-O workflow `.github/workflows/release.yml` só aceita disparo manual. O primeiro
-job compila e testa o código limpo sem produzir candidato publicável. Um job
-separado, protegido pelo ambiente `release-signing`, recompila, ofusca, valida
-diretamente o runtime protegido e então assina os manifestos de update e broker
-com chaves online distintas. Mappings de diagnóstico saem desse ambiente apenas
-como bundle AES-256-GCM autenticado; releases publicadas preservam esse bundle
-criptografado no R2 sem anexá-lo à release pública. A criação pública exige uma
-tag exata (`vX.Y.Z` ou
-`vX.Y.Z-preview`), `publish=true`, o canal correspondente e aprovação manual
-do ambiente GitHub `production`.
+O workflow `.github/workflows/release.yml` é iniciado por uma tag estável exata
+`vX.Y.Z` ou por `workflow_dispatch` controlado. Antes de qualquer segredo, ele
+confirma que a tag identifica o `origin/main` atual e compila/testa somente o
+código limpo, sem produzir candidato publicável. Um job separado, protegido
+pelo ambiente `release-signing`, recompila, ofusca e valida diretamente o
+runtime protegido antes de assinar os manifestos de update e broker com chaves
+online distintas. Mappings de diagnóstico saem desse ambiente apenas como bundle
+AES-256-GCM autenticado, preservado no R2 e nunca anexado à release pública. A
+publicação exige também a aprovação manual do ambiente GitHub `production`; o
+`workflow_dispatch` permite validar uma tag sem publicar ou retomar de forma
+controlada uma publicação interrompida.
 
 Antes de criar a release, o workflow repete build, testes, instalação e
 desinstalação; gera checksums; assina e verifica os manifestos do runtime e do
-broker; aplica o schema D1; implanta o Worker/feed; e produz uma atestação de
-proveniência do instalador. O binário permanece sem assinatura de código até
+broker; aplica o schema D1; implanta e verifica o Worker, o dashboard e o feed;
+gera as notas a partir do `CHANGELOG.md`; e produz uma atestação de proveniência
+do instalador. Quando a GitHub Release é criada, um dispatch explícito aciona a
+notificação estável no Discord. O binário permanece sem assinatura de código até
 existir um certificado Authenticode. SHA-256 e atestação aumentam a
 transparência, mas não substituem reputação ou uma assinatura pública.
 
@@ -173,7 +176,7 @@ Fontes oficiais usadas no desenho:
 - [Inno Setup: tema moderno e dinâmico](https://jrsoftware.org/ishelp/topic_setup_wizardstyle.htm)
 - [Inno Setup: Restart Manager](https://jrsoftware.org/ishelp/topic_setup_closeapplications.htm)
 - [Inno Setup: verificação dos downloads oficiais](https://jrsoftware.org/isdl-verify.php)
-- [GitHub: releases em workflows](https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch)
+- [GitHub: releases em workflows](https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#push)
 
 ## Procedimento de release
 
@@ -182,14 +185,15 @@ Fontes oficiais usadas no desenho:
    `Build-Installer.ps1 -Harden`, `Test-HardenedRuntime.ps1` e
    `Test-Installer.ps1`.
 3. Faça commit, envie `main`, crie a tag exata `vX.Y.Z` e envie a tag.
-4. Em **Actions → Build installer and publish release**, escolha a tag, canal
-   `stable` e `publish=true`.
+4. Aprove os ambientes `release-signing` e `production` após conferir o
+   candidato e a origem validada pelo workflow.
 5. Verifique a GitHub Release de notas e, em `vemryx.com/Ralven/`, o instalador,
-   runtime ZIP, checksums e os dois manifestos assinados antes de divulgar.
+   runtime ZIP, checksums e os dois manifestos assinados; confira também o
+   dashboard publicado antes de divulgar.
 
-O workflow nunca publica por `push`; a etapa de criação de release exige o
-disparo manual com `publish=true`. A página pública de download é
-`https://vemryx.com/Ralven/`, gratuita e sem login para
+O push da tag prepara automaticamente a release, mas os ambientes protegidos
+mantêm as duas confirmações humanas nos pontos que acessam chaves ou alteram
+produção. A página pública de download é `https://vemryx.com/Ralven/`, gratuita e sem login para
 visitantes. O botão da página usa `Ralven-Setup-latest-win-x64.exe`; a mesma
 release também publica o instalador versionado e o alias
 `Ralven-Setup-latest-win-x64.exe` no bucket privado da Vemryx.

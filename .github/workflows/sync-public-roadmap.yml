@@ -16,8 +16,9 @@ jobs:
       - name: Checkout the integrated roadmap
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Validate roadmap JSON syntax
-        run: python -m json.tool docs/public-roadmap.json > /dev/null
+      - name: Validate repository policy and roadmap contract
+        shell: pwsh
+        run: ./scripts/Test-RepositoryPolicy.ps1
 
       - name: Require the site dispatch token
         env:

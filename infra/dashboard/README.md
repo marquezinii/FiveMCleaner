@@ -73,12 +73,14 @@ accounts that made an AI request in the selected period; it is not presented as
 general app activity. No endpoint returns UID, username, e-mail, provider ID or
 interactive AI content.
 
-## Re-deploying
+## Deploy
 
-```bash
-npx wrangler pages project create ralven-dashboard --production-branch=production # one-time cutover only
-npx wrangler pages deploy . --project-name=ralven-dashboard --branch=production
-```
+O push de uma tag estável dispara o workflow de release. Depois dos gates dos
+ambientes `release-signing` e `production`, ele publica somente `index.html`,
+`_headers` e `assets/` com `--project-name=ralven-dashboard` e confirma no
+endereço público o commit implantado. Para
+retomar uma publicação interrompida, use o `workflow_dispatch` com a mesma tag
+e `publish=true`; o fluxo repete as validações e preserva os mesmos gates.
 
 `assets/app.js` usa `https://api.vemryx.com` como API padrão; `location.origin`
 continua sendo o endereço do próprio dashboard. O nome do projeto Pages e os

@@ -1309,7 +1309,7 @@ internal sealed class SyntheticWindowsApplicationInventoryInspector
                     "OBS Studio", "32.0", "OBS Project", null,
                     WindowsApplicationScope.LocalMachine, WindowsApplicationArchitecture.X64),
                 new WindowsInstalledApplication(
-                    "Ralven", "1.6.1", null, null,
+                    "Ralven", typeof(SyntheticWindowsApplicationInventoryInspector).Assembly.GetName().Version?.ToString(3), null, null,
                     WindowsApplicationScope.CurrentUser, WindowsApplicationArchitecture.X64)
             ],
             [

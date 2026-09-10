@@ -43,12 +43,7 @@ if ($previous.Tag -eq 'v0.2.0' -and $Version -eq '1.0.0') {
     exit 0
 }
 
-$patchVersion = if ($previous.Parts.Patch -lt 99) {
-    "{0}.{1}.{2}" -f $previous.Parts.Major, $previous.Parts.Minor, ($previous.Parts.Patch + 1)
-}
-else {
-    "{0}.{1}.0" -f $previous.Parts.Major, ($previous.Parts.Minor + 1)
-}
+$patchVersion = "{0}.{1}.{2}" -f $previous.Parts.Major, $previous.Parts.Minor, ($previous.Parts.Patch + 1)
 
 $minorVersion = "{0}.{1}.0" -f $previous.Parts.Major, ($previous.Parts.Minor + 1)
 $majorVersion = "{0}.0.0" -f ($previous.Parts.Major + 1)

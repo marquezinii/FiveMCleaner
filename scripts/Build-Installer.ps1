@@ -162,11 +162,11 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
     $Version = Get-ProjectVersion -Workspace $workspace
 }
 
-$versionMatch = [regex]::Match($Version, '^(?<core>\d+\.\d+\.\d+)(?<suffix>-[0-9A-Za-z][0-9A-Za-z.-]*)?$')
+$versionMatch = [regex]::Match($Version, '^\d+\.\d+\.\d+$')
 if (-not $versionMatch.Success) {
-    throw "Version must be SemVer-like (for example 1.2.3 or 1.2.3-preview): $Version"
+    throw "Version must be numeric SemVer (for example 1.2.3): $Version"
 }
-$numericVersion = "$($versionMatch.Groups['core'].Value).0"
+$numericVersion = "$Version.0"
 
 Assert-UnderArtifacts $publishDirectory
 Assert-UnderArtifacts $installerOutput
