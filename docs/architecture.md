@@ -111,6 +111,12 @@ gerenciada de `NotifyIcon` não expõe um retângulo estável do ícone; portant
 âncora visual é o ponteiro usado para invocar o menu, sem tentar acessar a
 estrutura interna da barra de tarefas.
 
+## Diálogos WPF
+
+As janelas secundárias compartilham `DialogWindow`, com modalidade nativa,
+backdrop visual e limites por monitor/DPI. A escolha por fluxo, os estilos e
+a validação reproduzível estão em [Janelas secundárias e diálogos](dialogs.md).
+
 ## Componentes
 
 ## Autenticação Firebase
@@ -172,7 +178,7 @@ exclusão do perfil pode remover o vínculo. Uma criação incerta continua bloq
 | `Ralven.App`       | WPF, navegação, prévia, progresso e confirmação                     | APIs administrativas ou detalhes de registro             |
 | `Ralven.Contracts` | DTOs, IDs, estados (inclusive transacionais), erros e contratos entre processos | WPF ou implementação Windows                  |
 | `Ralven.Core`      | casos de uso, composição de perfis, políticas, transação e rollback | controles visuais ou comandos shell                      |
-| `Ralven.Windows`   | descoberta de hardware/instalação e adaptadores Windows/FiveM       | decisão de qual perfil o usuário deve escolher           |
+| `Ralven.Windows`   | descoberta de hardware/instalação e adaptadores Windows/Jogos       | decisão de qual perfil o usuário deve escolher           |
 | `Ralven.Broker`    | executor elevado com allowlist mínima                               | navegação, telemetria ou lógica de produto ampla         |
 | `Ralven.Tests`     | contratos, políticas, falhas, rollback e doubles de sistema         | dependência de uma instalação real para testes unitários |
 
@@ -190,7 +196,7 @@ flowchart LR
   C --> W["Windows adapters · operações sem elevação"]
   C --> K["Contracts · mensagens tipadas"]
   K -->|"consentimento + UAC"| B["Broker elevado · allowlist"]
-  W --> F["FiveM Legacy e Windows"]
+  W --> F["Windows e integrações de Jogos"]
   B --> S["Configurações administrativas permitidas"]
   C --> R["Snapshots e relatório local"]
   W -. "Enhanced detectado" .-> X["Bloqueio seguro"]
@@ -359,6 +365,14 @@ pausam o timer e cancelam a amostra em curso; a retomada descarta resultados
 antigos e obtém uma amostra nova sem sobrepor coletas. A leitura da GPU consulta
 a categoria de contadores em lote, pareando as duas amostras pelo nome da
 instância. Instâncias sem par não viram utilização inventada.
+
+O painel oferece uma série selecionada entre CPU, GPU, memória, disco e rede,
+com percentuais em escala fixa e throughput em escala dinâmica explicitamente
+rotulada. Quando uma raiz FiveM Legacy já foi diagnosticada, o alvo FiveM troca
+a captura geral por CPU e working set agregado apenas dos processos com nome e
+imagem validados dentro dessa raiz. Essa leitura usa contabilidade do processo
+fornecida pelo Windows; não lê conteúdo da memória, não usa hook/injeção e não
+estima GPU, disco, rede, FPS ou frame time por processo.
 
 Essa suspensão é exclusiva das métricas de apresentação. O monitor de sessão
 continua consultando a presença a cada cinco segundos; mudanças de estado
@@ -567,12 +581,23 @@ O MVP grava somente sob `%LOCALAPPDATA%\Ralven`:
 - `Transactions/<id>.json`: plano, estados por ação e snapshots pequenos necessários ao rollback;
 - `Requests/<id>.json`: solicitação efêmera e de uso único consumida atomicamente pelo broker;
 - `settings.json`: preferências do próprio Ralven;
-- `crash.log`: exceções fatais locais, criado apenas quando necessário.
+- `Logs/crash.log`: exceções fatais locais, criado apenas quando necessário.
+
+Os dados descartáveis do próprio aplicativo usam uma allowlist separada dos
+dados duráveis. Downloads de atualização, logs e temporários reconhecidos podem
+ser calculados e removidos manualmente; configurações, login, filas de
+telemetria, journals, quarentenas e estado anti-downgrade ficam fora dela. O
+inventário completo e o contrato de segurança estão em
+[`docs/cache.md`](cache.md).
 
 Esses arquivos têm durabilidades diferentes e isso muda o que pode ser alterado:
 
 - `Transactions/<id>.json` é **durável entre versões**. É o único registro que mantém uma execução passada auditável e reversível, e um journal escrito por uma versão anterior precisa continuar carregando. Enums serializam como string camelCase (`allowIntegerValues: false`), e `UnmappedMemberHandling.Disallow` significa que **remover** uma propriedade do journal quebra JSON antigo — acrescentar é seguro, remover não. Ver `TransactionState`/`ActionJournalState`/`ActionExecutionOutcome` em "Resultado".
 - `Requests/<id>.json` é **efêmero**: reivindicado e apagado pelo broker, com janela de validade curta. Seu schema pode evoluir junto com o build.
+- `settings.json` é lido de forma tolerante a chaves desconhecidas, diferenças
+  de capitalização e comentários, mas sempre gravado de forma atômica. A restauração
+  de padrões afeta somente preferências gerais; consentimento de privacidade,
+  conta e marcadores internos permanecem preservados.
 
 Caches não são copiados para o journal. Durante uma limpeza, arquivos allowlisted são movidos para uma quarentena dentro do próprio volume; a ação restaura essa quarentena se falhar antes do commit e a remove somente ao confirmar a transação.
 

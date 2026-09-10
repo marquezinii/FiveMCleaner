@@ -305,7 +305,7 @@
   <data name="Settings.About.Title" xml:space="preserve"><value>About</value></data>
   <data name="Settings.About.Description" xml:space="preserve"><value>What Ralven is, who builds it and where to find help.</value></data>
   <data name="Settings.About.AppName" xml:space="preserve"><value>Ralven</value></data>
-  <data name="Settings.About.Tagline" xml:space="preserve"><value>More performance. Less complexity.</value></data>
+  <data name="Settings.About.Tagline" xml:space="preserve"><value>AI-powered Windows management and optimization platform.</value></data>
   <data name="Settings.About.Repository" xml:space="preserve"><value>Source code on GitHub</value></data>
   <data name="Settings.About.Changelog" xml:space="preserve"><value>Version history</value></data>
   <data name="Settings.About.Discord.Title" xml:space="preserve"><value>Join our official Discord</value></data>
@@ -313,6 +313,10 @@
   <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Open Discord</value></data>
   <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Join our official Discord</value></data>
   <data name="LiveAlert.Dismiss" xml:space="preserve"><value>Dismiss</value></data>
+  <data name="LiveAlert.Reopen" xml:space="preserve"><value>Open active notice</value></data>
+  <data name="LiveAlert.Title.Info" xml:space="preserve"><value>Information from Ralven</value></data>
+  <data name="LiveAlert.Title.Important" xml:space="preserve"><value>Important Ralven notice</value></data>
+  <data name="LiveAlert.Title.Critical" xml:space="preserve"><value>Critical Ralven notice</value></data>
   <data name="Account.TitleBar.SignInPrompt" xml:space="preserve"><value>Sign in / Register</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Scan PC again</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Optimize PC</value></data>
@@ -340,9 +344,9 @@
   <data name="Plan.VerifiedActions" xml:space="preserve"><value>{0} verified actions  •  {1}</value></data>
   <data name="Plan.Review" xml:space="preserve"><value>Review plan</value></data>
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Optimize now</value></data>
-  <data name="Optimizer.Title" xml:space="preserve"><value>FiveM Optimizer</value></data>
-  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Prepare your computer for FiveM with fewer interruptions, unnecessary processes and cache issues.</value></data>
-  <data name="Optimizer.General.Title" xml:space="preserve"><value>General Optimizer</value></data>
+  <data name="Optimizer.Title" xml:space="preserve"><value>Windows optimization</value></data>
+  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Review safe Windows improvements before applying them.</value></data>
+  <data name="Optimizer.General.Title" xml:space="preserve"><value>Windows optimization</value></data>
   <data name="Optimizer.General.Subtitle" xml:space="preserve"><value>Choose a profile and review what will change before you begin.</value></data>
   <data name="Optimizer.FiveM.Title" xml:space="preserve"><value>FiveM Optimizer</value></data>
   <data name="Optimizer.FiveM.Subtitle" xml:space="preserve"><value>Prepare FiveM on GTAV Legacy with dedicated diagnostics, settings and reversible actions.</value></data>
@@ -402,9 +406,9 @@
   <data name="Settings.SaveFailed" xml:space="preserve"><value>We couldn't save your settings. Your latest choices may not persist after restart.</value></data>
   <data name="Settings.SaveRetry" xml:space="preserve"><value>Try again</value></data>
   <data name="Settings.General.Title" xml:space="preserve"><value>General</value></data>
-  <data name="Settings.General.Description" xml:space="preserve"><value>Choose how Ralven looks, starts, and stays up to date.</value></data>
+  <data name="Settings.General.Description" xml:space="preserve"><value>Choose how Ralven looks, starts, runs in the background, and checks for updates.</value></data>
   <data name="Settings.General.Interface" xml:space="preserve"><value>Interface</value></data>
-  <data name="Settings.General.Startup" xml:space="preserve"><value>Startup and background</value></data>
+  <data name="Settings.General.Startup" xml:space="preserve"><value>Startup and notification area</value></data>
   <data name="Settings.General.Updates" xml:space="preserve"><value>Updates</value></data>
   <data name="Settings.Language.Title" xml:space="preserve"><value>Language</value></data>
   <data name="Settings.Language.Description" xml:space="preserve"><value>Follow Windows automatically or choose a language.</value></data>
@@ -418,15 +422,23 @@
   <data name="Settings.Appearance.System" xml:space="preserve"><value>System</value></data>
   <data name="Settings.Appearance.Dark" xml:space="preserve"><value>Dark</value></data>
   <data name="Settings.Appearance.Light" xml:space="preserve"><value>Light</value></data>
-  <data name="Settings.CloseBehavior.Title" xml:space="preserve"><value>Minimize to system tray</value></data>
+  <data name="Settings.CloseBehavior.Title" xml:space="preserve"><value>Keep running in the background</value></data>
   <data name="Settings.StartWithWindows.Title" xml:space="preserve"><value>Start with Windows</value></data>
-  <data name="Settings.StartWithWindows.Description" xml:space="preserve"><value>Open Ralven after you sign in.</value></data>
-  <data name="Settings.StartMinimized.Title" xml:space="preserve"><value>Start minimized</value></data>
-  <data name="Settings.StartMinimized.Description" xml:space="preserve"><value>When opened with Windows, keep Ralven in the notification area.</value></data>
+  <data name="Settings.StartWithWindows.Description" xml:space="preserve"><value>Open Ralven automatically after you sign in to Windows.</value></data>
+  <data name="Settings.StartMinimized.Title" xml:space="preserve"><value>Start in the background</value></data>
+  <data name="Settings.StartMinimized.Description" xml:space="preserve"><value>When opened with Windows, start only in the notification area.</value></data>
   <data name="Settings.AutomaticUpdates.Title" xml:space="preserve"><value>Check for updates automatically</value></data>
   <data name="Settings.AutomaticUpdates.Description" xml:space="preserve"><value>Check for a newer public version when Ralven starts.</value></data>
-  <data name="Settings.UpdateNotifications.Title" xml:space="preserve"><value>Update notifications</value></data>
-  <data name="Settings.UpdateNotifications.Description" xml:space="preserve"><value>Show a Windows notification when Ralven finds a new version.</value></data>
+  <data name="Settings.UpdateNotifications.Title" xml:space="preserve"><value>Notify me about new versions</value></data>
+  <data name="Settings.UpdateNotifications.Description" xml:space="preserve"><value>Show a Windows notification when the automatic check finds a new version.</value></data>
+  <data name="Settings.RestoreDefaults.Section" xml:space="preserve"><value>Defaults</value></data>
+  <data name="Settings.RestoreDefaults.Title" xml:space="preserve"><value>Restore default settings</value></data>
+  <data name="Settings.RestoreDefaults.Description" xml:space="preserve"><value>Restores language, appearance, startup, background, and update preferences. Account and privacy settings are not changed.</value></data>
+  <data name="Settings.RestoreDefaults.Button" xml:space="preserve"><value>Restore</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Title" xml:space="preserve"><value>Restore default settings?</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Message" xml:space="preserve"><value>Your general preferences will return to Ralven defaults. Account and privacy settings will be preserved.</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Confirm" xml:space="preserve"><value>Restore</value></data>
   <data name="Safety.Limits.Title" xml:space="preserve"><value>Safety limits</value></data>
   <data name="Safety.Limits.Description" xml:space="preserve"><value>Ralven never disables Defender, Firewall, UAC, Windows Update, the page file or critical services; it does not use BCDEdit/HPET, injection, hooks or Realtime priority.</value></data>
   <data name="Safety.EnhancedBlocked" xml:space="preserve"><value>FiveM Enhanced: blocked in this version until its official layout has been tested.</value></data>
@@ -528,9 +540,9 @@
   <data name="Diagnosis.CloseGtaVSafely" xml:space="preserve"><value>Close GTA V to optimize safely</value></data>
   <data name="Diagnosis.RecommendedProfile" xml:space="preserve"><value>{0} profile recommended for this PC</value></data>
   <data name="Diagnosis.LegacyReady" xml:space="preserve"><value>Diagnostics found the known Legacy layout and prepared compatible actions.</value></data>
-  <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>Ralven prepared a Windows plan from this PC's local capacity. FiveM has its own dedicated experience under Games.</value></data>
+  <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>Ralven prepared a Windows plan from this PC's local capacity. Supported game integrations are available separately under Games.</value></data>
   <data name="Diagnosis.EnhancedUnsupported" xml:space="preserve"><value>The Enhanced edition uses a new launcher and configurable cache. This version will not apply Legacy rules to it.</value></data>
-  <data name="Diagnosis.InstallLegacy" xml:space="preserve"><value>General Windows optimization is available now. Install or select FiveM Legacy only to enable its dedicated game actions.</value></data>
+  <data name="Diagnosis.InstallLegacy" xml:space="preserve"><value>Windows optimization is ready. Choose Games when you want to set up a supported integration and its dedicated actions.</value></data>
   <data name="Diagnosis.FreeDisk" xml:space="preserve"><value>{0} GB free</value></data>
   <data name="History.ProfileTitle" xml:space="preserve"><value>{0} profile</value></data>
   <data name="History.WindowsGamingTitle" xml:space="preserve"><value>Windows gaming settings</value></data>
@@ -592,11 +604,14 @@
   <data name="Tray.Message" xml:space="preserve"><value>Click the tray icon to return.</value></data>
   <data name="Notification.UpdateAvailable.Title" xml:space="preserve"><value>Ralven update available</value></data>
   <data name="Notification.UpdateAvailable.Message" xml:space="preserve"><value>Version {0} is available. Click to open Ralven.</value></data>
-  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>When clicking X, Ralven will minimize to the system tray instead of closing.</value></data>
+  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Closing the window keeps Ralven running in the notification area.</value></data>
   <data name="Settings.Telemetry.Title" xml:space="preserve"><value>Optional reports</value></data>
   <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Share anonymous usage and performance context plus sanitized error and crash reports. Enabled by default; you can turn it off at any time.</value></data>
+  <data name="Settings.Telemetry.Summary" xml:space="preserve"><value>Help improve Ralven with anonymous technical data.</value></data>
   <data name="Settings.Privacy.Title" xml:space="preserve"><value>Privacy</value></data>
   <data name="Settings.Privacy.Description" xml:space="preserve"><value>See the essential diagnostics used to keep Ralven reliable and control all optional reports in one place.</value></data>
+  <data name="Settings.Privacy.DataDetails" xml:space="preserve"><value>View details</value></data>
+  <data name="Settings.Privacy.ReportContents" xml:space="preserve"><value>View report data</value></data>
   <data name="Settings.CrashReports.Title" xml:space="preserve"><value>Send automatic crash reports</value></data>
   <data name="Settings.CrashReports.Description" xml:space="preserve"><value>Send sanitized stack traces when Ralven crashes or hits an unexpected error.</value></data>
   <data name="PrivacyConsent.WindowTitle" xml:space="preserve"><value>Privacy and diagnostics - Ralven</value></data>
@@ -608,6 +623,7 @@
   <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>We simplified the privacy controls without adding new data. Review the single optional choice below before continuing.</value></data>
   <data name="PrivacyConsent.Essential.Title" xml:space="preserve"><value>Essential diagnostics</value></data>
   <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>We collect the minimum needed for updates, security, stability and troubleshooting: app and Windows version, architecture, updater events and technical optimization outcomes. This cannot be turned off.</value></data>
+  <data name="PrivacyConsent.Essential.Summary" xml:space="preserve"><value>Required for updates, security, and stability.</value></data>
   <data name="PrivacyConsent.Essential.Status" xml:space="preserve"><value>ALWAYS ON</value></data>
   <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Optional reports</value></data>
   <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Shares anonymous hardware, profile and feature-use context plus sanitized error and crash reports. Enabled by default; you can turn it off at any time.</value></data>
@@ -1152,6 +1168,8 @@
   <data name="Update.Completed.Detail" xml:space="preserve"><value>The update was installed and verified. Nothing else is needed.</value></data>
   <data name="Update.BlockedWhileBusy" xml:space="preserve"><value>Finish or cancel the current optimization before updating.</value></data>
   <data name="Update.ReleaseNotes" xml:space="preserve"><value>View changes</value></data>
+  <data name="Update.Dismiss" xml:space="preserve"><value>Dismiss for now</value></data>
+  <data name="Update.Reopen" xml:space="preserve"><value>Show available update</value></data>
   <data name="Update.Failed.Title" xml:space="preserve"><value>Update was not downloaded</value></data>
   <data name="Update.Failed.Detail" xml:space="preserve"><value>Nothing was installed. {0}</value></data>
   <data name="Dialog.UpdateInstall.Title" xml:space="preserve"><value>Install verified update</value></data>
@@ -1261,10 +1279,27 @@
   <data name="Settings.CheckForUpdates.Title" xml:space="preserve"><value>Check for updates</value></data>
   <data name="Settings.CheckForUpdates.Description" xml:space="preserve"><value>Manually check whether a newer public version of Ralven is available, right now.</value></data>
   <data name="Settings.CheckForUpdates.Button" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Settings.Cache.Title" xml:space="preserve"><value>Ralven cache</value></data>
+  <data name="Settings.Cache.Description" xml:space="preserve"><value>Removes only update downloads, discardable logs and temporary files created by Ralven. Settings, sign-in, avatars, history, rollback data and pending telemetry are preserved.</value></data>
+  <data name="Settings.Cache.Button" xml:space="preserve"><value>Clear cache</value></data>
+  <data name="Settings.Cache.Confirm.Title" xml:space="preserve"><value>Clear Ralven cache</value></data>
+  <data name="Settings.Cache.Confirm.Message" xml:space="preserve"><value>Clear the listed discardable Ralven cache now? Settings, sign-in, history, rollback data, and pending telemetry will be preserved.</value></data>
+  <data name="Settings.Cache.Calculating" xml:space="preserve"><value>Calculating reclaimable space…</value></data>
+  <data name="Settings.Cache.Cleaning" xml:space="preserve"><value>Cleaning cache…</value></data>
+  <data name="Settings.Cache.Empty" xml:space="preserve"><value>No reclaimable Ralven cache was found.</value></data>
+  <data name="Settings.Cache.Size" xml:space="preserve"><value>{0} reclaimable in {1} files.</value></data>
+  <data name="Settings.Cache.SizePartial" xml:space="preserve"><value>{0} found in {1} files. {2} protected or unavailable locations were skipped.</value></data>
+  <data name="Settings.Cache.Cleaned" xml:space="preserve"><value>Cache cleaned: {0} freed.</value></data>
+  <data name="Settings.Cache.Partial" xml:space="preserve"><value>Partial cleanup: {0} freed and {1} remains. {2} locations could not be removed safely.</value></data>
+  <data name="Settings.Cache.Cancelled" xml:space="preserve"><value>Cache cleanup was cancelled safely.</value></data>
+  <data name="Settings.Cache.Error" xml:space="preserve"><value>Ralven could not access the cache right now. No settings or user data were removed.</value></data>
+  <data name="Settings.Cache.DemoUnavailable" xml:space="preserve"><value>Cache access is disabled in demonstration mode.</value></data>
   <data name="Update.ManualCheck.UpToDate" xml:space="preserve"><value>You already have the latest published version.</value></data>
   <data name="Update.ManualCheck.Failed" xml:space="preserve"><value>Could not check for updates: {0}</value></data>
   <data name="GtaVBenchmark.Title" xml:space="preserve"><value>Official GTA V benchmark</value></data>
   <data name="GtaVBenchmark.Description" xml:space="preserve"><value>Launches GTA V standalone (never inside FiveM) with Rockstar's own -benchmark flag, runs 3 rounds and reports the median. GTA V must be closed first.</value></data>
+  <data name="GtaVBenchmark.Summary" xml:space="preserve"><value>Runs GTA V's built-in test. Close the game first.</value></data>
+  <data name="GtaVBenchmark.Details" xml:space="preserve"><value>How it works</value></data>
   <data name="GtaVBenchmark.RunButton" xml:space="preserve"><value>Run official benchmark</value></data>
   <data name="GtaVBenchmark.Running" xml:space="preserve"><value>Running the official GTA V benchmark (3 rounds)... this can take several minutes.</value></data>
   <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Median of {4} round(s) — avg FPS: {0:0.#}, min FPS: {1:0.#}, 1% low: {2:0.#}, 0.1% low: {3:0.#}.</value></data>
@@ -1349,10 +1384,10 @@
   <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Reported by Windows</value></data>
   <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>FREE MEMORY</value></data>
   <data name="Dashboard.Kpi.Memory.Detail" xml:space="preserve"><value>of {0:0.0} GB total</value></data>
-  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>FIVEM CACHE</value></data>
-  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Reviewed by the optimizer</value></data>
+  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>GAME CACHE</value></data>
+  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Reviewed by the game integration</value></data>
   <data name="Dashboard.Kpi.Cache.None" xml:space="preserve"><value>None</value></data>
-  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>No cache found on disk</value></data>
+  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>No game-integration cache found on disk</value></data>
   <data name="Dashboard.Pressure.Low" xml:space="preserve"><value>Low</value></data>
   <data name="Dashboard.Pressure.Moderate" xml:space="preserve"><value>Moderate</value></data>
   <data name="Dashboard.Pressure.High" xml:space="preserve"><value>High</value></data>
@@ -1361,6 +1396,29 @@
   <data name="Dashboard.LivePerformance.Trend" xml:space="preserve"><value>AVERAGE AND PEAK</value></data>
   <data name="Dashboard.LivePerformance.Window" xml:space="preserve"><value>Last minute</value></data>
   <data name="Dashboard.LivePerformance.Now" xml:space="preserve"><value>now</value></data>
+  <data name="Dashboard.LivePerformance.FiveMDescription" xml:space="preserve"><value>Local CPU and memory use from verified FiveM Legacy processes, without hooks or injection.</value></data>
+  <data name="Dashboard.LivePerformance.Target.System" xml:space="preserve"><value>System</value></data>
+  <data name="Dashboard.LivePerformance.Target.FiveM" xml:space="preserve"><value>FiveM</value></data>
+  <data name="Dashboard.LivePerformance.Target.FiveMHelp" xml:space="preserve"><value>Available when a FiveM Legacy installation is detected.</value></data>
+  <data name="Dashboard.LivePerformance.Paused" xml:space="preserve"><value>PAUSED</value></data>
+  <data name="Dashboard.LivePerformance.PausedDetail" xml:space="preserve"><value>Updates paused</value></data>
+  <data name="Dashboard.LivePerformance.UpdatedNow" xml:space="preserve"><value>Updated now</value></data>
+  <data name="Dashboard.LivePerformance.Ago60Seconds" xml:space="preserve"><value>60s ago</value></data>
+  <data name="Dashboard.LivePerformance.Current" xml:space="preserve"><value>CURRENT</value></data>
+  <data name="Dashboard.LivePerformance.Average" xml:space="preserve"><value>AVERAGE</value></data>
+  <data name="Dashboard.LivePerformance.Peak" xml:space="preserve"><value>PEAK</value></data>
+  <data name="Dashboard.LivePerformance.ChartAutomation" xml:space="preserve"><value>{0} history. Current: {1}; average: {2}; peak: {3}.</value></data>
+  <data name="Dashboard.LivePerformance.TrendValueNetwork" xml:space="preserve"><value>avg {0:0.0} MB/s · peak {1:0.0} MB/s</value></data>
+  <data name="Dashboard.LivePerformance.TrendValueGigabytes" xml:space="preserve"><value>avg {0:0.0} GB · peak {1:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.GigabytesValue" xml:space="preserve"><value>{0:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.FiveMProcessCount" xml:space="preserve"><value>Verified processes: {0}</value></data>
+  <data name="Dashboard.LivePerformance.Status.Collecting" xml:space="preserve"><value>Collecting enough samples for a sustained reading.</value></data>
+  <data name="Dashboard.LivePerformance.Status.FiveMNotRunning" xml:space="preserve"><value>FiveM is not running.</value></data>
+  <data name="Dashboard.LivePerformance.Status.FiveMReadOnly" xml:space="preserve"><value>Local read-only measurement of verified FiveM processes.</value></data>
+  <data name="Dashboard.LivePerformance.Status.MetricUnavailable" xml:space="preserve"><value>This resource is not available from Windows right now.</value></data>
+  <data name="Dashboard.LivePerformance.Status.Network" xml:space="preserve"><value>Throughput uses its own dynamic scale.</value></data>
+  <data name="Dashboard.LivePerformance.Status.SustainedHigh" xml:space="preserve"><value>High use was sustained over the last few seconds.</value></data>
+  <data name="Dashboard.LivePerformance.Status.NoSustainedHigh" xml:space="preserve"><value>No sustained high use in the latest samples.</value></data>
   <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>LAST OPTIMIZATION</value></data>
   <data name="Dashboard.LastRun.None.Title" xml:space="preserve"><value>No optimization run yet</value></data>
   <data name="Dashboard.LastRun.None.Detail" xml:space="preserve"><value>Run the optimizer to create a restore point and a report you can review here.</value></data>
@@ -1498,14 +1556,15 @@
   <data name="Settings.Account.Plan.Unavailable" xml:space="preserve"><value>Couldn't confirm your plan</value></data>
   <data name="Settings.Account.Plan.UnavailableDetail" xml:space="preserve"><value>Your current access couldn't be verified. No Pro feature is unlocked while this status is unavailable.</value></data>
   <data name="Settings.Account.Plan.Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Settings.Account.Plan.Details" xml:space="preserve"><value>View plan details</value></data>
   <data name="Settings.Account.ChangePhoto" xml:space="preserve"><value>Change photo</value></data>
   <data name="Settings.Account.PhotoLocalOnly" xml:space="preserve"><value>Your profile photo is stored only on this computer.</value></data>
   <data name="Settings.Account.Unavailable" xml:space="preserve"><value>Account access is not available in this installation.</value></data>
   <data name="Report.ViewHistoryButton" xml:space="preserve"><value>View history</value></data>
   <data name="Settings.Account.CurrentPasswordPlaceholder" xml:space="preserve"><value>Confirm to change your password, e-mail, or delete your account</value></data>
   <data name="Settings.Account.Delete" xml:space="preserve"><value>Delete account</value></data>
-  <data name="Settings.Tools.Title" xml:space="preserve"><value>Tools</value></data>
-  <data name="Settings.Tools.Description" xml:space="preserve"><value>Maintenance and support actions to use only when needed.</value></data>
+  <data name="Settings.Tools.Title" xml:space="preserve"><value>Diagnostics and support</value></data>
+  <data name="Settings.Tools.Description" xml:space="preserve"><value>Measure GTA V, report problems, and find help when you need it.</value></data>
   <data name="Settings.Account.CurrentPasswordLabel" xml:space="preserve"><value>Current password</value></data>
   <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Remove</value></data>
   <data name="Progress.CancelHelp" xml:space="preserve"><value>The current step finishes before stopping.</value></data>
@@ -1802,4 +1861,10 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Personal.Export.Failed" xml:space="preserve"><value>Could not export the history. Check the selected location and try again.</value></data>
   <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>You enter the payer information on the secure Asaas page. Ralven stores billing references, amounts, statuses and dates; never card details. Any completed refund, including a partial refund, removes access for the related paid period.</value></data>
   <data name="RalvenAi.Logo.Animate" xml:space="preserve"><value>Animate Ralven AI logo</value></data>
+  <data name="Startup.Initializing" xml:space="preserve"><value>Initializing</value></data>
+  <data name="Startup.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Dialog.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Dialog.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Dialog.Confirm" xml:space="preserve"><value>Continue</value></data>
+  <data name="Dialog.OptionalDetails" xml:space="preserve"><value>Optional details</value></data>
 </root>

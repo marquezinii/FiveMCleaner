@@ -160,6 +160,11 @@ public sealed partial class MainViewModel
 
     private void RefreshFiveMSessionMonitorAvailability()
     {
+        if (!HasLegacySessionRoot() && liveMetricsTarget == LiveMetricsTarget.FiveM)
+        {
+            SelectLiveMetricsTarget(LiveMetricsTarget.System);
+        }
+
         if (IsFiveMSessionMonitoring
             && (!HasLegacySessionRoot()
                 || !string.Equals(
@@ -172,6 +177,7 @@ public sealed partial class MainViewModel
         }
 
         RefreshFiveMSessionMonitorPresentation();
+        OnPropertyChanged(nameof(IsFiveMLiveMetricsTargetAvailable));
     }
 
     private void RefreshFiveMSessionMonitorPresentation()

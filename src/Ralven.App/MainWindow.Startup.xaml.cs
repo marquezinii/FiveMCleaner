@@ -9,6 +9,11 @@ namespace Ralven.App;
 
 public partial class MainWindow
 {
+    internal void InvalidateStartupHealthIfPending()
+    {
+        if (!demoMode && !startupCompleted) InvalidateUpdateHealthReceiptIfRequested();
+    }
+
     private static void ConfirmUpdateHealthIfRequested()
     {
         var arguments = Environment.GetCommandLineArgs();

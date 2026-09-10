@@ -7,7 +7,7 @@ O Ralven altera configurações de alto impacto potencial. Segurança, explicabi
 Uma ação aceita pelo produto precisa respeitar todos os itens abaixo:
 
 1. **Escopo conhecido** — instalação e edição foram identificadas sem ambiguidade.
-2. **Legacy somente** — GTAV Enhanced retorna bloqueio seguro.
+2. **FiveM Legacy dentro de Jogos** — a integração especializada bloqueia GTAV Enhanced com segurança.
 3. **Processos encerrados** — nenhuma nova escrita ou limpeza começa com
    processos FiveM ativos. A única exceção é a compensação imediata e estreita
    do snapshot criado pela própria execução que acabou de falhar, descrita em
@@ -288,6 +288,14 @@ condições abaixo simultaneamente:
 
 A limpeza de cache não entra implicitamente nos modos Leve, Médio ou Agressivo.
 
+A limpeza do cache gerado pelo próprio Ralven é uma ferramenta manual separada
+dos perfis e das ações sobre o FiveM. Ela aceita somente os roots e padrões
+descartáveis documentados em [`docs/cache.md`](cache.md), revalida contenção e
+reparse points antes da exclusão e preserva configurações, sessão, dados do
+usuário, telemetria pendente, transações, quarentenas e segurança do updater.
+Falhas de acesso ou arquivos em uso produzem sucesso parcial verificável; nunca
+ampliam o escopo da exclusão.
+
 ### Monitor de sessão somente leitura
 
 O monitor de sessão da Visão geral é uma capacidade manual e local, limitada ao
@@ -303,6 +311,14 @@ telemetria, persistência, broker, leitura de memória, hooks ou injeção e nã
 altera FiveM, GTA V ou Windows. Sua existência não autoriza prioridade,
 afinidade, plano de energia, timer resolution ou qualquer outra mutação por
 sessão sem arquitetura própria de rollback e recuperação.
+
+O alvo FiveM do painel de desempenho é uma leitura separada e ainda mais
+restrita ao primeiro plano: só consulta tempo de CPU e working set que o Windows
+expõe para processos com imagem validada dentro da raiz Legacy diagnosticada.
+Ele pausa com a Visão geral, não lê o conteúdo da memória do processo e não
+autoriza hooks, injeção, overlay, telemetria, persistência ou qualquer mutação.
+Métricas por processo que não possam ser obtidas com esse contrato aparecem
+como indisponíveis.
 
 ### Encerramento de processo travado
 

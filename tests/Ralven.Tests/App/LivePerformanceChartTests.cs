@@ -1,4 +1,5 @@
 using Ralven.App.Controls;
+using System.Windows;
 using Xunit;
 
 namespace Ralven.Tests.App;
@@ -19,14 +20,14 @@ public sealed class LivePerformanceChartTests
     }
 
     [Fact]
-    public void IndexAt_FollowsTheSpacingOfAHistoryThatIsStillFilling()
+    public void IndexAt_KeepsPartialHistoryOnTheRealTimeWindow()
     {
-        // Com 10 amostras, elas ocupam a largura inteira: o passo é maior, e o
-        // ponto sob o cursor precisa acompanhar esse mesmo espaçamento.
-        Assert.Equal(150d, LivePerformanceChart.StepFor(600, 5));
-        Assert.Equal(0, LivePerformanceChart.IndexAt(600, 600, 5));
-        Assert.Equal(2, LivePerformanceChart.IndexAt(300, 600, 5));
-        Assert.Equal(4, LivePerformanceChart.IndexAt(0, 600, 5));
+        var step = LivePerformanceChart.StepFor(590, 60);
+
+        Assert.Equal(0, LivePerformanceChart.IndexAt(600, 10, 600, 60, 5));
+        Assert.Equal(2, LivePerformanceChart.IndexAt(600 - 2 * step, 10, 600, 60, 5));
+        // Cinco segundos de histórico não podem parecer um minuto completo.
+        Assert.Equal(-1, LivePerformanceChart.IndexAt(10, 10, 600, 60, 5));
     }
 
     [Fact]
@@ -61,5 +62,15 @@ public sealed class LivePerformanceChartTests
         Assert.Equal(12, LivePerformanceChart.ValueToY(100, 200));
         Assert.Equal(12, LivePerformanceChart.ValueToY(140, 200));
         Assert.Equal(106, LivePerformanceChart.ValueToY(50, 200));
+    }
+
+    [Fact]
+    public void ValueToY_UsesTheSelectedMetricsOwnScaleInsideThePlot()
+    {
+        var plot = new Rect(42, 12, 550, 164);
+
+        Assert.Equal(176, LivePerformanceChart.ValueToY(0, 20, plot));
+        Assert.Equal(94, LivePerformanceChart.ValueToY(10, 20, plot));
+        Assert.Equal(12, LivePerformanceChart.ValueToY(20, 20, plot));
     }
 }

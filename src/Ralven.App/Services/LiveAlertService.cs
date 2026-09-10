@@ -14,7 +14,18 @@ public interface ILiveAlertService
 /// server's opaque version stamp (its <c>updated_at</c>), used only to tell
 /// one alert apart from the next -- never parsed as a date.
 /// </summary>
-public sealed record LiveAlertSnapshot(string? Id, string Message, bool Active);
+public enum LiveAlertSeverity
+{
+    Info,
+    Important,
+    Critical
+}
+
+public sealed record LiveAlertSnapshot(
+    string? Id,
+    string Message,
+    bool Active,
+    LiveAlertSeverity Severity = LiveAlertSeverity.Important);
 
 /// <summary>
 /// Polls the Cloudflare Worker's public <c>GET /live-alert</c> route (see
@@ -83,8 +94,13 @@ public sealed class CloudflareLiveAlertService : ILiveAlertService
             return null;
         }
 
-        return new LiveAlertSnapshot(payload.Id, payload.Message.Trim(), true);
+        return new LiveAlertSnapshot(payload.Id, payload.Message.Trim(), true, payload.Severity switch
+        {
+            "info" => LiveAlertSeverity.Info,
+            "critical" => LiveAlertSeverity.Critical,
+            _ => LiveAlertSeverity.Important,
+        });
     }
 
-    private sealed record LiveAlertPayload(string? Id, string? Message, bool Active);
+    private sealed record LiveAlertPayload(string? Id, string? Message, bool Active, string? Severity);
 }

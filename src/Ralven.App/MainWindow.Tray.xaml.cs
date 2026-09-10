@@ -10,10 +10,19 @@ public partial class MainWindow
 {
     private void LiveAlertDismiss_Click(object sender, RoutedEventArgs e) => viewModel.DismissLiveAlert();
 
+    private void ShowLiveAlertNotification_Click(object sender, RoutedEventArgs e) => viewModel.ShowLiveAlertNotification();
+
+    private void ShowUpdateBanner_Click(object sender, RoutedEventArgs e)
+    {
+        viewModel.ShowUpdateBanner();
+        ActivateNavItem(DashboardNav);
+        Navigate(DashboardPage);
+    }
+
     private void MainWindow_ActivityChanged(object? sender, EventArgs e) => RefreshLiveMetricsActivity();
 
     private void RefreshLiveMetricsActivity() => viewModel.SetLiveMetricsEnabled(
-        IsVisible && IsActive && WindowState != WindowState.Minimized
+        startupCompleted && IsVisible && IsActive && WindowState != WindowState.Minimized
         && DashboardPage.Visibility == Visibility.Visible);
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
@@ -133,6 +142,7 @@ public partial class MainWindow
     /// </summary>
     public void RequestActivation()
     {
+        activationRequested = true;
         trayMenu.IsOpen = false;
         trayIcon.SetPersistentVisibility(viewModel.MinimizeToTrayOnClose);
         Show();
