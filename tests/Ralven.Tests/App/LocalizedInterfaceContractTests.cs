@@ -699,20 +699,18 @@ public sealed partial class LocalizedInterfaceContractTests
         // recurso, e travar o texto dos comentários proibia justamente
         // documentar a regra ao lado dela.
         var styleMarkup = WithoutXmlComments(styles);
-        var primaryButtonStyle = styleMarkup[styleMarkup.IndexOf("x:Key=\"PrimaryButtonStyle\"", StringComparison.Ordinal)..styleMarkup.IndexOf("x:Key=\"SecondaryButtonStyle\"", StringComparison.Ordinal)];
-        var stylesOutsidePrimaryButton = styleMarkup.Replace(primaryButtonStyle, string.Empty, StringComparison.Ordinal);
-        Assert.Contains("ScaleTransform", primaryButtonStyle, StringComparison.Ordinal);
-        // O ContentPresenter herda Foreground do Button. Os estados alteram o
-        // Background do próprio controle, que o Border recebe por
-        // TemplateBinding; setters no Border deixavam o CTA desabilitado
-        // branco e o texto terciário praticamente invisível.
-        Assert.DoesNotContain("TextBlock.Foreground=", primaryButtonStyle, StringComparison.Ordinal);
-        Assert.DoesNotContain("TargetName=\"Root\" Property=\"Background\"", primaryButtonStyle, StringComparison.Ordinal);
-        Assert.Contains("Property=\"Background\" Value=\"{DynamicResource Surface3Brush}\"", primaryButtonStyle, StringComparison.Ordinal);
-        Assert.DoesNotContain("ScaleTransform", stylesOutsidePrimaryButton, StringComparison.Ordinal);
+        var baseButtonStyle = styleMarkup[styleMarkup.IndexOf("x:Key=\"ButtonBaseStyle\"", StringComparison.Ordinal)..styleMarkup.IndexOf("x:Key=\"PrimaryButtonStyle\"", StringComparison.Ordinal)];
+        Assert.Contains("Property=\"Height\" Value=\"36\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.Contains("Property=\"MinHeight\" Value=\"36\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.Contains("x:Name=\"FocusRing\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.Contains("Property=\"IsKeyboardFocused\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.Contains("Property=\"Opacity\" Value=\"0.55\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.Contains("BasedOn=\"{StaticResource ButtonBaseStyle}\"", styleMarkup, StringComparison.Ordinal);
+        Assert.Contains("Property=\"Background\" Value=\"{DynamicResource Surface3Brush}\"", styleMarkup, StringComparison.Ordinal);
+        Assert.DoesNotContain("ScaleTransform", styleMarkup, StringComparison.Ordinal);
         Assert.DoesNotContain("ScaleTransform", WithoutXmlComments(overview), StringComparison.Ordinal);
         Assert.DoesNotContain("ScaleTransform", WithoutXmlComments(optimizer), StringComparison.Ordinal);
-        Assert.True(Regex.Matches(styles, "Property=\"IsKeyboardFocused\"").Count >= 3);
+        Assert.True(Regex.Matches(styles, "Property=\"IsKeyboardFocused\"").Count >= 1);
         Assert.Contains("<Style TargetType=\"ScrollBar\">", styles, StringComparison.Ordinal);
         Assert.Contains("HorizontalAlignment=\"Right\"", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"5\"", styles, StringComparison.Ordinal);
@@ -915,7 +913,7 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
-    public void LinkButtonStyle_UsesAStableCustomTemplate()
+    public void ButtonStyles_InheritTheSharedChromeAndKeepVisibleFocus()
     {
         var root = TestHelpers.FindRepositoryRoot();
         var document = XDocument.Load(Path.Combine(
@@ -926,20 +924,52 @@ public sealed partial class LocalizedInterfaceContractTests
             "Controls.xaml"));
         XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
         XNamespace xaml = "http://schemas.microsoft.com/winfx/2006/xaml";
-        var linkStyle = Assert.Single(
-            document.Descendants(presentation + "Style"),
-            element => (string?)element.Attribute(xaml + "Key") == "LinkButtonStyle");
+        var styles = document.Descendants(presentation + "Style")
+            .Where(element => element.Attribute(xaml + "Key") is not null)
+            .ToDictionary(element => (string)element.Attribute(xaml + "Key")!, StringComparer.Ordinal);
+        var baseStyle = styles["ButtonBaseStyle"];
 
-        Assert.Contains(linkStyle.Descendants(presentation + "ControlTemplate"), template =>
+        Assert.Contains(baseStyle.Descendants(presentation + "ControlTemplate"), template =>
             (string?)template.Attribute("TargetType") == "Button");
-        // O redesign acrescentou feedback de hover (opacidade reduzida) a
-        // este botão — toda microinteração do app precisa reagir a
-        // hover/pressed/focused, e um link sem nenhum dos três não cumpria
-        // essa exigência.
-        Assert.Contains(linkStyle.Descendants(presentation + "Trigger"), trigger =>
-            (string?)trigger.Attribute("Property") == "IsMouseOver");
-        Assert.Contains(linkStyle.Descendants(presentation + "Trigger"), trigger =>
+        Assert.Contains(baseStyle.Descendants(presentation + "Trigger"), trigger =>
             (string?)trigger.Attribute("Property") == "IsKeyboardFocused");
+
+        foreach (var key in new[]
+                 {
+                     "PrimaryButtonStyle",
+                     "SecondaryButtonStyle",
+                     "DangerGhostButtonStyle",
+                     "LinkButtonStyle",
+                     "IconButtonStyle"
+                 })
+        {
+            Assert.Equal("{StaticResource ButtonBaseStyle}", (string?)styles[key].Attribute("BasedOn"));
+        }
+
+        Assert.Equal("{StaticResource SecondaryButtonStyle}", (string?)styles["ProviderButtonStyle"].Attribute("BasedOn"));
+        Assert.Contains(styles["LinkButtonStyle"].Descendants(presentation + "Trigger"), trigger =>
+            (string?)trigger.Attribute("Property") == "IsMouseOver");
+        Assert.Contains(styles["LinkButtonStyle"].Descendants(presentation + "Trigger"), trigger =>
+            (string?)trigger.Attribute("Property") == "IsPressed");
+    }
+
+    [Fact]
+    public void ButtonDeclarations_UseTheSharedSystemInsteadOfDefaultChrome()
+    {
+        var appDirectory = Path.Combine(TestHelpers.FindRepositoryRoot(), "src", "Ralven.App");
+        XNamespace presentation = "http://schemas.microsoft.com/winfx/2006/xaml/presentation";
+
+        foreach (var path in Directory.EnumerateFiles(appDirectory, "*.xaml", SearchOption.AllDirectories))
+        {
+            var document = XDocument.Load(path);
+            foreach (var button in document.Descendants(presentation + "Button"))
+            {
+                var hasDeclaredStyle = button.Attribute("Style") is not null
+                    || button.Element(presentation + "Button.Style") is not null;
+
+                Assert.True(hasDeclaredStyle, $"{Path.GetRelativePath(appDirectory, path)} contém um Button sem estilo compartilhado.");
+            }
+        }
     }
 
     [Fact]

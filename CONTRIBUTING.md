@@ -1,6 +1,6 @@
 # Contribuindo com o Ralven
 
-Obrigado por ajudar a construir uma ferramenta transparente e segura para FiveM Legacy. Mudanças pequenas, bem justificadas e reversíveis são preferíveis a listas extensas de “tweaks”.
+Obrigado por ajudar a construir uma plataforma transparente e segura de gerenciamento e otimização do Windows com IA. Mudanças pequenas, bem justificadas e reversíveis são preferíveis a listas extensas de “tweaks”.
 
 ## Antes de começar
 
@@ -8,7 +8,7 @@ Obrigado por ajudar a construir uma ferramenta transparente e segura para FiveM 
 - Procure uma issue existente antes de abrir outra.
 - Para mudanças grandes ou novas ações de sistema, proponha primeiro o comportamento, evidências e rollback em uma issue.
 - Vulnerabilidades seguem [SECURITY.md](SECURITY.md), nunca uma issue pública.
-- O escopo atual é **FiveM para GTAV Legacy**. Alterações para Enhanced devem manter o bloqueio seguro, salvo decisão arquitetural posterior documentada.
+- A integração atual de Jogos suporta **FiveM para GTAV Legacy**. Alterações para Enhanced devem manter o bloqueio seguro, salvo decisão arquitetural posterior documentada.
 
 ## Ambiente local
 

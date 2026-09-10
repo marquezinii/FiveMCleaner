@@ -154,12 +154,12 @@
 
     <SolidColorBrush x:Key="NeutralBaseBrush" Color="#A6A7AC" />
 
-    <!-- Interruptor no padrão Fluent do Windows 11: trilho vazado quando
-         desligado, aceso pelo acento quando ligado. -->
-    <SolidColorBrush x:Key="ToggleTrackOffBrush" Color="#00000000" />
-    <SolidColorBrush x:Key="ToggleTrackOffHoverBrush" Color="#2D2E33" />
-    <SolidColorBrush x:Key="ToggleThumbBrush" Color="#A6A7AC" />
-    <SolidColorBrush x:Key="ToggleThumbOnBrush" Color="#FFFFFF" />
+    <!-- Interruptor: o trilho neutro preenchido continua legível sobre as
+         superfícies escuras; ligado usa o acento monocromático da marca. -->
+    <SolidColorBrush x:Key="ToggleTrackOffBrush" Color="#47484D" />
+    <SolidColorBrush x:Key="ToggleTrackOffHoverBrush" Color="#5B5C61" />
+    <SolidColorBrush x:Key="ToggleThumbBrush" Color="#FFFFFF" />
+    <SolidColorBrush x:Key="ToggleThumbOnBrush" Color="#0A0A0B" />
     <SolidColorBrush x:Key="ScrollThumbBrush" Color="#5B5C61" />
     <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#A6A7AC" />
     <SolidColorBrush x:Key="FocusRingBrush" Color="#FFFFFF" />

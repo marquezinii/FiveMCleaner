@@ -18,7 +18,7 @@
                 <Button x:Name="DismissButton" Content="{Binding KeepWorkingText}" Style="{StaticResource DialogSecondaryButtonStyle}"
                         MinHeight="42" Padding="20,10" Margin="0,4,12,0" IsCancel="True" Click="Dismiss_Click" />
                 <Button x:Name="ConfirmAction" Content="{Binding ConfirmText}" Style="{StaticResource PrimaryButtonStyle}"
-                        MinHeight="42" Padding="20,10" Margin="0,4,0,0" Click="Confirm_Click" />
+                        MinHeight="42" Padding="20,10" Margin="0,4,0,0" IsDefault="True" Click="Confirm_Click" />
             </WrapPanel>
         </Border>
     </Grid>

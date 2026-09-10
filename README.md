@@ -5,8 +5,8 @@
 <h1 align="center">Ralven</h1>
 
 <p align="center">
-  <strong>Mais desempenho. Menos complicação.</strong><br>
-  Gerenciamento, diagnóstico e otimização transparente do Windows, com uma área especializada para FiveM sobre GTAV Legacy.
+  <strong>Seu Windows, sob controle.</strong><br>
+  Plataforma de gerenciamento e otimização do Windows com IA, incluindo diagnóstico, manutenção, aplicativos, atualizações e Jogos.
 </p>
 
 <p align="center">
@@ -31,9 +31,9 @@
 > [!IMPORTANT]
 > O módulo FiveM do Ralven suporta somente **GTAV Legacy**. GTAV Enhanced é identificado e bloqueado com segurança até existir um adaptador dedicado, pesquisado e testado.
 
-## Seu PC em um lugar, FiveM com profundidade
+## Seu Windows em um lugar, Jogos com profundidade
 
-Otimizar analisa automaticamente o computador, recomenda Leve, Médio ou Agressivo conforme RAM, CPU, GPU/VRAM e espaço livre, e ajusta o Windows sem exigir FiveM ou GTA V. O plano geral reúne diagnósticos locais de hardware, armazenamento, drivers, tela, rede, memória e estabilidade com ações conservadoras já tipadas, como Modo de Jogo, captura em segundo plano, energia, responsividade visual e temporários antigos. Sistema mostra dentro do Ralven as informações locais do PC e a saúde agregada de antivírus, firewall e atualizações automáticas informada pela Central de Segurança do Windows. Aplicativos reúne descoberta, instalação, inventário gerenciado, atualização individual ou em lote, atualizações ignoradas e desinstalação de pacotes encontrados nas origens confiáveis `winget` e `msstore`, sempre mostrando pacote e origem antes de executar. Jogos reúne os títulos compatíveis e hoje abre um hub dedicado do FiveM sobre GTAV Legacy, com acesso separado ao plano do jogo, à preparação geral do Windows, ao histórico/restauração e à página oficial da versão mais recente do ReShade. Cada ação declara em qual escopo pode entrar, suas pré-condições, risco, resultado e rollback quando aplicável.
+Ralven reúne diagnóstico, manutenção, aplicativos, atualizações, otimização e orientação contextual por IA em uma única experiência para Windows. Otimizar analisa automaticamente o computador, recomenda Leve, Médio ou Agressivo conforme RAM, CPU, GPU/VRAM e espaço livre, e ajusta o Windows com ações conservadoras já tipadas. Sistema mostra as informações locais do PC e a saúde agregada informada pela Central de Segurança do Windows. Aplicativos reúne descoberta, instalação, inventário gerenciado, atualização individual ou em lote, atualizações ignoradas e desinstalação de pacotes das origens confiáveis `winget` e `msstore`, sempre mostrando pacote e origem antes de executar. Jogos reúne títulos compatíveis; hoje inclui um hub dedicado do FiveM sobre GTAV Legacy, com ferramentas especializadas, histórico/restauração e acesso oficial ao ReShade. Cada ação declara em qual escopo pode entrar, suas pré-condições, risco, resultado e rollback quando aplicável.
 
 | Você vê | O que isso significa |
 | --- | --- |
@@ -84,10 +84,11 @@ Leia a [política de segurança](docs/safety.md) e as [evidências técnicas](do
 
 | Área | Disponível hoje |
 | --- | --- |
-| Otimizar | Plano geral do Windows independente de FiveM/GTA, com diagnóstico, prévia, confirmação, progresso real, resultado por ação e rollback. |
+| Otimizar | Plano geral do Windows com diagnóstico, prévia, confirmação, progresso real, resultado por ação e rollback. |
 | Sistema | Informações internas do PC, saúde agregada informada pelo Windows e leitura/ajuste confirmado do Modo de Jogo e da gravação histórica; atalhos nativos ficam como ações secundárias. |
 | Aplicativos | Centro de pacotes com descoberta, instalados gerenciados, atualizações individuais/em lote, lista de ignorados e desinstalação via WinGet; limitado às origens confiáveis WinGet Community e Microsoft Store, com confirmação antes de cada mutação. O inventário local e os atalhos nativos continuam disponíveis. |
 | Jogos | Catálogo interno com um hub do FiveM sobre GTAV Legacy, reunindo o plano especializado, acesso ao otimizador geral, ao histórico/restauração e ao download oficial mais recente do ReShade, sem redistribuir seu instalador. |
+| Ralven AI | Orientação contextual em linguagem natural baseada no diagnóstico e no catálogo já conhecidos, sempre com revisão explícita antes de qualquer aplicação. |
 | Conta | Cadastro e login por e-mail, verificação, recuperação, senha, troca de credenciais e exclusão; Google usa OAuth 2.0 + PKCE quando a credencial desktop é fornecida ao build. |
 | Privacidade | ID token somente em memória, refresh token protegido por DPAPI e telemetria limitada por consentimento. |
 | Relatos de bug | Envio explícito com campos validados, e-mail e trecho de log opcionais — sem anexos automáticos. |
@@ -120,7 +121,7 @@ dotnet run --project tests/Ralven.Tests/Ralven.Tests.csproj --configuration Rele
 .\scripts\Verify-Safety.ps1
 ```
 
-Para abrir uma demonstração segura sem FiveM/GTA instalado:
+Para abrir uma demonstração local segura:
 
 ```powershell
 .\scripts\Install-DevelopmentShortcut.ps1 -Build
@@ -134,7 +135,7 @@ Ela usa dados sintéticos e não grava configurações nem executa ações do si
 App             WPF, conta, configurações e serviços de aplicação
 Contracts       DTOs, IDs e contratos duráveis
 Core            políticas, catálogo, planos e rollback
-Windows         descoberta e integrações de Windows/FiveM
+Windows         descoberta e integrações de Windows e Jogos
 Broker          operações administrativas tipadas e allowlisted
 Launcher/Updater atualização transacional e supervisão pós-update
 Worker/Dashboard backend de conta, telemetria, bugs e operação privada

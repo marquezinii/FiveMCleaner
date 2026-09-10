@@ -2,7 +2,6 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:controls="clr-namespace:Ralven.App.Controls"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         Title="{Binding [BugReport.WindowTitle], Source={StaticResource LocalizedStrings}}"
         Icon="/Ralven;component/Assets/Ralven.png"
         WindowStartupLocation="CenterOwner"
