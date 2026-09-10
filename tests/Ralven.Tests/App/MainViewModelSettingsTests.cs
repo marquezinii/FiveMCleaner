@@ -1,5 +1,6 @@
 using Ralven.App.Services;
 using Ralven.App.ViewModels;
+using Ralven.Windows.Infrastructure;
 using Xunit;
 
 namespace Ralven.Tests.App;
@@ -77,6 +78,33 @@ public sealed class MainViewModelSettingsTests
 
         Assert.Null(viewModel.SettingsSaveErrorMessage);
         Assert.NotNull(service.SavedSettings);
+    }
+
+    [Fact]
+    public async Task CacheTools_ReportSizeCleanCacheAndPreserveSettings()
+    {
+        using var temporary = new TemporaryDirectory();
+        var root = temporary.Combine("Ralven");
+        Directory.CreateDirectory(Path.Combine(root, "Updates"));
+        await File.WriteAllBytesAsync(Path.Combine(root, "Updates", "update.zip"), new byte[1536]);
+        await File.WriteAllTextAsync(Path.Combine(root, "settings.json"), "keep");
+        var localization = new LocalizationService(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+        using var viewModel = new MainViewModel(
+            new FakeAppOptimizationService(new AppSettings(), settingsFileExists: true),
+            localization,
+            startupRegistration: new SessionStartupRegistrationService(),
+            ralvenCacheService: new RalvenCacheService(root));
+
+        await viewModel.RefreshCacheStorageAsync();
+
+        Assert.True(viewModel.CanClearRalvenCache);
+        Assert.Contains("1.5 KB", viewModel.CacheStorageLabel, StringComparison.Ordinal);
+
+        await viewModel.CleanRalvenCacheAsync();
+
+        Assert.False(viewModel.CanClearRalvenCache);
+        Assert.Contains("1.5 KB", viewModel.CacheStorageLabel, StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(root, "settings.json")));
     }
 
     private static MainViewModel CreateViewModel(AppSettings settings) => new(

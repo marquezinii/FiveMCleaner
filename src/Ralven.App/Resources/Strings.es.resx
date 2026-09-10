@@ -1253,6 +1253,19 @@
   <data name="Settings.CheckForUpdates.Title" xml:space="preserve"><value>Buscar actualizaciones</value></data>
   <data name="Settings.CheckForUpdates.Description" xml:space="preserve"><value>Verifica manualmente, ahora mismo, si hay disponible una versión pública más reciente de Ralven.</value></data>
   <data name="Settings.CheckForUpdates.Button" xml:space="preserve"><value>Buscar actualizaciones</value></data>
+  <data name="Settings.Cache.Title" xml:space="preserve"><value>Caché de Ralven</value></data>
+  <data name="Settings.Cache.Description" xml:space="preserve"><value>Elimina solo descargas de actualizaciones, registros descartables y archivos temporales creados por Ralven. Se conservan la configuración, el inicio de sesión, los avatares, el historial, los datos de reversión y la telemetría pendiente.</value></data>
+  <data name="Settings.Cache.Button" xml:space="preserve"><value>Limpiar caché</value></data>
+  <data name="Settings.Cache.Calculating" xml:space="preserve"><value>Calculando el espacio recuperable…</value></data>
+  <data name="Settings.Cache.Cleaning" xml:space="preserve"><value>Limpiando la caché…</value></data>
+  <data name="Settings.Cache.Empty" xml:space="preserve"><value>No se encontró caché recuperable de Ralven.</value></data>
+  <data name="Settings.Cache.Size" xml:space="preserve"><value>{0} recuperables en {1} archivos.</value></data>
+  <data name="Settings.Cache.SizePartial" xml:space="preserve"><value>Se encontraron {0} en {1} archivos. Se omitieron {2} ubicaciones protegidas o no disponibles.</value></data>
+  <data name="Settings.Cache.Cleaned" xml:space="preserve"><value>Caché limpiada: se liberaron {0}.</value></data>
+  <data name="Settings.Cache.Partial" xml:space="preserve"><value>Limpieza parcial: se liberaron {0} y quedan {1}. No se pudieron eliminar {2} ubicaciones de forma segura.</value></data>
+  <data name="Settings.Cache.Cancelled" xml:space="preserve"><value>La limpieza de caché se canceló de forma segura.</value></data>
+  <data name="Settings.Cache.Error" xml:space="preserve"><value>Ralven no pudo acceder a la caché ahora. No se eliminó ninguna configuración ni dato del usuario.</value></data>
+  <data name="Settings.Cache.DemoUnavailable" xml:space="preserve"><value>El acceso a la caché está desactivado en el modo de demostración.</value></data>
   <data name="Update.ManualCheck.UpToDate" xml:space="preserve"><value>Ya tienes la última versión publicada.</value></data>
   <data name="Update.ManualCheck.Failed" xml:space="preserve"><value>No se pudo buscar actualizaciones: {0}</value></data>
   <data name="GtaVBenchmark.Title" xml:space="preserve"><value>Benchmark oficial de GTA V</value></data>

@@ -542,7 +542,14 @@ O MVP grava somente sob `%LOCALAPPDATA%\Ralven`:
 - `Transactions/<id>.json`: plano, estados por ação e snapshots pequenos necessários ao rollback;
 - `Requests/<id>.json`: solicitação efêmera e de uso único consumida atomicamente pelo broker;
 - `settings.json`: preferências do próprio Ralven;
-- `crash.log`: exceções fatais locais, criado apenas quando necessário.
+- `Logs/crash.log`: exceções fatais locais, criado apenas quando necessário.
+
+Os dados descartáveis do próprio aplicativo usam uma allowlist separada dos
+dados duráveis. Downloads de atualização, logs e temporários reconhecidos podem
+ser calculados e removidos manualmente; configurações, login, filas de
+telemetria, journals, quarentenas e estado anti-downgrade ficam fora dela. O
+inventário completo e o contrato de segurança estão em
+[`docs/cache.md`](cache.md).
 
 Esses arquivos têm durabilidades diferentes e isso muda o que pode ser alterado:
 

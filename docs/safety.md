@@ -288,6 +288,14 @@ condições abaixo simultaneamente:
 
 A limpeza de cache não entra implicitamente nos modos Leve, Médio ou Agressivo.
 
+A limpeza do cache gerado pelo próprio Ralven é uma ferramenta manual separada
+dos perfis e das ações sobre o FiveM. Ela aceita somente os roots e padrões
+descartáveis documentados em [`docs/cache.md`](cache.md), revalida contenção e
+reparse points antes da exclusão e preserva configurações, sessão, dados do
+usuário, telemetria pendente, transações, quarentenas e segurança do updater.
+Falhas de acesso ou arquivos em uso produzem sucesso parcial verificável; nunca
+ampliam o escopo da exclusão.
+
 ### Monitor de sessão somente leitura
 
 O monitor de sessão da Visão geral é uma capacidade manual e local, limitada ao

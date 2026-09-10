@@ -26,6 +26,8 @@ Windows realmente for executada.
   clara e escura gerada a partir do ícone oficial;
 - ícone e imagem oficiais do Ralven;
 - atalhos do menu Iniciar e desinstalação completa, com rótulos localizados;
+- identidade de shell estável `Ralven.Ralven` nos atalhos, mantendo nome e ícone
+  oficiais independentemente do caminho de instalação;
 - atalho de Área de Trabalho habilitado por padrão; inicialização com o Windows
   desmarcada por padrão (ambas alteráveis na instalação e depois);
 - página final lembra que atualizações futuras vêm pelo app, com confirmação;
@@ -40,6 +42,13 @@ pasta de instalação, em `%LOCALAPPDATA%\Ralven` durante a ponte. Na desinstala
 interativa, a pessoa escolhe se deseja preservar ou remover esses dados. A
 opção padrão é preservar; uma desinstalação silenciosa também preserva os dados
 para nunca apagar histórico ou backup sem confirmação visível.
+
+Essa identidade é o mecanismo Win32 suportado para o shell, mas não existe API
+pública do Microsoft PC Manager para cadastrar caminhos em **Limpeza Profunda >
+Outros itens do aplicativo**. A associação eventual depende do scanner interno
+da Microsoft; o Ralven não cria registros ou pacotes artificiais para forçar a
+exibição. A classificação e a limpeza manual estão em
+[`docs/cache.md`](cache.md).
 
 ## Build local reproduzível
 
