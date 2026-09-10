@@ -1,7 +1,7 @@
-# Objetivo da tarefa
+# Objective
 
 - **Agente:** Codex
-- **Objetivo:** suavizar a hierarquia visual da tela Visão Geral com um recorte pequeno, sóbrio e coerente nos temas claro e escuro.
-- **Escopo:** ajustar somente o Overview e, se indispensável, estilos de superfície que ele já usa; não alterar cabeçalho/conta, autenticação, navegação, comportamento funcional ou textos.
-- **Critérios de conclusão:** reduzir caixas e divisórias duras nos pontos de maior impacto, reutilizar tokens existentes, preservar responsividade/acessibilidade e validar build, testes e renderização em tema claro e escuro quando o ambiente permitir.
-- **Resultado entregue:** o diagnóstico principal usa a superfície hero existente com raio amplo e sem contorno; os três KPIs são agrupados por espaço, sem divisórias; o monitor ao vivo fica aberto sobre o fundo e preserva o gráfico como poço funcional. O XAML foi inspecionado em tema escuro e claro, maximizado e em 1600×1000. Foram aprovados 78 testes focados de localização/tokens, o build Release da solução (0 avisos) e a suíte completa (1.434 testes).
+- **Objetivo:** Reposicionar o Ralven em todo o produto como uma plataforma de gerenciamento e otimização do Windows com IA, sem alterar funcionalidades existentes.
+- **Escopo:** Textos públicos, localização, metadados, updater, documentação exibida ao usuário e integrações distribuídas; auditoria de resíduos também nos worktrees paralelos. Conforme esclarecimento do usuário, a superfície de distribuição ativa é o site da Vemryx; o instalador legado não foi alterado. Não inclui remover recursos FiveM nem alterar contratos jurídicos.
+- **Critérios de conclusão:** A identidade principal não apresenta o Ralven como otimizador de PC/FiveM; FiveM aparece apenas como uma integração da área de Jogos; traduções e artefatos de distribuição permanecem consistentes e as validações aplicáveis passam.
+- **Resultado entregue:** Posicionamento atualizado no aplicativo, na metadata dos binários, no site da Vemryx e na documentação atual. FiveM ficou restrito à linguagem de integrações de Jogos e fluxos técnicos. Build Release, 1.436 testes, verificação de segurança, paridade de localização e validação do site passaram.
