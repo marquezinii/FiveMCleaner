@@ -1,7 +1,11 @@
-# Objetivo da tarefa
+# Objetivo
 
 - **Agente:** Codex
-- **Objetivo:** suavizar a hierarquia visual da tela Visão Geral com um recorte pequeno, sóbrio e coerente nos temas claro e escuro.
-- **Escopo:** ajustar somente o Overview e, se indispensável, estilos de superfície que ele já usa; não alterar cabeçalho/conta, autenticação, navegação, comportamento funcional ou textos.
-- **Critérios de conclusão:** reduzir caixas e divisórias duras nos pontos de maior impacto, reutilizar tokens existentes, preservar responsividade/acessibilidade e validar build, testes e renderização em tema claro e escuro quando o ambiente permitir.
-- **Resultado entregue:** o diagnóstico principal usa a superfície hero existente com raio amplo e sem contorno; os três KPIs são agrupados por espaço, sem divisórias; o monitor ao vivo fica aberto sobre o fundo e preserva o gráfico como poço funcional. O XAML foi inspecionado em tema escuro e claro, maximizado e em 1600×1000. Foram aprovados 78 testes focados de localização/tokens, o build Release da solução (0 avisos) e a suíte completa (1.434 testes).
+- **Objetivo:** auditar e aprimorar as configurações do aplicativo com base no estado integrado e nas funcionalidades da próxima versão.
+- **Escopo:** organização e nomenclatura da página, preferências realmente úteis, persistência, aplicação, restauração de padrões, localização e testes; sem alterar políticas de otimização, segurança ou release.
+- **Critérios de conclusão:** opções justificadas e compatíveis com configurações anteriores; persistência, carregamento, alteração e restauração cobertos; UI localizada e validada; build e testes aplicáveis executados.
+- **Resultado entregue:** configurações gerais reorganizadas e renomeadas; busca
+  manual agrupada com atualizações; suporte agrupado com diagnóstico;
+  dependências visuais entre opções; restauração segura dos padrões gerais;
+  aviso nativo limitado à busca automática; persistência e localização cobertas
+  por testes e validação visual.
