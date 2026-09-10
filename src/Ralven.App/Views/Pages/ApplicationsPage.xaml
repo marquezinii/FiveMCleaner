@@ -301,6 +301,7 @@
                     </Grid>
                 </Border>
                 <CheckBox Grid.Column="1"
+                          Style="{StaticResource ToggleSwitchStyle}"
                           Content="{Binding [Applications.TechnicalDetails], Source={StaticResource LocalizedStrings}}"
                           IsChecked="{Binding ShowTechnicalDetails, Mode=TwoWay}"
                           VerticalAlignment="Center" />
@@ -363,6 +364,7 @@
                                         IsEnabled="{Binding CanUpdateSelected}"
                                         Click="UpdateSelectedApplications_Click" />
                                 <CheckBox Grid.Column="3"
+                                          Style="{StaticResource ToggleSwitchStyle}"
                                           Content="{Binding [Applications.Updates.ShowIgnored], Source={StaticResource LocalizedStrings}}"
                                           IsChecked="{Binding ShowIgnoredUpdates, Mode=TwoWay}"
                                           VerticalAlignment="Center" />

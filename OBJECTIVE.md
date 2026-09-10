@@ -1,11 +1,7 @@
 # Objective
 
-**Agente:** Codex
-
-**Objetivo:** Modernizar e padronizar o sistema visual de botões do aplicativo Ralven, preservando hierarquia, estados interativos e acessibilidade.
-
-**Escopo:** Estilos reutilizáveis de botões, tokens visuais relacionados e adoção consistente nas telas WPF existentes. Não inclui alterações de comportamento de otimizações, serviços, contratos ou textos públicos.
-
-**Critérios de conclusão:** Variantes primária, secundária, destrutiva, link, ícone e provedora são coerentes entre si; todos os estados suportados mantêm contraste, foco visível e alvo de clique adequado; build e testes aplicáveis passam; validação visual cobre telas e escalas disponíveis.
-
-**Resultado entregue:** Template base compartilhado e variantes primária, secundária, destrutiva, link, ícone e provedora aplicados ao aplicativo; exceções de dimensão excessiva removidas das telas e diálogos afetados; contratos de estilos e contraste ampliados. Build Release e 1.453 testes aprovados. A inspeção renderizada manual ficou pendente porque a automação deste host não disponibiliza aplicativos nativos.
+- **Agente:** Codex
+- **Objetivo:** Unificar os switches do Ralven em um controle compacto, claro e acessível, adequado aos temas do aplicativo.
+- **Escopo:** Estilos, recursos visuais e testes diretamente relacionados a switches/toggles existentes; não inclui mudanças de comportamento das configurações controladas.
+- **Critérios de conclusão:** Estados ligado, desligado, foco, hover e desabilitado são distintos; o controle mantém navegação por teclado e os checks aplicáveis passam.
+- **Resultado entregue:** Estilo compartilhado atualizado para track preenchido de 36×20px, knob de 16px, área de clique de 44×32px, animação existente de 180ms e contraste validado nos dois temas. Preferências equivalentes em Ultra e Aplicativos agora usam o mesmo switch; build Release, 1.443 testes, formatação e verificação de segurança passaram. A janela iniciou, mas a sessão não disponibilizou captura de aplicativos nativos para inspeção visual.
