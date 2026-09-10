@@ -274,7 +274,8 @@ public sealed class AppOptimizationServiceHistoryTests
         {
             callerThread = Environment.CurrentManagedThreadId;
             started.SetResult(service.LoadHistoryAsync(cancellationToken));
-        }) { IsBackground = true };
+        })
+        { IsBackground = true };
 
         thread.Start();
         var history = await started.Task.Unwrap().WaitAsync(TimeSpan.FromSeconds(10));

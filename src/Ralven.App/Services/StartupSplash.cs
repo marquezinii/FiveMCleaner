@@ -98,25 +98,39 @@ internal sealed class StartupSplash : IDisposable
                 Width = Math.Min(640, SystemParameters.WorkArea.Width),
                 Height = Math.Min(400, SystemParameters.WorkArea.Height),
                 WindowStartupLocation = WindowStartupLocation.CenterScreen,
-                WindowStyle = WindowStyle.None, ResizeMode = ResizeMode.NoResize,
-                ShowInTaskbar = false, Title = "Ralven", Background = Brush("CanvasBaseBrush"),
-                Foreground = foreground, FontFamily = new FontFamily("Segoe UI"),
-                UseLayoutRounding = true, SnapsToDevicePixels = true
+                WindowStyle = WindowStyle.None,
+                ResizeMode = ResizeMode.NoResize,
+                ShowInTaskbar = false,
+                Title = "Ralven",
+                Background = Brush("CanvasBaseBrush"),
+                Foreground = foreground,
+                FontFamily = new FontFamily("Segoe UI"),
+                UseLayoutRounding = true,
+                SnapsToDevicePixels = true
             };
             window.Resources.MergedDictionaries.Add(colors);
             var root = new Grid { Margin = new Thickness(28), Style = new Style(typeof(Grid)) };
             var close = new Button
             {
-                Style = new Style(typeof(Button)), Content = "×", ToolTip = closeLabel,
-                Width = 36, Height = 36, FontSize = 24, Padding = new Thickness(0),
-                HorizontalAlignment = HorizontalAlignment.Right, VerticalAlignment = VerticalAlignment.Top,
-                Background = Brushes.Transparent, Foreground = foreground, BorderThickness = new Thickness(0)
+                Style = new Style(typeof(Button)),
+                Content = "×",
+                ToolTip = closeLabel,
+                Width = 36,
+                Height = 36,
+                FontSize = 24,
+                Padding = new Thickness(0),
+                HorizontalAlignment = HorizontalAlignment.Right,
+                VerticalAlignment = VerticalAlignment.Top,
+                Background = Brushes.Transparent,
+                Foreground = foreground,
+                BorderThickness = new Thickness(0)
             };
             AutomationProperties.SetName(close, closeLabel);
             close.Click += (_, _) => window.Close();
             var content = new StackPanel
             {
-                Style = new Style(typeof(StackPanel)), HorizontalAlignment = HorizontalAlignment.Center,
+                Style = new Style(typeof(StackPanel)),
+                HorizontalAlignment = HorizontalAlignment.Center,
                 VerticalAlignment = VerticalAlignment.Center
             };
             var logo = new BitmapImage();
@@ -129,25 +143,35 @@ internal sealed class StartupSplash : IDisposable
             content.Children.Add(new Image { Style = new Style(typeof(Image)), Source = logo, Width = 96, Height = 96 });
             content.Children.Add(new TextBlock
             {
-                Style = new Style(typeof(TextBlock)), Text = label, Foreground = Brush("TextSecondaryBrush"),
-                FontSize = 16, Margin = new Thickness(0, 28, 0, 20), HorizontalAlignment = HorizontalAlignment.Center
+                Style = new Style(typeof(TextBlock)),
+                Text = label,
+                Foreground = Brush("TextSecondaryBrush"),
+                FontSize = 16,
+                Margin = new Thickness(0, 28, 0, 20),
+                HorizontalAlignment = HorizontalAlignment.Center
             });
             var dots = new StackPanel
             {
-                Style = new Style(typeof(StackPanel)), Orientation = Orientation.Horizontal,
+                Style = new Style(typeof(StackPanel)),
+                Orientation = Orientation.Horizontal,
                 HorizontalAlignment = HorizontalAlignment.Center
             };
             for (var index = 0; index < 3; index++)
             {
                 var dot = new Ellipse
                 {
-                    Style = new Style(typeof(Ellipse)), Width = 6, Height = 6,
-                    Margin = new Thickness(5, 0, 5, 0), Fill = foreground, Opacity = .35
+                    Style = new Style(typeof(Ellipse)),
+                    Width = 6,
+                    Height = 6,
+                    Margin = new Thickness(5, 0, 5, 0),
+                    Fill = foreground,
+                    Opacity = .35
                 };
                 if (MotionPolicy.AnimationsEnabled)
                     dot.BeginAnimation(UIElement.OpacityProperty, new DoubleAnimation(.25, 1, TimeSpan.FromMilliseconds(500))
                     {
-                        BeginTime = TimeSpan.FromMilliseconds(index * 140), AutoReverse = true,
+                        BeginTime = TimeSpan.FromMilliseconds(index * 140),
+                        AutoReverse = true,
                         RepeatBehavior = RepeatBehavior.Forever
                     });
                 dots.Children.Add(dot);
