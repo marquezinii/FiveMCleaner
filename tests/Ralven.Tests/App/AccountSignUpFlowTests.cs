@@ -220,6 +220,20 @@ public sealed class AccountSignUpFlowTests
         Assert.True(Directory.Exists(blockedPath));
     }
 
+    [Fact]
+    public async Task SessionStore_ReplacesThePersistedTokenWithoutLeavingTemporaryFiles()
+    {
+        using var directory = new TemporaryDirectory();
+        var path = directory.Combine("firebase.session");
+        var store = new SecureFirebaseSessionStore(path);
+
+        await store.WriteAsync("refresh-1", global::Xunit.TestContext.Current.CancellationToken);
+        await store.WriteAsync("refresh-2", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Equal("refresh-2", (await store.ReadAsync(global::Xunit.TestContext.Current.CancellationToken))?.RefreshToken);
+        Assert.Empty(Directory.EnumerateFiles(directory.Path, ".firebase.session.*.tmp"));
+    }
+
     private static FirebaseAuthService CreateService(List<string> requests, Func<HttpRequestMessage, HttpResponseMessage> send, string? sessionPath = null)
     {
         var path = sessionPath ?? TempSessionPath();

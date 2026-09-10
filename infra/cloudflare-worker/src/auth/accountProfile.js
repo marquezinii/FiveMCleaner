@@ -8,6 +8,7 @@
 const NAME_PATTERN = /^\p{L}[\p{L} '-]{0,59}$/u;
 const USERNAME_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]{2,23}$/;
 const CURRENT_TERMS_VERSION = '2026-08-02';
+const PROFILE_FIELDS = ['username', 'firstName', 'lastName', 'termsVersion'];
 
 /**
  * Validates and normalizes the profile-completion payload. Returns null on
@@ -18,7 +19,9 @@ const CURRENT_TERMS_VERSION = '2026-08-02';
  * @returns {{ username: string, usernameNormalized: string, firstName: string, lastName: string, termsVersion: string } | null}
  */
 export function validateAccountProfile(payload) {
-  if (payload === null || typeof payload !== 'object') {
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)
+    || Object.keys(payload).length !== PROFILE_FIELDS.length
+    || !PROFILE_FIELDS.every(field => Object.hasOwn(payload, field))) {
     return null;
   }
 
@@ -61,28 +64,14 @@ export function validateAccountProfile(payload) {
  * @returns {Promise<{ ok: true } | { ok: false, code: 'username-taken' | 'uid-taken' | 'unknown' }>}
  */
 export async function createAccountProfile(db, uid, profile) {
-  const existing = await fetchAccountProfile(db, uid);
-  if (existing !== null) {
-    if (existing.username !== profile.username
-      || existing.firstName !== profile.firstName
-      || existing.lastName !== profile.lastName) {
-      return { ok: false, code: 'uid-taken' };
-    }
-
-    await db
-      .prepare('UPDATE account_profiles SET terms_version = ?, terms_accepted_at = ? WHERE uid = ?')
-      .bind(profile.termsVersion, new Date().toISOString(), uid)
-      .run();
-    return { ok: true };
-  }
-
   try {
     const now = new Date().toISOString();
-    await db
+    const inserted = await db
       .prepare(
         `INSERT INTO account_profiles
            (uid, username, username_normalized, first_name, last_name, terms_version, terms_accepted_at, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT DO NOTHING`,
       )
       .bind(
         uid,
@@ -95,15 +84,30 @@ export async function createAccountProfile(db, uid, profile) {
         now,
       )
       .run();
-    return { ok: true };
-  } catch (err) {
-    const message = String(err?.message || '');
-    if (message.includes('idx_account_profiles_username_normalized')) {
+
+    if (inserted.meta?.changes === 1) {
+      return { ok: true };
+    }
+
+    const existing = await fetchAccountProfile(db, uid);
+    if (existing === null) {
+      // The only other unique key on this table is username_normalized.
+      // Using the post-conflict state instead of a SQLite error string keeps
+      // the API stable across D1/SQLite error-message variants.
       return { ok: false, code: 'username-taken' };
     }
-    if (message.includes('account_profiles.uid') || message.includes('PRIMARY KEY')) {
+    if (existing.username !== profile.username
+      || existing.firstName !== profile.firstName
+      || existing.lastName !== profile.lastName) {
       return { ok: false, code: 'uid-taken' };
     }
+
+    await db
+      .prepare('UPDATE account_profiles SET terms_version = ?, terms_accepted_at = ? WHERE uid = ?')
+      .bind(profile.termsVersion, now, uid)
+      .run();
+    return { ok: true };
+  } catch {
     return { ok: false, code: 'unknown' };
   }
 }

@@ -1,7 +1,9 @@
+# Objetivo
+
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** modernizar e ampliar a experiência do ícone do Ralven na bandeja do sistema com uma interface coerente com o produto e ações rápidas realmente úteis.
-- **Escopo:** investigar a integração Win32/WPF atual, implementar a melhor experiência de menu/popover da tray, ajustar interações de mouse/teclado, janela e estados relacionados, localizar textos públicos, atualizar documentação pública aplicável e adicionar testes; não alterar regras de otimização, broker, updater ou segurança da cadeia de release.
-- **Critérios de conclusão:** comportamento estável em Windows 10/11, DPI e múltiplos monitores; posicionamento e fechamento corretos; estados de hover, foco e disabled acessíveis; ações da tray integradas a fluxos existentes; build, testes, validação de segurança e inspeção visual aprovados.
-- **Resultado entregue:** o `NotifyIcon` nativo permanece como host da bandeja e encaminha o clique direito para um `ContextMenu` WPF escuro, localizado e acessível. O menu apresenta estado/versionamento e ações para abrir, otimizar, alternar o monitor local de FiveM, verificar atualizações, abrir Configurações e sair; usa os estados consolidados de atualização e alertas vivos, sem duplicar seus fluxos. Clique simples/duplo, visibilidade persistente, tooltip dinâmico, notificações temporárias e saída durante trabalho ativo foram endurecidos.
+- **Objetivo:** Auditar e fortalecer os fluxos de conta, autenticação e persistência de dados.
+- **Escopo:** Cadastro, login, sessão, perfil, recuperação, autorização, armazenamento local e rotas Worker/D1 relacionadas. Não inclui mudança de produto, release ou infraestrutura não relacionada.
+- **Critérios de conclusão:** Fluxos críticos revisados ponta a ponta, validações e testes relevantes executados, sem credenciais ou dados pessoais no repositório.
+- **Resultado entregue:** O Worker rejeita payloads de perfil fora do contrato e distingue conflitos de username por estado persistido, sem mensagens do D1. A sessão substitui o token persistido atomicamente, coalesce renovações simultâneas e restaura o estado em cancelamento. O preenchimento assíncrono não cruza dados entre contas trocadas; a bandeja integrada permanece independente desses fluxos.
