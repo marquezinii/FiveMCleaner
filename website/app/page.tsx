@@ -22,8 +22,8 @@ export default function Home() {
   useEffect(() => {
     document.documentElement.lang = language === "pt" ? "pt-BR" : "en";
     document.title = language === "pt"
-      ? "Ralven — Mais desempenho. Menos complicação."
-      : "Ralven — More performance. Less complexity.";
+      ? "Ralven — Gerenciamento do Windows com IA."
+      : "Ralven — AI-powered Windows management.";
   }, [language]);
 
   return (

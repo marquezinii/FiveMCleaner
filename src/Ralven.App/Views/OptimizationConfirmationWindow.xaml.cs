@@ -6,7 +6,7 @@ namespace Ralven.App.Views;
 /// Confirma ações importantes sem recorrer ao MessageBox do Windows,
 /// preservando o tema e a linguagem do aplicativo.
 /// </summary>
-public partial class OptimizationConfirmationWindow : Wpf.Ui.Controls.FluentWindow
+public partial class OptimizationConfirmationWindow : Ralven.App.Controls.DialogWindow
 {
     public OptimizationConfirmationWindow(
         string title,
@@ -20,6 +20,7 @@ public partial class OptimizationConfirmationWindow : Wpf.Ui.Controls.FluentWind
         ConfirmText = confirm;
         InitializeComponent();
         DataContext = this;
+        Loaded += (_, _) => DismissButton.Focus();
     }
 
     public string TitleText { get; }
@@ -29,6 +30,25 @@ public partial class OptimizationConfirmationWindow : Wpf.Ui.Controls.FluentWind
     public string KeepWorkingText { get; }
 
     public string ConfirmText { get; }
+
+    public static bool Confirm(Window? owner, string message, string title, string? confirm = null)
+    {
+        var strings = Services.LocalizationService.Current;
+        var dialog = new OptimizationConfirmationWindow(title, message,
+            strings.GetString("Dialog.Cancel"), confirm ?? strings.GetString("Dialog.Confirm"))
+        { Owner = owner };
+        return dialog.ShowDialog() == true;
+    }
+
+    public static void Inform(Window? owner, string message, string title)
+    {
+        var dialog = new OptimizationConfirmationWindow(title, message,
+            Services.LocalizationService.Current.GetString("Dialog.Close"), string.Empty)
+        { Owner = owner };
+        dialog.DismissButton.Margin = new Thickness(0);
+        dialog.ConfirmAction.Visibility = Visibility.Collapsed;
+        _ = dialog.ShowDialog();
+    }
 
     private void Confirm_Click(object sender, RoutedEventArgs e) => DialogResult = true;
 

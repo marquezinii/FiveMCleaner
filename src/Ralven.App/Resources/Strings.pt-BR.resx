@@ -305,7 +305,7 @@
   <data name="Settings.About.Title" xml:space="preserve"><value>Sobre</value></data>
   <data name="Settings.About.Description" xml:space="preserve"><value>O que é o Ralven, quem desenvolve e onde encontrar ajuda.</value></data>
   <data name="Settings.About.AppName" xml:space="preserve"><value>Ralven</value></data>
-  <data name="Settings.About.Tagline" xml:space="preserve"><value>Mais desempenho. Menos complicação.</value></data>
+  <data name="Settings.About.Tagline" xml:space="preserve"><value>Plataforma de gerenciamento e otimização do Windows com IA.</value></data>
   <data name="Settings.About.Repository" xml:space="preserve"><value>Código-fonte no GitHub</value></data>
   <data name="Settings.About.Changelog" xml:space="preserve"><value>Histórico de versões</value></data>
   <data name="Settings.About.Discord.Title" xml:space="preserve"><value>Junte-se ao nosso Discord oficial</value></data>
@@ -340,9 +340,9 @@
   <data name="Plan.VerifiedActions" xml:space="preserve"><value>{0} ações verificadas  •  {1}</value></data>
   <data name="Plan.Review" xml:space="preserve"><value>Revisar plano</value></data>
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Otimizar agora</value></data>
-  <data name="Optimizer.Title" xml:space="preserve"><value>Otimizador do FiveM</value></data>
-  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Prepare seu computador para jogar com menos travamentos, processos desnecessários e problemas de cache.</value></data>
-  <data name="Optimizer.General.Title" xml:space="preserve"><value>Otimizador Geral</value></data>
+  <data name="Optimizer.Title" xml:space="preserve"><value>Otimização do Windows</value></data>
+  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Revise melhorias seguras para o Windows antes de aplicá-las.</value></data>
+  <data name="Optimizer.General.Title" xml:space="preserve"><value>Otimização do Windows</value></data>
   <data name="Optimizer.General.Subtitle" xml:space="preserve"><value>Escolha um perfil e confira o que será ajustado antes de começar.</value></data>
   <data name="Optimizer.FiveM.Title" xml:space="preserve"><value>Otimizador do FiveM</value></data>
   <data name="Optimizer.FiveM.Subtitle" xml:space="preserve"><value>Prepare o FiveM sobre GTAV Legacy com diagnósticos, ajustes e ações reversíveis dedicadas.</value></data>
@@ -536,9 +536,9 @@
   <data name="Diagnosis.CloseGtaVSafely" xml:space="preserve"><value>Feche o GTA V para otimizar com segurança</value></data>
   <data name="Diagnosis.RecommendedProfile" xml:space="preserve"><value>Perfil {0} recomendado para este PC</value></data>
   <data name="Diagnosis.LegacyReady" xml:space="preserve"><value>O diagnóstico encontrou o layout Legacy conhecido e preparou ações compatíveis.</value></data>
-  <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>O Ralven preparou um plano do Windows com base na capacidade local deste PC. O FiveM tem uma experiência dedicada em Jogos.</value></data>
+  <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>O Ralven preparou um plano do Windows com base na capacidade local deste PC. As integrações de jogos compatíveis ficam disponíveis separadamente em Jogos.</value></data>
   <data name="Diagnosis.EnhancedUnsupported" xml:space="preserve"><value>A edição Enhanced usa um novo launcher e cache configurável. Esta versão não aplicará regras do Legacy nela.</value></data>
-  <data name="Diagnosis.InstallLegacy" xml:space="preserve"><value>A otimização geral do Windows já está disponível. Instale ou selecione o FiveM Legacy apenas para liberar as ações dedicadas ao jogo.</value></data>
+  <data name="Diagnosis.InstallLegacy" xml:space="preserve"><value>A otimização do Windows já está disponível. Escolha Jogos quando quiser configurar uma integração compatível e suas ações dedicadas.</value></data>
   <data name="Diagnosis.FreeDisk" xml:space="preserve"><value>{0} GB livres</value></data>
   <data name="History.ProfileTitle" xml:space="preserve"><value>Perfil {0}</value></data>
   <data name="History.WindowsGamingTitle" xml:space="preserve"><value>Ajustes de jogos do Windows</value></data>
@@ -1349,10 +1349,10 @@
   <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Informados pelo Windows</value></data>
   <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>MEMÓRIA LIVRE</value></data>
   <data name="Dashboard.Kpi.Memory.Detail" xml:space="preserve"><value>de {0:0.0} GB no total</value></data>
-  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHE DO FIVEM</value></data>
-  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisado pelo otimizador</value></data>
+  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHE DE JOGOS</value></data>
+  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisado pela integração de jogos</value></data>
   <data name="Dashboard.Kpi.Cache.None" xml:space="preserve"><value>Nenhum</value></data>
-  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>Nenhum cache encontrado no disco</value></data>
+  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>Nenhum cache de integração de jogos foi encontrado no disco</value></data>
   <data name="Dashboard.Pressure.Low" xml:space="preserve"><value>Baixa</value></data>
   <data name="Dashboard.Pressure.Moderate" xml:space="preserve"><value>Moderada</value></data>
   <data name="Dashboard.Pressure.High" xml:space="preserve"><value>Alta</value></data>
@@ -1802,4 +1802,8 @@ Média CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Personal.Export.Failed" xml:space="preserve"><value>Não foi possível exportar o histórico. Confira o local escolhido e tente novamente.</value></data>
   <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>Você informa os dados do pagador na página segura do Asaas. O Ralven guarda referências, valores, estados e datas da cobrança; nunca dados do cartão. Qualquer estorno concluído, inclusive parcial, remove o acesso do período pago correspondente.</value></data>
   <data name="RalvenAi.Logo.Animate" xml:space="preserve"><value>Animar logo do Ralven AI</value></data>
+  <data name="Dialog.Close" xml:space="preserve"><value>Fechar</value></data>
+  <data name="Dialog.Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Dialog.Confirm" xml:space="preserve"><value>Continuar</value></data>
+  <data name="Dialog.OptionalDetails" xml:space="preserve"><value>Detalhes opcionais</value></data>
 </root>
