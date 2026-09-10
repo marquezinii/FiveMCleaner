@@ -66,6 +66,8 @@
         <GradientStop Color="#111214" Offset="1" />
     </LinearGradientBrush>
 
+    <SolidColorBrush x:Key="DialogBackdropBrush" Color="#48000000" />
+
     <!-- Traço. Fina separa dentro de um bloco, média contorna um bloco,
          grossa delimita algo operável (campo, seletor). -->
     <SolidColorBrush x:Key="BorderSubtleBrush" Color="#2D2E33" />

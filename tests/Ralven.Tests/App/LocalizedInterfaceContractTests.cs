@@ -435,7 +435,8 @@ public sealed partial class LocalizedInterfaceContractTests
             "Themes",
             "Controls.xaml"));
 
-        Assert.Contains("Style=\"{StaticResource SettingsComboBoxStyle}\"", window, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource DialogSelectorStyle}\"", window, StringComparison.Ordinal);
+        Assert.Contains("BasedOn=\"{StaticResource SettingsComboBoxStyle}\"", controls, StringComparison.Ordinal);
         Assert.Contains("x:Key=\"SettingsComboBoxStyle\"", controls, StringComparison.Ordinal);
         Assert.DoesNotContain("FormComboBoxStyle", window, StringComparison.Ordinal);
     }
@@ -1003,7 +1004,7 @@ public sealed partial class LocalizedInterfaceContractTests
             comboPadding.Right > comboPadding.Left,
             "SettingsComboBoxStyle precisa de mais folga à direita que à esquerda: a seta mora naquele lado.");
 
-        Assert.Contains("Content=\"{Binding SelectedValue, RelativeSource={RelativeSource AncestorType=ComboBox}}\"", controls, StringComparison.Ordinal);
+        Assert.Contains("Content=\"{TemplateBinding SelectionBoxItem}\"", controls, StringComparison.Ordinal);
         Assert.Contains("SelectedValuePath=\"Content\"", mainWindow, StringComparison.Ordinal);
     }
 

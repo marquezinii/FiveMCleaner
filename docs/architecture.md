@@ -86,6 +86,12 @@ argumentos, versões nem dados pessoais. A gravação usa arquivo temporário na
 mesma pasta antes da substituição. Ignorar afeta apenas a apresentação e a
 seleção em lote, nunca executa uma operação no sistema.
 
+## Diálogos WPF
+
+As janelas secundárias compartilham `DialogWindow`, com modalidade nativa,
+backdrop visual e limites por monitor/DPI. A escolha por fluxo, os estilos e
+a validação reproduzível estão em [Janelas secundárias e diálogos](dialogs.md).
+
 ## Componentes
 
 ## Autenticação Firebase

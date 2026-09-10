@@ -19,13 +19,11 @@ public static class ExternalLauncher
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            System.Windows.MessageBox.Show(
+            Ralven.App.Views.OptimizationConfirmationWindow.Inform(System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive),
                 LocalizationService.Current.Format(
                     "Dialog.OpenExternal.Message",
                     LocalizationService.Current.DescribeException(exception)),
-                LocalizationService.Current.GetString("Dialog.OpenExternal.Title"),
-                MessageBoxButton.OK,
-                MessageBoxImage.Warning);
+                LocalizationService.Current.GetString("Dialog.OpenExternal.Title"));
         }
     }
 }
