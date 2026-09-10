@@ -1,4 +1,4 @@
-# Objetivo da tarefa
+# Objetivo
 
 - **Agente:** Codex
 - **Objetivo:** Simplificar a aba Configurações para tornar suas preferências mais fáceis de escanear sem ocultar informações importantes.

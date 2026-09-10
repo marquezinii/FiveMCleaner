@@ -154,7 +154,7 @@ public sealed partial class MainViewModel
                 return;
             }
 
-            ApplyDetectedUpdate(update);
+            ApplyDetectedUpdate(update, notifyUser: true);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
@@ -191,7 +191,7 @@ public sealed partial class MainViewModel
                 return;
             }
 
-            ApplyDetectedUpdate(update);
+            ApplyDetectedUpdate(update, notifyUser: false);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
@@ -208,12 +208,15 @@ public sealed partial class MainViewModel
     private static Version GetAssemblyVersion() =>
         Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(0, 0, 0);
 
-    private void ApplyDetectedUpdate(ReleaseUpdate update)
+    private void ApplyDetectedUpdate(ReleaseUpdate update, bool notifyUser)
     {
         availableUpdate = update;
         updatePresentationState = UpdatePresentationState.Available;
         RefreshUpdatePresentation();
-        UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
+        if (notifyUser)
+        {
+            UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
+        }
     }
 
     public async Task<DownloadedUpdate?> DownloadAvailableUpdateAsync()

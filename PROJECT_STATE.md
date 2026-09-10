@@ -5,7 +5,7 @@
 
 ## 1. Snapshot
 
-- **Produto:** Ralven, aplicativo desktop Windows para otimização transparente, reversível e orientada por diagnóstico do FiveM para **GTAV Legacy**.
+- **Produto:** Ralven, plataforma de gerenciamento e otimização do Windows com IA, transparente, reversível e orientada por diagnóstico. FiveM para **GTAV Legacy** é a integração especializada atual da área de Jogos.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
 - **Último estado consolidado:** 09/09/2026, após integração dos PRs #140–#146: ReShade oficial no hub FiveM, rodapé simplificado, fundação do Ralven AI, Visão Geral focada no Windows, sessão/telemetria do dashboard, coleta em segundo plano e hardening do updater. Confirme o estado real com Git e testes atuais antes de trabalhar.
 - **Release pública atual:** `v1.6.1`, publicada a partir de `main`. A próxima versão só é definida no fluxo oficial de release a partir das mudanças posteriores a essa tag.
@@ -14,7 +14,7 @@
 ## 2. Objetivo e invariantes de segurança
 
 - Priorizar mudanças pequenas, verificáveis, diagnosticáveis e reversíveis; nunca prometer ganho universal de FPS.
-- Suporte operacional somente a **FiveM para GTAV Legacy**. GTAV Enhanced deve ser detectado/bloqueado com segurança até existir suporte específico.
+- A integração de **FiveM para GTAV Legacy** é a única integração de jogo com suporte operacional hoje. GTAV Enhanced deve ser detectado/bloqueado com segurança até existir suporte específico.
 - Nunca desativar Defender, Firewall, SmartScreen, UAC, Windows Update ou serviços essenciais; nunca criar exclusões de antivírus.
 - Nunca injetar código, alterar memória de processos, instalar driver de kernel, usar hook gráfico ou baixar/executar código arbitrário como mecanismo de otimização.
 - Caches e arquivos sensíveis são tratados por allowlist. Autenticação, `game-storage`, NUI storage, configurações e plugins não são lixo automático.
