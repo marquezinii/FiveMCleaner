@@ -595,8 +595,11 @@
   <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Closing the window keeps Ralven running in the notification area.</value></data>
   <data name="Settings.Telemetry.Title" xml:space="preserve"><value>Optional reports</value></data>
   <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Share anonymous usage and performance context plus sanitized error and crash reports. Enabled by default; you can turn it off at any time.</value></data>
+  <data name="Settings.Telemetry.Summary" xml:space="preserve"><value>Help improve Ralven with anonymous technical data.</value></data>
   <data name="Settings.Privacy.Title" xml:space="preserve"><value>Privacy</value></data>
   <data name="Settings.Privacy.Description" xml:space="preserve"><value>See the essential diagnostics used to keep Ralven reliable and control all optional reports in one place.</value></data>
+  <data name="Settings.Privacy.DataDetails" xml:space="preserve"><value>View details</value></data>
+  <data name="Settings.Privacy.ReportContents" xml:space="preserve"><value>View report data</value></data>
   <data name="Settings.CrashReports.Title" xml:space="preserve"><value>Send automatic crash reports</value></data>
   <data name="Settings.CrashReports.Description" xml:space="preserve"><value>Send sanitized stack traces when Ralven crashes or hits an unexpected error.</value></data>
   <data name="PrivacyConsent.WindowTitle" xml:space="preserve"><value>Privacy and diagnostics - Ralven</value></data>
@@ -608,6 +611,7 @@
   <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>We simplified the privacy controls without adding new data. Review the single optional choice below before continuing.</value></data>
   <data name="PrivacyConsent.Essential.Title" xml:space="preserve"><value>Essential diagnostics</value></data>
   <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>We collect the minimum needed for updates, security, stability and troubleshooting: app and Windows version, architecture, updater events and technical optimization outcomes. This cannot be turned off.</value></data>
+  <data name="PrivacyConsent.Essential.Summary" xml:space="preserve"><value>Required for updates, security, and stability.</value></data>
   <data name="PrivacyConsent.Essential.Status" xml:space="preserve"><value>ALWAYS ON</value></data>
   <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Optional reports</value></data>
   <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Shares anonymous hardware, profile and feature-use context plus sanitized error and crash reports. Enabled by default; you can turn it off at any time.</value></data>
@@ -1265,6 +1269,8 @@
   <data name="Update.ManualCheck.Failed" xml:space="preserve"><value>Could not check for updates: {0}</value></data>
   <data name="GtaVBenchmark.Title" xml:space="preserve"><value>Official GTA V benchmark</value></data>
   <data name="GtaVBenchmark.Description" xml:space="preserve"><value>Launches GTA V standalone (never inside FiveM) with Rockstar's own -benchmark flag, runs 3 rounds and reports the median. GTA V must be closed first.</value></data>
+  <data name="GtaVBenchmark.Summary" xml:space="preserve"><value>Runs GTA V's built-in test. Close the game first.</value></data>
+  <data name="GtaVBenchmark.Details" xml:space="preserve"><value>How it works</value></data>
   <data name="GtaVBenchmark.RunButton" xml:space="preserve"><value>Run official benchmark</value></data>
   <data name="GtaVBenchmark.Running" xml:space="preserve"><value>Running the official GTA V benchmark (3 rounds)... this can take several minutes.</value></data>
   <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Median of {4} round(s) — avg FPS: {0:0.#}, min FPS: {1:0.#}, 1% low: {2:0.#}, 0.1% low: {3:0.#}.</value></data>
@@ -1498,6 +1504,7 @@
   <data name="Settings.Account.Plan.Unavailable" xml:space="preserve"><value>Couldn't confirm your plan</value></data>
   <data name="Settings.Account.Plan.UnavailableDetail" xml:space="preserve"><value>Your current access couldn't be verified. No Pro feature is unlocked while this status is unavailable.</value></data>
   <data name="Settings.Account.Plan.Refresh" xml:space="preserve"><value>Refresh</value></data>
+  <data name="Settings.Account.Plan.Details" xml:space="preserve"><value>View plan details</value></data>
   <data name="Settings.Account.ChangePhoto" xml:space="preserve"><value>Change photo</value></data>
   <data name="Settings.Account.PhotoLocalOnly" xml:space="preserve"><value>Your profile photo is stored only on this computer.</value></data>
   <data name="Settings.Account.Unavailable" xml:space="preserve"><value>Account access is not available in this installation.</value></data>
