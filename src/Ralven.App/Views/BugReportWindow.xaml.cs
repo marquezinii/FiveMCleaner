@@ -12,7 +12,7 @@ using Microsoft.Win32;
 
 namespace Ralven.App.Views;
 
-public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
+public partial class BugReportWindow : Ralven.App.Controls.DialogWindow
 {
     private readonly IBugReportService service;
     private readonly string appVersion;
@@ -38,7 +38,6 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         localization = LocalizationService.Current;
         InitializeComponent();
         PopulateBugCodeComboBox();
-        ConstrainToWorkArea();
         Closing += BugReportWindow_Closing;
     }
 
@@ -296,17 +295,4 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
 
     private sealed record BugCodeOption(BugCode Code, string Label);
 
-    private void ConstrainToWorkArea()
-    {
-        const double outerMargin = 24;
-        var workArea = SystemParameters.WorkArea;
-        var availableWidth = Math.Max(320, workArea.Width - outerMargin);
-        var availableHeight = Math.Max(320, workArea.Height - outerMargin);
-        MinWidth = Math.Min(MinWidth, availableWidth);
-        MinHeight = Math.Min(MinHeight, availableHeight);
-        MaxWidth = availableWidth;
-        MaxHeight = availableHeight;
-        Width = Math.Min(Width, availableWidth);
-        Height = Math.Min(Height, availableHeight);
-    }
 }

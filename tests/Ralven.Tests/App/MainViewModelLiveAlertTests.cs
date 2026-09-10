@@ -28,7 +28,9 @@ public sealed class MainViewModelLiveAlertTests
         await viewModel.CheckLiveAlertAsync();
 
         Assert.True(viewModel.IsLiveAlertBannerVisible);
+        Assert.True(viewModel.IsLiveAlertStatusVisible);
         Assert.True(viewModel.IsLiveAlertIconVisible);
+        Assert.True(viewModel.IsLiveAlertNotificationVisible);
         Assert.Equal("Entre no Discord", viewModel.LiveAlertMessage);
     }
 
@@ -57,6 +59,7 @@ public sealed class MainViewModelLiveAlertTests
         await viewModel.CheckLiveAlertAsync();
 
         Assert.False(viewModel.IsLiveAlertBannerVisible);
+        Assert.False(viewModel.IsLiveAlertStatusVisible);
         Assert.True(viewModel.IsLiveAlertIconVisible);
     }
 
@@ -124,5 +127,33 @@ public sealed class MainViewModelLiveAlertTests
         viewModel.DismissLiveAlert();
 
         Assert.Equal(0, settings.SaveCallCount);
+    }
+
+    [Fact]
+    public async Task CheckLiveAlertAsync_CriticalAlert_UsesCriticalNotificationPresentation()
+    {
+        var viewModel = CreateViewModel(new FakeLiveAlertService(
+            new LiveAlertSnapshot("v1", "Atualize o Ralven", true, LiveAlertSeverity.Critical)));
+
+        await viewModel.CheckLiveAlertAsync();
+
+        Assert.Equal("DangerBaseBrush", viewModel.LiveAlertToneBrushKey);
+        Assert.Equal("DangerSurfaceBrush", viewModel.LiveAlertSurfaceBrushKey);
+        Assert.Equal("IconAlertTriangle", viewModel.LiveAlertIconKey);
+    }
+
+    [Fact]
+    public async Task ShowLiveAlertNotification_ReopensAnExplicitlyDismissedAlertWithoutOverwritingItsDismissal()
+    {
+        var settings = new FakeAppOptimizationService(new AppSettings(), settingsFileExists: false);
+        var viewModel = CreateViewModel(new FakeLiveAlertService(new LiveAlertSnapshot("v1", "Entre no Discord", true)), settings);
+        await viewModel.InitializeAsync();
+        await viewModel.CheckLiveAlertAsync();
+        viewModel.DismissLiveAlert();
+
+        viewModel.ShowLiveAlertNotification();
+
+        Assert.True(viewModel.IsLiveAlertNotificationVisible);
+        Assert.Equal("v1", settings.SavedSettings!.DismissedLiveAlertId);
     }
 }

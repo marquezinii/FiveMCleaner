@@ -6,20 +6,25 @@
 // `active` off without resending the stored text.
 
 export const MAX_LIVE_ALERT_MESSAGE_LENGTH = 300;
+export const LIVE_ALERT_SEVERITIES = new Set(['info', 'important', 'critical']);
 
 export function validateLiveAlertUpdate(payload) {
   if (typeof payload !== 'object' || payload === null) {
     return null;
   }
 
-  const { message, active } = payload;
+  const { message, active, severity } = payload;
 
   if (typeof active !== 'boolean') {
     return null;
   }
 
+  if (severity !== undefined && !LIVE_ALERT_SEVERITIES.has(severity)) {
+    return null;
+  }
+
   if (message === undefined) {
-    return { active };
+    return severity === undefined ? { active } : { active, severity };
   }
 
   if (typeof message !== 'string') {
@@ -34,5 +39,5 @@ export function validateLiveAlertUpdate(payload) {
     return null;
   }
 
-  return { message: trimmed, active };
+  return severity === undefined ? { message: trimmed, active } : { message: trimmed, active, severity };
 }

@@ -4,6 +4,7 @@
 #define AppUrl "https://vemryx.com/Ralven/"
 #define AppWebsite "https://vemryx.com/Ralven/"
 #define AppExeName "Ralven.Launcher.exe"
+#define AppUserModelId "Ralven.Ralven"
 #define StableAppId "{{35FF816F-9EFD-42C8-A63B-CC5EA138805A}"
 
 #ifndef AppVersion
@@ -137,9 +138,9 @@ Name: "startup"; Description: "{cm:StartWithWindows}"; GroupDescription: "{cm:Ad
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs notimestamp
 
 [Icons]
-Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#AppExeName}"; Comment: "{#AppName}"
+Name: "{group}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#AppExeName}"; AppUserModelID: "{#AppUserModelId}"; Comment: "{#AppName}"
 Name: "{group}\{cm:UninstallShortcut}"; Filename: "{uninstallexe}"; Comment: "{cm:UninstallShortcut}"
-Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#AppExeName}"; Comment: "{#AppName}"; Tasks: desktopicon
+Name: "{autodesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#AppExeName}"; AppUserModelID: "{#AppUserModelId}"; Comment: "{#AppName}"; Tasks: desktopicon
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; ValueType: string; ValueName: "Ralven"; ValueData: """{app}\{#AppExeName}"" --startup"; Flags: uninsdeletevalue; Tasks: startup; Check: not IsAutomaticUpdateRelaunch

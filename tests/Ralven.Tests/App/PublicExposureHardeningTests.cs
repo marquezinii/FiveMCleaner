@@ -143,6 +143,16 @@ public sealed class PublicExposureHardeningTests
     }
 
     [Fact]
+    public void FatalStartupPresentationFailure_InvalidatesHealthBeforeShowingError()
+    {
+        var root = FindRepositoryRoot();
+        var appSource = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "App.xaml.cs"));
+        var fatalHandler = appSource[appSource.IndexOf("private static void ShowFatalError", StringComparison.Ordinal)..];
+        var invalidate = fatalHandler.IndexOf("InvalidateStartupHealthIfPending()", StringComparison.Ordinal);
+        Assert.True(invalidate >= 0 && invalidate < fatalHandler.IndexOf("MessageBox.Show", StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Startup_DoesNotWriteRawExceptionsToDeveloperSpecificPath()
     {
         var root = FindRepositoryRoot();

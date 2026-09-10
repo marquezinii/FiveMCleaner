@@ -23,6 +23,20 @@ public sealed class CloudflareLiveAlertServiceTests
         Assert.Equal("2026-08-17T12:00:00.000Z", result!.Id);
         Assert.Equal("Entre no Discord", result.Message);
         Assert.True(result.Active);
+        Assert.Equal(LiveAlertSeverity.Important, result.Severity);
+    }
+
+    [Fact]
+    public async Task GetCurrentAsync_MapsTheCriticalSeverity()
+    {
+        var handler = JsonResponse("""{"id":"x","message":"Atualize o Ralven","active":true,"severity":"critical"}""");
+        using var httpClient = new HttpClient(handler);
+        var service = new CloudflareLiveAlertService(httpClient, TestEndpoint);
+
+        var result = await service.GetCurrentAsync(CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal(LiveAlertSeverity.Critical, result!.Severity);
     }
 
     [Fact]

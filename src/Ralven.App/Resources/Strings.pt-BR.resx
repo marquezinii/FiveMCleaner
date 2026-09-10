@@ -305,7 +305,7 @@
   <data name="Settings.About.Title" xml:space="preserve"><value>Sobre</value></data>
   <data name="Settings.About.Description" xml:space="preserve"><value>O que é o Ralven, quem desenvolve e onde encontrar ajuda.</value></data>
   <data name="Settings.About.AppName" xml:space="preserve"><value>Ralven</value></data>
-  <data name="Settings.About.Tagline" xml:space="preserve"><value>Mais desempenho. Menos complicação.</value></data>
+  <data name="Settings.About.Tagline" xml:space="preserve"><value>Plataforma de gerenciamento e otimização do Windows com IA.</value></data>
   <data name="Settings.About.Repository" xml:space="preserve"><value>Código-fonte no GitHub</value></data>
   <data name="Settings.About.Changelog" xml:space="preserve"><value>Histórico de versões</value></data>
   <data name="Settings.About.Discord.Title" xml:space="preserve"><value>Junte-se ao nosso Discord oficial</value></data>
@@ -313,6 +313,10 @@
   <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Abrir Discord</value></data>
   <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Entre no nosso Discord oficial</value></data>
   <data name="LiveAlert.Dismiss" xml:space="preserve"><value>Fechar</value></data>
+  <data name="LiveAlert.Reopen" xml:space="preserve"><value>Abrir aviso ativo</value></data>
+  <data name="LiveAlert.Title.Info" xml:space="preserve"><value>Informação do Ralven</value></data>
+  <data name="LiveAlert.Title.Important" xml:space="preserve"><value>Aviso importante do Ralven</value></data>
+  <data name="LiveAlert.Title.Critical" xml:space="preserve"><value>Aviso crítico do Ralven</value></data>
   <data name="Account.TitleBar.SignInPrompt" xml:space="preserve"><value>Entrar / Cadastre-se</value></data>
   <data name="Dashboard.Refresh" xml:space="preserve"><value>Reanalisar PC</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Otimizar PC</value></data>
@@ -340,9 +344,9 @@
   <data name="Plan.VerifiedActions" xml:space="preserve"><value>{0} ações verificadas  •  {1}</value></data>
   <data name="Plan.Review" xml:space="preserve"><value>Revisar plano</value></data>
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Otimizar agora</value></data>
-  <data name="Optimizer.Title" xml:space="preserve"><value>Otimizador do FiveM</value></data>
-  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Prepare seu computador para jogar com menos travamentos, processos desnecessários e problemas de cache.</value></data>
-  <data name="Optimizer.General.Title" xml:space="preserve"><value>Otimizador Geral</value></data>
+  <data name="Optimizer.Title" xml:space="preserve"><value>Otimização do Windows</value></data>
+  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Revise melhorias seguras para o Windows antes de aplicá-las.</value></data>
+  <data name="Optimizer.General.Title" xml:space="preserve"><value>Otimização do Windows</value></data>
   <data name="Optimizer.General.Subtitle" xml:space="preserve"><value>Escolha um perfil e confira o que será ajustado antes de começar.</value></data>
   <data name="Optimizer.FiveM.Title" xml:space="preserve"><value>Otimizador do FiveM</value></data>
   <data name="Optimizer.FiveM.Subtitle" xml:space="preserve"><value>Prepare o FiveM sobre GTAV Legacy com diagnósticos, ajustes e ações reversíveis dedicadas.</value></data>
@@ -402,9 +406,9 @@
   <data name="Settings.SaveFailed" xml:space="preserve"><value>Não foi possível salvar suas configurações. As escolhas mais recentes podem não persistir após reiniciar.</value></data>
   <data name="Settings.SaveRetry" xml:space="preserve"><value>Tentar novamente</value></data>
   <data name="Settings.General.Title" xml:space="preserve"><value>Geral</value></data>
-  <data name="Settings.General.Description" xml:space="preserve"><value>Escolha como o Ralven aparece, inicia e se mantém atualizado.</value></data>
+  <data name="Settings.General.Description" xml:space="preserve"><value>Escolha como o Ralven aparece, inicia, trabalha em segundo plano e busca atualizações.</value></data>
   <data name="Settings.General.Interface" xml:space="preserve"><value>Interface</value></data>
-  <data name="Settings.General.Startup" xml:space="preserve"><value>Inicialização e segundo plano</value></data>
+  <data name="Settings.General.Startup" xml:space="preserve"><value>Inicialização e área de notificação</value></data>
   <data name="Settings.General.Updates" xml:space="preserve"><value>Atualizações</value></data>
   <data name="Settings.Language.Title" xml:space="preserve"><value>Idioma</value></data>
   <data name="Settings.Language.Description" xml:space="preserve"><value>Acompanhe o Windows automaticamente ou escolha um idioma.</value></data>
@@ -418,15 +422,23 @@
   <data name="Settings.Appearance.System" xml:space="preserve"><value>Sistema</value></data>
   <data name="Settings.Appearance.Dark" xml:space="preserve"><value>Escuro</value></data>
   <data name="Settings.Appearance.Light" xml:space="preserve"><value>Claro</value></data>
-  <data name="Settings.CloseBehavior.Title" xml:space="preserve"><value>Minimizar para a bandeja</value></data>
+  <data name="Settings.CloseBehavior.Title" xml:space="preserve"><value>Continuar em segundo plano ao fechar</value></data>
   <data name="Settings.StartWithWindows.Title" xml:space="preserve"><value>Iniciar com o Windows</value></data>
-  <data name="Settings.StartWithWindows.Description" xml:space="preserve"><value>Abrir o Ralven depois que você entrar na conta.</value></data>
-  <data name="Settings.StartMinimized.Title" xml:space="preserve"><value>Iniciar minimizado</value></data>
-  <data name="Settings.StartMinimized.Description" xml:space="preserve"><value>Quando abrir com o Windows, manter o Ralven na área de notificação.</value></data>
+  <data name="Settings.StartWithWindows.Description" xml:space="preserve"><value>Abrir o Ralven automaticamente depois que você entrar no Windows.</value></data>
+  <data name="Settings.StartMinimized.Title" xml:space="preserve"><value>Iniciar em segundo plano</value></data>
+  <data name="Settings.StartMinimized.Description" xml:space="preserve"><value>Quando aberto com o Windows, iniciar somente na área de notificação.</value></data>
   <data name="Settings.AutomaticUpdates.Title" xml:space="preserve"><value>Procurar atualizações automaticamente</value></data>
   <data name="Settings.AutomaticUpdates.Description" xml:space="preserve"><value>Verificar se existe uma versão pública mais nova quando o Ralven iniciar.</value></data>
-  <data name="Settings.UpdateNotifications.Title" xml:space="preserve"><value>Notificações de atualização</value></data>
-  <data name="Settings.UpdateNotifications.Description" xml:space="preserve"><value>Mostrar uma notificação do Windows quando o Ralven encontrar uma nova versão.</value></data>
+  <data name="Settings.UpdateNotifications.Title" xml:space="preserve"><value>Notificar sobre novas versões</value></data>
+  <data name="Settings.UpdateNotifications.Description" xml:space="preserve"><value>Mostrar uma notificação do Windows quando a busca automática encontrar uma nova versão.</value></data>
+  <data name="Settings.RestoreDefaults.Section" xml:space="preserve"><value>Padrões</value></data>
+  <data name="Settings.RestoreDefaults.Title" xml:space="preserve"><value>Restaurar configurações padrão</value></data>
+  <data name="Settings.RestoreDefaults.Description" xml:space="preserve"><value>Restaura idioma, aparência, inicialização, segundo plano e atualizações. Conta e privacidade não são alteradas.</value></data>
+  <data name="Settings.RestoreDefaults.Button" xml:space="preserve"><value>Restaurar</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Title" xml:space="preserve"><value>Restaurar configurações padrão?</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Message" xml:space="preserve"><value>Suas preferências gerais voltarão aos padrões do Ralven. As configurações de conta e privacidade serão preservadas.</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Confirm" xml:space="preserve"><value>Restaurar</value></data>
   <data name="Safety.Limits.Title" xml:space="preserve"><value>Limites de segurança</value></data>
   <data name="Safety.Limits.Description" xml:space="preserve"><value>O Ralven nunca desativa Defender, Firewall, UAC, Windows Update, pagefile ou serviços críticos; não usa BCDEdit/HPET, injeção, hooks ou prioridade Realtime.</value></data>
   <data name="Safety.EnhancedBlocked" xml:space="preserve"><value>FiveM Enhanced: bloqueado nesta versão até o layout oficial ser testado.</value></data>
@@ -528,9 +540,9 @@
   <data name="Diagnosis.CloseGtaVSafely" xml:space="preserve"><value>Feche o GTA V para otimizar com segurança</value></data>
   <data name="Diagnosis.RecommendedProfile" xml:space="preserve"><value>Perfil {0} recomendado para este PC</value></data>
   <data name="Diagnosis.LegacyReady" xml:space="preserve"><value>O diagnóstico encontrou o layout Legacy conhecido e preparou ações compatíveis.</value></data>
-  <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>O Ralven preparou um plano do Windows com base na capacidade local deste PC. O FiveM tem uma experiência dedicada em Jogos.</value></data>
+  <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>O Ralven preparou um plano do Windows com base na capacidade local deste PC. As integrações de jogos compatíveis ficam disponíveis separadamente em Jogos.</value></data>
   <data name="Diagnosis.EnhancedUnsupported" xml:space="preserve"><value>A edição Enhanced usa um novo launcher e cache configurável. Esta versão não aplicará regras do Legacy nela.</value></data>
-  <data name="Diagnosis.InstallLegacy" xml:space="preserve"><value>A otimização geral do Windows já está disponível. Instale ou selecione o FiveM Legacy apenas para liberar as ações dedicadas ao jogo.</value></data>
+  <data name="Diagnosis.InstallLegacy" xml:space="preserve"><value>A otimização do Windows já está disponível. Escolha Jogos quando quiser configurar uma integração compatível e suas ações dedicadas.</value></data>
   <data name="Diagnosis.FreeDisk" xml:space="preserve"><value>{0} GB livres</value></data>
   <data name="History.ProfileTitle" xml:space="preserve"><value>Perfil {0}</value></data>
   <data name="History.WindowsGamingTitle" xml:space="preserve"><value>Ajustes de jogos do Windows</value></data>
@@ -579,16 +591,27 @@
   <data name="Runtime.RestoreCompleted" xml:space="preserve"><value>Configurações restauradas</value></data>
   <data name="Runtime.RestoreCompletedDetail" xml:space="preserve"><value>O rollback respeitou mudanças mais recentes e não tentou recuperar limpezas permanentes.</value></data>
   <data name="Tray.Open" xml:space="preserve"><value>Abrir Ralven</value></data>
+  <data name="Tray.Optimize" xml:space="preserve"><value>Otimizar PC</value></data>
+  <data name="Tray.CheckUpdates" xml:space="preserve"><value>Verificar atualizações</value></data>
+  <data name="Tray.Settings" xml:space="preserve"><value>Configurações</value></data>
   <data name="Tray.Exit" xml:space="preserve"><value>Sair</value></data>
+  <data name="Tray.MenuName" xml:space="preserve"><value>Menu rápido do Ralven</value></data>
+  <data name="Tray.Status.Ready" xml:space="preserve"><value>Pronto</value></data>
+  <data name="Tray.SessionUnavailable" xml:space="preserve"><value>Indisponível</value></data>
+  <data name="Tray.Tooltip" xml:space="preserve"><value>Ralven — {0}</value></data>
+  <data name="Tray.UpdateCheck.Title" xml:space="preserve"><value>Atualizações do Ralven</value></data>
   <data name="Tray.Title" xml:space="preserve"><value>Ralven continua em execução</value></data>
-  <data name="Tray.Message" xml:space="preserve"><value>Clique duas vezes no ícone da bandeja para voltar.</value></data>
+  <data name="Tray.Message" xml:space="preserve"><value>Clique no ícone da bandeja para voltar.</value></data>
   <data name="Notification.UpdateAvailable.Title" xml:space="preserve"><value>Atualização do Ralven disponível</value></data>
   <data name="Notification.UpdateAvailable.Message" xml:space="preserve"><value>A versão {0} já está disponível. Clique para abrir o Ralven.</value></data>
-  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Ao clicar no X, o Ralven passará a ser minimizado para a bandeja do sistema em vez de ser fechado.</value></data>
+  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Fechar a janela mantém o Ralven em execução na área de notificação.</value></data>
   <data name="Settings.Telemetry.Title" xml:space="preserve"><value>Relatórios opcionais</value></data>
   <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Compartilha contexto anônimo de uso e desempenho, além de relatórios sanitizados de erros e falhas. Vem ativado por padrão e pode ser desativado quando quiser.</value></data>
+  <data name="Settings.Telemetry.Summary" xml:space="preserve"><value>Ajude a melhorar o Ralven com dados técnicos anônimos.</value></data>
   <data name="Settings.Privacy.Title" xml:space="preserve"><value>Privacidade</value></data>
   <data name="Settings.Privacy.Description" xml:space="preserve"><value>Veja os diagnósticos essenciais usados para manter o Ralven confiável e controle todos os relatórios opcionais em um só lugar.</value></data>
+  <data name="Settings.Privacy.DataDetails" xml:space="preserve"><value>Ver detalhes</value></data>
+  <data name="Settings.Privacy.ReportContents" xml:space="preserve"><value>Ver dados dos relatórios</value></data>
   <data name="Settings.CrashReports.Title" xml:space="preserve"><value>Enviar relatórios automáticos de falhas</value></data>
   <data name="Settings.CrashReports.Description" xml:space="preserve"><value>Envie stack traces sanitizados quando o Ralven travar ou encontrar um erro inesperado.</value></data>
   <data name="PrivacyConsent.WindowTitle" xml:space="preserve"><value>Privacidade e diagnóstico - Ralven</value></data>
@@ -600,6 +623,7 @@
   <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>Simplificamos os controles de privacidade sem adicionar novos dados. Revise a única escolha opcional abaixo antes de continuar.</value></data>
   <data name="PrivacyConsent.Essential.Title" xml:space="preserve"><value>Diagnósticos essenciais</value></data>
   <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>Coletamos o mínimo necessário para atualizações, segurança, estabilidade e diagnóstico: versão do app e Windows, arquitetura, eventos do atualizador e resultado técnico das otimizações. Não pode ser desativado.</value></data>
+  <data name="PrivacyConsent.Essential.Summary" xml:space="preserve"><value>Necessários para atualizações, segurança e estabilidade.</value></data>
   <data name="PrivacyConsent.Essential.Status" xml:space="preserve"><value>SEMPRE ATIVO</value></data>
   <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Relatórios opcionais</value></data>
   <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Compartilha contexto anônimo de hardware, perfil e recursos usados, além de relatórios sanitizados de erros e falhas. Vem ativado por padrão e pode ser desativado quando quiser.</value></data>
@@ -1144,6 +1168,8 @@
   <data name="Update.Completed.Detail" xml:space="preserve"><value>A atualização foi instalada e verificada. Não é preciso fazer mais nada.</value></data>
   <data name="Update.BlockedWhileBusy" xml:space="preserve"><value>Conclua ou cancele a otimização atual antes de atualizar.</value></data>
   <data name="Update.ReleaseNotes" xml:space="preserve"><value>Ver alterações</value></data>
+  <data name="Update.Dismiss" xml:space="preserve"><value>Fechar por enquanto</value></data>
+  <data name="Update.Reopen" xml:space="preserve"><value>Mostrar atualização disponível</value></data>
   <data name="Update.Failed.Title" xml:space="preserve"><value>A atualização não foi baixada</value></data>
   <data name="Update.Failed.Detail" xml:space="preserve"><value>Nada foi instalado. {0}</value></data>
   <data name="Dialog.UpdateInstall.Title" xml:space="preserve"><value>Instalar atualização verificada</value></data>
@@ -1253,10 +1279,27 @@
   <data name="Settings.CheckForUpdates.Title" xml:space="preserve"><value>Procurar atualizações</value></data>
   <data name="Settings.CheckForUpdates.Description" xml:space="preserve"><value>Verifique manualmente, agora mesmo, se há uma versão pública mais nova do Ralven disponível.</value></data>
   <data name="Settings.CheckForUpdates.Button" xml:space="preserve"><value>Procurar atualizações</value></data>
+  <data name="Settings.Cache.Title" xml:space="preserve"><value>Cache do Ralven</value></data>
+  <data name="Settings.Cache.Description" xml:space="preserve"><value>Remove somente downloads de atualização, logs descartáveis e arquivos temporários criados pelo Ralven. Configurações, login, avatares, histórico, dados de rollback e telemetria pendente são preservados.</value></data>
+  <data name="Settings.Cache.Button" xml:space="preserve"><value>Limpar cache</value></data>
+  <data name="Settings.Cache.Confirm.Title" xml:space="preserve"><value>Limpar cache do Ralven</value></data>
+  <data name="Settings.Cache.Confirm.Message" xml:space="preserve"><value>Limpar agora o cache descartável do Ralven listado? Configurações, login, histórico, dados de rollback e telemetria pendente serão preservados.</value></data>
+  <data name="Settings.Cache.Calculating" xml:space="preserve"><value>Calculando o espaço recuperável…</value></data>
+  <data name="Settings.Cache.Cleaning" xml:space="preserve"><value>Limpando o cache…</value></data>
+  <data name="Settings.Cache.Empty" xml:space="preserve"><value>Nenhum cache recuperável do Ralven foi encontrado.</value></data>
+  <data name="Settings.Cache.Size" xml:space="preserve"><value>{0} recuperáveis em {1} arquivos.</value></data>
+  <data name="Settings.Cache.SizePartial" xml:space="preserve"><value>{0} encontrados em {1} arquivos. {2} locais protegidos ou indisponíveis foram ignorados.</value></data>
+  <data name="Settings.Cache.Cleaned" xml:space="preserve"><value>Cache limpo: {0} liberados.</value></data>
+  <data name="Settings.Cache.Partial" xml:space="preserve"><value>Limpeza parcial: {0} liberados e {1} restantes. Não foi possível remover {2} locais com segurança.</value></data>
+  <data name="Settings.Cache.Cancelled" xml:space="preserve"><value>A limpeza do cache foi cancelada com segurança.</value></data>
+  <data name="Settings.Cache.Error" xml:space="preserve"><value>O Ralven não conseguiu acessar o cache agora. Nenhuma configuração ou dado do usuário foi removido.</value></data>
+  <data name="Settings.Cache.DemoUnavailable" xml:space="preserve"><value>O acesso ao cache fica desativado no modo de demonstração.</value></data>
   <data name="Update.ManualCheck.UpToDate" xml:space="preserve"><value>Você já está na última versão publicada.</value></data>
   <data name="Update.ManualCheck.Failed" xml:space="preserve"><value>Não foi possível verificar atualizações: {0}</value></data>
   <data name="GtaVBenchmark.Title" xml:space="preserve"><value>Benchmark oficial do GTA V</value></data>
   <data name="GtaVBenchmark.Description" xml:space="preserve"><value>Lança o GTA V standalone (nunca dentro do FiveM) com o parâmetro oficial -benchmark da Rockstar, roda 3 rodadas e mostra a mediana. O GTA V precisa estar fechado antes.</value></data>
+  <data name="GtaVBenchmark.Summary" xml:space="preserve"><value>Executa o teste integrado do GTA V. Feche o jogo antes.</value></data>
+  <data name="GtaVBenchmark.Details" xml:space="preserve"><value>Como funciona</value></data>
   <data name="GtaVBenchmark.RunButton" xml:space="preserve"><value>Executar benchmark oficial</value></data>
   <data name="GtaVBenchmark.Running" xml:space="preserve"><value>Executando o benchmark oficial do GTA V (3 rodadas)... isso pode levar vários minutos.</value></data>
   <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Mediana de {4} rodada(s) — FPS médio: {0:0.#}, FPS mínimo: {1:0.#}, 1% low: {2:0.#}, 0,1% low: {3:0.#}.</value></data>
@@ -1341,10 +1384,10 @@
   <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Informados pelo Windows</value></data>
   <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>MEMÓRIA LIVRE</value></data>
   <data name="Dashboard.Kpi.Memory.Detail" xml:space="preserve"><value>de {0:0.0} GB no total</value></data>
-  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHE DO FIVEM</value></data>
-  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisado pelo otimizador</value></data>
+  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHE DE JOGOS</value></data>
+  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisado pela integração de jogos</value></data>
   <data name="Dashboard.Kpi.Cache.None" xml:space="preserve"><value>Nenhum</value></data>
-  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>Nenhum cache encontrado no disco</value></data>
+  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>Nenhum cache de integração de jogos foi encontrado no disco</value></data>
   <data name="Dashboard.Pressure.Low" xml:space="preserve"><value>Baixa</value></data>
   <data name="Dashboard.Pressure.Moderate" xml:space="preserve"><value>Moderada</value></data>
   <data name="Dashboard.Pressure.High" xml:space="preserve"><value>Alta</value></data>
@@ -1353,6 +1396,29 @@
   <data name="Dashboard.LivePerformance.Trend" xml:space="preserve"><value>MÉDIA E PICO</value></data>
   <data name="Dashboard.LivePerformance.Window" xml:space="preserve"><value>Último minuto</value></data>
   <data name="Dashboard.LivePerformance.Now" xml:space="preserve"><value>agora</value></data>
+  <data name="Dashboard.LivePerformance.FiveMDescription" xml:space="preserve"><value>Uso local de CPU e memória dos processos verificados do FiveM Legacy, sem hooks ou injeção.</value></data>
+  <data name="Dashboard.LivePerformance.Target.System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Dashboard.LivePerformance.Target.FiveM" xml:space="preserve"><value>FiveM</value></data>
+  <data name="Dashboard.LivePerformance.Target.FiveMHelp" xml:space="preserve"><value>Disponível quando uma instalação FiveM Legacy é detectada.</value></data>
+  <data name="Dashboard.LivePerformance.Paused" xml:space="preserve"><value>PAUSADO</value></data>
+  <data name="Dashboard.LivePerformance.PausedDetail" xml:space="preserve"><value>Atualização pausada</value></data>
+  <data name="Dashboard.LivePerformance.UpdatedNow" xml:space="preserve"><value>Atualizado agora</value></data>
+  <data name="Dashboard.LivePerformance.Ago60Seconds" xml:space="preserve"><value>60 s atrás</value></data>
+  <data name="Dashboard.LivePerformance.Current" xml:space="preserve"><value>ATUAL</value></data>
+  <data name="Dashboard.LivePerformance.Average" xml:space="preserve"><value>MÉDIA</value></data>
+  <data name="Dashboard.LivePerformance.Peak" xml:space="preserve"><value>PICO</value></data>
+  <data name="Dashboard.LivePerformance.ChartAutomation" xml:space="preserve"><value>Histórico de {0}. Atual: {1}; média: {2}; pico: {3}.</value></data>
+  <data name="Dashboard.LivePerformance.TrendValueNetwork" xml:space="preserve"><value>média {0:0.0} MB/s · pico {1:0.0} MB/s</value></data>
+  <data name="Dashboard.LivePerformance.TrendValueGigabytes" xml:space="preserve"><value>média {0:0.0} GB · pico {1:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.GigabytesValue" xml:space="preserve"><value>{0:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.FiveMProcessCount" xml:space="preserve"><value>Processos verificados: {0}</value></data>
+  <data name="Dashboard.LivePerformance.Status.Collecting" xml:space="preserve"><value>Coletando amostras suficientes para uma leitura sustentada.</value></data>
+  <data name="Dashboard.LivePerformance.Status.FiveMNotRunning" xml:space="preserve"><value>O FiveM não está em execução.</value></data>
+  <data name="Dashboard.LivePerformance.Status.FiveMReadOnly" xml:space="preserve"><value>Medição local e somente leitura dos processos verificados do FiveM.</value></data>
+  <data name="Dashboard.LivePerformance.Status.MetricUnavailable" xml:space="preserve"><value>Este recurso não está disponível no Windows agora.</value></data>
+  <data name="Dashboard.LivePerformance.Status.Network" xml:space="preserve"><value>A taxa de transferência usa uma escala dinâmica própria.</value></data>
+  <data name="Dashboard.LivePerformance.Status.SustainedHigh" xml:space="preserve"><value>Uso elevado sustentado nos últimos segundos.</value></data>
+  <data name="Dashboard.LivePerformance.Status.NoSustainedHigh" xml:space="preserve"><value>Sem uso elevado sustentado nas amostras mais recentes.</value></data>
   <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>ÚLTIMA OTIMIZAÇÃO</value></data>
   <data name="Dashboard.LastRun.None.Title" xml:space="preserve"><value>Nenhuma otimização ainda</value></data>
   <data name="Dashboard.LastRun.None.Detail" xml:space="preserve"><value>Execute o otimizador para criar um ponto de restauração e um relatório que você poderá consultar aqui.</value></data>
@@ -1490,14 +1556,15 @@
   <data name="Settings.Account.Plan.Unavailable" xml:space="preserve"><value>Não foi possível confirmar seu plano</value></data>
   <data name="Settings.Account.Plan.UnavailableDetail" xml:space="preserve"><value>Não foi possível verificar seu acesso atual. Nenhum recurso Pro é liberado enquanto esse estado estiver indisponível.</value></data>
   <data name="Settings.Account.Plan.Refresh" xml:space="preserve"><value>Atualizar</value></data>
+  <data name="Settings.Account.Plan.Details" xml:space="preserve"><value>Ver detalhes do plano</value></data>
   <data name="Settings.Account.ChangePhoto" xml:space="preserve"><value>Trocar foto</value></data>
   <data name="Settings.Account.PhotoLocalOnly" xml:space="preserve"><value>A foto de perfil fica somente neste computador.</value></data>
   <data name="Settings.Account.Unavailable" xml:space="preserve"><value>O acesso à conta não está disponível nesta instalação.</value></data>
   <data name="Report.ViewHistoryButton" xml:space="preserve"><value>Ver histórico</value></data>
   <data name="Settings.Account.CurrentPasswordPlaceholder" xml:space="preserve"><value>Confirme para alterar sua senha, e-mail ou excluir a conta</value></data>
   <data name="Settings.Account.Delete" xml:space="preserve"><value>Excluir conta</value></data>
-  <data name="Settings.Tools.Title" xml:space="preserve"><value>Ferramentas</value></data>
-  <data name="Settings.Tools.Description" xml:space="preserve"><value>Ações de manutenção e suporte para usar somente quando necessário.</value></data>
+  <data name="Settings.Tools.Title" xml:space="preserve"><value>Diagnóstico e suporte</value></data>
+  <data name="Settings.Tools.Description" xml:space="preserve"><value>Meça o GTA V, relate problemas e encontre ajuda quando precisar.</value></data>
   <data name="Settings.Account.CurrentPasswordLabel" xml:space="preserve"><value>Senha atual</value></data>
   <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Remover</value></data>
   <data name="Progress.CancelHelp" xml:space="preserve"><value>A etapa atual termina antes de parar.</value></data>
@@ -1794,4 +1861,10 @@ Média CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Personal.Export.Failed" xml:space="preserve"><value>Não foi possível exportar o histórico. Confira o local escolhido e tente novamente.</value></data>
   <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>Você informa os dados do pagador na página segura do Asaas. O Ralven guarda referências, valores, estados e datas da cobrança; nunca dados do cartão. Qualquer estorno concluído, inclusive parcial, remove o acesso do período pago correspondente.</value></data>
   <data name="RalvenAi.Logo.Animate" xml:space="preserve"><value>Animar logo do Ralven AI</value></data>
+  <data name="Startup.Initializing" xml:space="preserve"><value>Inicializando</value></data>
+  <data name="Startup.Close" xml:space="preserve"><value>Fechar</value></data>
+  <data name="Dialog.Close" xml:space="preserve"><value>Fechar</value></data>
+  <data name="Dialog.Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Dialog.Confirm" xml:space="preserve"><value>Continuar</value></data>
+  <data name="Dialog.OptionalDetails" xml:space="preserve"><value>Detalhes opcionais</value></data>
 </root>

@@ -7,7 +7,7 @@ using Ralven.App.Services;
 
 namespace Ralven.App.Views;
 
-public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
+public partial class AccountWindow : Ralven.App.Controls.DialogWindow
 {
     private const int WM_SYSCOMMAND = 0x0112;
     private const int SC_MOVE = 0xF010;
@@ -80,15 +80,6 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         }
 
         Render(state);
-    }
-
-    /// <summary>Esc cancels, exactly like the X in the title bar.</summary>
-    protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
-    {
-        base.OnPreviewKeyDown(e);
-        if (e.Key != Key.Escape) return;
-        e.Handled = true;
-        Close();
     }
 
     /// <summary>
@@ -218,6 +209,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     /// </summary>
     private void ApplyModeCopy()
     {
+        SetPreferredHeight(registering ? 780 : 620);
         TitleText.Text = registering ? T("Account.Register.Title") : T("Account.Welcome.Title");
         SubtitleText.Text = registering
             ? T("Account.Register.Subtitle")

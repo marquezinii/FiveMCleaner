@@ -19,7 +19,7 @@ Worker), never by a client-side `if`.
 Only the internal-logic assemblies:
 
 - `Ralven.Core` — action catalog, profiles, planning.
-- `Ralven.Windows` — Windows/FiveM adapters and diagnostics.
+- `Ralven.Windows` — Windows and game-integration adapters and diagnostics.
 
 Everything else is intentionally left untouched, because these assemblies are
 resolved **by name at runtime** and renaming their members would break the app

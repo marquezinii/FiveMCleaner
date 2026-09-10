@@ -27,6 +27,7 @@ $requiredPatterns = [ordered]@{
     'x64-compatible runtime gate'   = 'ArchitecturesAllowed=x64compatible'
     'modern system-aware theme'     = 'WizardStyle=modern dynamic'
     'official application icon'     = 'SetupIconFile=.*Ralven\.ico'
+    'stable shortcut app identity'  = '#define AppUserModelId "Ralven\.Ralven"[\s\S]*AppUserModelID: "\{#AppUserModelId\}"'
     'proportional wizard artwork'   = 'WizardImageFile=\{#InstallerArtworkPath\}'
     'dark wizard artwork'           = 'WizardImageFileDynamicDark=\{#InstallerArtworkPathDark\}'
     'ultra lzma compression'        = 'Compression=lzma2/ultra'

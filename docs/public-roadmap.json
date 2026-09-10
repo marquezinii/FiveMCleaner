@@ -10,15 +10,24 @@
   },
   "items": [
     {
+      "id": "startup",
+      "status": { "pt": "Em desenvolvimento", "en": "In development" },
+      "title": { "pt": "Inicialização com resposta visual", "en": "Startup with visual feedback" },
+      "description": {
+        "pt": "A preparação local se sobrepõe à construção da janela, com uma tela de inicialização leve durante o trabalho necessário. Envios remotos do launcher deixam de atrasar a abertura.",
+        "en": "Local preparation overlaps window construction, with a lightweight startup screen during required work. Remote launcher delivery no longer delays opening the app."
+      }
+    },
+    {
       "id": "background-efficiency",
       "status": { "pt": "Em desenvolvimento", "en": "In development" },
       "title": {
-        "pt": "Coleta de métricas sob demanda",
-        "en": "On-demand resource monitoring"
+        "pt": "Painel de recursos sob demanda",
+        "en": "On-demand resource dashboard"
       },
       "description": {
-        "pt": "As métricas ao vivo pausam quando a janela perde o foco, é minimizada ou vai para a bandeja, e retomam ao voltar à Visão geral. O monitor local de sessão continua funcionando quando ativado.",
-        "en": "Live metrics pause when the window loses focus, is minimized or moves to the tray, and resume when returning to Overview. The local session monitor keeps running when enabled."
+        "pt": "O painel ao vivo ganha métricas selecionáveis, escala e resumo por recurso, além de CPU e memória locais dos processos verificados do FiveM Legacy. A coleta visual continua pausando fora do primeiro plano.",
+        "en": "The live dashboard adds selectable metrics, per-resource scales and summaries, plus local CPU and memory readings from verified FiveM Legacy processes. Visual collection still pauses outside the foreground."
       }
     },
     {
@@ -29,8 +38,8 @@
         "en": "Clearer experience and diagnostics"
       },
       "description": {
-        "pt": "O Otimizador ganha uma leitura mais direta do plano e dos resultados. A aba Sistema organiza informações essenciais do PC e da proteção, e Jogos abre um hub dedicado do FiveM com acesso ao download oficial mais recente do ReShade.",
-        "en": "The Optimizer gets a more direct view of plans and results. The System tab organizes essential PC and protection information, and Games opens a dedicated FiveM hub with access to the latest official ReShade download."
+        "pt": "O Otimizador ganha uma leitura mais direta do plano e dos resultados. Sistema organiza informações essenciais do PC e da proteção; Jogos abre um hub dedicado do FiveM com acesso ao ReShade oficial; Configurações reúne preferências com nomes e padrões claros, revelando detalhes sob demanda; diálogos de conta, relatos e confirmação compartilham superfícies mais leves e consistentes; avisos de atualização e comunicados ao vivo ficam claros, acionáveis e reabríveis; e a bandeja oferece um menu escuro com status e atalhos úteis.",
+        "en": "The Optimizer gets a more direct view of plans and results. System organizes essential PC and protection information; Games opens a dedicated FiveM hub with access to the official ReShade; Settings groups preferences with clear names and reveals details on demand; account, report, and confirmation dialogs share lighter, consistent surfaces; update notices and live announcements are clear, actionable, and reopenable; and the system tray offers a dark menu with status and useful shortcuts."
       }
     },
     {
@@ -65,8 +74,8 @@
         "en": "More reliable packages and operations"
       },
       "description": {
-        "pt": "A aba Aplicativos simplifica instalar, atualizar e desinstalar pacotes das fontes confiáveis. Relatos de erro e o painel operacional ganham contexto para acelerar a investigação.",
-        "en": "The Applications tab simplifies installing, updating and removing packages from trusted sources. Error reports and the operational dashboard gain context to speed investigation."
+        "pt": "A aba Aplicativos simplifica instalar, atualizar e desinstalar pacotes das fontes confiáveis. Configurações passa a mostrar e limpar somente o cache descartável do Ralven, preservando login, preferências e rollback. Relatos de erro e o painel operacional ganham contexto para acelerar a investigação.",
+        "en": "The Applications tab simplifies installing, updating and removing packages from trusted sources. Settings now reports and clears only Ralven's disposable cache while preserving sign-in, preferences, and rollback data. Error reports and the operational dashboard gain context to speed investigation."
       }
     }
   ]
