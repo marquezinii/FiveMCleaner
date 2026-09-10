@@ -32,7 +32,7 @@ public sealed partial class MainViewModel
     /// mesmo <see cref="ProgressPercent"/>, com um piso para que o núcleo nunca
     /// pareça parado nos primeiros segundos de uma execução que já começou.
     /// </summary>
-    public string ProgressPercentLabel => $"{Math.Round(ProgressPercent, MidpointRounding.AwayFromZero).ToString("0", CultureInfo.CurrentCulture)}%";
+    public string ProgressPercentLabel => $"{Math.Round(ProgressPercent, MidpointRounding.AwayFromZero).ToString("0", localization.CurrentCulture)}%";
 
     public double ProgressIntensity => 0.3 + (Math.Clamp(ProgressPercent / 100d, 0, 1) * 0.7);
 

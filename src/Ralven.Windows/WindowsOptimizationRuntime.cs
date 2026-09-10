@@ -752,7 +752,10 @@ public sealed class WindowsOptimizationRuntime
     {
         var factory = new WindowsOptimizationActionFactory(environment, dependencies);
         var catalog = new WindowsActionCatalog(factory.CreateCatalogActions());
-        var engine = new WindowsTransactionEngine(catalog, dependencies.JournalStore);
+        var engine = new WindowsTransactionEngine(
+            catalog,
+            dependencies.JournalStore,
+            dependencies.ActionText);
         return new WindowsOptimizationRuntime(factory, catalog, engine);
     }
 

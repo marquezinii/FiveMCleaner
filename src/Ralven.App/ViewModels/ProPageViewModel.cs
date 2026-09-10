@@ -1,4 +1,3 @@
-using System.Globalization;
 using Ralven.App.Services;
 
 namespace Ralven.App.ViewModels;
@@ -27,7 +26,7 @@ internal sealed class ProPageViewModel : BindableBase
     public bool ShowCheckout => !demo && signedIn && snapshot is { CheckoutAvailable: true, Offer: not null };
     public bool ShowCancel => snapshot?.Subscription?.CanCancel == true;
     public string Price => snapshot?.Offer is { } offer
-        ? (offer.AmountCents / 100m).ToString("C", CultureInfo.GetCultureInfo("pt-BR"))
+        ? L.FormatCurrency(offer.AmountCents / 100m, offer.Currency)
         : L.GetString("Pro.Price.Unavailable");
     public string ConsentText => L.Format("Pro.Checkout.Consent", Price);
     public string StatusTitle => L.GetString(demo ? "Pro.Status.Demo" : !signedIn ? "Pro.Status.SignedOut"

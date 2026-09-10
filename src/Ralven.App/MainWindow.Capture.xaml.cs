@@ -28,12 +28,7 @@ public partial class MainWindow
             var language = arguments.FirstOrDefault(value => value.StartsWith("--capture-language=", StringComparison.OrdinalIgnoreCase))?
                 ["--capture-language=".Length..];
             if (demoMode && language is not null)
-                LocalizationService.Current.SetLanguage(language switch
-                {
-                    "en" => AppLanguage.English,
-                    "es" => AppLanguage.Spanish,
-                    _ => AppLanguage.PortugueseBrazil,
-                });
+                viewModel.SelectLanguage(language);
 
             // O modo demo devolve AppSettings padrão de propósito (nunca lê
             // nem grava o arquivo do usuário), então o tema capturado sempre
@@ -103,9 +98,13 @@ public partial class MainWindow
                 Navigate(target.Element);
                 if (demoMode && tag == "HistoryPopulated")
                 {
-                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), "Windows · Personal", "06/09/2026 14:30", "6 · Committed", true));
-                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), "FiveM · Balanced", "05/09/2026 20:10", "4 · CommittedWithErrors", true));
-                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), "Windows · Light", "04/09/2026 10:00", "2 · RolledBack", false));
+                    var l = LocalizationService.Current;
+                    var firstDate = new DateTime(2026, 9, 6, 14, 30, 0).ToString("g", l.CurrentCulture);
+                    var secondDate = new DateTime(2026, 9, 5, 20, 10, 0).ToString("g", l.CurrentCulture);
+                    var thirdDate = new DateTime(2026, 9, 4, 10, 0, 0).ToString("g", l.CurrentCulture);
+                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), l.Format("History.ProfileTitle", l.GetString("Ultra.Name")), firstDate, l.Format("History.AdjustmentsState", 6, l.GetString("History.State.Committed")), true));
+                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), l.Format("History.ProfileTitle", l.GetString("Profiles.Balanced.Name")), secondDate, l.Format("History.AdjustmentsState", 4, l.GetString("History.State.CommittedWithErrors")), true));
+                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), l.Format("History.ProfileTitle", l.GetString("Profiles.Light.Name")), thirdDate, l.Format("History.AdjustmentsState", 2, l.GetString("History.State.RolledBack")), false));
                 }
             }
 

@@ -622,6 +622,17 @@ Esses arquivos têm durabilidades diferentes e isso muda o que pode ser alterado
 
 Caches não são copiados para o journal. Durante uma limpeza, arquivos allowlisted são movidos para uma quarentena dentro do próprio volume; a ação restaura essa quarentena se falhar antes do commit e a remove somente ao confirmar a transação.
 
+## Localização
+
+O catálogo declarativo em `localization/locales.json` define os idiomas e os
+conjuntos de recursos do aplicativo, do atualizador e das ações Windows. O
+seletor e a detecção automática consomem esse catálogo, sem branches por idioma;
+o locale também acompanha a solicitação tipada ao broker para formatar o journal
+e os resultados elevados. Os recursos são versionados, validados offline e
+sincronizados por `scripts/Sync-Localization.ps1`; consulte
+`docs/localization.md` para o contrato de chaves, placeholders, glossário,
+revisão e pseudo-localização.
+
 ## Testabilidade
 
 Adaptadores de sistema ficam atrás de interfaces. Testes devem cobrir:

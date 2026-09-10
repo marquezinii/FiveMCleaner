@@ -1,3 +1,5 @@
+using System.Globalization;
+
 namespace Ralven.Broker;
 
 internal enum BrokerOperation
@@ -9,6 +11,7 @@ internal enum BrokerOperation
 internal sealed record BrokerCommand(
     BrokerOperation Operation,
     Guid PipeId,
+    string CultureName,
     string? RequestPath,
     Guid? RollbackTransactionId);
 
@@ -25,15 +28,16 @@ internal static class BrokerCommandLine
     private const string RequestOption = "--request";
     private const string PipeOption = "--pipe";
     private const string RollbackOption = "--rollback";
+    private const string CultureOption = "--culture";
 
     public static BrokerCommand Parse(string[] args)
     {
         ArgumentNullException.ThrowIfNull(args);
 
-        if (args.Length != 4)
+        if (args.Length != 6)
         {
             throw new BrokerUsageException(
-                "Expected --request <file> --pipe <guid> or --rollback <guid> --pipe <guid>.");
+                "Expected --request <file> --pipe <guid> --culture <name> or --rollback <guid> --pipe <guid> --culture <name>.");
         }
 
         var values = new Dictionary<string, string>(StringComparer.Ordinal);
@@ -41,12 +45,27 @@ internal static class BrokerCommandLine
         {
             var option = args[index];
             var value = args[index + 1];
-            if (option is not (RequestOption or PipeOption or RollbackOption)
+            if (option is not (RequestOption or PipeOption or RollbackOption or CultureOption)
                 || string.IsNullOrWhiteSpace(value)
                 || !values.TryAdd(option, value))
             {
                 throw new BrokerUsageException("The broker command line is invalid.");
             }
+        }
+
+        if (!values.TryGetValue(CultureOption, out var cultureValue))
+        {
+            throw new BrokerUsageException("--culture must contain a valid culture name.");
+        }
+
+        string cultureName;
+        try
+        {
+            cultureName = CultureInfo.GetCultureInfo(cultureValue).Name;
+        }
+        catch (CultureNotFoundException)
+        {
+            throw new BrokerUsageException("--culture must contain a valid culture name.");
         }
 
         if (!values.TryGetValue(PipeOption, out var pipeValue)
@@ -68,6 +87,7 @@ internal static class BrokerCommandLine
             return new BrokerCommand(
                 BrokerOperation.ExecutePlan,
                 pipeId,
+                cultureName,
                 requestPath,
                 RollbackTransactionId: null);
         }
@@ -80,6 +100,7 @@ internal static class BrokerCommandLine
         return new BrokerCommand(
             BrokerOperation.Rollback,
             pipeId,
+            cultureName,
             RequestPath: null,
             transactionId);
     }

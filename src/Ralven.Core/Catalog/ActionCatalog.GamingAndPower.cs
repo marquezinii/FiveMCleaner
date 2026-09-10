@@ -136,7 +136,7 @@ public sealed partial class ActionCatalog
                 detectionSummary: "Lê o atraso atual de abertura dos menus pela API oficial SystemParametersInfo do Windows.",
                 confirmationSummary: "Relê e confirma que o atraso não ultrapassa 100 ms.",
                 undoSummary: "Totalmente reversível: o atraso anterior é restaurado no rollback.",
-                riskLimitations: "Muda somente a velocidade de abertura de menus em cascata; o efeito percebido varia conforme o uso."),
+                riskLimitations: "Muda somente a velocidade de abertura dos menus do Windows; o efeito percebido varia conforme o PC e o uso."),
             Define(
                 OptimizationActionIds.ReduceWindowsVisualEffects,
                 "Reduzir efeitos visuais do Windows",

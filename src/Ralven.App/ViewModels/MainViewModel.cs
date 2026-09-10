@@ -119,7 +119,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private LiveMetricKind selectedLiveMetric;
     private LiveSystemMetricsSnapshot? lastLiveMetrics;
     private int readinessScore;
-    private AppLanguagePreference languagePreference = AppLanguagePreference.Automatic;
+    private string languagePreference = AppLanguagePreference.Automatic;
     private AppThemePreference themePreference = AppThemePreference.System;
     private bool minimizeToTrayOnClose;
     private bool launchAtStartup;

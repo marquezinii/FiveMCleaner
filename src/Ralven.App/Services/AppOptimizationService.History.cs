@@ -70,8 +70,8 @@ public sealed partial class AppOptimizationService
                         ? AppHistoryKind.WindowsGaming
                         : AppHistoryKind.Optimization,
                     State = hasRequiredReceipt
-                        ? TranslateState(journal.State)
-                        : localization.GetString("History.State.AdminReceiptMissing"),
+                        ? StateResourceKey(journal.State)
+                        : "History.State.AdminReceiptMissing",
                     ChangedActions = changed,
                     CanRollback = canRollback && hasRequiredReceipt && journal.State is
                         TransactionState.Committed
@@ -267,7 +267,7 @@ public sealed partial class AppOptimizationService
                 ]);
     }
 
-    private string TranslateState(TransactionState state) => localization.GetString(state switch
+    private static string StateResourceKey(TransactionState state) => state switch
     {
         TransactionState.Committed => "History.State.Committed",
         TransactionState.CommittedWithErrors => "History.State.CommittedWithErrors",
@@ -278,7 +278,7 @@ public sealed partial class AppOptimizationService
         TransactionState.RollbackFailed => "History.State.RollbackFailed",
         TransactionState.Failed => "History.State.FailedSafely",
         _ => "History.State.Interrupted"
-    });
+    };
 
     private static bool CanOfferRollback(WindowsActionJournalEntry action)
     {

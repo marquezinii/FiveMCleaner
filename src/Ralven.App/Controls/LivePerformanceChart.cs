@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media;
+using Ralven.App.Services;
 
 // O projeto também referencia WinForms, então os tipos gráficos precisam de
 // alias explícito para não colidirem com System.Drawing.
@@ -563,7 +564,7 @@ public sealed class LivePerformanceChart : FrameworkElement
             (CreateText(
                 seconds <= 0
                     ? NowLabel
-                    : "-" + seconds.ToString("0", CultureInfo.CurrentCulture) + "s",
+                    : "-" + seconds.ToString("0", LocalizationService.Current.CurrentCulture) + "s",
                 9,
                 labels),
                 null)
@@ -719,7 +720,7 @@ public sealed class LivePerformanceChart : FrameworkElement
 
     private FormattedText CreateText(string text, double size, Brush brush) => new(
         text,
-        CultureInfo.CurrentCulture,
+        LocalizationService.Current.CurrentCulture,
         FlowDirection.LeftToRight,
         new Typeface(LabelFont, FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal),
         size,

@@ -59,13 +59,13 @@ public sealed class GraphicsPresetRecommendationAction : WindowsOptimizationActi
             or InvalidOperationException)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "Não foi possível ler o hardware necessário para recomendar um preset agora."));
+                WindowsActionText.Format("ActionResults.GraphicsPreset.HardwareReadFailed")));
         }
 
         if (gpus.Count == 0 || cpuSnapshot is null || ram.Modules.Count == 0)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "Não foi possível ler hardware suficiente para recomendar um preset agora; use os diagnósticos de GPU/CPU/RAM individualmente."));
+                WindowsActionText.Format("ActionResults.GraphicsPreset.InsufficientHardware")));
         }
 
         return Task.FromResult(WindowsActionApplyResult.NoChange(
@@ -98,23 +98,33 @@ public sealed class GraphicsPresetRecommendationAction : WindowsOptimizationActi
             || ramGiB < 8;
         if (isWeak)
         {
-            return $"Recomendação: preset FPS. Hardware detectado (GPU {(hasDedicatedGpu ? "dedicada" : "integrada")}, "
-                + $"~{vramGiB:0.#} GB de VRAM, {cpuSnapshot.LogicalThreads} threads lógicas, ~{ramGiB:0.#} GB de RAM) "
-                + "sugere priorizar FPS e responsividade em vez de qualidade visual.";
+            return WindowsActionText.Format(
+                "ActionResults.GraphicsPreset.Fps",
+                WindowsActionText.Format(hasDedicatedGpu
+                    ? "ActionResults.GraphicsPreset.DedicatedGpu"
+                    : "ActionResults.GraphicsPreset.IntegratedGpu"),
+                vramGiB,
+                cpuSnapshot.LogicalThreads,
+                ramGiB);
         }
 
         var isStrong = vramGiB >= 8 && cpuSnapshot.LogicalThreads >= 8 && ramGiB >= 16;
         if (isStrong && refreshHz <= 75)
         {
-            return $"Recomendação: preset Qualidade. Hardware com boa folga (GPU dedicada, ~{vramGiB:0.#} GB de VRAM, "
-                + $"{cpuSnapshot.LogicalThreads} threads lógicas, ~{ramGiB:0.#} GB de RAM) e monitor de {refreshHz} Hz "
-                + "comportam elevar a qualidade visual sem comprometer o FPS de forma perceptível.";
+            return WindowsActionText.Format(
+                "ActionResults.GraphicsPreset.Quality",
+                vramGiB,
+                cpuSnapshot.LogicalThreads,
+                ramGiB,
+                refreshHz);
         }
 
-        return $"Recomendação: preset Equilibrado. Hardware (GPU dedicada, ~{vramGiB:0.#} GB de VRAM, "
-            + $"{cpuSnapshot.LogicalThreads} threads lógicas, ~{ramGiB:0.#} GB de RAM, monitor de {refreshHz} Hz) "
-            + "sugere equilibrar qualidade visual com estabilidade de quadros. Esta é uma heurística com base no "
-            + "hardware local; não considera o servidor utilizado nem um benchmark ainda não executado.";
+        return WindowsActionText.Format(
+            "ActionResults.GraphicsPreset.Balanced",
+            vramGiB,
+            cpuSnapshot.LogicalThreads,
+            ramGiB,
+            refreshHz);
     }
 }
 
@@ -147,7 +157,7 @@ public sealed class TextureVramFitDiagnosisAction : WindowsOptimizationAction
         if (!File.Exists(settingsPath))
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "O arquivo gráfico ainda não existe; nada para comparar com a VRAM."));
+                WindowsActionText.Format("ActionResults.TextureVram.SettingsMissing")));
         }
 
         int? textureQuality;
@@ -159,13 +169,13 @@ public sealed class TextureVramFitDiagnosisAction : WindowsOptimizationAction
             or UnauthorizedAccessException or XmlException or InvalidDataException)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                $"Não foi possível ler a qualidade de textura configurada ({exception.Message})."));
+                WindowsActionText.Format("ActionResults.TextureVram.SettingsReadFailed")));
         }
 
         if (textureQuality is null)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "A opção de qualidade de textura não foi encontrada no arquivo gráfico."));
+                WindowsActionText.Format("ActionResults.TextureVram.OptionMissing")));
         }
 
         IReadOnlyList<GpuAdapterDetails> gpus;
@@ -178,14 +188,14 @@ public sealed class TextureVramFitDiagnosisAction : WindowsOptimizationAction
             or InvalidOperationException)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "Não foi possível ler a VRAM da GPU para comparar com a qualidade de textura configurada."));
+                WindowsActionText.Format("ActionResults.TextureVram.VramUnavailable")));
         }
 
         var bestVramBytes = gpus.Count == 0 ? (long?)null : gpus.Max(gpu => gpu.VramBytes ?? 0);
         if (bestVramBytes is null or 0)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "Não foi possível ler a VRAM da GPU para comparar com a qualidade de textura configurada."));
+                WindowsActionText.Format("ActionResults.TextureVram.VramUnavailable")));
         }
 
         var vramGiB = bestVramBytes.Value / (double)GiB;
@@ -198,11 +208,13 @@ public sealed class TextureVramFitDiagnosisAction : WindowsOptimizationAction
             _ => 8d
         };
 
-        var message = vramGiB < requiredGiB
-            ? $"A qualidade de textura configurada (nível {textureQuality}) costuma exigir por volta de {requiredGiB:0} GB de VRAM, "
-                + $"acima dos ~{vramGiB:0.#} GB detectados na GPU. Isso é uma estimativa por limiar, não uma medição real "
-                + "de uso durante o jogo, mas pode explicar stutter ou quedas de textura."
-            : $"A qualidade de textura configurada (nível {textureQuality}) é compatível com os ~{vramGiB:0.#} GB de VRAM detectados.";
+        var message = WindowsActionText.Format(
+            vramGiB < requiredGiB
+                ? "ActionResults.TextureVram.AboveEstimate"
+                : "ActionResults.TextureVram.Compatible",
+            textureQuality.Value,
+            requiredGiB,
+            vramGiB);
         return Task.FromResult(WindowsActionApplyResult.NoChange(message));
     }
 

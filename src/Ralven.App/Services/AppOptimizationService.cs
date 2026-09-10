@@ -535,7 +535,7 @@ public sealed partial class AppOptimizationService : IAppOptimizationService
 
         return WindowsOptimizationRuntime.Create(
             environment,
-            WindowsOptimizationDependencies.CreateDefault(environment, localization.Format));
+            WindowsOptimizationDependencies.CreateDefault(environment, FormatWindowsActionText));
     }
 
     internal WindowsOptimizationRuntime CreateRuntimeForPlan(OptimizationPlanDto plan)
@@ -550,7 +550,7 @@ public sealed partial class AppOptimizationService : IAppOptimizationService
             };
             return WindowsOptimizationRuntime.Create(
                 environment,
-                WindowsOptimizationDependencies.CreateDefault(environment, localization.Format));
+                WindowsOptimizationDependencies.CreateDefault(environment, FormatWindowsActionText));
         }
 
         if (plan.Scope != OptimizationScope.FiveMLegacy
@@ -561,6 +561,14 @@ public sealed partial class AppOptimizationService : IAppOptimizationService
         }
 
         return CreateRuntimeForDetectedInstallation();
+    }
+
+    private string FormatWindowsActionText(string key, params object?[] arguments)
+    {
+        var appText = localization.GetString(key);
+        return appText != key
+            ? string.Format(localization.CurrentCulture, appText, arguments)
+            : WindowsActionResources.ForCulture(localization.CurrentCulture)(key, arguments);
     }
 
     internal static bool HandleRollbackFailure(

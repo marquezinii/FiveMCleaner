@@ -16,10 +16,11 @@ public sealed class LocalizationServiceTests
     [InlineData("en-US", AppLanguage.English)]
     [InlineData("es-ES", AppLanguage.Spanish)]
     [InlineData("es-MX", AppLanguage.Spanish)]
-    [InlineData("fr-FR", AppLanguage.English)]
-    public void AutomaticDetection_UsesPortugueseForPtAndEnglishAsFallback(
+    [InlineData("fr-FR", "fr-FR")]
+    [InlineData("de-DE", AppLanguage.English)]
+    public void AutomaticDetection_UsesSupportedLanguageOrEnglishFallback(
         string cultureName,
-        AppLanguage expected)
+        string expected)
     {
         var service = new LocalizationService(CultureInfo.GetCultureInfo(cultureName));
 
@@ -43,7 +44,7 @@ public sealed class LocalizationServiceTests
 
         Assert.Equal("Visão geral", bindingSource["Navigation.Overview"]);
         Assert.Equal("pt-BR", service.CurrentCulture.Name);
-        Assert.Equal(AppLanguagePreference.PortugueseBrazil, service.CurrentPreference);
+        Assert.Equal(AppLanguage.PortugueseBrazil, service.CurrentPreference);
         Assert.Contains("Item[]", notifications);
         Assert.NotNull(languageChange);
         Assert.Equal(AppLanguage.English, languageChange!.PreviousLanguage);
@@ -73,7 +74,7 @@ public sealed class LocalizationServiceTests
 
         service.SetLanguage(AppLanguage.PortugueseBrazil);
 
-        Assert.Equal(AppLanguagePreference.PortugueseBrazil, service.CurrentPreference);
+        Assert.Equal(AppLanguage.PortugueseBrazil, service.CurrentPreference);
         Assert.Equal(AppLanguage.PortugueseBrazil, service.CurrentLanguage);
     }
 
@@ -117,7 +118,7 @@ public sealed class LocalizationServiceTests
     }
 
     [Fact]
-    public void EnglishAndPortugueseCatalogs_HaveExactlyTheSameKeys()
+    public void EverySupportedCatalog_HasExactlyTheSameKeys()
     {
         var manager = new ResourceManager(
             "Ralven.App.Resources.Strings",
@@ -126,42 +127,19 @@ public sealed class LocalizationServiceTests
             CultureInfo.GetCultureInfo("en-US"),
             createIfNotExists: true,
             tryParents: true);
-        using var portuguese = manager.GetResourceSet(
-            CultureInfo.GetCultureInfo("pt-BR"),
-            createIfNotExists: true,
-            tryParents: false);
-
         Assert.NotNull(english);
-        Assert.NotNull(portuguese);
         var englishKeys = KeysOf(english!);
-        var portugueseKeys = KeysOf(portuguese!);
-
         Assert.True(englishKeys.Count >= 100);
-        Assert.Equal(englishKeys, portugueseKeys);
-    }
+        foreach (var language in LocalizationCatalog.SupportedLanguages.Where(language => language.CultureName != AppLanguage.English))
+        {
+            using var localized = manager.GetResourceSet(
+                CultureInfo.GetCultureInfo(language.CultureName),
+                createIfNotExists: true,
+                tryParents: true);
 
-    [Fact]
-    public void EnglishAndSpanishCatalogs_HaveExactlyTheSameKeys()
-    {
-        var manager = new ResourceManager(
-            "Ralven.App.Resources.Strings",
-            typeof(LocalizationService).Assembly);
-        using var english = manager.GetResourceSet(
-            CultureInfo.GetCultureInfo("en-US"),
-            createIfNotExists: true,
-            tryParents: true);
-        using var spanish = manager.GetResourceSet(
-            CultureInfo.GetCultureInfo("es"),
-            createIfNotExists: true,
-            tryParents: false);
-
-        Assert.NotNull(english);
-        Assert.NotNull(spanish);
-        var englishKeys = KeysOf(english!);
-        var spanishKeys = KeysOf(spanish!);
-
-        Assert.True(englishKeys.Count >= 100);
-        Assert.Equal(englishKeys, spanishKeys);
+            Assert.NotNull(localized);
+            Assert.Equal(englishKeys, KeysOf(localized!));
+        }
     }
 
     [Fact]
@@ -172,9 +150,23 @@ public sealed class LocalizationServiceTests
         service.SetLanguage(AppLanguage.Spanish);
 
         Assert.Equal(AppLanguage.Spanish, service.CurrentLanguage);
-        Assert.Equal(AppLanguagePreference.Spanish, service.CurrentPreference);
-        Assert.Equal("es", service.CurrentCulture.Name);
+        Assert.Equal(AppLanguage.Spanish, service.CurrentPreference);
+        Assert.Equal("es-ES", service.CurrentCulture.Name);
         Assert.Equal("Configuración", service["Settings.Title"]);
+    }
+
+    [Fact]
+    public void PseudoLocalization_ExpandsTextAndPreservesPlaceholders()
+    {
+        var service = new LocalizationService(CultureInfo.GetCultureInfo("en-US"));
+
+        service.SetLanguage(LocalizationCatalog.PseudoCultureName);
+        var value = service.Format("About.VersionDeveloper", "0.2.0");
+
+        Assert.StartsWith("⟦", value, StringComparison.Ordinal);
+        Assert.EndsWith("⟧", value, StringComparison.Ordinal);
+        Assert.Contains("0.2.0", value, StringComparison.Ordinal);
+        Assert.True(value.Length > "Version 0.2.0  •  Ralven".Length);
     }
 
     [Fact]
@@ -224,6 +216,18 @@ public sealed class LocalizationServiceTests
         Assert.Contains("\"language\":\"spanish\"", json, StringComparison.Ordinal);
         Assert.NotNull(result);
         Assert.Equal(AppLanguagePreference.Spanish, result!.Language);
+    }
+
+    [Fact]
+    public void FrenchLanguagePreference_RoundTripsThroughSettingsJson()
+    {
+        var source = new AppSettings { Language = "fr-FR" };
+
+        var json = JsonSerializer.Serialize(source, RalvenJson.Options);
+        var result = JsonSerializer.Deserialize<AppSettings>(json, RalvenJson.Options);
+
+        Assert.Contains("\"language\":\"fr-FR\"", json, StringComparison.Ordinal);
+        Assert.Equal("fr-FR", result!.Language);
     }
 
     private static SortedSet<string> KeysOf(ResourceSet resourceSet)

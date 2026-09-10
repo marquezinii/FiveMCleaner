@@ -26,10 +26,10 @@ Windows realmente for executada.
 
 ## Experiência do instalador
 
-- português do Brasil e inglês, escolhidos pela interface do Windows;
+- português do Brasil, inglês, espanhol e francês, escolhidos pela interface do Windows;
 - entrada limpa com a marca do Ralven, explicação breve e uma ação principal;
 - tema moderno que acompanha o modo claro/escuro do sistema, com ícone oficial,
-  tipografia Segoe UI e dimensões confortáveis para Windows 10 e 11;
+  tipografia Segoe UI, arte lateral e dimensões confortáveis para Windows 10 e 11;
 - licença e informações completas convertidas para RTF no build. Títulos,
   listas, destaques, caracteres Unicode e links são preservados, e o texto
   extraído do RTF é comparado semanticamente com a fonte antes da compilação;

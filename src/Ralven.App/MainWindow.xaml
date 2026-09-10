@@ -373,7 +373,7 @@
                                        Style="{StaticResource BodyStrongText}"
                                        VerticalAlignment="Center"
                                        Margin="9,0,0,0"
-                                       MaxWidth="160"
+                                       MaxWidth="200"
                                        TextTrimming="CharacterEllipsis"
                                        TextWrapping="NoWrap" />
                         </StackPanel>
@@ -682,15 +682,13 @@
                                     <Border Style="{StaticResource SettingsCardStyle}">
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
-                                            <TextBlock Text="{Binding [Settings.Language.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" Margin="0,0,24,0" VerticalAlignment="Center" />
-                                            <ComboBox x:Name="LanguageSelector" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource SettingsComboBoxStyle}" SelectedValuePath="Content" SelectionChanged="LanguageSelector_SelectionChanged"
+                                            <StackPanel Margin="0,0,24,0">
+                                                <TextBlock Text="{Binding [Settings.Language.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                                                <TextBlock Text="{Binding [Settings.Language.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                                            </StackPanel>
+                                            <ComboBox x:Name="LanguageSelector" Grid.Column="1" VerticalAlignment="Center" Style="{StaticResource SettingsComboBoxStyle}" SelectionChanged="LanguageSelector_SelectionChanged"
                                                       AutomationProperties.Name="{Binding [Settings.Language.Title], Source={StaticResource LocalizedStrings}}"
-                                                      AutomationProperties.HelpText="{Binding [Settings.Language.Description], Source={StaticResource LocalizedStrings}}">
-                                                <ComboBoxItem Tag="auto" Content="{Binding [Settings.Language.Automatic], Source={StaticResource LocalizedStrings}}" />
-                                                <ComboBoxItem Tag="pt-BR" Content="{Binding [Settings.Language.PortugueseBrazil], Source={StaticResource LocalizedStrings}}" />
-                                                <ComboBoxItem Tag="en" Content="{Binding [Settings.Language.English], Source={StaticResource LocalizedStrings}}" />
-                                                <ComboBoxItem Tag="es" Content="{Binding [Settings.Language.Spanish], Source={StaticResource LocalizedStrings}}" />
-                                            </ComboBox>
+                                                      AutomationProperties.HelpText="{Binding [Settings.Language.Description], Source={StaticResource LocalizedStrings}}" />
                                         </Grid>
                                     </Border>
 

@@ -198,7 +198,7 @@ public sealed class VisualEffectsAction : WindowsOptimizationAction
         if (previous == desired)
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Os efeitos visuais já estavam no estado solicitado."));
+                WindowsActionText.Format("ActionResults.VisualEffects.AlreadyDesired")));
         }
 
         try
@@ -232,7 +232,7 @@ public sealed class VisualEffectsAction : WindowsOptimizationAction
 
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
             new VisualEffectsSnapshot(previous, desired),
-            "Efeitos visuais atualizados por API oficial do Windows."));
+            WindowsActionText.Format("ActionResults.VisualEffects.Applied")));
     }
 
     public override Task RollbackAsync(

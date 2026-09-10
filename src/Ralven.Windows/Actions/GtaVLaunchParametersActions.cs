@@ -314,13 +314,13 @@ public sealed class GtaVLaunchParametersDiagnosisAction : WindowsOptimizationAct
         if (commandLinePath is null)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "A instalação do GTA V Legacy standalone não foi confirmada; nada para diagnosticar."));
+                WindowsActionText.Format("ActionResults.GtaVCommandLine.NotConfirmedForDiagnosis")));
         }
 
         if (!File.Exists(commandLinePath))
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "Nenhum commandline.txt foi encontrado na pasta do GTA V; o jogo está usando os parâmetros padrão."));
+                WindowsActionText.Format("ActionResults.GtaVCommandLine.FileMissing")));
         }
 
         IReadOnlyList<string> lines;
@@ -331,7 +331,7 @@ public sealed class GtaVLaunchParametersDiagnosisAction : WindowsOptimizationAct
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                $"Não foi possível ler o commandline.txt ({exception.Message})."));
+                WindowsActionText.Format("ActionResults.GtaVCommandLine.ReadFailed")));
         }
 
         var flags = lines
@@ -343,11 +343,15 @@ public sealed class GtaVLaunchParametersDiagnosisAction : WindowsOptimizationAct
             .ToArray();
 
         var message = activeRepairFlags.Length > 0
-            ? $"Atenção: parâmetro(s) de reparo ainda ativo(s) no commandline.txt do GTA V: {string.Join(", ", activeRepairFlags)}. "
-                + "Isso não deveria ficar permanente; reverta assim que o problema for diagnosticado."
+            ? WindowsActionText.Format(
+                "ActionResults.GtaVCommandLine.RepairFlagsActive",
+                string.Join(", ", activeRepairFlags))
             : flags.Length > 0
-                ? $"{flags.Length} parâmetro(s) reconhecido(s) no commandline.txt do GTA V: {string.Join(", ", flags)}."
-                : "O commandline.txt existe mas não contém parâmetros reconhecidos.";
+                ? WindowsActionText.Format(
+                    "ActionResults.GtaVCommandLine.RecognizedFlags",
+                    flags.Length,
+                    string.Join(", ", flags))
+                : WindowsActionText.Format("ActionResults.GtaVCommandLine.NoRecognizedFlags");
         return Task.FromResult(WindowsActionApplyResult.NoChange(message));
     }
 
@@ -383,7 +387,7 @@ public abstract class GtaVLaunchParametersActionBase : WindowsOptimizationAction
 
     protected abstract IReadOnlyList<string> BuildDesiredLines();
 
-    protected abstract string NoticeVerb { get; }
+    protected abstract string AppliedMessageKey { get; }
 
     public sealed override Task<WindowsActionApplyResult> ApplyAsync(
         WindowsActionContext context,
@@ -393,7 +397,7 @@ public abstract class GtaVLaunchParametersActionBase : WindowsOptimizationAction
         if (commandLinePath is null)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "A instalação do GTA V Legacy standalone não foi confirmada; commandline.txt não será alterado."));
+                WindowsActionText.Format("ActionResults.GtaVCommandLine.NotConfirmedForChange")));
         }
 
         if (processInspector.IsRunningFrom(gtaVInstallationRoot))
@@ -420,7 +424,7 @@ public abstract class GtaVLaunchParametersActionBase : WindowsOptimizationAction
         if (changedFlags.Count == 0)
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Os parâmetros gerenciados já estavam na configuração desejada."));
+                WindowsActionText.Format("ActionResults.GtaVCommandLine.AlreadyDesired")));
         }
 
         var appliedSha256 = GtaVCommandLineFile.WriteAtomically(
@@ -431,7 +435,7 @@ public abstract class GtaVLaunchParametersActionBase : WindowsOptimizationAction
 
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
             new CommandLineSnapshot(originalExisted, existingLines, appliedSha256, changedFlags),
-            $"{NoticeVerb}: {string.Join(", ", changedFlags)}."));
+            WindowsActionText.Format(AppliedMessageKey, string.Join(", ", changedFlags))));
     }
 
     public sealed override Task RollbackAsync(
@@ -511,7 +515,7 @@ public sealed class GtaVGraphicsLaunchParametersAction : GtaVLaunchParametersAct
 
     protected override IReadOnlySet<string> ManagedFlags => Managed;
 
-    protected override string NoticeVerb => "Parâmetro(s) gráfico(s) de inicialização atualizado(s)";
+    protected override string AppliedMessageKey => "ActionResults.GtaVCommandLine.GraphicsApplied";
 
     protected override IReadOnlyList<string> BuildDesiredLines()
     {
@@ -563,7 +567,7 @@ public sealed class GtaVDisplayLaunchParametersAction : GtaVLaunchParametersActi
 
     protected override IReadOnlySet<string> ManagedFlags => Managed;
 
-    protected override string NoticeVerb => "Parâmetro(s) de exibição de inicialização atualizado(s)";
+    protected override string AppliedMessageKey => "ActionResults.GtaVCommandLine.DisplayApplied";
 
     protected override IReadOnlyList<string> BuildDesiredLines()
     {
@@ -622,7 +626,7 @@ public sealed class GtaVRepairLaunchParametersAction : GtaVLaunchParametersActio
 
     protected override IReadOnlySet<string> ManagedFlags => Managed;
 
-    protected override string NoticeVerb => "Parâmetro(s) de reparo temporariamente ativado(s) — lembre-se de reverter";
+    protected override string AppliedMessageKey => "ActionResults.GtaVCommandLine.RepairApplied";
 
     protected override IReadOnlyList<string> BuildDesiredLines()
     {

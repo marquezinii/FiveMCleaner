@@ -1,4 +1,3 @@
-using System.Globalization;
 using Ralven.Contracts;
 using Ralven.Core.Catalog;
 using Ralven.Windows.Infrastructure;
@@ -32,14 +31,18 @@ public sealed class CpuDetailsDiagnosisAction : ReadOnlyDiagnosticAction
     {
         if (snapshot is null)
         {
-            return "Não foi possível ler os detalhes da CPU neste momento.";
+            return WindowsActionText.Format("ActionResults.CpuDetails.Unavailable");
         }
 
-        var message = $"{snapshot.PhysicalCores} núcleo(s) físico(s), {snapshot.LogicalThreads} thread(s) lógica(s). "
-            + $"Frequência atual: {snapshot.CurrentClockMhz} MHz de {snapshot.MaxClockMhz} MHz máximos.";
+        var message = WindowsActionText.Format(
+            "ActionResults.CpuDetails.Summary",
+            snapshot.PhysicalCores,
+            snapshot.LogicalThreads,
+            snapshot.CurrentClockMhz,
+            snapshot.MaxClockMhz);
         if (snapshot.MaxClockMhz > 0 && snapshot.CurrentClockMhz < snapshot.MaxClockMhz * SignificantClockDropRatio)
         {
-            message += " A frequência atual está bem abaixo do máximo (economia de energia ou possível throttling).";
+            message += WindowsActionText.Format("ActionResults.CpuDetails.LowClockSuffix");
         }
 
         return message;
@@ -64,24 +67,26 @@ public sealed class GpuDetailsDiagnosisAction : ReadOnlyDiagnosticAction
     {
         if (adapters.Count == 0)
         {
-            return "Não foi possível detectar detalhes de VRAM/tipo da GPU neste momento.";
+            return WindowsActionText.Format("ActionResults.GpuDetails.Unavailable");
         }
 
         var parts = adapters.Select(adapter =>
         {
             var vram = adapter.VramBytes is > 0
-                ? $"{adapter.VramBytes.Value / (double)DiagnosticSignals.GiB:0.#} GB de VRAM"
-                : "VRAM não detectada";
+                ? WindowsActionText.Format(
+                    "ActionResults.GpuDetails.Vram",
+                    adapter.VramBytes.Value / (double)DiagnosticSignals.GiB)
+                : WindowsActionText.Format("ActionResults.GpuDetails.VramUnavailable");
             var kind = adapter.KindGuess switch
             {
-                GpuKindGuess.LikelyIntegrated => "provavelmente integrada",
-                GpuKindGuess.LikelyDiscrete => "provavelmente dedicada",
-                _ => "tipo não identificado"
+                GpuKindGuess.LikelyIntegrated => WindowsActionText.Format("ActionResults.GpuDetails.Integrated"),
+                GpuKindGuess.LikelyDiscrete => WindowsActionText.Format("ActionResults.GpuDetails.Discrete"),
+                _ => WindowsActionText.Format("ActionResults.GpuDetails.UnknownKind")
             };
-            return $"{adapter.DriverDescription} ({vram}, {kind})";
+            return WindowsActionText.Format("ActionResults.GpuDetails.Adapter", adapter.DriverDescription, vram, kind);
         });
 
-        return $"GPU(s) detectada(s): {string.Join("; ", parts)}.";
+        return WindowsActionText.Format("ActionResults.GpuDetails.Summary", string.Join("; ", parts));
     }
 }
 
@@ -103,7 +108,7 @@ public sealed class RamDetailsDiagnosisAction : ReadOnlyDiagnosticAction
     {
         if (snapshot.Modules.Count == 0)
         {
-            return "Não foi possível ler os detalhes dos módulos de memória neste momento.";
+            return WindowsActionText.Format("ActionResults.RamDetails.Unavailable");
         }
 
         var count = snapshot.Modules.Count;
@@ -114,12 +119,10 @@ public sealed class RamDetailsDiagnosisAction : ReadOnlyDiagnosticAction
             .Max();
 
         var frequencyLabel = configured > 0
-            ? $"{configured} MHz configurados"
-            : "frequência configurada não disponível";
+            ? WindowsActionText.Format("ActionResults.RamDetails.ConfiguredClock", configured)
+            : WindowsActionText.Format("ActionResults.RamDetails.ClockUnavailable");
 
-        return $"{count} módulo(s) de memória detectado(s), {frequencyLabel}. O Windows não expõe "
-            + "a topologia de canais nem o estado de XMP/EXPO de forma confiável; confirme esses dados "
-            + "na BIOS/UEFI ou na ferramenta oficial do fabricante.";
+        return WindowsActionText.Format("ActionResults.RamDetails.Summary", count, frequencyLabel);
     }
 }
 
@@ -141,16 +144,25 @@ public sealed class StorageHealthDiagnosisAction : ReadOnlyDiagnosticAction
     {
         if (snapshot.Disks.Count == 0)
         {
-            return "Não foi possível ler o tipo/saúde das unidades físicas neste momento.";
+            return WindowsActionText.Format("ActionResults.StorageHealth.Unavailable");
         }
 
         var unhealthyCount = snapshot.Disks.Count(disk => !disk.IsHealthy);
         var summary = string.Join("; ", snapshot.Disks.Select(disk =>
-            $"{disk.FriendlyName} ({disk.MediaTypeLabel}, {disk.HealthStatusLabel})"));
+            WindowsActionText.Format(
+                "ActionResults.StorageHealth.Disk",
+                disk.FriendlyName,
+                disk.MediaTypeLabel,
+                disk.HealthStatusLabel)));
 
         return unhealthyCount > 0
-            ? $"Atenção: {unhealthyCount} unidade(s) com alerta de saúde. Unidades detectadas: {summary}."
-            : $"Todas as unidades detectadas relatam saúde normal. Unidades: {summary}.";
+            ? WindowsActionText.Format(
+                unhealthyCount == 1
+                    ? "ActionResults.StorageHealth.WarningSingular"
+                    : "ActionResults.StorageHealth.Warning",
+                unhealthyCount,
+                summary)
+            : WindowsActionText.Format("ActionResults.StorageHealth.Healthy", summary);
     }
 }
 
@@ -171,10 +183,10 @@ public sealed class DriverVersionsDiagnosisAction : ReadOnlyDiagnosticAction
     protected override string Describe()
     {
         var buildLabel = OperatingSystem.IsWindows()
-            ? $"build {Environment.OSVersion.Version.Build}"
-            : "build desconhecido";
+            ? WindowsActionText.Format("ActionResults.DriverVersions.Build", Environment.OSVersion.Version.Build)
+            : WindowsActionText.Format("ActionResults.DriverVersions.UnknownBuild");
         var snapshot = inspector.GetSnapshot();
-        var message = $"Windows {buildLabel}. {Classify(snapshot)}";
+        var message = WindowsActionText.Format("ActionResults.DriverVersions.Summary", buildLabel, Classify(snapshot));
         var oldDriverWarning = ClassifyOldDrivers(snapshot, DateTimeOffset.UtcNow);
         return oldDriverWarning is null ? message : $"{message} {oldDriverWarning}";
     }
@@ -183,11 +195,11 @@ public sealed class DriverVersionsDiagnosisAction : ReadOnlyDiagnosticAction
     {
         var groups = new (string Label, IReadOnlyList<DriverVersionInfo> Items)[]
         {
-            ("Vídeo", snapshot.Video),
-            ("Rede", snapshot.Network),
-            ("Áudio", snapshot.Audio),
-            ("Chipset", snapshot.Chipset),
-            ("Armazenamento", snapshot.Storage),
+            (WindowsActionText.Format("ActionResults.DriverVersions.Video"), snapshot.Video),
+            (WindowsActionText.Format("ActionResults.DriverVersions.Network"), snapshot.Network),
+            (WindowsActionText.Format("ActionResults.DriverVersions.Audio"), snapshot.Audio),
+            (WindowsActionText.Format("ActionResults.DriverVersions.Chipset"), snapshot.Chipset),
+            (WindowsActionText.Format("ActionResults.DriverVersions.Storage"), snapshot.Storage),
             ("USB", snapshot.Usb),
             ("Bluetooth", snapshot.Bluetooth)
         };
@@ -198,7 +210,7 @@ public sealed class DriverVersionsDiagnosisAction : ReadOnlyDiagnosticAction
 
         var joined = string.Join(" | ", parts);
         return string.IsNullOrEmpty(joined)
-            ? "Não foi possível ler versões de driver de vídeo/rede/áudio/chipset/armazenamento/USB/Bluetooth."
+            ? WindowsActionText.Format("ActionResults.DriverVersions.Unavailable")
             : joined;
     }
 
@@ -225,8 +237,10 @@ public sealed class DriverVersionsDiagnosisAction : ReadOnlyDiagnosticAction
 
         var names = string.Join(", ", old.Select(item =>
             $"{item.DeviceName} ({item.DriverDate!.Value:yyyy-MM})"));
-        return $"Driver de vídeo com mais de {OldVideoDriverThresholdMonths} meses sem atualização: {names}. "
-            + "Considere atualizar pelo site oficial do fabricante.";
+        return WindowsActionText.Format(
+            "ActionResults.DriverVersions.OldVideoDriver",
+            OldVideoDriverThresholdMonths,
+            names);
     }
 }
 
@@ -265,18 +279,20 @@ public sealed class GSyncGuidanceDiagnosisAction : ReadOnlyDiagnosticAction
 
     internal static string Classify(DisplayConfigurationSnapshot? snapshot, GpuVendorSnapshot gpuSnapshot)
     {
-        var baseGuidance = "G-SYNC/FreeSync/VRR não tem uma API pública para ser ativado por este app; "
-            + $"confirme e ative pelo {DescribeControlPanel(gpuSnapshot)} ou pelo menu do próprio monitor.";
+        var baseGuidance = WindowsActionText.Format(
+            "ActionResults.Vrr.BaseGuidance",
+            DescribeControlPanel(gpuSnapshot));
         if (snapshot is null || snapshot.MaxRefreshHzAtCurrentResolution <= 0)
         {
             return baseGuidance;
         }
 
         var recommendedCap = Math.Max(1, snapshot.MaxRefreshHzAtCurrentResolution - VariableRangeHeadroomFps);
-        return $"{baseGuidance} Para manter o FPS dentro da faixa variável desta tecnologia neste monitor "
-            + $"({snapshot.MaxRefreshHzAtCurrentResolution} Hz no modo atual), o fabricante recomenda limitar "
-            + $"o FPS a alguns quadros abaixo do máximo (por exemplo, {recommendedCap} FPS) -- use o "
-            + "parâmetro -frameLimit do GTA V standalone para isso.";
+        return WindowsActionText.Format(
+            "ActionResults.Vrr.RefreshGuidance",
+            baseGuidance,
+            snapshot.MaxRefreshHzAtCurrentResolution,
+            recommendedCap);
     }
 
     /// <summary>
@@ -294,9 +310,9 @@ public sealed class GSyncGuidanceDiagnosisAction : ReadOnlyDiagnosticAction
 
         return vendors switch
         {
-            ["NVIDIA"] => "NVIDIA Control Panel (Configurar G-SYNC)",
+            ["NVIDIA"] => WindowsActionText.Format("ActionResults.Vrr.NvidiaPanel"),
             ["AMD"] => "AMD Software: Adrenalin Edition (FreeSync)",
-            _ => "painel de controle oficial da sua GPU"
+            _ => WindowsActionText.Format("ActionResults.Vrr.VendorPanel")
         };
     }
 }
@@ -318,12 +334,7 @@ public sealed class GuidedDriverReinstallAction : ReadOnlyDiagnosticAction
 
     protected override string Describe()
     {
-        return "Reinstalação limpa guiada (nenhum arquivo foi tocado): 1) baixe o Display Driver Uninstaller "
-            + "(DDU) e o instalador de driver mais recente do site oficial do fabricante da GPU antes de "
-            + "começar; 2) reinicie o Windows em Modo de Segurança; 3) rode o DDU e remova apenas o "
-            + "driver de vídeo; 4) reinicie normalmente e instale o driver baixado no passo 1. Válido "
-            + "tanto para GPUs NVIDIA quanto AMD (Adrenalin). Este aplicativo não baixa, instala nem "
-            + "remove nenhum driver automaticamente.";
+        return WindowsActionText.Format("ActionResults.DriverReinstall.Instructions");
     }
 }
 
@@ -345,23 +356,30 @@ public sealed class DisplayConfigurationDiagnosisAction : ReadOnlyDiagnosticActi
     {
         if (snapshot is null)
         {
-            return "Não foi possível ler a configuração do monitor neste momento.";
+            return WindowsActionText.Format("ActionResults.Display.Unavailable");
         }
 
         var hags = snapshot.HardwareGpuScheduling switch
         {
-            HardwareGpuSchedulingState.Enabled => "ativado",
-            HardwareGpuSchedulingState.Disabled => "desativado",
-            _ => "não suportado ou não informado pelo driver"
+            HardwareGpuSchedulingState.Enabled => WindowsActionText.Format("ActionResults.State.Enabled"),
+            HardwareGpuSchedulingState.Disabled => WindowsActionText.Format("ActionResults.State.Disabled"),
+            _ => WindowsActionText.Format("ActionResults.Display.HagsUnavailable")
         };
 
         var refreshNote = snapshot.CurrentRefreshHz < snapshot.MaxRefreshHzAtCurrentResolution
-            ? $" A taxa configurada ({snapshot.CurrentRefreshHz} Hz) está abaixo da máxima suportada nessa resolução ({snapshot.MaxRefreshHzAtCurrentResolution} Hz)."
+            ? WindowsActionText.Format(
+                "ActionResults.Display.RefreshBelowMaximum",
+                snapshot.CurrentRefreshHz,
+                snapshot.MaxRefreshHzAtCurrentResolution)
             : string.Empty;
 
-        return $"Monitor em {snapshot.Width}x{snapshot.Height} a {snapshot.CurrentRefreshHz} Hz.{refreshNote} "
-            + $"Agendamento de GPU acelerado por hardware (HAGS): {hags}. G-SYNC/FreeSync/VRR não podem ser "
-            + "detectados de forma confiável sem software do fabricante.";
+        return WindowsActionText.Format(
+            "ActionResults.Display.Summary",
+            snapshot.Width,
+            snapshot.Height,
+            snapshot.CurrentRefreshHz,
+            refreshNote,
+            hags);
     }
 }
 
@@ -386,10 +404,10 @@ public sealed class SessionSettingsDiagnosisAction : WindowsOptimizationAction
     private static readonly IReadOnlyDictionary<Guid, string> KnownPowerSchemes =
         new Dictionary<Guid, string>
         {
-            [new Guid("381b4222-f694-41f0-9685-ff5bb260df2e")] = "Balanceado",
-            [new Guid("8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c")] = "Alto desempenho",
-            [new Guid("a1841308-3541-4fab-bc81-f71556f20b4a")] = "Economia de energia",
-            [new Guid("e9a42b02-d5df-448d-aa00-03f14749eb61")] = "Desempenho máximo"
+            [new Guid("381b4222-f694-41f0-9685-ff5bb260df2e")] = "ActionResults.PowerPlan.Balanced",
+            [new Guid("8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c")] = "ActionResults.PowerPlan.HighPerformance",
+            [new Guid("a1841308-3541-4fab-bc81-f71556f20b4a")] = "ActionResults.PowerPlan.PowerSaver",
+            [new Guid("e9a42b02-d5df-448d-aa00-03f14749eb61")] = "ActionResults.PowerPlan.UltimatePerformance"
         };
 
     private readonly IRegistryStore registry;
@@ -416,11 +434,13 @@ public sealed class SessionSettingsDiagnosisAction : WindowsOptimizationAction
         try
         {
             var scheme = await powerPlans.GetActiveSchemeAsync(cancellationToken).ConfigureAwait(false);
-            powerPlanLabel = KnownPowerSchemes.TryGetValue(scheme, out var known) ? known : scheme.ToString("D");
+            powerPlanLabel = KnownPowerSchemes.TryGetValue(scheme, out var known)
+                ? WindowsActionText.Format(known)
+                : scheme.ToString("D");
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException)
         {
-            powerPlanLabel = "não foi possível ler";
+            powerPlanLabel = WindowsActionText.Format("ActionResults.State.Unavailable");
         }
 
         return WindowsActionApplyResult.NoChange(Classify(gameMode, fullscreenOptimizations, powerPlanLabel));
@@ -436,14 +456,19 @@ public sealed class SessionSettingsDiagnosisAction : WindowsOptimizationAction
         RegistryValueState fullscreenOptimizations,
         string powerPlanLabel)
     {
-        var gameModeLabel = gameMode is { Exists: true, NumericValue: 1 } ? "ativado" : "desativado ou padrão do Windows";
+        var gameModeLabel = gameMode is { Exists: true, NumericValue: 1 }
+            ? WindowsActionText.Format("ActionResults.State.Enabled")
+            : WindowsActionText.Format("ActionResults.SessionSettings.DisabledOrDefault");
         // GameDVR_FSEBehaviorMode = 2 means Windows-wide "Disable fullscreen optimizations" is on.
         var fseLabel = fullscreenOptimizations is { Exists: true, NumericValue: 2 }
-            ? "desativadas (jogo em tela cheia exclusiva)"
-            : "ativadas (padrão do Windows)";
+            ? WindowsActionText.Format("ActionResults.SessionSettings.FseDisabled")
+            : WindowsActionText.Format("ActionResults.SessionSettings.FseEnabled");
 
-        return $"Modo de Jogo: {gameModeLabel}. Otimizações para tela cheia: {fseLabel}. "
-            + $"Plano de energia ativo: {powerPlanLabel}.";
+        return WindowsActionText.Format(
+            "ActionResults.SessionSettings.Summary",
+            gameModeLabel,
+            fseLabel,
+            powerPlanLabel);
     }
 }
 
@@ -500,24 +525,24 @@ public sealed class ThrottlingSignalDiagnosisAction : ReadOnlyDiagnosticAction
 
         if (clockDropUnderLoad && (thermalSignal || wheaSignal))
         {
-            return "Possível throttling detectado: queda de frequência sob carga combinada com "
-                + (thermalSignal ? "temperatura elevada" : "eventos de erro de hardware (WHEA) recentes")
-                + ". Não confirmado por sensor direto de temperatura por núcleo.";
+            return WindowsActionText.Format(
+                "ActionResults.Throttling.Combined",
+                WindowsActionText.Format(thermalSignal
+                    ? "ActionResults.Throttling.TemperatureSignal"
+                    : "ActionResults.Throttling.WheaSignal"));
         }
 
         if (clockDropUnderLoad)
         {
-            return "Queda de frequência sob carga detectada, sem confirmação por outro sinal; "
-                + "pode ser plano de energia, limite de potência ou throttling não confirmado.";
+            return WindowsActionText.Format("ActionResults.Throttling.ClockDrop");
         }
 
         if (wheaSignal)
         {
-            return "Eventos de erro de hardware (WHEA) recentes foram encontrados, sem sinal de "
-                + "queda de frequência no momento desta leitura.";
+            return WindowsActionText.Format("ActionResults.Throttling.WheaOnly");
         }
 
-        return "Nenhum sinal de throttling foi detectado no momento desta leitura.";
+        return WindowsActionText.Format("ActionResults.Throttling.None");
     }
 }
 
@@ -537,17 +562,19 @@ public sealed class ResourceUsageDiagnosisAction : ReadOnlyDiagnosticAction
 
     internal static string Classify(ResourceUsageSnapshot snapshot)
     {
-        var network = snapshot.NetworkThroughputMBps.ToString("0.##", CultureInfo.InvariantCulture);
-        return $"Uso no momento da leitura — CPU: {FormatPercent(snapshot.CpuPercent)}, "
-            + $"disco: {FormatPercent(snapshot.DiskPercent)}, GPU: {FormatPercent(snapshot.GpuPercent)}, "
-            + $"rede: {network} MB/s. Amostra instantânea, não uma média.";
+        return WindowsActionText.Format(
+            "ActionResults.ResourceUsage.Summary",
+            FormatPercent(snapshot.CpuPercent),
+            FormatPercent(snapshot.DiskPercent),
+            FormatPercent(snapshot.GpuPercent),
+            snapshot.NetworkThroughputMBps);
     }
 
     private static string FormatPercent(double? value)
     {
         return value is { } percent
-            ? percent.ToString("0", CultureInfo.InvariantCulture) + "%"
-            : "não disponível";
+            ? WindowsActionText.Format("ActionResults.ResourceUsage.Percent", percent)
+            : WindowsActionText.Format("ActionResults.State.Unavailable");
     }
 }
 
@@ -572,15 +599,14 @@ public sealed class PciLinkDiagnosisAction : ReadOnlyDiagnosticAction
 
         if (withData.Length == 0)
         {
-            return "A largura/velocidade do link PCIe da GPU não pôde ser lida de forma confiável "
-                + "sem ferramenta do fabricante neste computador.";
+            return WindowsActionText.Format("ActionResults.PciLink.Unavailable");
         }
 
         var parts = withData.Select(adapter =>
         {
             var current = FormatLink(adapter.CurrentLinkWidth, adapter.CurrentLinkSpeedGtPerSecondTimesTen);
             var max = FormatLink(adapter.MaxLinkWidth, adapter.MaxLinkSpeedGtPerSecondTimesTen);
-            return $"{adapter.AdapterName}: atual {current} de máximo {max}";
+            return WindowsActionText.Format("ActionResults.PciLink.Adapter", adapter.AdapterName, current, max);
         });
 
         return string.Join("; ", parts) + ".";
@@ -589,7 +615,9 @@ public sealed class PciLinkDiagnosisAction : ReadOnlyDiagnosticAction
     private static string FormatLink(int? width, int? speedTimesTen)
     {
         var widthLabel = width is { } w ? $"x{w}" : "x?";
-        var speedLabel = speedTimesTen is { } s ? $"{s / 10d:0.#} GT/s" : "?";
+        var speedLabel = speedTimesTen is { } s
+            ? WindowsActionText.Format("ActionResults.PciLink.Speed", s / 10d)
+            : "?";
         return $"{widthLabel} @ {speedLabel}";
     }
 }
@@ -614,28 +642,31 @@ public sealed class HardwareStabilityDiagnosisAction : ReadOnlyDiagnosticAction
     {
         var biosLabel = snapshot.BiosReleaseDateUtc is { } releaseDate
             ? BuildBiosLabel(releaseDate, nowUtc)
-            : "Não foi possível ler a data de lançamento da BIOS.";
+            : WindowsActionText.Format("ActionResults.HardwareStability.BiosDateUnavailable");
 
         var wheaLabel = snapshot.RecentWheaEventCount <= 0
-            ? "Nenhum evento WHEA de erro de hardware foi encontrado nos últimos 30 dias."
+            ? WindowsActionText.Format("ActionResults.HardwareStability.NoWhea")
             : snapshot.RecentMemoryFlavoredWheaEventCount > 0
-                ? $"{snapshot.RecentWheaEventCount} evento(s) WHEA nos últimos 30 dias; "
-                    + $"{snapshot.RecentMemoryFlavoredWheaEventCount} evento(s) possui(em) possível indicação de memória."
-                : $"{snapshot.RecentWheaEventCount} evento(s) WHEA nos últimos 30 dias, sem indicação "
-                    + "de memória identificável nos dados do evento.";
+                ? WindowsActionText.Format(
+                    "ActionResults.HardwareStability.WheaWithMemory",
+                    snapshot.RecentWheaEventCount,
+                    snapshot.RecentMemoryFlavoredWheaEventCount)
+                : WindowsActionText.Format(
+                    "ActionResults.HardwareStability.Whea",
+                    snapshot.RecentWheaEventCount);
 
-        return $"{biosLabel} {wheaLabel} Resizable BAR/Above 4G Decoding/Smart Access Memory não podem "
-            + "ser detectados de forma confiável sem ferramenta do fabricante; verifique na BIOS ou no "
-            + "painel oficial da placa-mãe/GPU.";
+        return WindowsActionText.Format("ActionResults.HardwareStability.Summary", biosLabel, wheaLabel);
     }
 
     private static string BuildBiosLabel(DateTimeOffset releaseDate, DateTimeOffset nowUtc)
     {
         var ageYears = (nowUtc - releaseDate).TotalDays / 365.25;
         return ageYears >= OldBiosThresholdYears
-            ? $"BIOS lançada em {releaseDate:yyyy-MM-dd}, com mais de {OldBiosThresholdYears} anos; "
-                + "considere verificar atualizações no site do fabricante da placa-mãe."
-            : $"BIOS lançada em {releaseDate:yyyy-MM-dd}, relativamente recente.";
+            ? WindowsActionText.Format(
+                "ActionResults.HardwareStability.OldBios",
+                releaseDate,
+                OldBiosThresholdYears)
+            : WindowsActionText.Format("ActionResults.HardwareStability.RecentBios", releaseDate);
     }
 }
 
@@ -701,30 +732,30 @@ public sealed class BottleneckClassificationAction : ReadOnlyDiagnosticAction
         // 1. Térmico: alta temperatura disponível é o sinal mais direto que temos.
         if (DiagnosticSignals.IsTemperatureElevated(input.Thermal))
         {
-            return $"Gargalo provável: térmico. Temperatura em ~{input.Thermal.HighestCelsius:0}°C, "
-                + "o que pode causar throttling e queda de desempenho sob carga.";
+            return WindowsActionText.Format(
+                "ActionResults.BottleneckClassification.Thermal",
+                input.Thermal.HighestCelsius);
         }
 
         // 2. Processo de fundo: outro processo consumindo CPU de forma relevante.
         if (input.BackgroundProcess is { } process
             && process.CpuPercent / logicalProcessors >= BackgroundProcessCpuThresholdPercent)
         {
-            return $"Gargalo provável: processo em segundo plano. '{process.ProcessName}' está consumindo "
-                + "CPU de forma relevante enquanto o sistema está sob análise.";
+            return WindowsActionText.Format(
+                "ActionResults.BottleneckClassification.BackgroundProcess",
+                process.ProcessName);
         }
 
         // 3. Disco: tempo ativo elevado.
         if (input.ResourceUsage.DiskPercent >= HighUtilizationPercent)
         {
-            return "Gargalo provável: disco. A unidade está com tempo ativo elevado, "
-                + "o que pode causar travamentos ao carregar texturas/streaming.";
+            return WindowsActionText.Format("ActionResults.BottleneckClassification.Disk");
         }
 
         // 4. RAM: pouca memória disponível.
         if (DiagnosticSignals.IsMemoryUnderPressure(input.SystemResources))
         {
-            return "Gargalo provável: memória RAM. A memória disponível está baixa, "
-                + "o que pode causar paginação e engasgos.";
+            return WindowsActionText.Format("ActionResults.BottleneckClassification.Memory");
         }
 
         // 5. VRAM: só acusa pouca VRAM quando nenhum adaptador conhecido tem mais de 4 GB.
@@ -736,29 +767,25 @@ public sealed class BottleneckClassificationAction : ReadOnlyDiagnosticAction
         if (input.ResourceUsage.GpuPercent >= HighUtilizationPercent
             && highestVram is > 0 and <= SmallVramBytes)
         {
-            return "Gargalo provável: VRAM. A GPU detectada tem pouca memória de vídeo (4 GB ou menos) "
-                + "e está com uso alto; texturas em qualidade mais alta podem causar stutter.";
+            return WindowsActionText.Format("ActionResults.BottleneckClassification.Vram");
         }
 
         // 6. GPU: GPU saturada com CPU folgada.
         if (input.ResourceUsage.GpuPercent >= HighUtilizationPercent
             && input.ResourceUsage.CpuPercent < ModerateUtilizationPercent)
         {
-            return "Gargalo provável: GPU. A GPU está próxima do limite enquanto a CPU ainda tem folga; "
-                + "reduzir opções gráficas tende a ajudar mais que ajustes de CPU.";
+            return WindowsActionText.Format("ActionResults.BottleneckClassification.Gpu");
         }
 
         // 7. CPU: CPU saturada com GPU não saturada.
         if (input.ResourceUsage.CpuPercent >= ModerateUtilizationPercent
             && input.ResourceUsage.GpuPercent < HighUtilizationPercent)
         {
-            return "Gargalo provável: CPU. A CPU está com uso alto enquanto a GPU tem folga; "
-                + "reduzir opções gráficas tende a ajudar pouco nesse caso.";
+            return WindowsActionText.Format("ActionResults.BottleneckClassification.Cpu");
         }
 
         // Nenhum sinal local se destacou. Isso não autoriza inferir uma causa externa.
-        return "Nenhum gargalo local evidente foi encontrado nesta amostra; repita a medição durante "
-            + "a carga afetada para comparar os sinais.";
+        return WindowsActionText.Format("ActionResults.BottleneckClassification.None");
     }
 }
 

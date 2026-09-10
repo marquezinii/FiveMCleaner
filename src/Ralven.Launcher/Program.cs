@@ -1,6 +1,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Security.Cryptography;
+using System.Text.Json;
+using Ralven.App.Services;
 using Ralven.UpdateRuntime;
 
 namespace Ralven.Launcher;
@@ -38,6 +41,8 @@ internal static class Program
         var runtimeRoot = Path.Combine(AppContext.BaseDirectory, "Runtime");
         using var lifecycleLease = RuntimeUpdateLease.TryAcquire(runtimeRoot);
         if (lifecycleLease is null) return 0;
+        var localization = LocalizationService.Current;
+        ApplyStoredLanguage(localization, dataRoot);
         UpdateTransaction? currentTransaction = null;
         try
         {
@@ -103,8 +108,8 @@ internal static class Program
             recovery.Reconcile(DateTimeOffset.UtcNow, TimeSpan.Zero);
             Record(diagnostics, transaction, "rollback", "rolled-back", UpdaterEventCodes.HealthCheckTimeout, null, dataRoot, telemetryAuthorized);
             MessageBox.Show(
-                "A nova versão não confirmou uma inicialização saudável. A versão anterior foi restaurada e será usada na próxima abertura.",
-                "Recuperação do Ralven", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                localization.GetString("Launcher.Recovery.Message"),
+                localization.GetString("Launcher.Recovery.Title"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return 1;
         }
         catch (Exception exception)
@@ -138,7 +143,7 @@ internal static class Program
                 }
                 Record(diagnostics, currentTransaction, "activation", "failed", Classify(exception), exception.ToString(), dataRoot, telemetryAuthorized);
             }
-            MessageBox.Show(DescribeFailure(exception), "Ralven", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(DescribeFailure(localization, exception), "Ralven", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 2;
         }
     }
@@ -189,12 +194,29 @@ internal static class Program
         _ => UpdaterEventCodes.Unexpected,
     };
 
-    private static string DescribeFailure(Exception exception) => exception switch
+    private static string DescribeFailure(ILocalizationService localization, Exception exception) => exception switch
     {
-        TimeoutException => "O Ralven anterior não encerrou a tempo. Aguarde alguns instantes e tente abrir novamente.",
-        UnauthorizedAccessException => "O Windows não permitiu abrir esta versão. Verifique a permissão e tente novamente.",
-        CryptographicException or InvalidDataException => "Não foi possível verificar esta atualização com segurança. Nada foi alterado.",
-        FileNotFoundException => "Os arquivos necessários para abrir o Ralven não foram encontrados. Tente reparar ou reinstalar o aplicativo.",
-        _ => "Não foi possível abrir o Ralven agora. Tente novamente; se continuar, reinstale o aplicativo."
+        TimeoutException => localization.GetString("Launcher.Error.ParentTimeout"),
+        UnauthorizedAccessException => localization.GetString("Launcher.Error.AccessDenied"),
+        CryptographicException or InvalidDataException => localization.GetString("Launcher.Error.Security"),
+        FileNotFoundException => localization.GetString("Launcher.Error.MissingFiles"),
+        _ => localization.GetString("Launcher.Error.Unexpected")
     };
+
+    private static void ApplyStoredLanguage(LocalizationService localization, string dataRoot)
+    {
+        try
+        {
+            var path = Path.Combine(dataRoot, "settings.json");
+            if (!File.Exists(path) || new FileInfo(path).Length > 1_048_576) return;
+            using var document = JsonDocument.Parse(File.ReadAllText(path));
+            if (document.RootElement.TryGetProperty("language", out var language)
+                && language.GetString() is { } preference)
+                localization.Apply(preference, CultureInfo.CurrentUICulture);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        {
+            // A falha ao ler uma preferência nunca pode impedir o rollback ou o startup.
+        }
+    }
 }

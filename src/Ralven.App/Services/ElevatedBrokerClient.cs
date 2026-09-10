@@ -62,7 +62,7 @@ internal sealed class ElevatedBrokerClient
         try
         {
             return await RunAsync(
-                $"--request \"{requestPath}\" --pipe {{0}}",
+                $"--request \"{requestPath}\" --pipe {{0}} --culture {localization.CurrentCulture.Name}",
                 plan.PlanId,
                 progress,
                 cancellationToken).ConfigureAwait(false);
@@ -86,7 +86,7 @@ internal sealed class ElevatedBrokerClient
 
         cancellationToken.ThrowIfCancellationRequested();
         return RunAsync(
-            $"--rollback {transactionId:D} --pipe {{0}}",
+            $"--rollback {transactionId:D} --pipe {{0}} --culture {localization.CurrentCulture.Name}",
             transactionId,
             progress,
             cancellationToken);
@@ -147,7 +147,7 @@ internal sealed class ElevatedBrokerClient
             {
                 Succeeded = false,
                 WasCancelled = true,
-                Message = "A confirmação do Windows foi cancelada."
+                Message = localization.GetString("Broker.Error.Cancelled")
             };
         }
 
@@ -173,10 +173,7 @@ internal sealed class ElevatedBrokerClient
                 // propagate unhandled — gives a catchable, honest result
                 // instead of a generic app-level error.
                 throw new TimeoutException(
-                    "O componente administrativo não conectou ao canal de progresso local a tempo. "
-                        + "Isso pode acontecer quando o antivírus ou o SmartScreen do Windows interrompe "
-                        + "a elevação de um executável sem assinatura digital; verifique o histórico de "
-                        + "proteção do Windows Defender (ou do seu antivírus) antes de tentar novamente.");
+                    localization.GetString("Broker.Error.ConnectionTimeout"));
             }
 
             using var reader = new StreamReader(
@@ -202,7 +199,9 @@ internal sealed class ElevatedBrokerClient
             {
                 Succeeded = succeeded,
                 WasCancelled = false,
-                Message = terminal?.Message ?? DescribeMissingTerminalEvent(process.ExitCode),
+                Message = terminal is null
+                    ? DescribeMissingTerminalEvent(process.ExitCode, localization)
+                    : DescribeBrokerEvent(terminal, localization),
                 State = terminal?.State,
                 ErrorCode = terminal?.ErrorCode,
                 AppliedActionIds = terminal?.AppliedActionIds ?? []
@@ -211,7 +210,7 @@ internal sealed class ElevatedBrokerClient
         catch (OperationCanceledException) when (timeout.IsCancellationRequested)
         {
             throw new TimeoutException(
-                "O componente administrativo excedeu o limite de segurança. Consulte o histórico antes de tentar novamente.");
+                localization.GetString("Broker.Error.OperationTimeout"));
         }
     }
 
@@ -269,21 +268,43 @@ internal sealed class ElevatedBrokerClient
     /// to an elevated, unsigned executable) rather than a bug in the
     /// broker's own logic.
     /// </summary>
-    private static string DescribeMissingTerminalEvent(int exitCode)
+    private static string DescribeMissingTerminalEvent(
+        int exitCode,
+        ILocalizationService localization)
     {
         var known = exitCode switch
         {
-            2 => "Os argumentos enviados ao componente administrativo eram inválidos.",
-            3 => "O componente administrativo não conseguiu conectar ao canal de progresso local.",
-            7 => "O componente administrativo não recebeu um token de administrador válido.",
+            2 => localization.GetString("Broker.Error.InvalidArguments"),
+            3 => localization.GetString("Broker.Error.ConnectionFailed"),
+            7 => localization.GetString("Broker.Error.InvalidAdminToken"),
             _ => null
         };
 
         return known
-            ?? "O componente administrativo foi interrompido antes de confirmar o resultado (código de saída "
-                + $"{exitCode}). Isso costuma acontecer quando o antivírus ou o SmartScreen do Windows "
-                + "encerra um executável elevado sem assinatura digital; verifique o histórico de proteção "
-                + "do Windows Defender (ou do seu antivírus) antes de tentar novamente.";
+            ?? localization.Format("Broker.Error.Interrupted", exitCode);
+    }
+
+    private static string DescribeBrokerEvent(
+        BrokerEvent brokerEvent,
+        ILocalizationService localization)
+    {
+        if (!string.IsNullOrWhiteSpace(brokerEvent.ActionId))
+        {
+            var actionName = localization.GetStringOrFallback(
+                $"Actions.{brokerEvent.ActionId}.Name",
+                brokerEvent.ActionId);
+            return localization.Format("Runtime.BrokerActionDetail", actionName);
+        }
+
+        return localization.GetString(brokerEvent.Kind switch
+        {
+            BrokerEventKind.Started => "Runtime.BrokerStartedDetail",
+            BrokerEventKind.Completed => "Runtime.BrokerCompletedDetail",
+            BrokerEventKind.RollbackStarted => "Runtime.BrokerRollbackStartedDetail",
+            BrokerEventKind.RollbackCompleted => "Runtime.BrokerRollbackCompletedDetail",
+            BrokerEventKind.Rejected => "Runtime.BrokerRejectedDetail",
+            _ => "Runtime.BrokerFailedDetail"
+        });
     }
 
     /// <summary>
@@ -388,7 +409,7 @@ internal sealed class ElevatedBrokerClient
                 or BrokerEventKind.RollbackCompleted
                 ? localization.GetString("Runtime.BrokerRestoring")
                 : localization.GetString("Runtime.BrokerApplying"),
-            Detail = brokerEvent.Message,
+            Detail = DescribeBrokerEvent(brokerEvent, localization),
             ActionId = brokerEvent.ActionId,
             Outcome = brokerEvent.ActionId is null ? null : brokerEvent.Kind switch
             {

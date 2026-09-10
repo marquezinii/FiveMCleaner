@@ -34,6 +34,8 @@ $installerDocuments = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'i
 $installerLicense = Join-Path $installerDocuments 'license.rtf'
 $installerInfoEnglish = Join-Path $installerDocuments 'install-info.en.rtf'
 $installerInfoPortuguese = Join-Path $installerDocuments 'install-info.pt-BR.rtf'
+$installerInfoSpanish = Join-Path $installerDocuments 'install-info.es.rtf'
+$installerInfoFrench = Join-Path $installerDocuments 'install-info.fr.rtf'
 $stagingOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot ".installer-staging-$([Guid]::NewGuid().ToString('N'))"))
 $innoVersion = '7.0.2'
 $innoAssetName = "innosetup-$innoVersion-x64.exe"
@@ -176,6 +178,8 @@ Assert-UnderArtifacts $installerDocuments
 Assert-UnderArtifacts $installerLicense
 Assert-UnderArtifacts $installerInfoEnglish
 Assert-UnderArtifacts $installerInfoPortuguese
+Assert-UnderArtifacts $installerInfoSpanish
+Assert-UnderArtifacts $installerInfoFrench
 Assert-UnderArtifacts $stagingOutput
 New-Item -ItemType Directory -Force -Path $artifactsRoot, $installerOutput, $stagingOutput | Out-Null
 
@@ -184,6 +188,8 @@ try {
         -LicensePath (Join-Path $workspace 'LICENSE') `
         -EnglishInfoPath (Join-Path $workspace 'installer\install-info.en.txt') `
         -PortugueseInfoPath (Join-Path $workspace 'installer\install-info.pt-BR.txt') `
+        -SpanishInfoPath (Join-Path $workspace 'installer\install-info.es.txt') `
+        -FrenchInfoPath (Join-Path $workspace 'installer\install-info.fr.txt') `
         -OutputDirectory $installerDocuments
 
     & (Join-Path $PSScriptRoot 'Verify-Installer.ps1') -ScriptOnly
@@ -249,6 +255,8 @@ try {
         "/DInstallerLicensePath=$installerLicense",
         "/DInstallerInfoEnglishPath=$installerInfoEnglish",
         "/DInstallerInfoPortuguesePath=$installerInfoPortuguese",
+        "/DInstallerInfoSpanishPath=$installerInfoSpanish",
+        "/DInstallerInfoFrenchPath=$installerInfoFrench",
         $installerScript
     )
     & $compiler @arguments

@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <data name="ActionResults.Bottleneck.Unavailable" xml:space="preserve"><value>The hardware signals required for bottleneck diagnosis could not be read.</value></data>
+  <data name="ActionResults.Bottleneck.MemoryPressure" xml:space="preserve"><value>Likely bottleneck: memory is under pressure. Close unused programs before the next heavy workload.</value></data>
+  <data name="ActionResults.Bottleneck.CpuLimited" xml:space="preserve"><value>Likely bottleneck: few logical processors, which may limit CPU-intensive games and applications.</value></data>
+  <data name="ActionResults.Bottleneck.LowDiskSpace" xml:space="preserve"><value>Likely bottleneck: low free disk space, which may slow texture loading and content streaming.</value></data>
+  <data name="ActionResults.Bottleneck.Balanced" xml:space="preserve"><value>No obvious bottleneck was identified; the hardware appears balanced for the current workload.</value></data>
+  <data name="ActionResults.Overlays.NoneDetected" xml:space="preserve"><value>No known overlay or capture software was detected running.</value></data>
+  <data name="ActionResults.Overlays.Detected" xml:space="preserve"><value>Detected overlays: {0}. None were closed; close them manually if you notice instability.</value></data>
+  <data name="ActionResults.Overlays.NvidiaSuffix" xml:space="preserve"><value> The NVIDIA Share/ShadowPlay process may indicate that Instant Replay is active; Freestyle filters may also be in use if configured, so check the NVIDIA App.</value></data>
+  <data name="ActionResults.FiveMLogs.NoneFound" xml:space="preserve"><value>No recent FiveM log was found; there is nothing to analyze.</value></data>
+  <data name="ActionResults.FiveMLogs.ListFailed" xml:space="preserve"><value>The FiveM logs could not be listed.</value></data>
+  <data name="ActionResults.FiveMLogs.Header" xml:space="preserve"><value>Most recent log: {0}, modified {1} ago.</value></data>
+  <data name="ActionResults.FiveMLogs.PossibleErrors" xml:space="preserve"><value>{0} Lines with possible errors: {1}; this is not a definitive diagnosis.</value></data>
+  <data name="ActionResults.FiveMLogs.NoPossibleErrors" xml:space="preserve"><value>{0} No line with a possible error was found.</value></data>
+  <data name="ActionResults.FiveMLogs.ReadFailed" xml:space="preserve"><value>{0} Its contents could not be read right now.</value></data>
+  <data name="ActionResults.Age.Day" xml:space="preserve"><value>{0} day</value></data>
+  <data name="ActionResults.Age.Days" xml:space="preserve"><value>{0} days</value></data>
+  <data name="ActionResults.Age.Hour" xml:space="preserve"><value>{0} hour</value></data>
+  <data name="ActionResults.Age.Hours" xml:space="preserve"><value>{0} hours</value></data>
+  <data name="ActionResults.Age.Minute" xml:space="preserve"><value>{0} minute</value></data>
+  <data name="ActionResults.Age.Minutes" xml:space="preserve"><value>{0} minutes</value></data>
+  <data name="ActionResults.PerformanceGuide.Instructions" xml:space="preserve"><value>Use the official FiveM console commands (F8) to measure actual performance: cl_drawfps true (FPS), cl_drawperf true (FPS/ping/CPU/GPU), netgraph true (network), and, when developer mode is available, resmon true (CPU/memory per server resource). Ralven's streaming readiness panel shows additional session signals.</value></data>
+  <data name="ActionResults.Network.Unavailable" xml:space="preserve"><value>Network statistics could not be read.</value></data>
+  <data name="ActionResults.Network.NoActiveInterface" xml:space="preserve"><value>Statistics for an active network adapter could not be read right now.</value></data>
+  <data name="ActionResults.Network.ErrorsDetected" xml:space="preserve"><value>The accumulated counters for active adapters report {0} discarded packets and {1} packets with errors since the interfaces started. This does not confirm current instability or measure latency or jitter; confirm it while the problem occurs using the affected app or game's tools.{2}</value></data>
+  <data name="ActionResults.Network.Healthy" xml:space="preserve"><value>The accumulated counters for active adapters report no discarded packets or errors.{0}</value></data>
+  <data name="ActionResults.Network.LinkSuffix" xml:space="preserve"><value> Fastest active interface: {0}, {1} link.</value></data>
+  <data name="ActionResults.Thermal.Unavailable" xml:space="preserve"><value>This PC does not expose a reliable temperature reading without motherboard or GPU vendor software. If performance drops under sustained load, check temperatures with the vendor's official utility.</value></data>
+  <data name="ActionResults.Thermal.Elevated" xml:space="preserve"><value>Elevated temperature detected (~{0:0}°C); thermal throttling may occur under load.</value></data>
+  <data name="ActionResults.Thermal.Normal" xml:space="preserve"><value>Temperature was within a normal range (~{0:0}°C) at the time of the reading.</value></data>
+  <data name="ActionResults.Pagefile.Unavailable" xml:space="preserve"><value>The page file status could not be read.</value></data>
+  <data name="ActionResults.Pagefile.CommitUnavailable" xml:space="preserve"><value>The memory commit limit could not be read right now.</value></data>
+  <data name="ActionResults.Pagefile.NearLimit" xml:space="preserve"><value>Memory commit is close to the limit available to the process ({0:0.#} GB, composed of RAM and page file); new allocations may fail under load.</value></data>
+  <data name="ActionResults.Pagefile.Healthy" xml:space="preserve"><value>The process has enough available commit headroom ({0:0.#} GB, composed of RAM and page file) for the current workload.</value></data>
+  <data name="ActionResults.CacheIndex.NoneFound" xml:space="preserve"><value>No cache index was found (normal if the cache has never been used or was already cleared).</value></data>
+  <data name="ActionResults.CacheIndex.Corrupted" xml:space="preserve"><value>Apparently corrupted cache index: {0}. Use cache repair (Balanced/Aggressive profile with repair enabled) to rebuild it.</value></data>
+  <data name="ActionResults.CacheIndex.Healthy" xml:space="preserve"><value>The FiveM cache index is well formed; no known corruption was found.</value></data>
+  <data name="ActionResults.GpuVendor.Unavailable" xml:space="preserve"><value>The GPU vendor could not be identified right now.</value></data>
+  <data name="ActionResults.GpuVendor.Detected" xml:space="preserve"><value>Detected GPUs: {0}. Make 3D profile adjustments only in the vendor's official panel (NVIDIA Control Panel, AMD Software, or Intel Graphics Command Center); Ralven does not write or overwrite those profiles.</value></data>
+  <data name="ActionResults.GpuVendor.DriverSuffix" xml:space="preserve"><value> Download the latest driver directly from the vendor: {0}.</value></data>
+  <data name="ActionResults.GpuPreference.NotApplicable" xml:space="preserve"><value>No integrated and dedicated GPU pair was detected; this check applies only to dual-GPU laptops.</value></data>
+  <data name="ActionResults.GpuPreference.Configured" xml:space="preserve"><value>Two GPUs were detected, and FiveM is already configured to prefer the high-performance GPU.</value></data>
+  <data name="ActionResults.GpuPreference.Mismatch" xml:space="preserve"><value>Two GPUs were detected (one integrated and one dedicated), but FiveM is not configured to prefer the high-performance GPU in Windows graphics preferences. Enable the corresponding option to prevent the game from using the integrated GPU by mistake.</value></data>
+  <data name="ActionResults.HybridLaptop.OnBattery" xml:space="preserve"><value>The laptop is running on battery; vendor dedicated-GPU and maximum-performance modes usually apply only while plugged in. Connect the charger before playing for better performance.</value></data>
+  <data name="ActionResults.HybridLaptop.BatterySaver" xml:space="preserve"><value>Windows Energy Saver is active, which reduces overall performance. Turn it off before playing.</value></data>
+  <data name="ActionResults.HybridLaptop.NoVendorTool" xml:space="preserve"><value>No known vendor GPU-switching or performance-mode utility (Armoury Crate, MSI Center, Lenovo Vantage, etc.) was detected. If this laptop has a dedicated GPU and MUX switch, use the vendor utility to enable it.</value></data>
+  <data name="ActionResults.HybridLaptop.VendorTools" xml:space="preserve"><value>Detected vendor utilities: {0}. Use the appropriate utility to enable dedicated-GPU or MUX mode and the performance profile, if available; Ralven does not control these settings directly.</value></data>
+  <data name="ActionResults.MousePolling.HighCpu" xml:space="preserve"><value>CPU load is high right now ({0:0}%). If your mouse is set to 4000 Hz or 8000 Hz and stutter appears to coincide with mouse movement, test 1000 Hz. Very high polling rates increase CPU interrupt overhead, which may be noticeable when the CPU is already at its limit.</value></data>
+  <data name="ActionResults.MousePolling.NormalCpu" xml:space="preserve"><value>CPU load is not high right now. If stutter in a game appears to coincide with mouse movement and the mouse is set to 4000 Hz or 8000 Hz, test 1000 Hz as a diagnostic step. This app cannot read the mouse's actual polling rate or automatically correlate it with stutter.</value></data>
+  <data name="ActionResults.CpuDetails.Unavailable" xml:space="preserve"><value>CPU details could not be read right now.</value></data>
+  <data name="ActionResults.CpuDetails.Summary" xml:space="preserve"><value>{0} physical cores, {1} logical threads. Current frequency: {2} MHz out of a maximum of {3} MHz.</value></data>
+  <data name="ActionResults.CpuDetails.LowClockSuffix" xml:space="preserve"><value> The current frequency is well below the maximum (power saving or possible throttling).</value></data>
+  <data name="ActionResults.GpuDetails.Unavailable" xml:space="preserve"><value>GPU VRAM and type details could not be detected right now.</value></data>
+  <data name="ActionResults.GpuDetails.Vram" xml:space="preserve"><value>{0:0.#} GB VRAM</value></data>
+  <data name="ActionResults.GpuDetails.VramUnavailable" xml:space="preserve"><value>VRAM not detected</value></data>
+  <data name="ActionResults.GpuDetails.Integrated" xml:space="preserve"><value>likely integrated</value></data>
+  <data name="ActionResults.GpuDetails.Discrete" xml:space="preserve"><value>likely dedicated</value></data>
+  <data name="ActionResults.GpuDetails.UnknownKind" xml:space="preserve"><value>type not identified</value></data>
+  <data name="ActionResults.GpuDetails.Adapter" xml:space="preserve"><value>{0} ({1}, {2})</value></data>
+  <data name="ActionResults.GpuDetails.Summary" xml:space="preserve"><value>Detected GPUs: {0}.</value></data>
+  <data name="ActionResults.RamDetails.Unavailable" xml:space="preserve"><value>Memory module details could not be read right now.</value></data>
+  <data name="ActionResults.RamDetails.ConfiguredClock" xml:space="preserve"><value>{0} MHz configured</value></data>
+  <data name="ActionResults.RamDetails.ClockUnavailable" xml:space="preserve"><value>configured frequency unavailable</value></data>
+  <data name="ActionResults.RamDetails.Summary" xml:space="preserve"><value>Detected memory modules: {0}; {1}. Windows does not reliably expose channel topology or XMP/EXPO state; confirm these details in BIOS/UEFI or the vendor's official tool.</value></data>
+  <data name="ActionResults.StorageHealth.Unavailable" xml:space="preserve"><value>The type and health of physical drives could not be read right now.</value></data>
+  <data name="ActionResults.StorageHealth.Disk" xml:space="preserve"><value>{0} ({1}, {2})</value></data>
+  <data name="ActionResults.StorageHealth.Warning" xml:space="preserve"><value>Attention: {0} drives report a health warning. Detected drives: {1}.</value></data>
+  <data name="ActionResults.StorageHealth.WarningSingular" xml:space="preserve"><value>Attention: {0} drive reports a health warning. Detected drives: {1}.</value></data>
+  <data name="ActionResults.StorageHealth.Healthy" xml:space="preserve"><value>All detected drives report normal health. Drives: {0}.</value></data>
+  <data name="ActionResults.DriverVersions.Build" xml:space="preserve"><value>build {0}</value></data>
+  <data name="ActionResults.DriverVersions.UnknownBuild" xml:space="preserve"><value>unknown build</value></data>
+  <data name="ActionResults.DriverVersions.Summary" xml:space="preserve"><value>Windows {0}. {1}</value></data>
+  <data name="ActionResults.DriverVersions.Video" xml:space="preserve"><value>Video</value></data>
+  <data name="ActionResults.DriverVersions.Network" xml:space="preserve"><value>Network</value></data>
+  <data name="ActionResults.DriverVersions.Audio" xml:space="preserve"><value>Audio</value></data>
+  <data name="ActionResults.DriverVersions.Chipset" xml:space="preserve"><value>Chipset</value></data>
+  <data name="ActionResults.DriverVersions.Storage" xml:space="preserve"><value>Storage</value></data>
+  <data name="ActionResults.DriverVersions.Unavailable" xml:space="preserve"><value>Video, network, audio, chipset, storage, USB, and Bluetooth driver versions could not be read.</value></data>
+  <data name="ActionResults.DriverVersions.OldVideoDriver" xml:space="preserve"><value>Video driver not updated for more than {0} months: {1}. Consider updating it from the vendor's official website.</value></data>
+  <data name="ActionResults.Vrr.BaseGuidance" xml:space="preserve"><value>G-SYNC/FreeSync/VRR has no public API that this app can use to enable it; confirm and enable it through {0} or the monitor's own menu.</value></data>
+  <data name="ActionResults.Vrr.RefreshGuidance" xml:space="preserve"><value>{0} To keep FPS within this monitor's variable range ({1} Hz in the current mode), the vendor recommends limiting FPS a few frames below the maximum (for example, {2} FPS). Use the -frameLimit parameter for standalone GTA V.</value></data>
+  <data name="ActionResults.Vrr.NvidiaPanel" xml:space="preserve"><value>NVIDIA Control Panel (Set up G-SYNC)</value></data>
+  <data name="ActionResults.Vrr.VendorPanel" xml:space="preserve"><value>your GPU vendor's official control panel</value></data>
+  <data name="ActionResults.DriverReinstall.Instructions" xml:space="preserve"><value>Guided clean reinstall (no files were changed): 1) download Display Driver Uninstaller (DDU) and the latest driver installer from the GPU vendor's official website before starting; 2) restart Windows in Safe Mode; 3) run DDU and remove only the display driver; 4) restart normally and install the driver downloaded in step 1. This applies to both NVIDIA and AMD (Adrenalin) GPUs. This app never downloads, installs, or removes a driver automatically.</value></data>
+  <data name="ActionResults.Display.Unavailable" xml:space="preserve"><value>The monitor configuration could not be read right now.</value></data>
+  <data name="ActionResults.State.Enabled" xml:space="preserve"><value>enabled</value></data>
+  <data name="ActionResults.State.Disabled" xml:space="preserve"><value>disabled</value></data>
+  <data name="ActionResults.State.Unavailable" xml:space="preserve"><value>unavailable</value></data>
+  <data name="ActionResults.Display.HagsUnavailable" xml:space="preserve"><value>unsupported or not reported by the driver</value></data>
+  <data name="ActionResults.Display.RefreshBelowMaximum" xml:space="preserve"><value> The configured refresh rate ({0} Hz) is below the maximum supported at this resolution ({1} Hz).</value></data>
+  <data name="ActionResults.Display.Summary" xml:space="preserve"><value>Monitor at {0}x{1}, {2} Hz.{3} Hardware-accelerated GPU scheduling (HAGS): {4}. G-SYNC/FreeSync/VRR cannot be detected reliably without vendor software.</value></data>
+  <data name="ActionResults.PowerPlan.Balanced" xml:space="preserve"><value>Balanced</value></data>
+  <data name="ActionResults.PowerPlan.HighPerformance" xml:space="preserve"><value>High performance</value></data>
+  <data name="ActionResults.PowerPlan.PowerSaver" xml:space="preserve"><value>Power saver</value></data>
+  <data name="ActionResults.PowerPlan.UltimatePerformance" xml:space="preserve"><value>Ultimate Performance</value></data>
+  <data name="ActionResults.SessionSettings.DisabledOrDefault" xml:space="preserve"><value>disabled or using the Windows default</value></data>
+  <data name="ActionResults.SessionSettings.FseDisabled" xml:space="preserve"><value>disabled (exclusive fullscreen game)</value></data>
+  <data name="ActionResults.SessionSettings.FseEnabled" xml:space="preserve"><value>enabled (Windows default)</value></data>
+  <data name="ActionResults.SessionSettings.Summary" xml:space="preserve"><value>Game Mode: {0}. Fullscreen optimizations: {1}. Active power plan: {2}.</value></data>
+  <data name="ActionResults.Throttling.Combined" xml:space="preserve"><value>Possible throttling detected: a clock drop under load combined with {0}. This was not confirmed by a direct per-core temperature sensor.</value></data>
+  <data name="ActionResults.Throttling.TemperatureSignal" xml:space="preserve"><value>elevated temperature</value></data>
+  <data name="ActionResults.Throttling.WheaSignal" xml:space="preserve"><value>recent hardware error (WHEA) events</value></data>
+  <data name="ActionResults.Throttling.ClockDrop" xml:space="preserve"><value>A clock drop under load was detected without confirmation from another signal; it may be caused by the power plan, a power limit, or unconfirmed throttling.</value></data>
+  <data name="ActionResults.Throttling.WheaOnly" xml:space="preserve"><value>Recent hardware error (WHEA) events were found, without a clock-drop signal at the time of this reading.</value></data>
+  <data name="ActionResults.Throttling.None" xml:space="preserve"><value>No throttling signal was detected at the time of this reading.</value></data>
+  <data name="ActionResults.ResourceUsage.Percent" xml:space="preserve"><value>{0:0}%</value></data>
+  <data name="ActionResults.ResourceUsage.Summary" xml:space="preserve"><value>Usage at the time of the reading — CPU: {0}, disk: {1}, GPU: {2}, network: {3:0.##} MB/s. This is an instantaneous sample, not an average.</value></data>
+  <data name="ActionResults.PciLink.Unavailable" xml:space="preserve"><value>The GPU's PCIe link width and speed could not be read reliably without a vendor tool on this PC.</value></data>
+  <data name="ActionResults.PciLink.Adapter" xml:space="preserve"><value>{0}: currently {1}, maximum {2}</value></data>
+  <data name="ActionResults.PciLink.Speed" xml:space="preserve"><value>{0:0.#} GT/s</value></data>
+  <data name="ActionResults.HardwareStability.BiosDateUnavailable" xml:space="preserve"><value>The BIOS release date could not be read.</value></data>
+  <data name="ActionResults.HardwareStability.NoWhea" xml:space="preserve"><value>No WHEA hardware error event was found in the last 30 days.</value></data>
+  <data name="ActionResults.HardwareStability.WheaWithMemory" xml:space="preserve"><value>WHEA events in the last 30 days: {0}; events with a possible memory indication: {1}.</value></data>
+  <data name="ActionResults.HardwareStability.Whea" xml:space="preserve"><value>WHEA events in the last 30 days: {0}, with no identifiable memory indication in the event data.</value></data>
+  <data name="ActionResults.HardwareStability.Summary" xml:space="preserve"><value>{0} {1} Resizable BAR, Above 4G Decoding, and Smart Access Memory cannot be detected reliably without vendor tools; check the BIOS or the motherboard/GPU vendor's official panel.</value></data>
+  <data name="ActionResults.HardwareStability.OldBios" xml:space="preserve"><value>BIOS released on {0:yyyy-MM-dd}, more than {1} years ago; consider checking for updates on the motherboard vendor's website.</value></data>
+  <data name="ActionResults.HardwareStability.RecentBios" xml:space="preserve"><value>BIOS released on {0:yyyy-MM-dd}, relatively recent.</value></data>
+  <data name="ActionResults.BottleneckClassification.Thermal" xml:space="preserve"><value>Likely bottleneck: thermal. Temperature is approximately {0:0}°C, which may cause throttling and lower performance under load.</value></data>
+  <data name="ActionResults.BottleneckClassification.BackgroundProcess" xml:space="preserve"><value>Likely bottleneck: background process. '{0}' is using a significant amount of CPU while the system is being analyzed.</value></data>
+  <data name="ActionResults.BottleneckClassification.Disk" xml:space="preserve"><value>Likely bottleneck: disk. The drive has high active time, which may cause stalls while loading textures or streaming content.</value></data>
+  <data name="ActionResults.BottleneckClassification.Memory" xml:space="preserve"><value>Likely bottleneck: memory. Available memory is low, which may cause paging and stutter.</value></data>
+  <data name="ActionResults.BottleneckClassification.Vram" xml:space="preserve"><value>Likely bottleneck: VRAM. The detected GPU has little video memory (4 GB or less) and is under high load; higher-quality textures may cause stutter.</value></data>
+  <data name="ActionResults.BottleneckClassification.Gpu" xml:space="preserve"><value>Likely bottleneck: GPU. The GPU is close to its limit while the CPU still has headroom; reducing graphics options is more likely to help than CPU adjustments.</value></data>
+  <data name="ActionResults.BottleneckClassification.Cpu" xml:space="preserve"><value>Likely bottleneck: CPU. CPU usage is high while the GPU has headroom; reducing graphics options is unlikely to help much in this case.</value></data>
+  <data name="ActionResults.BottleneckClassification.None" xml:space="preserve"><value>No obvious local bottleneck was found in this sample; repeat the measurement while the affected workload is running to compare the signals.</value></data>
+  <data name="ActionResults.Engine.InterruptedAction" xml:space="preserve"><value>The previous run was interrupted before this action's final state was confirmed.</value></data>
+  <data name="ActionResults.Engine.NotRunAfterInterruption" xml:space="preserve"><value>Not run because the previous run was interrupted.</value></data>
+  <data name="ActionResults.Engine.StepCompleted" xml:space="preserve"><value>Step completed.</value></data>
+  <data name="ActionResults.Engine.NotRunAfterCriticalFailure" xml:space="preserve"><value>Not run after an earlier critical failure.</value></data>
+  <data name="ActionResults.Engine.UnmetPrerequisite" xml:space="preserve"><value>Unmet prerequisite: {0}.</value></data>
+  <data name="ActionResults.Engine.IncompleteActions" xml:space="preserve"><value>One or more actions did not complete; check the report.</value></data>
+  <data name="ActionResults.Engine.ActionFailed" xml:space="preserve"><value>The action failed safely. Check the error code and report.</value></data>
+  <data name="ActionResults.Engine.RollbackFailed" xml:space="preserve"><value>The action failed, and not every change could be rolled back. Review the local report.</value></data>
+  <data name="ActionResults.Engine.RollbackUnsafeAfterInterruption" xml:space="preserve"><value>The change cannot be restored safely after the interruption.</value></data>
+  <data name="ActionResults.Engine.NotRunAfterCancellation" xml:space="preserve"><value>Not run because the operation was cancelled.</value></data>
+  <data name="ActionResults.Engine.Cancelled" xml:space="preserve"><value>The operation was cancelled by the user.</value></data>
+  <data name="ActionResults.VisualEffects.AlreadyDesired" xml:space="preserve"><value>Visual effects were already in the requested state.</value></data>
+  <data name="ActionResults.VisualEffects.Applied" xml:space="preserve"><value>Visual effects were updated through the official Windows API.</value></data>
+  <data name="ActionResults.Registry.NoChange" xml:space="preserve"><value>No compatible value needed to change.</value></data>
+  <data name="ActionResults.Registry.Applied" xml:space="preserve"><value>Updated allowlisted settings: {0}.</value></data>
+  <data name="ActionResults.PerformancePowerPlan.OnBattery" xml:space="preserve"><value>High-performance mode was not enabled because the PC is running on battery.</value></data>
+  <data name="ActionResults.PerformancePowerPlan.Unavailable" xml:space="preserve"><value>This PC does not expose a compatible high-performance power plan.</value></data>
+  <data name="ActionResults.PerformancePowerPlan.AlreadyActive" xml:space="preserve"><value>The high-performance power plan was already active.</value></data>
+  <data name="ActionResults.PerformancePowerPlan.Applied" xml:space="preserve"><value>The high-performance power plan was enabled; the previous state was saved for rollback.</value></data>
+  <data name="ActionResults.PciPower.Unavailable" xml:space="preserve"><value>This PC does not expose the PCI Express Link State Power Management setting.</value></data>
+  <data name="ActionResults.PciPower.AlreadyOff" xml:space="preserve"><value>PCI Express Link State Power Management was already Off.</value></data>
+  <data name="ActionResults.PciPower.Applied" xml:space="preserve"><value>PCI Express Link State Power Management was set to Off; the previous value was saved for rollback.</value></data>
+  <data name="ActionResults.ProcessCheck.FiveMClosed" xml:space="preserve"><value>FiveM is closed; it is safe to continue.</value></data>
+  <data name="ActionResults.ProcessCheck.GtaVClosed" xml:space="preserve"><value>GTA V is closed; it is safe to continue.</value></data>
+  <data name="ActionResults.Cleanup.NoFiles" xml:space="preserve"><value>No allowlisted file met the cleanup criteria.</value></data>
+  <data name="ActionResults.Cleanup.Prepared" xml:space="preserve"><value>Files prepared for cleanup: {0} ({1:N0} bytes).</value></data>
+  <data name="ActionResults.DisplayPreferences.GtaVNotConfirmed" xml:space="preserve"><value>The GTA V Legacy installation was not confirmed; settings.xml will not be changed.</value></data>
+  <data name="ActionResults.DisplayPreferences.FiveMFileMissing" xml:space="preserve"><value>gta5_settings.xml does not exist yet; open FiveM once before applying the preference.</value></data>
+  <data name="ActionResults.DisplayPreferences.GtaVFileMissing" xml:space="preserve"><value>settings.xml does not exist yet; open GTA V Legacy once before applying the preference.</value></data>
+  <data name="ActionResults.DisplayPreferences.IncompatibleValues" xml:space="preserve"><value>The file does not contain unique, compatible values for: {0}.</value></data>
+  <data name="ActionResults.DisplayPreferences.AlreadyDesired" xml:space="preserve"><value>Window mode and VSync were verified and already matched the requested preference.</value></data>
+  <data name="ActionResults.DisplayPreferences.Applied" xml:space="preserve"><value>A backup was created and {0} display preferences were updated.</value></data>
+  <data name="ActionResults.Graphics.GtaVNotConfirmed" xml:space="preserve"><value>The GTA V Legacy installation was not confirmed; settings.xml will not be changed.</value></data>
+  <data name="ActionResults.Graphics.FiveMFileMissing" xml:space="preserve"><value>gta5_settings.xml does not exist yet; open FiveM once before applying the preset.</value></data>
+  <data name="ActionResults.Graphics.GtaVFileMissing" xml:space="preserve"><value>settings.xml does not exist yet; open GTA V Legacy once before applying the preset.</value></data>
+  <data name="ActionResults.Graphics.NoCompatibleSetting" xml:space="preserve"><value>No compatible allowlisted graphics setting was found in the file.</value></data>
+  <data name="ActionResults.Graphics.AlreadyDesired" xml:space="preserve"><value>The allowlisted graphics settings found were verified and already matched the requested profile.</value></data>
+  <data name="ActionResults.Graphics.Applied" xml:space="preserve"><value>A backup was created and {0} graphics options were updated.</value></data>
+  <data name="ActionResults.GtaVCommandLine.NotConfirmedForDiagnosis" xml:space="preserve"><value>The standalone GTA V Legacy installation was not confirmed; there is nothing to diagnose.</value></data>
+  <data name="ActionResults.GtaVCommandLine.FileMissing" xml:space="preserve"><value>No commandline.txt was found in the GTA V folder; the game is using default parameters.</value></data>
+  <data name="ActionResults.GtaVCommandLine.ReadFailed" xml:space="preserve"><value>commandline.txt could not be read.</value></data>
+  <data name="ActionResults.GtaVCommandLine.RepairFlagsActive" xml:space="preserve"><value>Attention: repair parameters are still active in GTA V's commandline.txt: {0}. They should not remain enabled permanently; revert them after diagnosing the problem.</value></data>
+  <data name="ActionResults.GtaVCommandLine.RecognizedFlags" xml:space="preserve"><value>Recognized parameters in GTA V's commandline.txt: {0} ({1}).</value></data>
+  <data name="ActionResults.GtaVCommandLine.NoRecognizedFlags" xml:space="preserve"><value>commandline.txt exists but contains no recognized parameters.</value></data>
+  <data name="ActionResults.GtaVCommandLine.NotConfirmedForChange" xml:space="preserve"><value>The standalone GTA V Legacy installation was not confirmed; commandline.txt will not be changed.</value></data>
+  <data name="ActionResults.GtaVCommandLine.AlreadyDesired" xml:space="preserve"><value>The managed parameters already matched the requested configuration.</value></data>
+  <data name="ActionResults.GtaVCommandLine.GraphicsApplied" xml:space="preserve"><value>Updated graphics startup parameters: {0}.</value></data>
+  <data name="ActionResults.GtaVCommandLine.DisplayApplied" xml:space="preserve"><value>Updated display startup parameters: {0}.</value></data>
+  <data name="ActionResults.GtaVCommandLine.RepairApplied" xml:space="preserve"><value>Temporarily enabled repair parameters: {0}. Remember to revert them.</value></data>
+  <data name="ActionResults.GraphicsPreset.HardwareReadFailed" xml:space="preserve"><value>The hardware required for a preset recommendation could not be read.</value></data>
+  <data name="ActionResults.GraphicsPreset.InsufficientHardware" xml:space="preserve"><value>There is not enough hardware information for a preset recommendation; use the individual GPU, CPU, and RAM diagnostics.</value></data>
+  <data name="ActionResults.GraphicsPreset.DedicatedGpu" xml:space="preserve"><value>dedicated</value></data>
+  <data name="ActionResults.GraphicsPreset.IntegratedGpu" xml:space="preserve"><value>integrated</value></data>
+  <data name="ActionResults.GraphicsPreset.Fps" xml:space="preserve"><value>Recommendation: FPS preset. The detected hardware ({0} GPU, ~{1:0.#} GB VRAM, {2} logical threads, ~{3:0.#} GB RAM) suggests prioritizing FPS and responsiveness over visual quality.</value></data>
+  <data name="ActionResults.GraphicsPreset.Quality" xml:space="preserve"><value>Recommendation: Quality preset. The hardware has comfortable headroom (dedicated GPU, ~{0:0.#} GB VRAM, {1} logical threads, ~{2:0.#} GB RAM), and the {3} Hz display supports higher visual quality without a noticeable FPS impact.</value></data>
+  <data name="ActionResults.GraphicsPreset.Balanced" xml:space="preserve"><value>Recommendation: Balanced preset. The hardware (dedicated GPU, ~{0:0.#} GB VRAM, {1} logical threads, ~{2:0.#} GB RAM, {3} Hz display) suggests balancing visual quality and frame stability. This is a local-hardware heuristic; it does not account for the server or a benchmark that has not been run.</value></data>
+  <data name="ActionResults.TextureVram.SettingsMissing" xml:space="preserve"><value>The graphics settings file does not exist yet; there is nothing to compare with VRAM.</value></data>
+  <data name="ActionResults.TextureVram.SettingsReadFailed" xml:space="preserve"><value>The configured texture quality could not be read.</value></data>
+  <data name="ActionResults.TextureVram.OptionMissing" xml:space="preserve"><value>The texture quality option was not found in the graphics settings file.</value></data>
+  <data name="ActionResults.TextureVram.VramUnavailable" xml:space="preserve"><value>GPU VRAM could not be read for comparison with the configured texture quality.</value></data>
+  <data name="ActionResults.TextureVram.AboveEstimate" xml:space="preserve"><value>The configured texture quality (level {0}) usually requires about {1:0} GB VRAM, above the ~{2:0.#} GB detected on the GPU. This is a threshold estimate, not an actual in-game usage measurement, but it may explain stuttering or texture drops.</value></data>
+  <data name="ActionResults.TextureVram.Compatible" xml:space="preserve"><value>The configured texture quality (level {0}) is compatible with the ~{2:0.#} GB VRAM detected on the GPU.</value></data>
+  <data name="Unit.Gigabytes" xml:space="preserve"><value>{0:0.##} GB</value></data>
+  <data name="Unit.Megabytes" xml:space="preserve"><value>{0:0.#} MB</value></data>
+  <data name="ActionResults.CacheStorage.ScopeReadFailed" xml:space="preserve"><value>{0}: could not be read completely.</value></data>
+  <data name="ActionResults.CacheStorage.ScopeSize" xml:space="preserve"><value>{0}: {1}</value></data>
+  <data name="ActionResults.CacheStorage.NoneFound" xml:space="preserve"><value>No FiveM cache or data folders were found.</value></data>
+  <data name="ActionResults.CacheStorage.Total" xml:space="preserve"><value>Total cache: {0} ({1}).</value></data>
+  <data name="ActionResults.CacheStorage.LockedFile" xml:space="preserve"><value>{0} file appears to be locked by another process.</value></data>
+  <data name="ActionResults.CacheStorage.LockedFiles" xml:space="preserve"><value>{0} files appear to be locked by another process.</value></data>
+  <data name="ActionResults.CacheStorage.NoLockedFiles" xml:space="preserve"><value>No locked files were found in the checked sample.</value></data>
+  <data name="ActionResults.InstallationHealth.Duplicate" xml:space="preserve"><value>A possible duplicate installation was found at '{0}'.</value></data>
+  <data name="ActionResults.InstallationHealth.WriteDenied" xml:space="preserve"><value>The FiveM data folder rejected a test write; check its permissions.</value></data>
+  <data name="ActionResults.InstallationHealth.OneDrive" xml:space="preserve"><value>The installation is inside a folder synchronized by OneDrive, which may cause file locks while playing.</value></data>
+  <data name="ActionResults.InstallationHealth.LowSpace" xml:space="preserve"><value>The installation drive is low on free space (~{0:0.#} GB).</value></data>
+  <data name="ActionResults.InstallationHealth.NoIssues" xml:space="preserve"><value>No installation issues were found by the available checks.</value></data>
+  <data name="ActionResults.CrashPatterns.RecurringCodes" xml:space="preserve"><value>Recurring error codes in recent dumps: {0}.</value></data>
+  <data name="ActionResults.CrashPatterns.DumpsReadFailed" xml:space="preserve"><value>Recent crash dumps could not be listed.</value></data>
+  <data name="ActionResults.CrashPatterns.StreamingErrors" xml:space="preserve"><value>Possible content-streaming errors in the recent log ({0}).</value></data>
+  <data name="ActionResults.CrashPatterns.NoneFound" xml:space="preserve"><value>No recurring error or streaming patterns were found in the available local data.</value></data>
+  <data name="ActionResults.CrashPatterns.Disclaimer" xml:space="preserve"><value>This is not a memory-dump analysis; treat it as a clue, not a definitive diagnosis.</value></data>
+  <data name="ActionResults.StuckProcess.NoneFound" xml:space="preserve"><value>No stuck FiveM process was found.</value></data>
+  <data name="ActionResults.StuckProcess.Terminated" xml:space="preserve"><value>The stuck process '{0}' (PID {1}) was terminated.</value></data>
+  <data name="ActionResults.AuthRepair.NoRecentLog" xml:space="preserve"><value>No recent FiveM log is available to confirm an entitlement failure.</value></data>
+  <data name="ActionResults.AuthRepair.NoPattern" xml:space="preserve"><value>No known entitlement-error pattern was found in the recent log; nothing was removed.</value></data>
+  <data name="ActionResults.AuthRepair.NoFiles" xml:space="preserve"><value>An entitlement-error pattern was found, but none of the expected files currently exist.</value></data>
+  <data name="ActionResults.AuthRepair.ItemMoved" xml:space="preserve"><value>{0} entitlement item was moved to quarantine; you will need to sign in again.</value></data>
+  <data name="ActionResults.AuthRepair.ItemsMoved" xml:space="preserve"><value>{0} entitlement items were moved to quarantine; you will need to sign in again.</value></data>
+</root>

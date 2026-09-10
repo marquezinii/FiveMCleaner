@@ -130,12 +130,12 @@ public abstract class AllowlistedRegistryAction : WindowsOptimizationAction
         if (applied.Count == 0)
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Nenhum valor compatível precisou ser alterado."));
+                WindowsActionText.Format("ActionResults.Registry.NoChange")));
         }
 
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
             new RegistryMutationSnapshot(applied),
-            $"{applied.Count} configuração(ões) allowlisted atualizada(s)."));
+            WindowsActionText.Format("ActionResults.Registry.Applied", applied.Count)));
     }
 
     public override Task RollbackAsync(

@@ -68,25 +68,44 @@ public sealed class CacheStorageDiagnosisAction : WindowsOptimizationAction
             }
             catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
             {
-                summaries.Add($"{scope.Name}: não foi possível ler completamente ({exception.Message}).");
+                summaries.Add(WindowsActionText.Format("ActionResults.CacheStorage.ScopeReadFailed", scope.Name));
                 continue;
             }
 
             totalBytes += scopeBytes;
-            summaries.Add($"{scope.Name}: {FormatBytes(scopeBytes)}");
+            summaries.Add(WindowsActionText.Format(
+                "ActionResults.CacheStorage.ScopeSize",
+                scope.Name,
+                FormatBytes(scopeBytes)));
         }
 
         if (summaries.Count == 0)
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Nenhuma pasta de cache ou dados do FiveM foi encontrada ainda."));
+                WindowsActionText.Format("ActionResults.CacheStorage.NoneFound")));
         }
 
-        var message = $"Cache total: {FormatBytes(totalBytes)} ({string.Join(", ", summaries)})."
+        var message = WindowsActionText.Format(
+                "ActionResults.CacheStorage.Total",
+                FormatBytes(totalBytes),
+                string.Join(", ", summaries))
             + (lockedFiles > 0
-                ? $" {lockedFiles} arquivo(s) parecem bloqueados por outro processo no momento da leitura."
-                : " Nenhum arquivo bloqueado foi encontrado na amostra verificada.");
+                ? " " + WindowsActionText.Format(
+                    lockedFiles == 1
+                        ? "ActionResults.CacheStorage.LockedFile"
+                        : "ActionResults.CacheStorage.LockedFiles",
+                    lockedFiles)
+                : " " + WindowsActionText.Format("ActionResults.CacheStorage.NoLockedFiles"));
         return Task.FromResult(WindowsActionApplyResult.NoChange(message));
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        const double mib = 1024d * 1024d;
+        const double gib = mib * 1024d;
+        return WindowsActionText.Format(
+            bytes >= gib ? "Unit.Gigabytes" : "Unit.Megabytes",
+            bytes >= gib ? bytes / gib : bytes / mib);
     }
 
     public override Task RollbackAsync(
@@ -114,14 +133,6 @@ public sealed class CacheStorageDiagnosisAction : WindowsOptimizationAction
         }
     }
 
-    private static string FormatBytes(long bytes)
-    {
-        const double mib = 1024d * 1024d;
-        const double gib = mib * 1024d;
-        return bytes >= gib
-            ? $"{bytes / gib:0.##} GB"
-            : $"{bytes / mib:0.#} MB";
-    }
 }
 
 public sealed class InstallationHealthDiagnosisAction : WindowsOptimizationAction
@@ -149,26 +160,26 @@ public sealed class InstallationHealthDiagnosisAction : WindowsOptimizationActio
 
         if (TryFindDuplicateInstallation(out var duplicatePath))
         {
-            findings.Add($"Possível instalação duplicada encontrada em '{duplicatePath}'.");
+            findings.Add(WindowsActionText.Format("ActionResults.InstallationHealth.Duplicate", duplicatePath));
         }
 
         if (!HasWritePermission())
         {
-            findings.Add("A pasta de dados do FiveM não aceitou escrita de teste; verifique permissões da pasta.");
+            findings.Add(WindowsActionText.Format("ActionResults.InstallationHealth.WriteDenied"));
         }
 
         if (IsUnderOneDrive())
         {
-            findings.Add("A instalação está dentro de uma pasta sincronizada pelo OneDrive, o que pode causar bloqueios de arquivo durante o jogo.");
+            findings.Add(WindowsActionText.Format("ActionResults.InstallationHealth.OneDrive"));
         }
 
         if (TryGetLowFreeSpace(out var freeGiB))
         {
-            findings.Add($"Pouco espaço livre na unidade da instalação (~{freeGiB:0.#} GB).");
+            findings.Add(WindowsActionText.Format("ActionResults.InstallationHealth.LowSpace", freeGiB));
         }
 
         var message = findings.Count == 0
-            ? "Nenhum problema de instalação foi encontrado nas verificações disponíveis."
+            ? WindowsActionText.Format("ActionResults.InstallationHealth.NoIssues")
             : string.Join(" ", findings);
         return Task.FromResult(WindowsActionApplyResult.NoChange(message));
     }
@@ -390,12 +401,12 @@ public sealed class CrashPatternDiagnosisAction : WindowsOptimizationAction
                 if (recurring.Count > 0)
                 {
                     var codes = string.Join(", ", recurring.Select(pair => $"{pair.Key} ({pair.Value}x)"));
-                    parts.Add($"Código(s) de erro recorrente(s) nos dumps recentes: {codes}.");
+                    parts.Add(WindowsActionText.Format("ActionResults.CrashPatterns.RecurringCodes", codes));
                 }
             }
             catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
             {
-                parts.Add($"Não foi possível listar os dumps recentes ({exception.Message}).");
+                parts.Add(WindowsActionText.Format("ActionResults.CrashPatterns.DumpsReadFailed"));
             }
         }
 
@@ -405,13 +416,15 @@ public sealed class CrashPatternDiagnosisAction : WindowsOptimizationAction
             var streamingKeywords = FindStreamingErrorKeywords(logTail);
             if (streamingKeywords.Count > 0)
             {
-                parts.Add($"Possíveis erros de streaming de conteúdo no log recente ({string.Join(", ", streamingKeywords)}).");
+                parts.Add(WindowsActionText.Format(
+                    "ActionResults.CrashPatterns.StreamingErrors",
+                    string.Join(", ", streamingKeywords)));
             }
         }
 
         var message = parts.Count == 0
-            ? "Nenhum padrão recorrente de erro ou de streaming foi encontrado nos dados locais disponíveis."
-            : string.Join(" ", parts) + " Isso não é uma análise de despejo de memória; use como indício, não como diagnóstico definitivo.";
+            ? WindowsActionText.Format("ActionResults.CrashPatterns.NoneFound")
+            : string.Join(" ", parts) + " " + WindowsActionText.Format("ActionResults.CrashPatterns.Disclaimer");
         return Task.FromResult(WindowsActionApplyResult.NoChange(message));
     }
 
@@ -478,7 +491,7 @@ public sealed class StuckProcessTerminationAction : WindowsOptimizationAction
         if (!snapshot.Found)
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Nenhum processo travado do FiveM foi encontrado; nada para encerrar."));
+                WindowsActionText.Format("ActionResults.StuckProcess.NoneFound")));
         }
 
         if (!terminator.TryTerminate(snapshot, fiveMInstallationRoot))
@@ -489,7 +502,10 @@ public sealed class StuckProcessTerminationAction : WindowsOptimizationAction
 
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
             new TerminatedProcessSnapshot(snapshot.ProcessId, snapshot.ProcessName),
-            $"Processo travado '{snapshot.ProcessName}' (PID {snapshot.ProcessId}) foi encerrado."));
+            WindowsActionText.Format(
+                "ActionResults.StuckProcess.Terminated",
+                snapshot.ProcessName,
+                snapshot.ProcessId)));
     }
 
     public override Task RollbackAsync(
@@ -669,13 +685,13 @@ public sealed class StaleAuthDataRepairAction : WindowsOptimizationAction
             || logTail.LastWriteTimeUtc > context.StartedAtUtc + MaximumFutureLogSkew)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "Nenhum log recente do FiveM está disponível para confirmar a falha de entitlement."));
+                WindowsActionText.Format("ActionResults.AuthRepair.NoRecentLog")));
         }
 
         if (!ContainsEntitlementFailurePattern(logTail.Content))
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Nenhum padrão conhecido de erro de entitlement foi encontrado no log recente; nada foi removido."));
+                WindowsActionText.Format("ActionResults.AuthRepair.NoPattern")));
         }
 
         var transactionQuarantine = SafePath.EnsureDescendant(
@@ -728,12 +744,16 @@ public sealed class StaleAuthDataRepairAction : WindowsOptimizationAction
         if (moved.Count == 0)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "Padrão de erro de entitlement encontrado, mas nenhum dos arquivos esperados existe no momento."));
+                WindowsActionText.Format("ActionResults.AuthRepair.NoFiles")));
         }
 
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
             new AuthDataRepairSnapshot(moved),
-            $"{moved.Count} item(ns) de entitlement movido(s) para quarentena; será necessário novo login."));
+            WindowsActionText.Format(
+                moved.Count == 1
+                    ? "ActionResults.AuthRepair.ItemMoved"
+                    : "ActionResults.AuthRepair.ItemsMoved",
+                moved.Count)));
     }
 
     public override Task CommitAsync(

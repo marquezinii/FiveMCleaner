@@ -10,6 +10,12 @@ param(
     [string]$PortugueseInfoPath,
 
     [Parameter(Mandatory)]
+    [string]$SpanishInfoPath,
+
+    [Parameter(Mandatory)]
+    [string]$FrenchInfoPath,
+
+    [Parameter(Mandatory)]
     [string]$OutputDirectory
 )
 
@@ -215,7 +221,9 @@ New-Item -ItemType Directory -Force -Path $resolvedOutput | Out-Null
 $documents = @(
     @{ Source = $LicensePath; Destination = 'license.rtf' },
     @{ Source = $EnglishInfoPath; Destination = 'install-info.en.rtf' },
-    @{ Source = $PortugueseInfoPath; Destination = 'install-info.pt-BR.rtf' }
+    @{ Source = $PortugueseInfoPath; Destination = 'install-info.pt-BR.rtf' },
+    @{ Source = $SpanishInfoPath; Destination = 'install-info.es.rtf' },
+    @{ Source = $FrenchInfoPath; Destination = 'install-info.fr.rtf' }
 )
 
 foreach ($document in $documents) {

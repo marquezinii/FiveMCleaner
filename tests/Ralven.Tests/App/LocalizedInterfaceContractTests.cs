@@ -26,7 +26,36 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
-    public void LocalizedXamlBindings_ResolveInEnglishAndPortuguese()
+    public void PublicXamlAndMessageBoxes_DoNotIntroduceHardcodedText()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var appDirectory = Path.Combine(root, "src", "Ralven.App");
+        var publicAttributes = new HashSet<string>(StringComparer.Ordinal)
+        {
+            "AutomationProperties.HelpText", "AutomationProperties.Name", "Content",
+            "Header", "Text", "Title", "ToolTip"
+        };
+        var xamlViolations = Directory.EnumerateFiles(appDirectory, "*.xaml", SearchOption.AllDirectories)
+            .SelectMany(path => XDocument.Load(path).Descendants().Attributes()
+                .Where(attribute => publicAttributes.Contains(attribute.Name.LocalName)
+                    && !attribute.Value.StartsWith('{')
+                    && attribute.Value.Any(char.IsLetter))
+                .Select(attribute => $"{path}: {attribute.Name.LocalName}={attribute.Value}"))
+            .ToArray();
+
+        Assert.Empty(xamlViolations);
+
+        var dialogViolations = new[] { "Ralven.App", "Ralven.Launcher", "Ralven.Updater" }
+            .SelectMany(project => Directory.EnumerateFiles(
+                Path.Combine(root, "src", project), "*.cs", SearchOption.AllDirectories))
+            .Where(path => HardcodedMessageBoxPattern().IsMatch(File.ReadAllText(path)))
+            .ToArray();
+
+        Assert.Empty(dialogViolations);
+    }
+
+    [Fact]
+    public void LocalizedXamlBindings_ResolveInEverySupportedLanguage()
     {
         var root = TestHelpers.FindRepositoryRoot();
         var sources = new[]
@@ -52,19 +81,11 @@ public sealed partial class LocalizedInterfaceContractTests
             .SelectMany(path => LocalizedKeyPattern().Matches(File.ReadAllText(path)))
             .Select(match => match.Groups["key"].Value)
             .ToSortedSet(StringComparer.Ordinal);
-        var english = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("en-US"));
-        var portuguese = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
-        var spanish = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("es"));
-
         Assert.NotEmpty(keys);
         foreach (var key in keys)
         {
-            Assert.NotEqual(key, english.GetString(key));
-            Assert.NotEqual(key, portuguese.GetString(key));
-            Assert.NotEqual(key, spanish.GetString(key));
+            Assert.All(SupportedLocalizations(), localization =>
+                Assert.NotEqual(key, localization.GetString(key)));
         }
     }
 
@@ -244,12 +265,7 @@ public sealed partial class LocalizedInterfaceContractTests
             "Settings.Account.Plan.UnavailableDetail",
             "Settings.Account.Plan.Refresh",
         };
-        var localizations = new[]
-        {
-            new LocalizationService(CultureInfo.GetCultureInfo("en-US")),
-            new LocalizationService(CultureInfo.GetCultureInfo("pt-BR")),
-            new LocalizationService(CultureInfo.GetCultureInfo("es")),
-        };
+        var localizations = SupportedLocalizations();
 
         foreach (var localization in localizations)
         {
@@ -307,10 +323,10 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Same(fallback.Parent, avatar.Parent);
         Assert.Equal("{StaticResource RadiusPill}", (string?)fallback.Parent?.Parent?.Attribute("CornerRadius"));
         Assert.Matches("x:Name=\"AccountAvatarEllipse\"[^>]*Width=\"28\"[^>]*Height=\"28\"", mainWindow);
-        Assert.Matches("x:Name=\"AccountLabel\"[\\s\\S]*?MaxWidth=\"160\"[\\s\\S]*?TextTrimming=\"CharacterEllipsis\"", mainWindow);
+        Assert.Matches("x:Name=\"AccountLabel\"[\\s\\S]*?MaxWidth=\"200\"[\\s\\S]*?TextTrimming=\"CharacterEllipsis\"", mainWindow);
         Assert.Contains("ApplyAccountSettingsUsername(result.Username);", accountCode, StringComparison.Ordinal);
         Assert.DoesNotContain("profile?.DisplayName", accountCode, StringComparison.Ordinal);
-        Assert.Contains("AccountLabel.MaxWidth = profile is null ? 160 : 120;", accountCode, StringComparison.Ordinal);
+        Assert.Contains("AccountLabel.MaxWidth = profile is null ? 200 : 120;", accountCode, StringComparison.Ordinal);
         Assert.Contains("demoMode && accountUsername is not null", captureCode, StringComparison.Ordinal);
         Assert.Equal("@ralven_user", MainWindow.FormatAccountUsername("ralven_user"));
         Assert.Empty(MainWindow.FormatAccountUsername(" "));
@@ -339,26 +355,18 @@ public sealed partial class LocalizedInterfaceContractTests
     {
         var root = TestHelpers.FindRepositoryRoot();
         var resourceDirectory = Path.Combine(root, "src", "Ralven.App", "Resources");
-        var localizedResources = new[]
-        {
-            "Strings.resx",
-            "Strings.pt-BR.resx",
-            "Strings.es.resx"
-        }.Select(fileName => XDocument
-            .Load(Path.Combine(resourceDirectory, fileName))
+        var resourcePaths = ResourceCatalogPaths(resourceDirectory);
+        var localizedResources = resourcePaths.Select(path => XDocument
+            .Load(path)
             .Descendants("data")
             .ToDictionary(
                 element => (string)element.Attribute("name")!,
                 element => (string?)element.Element("value") ?? string.Empty,
                 StringComparer.Ordinal))
             .ToArray();
-        var portugueseReviewContent = localizedResources[1];
-        var english = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("en-US"));
-        var portuguese = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
-        var spanish = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("es"));
+        var portugueseReviewContent = localizedResources[Array.FindIndex(
+            resourcePaths,
+            path => Path.GetFileName(path).Equals("Strings.pt-BR.resx", StringComparison.OrdinalIgnoreCase))];
 
         foreach (var action in ActionCatalog.Current.Actions)
         {
@@ -378,9 +386,8 @@ public sealed partial class LocalizedInterfaceContractTests
                     Assert.True(resources.TryGetValue(key, out var value));
                     Assert.False(string.IsNullOrWhiteSpace(value));
                 });
-                Assert.NotEqual(key, english.GetString(key));
-                Assert.NotEqual(key, portuguese.GetString(key));
-                Assert.NotEqual(key, spanish.GetString(key));
+                Assert.All(SupportedLocalizations(), localization =>
+                    Assert.NotEqual(key, localization.GetString(key)));
             }
 
             Assert.Equal(action.DetectionSummary, portugueseReviewContent[$"Actions.{action.Id}.DetectionSummary"]);
@@ -404,19 +411,11 @@ public sealed partial class LocalizedInterfaceContractTests
             .Matches(source)
             .Select(match => match.Groups["key"].Value)
             .ToSortedSet(StringComparer.Ordinal);
-        var english = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("en-US"));
-        var portuguese = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
-        var spanish = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("es"));
-
         Assert.NotEmpty(keys);
         foreach (var key in keys)
         {
-            Assert.NotEqual(key, english.GetString(key));
-            Assert.NotEqual(key, portuguese.GetString(key));
-            Assert.NotEqual(key, spanish.GetString(key));
+            Assert.All(SupportedLocalizations(), localization =>
+                Assert.NotEqual(key, localization.GetString(key)));
         }
     }
 
@@ -457,19 +456,11 @@ public sealed partial class LocalizedInterfaceContractTests
             .Matches(source)
             .Select(match => match.Groups["key"].Value)
             .ToSortedSet(StringComparer.Ordinal);
-        var english = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("en-US"));
-        var portuguese = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
-        var spanish = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("es"));
-
         Assert.NotEmpty(keys);
         foreach (var key in keys)
         {
-            Assert.NotEqual(key, english.GetString(key));
-            Assert.NotEqual(key, portuguese.GetString(key));
-            Assert.NotEqual(key, spanish.GetString(key));
+            Assert.All(SupportedLocalizations(), localization =>
+                Assert.NotEqual(key, localization.GetString(key)));
         }
     }
 
@@ -487,19 +478,11 @@ public sealed partial class LocalizedInterfaceContractTests
             .Matches(source)
             .Select(match => match.Groups["key"].Value)
             .ToSortedSet(StringComparer.Ordinal);
-        var english = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("en-US"));
-        var portuguese = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
-        var spanish = new LocalizationService(
-            System.Globalization.CultureInfo.GetCultureInfo("es"));
-
         Assert.NotEmpty(keys);
         foreach (var key in keys)
         {
-            Assert.NotEqual(key, english.GetString(key));
-            Assert.NotEqual(key, portuguese.GetString(key));
-            Assert.NotEqual(key, spanish.GetString(key));
+            Assert.All(SupportedLocalizations(), localization =>
+                Assert.NotEqual(key, localization.GetString(key)));
         }
     }
 
@@ -739,14 +722,9 @@ public sealed partial class LocalizedInterfaceContractTests
     public void ResxCatalogs_HaveNoDuplicateKeys()
     {
         var root = TestHelpers.FindRepositoryRoot();
-        foreach (var fileName in new[] { "Strings.resx", "Strings.pt-BR.resx", "Strings.es.resx" })
+        var resourceDirectory = Path.Combine(root, "src", "Ralven.App", "Resources");
+        foreach (var path in ResourceCatalogPaths(resourceDirectory))
         {
-            var path = Path.Combine(
-                root,
-                "src",
-                "Ralven.App",
-                "Resources",
-                fileName);
             var document = XDocument.Load(path);
             var duplicateKeys = document
                 .Descendants("data")
@@ -768,14 +746,10 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Equal("Ralven", ProductIdentity.Name);
 
         var root = TestHelpers.FindRepositoryRoot();
-        foreach (var fileName in new[] { "Strings.resx", "Strings.pt-BR.resx", "Strings.es.resx" })
+        var resourceDirectory = Path.Combine(root, "src", "Ralven.App", "Resources");
+        foreach (var path in ResourceCatalogPaths(resourceDirectory))
         {
-            var document = XDocument.Load(Path.Combine(
-                root,
-                "src",
-                "Ralven.App",
-                "Resources",
-                fileName));
+            var document = XDocument.Load(path);
             var values = document.Descendants("value").Select(element => element.Value);
 
             Assert.Contains(values, value => value == ProductIdentity.DisplayName);
@@ -1008,7 +982,7 @@ public sealed partial class LocalizedInterfaceContractTests
             "SettingsComboBoxStyle precisa de mais folga à direita que à esquerda: a seta mora naquele lado.");
 
         Assert.Contains("Content=\"{TemplateBinding SelectionBoxItem}\"", controls, StringComparison.Ordinal);
-        Assert.Contains("SelectedValuePath=\"Content\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("LocalizationCatalog.SupportedLanguages", TestHelpers.ReadMainWindowSource(), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -1063,6 +1037,16 @@ public sealed partial class LocalizedInterfaceContractTests
         return XmlCommentPattern().Replace(markup, string.Empty);
     }
 
+    private static LocalizationService[] SupportedLocalizations() =>
+        LocalizationCatalog.SupportedLanguages
+            .Select(language => new LocalizationService(CultureInfo.GetCultureInfo(language.CultureName)))
+            .ToArray();
+
+    private static string[] ResourceCatalogPaths(string resourceDirectory) =>
+        Directory.GetFiles(resourceDirectory, "Strings*.resx")
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToArray();
+
     /// <summary>
     /// Extrai o valor de <c>Padding</c> declarado por <c>SettingsComboBoxStyle</c>
     /// em <c>Themes/Controls.xaml</c>.
@@ -1107,4 +1091,7 @@ public sealed partial class LocalizedInterfaceContractTests
 
     [GeneratedRegex(@"\b(?:T|F)\(""(?<key>[A-Za-z0-9_.-]+)""", RegexOptions.CultureInvariant)]
     private static partial Regex LocalizedCodeKeyPattern();
+
+    [GeneratedRegex(@"MessageBox\.Show\(\s*""", RegexOptions.CultureInvariant | RegexOptions.Singleline)]
+    private static partial Regex HardcodedMessageBoxPattern();
 }

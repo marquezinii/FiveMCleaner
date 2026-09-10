@@ -48,13 +48,7 @@ public partial class MainWindow
             return;
         }
 
-        ApplyLanguagePreference((item.Tag as string) switch
-        {
-            "pt-BR" => AppLanguagePreference.PortugueseBrazil,
-            "en" => AppLanguagePreference.English,
-            "es" => AppLanguagePreference.Spanish,
-            _ => AppLanguagePreference.Automatic
-        });
+        ApplyLanguagePreference(item.Tag as string ?? AppLanguagePreference.Automatic);
     }
 
     private void ApplyTheme(AppThemePreference preference)
@@ -68,7 +62,7 @@ public partial class MainWindow
         themeManager.Apply(preference);
     }
 
-    private void ApplyLanguagePreference(AppLanguagePreference preference)
+    private void ApplyLanguagePreference(string preference)
     {
         if (IsLoaded)
         {
@@ -79,21 +73,7 @@ public partial class MainWindow
 
     private void SyncGeneralSettingsControls()
     {
-        syncingLanguageSelector = true;
-        try
-        {
-            LanguageSelector.SelectedIndex = viewModel.LanguagePreference switch
-            {
-                AppLanguagePreference.PortugueseBrazil => 1,
-                AppLanguagePreference.English => 2,
-                AppLanguagePreference.Spanish => 3,
-                _ => 0
-            };
-        }
-        finally
-        {
-            syncingLanguageSelector = false;
-        }
+        PopulateLanguageSelector(viewModel.LanguagePreference);
 
         ThemeSystemOption.IsChecked = viewModel.ThemePreference == AppThemePreference.System;
         ThemeDarkOption.IsChecked = viewModel.ThemePreference == AppThemePreference.Dark;

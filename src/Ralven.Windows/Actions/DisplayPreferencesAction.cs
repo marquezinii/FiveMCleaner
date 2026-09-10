@@ -86,15 +86,15 @@ public sealed class DisplayPreferencesAction : WindowsOptimizationAction
         if (target == GraphicsSettingsTarget.GtaV && gameRoot is null)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "A instalação do GTA V Legacy não foi confirmada; o settings.xml não será alterado."));
+                WindowsActionText.Format("ActionResults.DisplayPreferences.GtaVNotConfirmed")));
         }
 
         if (!GraphicsSettingsFile.Exists(settingsPath))
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                target == GraphicsSettingsTarget.FiveM
-                    ? "gta5_settings.xml ainda não existe; abra o FiveM uma vez antes de aplicar a preferência."
-                    : "settings.xml ainda não existe; abra o GTA V Legacy uma vez antes de aplicar a preferência."));
+                WindowsActionText.Format(target == GraphicsSettingsTarget.FiveM
+                    ? "ActionResults.DisplayPreferences.FiveMFileMissing"
+                    : "ActionResults.DisplayPreferences.GtaVFileMissing")));
         }
 
         processGuard.EnsureStopped(
@@ -155,19 +155,21 @@ public sealed class DisplayPreferencesAction : WindowsOptimizationAction
         if (unavailable.Count > 0)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                $"O arquivo não contém valores únicos e compatíveis para: {string.Join(", ", unavailable)}."));
+                WindowsActionText.Format(
+                    "ActionResults.DisplayPreferences.IncompatibleValues",
+                    string.Join(", ", unavailable))));
         }
 
         if (changed.Count == 0)
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Janela e VSync foram verificadas e já estavam na preferência solicitada."));
+                WindowsActionText.Format("ActionResults.DisplayPreferences.AlreadyDesired")));
         }
 
         var snapshot = transaction.Apply(document, context.TransactionId, originalHash, changed);
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
             snapshot,
-            $"Backup criado e {changed.Count} preferência(s) de exibição atualizada(s)."));
+            WindowsActionText.Format("ActionResults.DisplayPreferences.Applied", changed.Count)));
     }
 
     public override Task RollbackAsync(

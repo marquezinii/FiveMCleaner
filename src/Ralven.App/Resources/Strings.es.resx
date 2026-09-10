@@ -336,7 +336,7 @@
   <data name="LiveAlert.Title.Important" xml:space="preserve"><value>Aviso importante de Ralven</value></data>
   <data name="LiveAlert.Title.Critical" xml:space="preserve"><value>Aviso crítico de Ralven</value></data>
   <data name="Account.TitleBar.SignInPrompt" xml:space="preserve"><value>Iniciar sesión / Registrarse</value></data>
-  <data name="Dashboard.Refresh" xml:space="preserve"><value>Escanear PC de nuevo</value></data>
+  <data name="Dashboard.Refresh" xml:space="preserve"><value>Reanalizar</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Optimizar PC</value></data>
   <data name="Dashboard.SystemOverview" xml:space="preserve"><value>Tu computadora</value></data>
   <data name="Dashboard.Readiness" xml:space="preserve"><value>PREPARACIÓN</value></data>
@@ -359,7 +359,7 @@
   <data name="Profiles.Aggressive.Name" xml:space="preserve"><value>Agresivo</value></data>
   <data name="Profiles.Aggressive.Badge" xml:space="preserve"><value>FPS PRIMERO</value></data>
   <data name="Profiles.Aggressive.Description" xml:space="preserve"><value>Reduce efectos y configuraciones costosas para PC limitadas.</value></data>
-  <data name="Plan.VerifiedActions" xml:space="preserve"><value>{0} acciones verificadas  •  {1}</value></data>
+  <data name="Plan.VerifiedActions" xml:space="preserve"><value>Acciones verificadas: {0}  •  {1}</value></data>
   <data name="Plan.Review" xml:space="preserve"><value>Revisar plan</value></data>
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Optimizar ahora</value></data>
   <data name="Optimizer.Title" xml:space="preserve"><value>Optimización de Windows</value></data>
@@ -382,7 +382,7 @@
   <data name="Optimizer.Result.PartialTitle" xml:space="preserve"><value>Completado con errores</value></data>
   <data name="Optimizer.NextStep" xml:space="preserve"><value>SIGUIENTE PASO RECOMENDADO</value></data>
   <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Qué se ajustará</value></data>
-  <data name="Optimizer.AutomaticAnalysis.Header" xml:space="preserve"><value>{0} comprobaciones automáticas</value></data>
+  <data name="Optimizer.AutomaticAnalysis.Header" xml:space="preserve"><value>Comprobaciones automáticas: {0}</value></data>
   <data name="Optimizer.AutomaticAnalysis.Description" xml:space="preserve"><value>Comprobaciones de hardware, controladores y estabilidad. No cambian tu PC.</value></data>
   <data name="Optimizer.ExecutionDetails" xml:space="preserve"><value>Ver pasos completados</value></data>
   <data name="Optimizer.ResultDetails" xml:space="preserve"><value>Detalles e informe técnico</value></data>
@@ -543,8 +543,8 @@
   <data name="Plan.Empty.GeneralNoSafeActions" xml:space="preserve"><value>Esta PC ya cumple los objetivos seguros de Windows disponibles para el perfil seleccionado.</value></data>
   <data name="Plan.Empty.DiagnosticInProgress" xml:space="preserve"><value>Espera a que termine el diagnóstico antes de preparar acciones.</value></data>
   <data name="Plan.Empty.DiagnosticUnavailable" xml:space="preserve"><value>No se pudo completar el diagnóstico. Vuelve a analizar tu computadora antes de preparar acciones.</value></data>
-  <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} ajustes</value></data>
-  <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>{0} acciones completadas. {1}</value></data>
+  <data name="Plan.ActionsCatalog" xml:space="preserve"><value>Ajustes: {0}</value></data>
+  <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>Acciones completadas: {0}. {1}</value></data>
   <data name="Diagnosis.Partial" xml:space="preserve"><value>Diagnóstico parcial</value></data>
   <data name="Diagnosis.CouldNotScanAgain" xml:space="preserve"><value>No se pudo escanear de nuevo en este momento</value></data>
   <data name="Diagnosis.FiveMLegacyDetected" xml:space="preserve"><value>FIVEM LEGACY DETECTADO</value></data>
@@ -556,7 +556,7 @@
   <data name="Diagnosis.GtaVNotFound" xml:space="preserve"><value>GTA V LEGACY NO DETECTADO</value></data>
   <data name="Diagnosis.CloseFiveMSafely" xml:space="preserve"><value>Cierra FiveM para optimizar de forma segura</value></data>
   <data name="Diagnosis.CloseGtaVSafely" xml:space="preserve"><value>Cierra GTA V para optimizar de forma segura</value></data>
-  <data name="Diagnosis.RecommendedProfile" xml:space="preserve"><value>Perfil {0} recomendado para esta PC</value></data>
+  <data name="Diagnosis.RecommendedProfile" xml:space="preserve"><value>Perfil {0} recomendado para este PC</value></data>
   <data name="Diagnosis.LegacyReady" xml:space="preserve"><value>El diagnóstico encontró el diseño Legacy conocido y preparó acciones compatibles.</value></data>
   <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>Ralven preparó un plan de Windows según la capacidad local de esta PC. Las integraciones de juegos compatibles están disponibles por separado en Juegos.</value></data>
   <data name="Diagnosis.EnhancedUnsupported" xml:space="preserve"><value>La edición Enhanced usa un nuevo launcher y una caché configurable. Esta versión no le aplicará reglas de Legacy.</value></data>
@@ -564,7 +564,7 @@
   <data name="Diagnosis.FreeDisk" xml:space="preserve"><value>{0} GB libres</value></data>
   <data name="History.ProfileTitle" xml:space="preserve"><value>Perfil {0}</value></data>
   <data name="History.WindowsGamingTitle" xml:space="preserve"><value>Ajustes de juegos de Windows</value></data>
-  <data name="History.AdjustmentsState" xml:space="preserve"><value>{0} ajustes • {1}</value></data>
+  <data name="History.AdjustmentsState" xml:space="preserve"><value>Ajustes: {0} • {1}</value></data>
   <data name="History.Empty.Title" xml:space="preserve"><value>Aún no hay optimizaciones</value></data>
   <data name="History.Empty.Date" xml:space="preserve"><value>Historial local</value></data>
   <data name="History.Empty.Summary" xml:space="preserve"><value>Tu primera ejecución aparecerá aquí</value></data>
@@ -1135,7 +1135,7 @@
   <data name="Actions.windows.appearance.menu-show-delay.reduce.DetectionSummary" xml:space="preserve"><value>Lee el retraso actual de apertura de los menús mediante la API oficial de Windows.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.ConfirmationSummary" xml:space="preserve"><value>Vuelve a leer la configuración y confirma que el retraso coincide con el objetivo aplicado.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.UndoSummary" xml:space="preserve"><value>Totalmente reversible: la reversión restaura el retraso anterior de apertura de los menús.</value></data>
-  <data name="Actions.windows.appearance.menu-show-delay.reduce.RiskLimitations" xml:space="preserve"><value>Cambia la velocidad de apertura de los menús; el efecto percibido puede variar según el equipo y el uso.</value></data>
+  <data name="Actions.windows.appearance.menu-show-delay.reduce.RiskLimitations" xml:space="preserve"><value>Cambia la velocidad de apertura de los menús de Windows; el efecto percibido puede variar según el equipo y el uso.</value></data>
   <data name="Actions.windows.input.mouse-acceleration.disable.Name" xml:space="preserve"><value>Usar una respuesta consistente del puntero</value></data>
   <data name="Actions.windows.input.mouse-acceleration.disable.Description" xml:space="preserve"><value>Desactiva la aceleración del puntero de Windows sin cambiar la velocidad elegida por el usuario.</value></data>
   <data name="Actions.windows.input.mouse-acceleration.disable.DetectionSummary" xml:space="preserve"><value>Lee los umbrales y el nivel de aceleración mediante la API SystemParametersInfo de Windows.</value></data>
@@ -1159,9 +1159,9 @@
   <data name="Results.FiveMStopped" xml:space="preserve"><value>FiveM está cerrado; es seguro continuar.</value></data>
   <data name="Results.GtaVStopped" xml:space="preserve"><value>GTA V está cerrado; es seguro continuar.</value></data>
   <data name="Results.NoAllowlistedFiles" xml:space="preserve"><value>Ningún archivo permitido coincidió con los criterios de limpieza.</value></data>
-  <data name="Results.CleanupPrepared" xml:space="preserve"><value>{0} archivo(s) preparados para limpieza ({1} bytes).</value></data>
+  <data name="Results.CleanupPrepared" xml:space="preserve"><value>Archivos preparados para la limpieza: {0} ({1} bytes).</value></data>
   <data name="Results.RegistryNoChange" xml:space="preserve"><value>Ningún valor compatible necesitó ser cambiado.</value></data>
-  <data name="Results.RegistryUpdated" xml:space="preserve"><value>{0} configuración(es) permitidas actualizadas.</value></data>
+  <data name="Results.RegistryUpdated" xml:space="preserve"><value>Configuraciones permitidas actualizadas: {0}.</value></data>
   <data name="Results.PowerOnBattery" xml:space="preserve"><value>El modo de alto rendimiento no se habilitó porque la computadora está en batería.</value></data>
   <data name="Results.PowerUnsupported" xml:space="preserve"><value>Esta computadora no expone un plan de energía de alto rendimiento compatible.</value></data>
   <data name="Results.PowerAlreadyActive" xml:space="preserve"><value>El plan de energía de alto rendimiento ya estaba activo.</value></data>
@@ -1170,7 +1170,7 @@
   <data name="Results.GraphicsFiveMSettingsMissing" xml:space="preserve"><value>gta5_settings.xml aún no existe; abre FiveM una vez antes de aplicar el preset.</value></data>
   <data name="Results.GraphicsGtaSettingsMissing" xml:space="preserve"><value>settings.xml aún no existe; abre GTA V Legacy una vez antes de aplicar el preset.</value></data>
   <data name="Results.GraphicsAlreadyApplied" xml:space="preserve"><value>La configuración gráfica permitida ya coincidía con el preset solicitado.</value></data>
-  <data name="Results.GraphicsUpdated" xml:space="preserve"><value>Se creó un respaldo y se actualizaron {0} opción(es) gráfica(s).</value></data>
+  <data name="Results.GraphicsUpdated" xml:space="preserve"><value>Opciones gráficas actualizadas: {0}. Se creó una copia de seguridad.</value></data>
   <data name="Results.VisualEffectsAlreadyApplied" xml:space="preserve"><value>Los efectos visuales de Windows ya coincidían con el estado solicitado.</value></data>
   <data name="Results.VisualEffectsUpdated" xml:space="preserve"><value>Los efectos visuales de Windows se actualizaron a través de la API oficial.</value></data>
   <data name="Update.Available.Title" xml:space="preserve"><value>Ralven {0} está disponible</value></data>
@@ -1320,7 +1320,7 @@
   <data name="GtaVBenchmark.Details" xml:space="preserve"><value>Cómo funciona</value></data>
   <data name="GtaVBenchmark.RunButton" xml:space="preserve"><value>Ejecutar benchmark oficial</value></data>
   <data name="GtaVBenchmark.Running" xml:space="preserve"><value>Ejecutando el benchmark oficial de GTA V (3 rondas)... esto puede tardar varios minutos.</value></data>
-  <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Mediana de {4} ronda(s) — FPS promedio: {0:0.#}, FPS mínimo: {1:0.#}, 1% bajo: {2:0.#}, 0.1% bajo: {3:0.#}.</value></data>
+  <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Rondas del benchmark: {4}. Mediana — FPS promedio: {0:0.#}, FPS mínimo: {1:0.#}, 1% bajo: {2:0.#}, 0,1% bajo: {3:0.#}.</value></data>
   <data name="GtaVBenchmark.Error" xml:space="preserve"><value>No se pudo ejecutar el benchmark oficial: {0}</value></data>
   <data name="GtaVBenchmark.Failure.NotDetected" xml:space="preserve"><value>No se detectó GTA V en esta computadora.</value></data>
   <data name="GtaVBenchmark.Failure.StillRunning" xml:space="preserve"><value>GTA V sigue en ejecución. Ciérralo antes de ejecutar el benchmark oficial.</value></data>
@@ -1498,7 +1498,7 @@
   <data name="Account.Username.Available" xml:space="preserve"><value>Este nombre de usuario está disponible.</value></data>
   <data name="Account.Username.Taken" xml:space="preserve"><value>Este nombre de usuario ya está en uso.</value></data>
   <data name="Account.Password.PolicyMinimum" xml:space="preserve"><value>Usa al menos {0} caracteres.</value></data>
-  <data name="Account.Password.PolicyRemaining" xml:space="preserve"><value>Faltan {0} carácter(es) para el mínimo de {1}.</value></data>
+  <data name="Account.Password.PolicyRemaining" xml:space="preserve"><value>Caracteres restantes: {0} (mínimo: {1}).</value></data>
   <data name="Account.Password.PolicyMet" xml:space="preserve"><value>¡Bien! Tu contraseña cumple el mínimo requerido.</value></data>
   <data name="Account.Password.ConfirmMatch" xml:space="preserve"><value>Las contraseñas coinciden.</value></data>
   <data name="Account.Password.ConfirmMismatch" xml:space="preserve"><value>Las contraseñas no coinciden.</value></data>
@@ -1695,7 +1695,7 @@
   <data name="ActionResults.StartupLoad.PartialSuffix" xml:space="preserve"><value> Lectura parcial: no se pudieron consultar algunas fuentes de inicio.</value></data>
   <data name="ActionResults.StartupLoad.NoItems" xml:space="preserve"><value>No se encontraron elementos de inicio en las fuentes supervisadas.</value></data>
   <data name="ActionResults.StartupLoad.NoItemsAccessible" xml:space="preserve"><value>No se encontraron elementos de inicio en las fuentes accesibles.</value></data>
-  <data name="ActionResults.StartupLoad.Summary" xml:space="preserve"><value>Se detectaron {0} elemento(s) de inicio (registro: {1}; carpetas: {2}). La cantidad por sí sola no determina el impacto; revisa el impacto medido en el Administrador de tareas.</value></data>
+  <data name="ActionResults.StartupLoad.Summary" xml:space="preserve"><value>Elementos de inicio detectados: {0} (registro: {1}; carpetas: {2}). La cantidad por sí sola no determina el impacto; revisa el impacto medido en el Administrador de tareas.</value></data>
   <data name="ActionResults.TrimStatus.AccessDenied" xml:space="preserve"><value>Windows no permitió consultar la política de TRIM sin elevación; no se modificó ningún volumen.</value></data>
   <data name="ActionResults.TrimStatus.Unsupported" xml:space="preserve"><value>Esta instalación de Windows no admite la consulta de la política de TRIM.</value></data>
   <data name="ActionResults.TrimStatus.Unavailable" xml:space="preserve"><value>No se pudo consultar la política de TRIM en este momento.</value></data>
@@ -1946,4 +1946,30 @@ Media CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Dialog.Cancel" xml:space="preserve"><value>Cancelar</value></data>
   <data name="Dialog.Confirm" xml:space="preserve"><value>Continuar</value></data>
   <data name="Dialog.OptionalDetails" xml:space="preserve"><value>Detalles opcionales</value></data>
+  <data name="Launcher.Recovery.Title" xml:space="preserve"><value>Recuperación de Ralven</value></data>
+  <data name="Launcher.Recovery.Message" xml:space="preserve"><value>La nueva versión no confirmó un inicio correcto. Se restauró la versión anterior y se usará la próxima vez que abras Ralven.</value></data>
+  <data name="Launcher.Error.ParentTimeout" xml:space="preserve"><value>El proceso anterior de Ralven no se cerró a tiempo. Espera unos instantes e intenta abrirlo de nuevo.</value></data>
+  <data name="Launcher.Error.AccessDenied" xml:space="preserve"><value>Windows no permitió abrir esta versión. Comprueba los permisos e inténtalo de nuevo.</value></data>
+  <data name="Launcher.Error.Security" xml:space="preserve"><value>No se pudo verificar esta actualización de forma segura. No se cambió nada.</value></data>
+  <data name="Launcher.Error.MissingFiles" xml:space="preserve"><value>No se encontraron los archivos necesarios para abrir Ralven. Intenta reparar o reinstalar la aplicación.</value></data>
+  <data name="Launcher.Error.Unexpected" xml:space="preserve"><value>No se pudo abrir Ralven. Inténtalo de nuevo; si el problema continúa, reinstala la aplicación.</value></data>
+  <data name="Diagnostics.Notice.GtaVDetected" xml:space="preserve"><value>Se detectó GTA V Legacy; su ejecutable y settings.xml se incluirán en las acciones compatibles.</value></data>
+  <data name="Diagnostics.Notice.GtaVNotDetected" xml:space="preserve"><value>No se pudo confirmar automáticamente el ejecutable de GTA V Legacy.</value></data>
+  <data name="Diagnostics.Notice.LargeCache" xml:space="preserve"><value>La caché regenerable de servidores supera los 8 GB; la reparación inteligente puede liberar espacio.</value></data>
+  <data name="Diagnostics.Notice.LowDiskSpace" xml:space="preserve"><value>Queda poco espacio libre en la unidad de Windows; las limpiezas seguras pueden mejorar la capacidad de respuesta general.</value></data>
+  <data name="Diagnostics.Notice.Stable" xml:space="preserve"><value>Este PC está estable; el perfil sugerido prioriza la consistencia sin ajustes arriesgados.</value></data>
+  <data name="Broker.Error.Cancelled" xml:space="preserve"><value>Se canceló la confirmación de Windows.</value></data>
+  <data name="Broker.Error.ConnectionTimeout" xml:space="preserve"><value>El componente administrativo no se conectó a tiempo al canal de progreso local. Esto puede ocurrir si el antivirus o Windows SmartScreen interrumpe la elevación de un ejecutable sin firma digital; consulta el historial de protección de Windows Defender (o de tu antivirus) antes de volver a intentarlo.</value></data>
+  <data name="Broker.Error.OperationTimeout" xml:space="preserve"><value>El componente administrativo superó el límite de tiempo de seguridad. Consulta el historial antes de volver a intentarlo.</value></data>
+  <data name="Broker.Error.InvalidArguments" xml:space="preserve"><value>Los argumentos enviados al componente administrativo no eran válidos.</value></data>
+  <data name="Broker.Error.ConnectionFailed" xml:space="preserve"><value>El componente administrativo no pudo conectarse al canal de progreso local.</value></data>
+  <data name="Broker.Error.InvalidAdminToken" xml:space="preserve"><value>El componente administrativo no recibió un token de administrador válido.</value></data>
+  <data name="Broker.Error.Interrupted" xml:space="preserve"><value>El componente administrativo se interrumpió antes de confirmar el resultado (código de salida {0}). Esto suele ocurrir cuando el antivirus o Windows SmartScreen detiene un ejecutable elevado sin firma digital; consulta el historial de protección de Windows Defender (o de tu antivirus) antes de volver a intentarlo.</value></data>
+  <data name="Runtime.BrokerActionDetail" xml:space="preserve"><value>Paso administrativo: {0}</value></data>
+  <data name="Runtime.BrokerStartedDetail" xml:space="preserve"><value>El plan administrativo se validó y se inició.</value></data>
+  <data name="Runtime.BrokerCompletedDetail" xml:space="preserve"><value>Los cambios administrativos se completaron y quedaron registrados.</value></data>
+  <data name="Runtime.BrokerRollbackStartedDetail" xml:space="preserve"><value>Restaurando los cambios administrativos.</value></data>
+  <data name="Runtime.BrokerRollbackCompletedDetail" xml:space="preserve"><value>Se restauraron los cambios administrativos.</value></data>
+  <data name="Runtime.BrokerRejectedDetail" xml:space="preserve"><value>La solicitud administrativa se rechazó de forma segura.</value></data>
+  <data name="Runtime.BrokerFailedDetail" xml:space="preserve"><value>La operación administrativa se detuvo de forma segura. Consulta el informe antes de volver a intentarlo.</value></data>
 </root>
