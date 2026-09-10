@@ -22,10 +22,19 @@ public sealed partial class MainViewModel
     public bool IsLiveAlertBannerVisible
     {
         get => isLiveAlertBannerVisible;
-        private set => SetProperty(ref isLiveAlertBannerVisible, value);
+        private set
+        {
+            if (SetProperty(ref isLiveAlertBannerVisible, value))
+            {
+                OnPropertyChanged(nameof(IsLiveAlertNotificationVisible));
+                OnPropertyChanged(nameof(IsLiveAlertStatusVisible));
+            }
+        }
     }
 
     public bool IsLiveAlertNotificationVisible => IsLiveAlertBannerVisible;
+
+    public bool IsLiveAlertStatusVisible => !IsBusy && IsLiveAlertBannerVisible;
 
     /// <summary>
     /// The persistent warning-triangle icon. Stays visible for as long as

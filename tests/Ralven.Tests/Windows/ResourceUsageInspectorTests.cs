@@ -84,6 +84,35 @@ public sealed class ResourceUsageInspectorTests
         Assert.Equal(token, exception.CancellationToken);
     }
 
+    [Fact]
+    public void FiveMCpuUsage_UsesOnlyComparableProcessesAndTotalLogicalCapacity()
+    {
+        var existing = new FiveMProcessIdentity(42, 1000);
+        var previous = new Dictionary<FiveMProcessIdentity, TimeSpan>
+        {
+            [existing] = TimeSpan.FromSeconds(2)
+        };
+        var current = new Dictionary<FiveMProcessIdentity, TimeSpan>
+        {
+            [existing] = TimeSpan.FromSeconds(2.2),
+            [new FiveMProcessIdentity(84, 2000)] = TimeSpan.FromSeconds(4)
+        };
+
+        var usage = WindowsFiveMResourceUsageInspector.CalculateCpuPercent(
+            previous,
+            current,
+            TimeSpan.FromSeconds(1),
+            logicalProcessorCount: 4);
+
+        Assert.NotNull(usage);
+        Assert.Equal(5, usage.Value, precision: 6);
+        Assert.Null(WindowsFiveMResourceUsageInspector.CalculateCpuPercent(
+            previous,
+            current,
+            TimeSpan.FromMinutes(1),
+            logicalProcessorCount: 4));
+    }
+
     // Timer100Ns reports 100 * delta(rawValue) / delta(timeStamp100nSec).
     private static CounterSample GpuSample(long rawValue, long timestamp) => new(
         rawValue, 0, 10_000_000, 10_000_000, timestamp, timestamp,

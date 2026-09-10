@@ -12,6 +12,7 @@ using Brushes = System.Windows.Media.Brushes;
 using Color = System.Windows.Media.Color;
 using FlowDirection = System.Windows.FlowDirection;
 using FontFamily = System.Windows.Media.FontFamily;
+using KeyEventArgs = System.Windows.Input.KeyEventArgs;
 using MouseEventArgs = System.Windows.Input.MouseEventArgs;
 using Pen = System.Windows.Media.Pen;
 using Point = System.Windows.Point;
@@ -19,9 +20,9 @@ using Point = System.Windows.Point;
 namespace Ralven.App.Controls;
 
 /// <summary>
-/// Gráfico 2D do histórico ao vivo de CPU e GPU. Desenha uma janela de tempo
-/// fixa (<see cref="Capacity"/> amostras, mais recente à direita), com grade
-/// discreta, área preenchida e leitura sob o cursor.
+/// Gráfico 2D de uma ou duas séries ao vivo. Desenha uma janela de tempo fixa
+/// (<see cref="Capacity"/> amostras, mais recente à direita), com escala,
+/// área preenchida e leitura por mouse ou teclado.
 /// </summary>
 /// <remarks>
 /// Não existe laço de animação: o controle só redesenha quando chega uma
@@ -32,6 +33,9 @@ namespace Ralven.App.Controls;
 public sealed class LivePerformanceChart : FrameworkElement
 {
     private const double TopPadding = 12;
+    private const double LeftPadding = 42;
+    private const double RightPadding = 8;
+    private const double BottomPadding = 24;
     private const double TooltipPadding = 9;
     private const double TooltipGap = 12;
 
@@ -41,7 +45,11 @@ public sealed class LivePerformanceChart : FrameworkElement
 
     private int hoverIndex = -1;
 
-    public LivePerformanceChart() => ClipToBounds = true;
+    public LivePerformanceChart()
+    {
+        ClipToBounds = true;
+        Focusable = true;
+    }
 
     /// <summary>Amostras de CPU em porcentagem, da mais antiga para a mais recente.</summary>
     public static readonly DependencyProperty CpuValuesProperty = DependencyProperty.Register(
@@ -126,6 +134,48 @@ public sealed class LivePerformanceChart : FrameworkElement
         typeof(LivePerformanceChart),
         new FrameworkPropertyMetadata("now", FrameworkPropertyMetadataOptions.AffectsRender));
 
+    public static readonly DependencyProperty WindowLabelProperty = DependencyProperty.Register(
+        nameof(WindowLabel),
+        typeof(string),
+        typeof(LivePerformanceChart),
+        new FrameworkPropertyMetadata("60s", FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty MaximumValueProperty = DependencyProperty.Register(
+        nameof(MaximumValue),
+        typeof(double),
+        typeof(LivePerformanceChart),
+        new FrameworkPropertyMetadata(100d, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty ValueFormatProperty = DependencyProperty.Register(
+        nameof(ValueFormat),
+        typeof(string),
+        typeof(LivePerformanceChart),
+        new FrameworkPropertyMetadata("0", FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty ValueSuffixProperty = DependencyProperty.Register(
+        nameof(ValueSuffix),
+        typeof(string),
+        typeof(LivePerformanceChart),
+        new FrameworkPropertyMetadata("%", FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty ShowGridProperty = DependencyProperty.Register(
+        nameof(ShowGrid),
+        typeof(bool),
+        typeof(LivePerformanceChart),
+        new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty ShowAreaProperty = DependencyProperty.Register(
+        nameof(ShowArea),
+        typeof(bool),
+        typeof(LivePerformanceChart),
+        new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty ShowTooltipProperty = DependencyProperty.Register(
+        nameof(ShowTooltip),
+        typeof(bool),
+        typeof(LivePerformanceChart),
+        new FrameworkPropertyMetadata(true, FrameworkPropertyMetadataOptions.AffectsRender));
+
     public IReadOnlyList<double>? CpuValues
     {
         get => (IReadOnlyList<double>?)GetValue(CpuValuesProperty);
@@ -204,10 +254,63 @@ public sealed class LivePerformanceChart : FrameworkElement
         set => SetValue(NowLabelProperty, value);
     }
 
+    public string WindowLabel
+    {
+        get => (string)GetValue(WindowLabelProperty);
+        set => SetValue(WindowLabelProperty, value);
+    }
+
+    public double MaximumValue
+    {
+        get => (double)GetValue(MaximumValueProperty);
+        set => SetValue(MaximumValueProperty, value);
+    }
+
+    public string ValueFormat
+    {
+        get => (string)GetValue(ValueFormatProperty);
+        set => SetValue(ValueFormatProperty, value);
+    }
+
+    public string ValueSuffix
+    {
+        get => (string)GetValue(ValueSuffixProperty);
+        set => SetValue(ValueSuffixProperty, value);
+    }
+
+    public bool ShowGrid
+    {
+        get => (bool)GetValue(ShowGridProperty);
+        set => SetValue(ShowGridProperty, value);
+    }
+
+    public bool ShowArea
+    {
+        get => (bool)GetValue(ShowAreaProperty);
+        set => SetValue(ShowAreaProperty, value);
+    }
+
+    public bool ShowTooltip
+    {
+        get => (bool)GetValue(ShowTooltipProperty);
+        set => SetValue(ShowTooltipProperty, value);
+    }
+
     protected override void OnMouseMove(MouseEventArgs e)
     {
         base.OnMouseMove(e);
-        var index = IndexAt(e.GetPosition(this).X, ActualWidth, PointCount);
+        if (!ShowTooltip)
+        {
+            return;
+        }
+
+        var plot = PlotBounds(ActualWidth, ActualHeight);
+        var index = IndexAt(
+            e.GetPosition(this).X,
+            plot.Left,
+            plot.Right,
+            Math.Max(Capacity, 2),
+            PointCount);
         if (index == hoverIndex)
         {
             return;
@@ -220,12 +323,56 @@ public sealed class LivePerformanceChart : FrameworkElement
     protected override void OnMouseLeave(MouseEventArgs e)
     {
         base.OnMouseLeave(e);
-        if (hoverIndex < 0)
+        if (hoverIndex < 0 || IsKeyboardFocusWithin)
         {
             return;
         }
 
         hoverIndex = -1;
+        InvalidateVisual();
+    }
+
+    protected override void OnGotKeyboardFocus(KeyboardFocusChangedEventArgs e)
+    {
+        base.OnGotKeyboardFocus(e);
+        if (ShowTooltip && PointCount > 0)
+        {
+            hoverIndex = 0;
+            InvalidateVisual();
+        }
+    }
+
+    protected override void OnLostKeyboardFocus(KeyboardFocusChangedEventArgs e)
+    {
+        base.OnLostKeyboardFocus(e);
+        hoverIndex = -1;
+        InvalidateVisual();
+    }
+
+    protected override void OnKeyDown(KeyEventArgs e)
+    {
+        base.OnKeyDown(e);
+        if (!ShowTooltip || PointCount == 0)
+        {
+            return;
+        }
+
+        var next = e.Key switch
+        {
+            Key.Left => Math.Min(Math.Max(hoverIndex, 0) + 1, PointCount - 1),
+            Key.Right => Math.Max(hoverIndex - 1, 0),
+            Key.Home => PointCount - 1,
+            Key.End => 0,
+            Key.Escape => -1,
+            _ => hoverIndex
+        };
+        if (next == hoverIndex)
+        {
+            return;
+        }
+
+        hoverIndex = next;
+        e.Handled = true;
         InvalidateVisual();
     }
 
@@ -242,19 +389,20 @@ public sealed class LivePerformanceChart : FrameworkElement
         // superfície transparente é o que torna a leitura sob o cursor possível.
         drawingContext.DrawRectangle(Brushes.Transparent, null, new Rect(0, 0, width, height));
 
-        DrawGrid(drawingContext, width, height);
+        var plot = PlotBounds(width, height);
+        DrawGrid(drawingContext, plot);
 
         // A GPU fica atrás: quando as duas séries se encostam, a leitura de CPU
         // — a mais consultada — continua legível.
-        DrawSeries(drawingContext, GpuValues, GpuBrush, width, height);
-        DrawSeries(drawingContext, CpuValues, CpuBrush, width, height);
+        DrawSeries(drawingContext, GpuValues, GpuBrush, plot);
+        DrawSeries(drawingContext, CpuValues, CpuBrush, plot);
 
-        DrawHover(drawingContext, width, height);
+        DrawHover(drawingContext, plot, width, height);
     }
 
-    private void DrawGrid(DrawingContext drawingContext, double width, double height)
+    private void DrawGrid(DrawingContext drawingContext, Rect plot)
     {
-        if (GridBrush is not { } grid)
+        if (!ShowGrid || GridBrush is not { } grid)
         {
             return;
         }
@@ -265,13 +413,25 @@ public sealed class LivePerformanceChart : FrameworkElement
         };
         pen.Freeze();
 
-        // Sem rótulos numéricos na grade: as três linhas já dão a escala e
-        // qualquer texto fixo acaba atravessado pela série. O valor exato vem
-        // da leitura sob o cursor.
         foreach (var fraction in new[] { 0.25, 0.5, 0.75 })
         {
-            var y = Math.Round(ValueToY(fraction * 100, height)) + 0.5;
-            drawingContext.DrawLine(pen, new Point(0, y), new Point(width, y));
+            var y = Math.Round(ValueToY(fraction * Maximum, plot)) + 0.5;
+            drawingContext.DrawLine(pen, new Point(plot.Left, y), new Point(plot.Right, y));
+        }
+
+        if (LabelBrush is { } labels)
+        {
+            foreach (var fraction in new[] { 0d, 0.5, 1d })
+            {
+                var text = CreateText(FormatValue(fraction * Maximum), 9, labels);
+                var y = ValueToY(fraction * Maximum, plot) - text.Height / 2;
+                drawingContext.DrawText(text, new Point(4, Math.Clamp(y, 0, plot.Bottom - text.Height)));
+            }
+
+            var window = CreateText(WindowLabel, 9, labels);
+            drawingContext.DrawText(window, new Point(plot.Left, plot.Bottom + 6));
+            var now = CreateText(NowLabel, 9, labels);
+            drawingContext.DrawText(now, new Point(plot.Right - now.Width, plot.Bottom + 6));
         }
     }
 
@@ -279,8 +439,7 @@ public sealed class LivePerformanceChart : FrameworkElement
         DrawingContext drawingContext,
         IReadOnlyList<double>? values,
         Brush? brush,
-        double width,
-        double height)
+        Rect plot)
     {
         if (brush is null || values is null || values.Count == 0)
         {
@@ -289,33 +448,47 @@ public sealed class LivePerformanceChart : FrameworkElement
 
         var count = Math.Min(values.Count, Math.Max(Capacity, 2));
         var offset = values.Count - count;
-        var step = StepFor(width, PointCount);
-        var first = width - (count - 1) * step;
+        var step = StepFor(plot.Width, Math.Max(Capacity, 2));
+        var first = plot.Right - (count - 1) * step;
+
+        if (count == 1)
+        {
+            drawingContext.DrawEllipse(
+                brush,
+                null,
+                new Point(first, ValueToY(values[offset], plot)),
+                2,
+                2);
+            return;
+        }
 
         var line = new StreamGeometry();
         var area = new StreamGeometry();
         using (var lineContext = line.Open())
         using (var areaContext = area.Open())
         {
-            var start = new Point(first, ValueToY(values[offset], height));
+            var start = new Point(first, ValueToY(values[offset], plot));
             lineContext.BeginFigure(start, false, false);
-            areaContext.BeginFigure(new Point(first, height), true, true);
+            areaContext.BeginFigure(new Point(first, plot.Bottom), true, true);
             areaContext.LineTo(start, false, false);
 
             for (var index = 1; index < count; index++)
             {
-                var point = new Point(first + index * step, ValueToY(values[offset + index], height));
+                var point = new Point(first + index * step, ValueToY(values[offset + index], plot));
                 lineContext.LineTo(point, true, false);
                 areaContext.LineTo(point, false, false);
             }
 
-            areaContext.LineTo(new Point(first + (count - 1) * step, height), false, false);
+            areaContext.LineTo(new Point(first + (count - 1) * step, plot.Bottom), false, false);
         }
 
         line.Freeze();
         area.Freeze();
 
-        drawingContext.DrawGeometry(CreateAreaBrush(brush), null, area);
+        if (ShowArea)
+        {
+            drawingContext.DrawGeometry(CreateAreaBrush(brush), null, area);
+        }
         var pen = new Pen(brush, 1.6)
         {
             LineJoin = PenLineJoin.Round,
@@ -326,15 +499,15 @@ public sealed class LivePerformanceChart : FrameworkElement
         drawingContext.DrawGeometry(null, pen, line);
     }
 
-    private void DrawHover(DrawingContext drawingContext, double width, double height)
+    private void DrawHover(DrawingContext drawingContext, Rect plot, double width, double height)
     {
-        if (hoverIndex < 0)
+        if (!ShowTooltip || hoverIndex < 0)
         {
             return;
         }
 
-        var x = Math.Round(width - hoverIndex * StepFor(width, PointCount)) + 0.5;
-        if (x < 0 || x > width)
+        var x = Math.Round(plot.Right - hoverIndex * StepFor(plot.Width, Math.Max(Capacity, 2))) + 0.5;
+        if (x < plot.Left || x > plot.Right)
         {
             return;
         }
@@ -350,22 +523,22 @@ public sealed class LivePerformanceChart : FrameworkElement
         {
             var pen = new Pen(grid, 1);
             pen.Freeze();
-            drawingContext.DrawLine(pen, new Point(x, 0), new Point(x, height));
+            drawingContext.DrawLine(pen, new Point(x, plot.Top), new Point(x, plot.Bottom));
         }
 
-        DrawMarker(drawingContext, x, gpu, GpuBrush, height);
-        DrawMarker(drawingContext, x, cpu, CpuBrush, height);
+        DrawMarker(drawingContext, x, gpu, GpuBrush, plot);
+        DrawMarker(drawingContext, x, cpu, CpuBrush, plot);
         DrawTooltip(drawingContext, x, cpu, gpu, width, height);
     }
 
-    private void DrawMarker(DrawingContext drawingContext, double x, double? value, Brush? brush, double height)
+    private void DrawMarker(DrawingContext drawingContext, double x, double? value, Brush? brush, Rect plot)
     {
         if (value is not { } sample || brush is null)
         {
             return;
         }
 
-        var center = new Point(x, ValueToY(sample, height));
+        var center = new Point(x, ValueToY(sample, plot));
         var pen = new Pen(brush, 2);
         pen.Freeze();
         drawingContext.DrawEllipse(TooltipBackground, pen, center, 3.5, 3.5);
@@ -398,12 +571,12 @@ public sealed class LivePerformanceChart : FrameworkElement
 
         if (cpu is { } cpuValue)
         {
-            lines.Add((CreateText($"{CpuLabel}  {FormatPercent(cpuValue)}", 10.5, labels), CpuBrush));
+            lines.Add((CreateText($"{CpuLabel}  {FormatValue(cpuValue)}", 10.5, labels), CpuBrush));
         }
 
         if (gpu is { } gpuValue)
         {
-            lines.Add((CreateText($"{GpuLabel}  {FormatPercent(gpuValue)}", 10.5, labels), GpuBrush));
+            lines.Add((CreateText($"{GpuLabel}  {FormatValue(gpuValue)}", 10.5, labels), GpuBrush));
         }
 
         const double dotColumn = 12;
@@ -453,8 +626,8 @@ public sealed class LivePerformanceChart : FrameworkElement
     }
 
     /// <summary>
-    /// Amostras efetivamente desenhadas. Enquanto o histórico não enche, elas
-    /// ocupam a largura inteira em vez de deixar um trecho vazio à esquerda.
+    /// Amostras efetivamente desenhadas. O passo horizontal continua preso à
+    /// capacidade para que dez segundos de dados nunca pareçam um minuto.
     /// </summary>
     private int PointCount => Math.Min(
         Math.Max(CpuValues?.Count ?? 0, GpuValues?.Count ?? 0),
@@ -467,14 +640,23 @@ public sealed class LivePerformanceChart : FrameworkElement
     /// ponteiro está fora da janela desenhada.
     /// </summary>
     internal static int IndexAt(double x, double width, int count)
+        => IndexAt(x, 0, width, count, count);
+
+    internal static int IndexAt(
+        double x,
+        double left,
+        double right,
+        int capacity,
+        int sampleCount)
     {
-        if (width <= 8 || count < 2)
+        var width = right - left;
+        if (width <= 8 || capacity < 2 || sampleCount <= 0 || x < left || x > right)
         {
             return -1;
         }
 
-        var index = (int)Math.Round((width - x) / StepFor(width, count));
-        return index < 0 || index >= count ? -1 : index;
+        var index = (int)Math.Round((right - x) / StepFor(width, capacity));
+        return index < 0 || index >= sampleCount ? -1 : index;
     }
 
     internal static double? SampleAt(IReadOnlyList<double>? values, int indexFromNewest)
@@ -494,8 +676,32 @@ public sealed class LivePerformanceChart : FrameworkElement
         return height - Math.Clamp(value, 0, 100) / 100 * usable;
     }
 
-    private static string FormatPercent(double value) =>
-        value.ToString("0", CultureInfo.CurrentCulture) + "%";
+    internal static double ValueToY(double value, double maximumValue, Rect plot)
+    {
+        var maximum = Math.Max(maximumValue, double.Epsilon);
+        return plot.Bottom - Math.Clamp(value, 0, maximum) / maximum * plot.Height;
+    }
+
+    private double ValueToY(double value, Rect plot) => ValueToY(value, Maximum, plot);
+
+    private double Maximum => Math.Max(MaximumValue, double.Epsilon);
+
+    private Rect PlotBounds(double width, double height)
+    {
+        if (!ShowGrid)
+        {
+            return new Rect(1, 2, Math.Max(width - 2, 1), Math.Max(height - 4, 1));
+        }
+
+        return new Rect(
+            LeftPadding,
+            TopPadding,
+            Math.Max(width - LeftPadding - RightPadding, 1),
+            Math.Max(height - TopPadding - BottomPadding, 1));
+    }
+
+    private string FormatValue(double value) =>
+        value.ToString(ValueFormat, CultureInfo.CurrentCulture) + ValueSuffix;
 
     private static Brush CreateAreaBrush(Brush source)
     {

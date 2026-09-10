@@ -68,11 +68,30 @@ public sealed class MainViewModelUpdateCheckTests
         var viewModel = new MainViewModel(
             new FakeAppOptimizationService(new AppSettings(), settingsFileExists: false),
             releaseUpdateService: releaseUpdateService);
+        var notificationCount = 0;
+        viewModel.UpdateAvailableDetected += (_, _) => notificationCount++;
 
         await viewModel.CheckForUpdatesManuallyAsync();
 
         Assert.True(viewModel.IsUpdateBannerVisible);
         Assert.Null(viewModel.ManualUpdateCheckMessage);
+        Assert.Equal(0, notificationCount);
+    }
+
+    [Fact]
+    public async Task CheckForUpdatesAsync_UpdateAvailable_RaisesNativeNotificationEvent()
+    {
+        var update = FakeReleaseUpdateService.CreateUpdate("99.0.0");
+        var viewModel = new MainViewModel(
+            new FakeAppOptimizationService(new AppSettings(), settingsFileExists: false),
+            releaseUpdateService: new FakeReleaseUpdateService(updateToReturn: update));
+        var notificationCount = 0;
+        viewModel.UpdateAvailableDetected += (_, _) => notificationCount++;
+
+        await viewModel.CheckForUpdatesAsync();
+
+        Assert.True(viewModel.IsUpdateBannerVisible);
+        Assert.Equal(1, notificationCount);
     }
 
     [Fact]

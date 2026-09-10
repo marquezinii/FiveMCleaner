@@ -15,6 +15,9 @@ public partial class App : System.Windows.Application
 
     private static int isHandlingFatalError;
     private SingleInstanceGuard? singleInstanceGuard;
+    private StartupSplash? startupSplash;
+    private bool startupCancelled;
+    private bool activationPending;
     private Dictionary<string, Duration>? originalMotionDurations;
 
     /// <summary>
@@ -63,18 +66,25 @@ public partial class App : System.Windows.Application
 
     private void OnSystemParametersChangedForMotion(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
-        ApplyMotionPolicyToDurationTokens();
+        if (Dispatcher.CheckAccess()) ApplyMotionPolicyToDurationTokens();
+        else if (!Dispatcher.HasShutdownStarted) Dispatcher.BeginInvoke(ApplyMotionPolicyToDurationTokens);
     }
 
-    protected override void OnStartup(StartupEventArgs e)
+    protected override async void OnStartup(StartupEventArgs e)
     {
+        StartupTrace.Mark("app-startup");
         base.OnStartup(e);
         ApplyMotionPolicyToDurationTokens();
         SystemParameters.StaticPropertyChanged += OnSystemParametersChangedForMotion;
         DispatcherUnhandledException += OnDispatcherUnhandledException;
         AppDomain.CurrentDomain.UnhandledException += OnDomainUnhandledException;
         TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
-        Exit += (_, _) => TryShutdownCrashReporting();
+        Exit += (_, _) =>
+        {
+            startupCancelled = true;
+            startupSplash?.Dispose();
+            TryShutdownCrashReporting();
+        };
 
         // Demo mode (used for automated smoke tests/screenshots) is
         // intentionally exempt: it never persists settings or sends
@@ -100,17 +110,66 @@ public partial class App : System.Windows.Application
 
             singleInstanceGuard.ListenForActivation(OnActivationRequested);
             Exit += (_, _) => singleInstanceGuard.Dispose();
-            LegacyDataImporter.TryImport();
         }
 
         try
         {
+            var strings = LocalizationService.Current;
+            startupSplash = new StartupSplash(
+                strings.GetString("Startup.Initializing"),
+                strings.GetString("Startup.Close"),
+                ThemeManager.IsSystemLightTheme(),
+                () => Dispatcher.BeginInvoke(() =>
+                {
+                    startupCancelled = true;
+                    Shutdown(0);
+                }));
+            _ = ObserveSplashAsync(startupSplash);
+            if (!isDemoMode)
+            {
+                // Import remains mandatory and precedes every state read. Its
+                // filesystem traversal must not block either window dispatcher.
+                await Task.Run(LegacyDataImporter.TryImport);
+                StartupTrace.Mark("legacy-import-ready");
+            }
+            if (startupCancelled) return;
             var window = new MainWindow();
             MainWindow = window;
+            window.SourceInitialized += (_, _) => startupSplash?.SetOwner(
+                new System.Windows.Interop.WindowInteropHelper(window).Handle);
             window.Show();
+            if (activationPending) window.RequestActivation();
         }
         catch (Exception exception)
         {
+            startupSplash?.Dispose();
+            WriteCrashLog(exception);
+            TryCaptureException(exception);
+            ShowFatalError(exception);
+            Shutdown(1);
+        }
+    }
+
+    internal async Task CompleteStartupPresentationAsync()
+    {
+        if (startupSplash is not { } splash) return;
+        startupSplash = null;
+        splash.Dispose();
+        await splash.Completion;
+        StartupTrace.Mark("startup-presentation-ready");
+    }
+
+    private async Task ObserveSplashAsync(StartupSplash splash)
+    {
+        try
+        {
+            await splash.Completion;
+        }
+        catch (Exception exception)
+        {
+            // A failed secondary dispatcher cannot leave a hidden, half-started
+            // application behind. Use the same fatal path as the main window.
+            startupCancelled = true;
             WriteCrashLog(exception);
             TryCaptureException(exception);
             ShowFatalError(exception);
@@ -137,6 +196,10 @@ public partial class App : System.Windows.Application
         if (Current?.MainWindow is MainWindow mainWindow)
         {
             mainWindow.RequestActivation();
+        }
+        else if (Current is App app)
+        {
+            app.activationPending = true;
         }
     }
 
@@ -197,6 +260,7 @@ public partial class App : System.Windows.Application
 
     private static void ShowFatalError(Exception exception)
     {
+        (Current as App)?.startupSplash?.Dispose();
         if (Interlocked.Exchange(ref isHandlingFatalError, 1) != 0)
         {
             return;
@@ -204,6 +268,9 @@ public partial class App : System.Windows.Application
 
         try
         {
+            // Includes failures from the independent splash dispatcher, which
+            // do not unwind through MainWindow_Loaded's initialization catch.
+            (Current?.MainWindow as MainWindow)?.InvalidateStartupHealthIfPending();
             System.Windows.MessageBox.Show(
                 Services.LocalizationService.Current.Format(
                     "Dialog.FatalError.Message",

@@ -28,6 +28,7 @@ public sealed class MainViewModelLiveAlertTests
         await viewModel.CheckLiveAlertAsync();
 
         Assert.True(viewModel.IsLiveAlertBannerVisible);
+        Assert.True(viewModel.IsLiveAlertStatusVisible);
         Assert.True(viewModel.IsLiveAlertIconVisible);
         Assert.True(viewModel.IsLiveAlertNotificationVisible);
         Assert.Equal("Entre no Discord", viewModel.LiveAlertMessage);
@@ -58,6 +59,7 @@ public sealed class MainViewModelLiveAlertTests
         await viewModel.CheckLiveAlertAsync();
 
         Assert.False(viewModel.IsLiveAlertBannerVisible);
+        Assert.False(viewModel.IsLiveAlertStatusVisible);
         Assert.True(viewModel.IsLiveAlertIconVisible);
     }
 

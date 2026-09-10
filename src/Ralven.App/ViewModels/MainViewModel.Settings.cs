@@ -16,6 +16,7 @@ public sealed partial class MainViewModel
 {
     private string? settingsSaveErrorMessage;
     private BugCode? settingsSaveBugCode;
+    private bool suppressSettingsPersistence;
 
     public AppThemePreference ThemePreference => themePreference;
 
@@ -267,6 +268,28 @@ public sealed partial class MainViewModel
         SettingsChanged(refreshPlan: false);
     }
 
+    public async Task RestoreGeneralSettingsDefaultsAsync()
+    {
+        var defaults = new AppSettings();
+        suppressSettingsPersistence = true;
+        try
+        {
+            SelectLanguagePreference(defaults.Language);
+            SelectTheme(defaults.Theme);
+            MinimizeToTrayOnClose = defaults.MinimizeToTrayOnClose;
+            LaunchAtStartup = defaults.LaunchAtStartup;
+            StartMinimized = defaults.StartMinimized ?? false;
+            CheckForUpdates = defaults.CheckForUpdates;
+            NotifyWhenUpdateAvailable = defaults.NotifyWhenUpdateAvailable;
+        }
+        finally
+        {
+            suppressSettingsPersistence = false;
+        }
+
+        await RetrySaveSettingsAsync().ConfigureAwait(false);
+    }
+
     private void ApplySettings(AppSettings settings)
     {
         languagePreference = Enum.IsDefined(settings.Language)
@@ -334,6 +357,11 @@ public sealed partial class MainViewModel
 
     private void SettingsChanged(bool refreshPlan = true)
     {
+        if (suppressSettingsPersistence)
+        {
+            return;
+        }
+
         if (refreshPlan)
         {
             RefreshPlan();
@@ -489,15 +517,7 @@ public sealed partial class MainViewModel
 
         if (lastLiveMetrics is null)
         {
-            CpuUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            GpuUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            MemoryUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            DiskUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            NetworkUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            LiveMetricsUpdatedLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            MemoryUsageDetailLabel = string.Empty;
-            CpuTrendLabel = localization.GetString("Dashboard.LivePerformance.NotAvailable");
-            GpuTrendLabel = localization.GetString("Dashboard.LivePerformance.NotAvailable");
+            ResetLiveMetricPresentation();
         }
         else
         {
@@ -505,6 +525,7 @@ public sealed partial class MainViewModel
         }
 
         NotifyLivePerformanceStateChanged();
+        NotifyLiveMetricSelectionChanged();
         RefreshFiveMSessionMonitorPresentation();
         ApplyLastOptimization(historyRecords);
         RefreshWindowsGamingPresentation();

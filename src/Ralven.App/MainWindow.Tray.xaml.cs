@@ -19,7 +19,7 @@ public partial class MainWindow
     private void MainWindow_ActivityChanged(object? sender, EventArgs e) => RefreshLiveMetricsActivity();
 
     private void RefreshLiveMetricsActivity() => viewModel.SetLiveMetricsEnabled(
-        IsVisible && IsActive && WindowState != WindowState.Minimized
+        startupCompleted && IsVisible && IsActive && WindowState != WindowState.Minimized
         && DashboardPage.Visibility == Visibility.Visible);
 
     private void MainWindow_Closing(object? sender, CancelEventArgs e)
@@ -78,6 +78,7 @@ public partial class MainWindow
     /// </summary>
     public void RequestActivation()
     {
+        activationRequested = true;
         trayIcon.Hide();
         Show();
         if (WindowState == WindowState.Minimized)

@@ -17,8 +17,8 @@ public sealed partial class MainViewModel
         || updatePresentationState == UpdatePresentationState.Failed
         || JustUpdatedToVersion is not null);
 
-    public bool IsUpdateAttentionVisible => availableUpdate is not null
-        || updatePresentationState == UpdatePresentationState.Failed;
+    public bool IsUpdateAttentionVisible => !IsBusy && (availableUpdate is not null
+        || updatePresentationState == UpdatePresentationState.Failed);
 
     public bool IsUpdateDownloading
     {
@@ -53,6 +53,7 @@ public sealed partial class MainViewModel
     public bool CanDownloadUpdate => availableUpdate is not null
         && !IsUpdateDownloading
         && !IsInstallingUpdate
+        && !IsCacheOperationRunning
         && !IsBusy
         && !isWindowsGamingBusy;
 
@@ -171,7 +172,7 @@ public sealed partial class MainViewModel
                 return;
             }
 
-            ApplyDetectedUpdate(update);
+            ApplyDetectedUpdate(update, notifyUser: true);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
@@ -208,7 +209,7 @@ public sealed partial class MainViewModel
                 return;
             }
 
-            ApplyDetectedUpdate(update);
+            ApplyDetectedUpdate(update, notifyUser: false);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
@@ -225,13 +226,16 @@ public sealed partial class MainViewModel
     private static Version GetAssemblyVersion() =>
         Assembly.GetEntryAssembly()?.GetName().Version ?? new Version(0, 0, 0);
 
-    private void ApplyDetectedUpdate(ReleaseUpdate update)
+    private void ApplyDetectedUpdate(ReleaseUpdate update, bool notifyUser)
     {
         availableUpdate = update;
         isUpdateBannerDismissed = false;
         updatePresentationState = UpdatePresentationState.Available;
         RefreshUpdatePresentation();
-        UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
+        if (notifyUser)
+        {
+            UpdateAvailableDetected?.Invoke(this, update.Version.CoreVersion);
+        }
     }
 
     public async Task<DownloadedUpdate?> DownloadAvailableUpdateAsync()
