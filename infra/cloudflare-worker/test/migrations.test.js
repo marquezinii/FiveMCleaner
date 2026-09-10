@@ -112,10 +112,11 @@ const workerSchemaSmoke = `
      five_m_install_detected, gta_edition, optimization_target_count,
      windows_build, disk_type, free_space_gib_bucket, run_timestamp,
      days_since_last_run_bucket, backup_created, backup_restored,
-     elevation_used, process_count_at_start)
+     elevation_used, process_count_at_start, operation_id)
   VALUES
     ('OptimizationCompleted', 1, 'test', 'APP_OPT_ACTION_EXECUTION', 'Production', '2026-01-01T00:00:00.000Z',
-     1, 'Legacy', 1, 26100, 'SSD', 1, '2026-01-01T00:00:00.000Z', 1, 1, 0, 0, 1);
+     1, 'Legacy', 1, 26100, 'SSD', 1, '2026-01-01T00:00:00.000Z', 1, 1, 0, 0, 1,
+     '123e4567-e89b-42d3-a456-426614174000');
   INSERT INTO bug_reports
     (report_id, category, bug_code, summary, description, app_version, profile, environment, received_at)
   VALUES

@@ -58,6 +58,24 @@ public sealed class TelemetryEventValidatorTests
     }
 
     [Theory]
+    [InlineData(TelemetryEventNames.AppInitialized)]
+    [InlineData(TelemetryEventNames.OptimizationStarted)]
+    [InlineData(TelemetryEventNames.GtaVBenchmarkCompleted)]
+    [InlineData(TelemetryEventNames.GtaVBenchmarkFailed)]
+    public void Validate_UsefulExpandedEventNames_DoesNotThrow(string eventName)
+    {
+        var exception = Record.Exception(() => TelemetryEventValidator.Validate(ValidEvent() with { EventName = eventName }));
+
+        Assert.Null(exception);
+    }
+
+    [Fact]
+    public void Validate_EmptyOperationId_Throws()
+    {
+        Assert.Throws<ArgumentException>(() => TelemetryEventValidator.Validate(ValidEvent() with { OperationId = Guid.Empty }));
+    }
+
+    [Theory]
     [InlineData(1)]
     [InlineData(3)]
     [InlineData(255)]
@@ -377,6 +395,17 @@ public sealed class LocalTelemetryQueueTests : IDisposable
     }
 
     [Fact]
+    public void TryReserveDailyEvent_AllowsOnlyOneEventPerVersionAndDay()
+    {
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        var date = new DateOnly(2026, 9, 10);
+
+        Assert.True(queue.TryReserveDailyEvent(TelemetryEventNames.AppInitialized, "1.6.2", date));
+        Assert.False(queue.TryReserveDailyEvent(TelemetryEventNames.AppInitialized, "1.6.2", date));
+        Assert.True(queue.TryReserveDailyEvent(TelemetryEventNames.AppInitialized, "1.6.3", date));
+    }
+
+    [Fact]
     public async Task Prune_DropsTheOldestEventsOnceTheCountCeilingIsExceeded()
     {
         // Age alone never bounded the queue: a run enqueues events but a flush
@@ -601,6 +630,21 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task TrackOncePerUtcDayAsync_QueuesOnlyTheFirstHealthEvent()
+    {
+        using var client = new HttpClient(new CountingHandler(HttpStatusCode.InternalServerError));
+        var queue = new LocalTelemetryQueue(tempDirectory);
+        var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
+        service.Configure(enabled: true, includeOptionalData: false);
+        var health = new AnonymousTelemetryEvent(TelemetryEventNames.AppInitialized, TimeSpan.Zero, "1.6.2");
+
+        await service.TrackOncePerUtcDayAsync(health, global::Xunit.TestContext.Current.CancellationToken);
+        await service.TrackOncePerUtcDayAsync(health with { EventId = Guid.NewGuid() }, global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Single(queue.ReadPending(10));
+    }
+
+    [Fact]
     public async Task FlushPendingAsync_TransportFailure_KeepsTheEventQueued()
     {
         var handler = new CountingHandler(HttpStatusCode.InternalServerError);
@@ -722,7 +766,13 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
         var queue = new LocalTelemetryQueue(tempDirectory);
         var service = new QueuedCloudflareTelemetryService(queue, new CloudflareTelemetryTransport(client, TestEndpoint));
         await queue.EnqueueAsync(
-            SampleEvent() with { OsVersion = "Windows 11", CpuModel = "Test CPU", Profile = "Balanced" },
+            SampleEvent() with
+            {
+                OsVersion = "Windows 11",
+                CpuModel = "Test CPU",
+                Profile = "Balanced",
+                OperationId = new Guid("11111111-1111-4111-8111-111111111111")
+            },
             cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
         service.Configure(enabled: true, includeOptionalData: false);
 
@@ -730,6 +780,7 @@ public sealed class QueuedCloudflareTelemetryServiceTests : IDisposable
 
         Assert.Contains("Windows 11", handler.Body, StringComparison.Ordinal);
         Assert.DoesNotContain("Test CPU", handler.Body, StringComparison.Ordinal);
+        Assert.DoesNotContain("11111111-1111-4111-8111-111111111111", handler.Body, StringComparison.Ordinal);
         Assert.DoesNotContain("Balanced", handler.Body, StringComparison.Ordinal);
         Assert.Empty(queue.ReadPending(10));
     }

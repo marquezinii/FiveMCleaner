@@ -58,7 +58,7 @@ public sealed class UpdaterDiagnosticsAuthTests : IDisposable
     {
         Directory.CreateDirectory(root);
         File.WriteAllText(SettingsPath,
-            """{"shareAnonymousTelemetry":false,"privacyConsentVersion":8}""");
+            """{"shareAnonymousTelemetry":false,"privacyConsentVersion":9}""");
         Assert.True(UpdaterDiagnostics.IsTelemetryAuthorized(root));
     }
 
@@ -94,7 +94,7 @@ public sealed class UpdaterDiagnosticsAuthTests : IDisposable
     {
         Directory.CreateDirectory(root);
         File.WriteAllText(SettingsPath,
-            """{"shareAnonymousTelemetry":true,"privacyConsentVersion":8}""");
+            """{"shareAnonymousTelemetry":true,"privacyConsentVersion":9}""");
         Assert.True(UpdaterDiagnostics.IsTelemetryAuthorized(root));
     }
 
@@ -112,7 +112,7 @@ public sealed class UpdaterDiagnosticsAuthTests : IDisposable
     {
         Directory.CreateDirectory(root);
         File.WriteAllText(SettingsPath,
-            """{"shareAnonymousTelemetry":true,"privacyConsentVersion":8}""");
+            """{"shareAnonymousTelemetry":true,"privacyConsentVersion":9}""");
         using (new FileStream(SettingsPath, FileMode.Open, FileAccess.Read, FileShare.None))
         {
             Assert.False(UpdaterDiagnostics.IsTelemetryAuthorized(root));
@@ -124,7 +124,7 @@ public sealed class UpdaterDiagnosticsAuthTests : IDisposable
     {
         Directory.CreateDirectory(root);
         File.WriteAllText(SettingsPath,
-            """{"shareAnonymousTelemetry":"true","privacyConsentVersion":8}""");
+            """{"shareAnonymousTelemetry":"true","privacyConsentVersion":9}""");
         Assert.True(UpdaterDiagnostics.IsTelemetryAuthorized(root));
     }
 
@@ -141,7 +141,7 @@ public sealed class UpdaterDiagnosticsAuthTests : IDisposable
     public void CurrentNoticeWithoutLegacyTelemetryProperty_ReturnsTrue()
     {
         Directory.CreateDirectory(root);
-        File.WriteAllText(SettingsPath, """{"privacyConsentVersion":8}""");
+        File.WriteAllText(SettingsPath, """{"privacyConsentVersion":9}""");
         Assert.True(UpdaterDiagnostics.IsTelemetryAuthorized(root));
     }
 }

@@ -99,6 +99,9 @@ const STATS_BUILDERS = {
   'app-versions': queries.appVersionBreakdown,
   'average-time': queries.averageOptimizationTimeMs,
   'success-rate': queries.successRate,
+  'app-initializations-per-day': queries.appInitializationsPerDay,
+  'abandoned-optimizations': queries.abandonedOptimizationFlows,
+  'gtav-benchmark-outcomes': queries.gtaVBenchmarkOutcomes,
   'errors-by-version': queries.errorsByVersion,
   'error-categories': queries.errorCategoryBreakdown,
   'bug-codes': queries.bugCodeBreakdown,
@@ -608,8 +611,8 @@ async function handleTelemetryIngest(request, env) {
               five_m_install_detected, gta_edition, optimization_target_count,
               windows_build, disk_type, free_space_gib_bucket, run_timestamp,
               days_since_last_run_bucket, backup_created, backup_restored,
-              elevation_used, process_count_at_start)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              elevation_used, process_count_at_start, operation_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(event_id) DO NOTHING`,
         )
         .bind(
@@ -639,6 +642,7 @@ async function handleTelemetryIngest(request, env) {
           event.backupRestored === null ? null : Number(event.backupRestored),
           event.elevationUsed === null ? null : Number(event.elevationUsed),
           event.processCountAtStart,
+          event.operationId,
         ),
     );
     for (const actionId of event.actionIds) {

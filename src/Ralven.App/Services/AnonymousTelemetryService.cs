@@ -49,7 +49,9 @@ public sealed record AnonymousTelemetryEvent(
     bool? BackupCreated = null,
     bool? BackupRestored = null,
     bool? ElevationUsed = null,
-    int? ProcessCountAtStart = null)
+    int? ProcessCountAtStart = null,
+    // v9: correlates one optional optimization flow only; never identifies an installation.
+    Guid? OperationId = null)
 {
     // This identifies a delivery attempt's logical event, never a device or user.
     // It is persisted with the queued payload so retries retain the same value.
@@ -70,8 +72,21 @@ public sealed record AnonymousTelemetryEvent(
         BackupCreated = null,
         BackupRestored = null,
         ElevationUsed = null,
-        ProcessCountAtStart = null
+        ProcessCountAtStart = null,
+        OperationId = null
     };
+}
+
+/// <summary>Closed names for telemetry that has an operational consumer.</summary>
+public static class TelemetryEventNames
+{
+    public const string AppInitialized = "app-initialized";
+    public const string OptimizationStarted = "optimization-started";
+    public const string OptimizationCompleted = "optimization-completed";
+    public const string OptimizationFailed = "optimization-failed";
+    public const string OptimizationCancelled = "optimization-cancelled";
+    public const string GtaVBenchmarkCompleted = "gtav-benchmark-completed";
+    public const string GtaVBenchmarkFailed = "gtav-benchmark-failed";
 }
 
 public interface IAnonymousTelemetryService

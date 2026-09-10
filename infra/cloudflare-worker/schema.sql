@@ -31,9 +31,10 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
     run_timestamp TEXT,
     days_since_last_run_bucket INTEGER,
     backup_created INTEGER,
-    backup_restored INTEGER,
-    elevation_used INTEGER,
-    process_count_at_start INTEGER
+      backup_restored INTEGER,
+      elevation_used INTEGER,
+      process_count_at_start INTEGER,
+      operation_id TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_telemetry_events_received_at
@@ -44,6 +45,9 @@ CREATE INDEX IF NOT EXISTS idx_telemetry_events_environment
 
 CREATE INDEX IF NOT EXISTS idx_telemetry_events_app_version
     ON telemetry_events (app_version);
+
+CREATE INDEX IF NOT EXISTS idx_telemetry_events_operation_id
+    ON telemetry_events (operation_id);
 
 -- One row per action ID applied in an optimization-completed event, so
 -- "most used function" can be aggregated with a simple GROUP BY instead of

@@ -59,7 +59,7 @@ campo explicitamente; `null` ou valores desconhecidos continuam rejeitados.
 
 ```powershell
 npx.cmd wrangler d1 execute TELEMETRY_DB --remote --command "SELECT COUNT(*) AS total, MAX(received_at) AS last_received FROM telemetry_events"
-npx.cmd wrangler d1 execute TELEMETRY_DB --remote --command "SELECT five_m_install_detected FROM telemetry_events LIMIT 1; SELECT terms_version FROM account_profiles LIMIT 1; SELECT message, active, updated_at FROM live_alert WHERE id = 1"
+npx.cmd wrangler d1 execute TELEMETRY_DB --remote --command "SELECT five_m_install_detected, operation_id FROM telemetry_events LIMIT 1; SELECT terms_version FROM account_profiles LIMIT 1; SELECT message, active, updated_at FROM live_alert WHERE id = 1"
 npx.cmd wrangler deployments list
 ```
 

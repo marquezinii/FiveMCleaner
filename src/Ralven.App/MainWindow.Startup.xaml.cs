@@ -180,4 +180,8 @@ public partial class MainWindow
     /// </summary>
     private Task FlushPendingTelemetryIfAnyAsync() =>
         queuedCloudflareTelemetry?.FlushPendingAsync() ?? Task.CompletedTask;
+
+    private Task TrackAppInitializedTelemetryIfAuthorizedAsync() =>
+        queuedCloudflareTelemetry?.TrackOncePerUtcDayAsync(viewModel.CreateAppInitializedTelemetryEvent())
+        ?? Task.CompletedTask;
 }

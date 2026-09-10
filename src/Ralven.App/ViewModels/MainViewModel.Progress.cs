@@ -73,7 +73,8 @@ public sealed partial class MainViewModel
         string eventName,
         TimeSpan executionTime,
         string? errorCategory,
-        BugCode? bugCode = null)
+        BugCode? bugCode = null,
+        Guid? operationId = null)
     {
         if (!telemetry.IsEnabled)
         {
@@ -91,7 +92,7 @@ public sealed partial class MainViewModel
             GpuModel: ShareOptionalReports ? diagnostic?.GpuName : null,
             RamBucketGiB: ShareOptionalReports && diagnostic is not null ? RamBucketCalculator.ComputeBucketGiB(diagnostic.TotalMemoryGiB) : null,
             Profile: ShareOptionalReports ? selectedProfile.ToString() : null,
-            ActionIds: ShareOptionalReports ? currentPlan?.Actions
+            ActionIds: ShareOptionalReports && eventName != TelemetryEventNames.OptimizationStarted ? currentPlan?.Actions
                 .Select(action => action.Metadata.Id)
                 .Take(TelemetryEventValidator.MaxActionIds)
                 .ToArray() : null,
@@ -106,16 +107,57 @@ public sealed partial class MainViewModel
             FreeSpaceGiBBucket: ShareOptionalReports && diagnostic is not null ? BucketFreeSpaceGiB(diagnostic.FreeDiskGiB) : null,
             RunTimestamp: ShareOptionalReports ? DateTimeOffset.UtcNow : null,
             DaysSinceLastRunBucket: ShareOptionalReports ? GetDaysSinceLastRunBucket() : null,
-            BackupCreated: null, // será preenchido pelo resultado da otimização quando disponível
-            BackupRestored: null, // será preenchido pelo resultado da otimização quando disponível
-            ElevationUsed: null, // será preenchido pelo resultado da otimização quando disponível
-            ProcessCountAtStart: ShareOptionalReports ? GetProcessCountBucket() : null);
-        if (currentPlan?.PlanId is { } transactionId && transactionId != Guid.Empty)
+            // These fields remain reserved until the transaction exposes an
+            // authoritative outcome; never infer a backup or UAC result.
+            BackupCreated: null,
+            BackupRestored: null,
+            ElevationUsed: null,
+            ProcessCountAtStart: ShareOptionalReports ? GetProcessCountBucket() : null,
+            OperationId: ShareOptionalReports ? operationId : null);
+        if (eventName != TelemetryEventNames.OptimizationStarted
+            && currentPlan?.PlanId is { } transactionId && transactionId != Guid.Empty)
         {
             telemetryEvent = telemetryEvent with { EventId = transactionId };
         }
 
         _ = TrackOptimizationTelemetryAsync(telemetryEvent);
+    }
+
+    internal AnonymousTelemetryEvent CreateAppInitializedTelemetryEvent() => new(
+        TelemetryEventNames.AppInitialized,
+        TimeSpan.Zero,
+        AppVersion.TrimStart('v', 'V'),
+        OsVersion: diagnostic?.OsLabel,
+        SystemArchitecture: diagnostic?.SystemArchitecture);
+
+    private void TrackOptimizationStartedTelemetry()
+    {
+        if (!ShareOptionalReports || currentPlan?.PlanId is not { } operationId || operationId == Guid.Empty)
+        {
+            return;
+        }
+
+        TrackOptimizationTelemetry(
+            TelemetryEventNames.OptimizationStarted,
+            TimeSpan.Zero,
+            errorCategory: null,
+            operationId: operationId);
+    }
+
+    private void TrackGtaVBenchmarkTelemetry(string eventName, TimeSpan executionTime, string? errorCategory)
+    {
+        if (!ShareOptionalReports || !telemetry.IsEnabled)
+        {
+            return;
+        }
+
+        _ = TrackOptimizationTelemetryAsync(new AnonymousTelemetryEvent(
+            eventName,
+            executionTime,
+            AppVersion.TrimStart('v', 'V'),
+            errorCategory,
+            OsVersion: diagnostic?.OsLabel,
+            SystemArchitecture: diagnostic?.SystemArchitecture));
     }
 
     private async Task TrackOptimizationTelemetryAsync(AnonymousTelemetryEvent telemetryEvent)
