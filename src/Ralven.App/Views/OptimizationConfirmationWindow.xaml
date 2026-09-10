@@ -69,15 +69,11 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Margin="18,0">
                     <Button Content="{Binding KeepWorkingText}"
                             Style="{StaticResource SecondaryButtonStyle}"
-                            Height="38"
-                            Padding="16,0"
                             Margin="0,0,9,0"
                             IsCancel="True"
                             Click="Dismiss_Click" />
                     <Button Content="{Binding ConfirmText}"
                             Style="{StaticResource PrimaryButtonStyle}"
-                            Height="38"
-                            Padding="17,0"
                             IsDefault="True"
                             Click="Confirm_Click" />
                 </StackPanel>

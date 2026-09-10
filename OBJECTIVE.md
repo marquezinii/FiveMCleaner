@@ -1,8 +1,11 @@
 # Objective
 
-- **Agente:** Codex
-- **Objetivo:** Preservar suporte completo e previsível ao Windows 10 no Ralven, inclusive diante das funcionalidades em desenvolvimento.
-- **Escopo:** Revisar `dev/proxima-versao` e worktrees ativas em busca de dependências ou comportamentos exclusivos do Windows 11; corrigir incompatibilidades comprovadas e adicionar cobertura proporcional.
-- **Fora de escopo:** Alterar suporte a GTAV Enhanced, publicar release ou integrar branches de outros trabalhos.
-- **Critérios de conclusão:** APIs e comportamentos incompatíveis identificados possuem fallback seguro ou indisponibilidade explícita; validações automatizadas aplicáveis passam; pontos nativos remanescentes ficam claros para validação manual no Windows 10.
-- **Resultado entregue:** O fallback de backdrop centralizado preserva Mica no Windows 11 e usa Acrylic no Windows 10; todas as janelas Fluent usam a política e um teste impede regressão. A revisão da `dev` e das worktrees ativas não encontrou outra API Windows 11-only sem tratamento. Build Release e 1.441 testes passaram; o aceite nativo está documentado em `docs/windows10-validation.md`.
+**Agente:** Codex
+
+**Objetivo:** Modernizar e padronizar o sistema visual de botões do aplicativo Ralven, preservando hierarquia, estados interativos e acessibilidade.
+
+**Escopo:** Estilos reutilizáveis de botões, tokens visuais relacionados e adoção consistente nas telas WPF existentes. Não inclui alterações de comportamento de otimizações, serviços, contratos ou textos públicos.
+
+**Critérios de conclusão:** Variantes primária, secundária, destrutiva, link, ícone e provedora são coerentes entre si; todos os estados suportados mantêm contraste, foco visível e alvo de clique adequado; build e testes aplicáveis passam; validação visual cobre telas e escalas disponíveis.
+
+**Resultado entregue:** Template base compartilhado e variantes primária, secundária, destrutiva, link, ícone e provedora aplicados ao aplicativo; exceções de dimensão excessiva removidas das telas e diálogos afetados; contratos de estilos e contraste ampliados. Build Release e 1.453 testes aprovados. A inspeção renderizada manual ficou pendente porque a automação deste host não disponibiliza aplicativos nativos.
