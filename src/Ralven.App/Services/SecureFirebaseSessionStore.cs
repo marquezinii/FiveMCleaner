@@ -30,19 +30,45 @@ public sealed class SecureFirebaseSessionStore
 
     internal async Task WriteAsync(string refreshToken, CancellationToken cancellationToken)
     {
+        string? temporaryPath = null;
+        byte[]? plaintext = null;
+        byte[]? encrypted = null;
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            var directory = Path.GetDirectoryName(path)!;
+            Directory.CreateDirectory(directory);
             var json = JsonSerializer.Serialize(new PersistedFirebaseSession(refreshToken), RalvenJson.Options);
-            var encrypted = ProtectedData.Protect(Encoding.UTF8.GetBytes(json), null, DataProtectionScope.CurrentUser);
-            try { await File.WriteAllBytesAsync(path, encrypted, cancellationToken).ConfigureAwait(false); }
-            finally { CryptographicOperations.ZeroMemory(encrypted); }
+            plaintext = Encoding.UTF8.GetBytes(json);
+            encrypted = ProtectedData.Protect(plaintext, null, DataProtectionScope.CurrentUser);
+            temporaryPath = Path.Combine(directory, $".{Path.GetFileName(path)}.{Guid.NewGuid():N}.tmp");
+            await File.WriteAllBytesAsync(temporaryPath, encrypted, cancellationToken).ConfigureAwait(false);
+            File.Move(temporaryPath, path, overwrite: true);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or CryptographicException)
         {
             // Best-effort: losing the persistent "keep me signed in" token
             // degrades to a manual login next launch, never a crash during
             // the signup/sign-in flow that created it.
+        }
+        finally
+        {
+            if (plaintext is not null)
+            {
+                CryptographicOperations.ZeroMemory(plaintext);
+            }
+            if (encrypted is not null)
+            {
+                CryptographicOperations.ZeroMemory(encrypted);
+            }
+            if (temporaryPath is not null)
+            {
+                try { File.Delete(temporaryPath); }
+                catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+                {
+                    // A stale, DPAPI-protected temporary file is safer than
+                    // masking the completed sign-in with a cleanup failure.
+                }
+            }
         }
     }
 

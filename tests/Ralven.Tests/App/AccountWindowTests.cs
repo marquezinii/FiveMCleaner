@@ -245,6 +245,24 @@ public sealed class AccountWindowTests
         Assert.False(AccountWindow.IsMoveCommand(WM_COMMAND, (IntPtr)wParam));
     }
 
+    [Fact]
+    public void ProfilePrefill_AppliesOnlyWhileTheSameAccountStillNeedsCompletion()
+    {
+        var expected = new AuthenticationSnapshot(
+            AuthenticationState.ProfileCompletionRequired,
+            new FirebaseUser("uid-1", "person@example.com", true));
+
+        Assert.True(AccountWindow.IsCurrentProfilePrefill("uid-1", expected));
+        Assert.False(AccountWindow.IsCurrentProfilePrefill("uid-1", expected with
+        {
+            User = new FirebaseUser("uid-2", "other@example.com", true),
+        }));
+        Assert.False(AccountWindow.IsCurrentProfilePrefill("uid-1", expected with
+        {
+            State = AuthenticationState.SignedIn,
+        }));
+    }
+
     /// <summary>
     /// Once the account is fully signed in, the window's job is done: it
     /// must not try to show the (now-removed) management UI, and must close

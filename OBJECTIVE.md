@@ -1,7 +1,29 @@
-# Objetivo da tarefa
+# Objetivo
 
-- **Agente:** Codex
-- **Objetivo:** suavizar a hierarquia visual da tela Visão Geral com um recorte pequeno, sóbrio e coerente nos temas claro e escuro.
-- **Escopo:** ajustar somente o Overview e, se indispensável, estilos de superfície que ele já usa; não alterar cabeçalho/conta, autenticação, navegação, comportamento funcional ou textos.
-- **Critérios de conclusão:** reduzir caixas e divisórias duras nos pontos de maior impacto, reutilizar tokens existentes, preservar responsividade/acessibilidade e validar build, testes e renderização em tema claro e escuro quando o ambiente permitir.
-- **Resultado entregue:** o diagnóstico principal usa a superfície hero existente com raio amplo e sem contorno; os três KPIs são agrupados por espaço, sem divisórias; o monitor ao vivo fica aberto sobre o fundo e preserva o gráfico como poço funcional. O XAML foi inspecionado em tema escuro e claro, maximizado e em 1600×1000. Foram aprovados 78 testes focados de localização/tokens, o build Release da solução (0 avisos) e a suíte completa (1.434 testes).
+## Agente
+
+Codex
+
+## Objetivo
+
+Auditar e fortalecer os fluxos de conta, autenticação e persistência de dados.
+
+## Escopo
+
+Cadastro, login, sessão, perfil, recuperação, autorização, armazenamento local e rotas Worker/D1 relacionadas. Não inclui mudança de produto, release ou infraestrutura não relacionada.
+
+## Critérios de conclusão
+
+- Fluxos críticos revisados ponta a ponta, com correções mínimas para falhas confirmadas.
+- Validações e testes relevantes executados.
+- Nenhuma credencial, token ou dado pessoal adicionado ao repositório.
+
+## Resultado entregue
+
+- O Worker passou a rejeitar payloads de perfil fora do contrato e a distinguir
+  conflitos de username por estado persistido, sem acoplar a API a mensagens do D1.
+- A sessão agora substitui o token persistido atomicamente, coalesce refreshes
+  simultâneos e restaura o estado ao cancelar uma renovação.
+- O preenchimento assíncrono do perfil não cruza dados entre contas trocadas.
+- Build Release, 1.441 testes .NET e 259 testes do Worker (incluindo migrações)
+  foram aprovados.

@@ -253,33 +253,62 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
 
     private async Task<FirebaseAuthResult> RefreshAsync(CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(refreshToken)) { SetState(AuthenticationState.SignedOut); return Result(); }
-        SetState(AuthenticationState.RefreshingSession);
-
         await sessionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         var invalidated = false;
+        var refreshed = false;
+        var stateBeforeRefresh = Current;
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, $"{SecureTokenBase}?key={apiKey}") { Content = new FormUrlEncodedContent(new Dictionary<string, string> { ["grant_type"] = "refresh_token", ["refresh_token"] = refreshToken }) };
-            using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            var payload = await response.Content.ReadFromJsonAsync<FirebaseRefreshResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
-
-            if (!response.IsSuccessStatusCode || payload?.id_token is null || payload.refresh_token is null)
+            if (string.IsNullOrWhiteSpace(refreshToken))
             {
-                // Already holding sessionLock here: clear the state directly
-                // instead of going through LogoutCoreAsync, which would try
-                // to re-acquire the same (non-reentrant) semaphore and hang.
                 invalidated = true;
                 await ClearSessionStateAsync().ConfigureAwait(false);
             }
+            else if (!string.IsNullOrWhiteSpace(idToken)
+                && DateTimeOffset.UtcNow < tokenExpiresAt - TimeSpan.FromMinutes(5))
+            {
+                // A concurrent caller already rotated the token while this
+                // caller waited for the session lock.
+                return Result();
+            }
             else
             {
-                idToken = payload.id_token; refreshToken = payload.refresh_token; tokenExpiresAt = Expiry(payload.expires_in);
-                if (persistSession) await sessionStore.WriteAsync(refreshToken, cancellationToken).ConfigureAwait(false);
+                SetState(AuthenticationState.RefreshingSession);
+                using var request = new HttpRequestMessage(HttpMethod.Post, $"{SecureTokenBase}?key={apiKey}") { Content = new FormUrlEncodedContent(new Dictionary<string, string> { ["grant_type"] = "refresh_token", ["refresh_token"] = refreshToken }) };
+                using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                var payload = await response.Content.ReadFromJsonAsync<FirebaseRefreshResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                if (!response.IsSuccessStatusCode || string.IsNullOrWhiteSpace(payload?.id_token) || string.IsNullOrWhiteSpace(payload.refresh_token))
+                {
+                    // Already holding sessionLock here: clear the state directly
+                    // instead of going through LogoutCoreAsync, which would try
+                    // to re-acquire the same (non-reentrant) semaphore and hang.
+                    invalidated = true;
+                    await ClearSessionStateAsync().ConfigureAwait(false);
+                }
+                else
+                {
+                    idToken = payload.id_token; refreshToken = payload.refresh_token; tokenExpiresAt = Expiry(payload.expires_in);
+                    if (persistSession) await sessionStore.WriteAsync(refreshToken, cancellationToken).ConfigureAwait(false);
+                    refreshed = true;
+                }
             }
         }
-        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { return Fail("NETWORK_REQUEST_FAILED"); }
-        catch (Exception exception) when (exception is HttpRequestException or JsonException or IOException) { return Fail("NETWORK_REQUEST_FAILED"); }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            RestoreStateAfterRefreshFailure(stateBeforeRefresh);
+            throw;
+        }
+        catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
+        {
+            RestoreStateAfterRefreshFailure(stateBeforeRefresh);
+            return Fail("NETWORK_REQUEST_FAILED");
+        }
+        catch (Exception exception) when (exception is HttpRequestException or JsonException or IOException)
+        {
+            RestoreStateAfterRefreshFailure(stateBeforeRefresh);
+            return Fail("NETWORK_REQUEST_FAILED");
+        }
         finally
         {
             sessionLock.Release();
@@ -291,14 +320,21 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
             return new FirebaseAuthResult(AuthenticationState.SignedOut, null, localization["Account.Error.SessionInvalid"]);
         }
 
-        return await LoadUserAsync(idToken!, cancellationToken).ConfigureAwait(false);
+        return refreshed ? await LoadUserAsync(idToken!, cancellationToken).ConfigureAwait(false) : Result();
     }
 
     private async Task<FirebaseAuthResult> UpdateAsync(string? password, string? email, CancellationToken cancellationToken)
     {
         var token = await GetIdTokenAsync(cancellationToken).ConfigureAwait(false);
         if (token is null) return Result();
-        var response = await PostAsync<FirebaseTokenResponse>("accounts:update", new { idToken = token, returnSecureToken = true, password, email }, cancellationToken).ConfigureAwait(false);
+        var request = new Dictionary<string, object?>
+        {
+            ["idToken"] = token,
+            ["returnSecureToken"] = true,
+        };
+        if (password is not null) request["password"] = password;
+        if (email is not null) request["email"] = email;
+        var response = await PostAsync<FirebaseTokenResponse>("accounts:update", request, cancellationToken).ConfigureAwait(false);
         return response.Error is null ? await AcceptTokensAsync(response.Value!, persistSession, cancellationToken).ConfigureAwait(false) : Fail(response.Error);
     }
 
@@ -312,7 +348,7 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
 
     private async Task<FirebaseAuthResult> AcceptTokensAsync(FirebaseTokenResponse tokens, bool persist, CancellationToken cancellationToken)
     {
-        if (tokens.idToken is null || tokens.refreshToken is null) return Fail("INVALID_ID_TOKEN");
+        if (string.IsNullOrWhiteSpace(tokens.idToken) || string.IsNullOrWhiteSpace(tokens.refreshToken)) return Fail("INVALID_ID_TOKEN");
 
         await sessionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
@@ -338,7 +374,7 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
     {
         var response = await PostAsync<FirebaseLookupResponse>("accounts:lookup", new { idToken = token }, cancellationToken).ConfigureAwait(false);
         var user = response.Value?.users?.FirstOrDefault();
-        if (response.Error is not null || user?.localId is null || user.email is null) return Fail(response.Error ?? "INVALID_ID_TOKEN");
+        if (response.Error is not null || string.IsNullOrWhiteSpace(user?.localId) || string.IsNullOrWhiteSpace(user.email)) return Fail(response.Error ?? "INVALID_ID_TOKEN");
         var hasPassword = user.providerUserInfo?.Any(provider =>
             string.Equals(provider.providerId, "password", StringComparison.Ordinal)) == true;
         var firebaseUser = new FirebaseUser(user.localId, user.email, user.emailVerified, hasPassword);
@@ -366,6 +402,10 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
                     (AuthenticationState.ProfileCompletionRequired, null),
                 _ => (AuthenticationState.ProfileUnavailable, ProfileUnavailableError),
             };
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
         }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
@@ -415,6 +455,11 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
                 TaskScheduler.Default);
         }
         return new FirebaseAuthResult(Current.State, Current.User, FirebaseAuthErrorMapper.Map(error, localization, sensitiveFlow));
+    }
+    private void RestoreStateAfterRefreshFailure(AuthenticationSnapshot state)
+    {
+        Current = state;
+        StateChanged?.Invoke(this, Current);
     }
     private void SetState(AuthenticationState state, FirebaseUser? user = null)
     {

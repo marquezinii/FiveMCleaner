@@ -453,16 +453,23 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
 
     private async Task PrefillProfileAsync()
     {
+        var expectedUid = accounts.Current.User?.Uid;
+        if (expectedUid is null) return;
         var token = await accounts.GetIdTokenAsync();
         if (token is null) return;
 
         var existing = await profiles.FetchAsync(token);
-        if (existing.Outcome != AccountProfileFetchOutcome.Found) return;
+        if (existing.Outcome != AccountProfileFetchOutcome.Found
+            || !IsCurrentProfilePrefill(expectedUid, accounts.Current)) return;
 
         UsernameBox.Text = existing.Username ?? UsernameBox.Text;
         FirstNameBox.Text = existing.FirstName ?? FirstNameBox.Text;
         LastNameBox.Text = existing.LastName ?? LastNameBox.Text;
     }
+
+    internal static bool IsCurrentProfilePrefill(string expectedUid, AuthenticationSnapshot? current) =>
+        current is { State: AuthenticationState.ProfileCompletionRequired, User: { } user }
+        && string.Equals(user.Uid, expectedUid, StringComparison.Ordinal);
 
     private bool ValidateTermsAcceptance()
     {
