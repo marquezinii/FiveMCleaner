@@ -3,6 +3,9 @@ using System.Net.Http.Json;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
+using System.Runtime.CompilerServices;
+
+[assembly: InternalsVisibleTo("Ralven.Tests")]
 
 namespace Ralven.UpdateRuntime;
 
@@ -53,15 +56,22 @@ public sealed class UpdaterDiagnostics
 
     private readonly string logPath;
     private readonly string pendingRoot;
+    private readonly Func<UpdaterEvent, Task<bool>> send;
 
-    public UpdaterDiagnostics(string dataRoot)
+    public UpdaterDiagnostics(string dataRoot) : this(dataRoot, null) { }
+
+    internal UpdaterDiagnostics(string dataRoot, Func<UpdaterEvent, Task<bool>>? sender)
     {
         var root = UpdatePathSafety.EnsureNoReparsePoints(dataRoot);
         logPath = Path.Combine(root, "Logs", "updater.jsonl");
         pendingRoot = Path.Combine(root, "UpdaterTelemetry", "pending");
+        send = sender ?? TrySendAsync;
     }
 
-    public async Task RecordAsync(UpdaterEvent value, string? localDetail, bool telemetryAuthorized)
+    public Task RecordAsync(UpdaterEvent value, string? localDetail, bool telemetryAuthorized) =>
+        RecordAsync(value, localDetail, telemetryAuthorized, flushPending: true);
+
+    public async Task RecordAsync(UpdaterEvent value, string? localDetail, bool telemetryAuthorized, bool flushPending)
     {
         try
         {
@@ -95,7 +105,7 @@ public sealed class UpdaterDiagnostics
             // pode observar um JSON parcialmente escrito.
             AtomicFile.WriteText(pendingPath, JsonSerializer.Serialize(value));
             PrunePending();
-            await FlushPendingAsync(true).ConfigureAwait(false);
+            if (flushPending) await FlushPendingAsync(true).ConfigureAwait(false);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }
@@ -133,7 +143,7 @@ public sealed class UpdaterDiagnostics
                 TryDelete(file);
                 continue;
             }
-            if (!await TrySendAsync(value).ConfigureAwait(false)) break;
+            if (!await send(value).ConfigureAwait(false)) break;
             TryDelete(file);
         }
     }

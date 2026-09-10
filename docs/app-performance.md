@@ -1,5 +1,8 @@
 # Desempenho do aplicativo
 
+Para fluxo de abertura, splash, gargalos e profiling do processo até a
+prontidão local, veja [Inicialização do Ralven](startup-performance.md).
+
 O painel ao vivo coleta somente com a Visão geral selecionada e a janela ativa,
 visível e não minimizada. Perda de foco, minimização, navegação e bandeja pausam
 o timer e cancelam a captura em andamento. Reabrir obtém uma leitura nova;

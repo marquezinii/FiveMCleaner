@@ -1824,6 +1824,8 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Personal.Export.Failed" xml:space="preserve"><value>Could not export the history. Check the selected location and try again.</value></data>
   <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>You enter the payer information on the secure Asaas page. Ralven stores billing references, amounts, statuses and dates; never card details. Any completed refund, including a partial refund, removes access for the related paid period.</value></data>
   <data name="RalvenAi.Logo.Animate" xml:space="preserve"><value>Animate Ralven AI logo</value></data>
+  <data name="Startup.Initializing" xml:space="preserve"><value>Initializing</value></data>
+  <data name="Startup.Close" xml:space="preserve"><value>Close</value></data>
   <data name="Dialog.Close" xml:space="preserve"><value>Close</value></data>
   <data name="Dialog.Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Dialog.Confirm" xml:space="preserve"><value>Continue</value></data>

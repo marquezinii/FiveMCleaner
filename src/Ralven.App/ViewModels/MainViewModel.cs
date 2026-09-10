@@ -241,8 +241,11 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
 
     public string AboutVersionDeveloper => localization.Format("About.VersionDeveloper", AppVersion);
 
-    public async Task InitializeAsync()
+    public Task InitializeAsync() => InitializeAsync(startBackgroundServices: true);
+
+    internal async Task InitializeAsync(bool startBackgroundServices)
     {
+        StartupTrace.Mark("initialize-start");
         isInitializing = true;
         RaiseCommandState();
         try
@@ -250,41 +253,31 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
             var settingsTask = service.LoadSettingsAsync();
             var diagnosticTask = service.DiagnoseAsync();
             var historyTask = service.LoadHistoryAsync();
-            await Task.WhenAll(settingsTask, diagnosticTask, historyTask);
-
-            var loadedSettings = await settingsTask;
-            var settingsFileExistedBeforeLoad = service.SettingsFileExists();
-            ApplySettings(loadedSettings);
-            RefreshPrivacyAuthorization(settingsFileExistedBeforeLoad);
-            PendingReleaseNotes = ReleaseNotesEvaluator.Evaluate(
-                loadedSettings,
-                settingsFileExistedBeforeLoad,
-                AppVersion,
-                ReleaseNotesCatalog.Versions);
+            // Preferences/consent do not depend on a successful system probe.
+            // Observe every task even if loading or applying settings fails.
+            try
+            {
+                var loadedSettings = await settingsTask;
+                var settingsFileExistedBeforeLoad = service.SettingsFileExists();
+                ApplySettings(loadedSettings);
+                StartupTrace.Mark("settings-applied");
+                RefreshPrivacyAuthorization(settingsFileExistedBeforeLoad);
+                PendingReleaseNotes = ReleaseNotesEvaluator.Evaluate(
+                    loadedSettings,
+                    settingsFileExistedBeforeLoad,
+                    AppVersion,
+                    ReleaseNotesCatalog.Versions);
+            }
+            finally
+            {
+                await Task.WhenAll(settingsTask, diagnosticTask, historyTask);
+            }
+            StartupTrace.Mark("initial-data-ready");
             ApplyDiagnostic(await diagnosticTask);
+            StartupTrace.Mark("diagnostic-applied");
             SetSystemPcStatus("System.Pc.Status.Ready");
             ApplyHistory(await historyTask);
-            if (checkForUpdates && releaseUpdateService is not null)
-            {
-                _ = CheckForUpdatesAsync().ContinueWith(
-                    static t => { _ = t.Exception; },
-                    CancellationToken.None,
-                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
-            }
-
-            if (liveAlertService is not null)
-            {
-                _ = CheckLiveAlertAsync().ContinueWith(
-                    static t => { _ = t.Exception; },
-                    CancellationToken.None,
-                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
-
-                liveAlertTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = LiveAlertPollInterval };
-                liveAlertTimer.Tick += (_, _) => _ = CheckLiveAlertAsync();
-                liveAlertTimer.Start();
-            }
+            StartupTrace.Mark("history-applied");
         }
         catch (Exception exception)
         {
@@ -303,7 +296,37 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
             RaiseCommandState();
         }
         await InitializePersonalWorkspaceAsync();
-        await ObservePersonalPcAsync();
+        StartupTrace.Mark("personal-workspace-ready");
+        if (startBackgroundServices) StartBackgroundServices();
+    }
+
+    private bool backgroundServicesStarted;
+
+    internal void StartBackgroundServices()
+    {
+        if (backgroundServicesStarted || personalLifetime.IsCancellationRequested) return;
+        backgroundServicesStarted = true;
+        if (checkForUpdates && releaseUpdateService is not null)
+        {
+            _ = CheckForUpdatesAsync().ContinueWith(
+                static t => { _ = t.Exception; },
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+        }
+
+        if (liveAlertService is not null)
+        {
+            _ = CheckLiveAlertAsync().ContinueWith(
+                static t => { _ = t.Exception; },
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+            liveAlertTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = LiveAlertPollInterval };
+            liveAlertTimer.Tick += (_, _) => _ = CheckLiveAlertAsync();
+            liveAlertTimer.Start();
+        }
+        _ = ObservePersonalPcAsync();
     }
 
     public async Task RefreshDiagnosticAsync()

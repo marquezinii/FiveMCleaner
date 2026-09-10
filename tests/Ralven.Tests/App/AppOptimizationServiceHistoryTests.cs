@@ -250,6 +250,63 @@ public sealed class AppOptimizationServiceHistoryTests
     }
 
     [Fact]
+    public async Task LoadHistory_AdministratorReceiptIsReadOutsideTheCallingThread()
+    {
+        using var temporaryDirectory = new TemporaryDirectory();
+        var definition = ActionCatalog.Current.GetRequired(
+            OptimizationActionIds.EnableSessionPerformancePowerPlan);
+        await WriteJournalAsync(
+            temporaryDirectory.Path,
+            Journal(definition, TransactionState.Committed));
+        var receiptThread = 0;
+        var callerThread = 0;
+        var cancellationToken = TestContext.Current.CancellationToken;
+        var started = new TaskCompletionSource<Task<IReadOnlyList<AppHistoryRecord>>>(
+            TaskCreationOptions.RunContinuationsAsynchronously);
+        var service = new AppOptimizationService(
+            temporaryDirectory.Path,
+            administratorReceiptExists: _ =>
+            {
+                receiptThread = Environment.CurrentManagedThreadId;
+                return true;
+            });
+        var thread = new Thread(() =>
+        {
+            callerThread = Environment.CurrentManagedThreadId;
+            started.SetResult(service.LoadHistoryAsync(cancellationToken));
+        }) { IsBackground = true };
+
+        thread.Start();
+        var history = await started.Task.Unwrap().WaitAsync(TimeSpan.FromSeconds(10));
+
+        Assert.True(Assert.Single(history).CanRollback);
+        Assert.NotEqual(0, receiptThread);
+        Assert.NotEqual(callerThread, receiptThread);
+    }
+
+    [Fact]
+    public async Task LoadHistory_CancelledBeforeScan_DoesNotReadReceipts()
+    {
+        using var temporaryDirectory = new TemporaryDirectory();
+        var definition = ActionCatalog.Current.GetRequired(
+            OptimizationActionIds.EnableSessionPerformancePowerPlan);
+        await WriteJournalAsync(
+            temporaryDirectory.Path,
+            Journal(definition, TransactionState.Committed));
+        var receiptRead = false;
+        var service = new AppOptimizationService(
+            temporaryDirectory.Path,
+            administratorReceiptExists: _ => receiptRead = true);
+        using var cancellation = new CancellationTokenSource();
+        cancellation.Cancel();
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(
+            () => service.LoadHistoryAsync(cancellation.Token));
+
+        Assert.False(receiptRead);
+    }
+
+    [Fact]
     public async Task LoadHistory_LockedJournalDoesNotHideOtherRecords()
     {
         using var temporaryDirectory = new TemporaryDirectory();

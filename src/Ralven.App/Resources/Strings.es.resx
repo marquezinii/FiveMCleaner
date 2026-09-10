@@ -1824,6 +1824,8 @@ Media CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Personal.Export.Failed" xml:space="preserve"><value>No se pudo exportar el historial. Comprueba la ubicación y vuelve a intentarlo.</value></data>
   <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>Introduces los datos del pagador en la página segura de Asaas. Ralven guarda referencias, importes, estados y fechas del cobro; nunca datos de tarjeta. Cualquier reembolso completado, incluso parcial, elimina el acceso del período pagado correspondiente.</value></data>
   <data name="RalvenAi.Logo.Animate" xml:space="preserve"><value>Animar el logo de Ralven AI</value></data>
+  <data name="Startup.Initializing" xml:space="preserve"><value>Inicializando</value></data>
+  <data name="Startup.Close" xml:space="preserve"><value>Cerrar</value></data>
   <data name="Dialog.Close" xml:space="preserve"><value>Cerrar</value></data>
   <data name="Dialog.Cancel" xml:space="preserve"><value>Cancelar</value></data>
   <data name="Dialog.Confirm" xml:space="preserve"><value>Continuar</value></data>

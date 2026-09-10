@@ -10,6 +10,15 @@
   },
   "items": [
     {
+      "id": "startup",
+      "status": { "pt": "Em desenvolvimento", "en": "In development" },
+      "title": { "pt": "Inicialização com resposta visual", "en": "Startup with visual feedback" },
+      "description": {
+        "pt": "A preparação local se sobrepõe à construção da janela, com uma tela de inicialização leve durante o trabalho necessário. Envios remotos do launcher deixam de atrasar a abertura.",
+        "en": "Local preparation overlaps window construction, with a lightweight startup screen during required work. Remote launcher delivery no longer delays opening the app."
+      }
+    },
+    {
       "id": "background-efficiency",
       "status": { "pt": "Em desenvolvimento", "en": "In development" },
       "title": {

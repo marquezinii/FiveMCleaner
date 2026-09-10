@@ -21,6 +21,7 @@ public sealed partial class AppOptimizationService
 {
     public async Task<AppDiagnostic> DiagnoseAsync(CancellationToken cancellationToken = default)
     {
+        StartupTrace.Mark("diagnosis-start");
         if (demoMode && useSyntheticDiagnostic)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -48,6 +49,7 @@ public sealed partial class AppOptimizationService
             var archLabelTask = Task.Run(GetArchitectureLabel, cancellationToken);
 
             var installation = await installationTask.ConfigureAwait(false);
+            StartupTrace.Mark("installation-ready");
             var gtaV = GtaVLocator.Detect(installation.Root);
             var gtaVIsRunning = new WindowsGtaVProcessInspector()
                 .IsRunningFrom(gtaV.InstallationRoot);
@@ -56,12 +58,14 @@ public sealed partial class AppOptimizationService
                 : null;
 
             var systemResources = await systemResourcesTask.ConfigureAwait(false);
+            StartupTrace.Mark("system-resources-ready");
             var cacheBytes = installation.Edition == FiveMEdition.Legacy && installation.Root is not null
                 ? GetLegacyServerCacheBytes(installation.Root, cancellationToken)
                 : 0L;
 
             var gpuDetails = await gpuDetailsTask.ConfigureAwait(false);
             var cpuDetails = await cpuDetailsTask.ConfigureAwait(false);
+            StartupTrace.Mark("gpu-cpu-ready");
             var gpuNames = gpuDetails
                 .Select(gpu => gpu.DriverDescription)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
@@ -78,6 +82,7 @@ public sealed partial class AppOptimizationService
             var logicalProcessorCount = systemResources.LogicalProcessorCount;
             var freeDiskGiB = systemResources.SystemDriveFreeBytes / 1024d / 1024d / 1024d;
             var running = IsFiveMRunning();
+            StartupTrace.Mark("processes-ready");
 
             var assessment = HardwareProfileAdvisor.Assess(
                 memoryGiB,
@@ -93,6 +98,7 @@ public sealed partial class AppOptimizationService
             var memoryModuleLayout = await memoryLayoutTask.ConfigureAwait(false);
             var osLabel = await osLabelTask.ConfigureAwait(false);
             var archLabel = await archLabelTask.ConfigureAwait(false);
+            StartupTrace.Mark("diagnosis-ready");
 
             return new AppDiagnostic
             {
