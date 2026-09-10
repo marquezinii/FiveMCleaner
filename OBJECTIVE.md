@@ -1,4 +1,4 @@
-# Objetivo da tarefa
+# Objective
 
 - **Agente:** Codex
 - **Objetivo:** Preservar suporte completo e previsível ao Windows 10 no Ralven, inclusive diante das funcionalidades em desenvolvimento.

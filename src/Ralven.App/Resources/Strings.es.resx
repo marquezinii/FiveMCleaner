@@ -305,7 +305,7 @@
   <data name="Settings.About.Title" xml:space="preserve"><value>Acerca de</value></data>
   <data name="Settings.About.Description" xml:space="preserve"><value>Qué es Ralven, quién lo desarrolla y dónde encontrar ayuda.</value></data>
   <data name="Settings.About.AppName" xml:space="preserve"><value>Ralven</value></data>
-  <data name="Settings.About.Tagline" xml:space="preserve"><value>Más rendimiento. Menos complicaciones.</value></data>
+  <data name="Settings.About.Tagline" xml:space="preserve"><value>Plataforma de gestión y optimización de Windows con IA.</value></data>
   <data name="Settings.About.Repository" xml:space="preserve"><value>Código fuente en GitHub</value></data>
   <data name="Settings.About.Changelog" xml:space="preserve"><value>Historial de versiones</value></data>
   <data name="Settings.About.Discord.Title" xml:space="preserve"><value>Únete a nuestro Discord oficial</value></data>
@@ -340,9 +340,9 @@
   <data name="Plan.VerifiedActions" xml:space="preserve"><value>{0} acciones verificadas  •  {1}</value></data>
   <data name="Plan.Review" xml:space="preserve"><value>Revisar plan</value></data>
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Optimizar ahora</value></data>
-  <data name="Optimizer.Title" xml:space="preserve"><value>Optimizador de FiveM</value></data>
-  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Prepara tu equipo para jugar con menos interrupciones, procesos innecesarios y problemas de caché.</value></data>
-  <data name="Optimizer.General.Title" xml:space="preserve"><value>Optimizador general</value></data>
+  <data name="Optimizer.Title" xml:space="preserve"><value>Optimización de Windows</value></data>
+  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Revisa mejoras seguras para Windows antes de aplicarlas.</value></data>
+  <data name="Optimizer.General.Title" xml:space="preserve"><value>Optimización de Windows</value></data>
   <data name="Optimizer.General.Subtitle" xml:space="preserve"><value>Elige un perfil y revisa qué cambiará antes de comenzar.</value></data>
   <data name="Optimizer.FiveM.Title" xml:space="preserve"><value>Optimizador de FiveM</value></data>
   <data name="Optimizer.FiveM.Subtitle" xml:space="preserve"><value>Prepara FiveM sobre GTAV Legacy con diagnósticos, ajustes y acciones reversibles dedicadas.</value></data>
@@ -528,9 +528,9 @@
   <data name="Diagnosis.CloseGtaVSafely" xml:space="preserve"><value>Cierra GTA V para optimizar de forma segura</value></data>
   <data name="Diagnosis.RecommendedProfile" xml:space="preserve"><value>Perfil {0} recomendado para esta PC</value></data>
   <data name="Diagnosis.LegacyReady" xml:space="preserve"><value>El diagnóstico encontró el diseño Legacy conocido y preparó acciones compatibles.</value></data>
-  <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>Ralven preparó un plan de Windows según la capacidad local de esta PC. FiveM tiene una experiencia dedicada en Juegos.</value></data>
+  <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>Ralven preparó un plan de Windows según la capacidad local de esta PC. Las integraciones de juegos compatibles están disponibles por separado en Juegos.</value></data>
   <data name="Diagnosis.EnhancedUnsupported" xml:space="preserve"><value>La edición Enhanced usa un nuevo launcher y una caché configurable. Esta versión no le aplicará reglas de Legacy.</value></data>
-  <data name="Diagnosis.InstallLegacy" xml:space="preserve"><value>La optimización general de Windows ya está disponible. Instala o selecciona FiveM Legacy solo para habilitar las acciones dedicadas al juego.</value></data>
+  <data name="Diagnosis.InstallLegacy" xml:space="preserve"><value>La optimización de Windows ya está disponible. Elige Juegos cuando quieras configurar una integración compatible y sus acciones específicas.</value></data>
   <data name="Diagnosis.FreeDisk" xml:space="preserve"><value>{0} GB libres</value></data>
   <data name="History.ProfileTitle" xml:space="preserve"><value>Perfil {0}</value></data>
   <data name="History.WindowsGamingTitle" xml:space="preserve"><value>Ajustes de juegos de Windows</value></data>
@@ -1341,10 +1341,10 @@
   <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Informados por Windows</value></data>
   <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>MEMORIA LIBRE</value></data>
   <data name="Dashboard.Kpi.Memory.Detail" xml:space="preserve"><value>de {0:0.0} GB en total</value></data>
-  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHÉ DE FIVEM</value></data>
-  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisada por el optimizador</value></data>
+  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHÉ DE JUEGOS</value></data>
+  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisada por la integración de juegos</value></data>
   <data name="Dashboard.Kpi.Cache.None" xml:space="preserve"><value>Ninguna</value></data>
-  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>No se encontró caché en el disco</value></data>
+  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>No se encontró caché de integración de juegos en el disco</value></data>
   <data name="Dashboard.Pressure.Low" xml:space="preserve"><value>Baja</value></data>
   <data name="Dashboard.Pressure.Moderate" xml:space="preserve"><value>Moderada</value></data>
   <data name="Dashboard.Pressure.High" xml:space="preserve"><value>Alta</value></data>
