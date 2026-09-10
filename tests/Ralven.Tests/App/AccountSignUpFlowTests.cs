@@ -162,7 +162,9 @@ public sealed class AccountSignUpFlowTests
 
         Assert.False(result.Succeeded);
         Assert.Equal(AuthenticationState.EmailVerificationRequired, result.State);
-        Assert.Equal(LocalizationService.Current.GetString("Account.Verification.SendFailed"), result.Error);
+        Assert.Equal(
+            new LocalizationService(System.Globalization.CultureInfo.GetCultureInfo("pt-BR")).GetString("Account.Verification.SendFailed"),
+            result.Error);
     }
 
     [Fact]
