@@ -1,7 +1,8 @@
 # Objective
 
 - **Agente:** Codex
-- **Objetivo:** Reposicionar o Ralven em todo o produto como uma plataforma de gerenciamento e otimização do Windows com IA, sem alterar funcionalidades existentes.
-- **Escopo:** Textos públicos, localização, metadados, updater, documentação exibida ao usuário e integrações distribuídas; auditoria de resíduos também nos worktrees paralelos. Conforme esclarecimento do usuário, a superfície de distribuição ativa é o site da Vemryx; o instalador legado não foi alterado. Não inclui remover recursos FiveM nem alterar contratos jurídicos.
-- **Critérios de conclusão:** A identidade principal não apresenta o Ralven como otimizador de PC/FiveM; FiveM aparece apenas como uma integração da área de Jogos; traduções e artefatos de distribuição permanecem consistentes e as validações aplicáveis passam.
-- **Resultado entregue:** Posicionamento atualizado no aplicativo, na metadata dos binários, no site da Vemryx e na documentação atual. FiveM ficou restrito à linguagem de integrações de Jogos e fluxos técnicos. Build Release, 1.436 testes, verificação de segurança, paridade de localização e validação do site passaram.
+- **Objetivo:** Preservar suporte completo e previsível ao Windows 10 no Ralven, inclusive diante das funcionalidades em desenvolvimento.
+- **Escopo:** Revisar `dev/proxima-versao` e worktrees ativas em busca de dependências ou comportamentos exclusivos do Windows 11; corrigir incompatibilidades comprovadas e adicionar cobertura proporcional.
+- **Fora de escopo:** Alterar suporte a GTAV Enhanced, publicar release ou integrar branches de outros trabalhos.
+- **Critérios de conclusão:** APIs e comportamentos incompatíveis identificados possuem fallback seguro ou indisponibilidade explícita; validações automatizadas aplicáveis passam; pontos nativos remanescentes ficam claros para validação manual no Windows 10.
+- **Resultado entregue:** O fallback de backdrop centralizado preserva Mica no Windows 11 e usa Acrylic no Windows 10; todas as janelas Fluent usam a política e um teste impede regressão. A revisão da `dev` e das worktrees ativas não encontrou outra API Windows 11-only sem tratamento. Build Release e 1.441 testes passaram; o aceite nativo está documentado em `docs/windows10-validation.md`.
