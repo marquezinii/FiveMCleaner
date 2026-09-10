@@ -1,7 +1,8 @@
-# Objetivo da tarefa
+# Startup readiness
 
-- **Agente:** Codex
-- **Objetivo:** suavizar a hierarquia visual da tela Visão Geral com um recorte pequeno, sóbrio e coerente nos temas claro e escuro.
-- **Escopo:** ajustar somente o Overview e, se indispensável, estilos de superfície que ele já usa; não alterar cabeçalho/conta, autenticação, navegação, comportamento funcional ou textos.
-- **Critérios de conclusão:** reduzir caixas e divisórias duras nos pontos de maior impacto, reutilizar tokens existentes, preservar responsividade/acessibilidade e validar build, testes e renderização em tema claro e escuro quando o ambiente permitir.
-- **Resultado entregue:** o diagnóstico principal usa a superfície hero existente com raio amplo e sem contorno; os três KPIs são agrupados por espaço, sem divisórias; o monitor ao vivo fica aberto sobre o fundo e preserva o gráfico como poço funcional. O XAML foi inspecionado em tema escuro e claro, maximizado e em 1600×1000. Foram aprovados 78 testes focados de localização/tokens, o build Release da solução (0 avisos) e a suíte completa (1.434 testes).
+- **Agente:** Codex.
+- **Objetivo:** medir e reduzir o tempo de inicialização real e oferecer uma splash leve vinculada ao trabalho necessário.
+- **Escopo:** startup WPF, preparação local, diagnóstico e serviços iniciados na abertura; instrumentação reproduzível, testes e documentação. Sem release, alterações de segurança ou remoção de funcionalidades.
+- **Critérios de conclusão:** comparar baseline e implementação; interface responsiva; splash sem duração mínima ou progresso fictício; preservar consentimento, conta, recuperação, instância única e saúde do updater; build e regressões aplicáveis.
+- **Resultado entregue:** importação/histórico fora da UI; leituras locais sobrepostas ao XAML; tema idempotente; preferências preservadas com falha diagnóstica; serviços remotos adiados; splash animada de 640 × 400 DIP com limiar cancelável de 180 ms. Launcher entrega telemetria após supervisão e liberação do mutex no thread proprietário. Dez execuções por versão: primeira resposta mediana 1,86 → 1,27 s; prontidão renderizada 1,86 → 1,73 s, com variabilidade documentada em `docs/startup-performance.md`. Build Release sem warnings, 1.454 testes aprovados, verificação de segurança aprovada. Homologação do pacote instalado pós-update, Windows 10, PCs lentos, conta real/offline e múltiplos monitores permanece manual.
+- **Limitação de teste:** o probe de monitoramento perdeu foco na fase foreground e não validou a sequência de atividade/tray; não foi enfraquecido. Falhas fatais da splash invalidam saúde pendente antes da saída. Atalho de desenvolvimento reconstruído pelo script oficial.

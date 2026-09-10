@@ -28,6 +28,14 @@
   <ItemGroup Condition="'$(RalvenPerformanceProbe)' == 'true'">
     <Compile Include="../../scripts/PerformanceProbe.cs" />
   </ItemGroup>
+  <PropertyGroup Condition="'$(RalvenStartupProbe)' == 'true'">
+    <StartupObject>StartupProbe</StartupObject>
+    <OutputType>Exe</OutputType>
+    <OutputPath>../../artifacts/startup-probe/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(RalvenStartupProbe)' == 'true'">
+    <Compile Include="../../scripts/StartupProbe.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Management" />
     <PackageReference Include="Sentry" />

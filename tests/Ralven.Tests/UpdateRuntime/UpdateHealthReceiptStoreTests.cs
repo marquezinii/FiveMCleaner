@@ -20,6 +20,18 @@ public sealed class UpdateHealthReceiptStoreTests : IDisposable
     }
 
     [Fact]
+    public void Invalidate_WithdrawsPrematureStartupHealthConfirmation()
+    {
+        var transaction = new UpdateRecoveryJournal(root).Begin("1.0.0", "1.1.0");
+        var receipt = new UpdateHealthReceiptStore(root);
+        receipt.Confirm(transaction);
+        receipt.Invalidate();
+        Assert.False(receipt.Confirms(transaction));
+        receipt.Invalidate();
+        Assert.False(receipt.Confirms(transaction));
+    }
+
+    [Fact]
     public void Confirms_TreatsATransientLockAsNotConfirmedInsteadOfThrowing()
     {
         var journal = new UpdateRecoveryJournal(root);
