@@ -1,7 +1,7 @@
-# Objetivo da tarefa
+# Experiência de diálogos
 
-- **Agente:** Codex
-- **Objetivo:** suavizar a hierarquia visual da tela Visão Geral com um recorte pequeno, sóbrio e coerente nos temas claro e escuro.
-- **Escopo:** ajustar somente o Overview e, se indispensável, estilos de superfície que ele já usa; não alterar cabeçalho/conta, autenticação, navegação, comportamento funcional ou textos.
-- **Critérios de conclusão:** reduzir caixas e divisórias duras nos pontos de maior impacto, reutilizar tokens existentes, preservar responsividade/acessibilidade e validar build, testes e renderização em tema claro e escuro quando o ambiente permitir.
-- **Resultado entregue:** o diagnóstico principal usa a superfície hero existente com raio amplo e sem contorno; os três KPIs são agrupados por espaço, sem divisórias; o monitor ao vivo fica aberto sobre o fundo e preserva o gráfico como poço funcional. O XAML foi inspecionado em tema escuro e claro, maximizado e em 1600×1000. Foram aprovados 78 testes focados de localização/tokens, o build Release da solução (0 avisos) e a suíte completa (1.434 testes).
+- **Agente:** Codex.
+- **Objetivo:** unificar as janelas secundárias em superfícies modais confortáveis, acessíveis e integradas visualmente ao Ralven.
+- **Escopo:** sete janelas WPF, confirmações/avisos do aplicativo, shell compartilhado, teclado, foco, dimensões, rolagem e documentação. Preservar contratos de autenticação, consentimento e operações; seletores do Windows e falha fatal continuam nativos.
+- **Critérios de conclusão:** build e suíte Release; renderização dos principais formulários em temas/resoluções distintos; verificações de foco, fechamento e confirmação; PR para integração.
+- **Resultado entregue:** sete janelas migradas para `DialogWindow`; confirmações/avisos unificados; opções sem contorno branco, ações fixas, formulários e leitores roláveis, limites por monitor/DPI e foco compartilhado. Build Release sem avisos; 1.440 testes aprovados; probe WPF com 32 combinações aprovadas (claro/escuro, normal/480×520), incluindo cadastro/termos aninhados, Tab/Escape, seleção, rolagem e consentimento. Conversão DPI testada em 100/125/150/200%; movimentação entre monitores físicos e leitor de tela não exercitados. Documentação e roadmap atualizados; entrega por PR sem merge.

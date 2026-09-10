@@ -146,4 +146,5 @@
         <GradientStop Color="#6842A0" Offset="0" />
         <GradientStop Color="#9C3FD1" Offset="1" />
     </LinearGradientBrush>
+    <SolidColorBrush x:Key="DialogBackdropBrush" Color="#28000000" />
 </ResourceDictionary>
