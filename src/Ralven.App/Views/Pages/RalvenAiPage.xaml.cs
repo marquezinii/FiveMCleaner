@@ -86,7 +86,7 @@ public partial class RalvenAiPage : UserControl, IDisposable
         var history = messages.TakeLast(6)
             .Select(item => new RalvenAiConversationTurn(item.IsUser ? "user" : "assistant", item.Text))
             .ToArray();
-        messages.Add(new ChatMessage(Localize("RalvenAi.You"), text, true));
+        messages.Add(new ChatMessage(Localize("RalvenAi.You"), text, true, string.Empty, []));
         EmptyState.Visibility = Visibility.Collapsed;
         MessageTextBox.Clear();
         SetSending(true);
@@ -99,7 +99,9 @@ public partial class RalvenAiPage : UserControl, IDisposable
                 await Task.Yield();
                 reply = new RalvenAiReply(
                     Localize("RalvenAi.DemoReply"),
-                    OptimizationProfile.Balanced);
+                    OptimizationProfile.Balanced,
+                    [RalvenAiSource.LocalDiagnostic, RalvenAiSource.SupportedPlans],
+                    [new RalvenAiToolRequest(RalvenAiTool.ReviewProfile, OptimizationProfile.Balanced)]);
             }
             else
             {
@@ -118,7 +120,12 @@ public partial class RalvenAiPage : UserControl, IDisposable
                     lifetime.Token);
             }
 
-            messages.Add(new ChatMessage(Localize("RalvenAi.Assistant"), reply.Answer, false));
+            messages.Add(new ChatMessage(
+                Localize("RalvenAi.Assistant"),
+                reply.Answer,
+                false,
+                DescribeSources(reply.Sources),
+                reply.ToolRequests.Select(ToToolAction).ToArray()));
             recommendedProfile = reply.RecommendedProfile;
             RecommendationPanel.Visibility = recommendedProfile is null
                 ? Visibility.Collapsed
@@ -155,6 +162,25 @@ public partial class RalvenAiPage : UserControl, IDisposable
     private void ViewPro_Click(object sender, RoutedEventArgs e) =>
         (Window.GetWindow(this) as MainWindow)?.RequestNavigateToPro();
 
+    private async void ToolRequest_Click(object sender, RoutedEventArgs e)
+    {
+        if (sending || sender is not Button { Tag: ChatToolAction action } || Window.GetWindow(this) is not MainWindow shell)
+        {
+            return;
+        }
+
+        SetSending(true);
+        try
+        {
+            await shell.RequestExecuteRalvenAiToolAsync(action.Request);
+            StatusText.Text = Localize("RalvenAi.Tool.Completed");
+        }
+        finally
+        {
+            SetSending(false);
+        }
+    }
+
     private void SetSending(bool value)
     {
         sending = value;
@@ -168,11 +194,29 @@ public partial class RalvenAiPage : UserControl, IDisposable
 
     private static string Localize(string key) => LocalizationService.Current.GetString(key);
 
+    private static string DescribeSources(IReadOnlyList<RalvenAiSource> sources) =>
+        string.Join(" · ", sources.Select(source => Localize($"RalvenAi.Sources.{source}")));
+
+    private static ChatToolAction ToToolAction(RalvenAiToolRequest request)
+    {
+        var title = request.Tool == RalvenAiTool.ReviewProfile && request.Profile is { } profile
+            ? Localize($"RalvenAi.Tool.ReviewProfile.{profile}")
+            : Localize($"RalvenAi.Tool.{request.Tool}");
+        return new ChatToolAction(request, title);
+    }
+
     public void Dispose()
     {
         lifetime.Cancel();
         lifetime.Dispose();
     }
 
-    private sealed record ChatMessage(string Author, string Text, bool IsUser);
+    private sealed record ChatMessage(
+        string Author,
+        string Text,
+        bool IsUser,
+        string SourceSummary,
+        IReadOnlyList<ChatToolAction> ToolRequests);
+
+    private sealed record ChatToolAction(RalvenAiToolRequest Request, string Title);
 }

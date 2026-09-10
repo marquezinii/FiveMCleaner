@@ -6,10 +6,21 @@ import { hasExactJsonContentType, readBoundedJson } from './requestSecurity.js';
 const MAX_BODY_BYTES = 64 * 1024;
 const MAX_PROVIDER_BODY_BYTES = 64 * 1024;
 const MAX_OUTPUT_TOKENS = 700;
-const PROMPT_VERSION = 1;
+const PROMPT_VERSION = 2;
 const AI_ENTITLEMENT = 'ralven_ai';
 const PROFILE_NAMES = new Set(['light', 'balanced', 'aggressive']);
 const REPLY_PROFILES = new Set(['none', ...PROFILE_NAMES]);
+const SOURCE_NAMES = new Set(['diagnostic', 'supported_plans']);
+const TOOL_NAMES = new Set([
+  'refresh_diagnostic',
+  'review_profile',
+  'open_overview',
+  'open_system',
+  'open_applications',
+  'open_games',
+  'open_fivem',
+  'open_history',
+]);
 const ROLES = new Set(['user', 'assistant']);
 const REQUEST_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u;
 
@@ -274,6 +285,8 @@ export function buildOpenAiRequest(input, model, identifier) {
       'Never provide shell, PowerShell, registry, download, security-disabling, anti-cheat bypass, injection, or binary modification instructions.',
       'Never promise universal FPS, latency, stutter, or temperature gains.',
       'You may recommend only none, light, balanced, or aggressive. Ralven itself owns preview, confirmation, execution, verification, and rollback.',
+      'You may request at most one local Ralven tool when it helps the current user question. Available tools only open a Ralven view, refresh the local diagnosis, or prepare a standard profile plan; none change the PC on their own.',
+      'Every answer must disclose whether it used the local diagnostic, the supported-plan catalog, or both. Never invent a source or URL.',
       'Keep the answer concise and explain uncertainty.',
     ].join(' '),
     input: JSON.stringify(providerInput),
@@ -282,7 +295,6 @@ export function buildOpenAiRequest(input, model, identifier) {
     store: false,
     prompt_cache_key: `ralven-ai-v${PROMPT_VERSION}`,
     safety_identifier: identifier,
-    tools: [],
     text: {
       verbosity: 'low',
       format: {
@@ -294,8 +306,29 @@ export function buildOpenAiRequest(input, model, identifier) {
           properties: {
             answer: { type: 'string', minLength: 1, maxLength: 2_000 },
             recommendedProfile: { type: 'string', enum: ['none', 'light', 'balanced', 'aggressive'] },
+            sources: {
+              type: 'array',
+              minItems: 1,
+              maxItems: 2,
+              uniqueItems: true,
+              items: { type: 'string', enum: ['diagnostic', 'supported_plans'] },
+            },
+            toolRequests: {
+              type: 'array',
+              minItems: 0,
+              maxItems: 1,
+              items: {
+                type: 'object',
+                properties: {
+                  tool: { type: 'string', enum: [...TOOL_NAMES] },
+                  profile: { type: ['string', 'null'], enum: ['light', 'balanced', 'aggressive', null] },
+                },
+                required: ['tool', 'profile'],
+                additionalProperties: false,
+              },
+            },
           },
-          required: ['answer', 'recommendedProfile'],
+          required: ['answer', 'recommendedProfile', 'sources', 'toolRequests'],
           additionalProperties: false,
         },
       },
@@ -325,13 +358,35 @@ export function parseRalvenAiReply(response) {
     return null;
   }
   const answer = typeof reply?.answer === 'string' ? reply.answer.trim() : '';
-  if (!hasExactKeys(reply, ['answer', 'recommendedProfile'])
+  if (!hasExactKeys(reply, ['answer', 'recommendedProfile', 'sources', 'toolRequests'])
     || !boundedText(answer, 2_000)
     || !REPLY_PROFILES.has(reply.recommendedProfile)
+    || !Array.isArray(reply.sources)
+    || reply.sources.length < 1
+    || reply.sources.length > 2
+    || new Set(reply.sources).size !== reply.sources.length
+    || !reply.sources.every(source => SOURCE_NAMES.has(source))
+    || !Array.isArray(reply.toolRequests)
+    || reply.toolRequests.length > 1
     || /```|https?:\/\/|\b(?:powershell|cmd\.exe|reg\.exe|disable\s+(?:defender|firewall|uac)|bypass\s+anti-?cheat)\b/iu.test(answer)) {
     return null;
   }
-  return { answer, recommendedProfile: reply.recommendedProfile };
+  const toolRequests = [];
+  for (const request of reply.toolRequests) {
+    if (!hasExactKeys(request, ['tool', 'profile']) || !TOOL_NAMES.has(request.tool)) return null;
+    if (request.tool === 'review_profile') {
+      if (!PROFILE_NAMES.has(request.profile)) return null;
+    } else if (request.profile !== null) {
+      return null;
+    }
+    toolRequests.push({ tool: request.tool, profile: request.profile });
+  }
+  return {
+    answer,
+    recommendedProfile: reply.recommendedProfile,
+    sources: reply.sources,
+    toolRequests,
+  };
 }
 
 export async function handleRalvenAi(request, env, dependencies = {}) {

@@ -5,17 +5,24 @@
 O Ralven AI oferece orientação contextual para uma conta com os entitlements
 ativos `ralven_pro` e `ralven_ai`. Pagamentos Pro canônicos concedem os dois no
 mesmo período; um grant Pro isolado não concede IA por inferência. Ele pode
-explicar o diagnóstico e recomendar somente um dos perfis padrão `Light`,
-`Balanced` ou `Aggressive`.
+explicar o diagnóstico, recomendar somente um dos perfis padrão `Light`,
+`Balanced` ou `Aggressive` e solicitar uma única ferramenta local por resposta.
+
+As ferramentas são fechadas: atualizar o diagnóstico, abrir Visão geral,
+Sistema, Aplicativos, Jogos, FiveM ou Histórico e preparar a revisão de um
+perfil padrão. A conversa mostra a fonte local usada (`diagnostic` e/ou
+`supported_plans`) e apresenta a ferramenta solicitada como botão explícito.
+Nenhuma ferramenta recebe paths, argumentos livres, arquivos ou acesso
+administrativo.
 
 A recomendação não é um plano executável produzido pelo modelo. O botão
 **Revisar plano** seleciona o perfil no planejador local existente; preview,
 confirmação, execução tipada, verificação e rollback continuam sob controle do
 código C# e do broker allowlisted.
 
-Ficam fora da V1: shell ou ferramentas do modelo, ações arbitrárias, execução
-automática, memória persistente de conversa, streaming, roteamento entre
-modelos e novos ajustes de Windows/FiveM.
+Ficam fora da V1: shell, ferramentas com argumentos livres, ações arbitrárias,
+execução automática de alteração persistente, memória persistente de conversa,
+streaming, roteamento entre modelos e novos ajustes de Windows/FiveM.
 
 ## Logo interativa
 
@@ -49,12 +56,15 @@ alterar a identidade da marca.
 3. `POST /ai/message` verifica o Firebase ID Token, e-mail verificado, os dois
    entitlements, rate limit por UID, schema fechado e orçamento antes de chamar
    o provedor.
-4. O Worker chama a Responses API com `store: false`, reasoning `low`, sem
-   tools, verbosidade baixa e saída JSON estrita (`answer` +
-   `recommendedProfile`).
-5. A saída é validada e bloqueada quando contém URL, bloco de código, comando
+4. O Worker chama a Responses API com `store: false`, reasoning `low`,
+   verbosidade baixa e saída JSON estrita: resposta, perfil recomendado, fontes
+   locais e no máximo uma solicitação de ferramenta fechada.
+5. O cliente aceita somente nomes de ferramentas e perfis allowlisted,
+   revalida a solicitação localmente e delega a escrita ao fluxo transacional
+   existente, que continua exigindo confirmação, snapshot e rollback.
+6. A saída é validada e bloqueada quando contém URL, bloco de código, comando
    de sistema ou orientação explícita para enfraquecer segurança.
-6. O cliente repete no máximo uma falha de transporte com o mesmo UUID. O
+7. O cliente repete no máximo uma falha de transporte com o mesmo UUID. O
    Worker deriva dele um ID HMAC por conta e impede uma segunda chamada paga.
 
 Pergunta, conversa e snapshot não são persistidos no D1. `ralven_ai_usage`
@@ -94,9 +104,9 @@ Antes de ativar a rota em um ambiente remoto:
 
 | Estado | Entrega |
 | --- | --- |
-| Implementado | UI e contexto local sanitizado; autenticação; acesso Pro + IA separado; rate limit; schema fechado; orçamento/reserva; custo por categoria de token; idempotência; HMAC; resposta estruturada; `store: false`; revisão no planejador local. |
+| Implementado | UI e contexto local sanitizado; fontes locais visíveis; solicitações locais fechadas; autenticação; acesso Pro + IA separado; rate limit; schema fechado; orçamento/reserva; custo por categoria de token; idempotência; HMAC; resposta estruturada; `store: false`; revisão no planejador local. |
 | Operacional pendente | migrations remotas, dois secrets, revisão final dos preços/tetos, ativação explícita, deploy e smoke real. |
-| Deliberadamente adiado | tools mesmo read-only, streaming, memória persistente, retry de provedor, créditos, painel administrativo de IA, attestation de dispositivo e roteamento de modelos. |
+| Deliberadamente adiado | tools arbitrárias ou com argumentos livres, streaming, memória persistente, retry de provedor, créditos, painel administrativo de IA, attestation de dispositivo e roteamento de modelos. |
 
 Os itens adiados não são necessários para a V1 contextual e ampliariam custo ou
 superfície de ataque antes de existir evidência de necessidade.

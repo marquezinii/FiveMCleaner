@@ -36,7 +36,31 @@ public sealed record RalvenAiPcContext(
 
 public sealed record RalvenAiConversationTurn(string Role, string Text);
 
-public sealed record RalvenAiReply(string Answer, OptimizationProfile? RecommendedProfile);
+public enum RalvenAiSource
+{
+    LocalDiagnostic,
+    SupportedPlans
+}
+
+public enum RalvenAiTool
+{
+    RefreshDiagnostic,
+    ReviewProfile,
+    OpenOverview,
+    OpenSystem,
+    OpenApplications,
+    OpenGames,
+    OpenFiveM,
+    OpenHistory
+}
+
+public sealed record RalvenAiToolRequest(RalvenAiTool Tool, OptimizationProfile? Profile);
+
+public sealed record RalvenAiReply(
+    string Answer,
+    OptimizationProfile? RecommendedProfile,
+    IReadOnlyList<RalvenAiSource> Sources,
+    IReadOnlyList<RalvenAiToolRequest> ToolRequests);
 
 public enum RalvenAiError
 {
@@ -156,22 +180,112 @@ public sealed class RalvenAiService
                     throw new RalvenAiException(RalvenAiError.InvalidResponse);
                 }
 
-                if (body is null || string.IsNullOrWhiteSpace(body.Answer) || body.Answer.Length > 2_000)
+                var reply = ParseReply(body);
+                if (reply is null)
                 {
                     throw new RalvenAiException(RalvenAiError.InvalidResponse);
                 }
-
-                OptimizationProfile? profile = body.RecommendedProfile?.ToLowerInvariant() switch
-                {
-                    "light" => OptimizationProfile.Light,
-                    "balanced" => OptimizationProfile.Balanced,
-                    "aggressive" => OptimizationProfile.Aggressive,
-                    null or "none" => null,
-                    _ => throw new RalvenAiException(RalvenAiError.InvalidResponse)
-                };
-                return new RalvenAiReply(body.Answer.Trim(), profile);
+                return reply;
             }
         }
+    }
+
+    private static RalvenAiReply? ParseReply(ResponseDto? body)
+    {
+        if (body is null || string.IsNullOrWhiteSpace(body.Answer) || body.Answer.Length > 2_000 ||
+            !TryParseProfile(body.RecommendedProfile, allowNone: true, out var profile) ||
+            body.Sources is null || body.Sources.Length is < 1 or > 2)
+        {
+            return null;
+        }
+
+        var sources = new List<RalvenAiSource>(body.Sources.Length);
+        foreach (var source in body.Sources)
+        {
+            var parsed = source switch
+            {
+                "diagnostic" => RalvenAiSource.LocalDiagnostic,
+                "supported_plans" => RalvenAiSource.SupportedPlans,
+                _ => (RalvenAiSource?)null
+            };
+            if (parsed is null || sources.Contains(parsed.Value))
+            {
+                return null;
+            }
+            sources.Add(parsed.Value);
+        }
+
+        if (body.ToolRequests is null || body.ToolRequests.Length > 1)
+        {
+            return null;
+        }
+        var requests = new List<RalvenAiToolRequest>(body.ToolRequests.Length);
+        foreach (var request in body.ToolRequests)
+        {
+            if (!TryParseToolRequest(request, out var parsed))
+            {
+                return null;
+            }
+            requests.Add(parsed);
+        }
+
+        return new RalvenAiReply(body.Answer.Trim(), profile, sources, requests);
+    }
+
+    private static bool TryParseToolRequest(ToolRequestDto? request, out RalvenAiToolRequest parsed)
+    {
+        parsed = default!;
+        if (request is null)
+        {
+            return false;
+        }
+
+        var tool = request.Tool switch
+        {
+            "refresh_diagnostic" => RalvenAiTool.RefreshDiagnostic,
+            "review_profile" => RalvenAiTool.ReviewProfile,
+            "open_overview" => RalvenAiTool.OpenOverview,
+            "open_system" => RalvenAiTool.OpenSystem,
+            "open_applications" => RalvenAiTool.OpenApplications,
+            "open_games" => RalvenAiTool.OpenGames,
+            "open_fivem" => RalvenAiTool.OpenFiveM,
+            "open_history" => RalvenAiTool.OpenHistory,
+            _ => (RalvenAiTool?)null
+        };
+        if (tool is null)
+        {
+            return false;
+        }
+
+        if (tool == RalvenAiTool.ReviewProfile)
+        {
+            if (!TryParseProfile(request.Profile, allowNone: false, out var profile) || profile is null)
+            {
+                return false;
+            }
+            parsed = new RalvenAiToolRequest(tool.Value, profile);
+            return true;
+        }
+
+        if (request.Profile is not null)
+        {
+            return false;
+        }
+        parsed = new RalvenAiToolRequest(tool.Value, null);
+        return true;
+    }
+
+    private static bool TryParseProfile(string? value, bool allowNone, out OptimizationProfile? profile)
+    {
+        profile = value?.ToLowerInvariant() switch
+        {
+            "light" => OptimizationProfile.Light,
+            "balanced" => OptimizationProfile.Balanced,
+            "aggressive" => OptimizationProfile.Aggressive,
+            null or "none" when allowNone => null,
+            _ => null
+        };
+        return profile is not null || (allowNone && (value is null or "none"));
     }
 
     private static async Task<RalvenAiError> MapErrorAsync(
@@ -241,7 +355,13 @@ public sealed class RalvenAiService
 
     private sealed record ResponseDto(
         [property: JsonPropertyName("answer")] string? Answer,
-        [property: JsonPropertyName("recommendedProfile")] string? RecommendedProfile);
+        [property: JsonPropertyName("recommendedProfile")] string? RecommendedProfile,
+        [property: JsonPropertyName("sources")] string[]? Sources,
+        [property: JsonPropertyName("toolRequests")] ToolRequestDto[]? ToolRequests);
+
+    private sealed record ToolRequestDto(
+        [property: JsonPropertyName("tool")] string? Tool,
+        [property: JsonPropertyName("profile")] string? Profile);
 
     private sealed record ErrorDto([property: JsonPropertyName("error")] string? Error);
 }

@@ -40,6 +40,20 @@
   <data name="RalvenAi.Assistant" xml:space="preserve"><value>Ralven AI</value></data>
   <data name="RalvenAi.Recommendation.Title" xml:space="preserve"><value>PERFIL PADRÃO RECOMENDADO</value></data>
   <data name="RalvenAi.ReviewPlan" xml:space="preserve"><value>Revisar plano</value></data>
+  <data name="RalvenAi.Sources.Title" xml:space="preserve"><value>FONTES USADAS NESTA RESPOSTA</value></data>
+  <data name="RalvenAi.Sources.LocalDiagnostic" xml:space="preserve"><value>Diagnóstico local atual</value></data>
+  <data name="RalvenAi.Sources.SupportedPlans" xml:space="preserve"><value>Catálogo de planos suportados</value></data>
+  <data name="RalvenAi.Tool.RefreshDiagnostic" xml:space="preserve"><value>Atualizar diagnóstico local</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Light" xml:space="preserve"><value>Revisar plano Leve</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Balanced" xml:space="preserve"><value>Revisar plano Médio</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Aggressive" xml:space="preserve"><value>Revisar plano Agressivo</value></data>
+  <data name="RalvenAi.Tool.OpenOverview" xml:space="preserve"><value>Abrir Visão geral</value></data>
+  <data name="RalvenAi.Tool.OpenSystem" xml:space="preserve"><value>Abrir Sistema</value></data>
+  <data name="RalvenAi.Tool.OpenApplications" xml:space="preserve"><value>Abrir Aplicativos</value></data>
+  <data name="RalvenAi.Tool.OpenGames" xml:space="preserve"><value>Abrir Jogos</value></data>
+  <data name="RalvenAi.Tool.OpenFiveM" xml:space="preserve"><value>Abrir FiveM</value></data>
+  <data name="RalvenAi.Tool.OpenHistory" xml:space="preserve"><value>Abrir Histórico</value></data>
+  <data name="RalvenAi.Tool.Completed" xml:space="preserve"><value>Ação aberta no Ralven. Nenhuma alteração foi aplicada sem sua confirmação.</value></data>
   <data name="RalvenAi.DemoReply" xml:space="preserve"><value>O perfil Médio é um ponto de partida sensato para este diagnóstico. Ele mantém o plano nas ações suportadas pelo Ralven e permite revisar cada alteração antes de executar.</value></data>
   <data name="RalvenAi.Error.DiagnosticUnavailable" xml:space="preserve"><value>O diagnóstico local ainda não está pronto. Atualize o diagnóstico e tente novamente.</value></data>
   <data name="RalvenAi.Error.Unavailable" xml:space="preserve"><value>O Ralven AI está indisponível agora. Nenhuma alteração foi feita.</value></data>
