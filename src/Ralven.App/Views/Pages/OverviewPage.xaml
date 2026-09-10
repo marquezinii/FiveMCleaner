@@ -92,12 +92,12 @@
                                  Visibility="{Binding IsUpdateDownloading, Converter={StaticResource BooleanToVisibilityConverter}}" />
                 </StackPanel>
                 <StackPanel Grid.Column="2" VerticalAlignment="Top" Visibility="{Binding IsUpdateActionVisible, Converter={StaticResource BooleanToVisibilityConverter}}">
-                    <Button Content="{Binding UpdateActionLabel}" Style="{StaticResource PrimaryButtonStyle}" Height="34" Padding="16,0"
+                    <Button Content="{Binding UpdateActionLabel}" Style="{StaticResource PrimaryButtonStyle}"
                             IsEnabled="{Binding CanDownloadUpdate}" Click="DownloadUpdate_Click" />
                     <Button Content="{Binding UpdateReleaseNotesLabel}" Style="{StaticResource LinkButtonStyle}" HorizontalAlignment="Center" Margin="0,8,0,0"
                             IsEnabled="{Binding CanOpenReleaseNotes}" Click="OpenReleaseNotes_Click" />
                 </StackPanel>
-                <Button Grid.Column="2" Style="{StaticResource IconButtonStyle}" Width="28" Height="28" VerticalAlignment="Top" HorizontalAlignment="Right"
+                <Button Grid.Column="2" Style="{StaticResource IconButtonStyle}" VerticalAlignment="Top" HorizontalAlignment="Right"
                         Visibility="{Binding IsUpdateCompletedBannerVisible, Converter={StaticResource BooleanToVisibilityConverter}}"
                         Click="DismissCompletedUpdate_Click">
                     <Path Style="{StaticResource Icon16}" Data="{StaticResource IconClose}" />

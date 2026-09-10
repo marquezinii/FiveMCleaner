@@ -2,10 +2,10 @@
 
 ## Escopo implementado
 
-Espaço pessoal é a experiência do Ralven Pro no otimizador geral do Windows.
+Espaço pessoal é a experiência do Ralven Pro para gerenciamento e otimização do Windows.
 O nome interno Ultra permanece nos contratos e arquivos; não é um terceiro plano.
 Leve, Médio e Agressivo continuam gratuitos, incluindo diagnóstico, prévia,
-histórico, comparação básica e rollback. FiveM mantém seu fluxo independente.
+histórico, comparação básica e rollback.
 O acesso à assinatura e à contratação está descrito em [billing.md](billing.md).
 
 O valor proposto é montar uma recomendação conforme uso, pressão de recursos e

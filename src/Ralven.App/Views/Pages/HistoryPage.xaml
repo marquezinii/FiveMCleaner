@@ -23,7 +23,7 @@
                     <TextBlock Grid.Row="2" Text="{Binding Summary}" Style="{StaticResource SecondaryText}" VerticalAlignment="Center" Margin="0,0,18,0" TextWrapping="Wrap" />
                     <StackPanel Grid.Column="1" Grid.RowSpan="3" Orientation="Vertical" VerticalAlignment="Center" Margin="12,0,0,0">
                         <Button Content="{Binding [History.ViewReport], Source={StaticResource LocalizedStrings}}"
-                                Height="34" Padding="16,0" VerticalAlignment="Center" Margin="0,0,0,8"
+                                VerticalAlignment="Center" Margin="0,0,0,8"
                                 Tag="{Binding}" Click="OpenHistoryReport_Click">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
@@ -37,7 +37,7 @@
                             </Button.Style>
                         </Button>
                         <Button Content="{Binding [History.Undo], Source={StaticResource LocalizedStrings}}"
-                                Height="34" Padding="16,0" VerticalAlignment="Center"
+                                VerticalAlignment="Center"
                                 Tag="{Binding}" Click="RollbackHistory_Click">
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">

@@ -9,14 +9,14 @@ test("exports the Portuguese Ralven landing page", async () => {
 
   assert.match(
     html,
-    /<title>Ralven — Mais desempenho\. Menos complicação\.<\/title>/i,
+    /<title>Ralven — Gerenciamento do Windows com IA\.<\/title>/i,
   );
   assert.match(html, /lang="pt-BR"/i);
-  assert.match(html, /Mais desempenho\./i);
-  assert.match(html, /Menos complicação\./i);
+  assert.match(html, /Seu Windows\./i);
+  assert.match(html, /Sob controle\./i);
   assert.match(html, /Download do instalador/i);
-  assert.match(html, /Escolha o perfil\. O app cuida do restante\./i);
-  assert.match(html, /Sua live continua sendo prioridade\./i);
+  assert.match(html, /Otimização com escopo claro\./i);
+  assert.match(html, /Sua transmissão também entra no contexto\./i);
   assert.match(html, /Sobre o SmartScreen e antivírus/i);
   assert.match(html, /Código-fonte disponível/i);
   assert.match(html, /A distribuição ofusca partes internas de Core e Windows/i);
@@ -26,6 +26,7 @@ test("exports the Portuguese Ralven landing page", async () => {
   assert.match(html, /href="https:\/\/vemryx\.com\/"[^>]*>Ralven<\/a>/i);
   assert.match(html, /<span>Ralven<\/span>/i);
   assert.doesNotMatch(html, /FiveMCleaner|Ralven<span> One/i);
+  assert.doesNotMatch(html, /Mais desempenho\. Menos complicação\./i);
   assert.match(html, /href="\/icon\.png"/i);
   assert.match(html, /<main id="main-content">/i);
   assert.match(html, /class="skip-link"/i);

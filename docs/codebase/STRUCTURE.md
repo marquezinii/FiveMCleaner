@@ -35,7 +35,7 @@
 | `Ralven.App` | WPF, navegação, localização, ViewModels e serviços de aplicação | Escrita privilegiada direta no Windows |
 | `Ralven.Contracts` | DTOs, IDs, enums, resultados e serialização compartilhada | WPF ou implementações Windows |
 | `Ralven.Core` | Catálogo, políticas e construção de planos | UI, registro ou filesystem concreto |
-| `Ralven.Windows` | Descoberta, ações e transação Windows/FiveM | Decisão visual ou ampliação de produto |
+| `Ralven.Windows` | Descoberta, ações e transação Windows e Jogos | Decisão visual ou ampliação de produto |
 | `Ralven.Broker` | Execução administrativa tipada e allowlisted | Shell livre, rede, telemetria ou UI |
 | `Launcher` / `Updater` / `UpdateRuntime` / `ReleaseTool` | Staging, assinatura, ativação, health-check e rollback | Enfraquecer validação para aceitar pacote inválido |
 | `infra/cloudflare-worker` | Validação server-side, auth, D1 e APIs | Confiar em identidade ou validação enviada pelo cliente |

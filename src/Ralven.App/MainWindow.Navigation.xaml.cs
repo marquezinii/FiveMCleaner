@@ -227,12 +227,11 @@ public partial class MainWindow
             return;
         }
 
-        var decision = System.Windows.MessageBox.Show(
+        var decision = Ralven.App.Views.OptimizationConfirmationWindow.Confirm(this,
             LocalizationService.Current.Format("Dialog.UpdateInstall.Message", pendingVersion),
             LocalizationService.Current.GetString("Dialog.UpdateInstall.Title"),
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Information);
-        if (decision != MessageBoxResult.Yes)
+            LocalizationService.Current.GetString("Dialog.UpdateInstall.Title"));
+        if (decision != true)
         {
             return;
         }

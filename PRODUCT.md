@@ -2,7 +2,7 @@
 
 ## Plataforma e público
 
-Ralven é um aplicativo desktop nativo para Windows 10/11 em WPF e .NET 10. Atende pessoas que querem entender, manter e otimizar o computador com segurança, preservando uma área especializada para FiveM sobre GTAV Legacy.
+Ralven é uma plataforma de gerenciamento e otimização do Windows com IA, entregue como aplicativo desktop nativo para Windows 10/11 em WPF e .NET 10. Atende pessoas que querem entender, manter e otimizar o computador com segurança; FiveM sobre GTAV Legacy é uma integração especializada dentro de Jogos.
 
 ## Propósito
 
@@ -10,12 +10,12 @@ Centralizar diagnóstico, manutenção assistida e otimização transparente. Su
 
 ## Posicionamento
 
-Ralven não é um pacote genérico de tweaks. Cada mutação tem escopo tipado, pré-condições, confirmação, verificação e rollback quando aplicável. O produto nunca desativa Defender, Firewall, SmartScreen, Windows Update ou UAC; não injeta código em jogos; não aplica prioridade Realtime, afinidade fixa ou debloat amplo como padrão seguro.
+Ralven é uma Windows Management Platform com recursos de IA, não um pacote genérico de tweaks nem somente um otimizador. Cada mutação tem escopo tipado, pré-condições, confirmação, verificação e rollback quando aplicável. O produto nunca desativa Defender, Firewall, SmartScreen, Windows Update ou UAC; não injeta código em jogos; não aplica prioridade Realtime, afinidade fixa ou debloat amplo como padrão seguro.
 
 ## Capacidades atuais
 
 - visão geral com diagnóstico local e métricas reais;
-- otimizador geral do Windows que funciona sem FiveM ou GTA V e reutiliza o mesmo catálogo tipado, prévia, execução transacional, histórico e rollback;
+- gerenciamento e otimização geral do Windows com catálogo tipado, prévia, execução transacional, histórico e rollback;
 - inventário interno somente leitura de aplicativos e inicialização, além de acessos seguros a superfícies nativas do Windows;
 - catálogo de Jogos com diagnóstico e otimização especializada de FiveM/GTAV Legacy;
 - planos Leve, Médio e Agressivo com prévia e confirmação;
@@ -27,7 +27,7 @@ GTAV Enhanced é detectado e bloqueado até existir um adaptador específico. N�
 
 ## Identidade
 
-Ralven usa uma paleta carvão/grafite/prata/branco, tipografia Inter e o símbolo R oficial preservado na biblioteca `assets/brand`. “Mais desempenho. Menos complicação.” é uma mensagem institucional, não uma garantia técnica.
+Ralven usa uma paleta carvão/grafite/prata/branco, tipografia Inter e o símbolo R oficial preservado na biblioteca `assets/brand`. A mensagem institucional é “Seu Windows, sob controle.”; a descrição canônica em PT-BR é “Plataforma de gerenciamento e otimização do Windows com IA.”
 
 Os nomes de gerações sem suporte aparecem apenas no importador local de dados, na procedência dos anexos e em IDs externos que já estão implantados. Eles não são aliases públicos nem contratos de execução.
 
@@ -37,7 +37,7 @@ Os nomes de gerações sem suporte aparecem apenas no importador local de dados,
 - reversibilidade como recurso de primeira classe;
 - precisão técnica em linguagem clara;
 - dados reais, sem depoimentos, benchmarks ou métricas fabricadas;
-- FiveM continua profundo sem limitar as conveniências gerais do Windows;
+- FiveM é uma integração profunda da área de Jogos, sem limitar as capacidades gerais do Windows;
 - o escopo geral nunca recebe ações específicas de FiveM/GTA por inferência, prefixo ou fallback;
 - privacidade, segurança e acessibilidade não são simplificadas pelo design.
 

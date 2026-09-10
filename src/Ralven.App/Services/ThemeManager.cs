@@ -17,6 +17,7 @@ public sealed class ThemeManager : IDisposable
     private const string LightTokensUri = "Themes/Tokens/Colors.Light.xaml";
 
     private AppThemePreference preference = AppThemePreference.System;
+    private bool? appliedLightTheme;
     private bool disposed;
 
     public ThemeManager()
@@ -86,10 +87,10 @@ public sealed class ThemeManager : IDisposable
         }
     }
 
-    private static void ApplyEffectiveTheme(bool useLightTheme)
+    private void ApplyEffectiveTheme(bool useLightTheme)
     {
         var app = System.Windows.Application.Current;
-        if (app is null)
+        if (app is null || appliedLightTheme == useLightTheme)
         {
             return;
         }
@@ -129,9 +130,10 @@ public sealed class ThemeManager : IDisposable
         var wpfUiTheme = useLightTheme ? ApplicationTheme.Light : ApplicationTheme.Dark;
         ApplicationAccentColorManager.Apply(accent, wpfUiTheme, systemGlassColor: false, systemAccentColor: false);
         ApplicationThemeManager.Apply(wpfUiTheme, updateAccent: false);
+        appliedLightTheme = useLightTheme;
     }
 
-    private static bool IsSystemLightTheme()
+    internal static bool IsSystemLightTheme()
     {
         try
         {
