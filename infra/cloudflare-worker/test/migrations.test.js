@@ -255,7 +255,7 @@ test('AI foundation backfills only payment-backed Pro access', async (t) => {
        '2026-01-01T00:01:00.000Z', '2026-01-01T00:01:00.000Z');
   `);
 
-  const currentConfig = await createFixture(root, 'current', migrationNames.slice(0, migrationIndex + 1));
+  const currentConfig = await createFixture(root, 'current', migrationNames.slice(0, aiFoundationMigrationIndex + 1));
   apply(currentConfig, stateDirectory);
   const result = execute(currentConfig, stateDirectory, `
     SELECT account_uid, entitlement_key FROM account_entitlements
