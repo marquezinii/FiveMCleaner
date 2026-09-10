@@ -1,6 +1,6 @@
 # Ralven dashboard
 
-Static admin dashboard for the telemetry and bug reports collected by
+Static admin command center for the operational data collected by
 [`infra/cloudflare-worker`](../cloudflare-worker/README.md). Plain HTML/CSS/JS,
 no build step, no framework — served as-is by Cloudflare Pages. The .NET
 client sends telemetry to the Worker's `/telemetry` route and bug reports to
@@ -9,19 +9,13 @@ attachment/screenshot, no R2) — see `infra/cloudflare-worker/README.md`.
 
 ## What's here
 
-- `index.html` — login screen + the dashboard itself (one page, toggled by
-  whether a session cookie is currently valid), branded with the Ralven
-  logo, and organized into four sections: **Adoção** (usage/version/profile
-  charts), **Hardware** (CPU/GPU/RAM breakdowns), **Diagnóstico de bugs**
-  (error categories, exact allowlisted failure codes, errors by version, and
-  a recent incident feed with occurrence metadata and planned action IDs),
-  and **Bugs reportados** (the
-  "Reportar um bug" submissions from `/api/bugs` — category, summary,
-  version, profile, environment, optional email, and whether a log excerpt
-  was included; no attachment/screenshot, that feature was dropped). Recent
-  errors and reports open a native detail dialog so long descriptions,
-  technical context and log excerpts remain readable without widening the
-  tables.
+- `index.html` — login screen + responsive command center organized into
+  **Visão geral**, **Crescimento**, **Confiabilidade**, **Compatibilidade** and
+  **Operações**. It combines anonymous optimization telemetry with aggregate
+  account growth, Ralven AI usage/cost, subscription/payment health, updater
+  outcomes and support reports. Recent errors and reports open a native detail
+  dialog; incident search and global period/version/environment filters keep
+  investigation focused.
 - `assets/img/logo.png` — the app's own icon, reused as-is (same asset as
   `assets/brand/export/app-icon/ralven-app-icon-512.png`).
 - `assets/api.js` — pure URL-building and response-shaping for the Worker's
@@ -34,10 +28,11 @@ attachment/screenshot, no R2) — see `infra/cloudflare-worker/README.md`.
   charts), with pointer tooltips, keyboard exploration and resize handling.
   Pure hit-testing and tooltip formatting are unit tested without adding a
   headless-canvas dependency; final rendering still requires browser QA.
-- `assets/app.js` — DOM wiring: login/logout, filters (date range, version,
-  environment), fetching every stat, drawing every chart, rendering the
-  recent-failures table, and the CSV export links. Thin glue over the tested
-  modules above.
+- `assets/app.js` — DOM wiring: persistent session recovery, period presets,
+  global filters, aggregate health signals, charts, searchable incident feeds,
+  CSV exports and the live-alert workflow. Publishing or deactivating a live
+  alert requires an explicit confirmation and the existing session-bound CSRF
+  token.
 - `_headers` — Cloudflare Pages headers that forbid framing, plugins and
   third-party scripts while allowing requests only to the deployed Worker.
 
@@ -63,7 +58,7 @@ full auth design (custom password + PBKDF2 hash + brute-force lockout +
 server-side revocable sessions — no Google/GitHub OAuth, no Cloudflare
 Access, no custom domain required).
 
-## "Active users" honesty note
+## Growth and "active users" honesty note
 
 Ralven's telemetry never includes a device or machine identifier (see
 `docs/telemetry.md`) — that is a deliberate privacy invariant, not a gap. As
@@ -71,6 +66,12 @@ a direct consequence, this dashboard cannot show a true unique-user count;
 every "per day"/"in period" number is a count of *optimization runs*
 (events), which the UI and this README say plainly rather than mislabeling
 it as "usuários online" the way an early sketch of this dashboard did.
+
+The account total and new-account series come from aggregate queries over
+`account_profiles`. "Contas ativas no Ralven AI" means distinct authenticated
+accounts that made an AI request in the selected period; it is not presented as
+general app activity. No endpoint returns UID, username, e-mail, provider ID or
+interactive AI content.
 
 ## Re-deploying
 

@@ -185,18 +185,22 @@ O Worker também recebe os relatos de bug (rota `/bugs`, ver
 [Relatos de bug e privacidade](bug-reports.md)) — somente texto, sem anexo
 de captura de tela e sem depender de R2, guardados só no D1.
 
-O painel administrativo privado em `https://dashboard.vemryx.com` consome esses endpoints para
-mostrar gráficos agregados — otimizações por dia, versões do Windows/app,
-funções mais usadas, hardware mais comum, tempo médio, taxa de sucesso e,
-para investigar bugs mais rápido, erros por categoria, ações mais
-associadas a falhas, um feed não agregado dos últimos erros e uma aba
-**"Bugs reportados"** com os relatos recebidos pela rota `/bugs` (categoria e
-código allowlisted, resumo, versão, perfil, ambiente, e-mail opcional e se um trecho de log foi
-enviado — sem captura de tela, esse formulário é só texto). Nenhum dado
-individual de usuário é exibido nem poderia ser, já que a telemetria nunca
-carrega um identificador de máquina; o painel deixa isso explícito em vez
-de fingir uma contagem de "usuários únicos" que os dados não permitem
-calcular corretamente.
+O painel administrativo privado em `https://dashboard.vemryx.com` combina,
+sempre atrás da sessão administrativa, métricas agregadas de otimizações,
+versões, adoção de ações/perfis, hardware, falhas e updater. O centro de
+comando também resume crescimento de contas, uso/custo do Ralven AI e saúde de
+assinaturas/pagamentos a partir das tabelas operacionais que já existem; essas
+consultas não retornam UID, username, e-mail, identificador do provedor nem
+conteúdo interativo da IA. Relatos de bug e falhas recentes continuam sendo as
+únicas visões não agregadas, limitadas aos campos já autorizados e sanitizados
+por seus contratos.
+
+A telemetria anônima não permite contar usuários únicos ou usuários ativos do
+aplicativo. O total de contas vem de `account_profiles`, e "contas ativas no
+Ralven AI" significa apenas contas autenticadas com uma requisição de IA no
+período selecionado. O painel explicita essas fronteiras para não transformar
+eventos, cadastros ou uso de uma funcionalidade em uma alegação de atividade
+geral que os dados não sustentam.
 
 O Worker também expõe métricas administrativas fechadas para inicializações
 saudáveis por dia/versão, otimizações iniciadas sem resultado terminal e

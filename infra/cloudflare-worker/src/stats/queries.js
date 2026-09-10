@@ -37,6 +37,25 @@ function buildFilters({ from, to, appVersion, environment = 'Production' } = {})
   return { whereSql: clauses.length > 0 ? clauses.join(' AND ') : '1=1', params };
 }
 
+function buildDateFilters(filters = {}, column = 'created_at') {
+  const clauses = [];
+  const params = [];
+  appendDateRangeClauses(clauses, params, filters, column);
+  return { whereSql: clauses.length > 0 ? clauses.join(' AND ') : '1=1', params };
+}
+
+function buildUpdaterFilters({ from, to, appVersion, environment = 'Production' } = {}) {
+  const clauses = [];
+  const params = [];
+  appendEnvironmentClause(clauses, params, environment);
+  appendDateRangeClauses(clauses, params, { from, to });
+  if (appVersion) {
+    clauses.push('candidate_version = ?');
+    params.push(appVersion);
+  }
+  return { whereSql: clauses.length > 0 ? clauses.join(' AND ') : '1=1', params };
+}
+
 /** Optimization runs (any outcome) per calendar day, oldest first. */
 export function optimizationRunsPerDay(filters) {
   const { whereSql, params } = buildFilters(filters);
@@ -345,6 +364,155 @@ export function windowsBuildBreakdown(filters) {
           GROUP BY windows_build
           ORDER BY runs DESC
           LIMIT 10`,
+    params,
+  };
+}
+
+/** Outcome mix makes cancellations visible instead of folding them into failures. */
+export function optimizationOutcomeBreakdown(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT event_name, COUNT(*) AS occurrences
+          FROM telemetry_events
+          WHERE ${whereSql}
+          GROUP BY event_name
+          ORDER BY occurrences DESC`,
+    params,
+  };
+}
+
+export function profileBreakdown(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT profile, COUNT(*) AS runs
+          FROM telemetry_events
+          WHERE ${whereSql} AND profile IS NOT NULL
+          GROUP BY profile
+          ORDER BY runs DESC`,
+    params,
+  };
+}
+
+export function actionUsage(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT telemetry_event_actions.action_id, COUNT(*) AS runs
+          FROM telemetry_event_actions
+          JOIN telemetry_events ON telemetry_events.id = telemetry_event_actions.telemetry_event_id
+          WHERE ${whereSql}
+          GROUP BY telemetry_event_actions.action_id
+          ORDER BY runs DESC
+          LIMIT 12`,
+    params,
+  };
+}
+
+export function reliabilityByVersion(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT app_version,
+                 COUNT(*) AS total,
+                 SUM(CASE WHEN event_name = 'optimization-completed' THEN 1 ELSE 0 END) AS completed,
+                 SUM(CASE WHEN event_name = 'optimization-failed' THEN 1 ELSE 0 END) AS failed,
+                 SUM(CASE WHEN event_name = 'optimization-cancelled' THEN 1 ELSE 0 END) AS cancelled
+          FROM telemetry_events
+          WHERE ${whereSql}
+          GROUP BY app_version
+          ORDER BY MAX(received_at) DESC
+          LIMIT 10`,
+    params,
+  };
+}
+
+/** Aggregate account growth only; no UID or profile field leaves D1. */
+export function accountSummary(filters) {
+  const { whereSql, params } = buildDateFilters(filters);
+  return {
+    sql: `SELECT
+            (SELECT COUNT(*) FROM account_profiles) AS total_accounts,
+            COUNT(*) AS new_accounts
+          FROM account_profiles
+          WHERE ${whereSql}`,
+    params,
+  };
+}
+
+export function accountsPerDay(filters) {
+  const { whereSql, params } = buildDateFilters(filters);
+  return {
+    sql: `SELECT substr(created_at, 1, 10) AS day, COUNT(*) AS accounts
+          FROM account_profiles
+          WHERE ${whereSql}
+          GROUP BY day
+          ORDER BY day ASC`,
+    params,
+  };
+}
+
+/** Aggregate AI operations and cost; interactive content and account IDs stay private. */
+export function aiUsageSummary(filters) {
+  const { whereSql, params } = buildDateFilters(filters);
+  return {
+    sql: `SELECT COUNT(*) AS requests,
+                 COUNT(DISTINCT account_uid) AS active_accounts,
+                 SUM(CASE WHEN state = 'completed' THEN 1 ELSE 0 END) AS completed,
+                 SUM(CASE WHEN state = 'failed' THEN 1 ELSE 0 END) AS failed,
+                 COALESCE(SUM(actual_cost_microusd), 0) AS cost_microusd,
+                 COALESCE(SUM(input_tokens), 0) AS input_tokens,
+                 COALESCE(SUM(output_tokens), 0) AS output_tokens
+          FROM ralven_ai_usage
+          WHERE ${whereSql}`,
+    params,
+  };
+}
+
+export function aiUsagePerDay(filters) {
+  const { whereSql, params } = buildDateFilters(filters);
+  return {
+    sql: `SELECT substr(created_at, 1, 10) AS day,
+                 COUNT(*) AS requests,
+                 COUNT(DISTINCT account_uid) AS active_accounts,
+                 COALESCE(SUM(actual_cost_microusd), 0) AS cost_microusd
+          FROM ralven_ai_usage
+          WHERE ${whereSql}
+          GROUP BY day
+          ORDER BY day ASC`,
+    params,
+  };
+}
+
+export function billingSubscriptionBreakdown() {
+  return {
+    sql: `SELECT state, COUNT(*) AS subscriptions
+          FROM billing_subscriptions
+          GROUP BY state
+          ORDER BY subscriptions DESC`,
+    params: [],
+  };
+}
+
+export function billingPaymentSummary(filters) {
+  const { whereSql, params } = buildDateFilters(filters, 'updated_at');
+  return {
+    sql: `SELECT COUNT(*) AS payments,
+                 SUM(CASE WHEN state IN ('approved', 'refunded') THEN amount_cents - refunded_cents ELSE 0 END) AS net_revenue_cents,
+                 SUM(CASE WHEN state IN ('rejected', 'charged_back') THEN 1 ELSE 0 END) AS problem_payments,
+                 COALESCE(SUM(refunded_cents), 0) AS refunded_cents
+          FROM billing_payments
+          WHERE ${whereSql}`,
+    params,
+  };
+}
+
+export function updaterSummary(filters) {
+  const { whereSql, params } = buildUpdaterFilters(filters);
+  return {
+    sql: `SELECT COUNT(*) AS events,
+                 SUM(CASE WHEN outcome = 'failed' THEN 1 ELSE 0 END) AS failed,
+                 COUNT(DISTINCT candidate_version) AS candidate_versions,
+                 MAX(received_at) AS last_event_at
+          FROM updater_events
+          WHERE ${whereSql}`,
     params,
   };
 }

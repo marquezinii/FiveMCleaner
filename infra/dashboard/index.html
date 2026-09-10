@@ -4,7 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
-  <title>Ralven Dashboard</title>
+  <title>Ralven · Centro de comando</title>
   <link rel="icon" href="assets/img/logo.png" />
   <link rel="stylesheet" href="assets/brand.css" />
   <link rel="stylesheet" href="assets/styles.css" />
@@ -14,197 +14,157 @@
 
   <section id="login-view" class="login-view" aria-labelledby="login-title">
     <form id="login-form" class="login-card">
-      <img class="login-logo" src="assets/img/logo.png" alt="Ralven" />
-      <h1 id="login-title">Painel de telemetria</h1>
-      <p class="login-subtitle">Acesso restrito a administradores.</p>
-      <label for="password">Senha</label>
+      <div class="login-mark"><img class="login-logo" src="assets/img/logo.png" alt="" /></div>
+      <p class="eyebrow">Operações Ralven</p>
+      <h1 id="login-title">Centro de comando</h1>
+      <p class="login-subtitle">Telemetria, confiabilidade e operação do produto em um só lugar.</p>
+      <label for="password">Senha de administrador</label>
       <input type="password" id="password" name="password" autocomplete="current-password" required />
-      <button type="submit">Entrar</button>
-      <p id="login-error" class="login-error" role="alert"></p>
+      <button type="submit">Entrar com segurança</button>
+      <p id="login-error" class="form-error" role="alert"></p>
     </form>
   </section>
 
   <section id="dashboard-view" class="dashboard-view hidden">
-    <header class="dashboard-header">
+    <aside class="sidebar">
       <div class="brand">
         <img class="brand-logo" src="assets/img/logo.png" alt="" />
-        <div>
-          <h1>Ralven</h1>
-          <span class="brand-subtitle">Painel de telemetria</span>
-        </div>
+        <div><strong>Ralven</strong><span>Command Center</span></div>
       </div>
-      <button id="logout-button" type="button" class="link-button">Sair</button>
-    </header>
+      <nav class="side-nav" aria-label="Navegação principal">
+        <a href="#overview" class="active"><span>01</span>Visão geral</a>
+        <a href="#growth"><span>02</span>Crescimento</a>
+        <a href="#reliability"><span>03</span>Confiabilidade</a>
+        <a href="#compatibility"><span>04</span>Compatibilidade</a>
+        <a href="#operations"><span>05</span>Operações</a>
+      </nav>
+      <div class="sidebar-foot">
+        <p><span class="privacy-dot"></span>Dados agregados e minimizados</p>
+        <button id="logout-button" type="button" class="link-button">Encerrar sessão</button>
+      </div>
+    </aside>
 
-    <form id="filter-form" class="filters" aria-label="Filtros do painel">
-      <label>Período
-        <span class="date-range">
-          <input type="date" name="from" aria-label="Data inicial" />
-          <span>—</span>
-          <input type="date" name="to" aria-label="Data final" />
-        </span>
-        <span class="filter-hint">Datas em UTC</span>
-      </label>
-      <label>Versão
-        <input type="text" name="version" placeholder="Todas" inputmode="numeric" />
-      </label>
-      <label>Ambiente
-        <select name="environment">
-          <option value="Production">Produção</option>
-          <option value="Development">Desenvolvimento</option>
-          <option value="All">Todos</option>
-        </select>
-      </label>
-      <button type="submit">Atualizar dados</button>
-    </form>
-
-    <main id="dashboard-main">
-      <p id="chart-help" class="visually-hidden">Nos gráficos, passe o mouse para ver detalhes ou use Tab e as setas do teclado.</p>
-
-      <section class="dashboard-section overview panel" aria-labelledby="overview-title">
-        <div class="section-heading">
-          <h2 id="overview-title">Visão geral</h2>
+    <div class="workspace">
+      <header class="command-header">
+        <div><p class="eyebrow">Saúde do produto</p><h1>Centro de comando</h1></div>
+        <div class="header-actions">
           <p id="refresh-status" class="refresh-status" aria-live="polite">Dados prontos para consulta</p>
+          <button id="refresh-button" type="button" class="secondary-button">Atualizar</button>
         </div>
-        <div class="tiles">
-          <article class="tile"><span class="tile-label">Otimizações</span><strong id="tile-total-runs" class="tile-value">—</strong><span class="tile-detail">execuções no período</span></article>
-          <article class="tile tile-success"><span class="tile-label">Taxa de sucesso</span><strong id="tile-success-rate" class="tile-value">—</strong><span class="tile-detail">operações concluídas</span></article>
-          <article class="tile"><span class="tile-label">Tempo médio</span><strong id="tile-average-time" class="tile-value">—</strong><span class="tile-detail">por otimização concluída</span></article>
-          <article class="tile tile-danger"><span class="tile-label">Falhas</span><strong id="tile-total-failures" class="tile-value">—</strong><span class="tile-detail">eventos no período</span></article>
-        </div>
-      </section>
+      </header>
 
-      <div class="dashboard-grid primary-grid">
-        <section class="dashboard-section panel" aria-labelledby="adoption-title">
-          <div class="section-heading"><h2 id="adoption-title">Adoção</h2></div>
-          <div class="split-charts">
-            <article class="chart-card distribution-card">
-              <div class="card-heading"><h3>Versões do Ralven</h3><a id="csv-app-versions" class="csv-link" download>Exportar CSV</a></div>
-              <div class="distribution-content">
-                <div class="chart-plot"><canvas id="chart-app-versions" width="220" height="220" tabindex="0" aria-label="Distribuição de versões do Ralven. Use as setas para explorar." aria-describedby="chart-help" role="img"></canvas></div>
-                <div id="legend-app-versions" class="chart-legend" aria-label="Legenda de versões"></div>
-              </div>
-            </article>
-            <article class="chart-card line-card">
-              <div class="card-heading"><h3>Otimizações ao longo do tempo</h3><a id="csv-runs-per-day" class="csv-link" download>Exportar CSV</a></div>
-              <div class="chart-plot"><canvas id="chart-runs-per-day" width="620" height="220" tabindex="0" aria-label="Gráfico de otimizações por dia. Use as setas para explorar." aria-describedby="chart-help" role="img"></canvas></div>
-            </article>
+      <form id="filter-form" class="filters" aria-label="Filtros globais">
+        <fieldset class="period-presets">
+          <legend>Período</legend>
+          <button type="button" data-days="7">7 dias</button>
+          <button type="button" data-days="30" class="active">30 dias</button>
+          <button type="button" data-days="90">90 dias</button>
+        </fieldset>
+        <label>De<input type="date" name="from" aria-label="Data inicial em UTC" /></label>
+        <label>Até<input type="date" name="to" aria-label="Data final em UTC" /></label>
+        <label>Versão<input type="search" name="version" placeholder="Todas" inputmode="numeric" /></label>
+        <label>Ambiente<select name="environment"><option value="Production">Produção</option><option value="Development">Desenvolvimento</option><option value="All">Todos</option></select></label>
+        <button type="submit" class="primary-button">Aplicar filtros</button>
+      </form>
+
+      <main id="dashboard-main" tabindex="-1">
+        <p id="chart-help" class="visually-hidden">Nos gráficos, passe o mouse para ver detalhes ou use Tab e as setas do teclado.</p>
+
+        <section id="overview" class="page-section" aria-labelledby="overview-title">
+          <div class="section-intro">
+            <div><p class="eyebrow">Visão geral</p><h2 id="overview-title">Pulso do produto</h2></div>
+            <p id="period-label" class="section-note">Últimos 30 dias · Produção</p>
+          </div>
+          <div class="signal-grid">
+            <article class="signal-card"><span>Execuções</span><strong id="tile-total-runs">—</strong><small>operações no período</small></article>
+            <article class="signal-card"><span>Sucesso</span><strong id="tile-success-rate">—</strong><small>concluídas sem falha</small></article>
+            <article class="signal-card"><span>Contas</span><strong id="tile-total-accounts">—</strong><small id="tile-new-accounts">— novas no período</small></article>
+            <article class="signal-card"><span>Ralven AI</span><strong id="tile-ai-active">—</strong><small>contas ativas no período</small></article>
+            <article class="signal-card"><span>Assinaturas</span><strong id="tile-active-subscriptions">—</strong><small>autorizadas agora</small></article>
+            <article class="signal-card"><span>Receita líquida</span><strong id="tile-net-revenue">—</strong><small>pagamentos no período</small></article>
+          </div>
+          <div id="health-signals" class="health-signals" aria-live="polite"><p class="empty-state">Os sinais operacionais aparecem após a atualização.</p></div>
+          <div class="overview-grid">
+            <article class="panel chart-card span-2"><div class="card-heading"><div><p class="eyebrow">Demanda</p><h3>Otimizações ao longo do tempo</h3></div><a id="csv-runs-per-day" class="csv-link" download>CSV</a></div><div class="chart-plot tall"><canvas id="chart-runs-per-day" width="760" height="250" tabindex="0" aria-label="Otimizações por dia" aria-describedby="chart-help" role="img"></canvas></div></article>
+            <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Adoção</p><h3>Versões em uso</h3></div><a id="csv-app-versions" class="csv-link" download>CSV</a></div><div class="distribution-content"><div class="chart-plot"><canvas id="chart-app-versions" width="220" height="220" tabindex="0" aria-label="Versões do Ralven em uso" aria-describedby="chart-help" role="img"></canvas></div><div id="legend-app-versions" class="chart-legend"></div></div></article>
           </div>
         </section>
 
-        <section class="dashboard-section panel" aria-labelledby="hardware-title">
-          <div class="section-heading"><h2 id="hardware-title">Hardware</h2></div>
-          <div class="hardware-layout">
-            <article class="chart-card distribution-card">
-              <div class="card-heading"><h3>Sistemas operacionais</h3><a id="csv-os-versions" class="csv-link" download>Exportar CSV</a></div>
-              <div class="distribution-content">
-                <div class="chart-plot"><canvas id="chart-os-versions" width="220" height="220" tabindex="0" aria-label="Distribuição de sistemas operacionais. Use as setas para explorar." aria-describedby="chart-help" role="img"></canvas></div>
-                <div id="legend-os-versions" class="chart-legend" aria-label="Legenda de sistemas operacionais"></div>
-              </div>
-            </article>
-            <article class="chart-card hardware-card">
-              <h3>Configurações mais comuns</h3>
-              <div class="hardware-charts">
-                <div><div class="card-heading"><h4>CPU</h4><a id="csv-top-cpu" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-top-cpu" width="500" height="132" tabindex="0" aria-label="CPUs mais comuns. Use as setas para explorar." aria-describedby="chart-help" role="img"></canvas></div></div>
-                <div><div class="card-heading"><h4>GPU</h4><a id="csv-top-gpu" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-top-gpu" width="500" height="132" tabindex="0" aria-label="GPUs mais comuns. Use as setas para explorar." aria-describedby="chart-help" role="img"></canvas></div></div>
-                <div><div class="card-heading"><h4>Memória RAM</h4><a id="csv-ram-buckets" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-ram-buckets" width="500" height="132" tabindex="0" aria-label="Faixas de memória RAM mais comuns. Use as setas para explorar." aria-describedby="chart-help" role="img"></canvas></div></div>
-              </div>
-            </article>
+        <section id="growth" class="page-section" aria-labelledby="growth-title">
+          <div class="section-intro"><div><p class="eyebrow">Crescimento e adoção</p><h2 id="growth-title">O que está ganhando tração</h2></div><p class="section-note">Contas são agregadas; telemetria continua anônima.</p></div>
+          <div class="metric-strip">
+            <article><span>Requisições de IA</span><strong id="metric-ai-requests">—</strong></article>
+            <article><span>Conclusão da IA</span><strong id="metric-ai-success">—</strong></article>
+            <article><span>Custo da IA</span><strong id="metric-ai-cost">—</strong></article>
+            <article><span>Pagamentos com problema</span><strong id="metric-payment-problems">—</strong></article>
           </div>
-        </section>
-      </div>
-
-      <div class="dashboard-grid diagnostics-grid">
-        <section class="dashboard-section panel" aria-labelledby="diagnostics-title">
-          <div class="section-heading"><h2 id="diagnostics-title">Análise de erros</h2></div>
-          <div class="diagnostic-charts">
-            <article class="chart-card">
-              <div class="card-heading"><h3>Erros por versão</h3><a id="csv-errors-by-version" class="csv-link" download>Exportar CSV</a></div>
-              <div class="chart-plot"><canvas id="chart-errors-by-version" width="620" height="230" tabindex="0" aria-label="Erros por versão e categoria. Use as setas para explorar." aria-describedby="chart-help" role="img"></canvas></div>
-            </article>
-            <article class="chart-card distribution-card compact-distribution">
-              <div class="card-heading"><h3>Tipos de erro</h3><a id="csv-error-categories" class="csv-link" download>Exportar CSV</a></div>
-              <div class="distribution-content">
-                <div class="chart-plot"><canvas id="chart-error-categories" width="220" height="220" tabindex="0" aria-label="Distribuição de tipos de erro. Use as setas para explorar." aria-describedby="chart-help" role="img"></canvas></div>
-                <div id="legend-error-categories" class="chart-legend" aria-label="Legenda de tipos de erro"></div>
-              </div>
-            </article>
-            <article class="chart-card failure-code-card">
-              <div class="card-heading"><h3>Códigos de falha</h3><a id="csv-bug-codes" class="csv-link" download>Exportar CSV</a></div>
-              <div class="chart-plot"><canvas id="chart-bug-codes" width="620" height="230" tabindex="0" aria-label="Códigos exatos de falha. Use as setas para explorar." aria-describedby="chart-help" role="img"></canvas></div>
-            </article>
+          <div class="content-grid three-columns">
+            <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Base cadastrada</p><h3>Novas contas por dia</h3></div><a id="csv-accounts-per-day" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-accounts-per-day" width="520" height="230" tabindex="0" aria-label="Novas contas por dia" aria-describedby="chart-help" role="img"></canvas></div></article>
+            <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Uso opcional</p><h3>Ralven AI por dia</h3></div><a id="csv-ai-per-day" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-ai-per-day" width="520" height="230" tabindex="0" aria-label="Requisições do Ralven AI por dia" aria-describedby="chart-help" role="img"></canvas></div></article>
+            <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Produto pago</p><h3>Estado das assinaturas</h3></div><a id="csv-billing-subscriptions" class="csv-link" download>CSV</a></div><div class="distribution-content compact"><div class="chart-plot"><canvas id="chart-billing-subscriptions" width="220" height="220" tabindex="0" aria-label="Estado das assinaturas" aria-describedby="chart-help" role="img"></canvas></div><div id="legend-billing-subscriptions" class="chart-legend"></div></div></article>
+            <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Preferência</p><h3>Perfis escolhidos</h3></div><a id="csv-profiles" class="csv-link" download>CSV</a></div><div class="distribution-content compact"><div class="chart-plot"><canvas id="chart-profiles" width="220" height="220" tabindex="0" aria-label="Perfis de otimização escolhidos" aria-describedby="chart-help" role="img"></canvas></div><div id="legend-profiles" class="chart-legend"></div></div></article>
+            <article class="panel chart-card span-2"><div class="card-heading"><div><p class="eyebrow">Funcionalidades</p><h3>Ações mais adotadas</h3></div><a id="csv-actions" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-actions" width="760" height="250" tabindex="0" aria-label="Ações de otimização mais usadas" aria-describedby="chart-help" role="img"></canvas></div></article>
           </div>
         </section>
 
-        <section class="dashboard-section panel incident-panel" aria-labelledby="recent-errors-title">
-          <div class="section-heading"><h2 id="recent-errors-title">Eventos recentes</h2><div class="section-actions"><a id="csv-recent-failures" class="csv-link" download>Exportar CSV</a><button id="recent-failures-toggle" class="icon-button feed-toggle" type="button" aria-controls="recent-failures-body" aria-expanded="false" aria-label="Mostrar todos os eventos recentes" title="Mostrar todos" hidden>+</button></div></div>
-          <div class="table-scroll">
-            <table class="data-table">
-              <thead><tr><th>Quando</th><th>Código</th><th>Categoria</th><th>Versão</th><th>Perfil</th><th>Ambiente</th><th><span class="visually-hidden">Detalhes</span></th></tr></thead>
-              <tbody id="recent-failures-body"><tr><td colspan="7" class="empty-row">Sem dados ainda</td></tr></tbody>
-            </table>
+        <section id="reliability" class="page-section" aria-labelledby="reliability-title">
+          <div class="section-intro"><div><p class="eyebrow">Confiabilidade</p><h2 id="reliability-title">Falhas, regressões e versões</h2></div><p class="section-note">Códigos allowlisted; sem stack trace ou caminhos pessoais.</p></div>
+          <div class="metric-strip danger-strip">
+            <article><span>Falhas</span><strong id="tile-total-failures">—</strong></article>
+            <article><span>Tempo médio</span><strong id="tile-average-time">—</strong></article>
+            <article><span>Falhas do updater</span><strong id="metric-updater-failures">—</strong></article>
+            <article><span>Relatos no feed</span><strong id="metric-bug-reports">—</strong></article>
           </div>
-        </section>
-      </div>
-
-      <div class="dashboard-grid operations-grid">
-        <section class="dashboard-section panel" aria-labelledby="bug-reports-title">
-          <div class="section-heading"><h2 id="bug-reports-title">Bugs reportados</h2><div class="section-actions"><a id="csv-bug-reports" class="csv-link" download>Exportar CSV</a><button id="bug-reports-toggle" class="icon-button feed-toggle" type="button" aria-controls="bug-reports-body" aria-expanded="false" aria-label="Mostrar todos os bugs reportados" title="Mostrar todos" hidden>+</button></div></div>
-          <div class="table-scroll">
-            <table class="data-table">
-              <thead><tr><th>Quando</th><th>Código</th><th>Resumo</th><th>Categoria</th><th>Versão</th><th><span class="visually-hidden">Detalhes</span></th></tr></thead>
-              <tbody id="bug-reports-body"><tr><td colspan="6" class="empty-row">Sem dados ainda</td></tr></tbody>
-            </table>
+          <div class="content-grid three-columns">
+            <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Resultado</p><h3>Desfechos das otimizações</h3></div><a id="csv-outcomes" class="csv-link" download>CSV</a></div><div class="distribution-content compact"><div class="chart-plot"><canvas id="chart-outcomes" width="220" height="220" tabindex="0" aria-label="Desfechos das otimizações" aria-describedby="chart-help" role="img"></canvas></div><div id="legend-outcomes" class="chart-legend"></div></div></article>
+            <article class="panel table-panel span-2"><div class="card-heading"><div><p class="eyebrow">Comparação</p><h3>Confiabilidade por versão</h3></div><a id="csv-reliability-by-version" class="csv-link" download>CSV</a></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Versão</th><th>Sucesso</th><th>Concluídas</th><th>Falhas</th><th>Canceladas</th><th>Total</th></tr></thead><tbody id="reliability-versions-body"><tr><td colspan="6" class="empty-row">Sem dados no período</td></tr></tbody></table></div></article>
+            <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Categorias</p><h3>Tipos de erro</h3></div><a id="csv-error-categories" class="csv-link" download>CSV</a></div><div class="distribution-content compact"><div class="chart-plot"><canvas id="chart-error-categories" width="220" height="220" tabindex="0" aria-label="Tipos de erro" aria-describedby="chart-help" role="img"></canvas></div><div id="legend-error-categories" class="chart-legend"></div></div></article>
+            <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Regressões</p><h3>Erros por versão</h3></div><a id="csv-errors-by-version" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-errors-by-version" width="520" height="230" tabindex="0" aria-label="Erros por versão" aria-describedby="chart-help" role="img"></canvas></div></article>
+            <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Diagnóstico</p><h3>Códigos mais frequentes</h3></div><a id="csv-bug-codes" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-bug-codes" width="520" height="230" tabindex="0" aria-label="Códigos de falha mais frequentes" aria-describedby="chart-help" role="img"></canvas></div></article>
+            <article class="panel table-panel span-3"><div class="card-heading"><div><p class="eyebrow">Investigação</p><h3>Falhas recentes</h3></div><div class="table-actions"><input id="incident-search" type="search" placeholder="Buscar código, versão ou perfil" aria-label="Buscar falhas recentes" /><a id="csv-recent-failures" class="csv-link" download>CSV</a><button id="recent-failures-toggle" class="icon-button feed-toggle" type="button" aria-controls="recent-failures-body" aria-expanded="false" hidden>+</button></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Quando</th><th>Código</th><th>Categoria</th><th>Versão</th><th>Perfil</th><th>Ambiente</th><th><span class="visually-hidden">Detalhes</span></th></tr></thead><tbody id="recent-failures-body"><tr><td colspan="7" class="empty-row">Sem dados no período</td></tr></tbody></table></div></article>
           </div>
         </section>
 
-        <section class="dashboard-section panel" aria-labelledby="updater-events-title">
-          <div class="section-heading"><h2 id="updater-events-title">Bugs do updater</h2><button id="updater-events-toggle" class="icon-button feed-toggle" type="button" aria-controls="updater-events-body" aria-expanded="false" aria-label="Mostrar todos os bugs do updater" title="Mostrar todos" hidden>+</button></div>
-          <div class="table-scroll">
-            <table class="data-table">
-              <thead><tr><th>Quando</th><th>Código</th><th>Diagnóstico</th><th>Etapa</th><th>Resultado</th><th>Versão anterior</th><th>Versão candidata</th><th>Ambiente</th></tr></thead>
-              <tbody id="updater-events-body"><tr><td colspan="8" class="empty-row">Sem dados ainda</td></tr></tbody>
-            </table>
+        <section id="compatibility" class="page-section" aria-labelledby="compatibility-title">
+          <div class="section-intro"><div><p class="eyebrow">Compatibilidade</p><h2 id="compatibility-title">Ambiente real da base</h2></div><p class="section-note">Hardware opcional e agregado para orientar suporte.</p></div>
+          <div class="content-grid three-columns">
+            <article class="panel chart-card"><div class="card-heading"><h3>Windows</h3><a id="csv-os-versions" class="csv-link" download>CSV</a></div><div class="distribution-content compact"><div class="chart-plot"><canvas id="chart-os-versions" width="220" height="220" tabindex="0" aria-label="Versões do Windows" aria-describedby="chart-help" role="img"></canvas></div><div id="legend-os-versions" class="chart-legend"></div></div></article>
+            <article class="panel chart-card"><div class="card-heading"><h3>CPUs mais comuns</h3><a id="csv-top-cpu" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-top-cpu" width="520" height="240" tabindex="0" aria-label="CPUs mais comuns" aria-describedby="chart-help" role="img"></canvas></div></article>
+            <article class="panel chart-card"><div class="card-heading"><h3>GPUs mais comuns</h3><a id="csv-top-gpu" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-top-gpu" width="520" height="240" tabindex="0" aria-label="GPUs mais comuns" aria-describedby="chart-help" role="img"></canvas></div></article>
           </div>
         </section>
 
-        <section class="dashboard-section panel live-alert-section" aria-labelledby="live-alert-title">
-          <div class="section-heading"><h2 id="live-alert-title">Aviso ao vivo</h2><p id="live-alert-status" class="refresh-status" aria-live="polite">Carregando…</p></div>
-          <form id="live-alert-form" class="live-alert-form">
-            <p id="live-alert-hint" class="live-alert-hint">O aviso aparece no aplicativo como uma notificação discreta. Use o nível que corresponde ao impacto real.</p>
-            <div class="live-alert-templates"><button type="button" class="chip" data-template="Detectamos um problema no atualizador. Recomendamos reinstalar o Ralven pela última versão oficial do site." data-severity="critical">Problema no atualizador</button><button type="button" class="chip" data-template="Ainda não está no nosso Discord oficial? Entre para ficar por dentro de novidades e suporte." data-severity="info">Entre no Discord</button></div>
-            <label class="live-alert-severity-label" for="live-alert-severity">Impacto
-              <select id="live-alert-severity" name="severity">
-                <option value="info">Informativo</option>
-                <option value="important" selected>Importante</option>
-                <option value="critical">Crítico</option>
-              </select>
-            </label>
-            <label class="live-alert-severity-label" for="live-alert-message">Mensagem
-              <textarea id="live-alert-message" name="message" maxlength="300" rows="5" aria-describedby="live-alert-hint live-alert-counter" placeholder="Escreva o que a pessoa precisa saber..."></textarea>
-            </label>
-            <div class="live-alert-footer"><span id="live-alert-counter" class="live-alert-counter">0/300</span><div class="live-alert-actions"><button type="button" id="live-alert-deactivate" class="link-button">Desativar</button><button type="submit">Enviar</button></div></div>
-            <p id="live-alert-error" class="login-error" role="alert"></p>
-          </form>
+        <section id="operations" class="page-section" aria-labelledby="operations-title">
+          <div class="section-intro"><div><p class="eyebrow">Operações</p><h2 id="operations-title">Investigar e comunicar</h2></div><p class="section-note">Ações sensíveis pedem confirmação antes de publicar.</p></div>
+          <div class="content-grid operations-grid">
+            <article class="panel table-panel span-2"><div class="card-heading"><div><p class="eyebrow">Suporte</p><h3>Bugs reportados</h3></div><div class="table-actions"><a id="csv-bug-reports" class="csv-link" download>CSV</a><button id="bug-reports-toggle" class="icon-button feed-toggle" type="button" aria-controls="bug-reports-body" aria-expanded="false" hidden>+</button></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Quando</th><th>Código</th><th>Resumo</th><th>Categoria</th><th>Versão</th><th><span class="visually-hidden">Detalhes</span></th></tr></thead><tbody id="bug-reports-body"><tr><td colspan="6" class="empty-row">Sem relatos no período</td></tr></tbody></table></div></article>
+            <article class="panel live-alert-section">
+              <div class="card-heading"><div><p class="eyebrow">Comunicação</p><h3>Aviso ao vivo</h3></div><p id="live-alert-status" class="status-pill" aria-live="polite">Carregando…</p></div>
+              <form id="live-alert-form" class="live-alert-form">
+                <div class="live-alert-preview"><span>Prévia no aplicativo</span><p id="live-alert-preview">A mensagem aparecerá aqui.</p></div>
+                <div class="live-alert-templates">
+                  <button type="button" class="chip" data-severity="critical" data-template="Detectamos um problema no atualizador. Recomendamos reinstalar o Ralven pela última versão oficial do site.">Incidente no updater</button>
+                  <button type="button" class="chip" data-severity="info" data-template="Ainda não está no nosso Discord oficial? Entre para acompanhar novidades e suporte.">Comunidade</button>
+                </div>
+                <label for="live-alert-severity">Impacto
+                  <select id="live-alert-severity" name="severity"><option value="info">Informativo</option><option value="important" selected>Importante</option><option value="critical">Crítico</option></select>
+                </label>
+                <label for="live-alert-message">Mensagem</label>
+                <textarea id="live-alert-message" name="message" maxlength="300" rows="5" aria-describedby="live-alert-counter" placeholder="Mensagem exibida no app dos usuários..."></textarea>
+                <div class="live-alert-footer"><span id="live-alert-counter">0/300</span><div class="live-alert-actions"><button type="button" id="live-alert-deactivate" class="secondary-button">Desativar</button><button type="submit" class="danger-button">Publicar aviso</button></div></div>
+                <p id="live-alert-error" class="form-error" role="alert"></p>
+              </form>
+            </article>
+            <article class="panel table-panel span-3"><div class="card-heading"><div><p class="eyebrow">Distribuição</p><h3>Eventos do updater</h3></div><button id="updater-events-toggle" class="icon-button feed-toggle" type="button" aria-controls="updater-events-body" aria-expanded="false" hidden>+</button></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Quando</th><th>Código</th><th>Diagnóstico</th><th>Etapa</th><th>Resultado</th><th>Versão anterior</th><th>Versão candidata</th><th>Ambiente</th></tr></thead><tbody id="updater-events-body"><tr><td colspan="8" class="empty-row">Sem eventos no período</td></tr></tbody></table></div></article>
+          </div>
         </section>
-      </div>
 
-      <p class="dashboard-footnote">Os dados vêm de telemetria anônima e agregada. “Otimizações” contam eventos, não usuários únicos.</p>
-    </main>
+        <footer class="dashboard-footnote">Contas e cobrança são exibidas somente em agregados. “Execuções” contam eventos anônimos, não usuários únicos.</footer>
+      </main>
+    </div>
   </section>
 
-  <dialog id="detail-dialog" class="detail-dialog" aria-labelledby="detail-dialog-title">
-    <div class="dialog-shell">
-      <header class="dialog-header">
-        <div><span id="detail-dialog-kind" class="dialog-kind">Detalhes</span><h2 id="detail-dialog-title">Detalhes</h2></div>
-        <button id="detail-dialog-close" type="button" class="icon-button" aria-label="Fechar detalhes">×</button>
-      </header>
-      <dl id="detail-dialog-meta" class="detail-meta"></dl>
-      <div id="detail-dialog-content" class="detail-content"></div>
-      <footer class="dialog-footer"><button id="detail-dialog-copy" type="button" class="secondary-button">Copiar detalhes</button><button id="detail-dialog-dismiss" type="button">Fechar</button></footer>
-    </div>
-  </dialog>
-
+  <dialog id="detail-dialog" class="detail-dialog" aria-labelledby="detail-dialog-title"><div class="dialog-shell"><header class="dialog-header"><div><span id="detail-dialog-kind" class="dialog-kind">Detalhes</span><h2 id="detail-dialog-title">Detalhes</h2></div><button id="detail-dialog-close" type="button" class="icon-button" aria-label="Fechar detalhes">×</button></header><dl id="detail-dialog-meta" class="detail-meta"></dl><div id="detail-dialog-content" class="detail-content"></div><footer class="dialog-footer"><button id="detail-dialog-copy" type="button" class="secondary-button">Copiar detalhes</button><button id="detail-dialog-dismiss" type="button" class="primary-button">Fechar</button></footer></div></dialog>
   <script type="module" src="assets/app.js"></script>
 </body>
 </html>

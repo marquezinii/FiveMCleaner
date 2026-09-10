@@ -448,6 +448,13 @@ somente texto (sem anexo/captura de tela, sem R2). Qualquer erro de transporte �
 suprimido localmente para não alterar a execução nem os logs. Detalhes de
 privacidade: [telemetry.md](telemetry.md) e [bug-reports.md](bug-reports.md).
 
+O dashboard administrativo permanece fora do processo distribuído e consulta
+somente rotas autenticadas do Worker. As consultas de produto agregam, no D1,
+telemetria, contas, updater, cobrança e uso do Ralven AI; nenhum identificador
+de conta/provedor ou conteúdo interativo sai dessas consultas. Filtros de
+versão e ambiente se aplicam apenas aos domínios que possuem esses campos, e o
+período é traduzido para a coluna temporal própria de cada tabela.
+
 ### Relatório de falhas e configuração centralizada
 
 `ICrashReportingService` (implementação `SentryCrashReportingService`) é
