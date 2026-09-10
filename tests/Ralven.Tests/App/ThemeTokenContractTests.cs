@@ -53,6 +53,11 @@ public sealed class ThemeTokenContractTests
             data.Add(theme, "AppTextOnAccentBrush", "AccentBrightBrush", 4.5);
             // Preenchimento do acento contra a folha: componente não textual.
             data.Add(theme, "AccentBrush", "Surface1Color", 3.0);
+            // O switch é um controle de estado: track e thumb precisam se
+            // distinguir tanto em repouso quanto ligado.
+            data.Add(theme, "ToggleTrackOffBrush", "Surface1Color", 1.5);
+            data.Add(theme, "ToggleThumbBrush", "ToggleTrackOffBrush", 1.5);
+            data.Add(theme, "ToggleThumbOnBrush", "AccentBrush", 4.5);
         }
 
         return data;
@@ -130,6 +135,18 @@ public sealed class ThemeTokenContractTests
         }
 
         Assert.Empty(offenders);
+    }
+
+    [Fact]
+    public void ToggleSwitch_UsesCompactFilledTrack()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var controls = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "Themes", "Controls.xaml"));
+
+        Assert.Contains("Width=\"44\" Height=\"32\"", controls, StringComparison.Ordinal);
+        Assert.Contains("Width=\"36\" Height=\"20\"", controls, StringComparison.Ordinal);
+        Assert.Contains("Width=\"16\" Height=\"16\"", controls, StringComparison.Ordinal);
+        Assert.Contains("To=\"16\"", controls, StringComparison.Ordinal);
     }
 
     private static SortedSet<string> ReadKeys(string fileName)

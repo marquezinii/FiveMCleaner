@@ -1,7 +1,7 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** suavizar a hierarquia visual da tela Visão Geral com um recorte pequeno, sóbrio e coerente nos temas claro e escuro.
-- **Escopo:** ajustar somente o Overview e, se indispensável, estilos de superfície que ele já usa; não alterar cabeçalho/conta, autenticação, navegação, comportamento funcional ou textos.
-- **Critérios de conclusão:** reduzir caixas e divisórias duras nos pontos de maior impacto, reutilizar tokens existentes, preservar responsividade/acessibilidade e validar build, testes e renderização em tema claro e escuro quando o ambiente permitir.
-- **Resultado entregue:** o diagnóstico principal usa a superfície hero existente com raio amplo e sem contorno; os três KPIs são agrupados por espaço, sem divisórias; o monitor ao vivo fica aberto sobre o fundo e preserva o gráfico como poço funcional. O XAML foi inspecionado em tema escuro e claro, maximizado e em 1600×1000. Foram aprovados 78 testes focados de localização/tokens, o build Release da solução (0 avisos) e a suíte completa (1.434 testes).
+- **Objetivo:** Unificar os switches do Ralven em um controle compacto, claro e acessível, adequado aos temas do aplicativo.
+- **Escopo:** Estilos, recursos visuais e testes diretamente relacionados a switches/toggles existentes; não inclui mudanças de comportamento das configurações controladas.
+- **Critérios de conclusão:** Estados ligado, desligado, foco, hover e desabilitado são distintos; o controle mantém navegação por teclado e os checks aplicáveis passam.
+- **Resultado entregue:** Estilo compartilhado atualizado para track preenchido de 36×20px, knob de 16px, área de clique de 44×32px, animação existente de 180ms e contraste validado nos dois temas. Preferências equivalentes em Ultra e Aplicativos agora usam o mesmo switch; build Release, 1.443 testes, formatação e verificação de segurança passaram. A janela iniciou, mas a sessão não disponibilizou captura de aplicativos nativos para inspeção visual.
