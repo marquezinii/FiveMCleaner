@@ -2,7 +2,7 @@ export type Language = "pt" | "en";
 
 export const DOWNLOAD_URL =
   "https://vemryx.com/Ralven/download/";
-export const GITHUB_URL = "https://github.com/marquezinii/VemryxOne";
+export const GITHUB_URL = "https://github.com/marquezinii/Ralven";
 export const DISCORD_URL = "https://discord.gg/bazcuQB9n6";
 export const BRAND_HOME_URL = "https://vemryx.com/";
 export const ICON_URL = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/icon.png`;
@@ -24,10 +24,10 @@ export const copy = {
     headerDownload: "Baixar",
     discordLabel: "Entre no nosso Discord oficial",
     hero: {
-      eyebrow: "RALVEN · OTIMIZAÇÃO TRANSPARENTE",
-      titleStart: "Mais desempenho.",
-      titleAccent: "Menos complicação.",
-      body: "Diagnóstico, manutenção e otimização transparente do Windows, com decisões técnicas claras, progresso real, rollback e recursos especializados para FiveM em GTA V Legacy.",
+      eyebrow: "RALVEN · GESTÃO INTELIGENTE DO WINDOWS",
+      titleStart: "Seu Windows.",
+      titleAccent: "Sob controle.",
+      body: "Uma plataforma de gerenciamento e otimização do Windows com IA para diagnosticar, manter, atualizar e ajustar seu PC com decisões técnicas claras, progresso real e rollback.",
       download: "Download do instalador",
       github: "Ver código no GitHub",
       releaseNote: "Download oficial Vemryx · sem cadastro",
@@ -41,11 +41,11 @@ export const copy = {
     },
     preview: {
       label: "PRÉVIA DA INTERFACE",
-      appStatus: "Sistema pronto",
-      title: "Seu PC, o plano certo",
+      appStatus: "Windows pronto",
+      title: "Seu Windows, organizado em um só lugar",
       subtitle: "Diagnóstico local concluído",
       ringTop: "PRONTO",
-      ringBottom: "para otimizar",
+      ringBottom: "para gerenciar",
       profileLabel: "Perfil selecionado",
       light: "Leve",
       medium: "Médio",
@@ -54,18 +54,18 @@ export const copy = {
       progressTitle: "Preparando otimização segura",
       progressDetail: "Validando configurações atuais…",
       detectedGpu: "CPU e GPU identificadas",
-      detectedGame: "FiveM detectado",
+      detectedGame: "Jogos prontos",
       local: "Processamento local",
     },
     quickFacts: [
-      ["01 clique", "para iniciar"],
-      ["03 perfis", "com escopos claros"],
-      ["Local", "telemetria opcional"],
+      ["IA", "orientação contextual"],
+      ["Apps", "instale e atualize"],
+      ["Jogos", "integrações específicas"],
       ["Reversível", "com snapshots"],
     ],
     profiles: {
-      eyebrow: "TRÊS PRIORIDADES, UMA ESCOLHA SIMPLES",
-      title: "Escolha o perfil. O app cuida do restante.",
+      eyebrow: "OTIMIZAÇÃO QUANDO FAZ SENTIDO",
+      title: "Otimização com escopo claro.",
       intro: "Nada de dezenas de caixas confusas. Cada perfil usa um catálogo seguro de ações e só altera o que realmente precisa de ajuste.",
       items: [
         {
@@ -85,7 +85,7 @@ export const copy = {
           summary: "O melhor equilíbrio entre imagem e resposta.",
           ideal: "Recomendado para a maioria dos jogadores.",
           bullets: [
-            "Equilibra sistema, FiveM e GTA V",
+            "Equilibra sistema, energia e jogos",
             "Prioriza a GPU correta quando necessário",
             "Mantém serviços e proteções críticas",
           ],
@@ -115,7 +115,7 @@ export const copy = {
         {
           number: "01",
           title: "Diagnostica",
-          text: "Identifica processador, placa de vídeo, memória, Windows, FiveM e GTA V.",
+          text: "Identifica processador, placa de vídeo, memória, Windows e integrações compatíveis.",
         },
         {
           number: "02",
@@ -149,7 +149,7 @@ export const copy = {
         },
         {
           title: "Sem scripts remotos",
-          text: "A otimização vem dentro do aplicativo; nenhum comando desconhecido é baixado para executar.",
+          text: "As ações chegam dentro do aplicativo; nenhum comando desconhecido é baixado para executar.",
         },
         {
           title: "Proteções preservadas",
@@ -159,8 +159,8 @@ export const copy = {
       github: "Audite o projeto no GitHub",
     },
     streamers: {
-      eyebrow: "PRONTO PARA QUEM JOGA E TRANSMITE",
-      title: "Sua live continua sendo prioridade.",
+      eyebrow: "PRONTO PARA AS SUAS ROTINAS",
+      title: "Sua transmissão também entra no contexto.",
       body: "Se OBS Studio, Streamlabs ou TikTok LIVE Studio estiver instalado ou aberto, o Ralven reconhece o ambiente e preserva ferramentas de transmissão. Ele não encerra esses processos nem altera cenas, perfis, gravações ou chats.",
       note: "A proteção para streaming faz parte dos três perfis — não é um modo separado que você precisa lembrar de ativar.",
       platforms: ["OBS Studio", "Streamlabs", "TikTok LIVE Studio"],
@@ -209,8 +209,8 @@ export const copy = {
       title: "Sem letra miúda.",
       items: [
         [
-          "O Ralven garante mais FPS?",
-          "Não existe ganho universal: hardware, servidor, temperatura e outros fatores influenciam o resultado. O app melhora configurações relevantes, mostra uma estimativa contextual e distingue claramente estimativa de medição real.",
+          "O Ralven garante ganhos de desempenho?",
+          "Não existe ganho universal: hardware, temperatura e outros fatores influenciam o resultado. Otimização é uma das capacidades da plataforma; quando uma medição real não existe, o app deixa isso explícito.",
         ],
         [
           "Posso desfazer as alterações?",
@@ -236,14 +236,14 @@ export const copy = {
     },
     finalCta: {
       eyebrow: "Ralven",
-      title: "Um clique. Um plano claro. Seu PC no controle.",
-      body: "Baixe a versão estável mais recente e deixe o aplicativo decidir com segurança o que faz sentido para o seu computador.",
+      title: "Seu Windows, mais simples de gerenciar.",
+      body: "Baixe a versão estável mais recente e reúna diagnóstico, aplicativos, atualizações, otimização e orientação por IA em um só lugar.",
       download: "Baixar instalador",
       github: "Abrir GitHub",
       note: "Grátis · código-fonte disponível · Windows x64",
     },
     footer: {
-      tagline: "Diagnóstico e otimização transparente para Windows e FiveM.",
+      tagline: "Gerenciamento e otimização inteligente para Windows.",
       product: "Produto",
       trust: "Transparência",
       community: "Comunidade",
@@ -269,10 +269,10 @@ export const copy = {
     headerDownload: "Download",
     discordLabel: "Join our official Discord",
     hero: {
-      eyebrow: "RALVEN · TRANSPARENT OPTIMIZATION",
-      titleStart: "More performance.",
-      titleAccent: "Less complexity.",
-      body: "Transparent Windows diagnostics, maintenance and optimization with clear technical decisions, real progress, rollback and specialized support for FiveM on GTA V Legacy.",
+      eyebrow: "RALVEN · AI-POWERED WINDOWS MANAGEMENT",
+      titleStart: "Your Windows.",
+      titleAccent: "Under control.",
+      body: "An AI-powered Windows management platform to diagnose, maintain, update and tune your PC with clear technical decisions, real progress and rollback.",
       download: "Download installer",
       github: "View code on GitHub",
       releaseNote: "Official Vemryx download · no account required",
@@ -286,11 +286,11 @@ export const copy = {
     },
     preview: {
       label: "INTERFACE PREVIEW",
-      appStatus: "System ready",
-      title: "Your PC, the right plan",
+      appStatus: "Windows ready",
+      title: "Your Windows, managed in one place",
       subtitle: "Local diagnosis complete",
       ringTop: "READY",
-      ringBottom: "to optimize",
+      ringBottom: "to manage",
       profileLabel: "Selected profile",
       light: "Light",
       medium: "Balanced",
@@ -299,18 +299,18 @@ export const copy = {
       progressTitle: "Preparing safe optimization",
       progressDetail: "Checking current settings…",
       detectedGpu: "CPU and GPU identified",
-      detectedGame: "FiveM detected",
+      detectedGame: "Games ready",
       local: "Local processing",
     },
     quickFacts: [
-      ["01 click", "to start"],
-      ["03 profiles", "with clear scopes"],
-      ["Local", "optional telemetry"],
+      ["AI", "contextual guidance"],
+      ["Apps", "install and update"],
+      ["Games", "specific integrations"],
       ["Reversible", "with snapshots"],
     ],
     profiles: {
-      eyebrow: "THREE PRIORITIES, ONE SIMPLE CHOICE",
-      title: "Choose a profile. The app handles the rest.",
+      eyebrow: "OPTIMIZATION WHEN IT MAKES SENSE",
+      title: "Optimization with a clear scope.",
       intro: "No dozens of confusing checkboxes. Every profile uses a safe action catalog and only changes what actually needs adjustment.",
       items: [
         {
@@ -330,7 +330,7 @@ export const copy = {
           summary: "The best balance between image and response.",
           ideal: "Recommended for most players.",
           bullets: [
-            "Balances Windows, FiveM and GTA V",
+            "Balances Windows, power, and games",
             "Prioritizes the correct GPU when needed",
             "Keeps critical services and protections",
           ],
@@ -360,7 +360,7 @@ export const copy = {
         {
           number: "01",
           title: "Diagnose",
-          text: "Identifies the CPU, GPU, memory, Windows, FiveM and GTA V.",
+          text: "Identifies the CPU, GPU, memory, Windows, and compatible integrations.",
         },
         {
           number: "02",
@@ -394,7 +394,7 @@ export const copy = {
         },
         {
           title: "No remote scripts",
-          text: "Optimization ships inside the app; it does not download unknown commands to execute.",
+          text: "Actions ship inside the app; it does not download unknown commands to execute.",
         },
         {
           title: "Protections preserved",
@@ -404,8 +404,8 @@ export const copy = {
       github: "Audit the project on GitHub",
     },
     streamers: {
-      eyebrow: "READY FOR PLAYERS WHO STREAM",
-      title: "Your broadcast remains a priority.",
+      eyebrow: "READY FOR YOUR ROUTINES",
+      title: "Your broadcast is part of the context, too.",
       body: "If OBS Studio, Streamlabs or TikTok LIVE Studio is installed or open, Ralven recognizes the environment and preserves streaming tools. It does not close these processes or alter scenes, profiles, recordings or chats.",
       note: "Streaming protection is part of all three profiles — not a separate mode you must remember to enable.",
       platforms: ["OBS Studio", "Streamlabs", "TikTok LIVE Studio"],
@@ -454,8 +454,8 @@ export const copy = {
       title: "No fine print.",
       items: [
         [
-          "Does Ralven guarantee more FPS?",
-          "There is no universal gain: hardware, server, temperature and other factors affect results. The app improves relevant settings, provides a contextual estimate and clearly separates estimates from real measurements.",
+          "Does Ralven guarantee performance gains?",
+          "There is no universal gain: hardware, temperature, and other factors affect the result. Optimization is one capability of the platform; when a real measurement is not available, the app makes that clear.",
         ],
         [
           "Can I undo the changes?",
@@ -481,14 +481,14 @@ export const copy = {
     },
     finalCta: {
       eyebrow: "Ralven",
-      title: "One click. One clear plan. Your PC in control.",
-      body: "Download the latest stable version and let the app safely decide what makes sense for your computer.",
+      title: "Your Windows, easier to manage.",
+      body: "Download the latest stable version and bring diagnostics, apps, updates, optimization, and AI guidance into one place.",
       download: "Download installer",
       github: "Open GitHub",
       note: "Free · source available · Windows x64",
     },
     footer: {
-      tagline: "Transparent diagnostics and optimization for Windows and FiveM.",
+      tagline: "AI-powered Windows management and optimization.",
       product: "Product",
       trust: "Transparency",
       community: "Community",

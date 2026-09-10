@@ -12,7 +12,7 @@ Esta página registra as evidências usadas para definir o escopo e as política
 
 Esta expansão distingue diagnóstico suportado de automação baseada em chaves
 privadas ou heurísticas de internet. O escopo geral usa somente capacidades já
-tipadas no Ralven e não exige FiveM/GTA instalado.
+tipadas no Ralven e independe de integrações de Jogos instaladas.
 
 ### Energia
 
@@ -390,6 +390,6 @@ Esses resultados são antigos e dependentes de hardware. Por isso, os presets do
 
 ## Marca e representação
 
-O acordo do Cfx.re proíbe representação que sugira endosso ou afiliação. A comunicação pública deve apresentar o Ralven como projeto independente “para FiveM”, incluir disclaimer claro e evitar o logo oficial como marca própria.
+O acordo do Cfx.re proíbe representação que sugira endosso ou afiliação. A comunicação pública deve apresentar o Ralven como projeto independente; ao mencionar a integração com FiveM, deve deixar claro que ela faz parte de Jogos, incluir disclaimer claro e evitar o logo oficial como marca própria.
 
 Fonte: [Cfx.re Platform Service Agreement](https://runtime.fivem.net/fivem-service-agreement-4.pdf), seção “Representation”.

@@ -16,6 +16,7 @@ public sealed partial class MainViewModel
 {
     private string? settingsSaveErrorMessage;
     private BugCode? settingsSaveBugCode;
+    private bool suppressSettingsPersistence;
 
     public AppThemePreference ThemePreference => themePreference;
 
@@ -267,6 +268,28 @@ public sealed partial class MainViewModel
         SettingsChanged(refreshPlan: false);
     }
 
+    public async Task RestoreGeneralSettingsDefaultsAsync()
+    {
+        var defaults = new AppSettings();
+        suppressSettingsPersistence = true;
+        try
+        {
+            SelectLanguagePreference(defaults.Language);
+            SelectTheme(defaults.Theme);
+            MinimizeToTrayOnClose = defaults.MinimizeToTrayOnClose;
+            LaunchAtStartup = defaults.LaunchAtStartup;
+            StartMinimized = defaults.StartMinimized ?? false;
+            CheckForUpdates = defaults.CheckForUpdates;
+            NotifyWhenUpdateAvailable = defaults.NotifyWhenUpdateAvailable;
+        }
+        finally
+        {
+            suppressSettingsPersistence = false;
+        }
+
+        await RetrySaveSettingsAsync().ConfigureAwait(false);
+    }
+
     private void ApplySettings(AppSettings settings)
     {
         languagePreference = Enum.IsDefined(settings.Language)
@@ -334,6 +357,11 @@ public sealed partial class MainViewModel
 
     private void SettingsChanged(bool refreshPlan = true)
     {
+        if (suppressSettingsPersistence)
+        {
+            return;
+        }
+
         if (refreshPlan)
         {
             RefreshPlan();

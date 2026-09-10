@@ -92,7 +92,7 @@ Movimento reforça causalidade, não identidade. Transições ficam entre 100 e 
 
 ## Voz
 
-Frases curtas, concretas e honestas. Preferir “Revisar plano”, “Otimização concluída” e “Não foi possível verificar” a slogans dentro de fluxos operacionais. “Mais desempenho. Menos complicação.” pode aparecer em superfícies institucionais; não é garantia de resultado.
+Frases curtas, concretas e honestas. Preferir “Revisar plano”, “Otimização concluída” e “Não foi possível verificar” a slogans dentro de fluxos operacionais. “Seu Windows, sob controle.” pode aparecer em superfícies institucionais; não é garantia de resultado.
 
 ## Verificação
 

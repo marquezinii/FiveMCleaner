@@ -22,6 +22,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private readonly IAnonymousTelemetryService telemetry;
     private readonly ILiveAlertService? liveAlertService;
     private readonly ILiveSystemMetricsProvider liveSystemMetricsProvider;
+    private readonly RalvenCacheService ralvenCacheService;
     private readonly ProgressTimingEstimator progressTimingEstimator = new();
     private readonly SemaphoreSlim settingsSaveGate = new(1, 1);
     private readonly Queue<string> pendingHeadlines = new();
@@ -163,7 +164,8 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
         WindowsGamingControlsService? windowsGamingControls = null,
         Func<string, FiveMSessionPresence>? fiveMSessionProbe = null,
         IWindowsSystemHealthInspector? windowsSystemHealthInspector = null,
-        PersonalWorkspaceService? personalWorkspaceService = null)
+        PersonalWorkspaceService? personalWorkspaceService = null,
+        RalvenCacheService? ralvenCacheService = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
         this.personalWorkspaceService = personalWorkspaceService ?? new PersonalWorkspaceService(_ => Task.FromResult(false), inMemory: true);
@@ -173,6 +175,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
         this.silentUpdateInstaller = silentUpdateInstaller;
         this.telemetry = telemetry ?? DisabledAnonymousTelemetryService.Instance;
         this.liveAlertService = liveAlertService;
+        this.ralvenCacheService = ralvenCacheService ?? new RalvenCacheService();
         this.liveSystemMetricsProvider = liveSystemMetricsProvider ?? new WindowsLiveSystemMetricsProvider();
         this.windowsGamingControls = windowsGamingControls ?? new WindowsGamingControlsService();
         this.fiveMSessionProbe = fiveMSessionProbe ?? WindowsFiveMSessionProbe.Probe;
@@ -378,6 +381,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
         OnPropertyChanged(nameof(CanRefreshWindowsSystemHealth));
         // Updating restarts the app, so the button has to follow IsBusy.
         OnPropertyChanged(nameof(CanDownloadUpdate));
+        OnPropertyChanged(nameof(CanClearRalvenCache));
     }
 
     public void Dispose()

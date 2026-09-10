@@ -421,11 +421,10 @@ public partial class MainWindow
             return;
         }
 
-        if (System.Windows.MessageBox.Show(
+        if (Ralven.App.Views.OptimizationConfirmationWindow.Confirm(this,
                 LocalizationService.Current.GetString("Settings.Account.DeleteConfirmation"),
                 LocalizationService.Current.GetString("Settings.Account.Delete"),
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning) != MessageBoxResult.Yes)
+                LocalizationService.Current.GetString("Settings.Account.Delete")) != true)
         {
             return;
         }
@@ -563,7 +562,7 @@ public partial class MainWindow
     {
         if (accountService is null)
         {
-            System.Windows.MessageBox.Show(LocalizationService.Current.GetString("Settings.Account.Unavailable"), LocalizationService.Current.GetString("Settings.Account.Title"), MessageBoxButton.OK, MessageBoxImage.Information);
+            Ralven.App.Views.OptimizationConfirmationWindow.Inform(this, LocalizationService.Current.GetString("Settings.Account.Unavailable"), LocalizationService.Current.GetString("Settings.Account.Title"));
             return;
         }
 
