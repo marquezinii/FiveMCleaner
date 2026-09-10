@@ -6,7 +6,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
              d:DesignWidth="1400"
-             d:DesignHeight="820">
+             d:DesignHeight="820"
+             FontFamily="{StaticResource RalvenAiFont}">
     <UserControl.Resources>
         <Style x:Key="PromptSuggestionButtonStyle"
                TargetType="Button"
@@ -15,7 +16,14 @@
             <Setter Property="MinHeight" Value="44" />
             <Setter Property="Padding" Value="14,9" />
             <Setter Property="FontWeight" Value="Normal" />
+            <Setter Property="FontFamily" Value="{StaticResource RalvenAiFont}" />
             <Setter Property="HorizontalContentAlignment" Value="Left" />
+        </Style>
+
+        <Style x:Key="RalvenAiPrimaryButtonStyle"
+               TargetType="Button"
+               BasedOn="{StaticResource PrimaryButtonStyle}">
+            <Setter Property="FontFamily" Value="{StaticResource RalvenAiFont}" />
         </Style>
 
         <Style x:Key="ChatComposerTextBoxStyle" TargetType="TextBox">
@@ -23,7 +31,7 @@
             <Setter Property="Background" Value="Transparent" />
             <Setter Property="BorderThickness" Value="0" />
             <Setter Property="Padding" Value="0" />
-            <Setter Property="FontFamily" Value="{StaticResource AppFontBody}" />
+            <Setter Property="FontFamily" Value="{StaticResource RalvenAiFont}" />
             <Setter Property="FontSize" Value="14" />
             <Setter Property="CaretBrush" Value="{DynamicResource AccentBrush}" />
             <Setter Property="SelectionBrush" Value="{DynamicResource AccentBrush}" />
@@ -148,9 +156,10 @@
                                        Style="{StaticResource OverlineText}" />
                             <TextBlock x:Name="RecommendationProfileText"
                                        Style="{StaticResource SectionText}"
+                                       FontFamily="{StaticResource RalvenAiFont}"
                                        Margin="0,7,0,0" />
                             <Button Content="{Binding [RalvenAi.ReviewPlan], Source={StaticResource LocalizedStrings}}"
-                                    Style="{StaticResource PrimaryButtonStyle}"
+                                    Style="{StaticResource RalvenAiPrimaryButtonStyle}"
                                     Margin="0,16,0,0"
                                     HorizontalAlignment="Left"
                                     Click="ReviewPlan_Click" />
@@ -171,6 +180,7 @@
                     Margin="0,0,0,20" />
                 <TextBlock x:Name="WelcomeText"
                            Style="{StaticResource DisplayText}"
+                           FontFamily="{StaticResource RalvenAiFont}"
                            TextAlignment="Center" />
                 <TextBlock Text="{Binding [RalvenAi.Empty.Detail], Source={StaticResource LocalizedStrings}}"
                            Style="{StaticResource SecondaryText}"
@@ -275,7 +285,7 @@
                     <Button x:Name="SendButton"
                             Grid.Column="1"
                             Content="{Binding [RalvenAi.Send], Source={StaticResource LocalizedStrings}}"
-                            Style="{StaticResource PrimaryButtonStyle}"
+                            Style="{StaticResource RalvenAiPrimaryButtonStyle}"
                             MinWidth="92"
                             Click="Send_Click" />
                 </Grid>

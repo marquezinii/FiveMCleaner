@@ -1,7 +1,6 @@
 # Objetivo da tarefa
 
 - **Agente**: Codex
-- **Objetivo**: Tornar explícita a exigência de criar uma nova branch e uma nova worktree exclusivas para cada tarefa com alterações, mesmo quando já existir uma branch ou worktree semelhante.
-- **Escopo**: Alterar somente a governança Git/worktree em `AI_RULES.md`; não modificar código, estado do projeto ou branches de integração.
-- **Critérios de conclusão**: A regra deve estar explícita e coerente com o fluxo de preparação de tarefas; a alteração deve ser revisada, commitada e enviada em PR para `dev/proxima-versao`.
-- **Resultado entregue**: `AI_RULES.md` agora exige uma nova branch e uma nova worktree por tarefa, sem reutilizar worktrees semelhantes; PR destinado a `dev/proxima-versao`.
+- **Objetivo**: Fazer o conteúdo textual do Ralven AI usar Geist Sans como fonte principal, com fallback confiável e sem alterar a identidade tipográfica do restante do aplicativo.
+- **Escopo**: Recurso de fonte incorporado, token tipográfico específico da página do Ralven AI e aplicação consistente aos textos e controles dessa conversa. Fora do escopo: novo renderer Markdown, redesign visual, alteração da fonte global do Ralven ou mudança funcional nas respostas.
+- **Critérios de conclusão**: respostas, listas, títulos, citações, blocos e elementos textuais renderizados na página do Ralven AI herdam Geist Sans; fontes monoespaçadas existentes continuam preservadas; build/testes aplicáveis passam; a tela é inspecionada visualmente sem regressões evidentes de layout, quebra, espaçamento ou truncamento.
