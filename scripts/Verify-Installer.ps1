@@ -46,7 +46,7 @@ $requiredPatterns = [ordered]@{
     'ultra lzma compression'        = 'Compression=lzma2/ultra'
     'localized finished label'      = '(?im)^\s*en\.FinishedLabel='
     'localized uninstall shortcut'  = 'Name: "\{group\}\\\{cm:UninstallShortcut\}"'
-    'english app comments metadata' = 'AppComments=Transparent and reversible optimization'
+    'english app comments metadata' = 'AppComments=Transparent and reversible Windows management for diagnostics, maintenance and optimization\.'
     'Windows language detection'    = 'LanguageDetectionMethod=uilanguage'
     'fresh language detection'      = 'UsePreviousLanguage=no'
     'offline embedded payload'      = 'Source: "\{#SourceDir\}\\\*"'
