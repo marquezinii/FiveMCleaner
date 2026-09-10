@@ -246,7 +246,7 @@ async function handleUsernameAvailability(request, env, url) {
 }
 
 // Public broadcast the desktop app polls (startup + hourly) to show an
-// admin-authored banner -- see docs/superpowers/specs/2026-08-17-live-alerts-design.md.
+// admin-authored banner -- see docs/architecture.md.
 // Necessarily unauthenticated, same trade as the username lookup above: a
 // rate-limited, read-only, advisory GET.
 async function handleLiveAlertGet(request, env) {

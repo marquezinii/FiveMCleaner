@@ -31,8 +31,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private static readonly TimeSpan LiveMetricsInterval = TimeSpan.FromSeconds(1);
     private const int LiveMetricsHistoryCapacity = 60;
     // Startup check plus this cadence is "almost instant" without polling the
-    // free-tier Worker unnecessarily -- see
-    // docs/superpowers/specs/2026-08-17-live-alerts-design.md.
+    // free-tier Worker unnecessarily -- see docs/architecture.md.
     private static readonly TimeSpan LiveAlertPollInterval = TimeSpan.FromHours(1);
     private DispatcherTimer? headlineDwellTimer;
     private DateTime headlineShownAtUtc;

@@ -170,7 +170,6 @@
 - Se o cadastro no Firebase for concluído mas o perfil falhar ao salvar
   (username já em uso, rede), a conta Firebase criada é preservada — a
   janela pede outro nome de usuário em vez de descartar o cadastro.
-- Detalhes completos em `.ai/tasks/account-registration-profile-fields.md`.
 - Validação: build Release sem avisos, 719 testes .NET (29 novos),
   `dotnet format --verify-no-changes`, `Verify-Safety.ps1`, 148 testes do
   Worker (16 novos), `git diff --check` aprovados.
@@ -784,9 +783,7 @@
 
 ## Redesign visual completo — Fluent Design via WPF-UI — 31/07/2026
 
-- Rodada de redesign visual pedida pelo usuário ("aplicativo quase novo"),
-  seguindo `docs/superpowers/specs/2026-07-31-redesign-visual-fluent-design.md`
-  e `docs/superpowers/plans/2026-07-31-redesign-visual-fluent-design.md`.
+- Rodada de redesign visual pedida pelo usuário ("aplicativo quase novo").
   Escopo puramente visual/UX: nenhuma mudança em `ViewModels`, fluxo de
   otimização, contratos ou textos localizados.
 - Adicionada a biblioteca `WPF-UI` (Lepo.co, versão 4.3.0) ao
@@ -1612,8 +1609,6 @@ artifacts/, publish/, tmp/   Saídas locais ignoradas pelo Git
   - este commit (docs: atualiza safety/architecture/PROJECT_STATE) fecha a
     etapa; use `git log --oneline -6` para conferir o hash exato.
 - O checkout canônico está em `C:\Projetos\FiveMCleaner`, no branch `main`.
-- Especificação completa da tarefa em
-  `docs/superpowers/specs/2026-07-22-motor-otimizacao-resiliente-design.md`.
 - Última validação do app: `dotnet build` Release sem avisos/erros, **238
   testes .NET aprovados** cobrindo isolamento,
   dependência, aborto crítico, outcome, relatório, sanitização e apresentação
@@ -2521,7 +2516,7 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   `AppSettings` e decide se o arquivo já existia continua sendo a camada de
   serviço existente (`AppOptimizationService.LoadSettingsAsync`), preservando
   a composição manual do projeto (nenhum container de DI foi adicionado).
-- `AppSettings` ([AppModels.cs](src/FiveMCleaner.App/Services/AppModels.cs))
+- `AppSettings` ([AppModels.cs](src/Ralven.App/Services/AppModels.cs))
   ganhou `ShareCrashReports` (`true` por padrão) e `PrivacyConsentVersion`
   (`int?`, `null` por padrão). Compatibilidade com `settings.json` antigos
   verificada e testada: um arquivo salvo por uma versão anterior do app (só
@@ -2556,7 +2551,7 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   `PrivacyConsentEvaluator`/campos de `AppSettings`) registrada na entrada
   anterior.
 - Nova janela WPF `PrivacyConsentWindow`
-  ([PrivacyConsentWindow.xaml](src/FiveMCleaner.App/Views/PrivacyConsentWindow.xaml)/
+  ([PrivacyConsentWindow.xaml](src/Ralven.App/Views/PrivacyConsentWindow.xaml)/
   `.xaml.cs`), no mesmo padrão visual/arquitetural de `BugReportWindow`/
   `OptimizationConfirmationWindow` (chrome customizado, sem DI). Mostra
   título e introdução variando por cenário (primeira instalação, upgrade de
@@ -2566,7 +2561,7 @@ complementar, mas confirme sempre o comportamento no código e nos testes.
   Alt+F4 é tratado pelo mesmo caminho de "Continuar", só que com os dois
   valores como recusados — nunca impede o app de abrir.
 - Nova lógica pura `PrivacyConsentOutcomeBuilder`
-  ([PrivacyConsentOutcomeBuilder.cs](src/FiveMCleaner.App/Services/PrivacyConsentOutcomeBuilder.cs)):
+  ([PrivacyConsentOutcomeBuilder.cs](src/Ralven.App/Services/PrivacyConsentOutcomeBuilder.cs)):
   transforma a escolha do usuário (ou o fechamento da janela) no
   `AppSettings` a persistir, sempre preservando os demais campos e
   carimbando `PrivacyConsentVersion = PrivacyConsentPolicy.CurrentVersion`.

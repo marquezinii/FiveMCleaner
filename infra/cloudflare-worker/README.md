@@ -54,7 +54,7 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
 - `src/liveAlert/` — the single-row admin broadcast the dashboard writes
   (`POST /admin/live-alert`, session-protected) and the desktop app polls at
   startup plus once an hour (`GET /live-alert`, public, rate limited). See
-  `docs/superpowers/specs/2026-08-17-live-alerts-design.md`.
+  [`docs/architecture.md`](../../docs/architecture.md#avisos-ao-vivo).
 - `src/auth/` — the custom admin authentication (see below).
 - `src/billing/` — provider webhook verification/reconciliation and the
   authenticated checkout/cancellation and payment-backed entitlement read model.

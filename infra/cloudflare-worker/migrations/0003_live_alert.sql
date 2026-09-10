@@ -1,6 +1,6 @@
 -- Single-row broadcast the admin dashboard writes to and the desktop app
 -- polls (startup + hourly) -- see
--- docs/superpowers/specs/2026-08-17-live-alerts-design.md and schema.sql
+-- docs/architecture.md and schema.sql
 -- for the full rationale.
 CREATE TABLE IF NOT EXISTS live_alert (
     id INTEGER PRIMARY KEY,

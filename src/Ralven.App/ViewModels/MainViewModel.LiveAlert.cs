@@ -44,8 +44,8 @@ public sealed partial class MainViewModel
 
     /// <summary>
     /// Polls the current admin-broadcast live alert. Called at startup and
-    /// then hourly by <see cref="liveAlertTimer"/> -- see
-    /// docs/superpowers/specs/2026-08-17-live-alerts-design.md. A network
+    /// then hourly by <see cref="liveAlertTimer"/> -- see docs/architecture.md.
+    /// A network
     /// failure or malformed response leaves the current banner/icon state
     /// untouched instead of flickering it away.
     /// </summary>

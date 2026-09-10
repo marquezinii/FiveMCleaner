@@ -142,6 +142,20 @@ Pagamentos reconciliados mantêm períodos estáveis no ledger D1. Cancelamento
 confirmado interrompe renovação e preserva o período pago; somente então a
 exclusão do perfil pode remover o vínculo. Uma criação incerta continua bloqueada.
 
+## Avisos ao vivo
+
+O dashboard administrativo mantém um único aviso global no D1. A escrita usa
+`POST /admin/live-alert`, exige sessão administrativa e CSRF da origem exata do
+dashboard e aceita somente texto simples de até 300 caracteres. Não existe
+histórico remoto de avisos nem conteúdo HTML/Markdown.
+
+O aplicativo consulta `GET /live-alert` na inicialização e depois a cada hora.
+A leitura é pública, somente leitura e limitada por IP; indisponibilidade de rede
+ou payload inválido preserva o estado local atual. Dispensar o banner grava apenas
+`DismissedLiveAlertId` nas preferências locais, mantendo o ícone enquanto o mesmo
+aviso continuar ativo. A rota, a migration e o painel já fazem parte da
+infraestrutura suportada.
+
 | Projeto                  | Responsabilidade                                                    | Não deve conhecer                                        |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- |
 | `Ralven.App`       | WPF, navegação, prévia, progresso e confirmação                     | APIs administrativas ou detalhes de registro             |

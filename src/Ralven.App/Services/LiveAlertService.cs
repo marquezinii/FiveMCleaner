@@ -18,7 +18,7 @@ public sealed record LiveAlertSnapshot(string? Id, string Message, bool Active);
 
 /// <summary>
 /// Polls the Cloudflare Worker's public <c>GET /live-alert</c> route (see
-/// docs/superpowers/specs/2026-08-17-live-alerts-design.md). Unauthenticated
+/// docs/architecture.md). Unauthenticated
 /// by design -- every installed app reads the same single broadcast -- and
 /// never throws: a network failure or malformed response returns
 /// <see langword="null"/> so a transient outage never changes what is

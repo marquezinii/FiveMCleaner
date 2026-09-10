@@ -255,7 +255,7 @@ CREATE TABLE IF NOT EXISTS account_entitlements (
 
 -- Single-row broadcast the admin dashboard writes to and the desktop app
 -- polls (startup + hourly) -- see
--- docs/superpowers/specs/2026-08-17-live-alerts-design.md. There is only
+-- docs/architecture.md. There is only
 -- ever one active alert at a time; id is always 1, seeded below.
 CREATE TABLE IF NOT EXISTS live_alert (
     id INTEGER PRIMARY KEY,

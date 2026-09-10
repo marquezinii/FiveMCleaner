@@ -7,8 +7,7 @@ namespace Ralven.Tests.App;
 /// <summary>
 /// Exercises <see cref="MainViewModel.CheckLiveAlertAsync"/> and
 /// <see cref="MainViewModel.DismissLiveAlert"/> -- the admin-broadcast banner
-/// and its persistent warning icon. See
-/// docs/superpowers/specs/2026-08-17-live-alerts-design.md for the full
+/// and its persistent warning icon. See docs/architecture.md for the full
 /// behavior this is meant to guard.
 /// </summary>
 public sealed class MainViewModelLiveAlertTests
