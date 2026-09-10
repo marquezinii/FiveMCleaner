@@ -66,6 +66,7 @@
     <Resource Include="../../assets/brand/fonts/geist-1.1.0/GeistVariableVF.ttf" Link="Assets/Fonts/GeistVariableVF.ttf" />
     <EmbeddedResource Include="Assets/update-manifest-public-key.pem" />
     <EmbeddedResource Include="Assets/broker-integrity-public-key.pem" />
+    <EmbeddedResource Include="../../localization/locales.json" Link="Resources/locales.json" LogicalName="Ralven.App.Resources.locales.json" />
     <None Update="Assets/ReShade.LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>

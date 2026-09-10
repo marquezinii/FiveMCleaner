@@ -303,15 +303,15 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
         if (target == GraphicsSettingsTarget.GtaV && gameRoot is null)
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                "A instalação do GTA V Legacy não foi confirmada; o settings.xml não será alterado."));
+                WindowsActionText.Format("ActionResults.Graphics.GtaVNotConfirmed")));
         }
 
         if (!GraphicsSettingsFile.Exists(settingsPath))
         {
             return Task.FromResult(WindowsActionApplyResult.Skipped(
-                target == GraphicsSettingsTarget.FiveM
-                    ? "gta5_settings.xml ainda não existe; abra o FiveM uma vez antes de aplicar o preset."
-                    : "settings.xml ainda não existe; abra o GTA V Legacy uma vez antes de aplicar o preset."));
+                WindowsActionText.Format(target == GraphicsSettingsTarget.FiveM
+                    ? "ActionResults.Graphics.FiveMFileMissing"
+                    : "ActionResults.Graphics.GtaVFileMissing")));
         }
 
         processGuard.EnsureStopped(
@@ -388,17 +388,17 @@ public sealed class LegacyGraphicsPresetAction : WindowsOptimizationAction
             if (verified == 0)
             {
                 return Task.FromResult(WindowsActionApplyResult.Skipped(
-                    "Nenhuma configuração gráfica allowlisted compatível foi encontrada no arquivo."));
+                    WindowsActionText.Format("ActionResults.Graphics.NoCompatibleSetting")));
             }
 
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "As configurações gráficas allowlisted encontradas foram verificadas e já estavam no preset solicitado."));
+                WindowsActionText.Format("ActionResults.Graphics.AlreadyDesired")));
         }
 
         var snapshot = transaction.Apply(document, context.TransactionId, originalHash, changed);
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
             snapshot,
-            $"Backup criado e {changed.Count} opção(ões) gráfica(s) atualizada(s)."));
+            WindowsActionText.Format("ActionResults.Graphics.Applied", changed.Count)));
     }
 
     public override Task RollbackAsync(

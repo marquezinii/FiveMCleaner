@@ -1,0 +1,55 @@
+{
+  "sourceCulture": "en-US",
+  "pseudoCulture": "qps-Ploc",
+  "resourceSets": [
+    {
+      "name": "app",
+      "pathProperty": "appResource",
+      "allowEmptyKeys": ["Brand.ProductSuffix"]
+    },
+    {
+      "name": "updater",
+      "pathProperty": "updaterResource",
+      "allowEmptyKeys": []
+    },
+    {
+      "name": "windows",
+      "pathProperty": "windowsResource",
+      "allowEmptyKeys": []
+    }
+  ],
+  "languages": [
+    {
+      "culture": "en-US",
+      "displayName": "English",
+      "appResource": "src/Ralven.App/Resources/Strings.resx",
+      "updaterResource": "src/Ralven.Updater/Resources/Strings.resx",
+      "windowsResource": "src/Ralven.Windows/Resources/Strings.resx",
+      "aliases": ["en", "english"]
+    },
+    {
+      "culture": "pt-BR",
+      "displayName": "Português (Brasil)",
+      "appResource": "src/Ralven.App/Resources/Strings.pt-BR.resx",
+      "updaterResource": "src/Ralven.Updater/Resources/Strings.pt-BR.resx",
+      "windowsResource": "src/Ralven.Windows/Resources/Strings.pt-BR.resx",
+      "aliases": ["pt", "portugueseBrazil"]
+    },
+    {
+      "culture": "es-ES",
+      "displayName": "Español",
+      "appResource": "src/Ralven.App/Resources/Strings.es.resx",
+      "updaterResource": "src/Ralven.Updater/Resources/Strings.es.resx",
+      "windowsResource": "src/Ralven.Windows/Resources/Strings.es.resx",
+      "aliases": ["es", "spanish"]
+    },
+    {
+      "culture": "fr-FR",
+      "displayName": "Français",
+      "appResource": "src/Ralven.App/Resources/Strings.fr.resx",
+      "updaterResource": "src/Ralven.Updater/Resources/Strings.fr.resx",
+      "windowsResource": "src/Ralven.Windows/Resources/Strings.fr.resx",
+      "aliases": ["fr", "french"]
+    }
+  ]
+}

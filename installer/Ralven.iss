@@ -47,6 +47,14 @@
   #define InstallerInfoPortuguesePath "..\artifacts\installer-documents\install-info.pt-BR.rtf"
 #endif
 
+#ifndef InstallerInfoSpanishPath
+  #define InstallerInfoSpanishPath "..\artifacts\installer-documents\install-info.es.rtf"
+#endif
+
+#ifndef InstallerInfoFrenchPath
+  #define InstallerInfoFrenchPath "..\artifacts\installer-documents\install-info.fr.rtf"
+#endif
+
 #define InstallerBaseName "Ralven-Setup-" + AppVersion + "-win-x64"
 
 [Setup]
@@ -128,6 +136,8 @@ DialogFontSize=10
 [Languages]
 Name: "en"; MessagesFile: "compiler:Default.isl"; InfoBeforeFile: "{#InstallerInfoEnglishPath}"
 Name: "ptbr"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"; InfoBeforeFile: "{#InstallerInfoPortuguesePath}"
+Name: "es"; MessagesFile: "compiler:Languages\Spanish.isl"; InfoBeforeFile: "{#InstallerInfoSpanishPath}"
+Name: "fr"; MessagesFile: "compiler:Languages\French.isl"; InfoBeforeFile: "{#InstallerInfoFrenchPath}"
 
 [Messages]
 en.ButtonBack=Back
@@ -154,6 +164,8 @@ ptbr.ButtonNo=Não
 ptbr.LicenseAccepted=Eu aceito o acordo
 ptbr.LicenseNotAccepted=Eu não aceito o acordo
 ptbr.FinishedLabel=A instalação do [name] foi concluída.%n%nAtualizações futuras chegam pelo próprio aplicativo, após a sua confirmação. Em geral não é necessário baixar este instalador de novo.%n%nQuando o log estiver ativo, os arquivos ficam na pasta temporária do Windows.
+es.FinishedLabel=La instalación de [name] ha finalizado.%n%nLas próximas actualizaciones se ofrecen en la aplicación después de tu confirmación. Normalmente no tendrás que descargar este instalador de nuevo.%n%nCuando el registro está activado, los archivos se guardan en la carpeta temporal de Windows.
+fr.FinishedLabel=L'installation de [name] est terminée.%n%nLes prochaines mises à jour sont proposées dans l'application après votre confirmation. Vous n'aurez normalement pas besoin de télécharger à nouveau ce programme d'installation.%n%nLorsque la journalisation est activée, les fichiers sont enregistrés dans le dossier temporaire de Windows.
 
 [CustomMessages]
 en.AdditionalShortcuts=Shortcuts
@@ -232,6 +244,82 @@ ptbr.LogFinishing=Finalizando a instalação.
 ptbr.LogCompleted=Instalação concluída com sucesso.
 ptbr.CompletedTitle=O Ralven está pronto
 ptbr.CompletedBody=O aplicativo foi instalado para a sua conta do Windows. Atualizações futuras serão oferecidas dentro do Ralven após a sua confirmação.
+es.AdditionalShortcuts=Accesos directos
+es.DesktopIcon=Crear un acceso directo en el escritorio
+es.StartWithWindowsTask=Iniciar Ralven al iniciar sesión en Windows
+es.LaunchProgram=Abrir Ralven
+es.UninstallShortcut=Desinstalar Ralven
+es.RemoveUserDataQuestion=¿También quieres eliminar la configuración local, los registros, las copias de seguridad y las actualizaciones descargadas de Ralven? Si eliges No, estos datos se conservarán para una instalación futura.
+es.WelcomeTitle=Ralven
+es.WelcomeSubtitle=Configura una gestión de Windows transparente y reversible para diagnóstico, mantenimiento y optimización.
+es.WelcomeBody=La instalación funciona sin conexión, no requiere acceso de administrador y conserva tus datos locales existentes.
+es.InstallAction=Instalar
+es.LicenseIntro=Lee la licencia completa antes de continuar. Los títulos, listas y destacados están formateados para una lectura cómoda.
+es.InfoIntro=Revisa cómo se instala, actualiza y elimina Ralven de este equipo.
+es.ProgressTitle=Instalando Ralven
+es.ProgressSubtitle=Puedes mantener esta ventana abierta mientras el instalador completa los pasos siguientes.
+es.ProgressSummary=%1 de 4 pasos completados
+es.StepPreparing=Preparar la instalación
+es.StepFiles=Instalar los archivos de Ralven
+es.StepPreferences=Crear accesos directos y preferencias
+es.StepFinishing=Finalizar y verificar la instalación
+es.StatePending=Pendiente
+es.StateActive=En curso
+es.StateComplete=Completado
+es.StateFailed=Fallido
+es.ShowDetails=Mostrar detalles
+es.HideDetails=Ocultar detalles
+es.TechnicalDetails=Detalles técnicos
+es.LogStarted=Instalador iniciado.
+es.LogDestination=Destino: %1
+es.LogPreparing=Preparando la instalación.
+es.LogInstalling=Instalando el paquete verificado de Ralven.
+es.LogProgress=Progreso de instalación: %1%%
+es.LogFile=Escribiendo: %1
+es.LogSelectedTasks=Opciones seleccionadas: %1
+es.LogPreferences=Creando los accesos directos y preferencias seleccionados.
+es.LogFinishing=Finalizando la instalación.
+es.LogCompleted=Instalación completada correctamente.
+es.CompletedTitle=Ralven está listo
+es.CompletedBody=La aplicación se instaló para tu cuenta de Windows. Las actualizaciones futuras se ofrecerán dentro de Ralven después de tu confirmación.
+fr.AdditionalShortcuts=Raccourcis
+fr.DesktopIcon=Créer un raccourci sur le Bureau
+fr.StartWithWindowsTask=Démarrer Ralven à l'ouverture de session Windows
+fr.LaunchProgram=Ouvrir Ralven
+fr.UninstallShortcut=Désinstaller Ralven
+fr.RemoveUserDataQuestion=Supprimer également les paramètres locaux, les journaux, les sauvegardes et les mises à jour téléchargées de Ralven ? Si vous choisissez Non, ces données seront conservées pour une prochaine installation.
+fr.WelcomeTitle=Ralven
+fr.WelcomeSubtitle=Configurez une gestion transparente et réversible de Windows pour le diagnostic, la maintenance et l’optimisation.
+fr.WelcomeBody=L’installation fonctionne hors ligne, ne demande pas d’accès administrateur et préserve vos données locales existantes.
+fr.InstallAction=Installer
+fr.LicenseIntro=Lisez la licence complète avant de continuer. Les titres, listes et mises en évidence sont formatés pour une lecture confortable.
+fr.InfoIntro=Découvrez comment Ralven est installé, mis à jour et supprimé de ce PC.
+fr.ProgressTitle=Installation de Ralven
+fr.ProgressSubtitle=Vous pouvez laisser cette fenêtre ouverte pendant que l’installateur termine les étapes ci-dessous.
+fr.ProgressSummary=%1 étapes terminées sur 4
+fr.StepPreparing=Préparer l’installation
+fr.StepFiles=Installer les fichiers de Ralven
+fr.StepPreferences=Créer les raccourcis et préférences
+fr.StepFinishing=Terminer et vérifier l’installation
+fr.StatePending=En attente
+fr.StateActive=En cours
+fr.StateComplete=Terminé
+fr.StateFailed=Échec
+fr.ShowDetails=Afficher les détails
+fr.HideDetails=Masquer les détails
+fr.TechnicalDetails=Détails techniques
+fr.LogStarted=Installateur démarré.
+fr.LogDestination=Destination : %1
+fr.LogPreparing=Préparation de l’installation.
+fr.LogInstalling=Installation du package Ralven vérifié.
+fr.LogProgress=Progression de l’installation : %1%%
+fr.LogFile=Écriture : %1
+fr.LogSelectedTasks=Options sélectionnées : %1
+fr.LogPreferences=Création des raccourcis et préférences sélectionnés.
+fr.LogFinishing=Finalisation de l’installation.
+fr.LogCompleted=Installation terminée avec succès.
+fr.CompletedTitle=Ralven est prêt
+fr.CompletedBody=L’application a été installée pour votre compte Windows. Les prochaines mises à jour seront proposées dans Ralven après votre confirmation.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:AdditionalShortcuts}:"

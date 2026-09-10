@@ -45,6 +45,10 @@ $requiredPatterns = [ordered]@{
     'mnemonic stripping fallback'   = "StringChangeEx\(Result, '&', '', True\)"
     'ultra lzma compression'        = 'Compression=lzma2/ultra'
     'localized finished label'      = '(?im)^\s*en\.FinishedLabel='
+    'Spanish installer language'    = '(?im)^Name: "es"; MessagesFile: "compiler:Languages\\Spanish\.isl"'
+    'French installer language'     = '(?im)^Name: "fr"; MessagesFile: "compiler:Languages\\French\.isl"'
+    'Spanish custom messages'       = '(?im)^es\.RemoveUserDataQuestion='
+    'French custom messages'        = '(?im)^fr\.RemoveUserDataQuestion='
     'localized uninstall shortcut'  = 'Name: "\{group\}\\\{cm:UninstallShortcut\}"'
     'english app comments metadata' = 'AppComments=Transparent and reversible Windows management for diagnostics, maintenance and optimization\.'
     'Windows language detection'    = 'LanguageDetectionMethod=uilanguage'
@@ -104,7 +108,9 @@ if ($deleteStatements.Count -ne 1 -or
 
 foreach ($infoRelative in @(
     'installer\install-info.en.txt',
-    'installer\install-info.pt-BR.txt'
+    'installer\install-info.pt-BR.txt',
+    'installer\install-info.es.txt',
+    'installer\install-info.fr.txt'
 )) {
     $infoPath = Join-Path $workspace $infoRelative
     if (-not (Test-Path -LiteralPath $infoPath -PathType Leaf)) {
@@ -129,9 +135,11 @@ try {
         -LicensePath (Join-Path $workspace 'LICENSE') `
         -EnglishInfoPath (Join-Path $workspace 'installer\install-info.en.txt') `
         -PortugueseInfoPath (Join-Path $workspace 'installer\install-info.pt-BR.txt') `
+        -SpanishInfoPath (Join-Path $workspace 'installer\install-info.es.txt') `
+        -FrenchInfoPath (Join-Path $workspace 'installer\install-info.fr.txt') `
         -OutputDirectory $documentProbe
 
-    foreach ($documentName in @('license.rtf', 'install-info.en.rtf', 'install-info.pt-BR.rtf')) {
+    foreach ($documentName in @('license.rtf', 'install-info.en.rtf', 'install-info.pt-BR.rtf', 'install-info.es.rtf', 'install-info.fr.rtf')) {
         $documentPath = Join-Path $documentProbe $documentName
         $rtf = Get-Content -LiteralPath $documentPath -Raw
         if (-not $rtf.StartsWith('{\rtf1', [StringComparison]::Ordinal)) {

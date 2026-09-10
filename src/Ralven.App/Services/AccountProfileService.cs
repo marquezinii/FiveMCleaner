@@ -124,7 +124,7 @@ public sealed class DisabledAccountProfileService : IAccountProfileService
         CancellationToken cancellationToken = default) =>
         Task.FromResult(new AccountProfileResult(
             AccountProfileOutcome.Failed,
-            "Não foi possível salvar seu perfil agora. Tente novamente mais tarde."));
+            Message: null));
 
     public Task<AccountProfileFetchResult> FetchAsync(
         string idToken,

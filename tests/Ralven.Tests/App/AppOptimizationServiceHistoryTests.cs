@@ -204,9 +204,7 @@ public sealed class AppOptimizationServiceHistoryTests
         var history = await new AppOptimizationService(temporaryDirectory.Path, localization)
             .LoadHistoryAsync(TestContext.Current.CancellationToken);
 
-        Assert.Equal(
-            localization.GetString("History.State.CommittedWithErrors"),
-            Assert.Single(history).State);
+        Assert.Equal("History.State.CommittedWithErrors", Assert.Single(history).State);
     }
 
     [Fact]
@@ -228,7 +226,7 @@ public sealed class AppOptimizationServiceHistoryTests
 
         var record = Assert.Single(history);
         Assert.False(record.CanRollback);
-        Assert.Equal(localization.GetString("History.State.AdminReceiptMissing"), record.State);
+        Assert.Equal("History.State.AdminReceiptMissing", record.State);
     }
 
     [Fact]

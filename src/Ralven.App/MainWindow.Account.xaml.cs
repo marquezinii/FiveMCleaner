@@ -796,7 +796,7 @@ public partial class MainWindow
         AccountLabel.Text = profile is null
             ? LocalizationService.Current.GetString("Account.SignInButton")
             : FormatAccountUsername(accountUsername);
-        AccountLabel.MaxWidth = profile is null ? 160 : 120;
+        AccountLabel.MaxWidth = profile is null ? 200 : 120;
         var accountAction = LocalizationService.Current.GetString(
             profile is null ? "Account.SignInTooltip" : "Account.ViewTooltip");
         AccountButton.ToolTip = accountAction;

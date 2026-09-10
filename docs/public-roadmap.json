@@ -89,6 +89,18 @@
         "pt": "Senha e Google podem ser vinculados com reautenticação, mudanças sensíveis ganham validação consistente e a conta passa a oferecer autenticação de dois fatores TOTP com códigos de recuperação de uso único.",
         "en": "Password and Google can be linked with reauthentication, sensitive changes gain consistent validation, and accounts add TOTP two-factor authentication with single-use recovery codes."
       }
+    },
+    {
+      "id": "localization",
+      "status": { "pt": "Em desenvolvimento", "en": "In development" },
+      "title": {
+        "pt": "Ralven em quatro idiomas",
+        "en": "Ralven in four languages"
+      },
+      "description": {
+        "pt": "Português, inglês e espanhol recebem uma revisão completa, e o francês passa a cobrir o aplicativo, o instalador e as mensagens de atualização. Validações automáticas impedem catálogos incompletos.",
+        "en": "Portuguese, English and Spanish receive a full review, and French now covers the app, installer and update messages. Automated validation prevents incomplete catalogs."
+      }
     }
   ]
 }

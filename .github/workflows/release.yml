@@ -92,6 +92,7 @@ jobs:
         shell: pwsh
         run: |
           ./scripts/Test-RepositoryPolicy.ps1
+          ./scripts/Sync-Localization.ps1 -Mode Check
           ./scripts/Verify-Safety.ps1 -SkipTests
           # Execute the xUnit v3 app directly; the .NET 10 test server reports zero tests here.
           dotnet run --project tests/Ralven.Tests/Ralven.Tests.csproj `

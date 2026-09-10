@@ -17,7 +17,7 @@ public sealed class HardwareDiagnosticActionsTests
     {
         var message = CpuDetailsDiagnosisAction.Classify(new CpuSnapshot(8, 16, 1000, 4800));
 
-        Assert.Contains("núcleo(s)", message, StringComparison.Ordinal);
+        Assert.Contains("8 núcleos físicos", message, StringComparison.Ordinal);
         Assert.Contains("bem abaixo do máximo", message, StringComparison.Ordinal);
     }
 
@@ -83,7 +83,7 @@ public sealed class HardwareDiagnosticActionsTests
 
         var message = RamDetailsDiagnosisAction.Classify(snapshot);
 
-        Assert.Contains("frequência configurada não disponível", message, StringComparison.Ordinal);
+        Assert.Contains("frequência configurada indisponível", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -103,7 +103,7 @@ public sealed class HardwareDiagnosticActionsTests
 
         var message = StorageHealthDiagnosisAction.Classify(snapshot);
 
-        Assert.Contains("Atenção: 1 unidade(s)", message, StringComparison.Ordinal);
+        Assert.Contains("Atenção: 1 unidade", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -238,7 +238,7 @@ public sealed class HardwareDiagnosticActionsTests
 
         var message = ThrottlingSignalDiagnosisAction.Classify(cpu, usage, stability, thermal);
 
-        Assert.Contains("Queda de frequência sob carga detectada", message, StringComparison.Ordinal);
+        Assert.Contains("Foi detectada queda de frequência sob carga", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -259,8 +259,8 @@ public sealed class HardwareDiagnosticActionsTests
     {
         var message = ResourceUsageDiagnosisAction.Classify(new ResourceUsageSnapshot(null, null, null, 0));
 
-        Assert.Contains("CPU: não disponível", message, StringComparison.Ordinal);
-        Assert.Contains("GPU: não disponível", message, StringComparison.Ordinal);
+        Assert.Contains("CPU: indisponível", message, StringComparison.Ordinal);
+        Assert.Contains("GPU: indisponível", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -269,13 +269,13 @@ public sealed class HardwareDiagnosticActionsTests
         var message = ResourceUsageDiagnosisAction.Classify(new ResourceUsageSnapshot(42, 10, 5, 3.25));
 
         Assert.Contains("CPU: 42%", message, StringComparison.Ordinal);
-        Assert.Contains("3.25 MB/s", message, StringComparison.Ordinal);
+        Assert.Contains("3,25 MB/s", message, StringComparison.Ordinal);
     }
 
     [Fact]
     public void PciLink_ReportsHonestlyWhenNoDataAvailable()
     {
-        Assert.Contains("não pôde ser lida", PciLinkDiagnosisAction.Classify([]), StringComparison.Ordinal);
+        Assert.Contains("Não foi possível ler", PciLinkDiagnosisAction.Classify([]), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -298,7 +298,7 @@ public sealed class HardwareDiagnosticActionsTests
         var message = HardwareStabilityDiagnosisAction.Classify(
             snapshot, new DateTimeOffset(2026, 7, 23, 0, 0, 0, TimeSpan.Zero));
 
-        Assert.Contains("com mais de 3 anos", message, StringComparison.Ordinal);
+        Assert.Contains("há mais de 3 anos", message, StringComparison.Ordinal);
         Assert.Contains("Resizable BAR", message, StringComparison.Ordinal);
     }
 
@@ -320,8 +320,8 @@ public sealed class HardwareDiagnosticActionsTests
 
         var message = HardwareStabilityDiagnosisAction.Classify(snapshot, DateTimeOffset.UtcNow);
 
-        Assert.Contains("5 evento(s) WHEA", message, StringComparison.Ordinal);
-        Assert.Contains("2 evento(s)", message, StringComparison.Ordinal);
+        Assert.Contains("Eventos WHEA nos últimos 30 dias: 5", message, StringComparison.Ordinal);
+        Assert.Contains("indicação de memória: 2", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -331,7 +331,7 @@ public sealed class HardwareDiagnosticActionsTests
 
         var message = HardwareStabilityDiagnosisAction.Classify(snapshot, DateTimeOffset.UtcNow);
 
-        Assert.Contains("3 evento(s) WHEA", message, StringComparison.Ordinal);
+        Assert.Contains("Eventos WHEA nos últimos 30 dias: 3", message, StringComparison.Ordinal);
         Assert.Contains("sem indicação de memória", message, StringComparison.Ordinal);
     }
 }
@@ -777,7 +777,7 @@ public sealed class HardwareInspectorSmokeTests
 
         Assert.False(result.Changed);
         Assert.Contains("DDU", result.Messages[0], StringComparison.Ordinal);
-        Assert.Contains("não baixa, instala nem remove", result.Messages[0], StringComparison.Ordinal);
+        Assert.Contains("nunca baixa, instala ou remove", result.Messages[0], StringComparison.Ordinal);
     }
 
     [Fact]
@@ -788,7 +788,7 @@ public sealed class HardwareInspectorSmokeTests
             batterySaverActive: true,
             detectedTools: []);
 
-        Assert.Contains("conecte-o antes de jogar", message, StringComparison.Ordinal);
+        Assert.Contains("Conecte-o antes de jogar", message, StringComparison.Ordinal);
         Assert.Contains("Economia de Energia", message, StringComparison.Ordinal);
         Assert.Contains("Nenhum utilitário conhecido", message, StringComparison.Ordinal);
     }
@@ -801,8 +801,8 @@ public sealed class HardwareInspectorSmokeTests
             batterySaverActive: false,
             detectedTools: ["ASUS Armoury Crate"]);
 
-        Assert.DoesNotContain("conecte-o antes de jogar", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("Conecte-o antes de jogar", message, StringComparison.Ordinal);
         Assert.Contains("ASUS Armoury Crate", message, StringComparison.Ordinal);
-        Assert.Contains("não controla isso diretamente", message, StringComparison.Ordinal);
+        Assert.Contains("não controla essas configurações diretamente", message, StringComparison.Ordinal);
     }
 }

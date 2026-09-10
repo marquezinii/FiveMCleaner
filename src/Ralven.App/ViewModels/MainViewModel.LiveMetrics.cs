@@ -421,7 +421,7 @@ public sealed partial class MainViewModel
                     : "Dashboard.LivePerformance.UpdatedNow");
         LiveMetricsUpdatedExactLabel = localization.Format(
             "Dashboard.LivePerformance.Updated",
-            snapshot.CapturedAt.ToLocalTime().ToString("HH:mm:ss"));
+            snapshot.CapturedAt.ToLocalTime().ToString("T", localization.CurrentCulture));
     }
 
     private void ApplySystemLiveMetrics(LiveSystemMetricsSnapshot snapshot, bool addHistory)
@@ -438,7 +438,6 @@ public sealed partial class MainViewModel
         MemoryUsageDetailLabel = snapshot is { UsedMemoryGiB: { } used, TotalMemoryGiB: { } total }
             ? localization.Format("Dashboard.LivePerformance.MemoryDetail", used, total)
             : string.Empty;
-
         if (!addHistory)
         {
             return;

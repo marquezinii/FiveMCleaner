@@ -65,6 +65,7 @@ public sealed class SilentUpdateInstaller : ISilentUpdateInstaller
             "--installer-sha256", update.Sha256Hex,
             "--parent-pid", parentProcessId.ToString(CultureInfo.InvariantCulture),
             "--parent-start-time", parentStartTimeUtcFileTime.ToString(CultureInfo.InvariantCulture),
+            "--culture", LocalizationService.Current.CurrentCulture.Name,
         };
         var preparedLogDirectory = TryPrepareLogDirectory();
         if (preparedLogDirectory is not null)

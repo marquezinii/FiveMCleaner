@@ -129,26 +129,26 @@ public sealed partial class AppOptimizationService
         }, cancellationToken).ConfigureAwait(false);
     }
 
-    private static IReadOnlyList<string> BuildDiagnosticNotices(
+    private IReadOnlyList<string> BuildDiagnosticNotices(
         GtaVInstallationInfo gtaV,
         long cacheBytes,
         double freeDiskGiB)
     {
         var notices = new List<string>();
-        notices.Add(gtaV.IsInstalled
-            ? "GTA V Legacy detectado; executável e settings.xml entrarão nas ações compatíveis."
-            : "O executável do GTA V Legacy não foi confirmado automaticamente.");
+        notices.Add(localization.GetString(gtaV.IsInstalled
+            ? "Diagnostics.Notice.GtaVDetected"
+            : "Diagnostics.Notice.GtaVNotDetected"));
         if (cacheBytes >= 8L * 1024 * 1024 * 1024)
         {
-            notices.Add("O cache regenerável de servidores está acima de 8 GB; o reparo inteligente pode liberar espaço.");
+            notices.Add(localization.GetString("Diagnostics.Notice.LargeCache"));
         }
         else if (freeDiskGiB < 15)
         {
-            notices.Add("Há pouco espaço livre na unidade do Windows; limpezas seguras podem melhorar a responsividade geral.");
+            notices.Add(localization.GetString("Diagnostics.Notice.LowDiskSpace"));
         }
         else
         {
-            notices.Add("O PC está estável; o perfil sugerido prioriza consistência sem tweaks de risco.");
+            notices.Add(localization.GetString("Diagnostics.Notice.Stable"));
         }
 
         return notices;

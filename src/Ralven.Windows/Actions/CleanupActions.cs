@@ -54,7 +54,7 @@ public sealed class VerifyFiveMStoppedAction : WindowsOptimizationAction
         }
 
         return Task.FromResult(WindowsActionApplyResult.NoChange(
-            "FiveM fechado; é seguro continuar."));
+            WindowsActionText.Format("ActionResults.ProcessCheck.FiveMClosed")));
     }
 
     public override Task RollbackAsync(
@@ -97,7 +97,7 @@ public sealed class VerifyGtaVStoppedAction : WindowsOptimizationAction
         }
 
         return Task.FromResult(WindowsActionApplyResult.NoChange(
-            "GTA V fechado; é seguro continuar."));
+            WindowsActionText.Format("ActionResults.ProcessCheck.GtaVClosed")));
     }
 
     public override Task RollbackAsync(
@@ -400,12 +400,12 @@ public abstract class QuarantineCleanupAction : WindowsOptimizationAction
         if (fileCount == 0)
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Nenhum arquivo allowlisted atendia aos critérios da limpeza."));
+                WindowsActionText.Format("ActionResults.Cleanup.NoFiles")));
         }
 
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
             new CleanupActionSnapshot(snapshots),
-            $"{fileCount} arquivo(s) preparado(s) para limpeza ({byteCount:N0} bytes)."));
+            WindowsActionText.Format("ActionResults.Cleanup.Prepared", fileCount, byteCount)));
     }
 
     public override Task CommitAsync(

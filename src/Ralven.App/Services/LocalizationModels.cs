@@ -1,39 +1,41 @@
 namespace Ralven.App.Services;
 
 /// <summary>
-/// Preference persisted in settings. Automatic is an internal first-run state;
-/// the language picker can expose only English and PortugueseBrazil.
+/// Stable preference values persisted by older releases. New languages are
+/// discovered from localization/locales.json and do not require another enum.
 /// </summary>
-public enum AppLanguagePreference
+public static class AppLanguagePreference
 {
-    Automatic,
-    English,
-    PortugueseBrazil,
-    Spanish
+    public const string Automatic = "automatic";
+    public const string English = "english";
+    public const string PortugueseBrazil = "portugueseBrazil";
+    public const string Spanish = "spanish";
 }
 
-public enum AppLanguage
+public static class AppLanguage
 {
-    English,
-    PortugueseBrazil,
-    Spanish
+    public const string English = "en-US";
+    public const string PortugueseBrazil = "pt-BR";
+    public const string Spanish = "es-ES";
 }
+
+public sealed record SupportedLanguage(string CultureName, string DisplayName);
 
 public sealed class AppLanguageChangedEventArgs : EventArgs
 {
     public AppLanguageChangedEventArgs(
-        AppLanguage previousLanguage,
-        AppLanguage currentLanguage,
-        AppLanguagePreference preference)
+        string previousLanguage,
+        string currentLanguage,
+        string preference)
     {
         PreviousLanguage = previousLanguage;
         CurrentLanguage = currentLanguage;
         Preference = preference;
     }
 
-    public AppLanguage PreviousLanguage { get; }
+    public string PreviousLanguage { get; }
 
-    public AppLanguage CurrentLanguage { get; }
+    public string CurrentLanguage { get; }
 
-    public AppLanguagePreference Preference { get; }
+    public string Preference { get; }
 }

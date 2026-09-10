@@ -341,8 +341,20 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         StartupTrace.Mark("local-ready");
         RefreshTrayIconPresentation();
         themeManager.Apply(viewModel.ThemePreference);
+        PopulateLanguageSelector(viewModel.LanguagePreference);
+        switch (viewModel.ThemePreference)
+        {
+            case AppThemePreference.Dark:
+                ThemeDarkOption.IsChecked = true;
+                break;
+            case AppThemePreference.Light:
+                ThemeLightOption.IsChecked = true;
+                break;
+            default:
+                ThemeSystemOption.IsChecked = true;
+                break;
+        }
         StartupTrace.Mark("saved-theme-ready");
-        SyncGeneralSettingsControls();
         // Allow the completed bindings/layout to render before dismissing the
         // splash. Consent dialogs must never sit behind the startup window.
         await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ContextIdle);
@@ -419,9 +431,48 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void MainWindow_LanguageChanged(object? sender, AppLanguageChangedEventArgs e)
     {
+        PopulateLanguageSelector(e.Preference);
         ApplyAccountEntitlementPresentation();
         proViewModel.Refresh();
         RefreshTrayIconPresentation();
+    }
+
+    private void PopulateLanguageSelector(string preference)
+    {
+        // A sincronização programática não pode transformar "automatic" no
+        // idioma detectado e persistir esse pin durante o startup.
+        syncingLanguageSelector = true;
+        try
+        {
+            LanguageSelector.Items.Clear();
+            LanguageSelector.Items.Add(new System.Windows.Controls.ComboBoxItem
+            {
+                Tag = AppLanguagePreference.Automatic,
+                Content = LocalizationService.Current.GetString("Settings.Language.Automatic")
+            });
+            foreach (var language in LocalizationCatalog.SupportedLanguages)
+            {
+                LanguageSelector.Items.Add(new System.Windows.Controls.ComboBoxItem
+                {
+                    Tag = language.CultureName,
+                    Content = language.DisplayName
+                });
+            }
+
+            var normalized = LocalizationCatalog.NormalizePreference(preference);
+            LanguageSelector.SelectedIndex = normalized == AppLanguagePreference.Automatic
+                ? 0
+                : LocalizationCatalog.SupportedLanguages
+                    .Select((language, index) => (language, index))
+                    .Where(item => item.language.CultureName.Equals(normalized, StringComparison.OrdinalIgnoreCase))
+                    .Select(item => item.index + 1)
+                    .DefaultIfEmpty(0)
+                    .First();
+        }
+        finally
+        {
+            syncingLanguageSelector = false;
+        }
     }
 
     private void Application_SessionEnding(object? sender, SessionEndingCancelEventArgs e)

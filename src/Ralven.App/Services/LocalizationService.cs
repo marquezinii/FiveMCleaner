@@ -6,6 +6,8 @@ using System.Net.Http;
 using System.Resources;
 using System.Security;
 using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace Ralven.App.Services;
 
@@ -13,9 +15,9 @@ public interface ILocalizationService
 {
     event EventHandler<AppLanguageChangedEventArgs>? LanguageChanged;
 
-    AppLanguage CurrentLanguage { get; }
+    string CurrentLanguage { get; }
 
-    AppLanguagePreference CurrentPreference { get; }
+    string CurrentPreference { get; }
 
     CultureInfo CurrentCulture { get; }
 
@@ -27,9 +29,144 @@ public interface ILocalizationService
 
     string DescribeException(Exception exception);
 
-    void Apply(AppLanguagePreference preference, CultureInfo? systemUiCulture = null);
+    void Apply(string preference, CultureInfo? systemUiCulture = null);
 
-    void SetLanguage(AppLanguage language);
+    void SetLanguage(string cultureName);
+}
+
+public static class LocalizationCatalog
+{
+    private const string ManifestResourceName = "Ralven.App.Resources.locales.json";
+    private static readonly LocalizationManifest Manifest = LoadManifest();
+    private static readonly IReadOnlyDictionary<string, SupportedLanguage> LanguagesByName =
+        Manifest.Languages.ToDictionary(
+            language => language.Culture,
+            language => new SupportedLanguage(language.Culture, language.DisplayName),
+            StringComparer.OrdinalIgnoreCase);
+    private static readonly IReadOnlyDictionary<string, string> CultureByAlias = BuildAliases();
+
+    public static string SourceCultureName => Manifest.SourceCulture;
+
+    public static string PseudoCultureName => Manifest.PseudoCulture;
+
+    public static IReadOnlyList<SupportedLanguage> SupportedLanguages { get; } = Manifest.Languages
+        .Select(language => LanguagesByName[language.Culture])
+        .ToArray();
+
+    public static bool TryNormalizePreference(string? preference, out string normalized)
+    {
+        if (string.IsNullOrWhiteSpace(preference)
+            || preference.Equals(AppLanguagePreference.Automatic, StringComparison.OrdinalIgnoreCase)
+            || preference.Equals("auto", StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = AppLanguagePreference.Automatic;
+            return true;
+        }
+
+        if (preference.Equals(Manifest.PseudoCulture, StringComparison.OrdinalIgnoreCase))
+        {
+            normalized = Manifest.PseudoCulture;
+            return true;
+        }
+
+        return CultureByAlias.TryGetValue(preference, out normalized!);
+    }
+
+    public static string NormalizePreference(string? preference) =>
+        TryNormalizePreference(preference, out var normalized)
+            ? normalized
+            : AppLanguagePreference.Automatic;
+
+    public static string DetectLanguage(CultureInfo? systemUiCulture)
+    {
+        if (systemUiCulture is not null)
+        {
+            if (LanguagesByName.TryGetValue(systemUiCulture.Name, out var exact))
+            {
+                return exact.CultureName;
+            }
+
+            var languageMatch = SupportedLanguages.FirstOrDefault(language =>
+                CultureInfo.GetCultureInfo(language.CultureName).TwoLetterISOLanguageName.Equals(
+                    systemUiCulture.TwoLetterISOLanguageName,
+                    StringComparison.OrdinalIgnoreCase));
+            if (languageMatch is not null)
+            {
+                return languageMatch.CultureName;
+            }
+        }
+
+        return Manifest.SourceCulture;
+    }
+
+    public static string Resolve(string preference, CultureInfo? systemUiCulture = null)
+    {
+        if (!TryNormalizePreference(preference, out var normalized))
+        {
+            throw new ArgumentOutOfRangeException(nameof(preference));
+        }
+
+        return normalized == AppLanguagePreference.Automatic
+            ? DetectLanguage(systemUiCulture ?? CultureInfo.CurrentUICulture)
+            : normalized;
+    }
+
+    public static CultureInfo CultureFor(string cultureName) =>
+        CultureInfo.GetCultureInfo(
+            cultureName.Equals(Manifest.PseudoCulture, StringComparison.OrdinalIgnoreCase)
+                ? Manifest.SourceCulture
+                : LanguagesByName.TryGetValue(cultureName, out var language)
+                    ? language.CultureName
+                    : Manifest.SourceCulture);
+
+    private static IReadOnlyDictionary<string, string> BuildAliases()
+    {
+        var aliases = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var language in Manifest.Languages)
+        {
+            aliases.Add(language.Culture, language.Culture);
+            foreach (var alias in language.Aliases)
+            {
+                aliases.Add(alias, language.Culture);
+            }
+        }
+
+        return aliases;
+    }
+
+    private static LocalizationManifest LoadManifest()
+    {
+        using var stream = typeof(LocalizationCatalog).Assembly.GetManifestResourceStream(ManifestResourceName)
+            ?? throw new InvalidOperationException("The localization manifest is missing.");
+        var manifest = JsonSerializer.Deserialize<LocalizationManifest>(
+            stream,
+            new JsonSerializerOptions(JsonSerializerDefaults.Web))
+            ?? throw new InvalidDataException("The localization manifest is invalid.");
+        if (manifest.Languages.Count == 0
+            || !manifest.Languages.Any(language => language.Culture.Equals(
+                manifest.SourceCulture,
+                StringComparison.OrdinalIgnoreCase)))
+        {
+            throw new InvalidDataException("The localization manifest has no valid source culture.");
+        }
+
+        foreach (var language in manifest.Languages)
+        {
+            _ = CultureInfo.GetCultureInfo(language.Culture);
+        }
+
+        return manifest;
+    }
+
+    private sealed record LocalizationManifest(
+        string SourceCulture,
+        string PseudoCulture,
+        IReadOnlyList<LocalizationLanguage> Languages);
+
+    private sealed record LocalizationLanguage(
+        string Culture,
+        string DisplayName,
+        IReadOnlyList<string> Aliases);
 }
 
 /// <summary>
@@ -59,28 +196,27 @@ internal static class LocalizationFallback
 public sealed class LocalizationService : ILocalizationService
 {
     private const string ResourceBaseName = "Ralven.App.Resources.Strings";
-    private static readonly CultureInfo EnglishCulture = CultureInfo.GetCultureInfo("en-US");
-    private static readonly CultureInfo PortugueseBrazilCulture = CultureInfo.GetCultureInfo("pt-BR");
-    private static readonly CultureInfo SpanishCulture = CultureInfo.GetCultureInfo("es");
+    private static readonly CultureInfo SourceCulture = CultureInfo.GetCultureInfo(
+        LocalizationCatalog.SourceCultureName);
     private static readonly ResourceManager Resources = new(
         ResourceBaseName,
         typeof(LocalizationService).Assembly);
 
     private readonly object sync = new();
-    private AppLanguage currentLanguage;
-    private AppLanguagePreference currentPreference;
+    private string currentLanguage;
+    private string currentPreference;
 
     public LocalizationService(CultureInfo? systemUiCulture = null)
     {
         currentPreference = AppLanguagePreference.Automatic;
-        currentLanguage = DetectLanguage(systemUiCulture ?? CultureInfo.CurrentUICulture);
+        currentLanguage = LocalizationCatalog.DetectLanguage(systemUiCulture ?? CultureInfo.CurrentUICulture);
     }
 
     public static LocalizationService Current { get; } = new();
 
     public event EventHandler<AppLanguageChangedEventArgs>? LanguageChanged;
 
-    public AppLanguage CurrentLanguage
+    public string CurrentLanguage
     {
         get
         {
@@ -91,7 +227,7 @@ public sealed class LocalizationService : ILocalizationService
         }
     }
 
-    public AppLanguagePreference CurrentPreference
+    public string CurrentPreference
     {
         get
         {
@@ -102,7 +238,7 @@ public sealed class LocalizationService : ILocalizationService
         }
     }
 
-    public CultureInfo CurrentCulture => CultureFor(CurrentLanguage);
+    public CultureInfo CurrentCulture => LocalizationCatalog.CultureFor(CurrentLanguage);
 
     public string this[string key] => GetString(key);
 
@@ -110,13 +246,19 @@ public sealed class LocalizationService : ILocalizationService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(key);
 
+        if (CurrentLanguage.Equals(LocalizationCatalog.PseudoCultureName, StringComparison.OrdinalIgnoreCase))
+        {
+            var source = Resources.GetString(key, SourceCulture);
+            return string.IsNullOrEmpty(source) ? key : PseudoLocalization.Transform(source);
+        }
+
         var localized = Resources.GetString(key, CurrentCulture);
         if (!string.IsNullOrEmpty(localized))
         {
             return localized;
         }
 
-        var englishFallback = Resources.GetString(key, EnglishCulture);
+        var englishFallback = Resources.GetString(key, SourceCulture);
         return string.IsNullOrEmpty(englishFallback) ? key : englishFallback;
     }
 
@@ -124,6 +266,16 @@ public sealed class LocalizationService : ILocalizationService
     {
         ArgumentNullException.ThrowIfNull(arguments);
         return string.Format(CurrentCulture, GetString(key), arguments);
+    }
+
+    public string FormatCurrency(decimal amount, string currencyCode)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(currencyCode);
+        var culture = (CultureInfo)CurrentCulture.Clone();
+        culture.NumberFormat.CurrencySymbol = currencyCode.Equals("BRL", StringComparison.OrdinalIgnoreCase)
+            ? "R$"
+            : currencyCode.ToUpperInvariant();
+        return amount.ToString("C", culture);
     }
 
     public string DescribeException(Exception exception)
@@ -143,96 +295,66 @@ public sealed class LocalizationService : ILocalizationService
         });
     }
 
-    public void Apply(AppLanguagePreference preference, CultureInfo? systemUiCulture = null)
+    public void Apply(string preference, CultureInfo? systemUiCulture = null)
     {
-        if (!Enum.IsDefined(preference))
+        if (!LocalizationCatalog.TryNormalizePreference(preference, out var normalized))
         {
             throw new ArgumentOutOfRangeException(nameof(preference));
         }
 
-        var resolved = Resolve(preference, systemUiCulture ?? CultureInfo.CurrentUICulture);
-        AppLanguage previous;
+        var resolved = LocalizationCatalog.Resolve(normalized, systemUiCulture ?? CultureInfo.CurrentUICulture);
+        string previous;
         var shouldNotify = false;
         lock (sync)
         {
             previous = currentLanguage;
             shouldNotify = currentLanguage != resolved;
             currentLanguage = resolved;
-            currentPreference = preference;
+            currentPreference = normalized;
         }
 
         if (shouldNotify)
         {
             LanguageChanged?.Invoke(
                 this,
-                new AppLanguageChangedEventArgs(previous, resolved, preference));
+                new AppLanguageChangedEventArgs(previous, resolved, normalized));
         }
     }
 
-    public void SetLanguage(AppLanguage language)
+    public void SetLanguage(string cultureName)
     {
-        if (!Enum.IsDefined(language))
-        {
-            throw new ArgumentOutOfRangeException(nameof(language));
-        }
-
-        Apply(language switch
-        {
-            AppLanguage.English => AppLanguagePreference.English,
-            AppLanguage.PortugueseBrazil => AppLanguagePreference.PortugueseBrazil,
-            AppLanguage.Spanish => AppLanguagePreference.Spanish,
-            _ => throw new ArgumentOutOfRangeException(nameof(language))
-        });
+        Apply(cultureName);
     }
+}
 
-    public static AppLanguage DetectLanguage(CultureInfo? systemUiCulture)
+internal static class PseudoLocalization
+{
+    private const string Accented = "åƀçđëƒĝĥïĵķľɱñôþɋřšŧüṽŵẋÿžÅƁÇĐËƑĜĤÏĴĶĽṀÑÔÞɊŘŠŦÜṼŴẊŸŽ";
+    private const string Plain = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+
+    public static string Transform(string value)
     {
-        if (systemUiCulture is null)
+        var result = new StringBuilder(value.Length * 2).Append('⟦');
+        var letters = 0;
+        for (var index = 0; index < value.Length; index++)
         {
-            return AppLanguage.English;
+            if (value[index] == '{' && value.IndexOf('}', index + 1) is var closing && closing >= 0)
+            {
+                result.Append(value, index, closing - index + 1);
+                index = closing;
+                continue;
+            }
+
+            var mapped = Plain.IndexOf(value[index]);
+            result.Append(mapped >= 0 ? Accented[mapped] : value[index]);
+            if (mapped >= 0 && ++letters % 4 == 0)
+            {
+                result.Append('~');
+            }
         }
 
-        if (string.Equals(
-            systemUiCulture.TwoLetterISOLanguageName,
-            "pt",
-            StringComparison.OrdinalIgnoreCase))
-        {
-            return AppLanguage.PortugueseBrazil;
-        }
-
-        if (string.Equals(
-            systemUiCulture.TwoLetterISOLanguageName,
-            "es",
-            StringComparison.OrdinalIgnoreCase))
-        {
-            return AppLanguage.Spanish;
-        }
-
-        return AppLanguage.English;
+        return result.Append('⟧').ToString();
     }
-
-    public static AppLanguage Resolve(
-        AppLanguagePreference preference,
-        CultureInfo? systemUiCulture = null)
-    {
-        return preference switch
-        {
-            AppLanguagePreference.Automatic => DetectLanguage(
-                systemUiCulture ?? CultureInfo.CurrentUICulture),
-            AppLanguagePreference.English => AppLanguage.English,
-            AppLanguagePreference.PortugueseBrazil => AppLanguage.PortugueseBrazil,
-            AppLanguagePreference.Spanish => AppLanguage.Spanish,
-            _ => throw new ArgumentOutOfRangeException(nameof(preference))
-        };
-    }
-
-    private static CultureInfo CultureFor(AppLanguage language) => language switch
-    {
-        AppLanguage.English => EnglishCulture,
-        AppLanguage.PortugueseBrazil => PortugueseBrazilCulture,
-        AppLanguage.Spanish => SpanishCulture,
-        _ => EnglishCulture
-    };
 }
 
 /// <summary>

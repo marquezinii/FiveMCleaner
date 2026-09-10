@@ -15,12 +15,14 @@ public sealed class UpdateHandoffTests
             "--installer-sha256", new string('a', 64),
             "--parent-pid", "123",
             "--parent-start-time", "456",
+            "--culture", "fr-FR",
             "--log", Path.Combine(localData, "Ralven", "Logs", "update-install.log"),
         ], out var handoff, out _);
 
         Assert.True(accepted);
         Assert.Equal(123, handoff.ParentProcessId);
         Assert.Equal(456, handoff.ParentStartTimeUtcFileTime);
+        Assert.Equal("fr-FR", handoff.CultureName);
         Assert.Contains("/AUTOUPDATE=yes", handoff.BuildInstallerArguments());
     }
 
@@ -31,10 +33,10 @@ public sealed class UpdateHandoffTests
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "Ralven", "Updates", "update.exe");
         var unknown = UpdateHandoff.TryParse([
-            "--installer", installer, "--installer-size", "1", "--installer-sha256", new string('a', 64), "--parent-pid", "1", "--parent-start-time", "2", "--extra", "value",
+            "--installer", installer, "--installer-size", "1", "--installer-sha256", new string('a', 64), "--parent-pid", "1", "--parent-start-time", "2", "--culture", "en-US", "--extra", "value",
         ], out _, out _);
         var relative = UpdateHandoff.TryParse([
-            "--installer", "update.exe", "--installer-size", "1", "--installer-sha256", new string('a', 64), "--parent-pid", "1", "--parent-start-time", "2",
+            "--installer", "update.exe", "--installer-size", "1", "--installer-sha256", new string('a', 64), "--parent-pid", "1", "--parent-start-time", "2", "--culture", "en-US",
         ], out _, out _);
         var missingProcessIdentity = UpdateHandoff.TryParse([
             "--installer", installer, "--installer-size", "1", "--installer-sha256", new string('a', 64), "--parent-pid", "1",

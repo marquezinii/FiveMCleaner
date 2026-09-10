@@ -1,6 +1,8 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Security.Cryptography;
+using System.Globalization;
+using System.Resources;
 using System.Windows.Forms;
 using Ralven.UpdateRuntime;
 
@@ -10,15 +12,18 @@ public static class Program
 {
     private const int ParentExitTimeoutMilliseconds = 120_000;
     private const int InstallerTimeoutMilliseconds = 600_000;
+    private static readonly ResourceManager Messages = new("Ralven.Updater.Resources.Strings", typeof(Program).Assembly);
+    private static CultureInfo uiCulture = CultureInfo.CurrentUICulture;
 
     [STAThread]
     public static int Main(string[] args)
     {
         if (!UpdateHandoff.TryParse(args, out var handoff, out var error))
         {
-            ShowFailure(error);
+            ShowFailure(T(error));
             return 2;
         }
+        uiCulture = CultureInfo.GetCultureInfo(handoff.CultureName);
 
         try
         {
@@ -97,15 +102,17 @@ public static class Program
     }
 
     private static void ShowFailure(string? detail) => MessageBox.Show(
-        $"Não foi possível concluir a atualização do Ralven.\n\n{detail}\n\nAbra o aplicativo novamente e tente outra vez.",
-        "Atualização do Ralven", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        string.Format(uiCulture, T("Updater.Failure"), detail),
+        T("Updater.Title"), MessageBoxButtons.OK, MessageBoxIcon.Error);
 
     private static string DescribeFailure(Exception exception) => exception switch
     {
-        TimeoutException => "A atualização demorou mais que o esperado e foi interrompida. Abra o Ralven novamente para tentar outra vez.",
-        UnauthorizedAccessException => "O Windows não permitiu concluir a atualização. Verifique a permissão e tente novamente.",
-        CryptographicException or InvalidDataException => "A verificação de segurança do instalador falhou. Nada foi alterado.",
-        FileNotFoundException => "O instalador verificado não está mais disponível. Abra o Ralven e baixe a atualização novamente.",
-        _ => "O atualizador encontrou um problema inesperado. Abra o Ralven novamente e tente outra vez."
+        TimeoutException => T("Updater.Error.Timeout"),
+        UnauthorizedAccessException => T("Updater.Error.AccessDenied"),
+        CryptographicException or InvalidDataException => T("Updater.Error.Security"),
+        FileNotFoundException => T("Updater.Error.MissingInstaller"),
+        _ => T("Updater.Error.Unexpected")
     };
+
+    internal static string T(string key) => Messages.GetString(key, uiCulture) ?? key;
 }

@@ -1,3 +1,4 @@
+using System.Globalization;
 using Ralven.Contracts;
 using Ralven.Windows;
 using Ralven.Windows.Actions;
@@ -14,10 +15,15 @@ internal sealed class WindowsAdministratorRuntimeAdapter
         this.runtime = runtime;
     }
 
-    public static WindowsAdministratorRuntimeAdapter CreateDefault(bool forRollback = false)
+    public static WindowsAdministratorRuntimeAdapter CreateDefault(
+        string cultureName,
+        bool forRollback = false)
     {
         var environment = WindowsOptimizationEnvironment.DetectDefault();
-        var dependencies = WindowsOptimizationDependencies.CreateDefault(environment);
+        var culture = CultureInfo.GetCultureInfo(cultureName);
+        var dependencies = WindowsOptimizationDependencies.CreateDefault(
+            environment,
+            WindowsActionResources.ForCulture(culture));
         dependencies = dependencies with
         {
             JournalStore = new BrokerAdministratorJournalStore(

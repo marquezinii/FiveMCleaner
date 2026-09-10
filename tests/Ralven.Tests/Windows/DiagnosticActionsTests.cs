@@ -167,7 +167,7 @@ public sealed class DiagnosticActionsTests
         Assert.False(result.Changed);
         var message = Assert.Single(result.Messages);
         Assert.Contains("recent.log", message, StringComparison.Ordinal);
-        Assert.Contains("1 linha(s)", message, StringComparison.Ordinal);
+        Assert.Contains("Linhas com possíveis erros: 1", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -189,7 +189,7 @@ public sealed class DiagnosticActionsTests
     [InlineData(true, 0, 0, "não registram")]
     [InlineData(true, 5, 0, "contadores acumulados")]
     [InlineData(true, 0, 3, "contadores acumulados")]
-    [InlineData(false, 0, 0, "Não foi possível ler estatísticas")]
+    [InlineData(false, 0, 0, "estatísticas de uma placa de rede ativa")]
     public void NetworkHealthDiagnosis_ClassifiesFromLocalCountersOnly(
         bool hasActiveInterface,
         long discarded,

@@ -344,7 +344,7 @@ public sealed partial class ActionCatalog
                 progressWeight: 2,
                 expectedImpact: "Mostra quando muitos programas disputam recursos no logon e encaminha a decisão para o inventário de Aplicativos.",
                 ActionOptionGate.Always,
-                detectionSummary: "Reutiliza o inventário allowlisted de Run, RunOnce e pastas Startup por usuário e por máquina, lendo somente nomes e origens.",
+                detectionSummary: "Reutiliza o inventário permitido de Run, RunOnce e pastas Startup por usuário e por máquina, lendo somente nomes e origens.",
                 confirmationSummary: "Sempre é concluída com uma mensagem informativa; fontes inacessíveis permanecem marcadas como resultado parcial.",
                 undoSummary: "Somente leitura: não executa comandos nem habilita ou desabilita itens de inicialização.",
                 riskLimitations: "Não calcula o impacto do Gerenciador de Tarefas e não inclui serviços ou tarefas agendadas; quantidade sozinha não determina lentidão."),

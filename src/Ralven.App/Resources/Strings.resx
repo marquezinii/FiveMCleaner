@@ -359,7 +359,7 @@
   <data name="Profiles.Aggressive.Name" xml:space="preserve"><value>Aggressive</value></data>
   <data name="Profiles.Aggressive.Badge" xml:space="preserve"><value>FPS FIRST</value></data>
   <data name="Profiles.Aggressive.Description" xml:space="preserve"><value>Reduces expensive effects and settings for limited PCs.</value></data>
-  <data name="Plan.VerifiedActions" xml:space="preserve"><value>{0} verified actions  •  {1}</value></data>
+  <data name="Plan.VerifiedActions" xml:space="preserve"><value>Verified actions: {0}  •  {1}</value></data>
   <data name="Plan.Review" xml:space="preserve"><value>Review plan</value></data>
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Optimize now</value></data>
   <data name="Optimizer.Title" xml:space="preserve"><value>Windows optimization</value></data>
@@ -388,7 +388,7 @@
   <data name="Optimizer.Result.PartialTitle" xml:space="preserve"><value>Completed with failures</value></data>
   <data name="Optimizer.NextStep" xml:space="preserve"><value>NEXT RECOMMENDED STEP</value></data>
   <data name="Optimizer.PlanTitle" xml:space="preserve"><value>What will change</value></data>
-  <data name="Optimizer.AutomaticAnalysis.Header" xml:space="preserve"><value>{0} automatic checks</value></data>
+  <data name="Optimizer.AutomaticAnalysis.Header" xml:space="preserve"><value>Automatic checks: {0}</value></data>
   <data name="Optimizer.AutomaticAnalysis.Description" xml:space="preserve"><value>Hardware, driver and stability checks. They do not change your PC.</value></data>
   <data name="Optimizer.ExecutionDetails" xml:space="preserve"><value>View completed steps</value></data>
   <data name="Optimizer.ResultDetails" xml:space="preserve"><value>Details and technical report</value></data>
@@ -543,8 +543,8 @@
   <data name="Plan.Empty.GeneralNoSafeActions" xml:space="preserve"><value>This PC already matches the safe Windows targets available for the selected profile.</value></data>
   <data name="Plan.Empty.DiagnosticInProgress" xml:space="preserve"><value>Wait for the diagnostic to finish before preparing actions.</value></data>
   <data name="Plan.Empty.DiagnosticUnavailable" xml:space="preserve"><value>The diagnostic could not be completed. Try scanning your PC again before preparing actions.</value></data>
-  <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} adjustments</value></data>
-  <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>{0} actions completed. {1}</value></data>
+  <data name="Plan.ActionsCatalog" xml:space="preserve"><value>Adjustments: {0}</value></data>
+  <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>Completed actions: {0}. {1}</value></data>
   <data name="Diagnosis.Partial" xml:space="preserve"><value>Partial diagnostics</value></data>
   <data name="Diagnosis.CouldNotScanAgain" xml:space="preserve"><value>Could not scan again right now</value></data>
   <data name="Diagnosis.FiveMLegacyDetected" xml:space="preserve"><value>FIVEM LEGACY DETECTED</value></data>
@@ -564,7 +564,7 @@
   <data name="Diagnosis.FreeDisk" xml:space="preserve"><value>{0} GB free</value></data>
   <data name="History.ProfileTitle" xml:space="preserve"><value>{0} profile</value></data>
   <data name="History.WindowsGamingTitle" xml:space="preserve"><value>Windows gaming settings</value></data>
-  <data name="History.AdjustmentsState" xml:space="preserve"><value>{0} adjustments • {1}</value></data>
+  <data name="History.AdjustmentsState" xml:space="preserve"><value>Adjustments: {0} • {1}</value></data>
   <data name="History.Empty.Title" xml:space="preserve"><value>No optimizations yet</value></data>
   <data name="History.Empty.Date" xml:space="preserve"><value>Local history</value></data>
   <data name="History.Empty.Summary" xml:space="preserve"><value>Your first run will appear here</value></data>
@@ -1159,9 +1159,9 @@
   <data name="Results.FiveMStopped" xml:space="preserve"><value>FiveM is closed; it is safe to continue.</value></data>
   <data name="Results.GtaVStopped" xml:space="preserve"><value>GTA V is closed; it is safe to continue.</value></data>
   <data name="Results.NoAllowlistedFiles" xml:space="preserve"><value>No allowlisted file matched the cleanup criteria.</value></data>
-  <data name="Results.CleanupPrepared" xml:space="preserve"><value>{0} file(s) prepared for cleanup ({1} bytes).</value></data>
+  <data name="Results.CleanupPrepared" xml:space="preserve"><value>Files prepared for cleanup: {0} ({1} bytes).</value></data>
   <data name="Results.RegistryNoChange" xml:space="preserve"><value>No compatible value needed to be changed.</value></data>
-  <data name="Results.RegistryUpdated" xml:space="preserve"><value>{0} allowlisted setting(s) updated.</value></data>
+  <data name="Results.RegistryUpdated" xml:space="preserve"><value>Updated allowlisted settings: {0}.</value></data>
   <data name="Results.PowerOnBattery" xml:space="preserve"><value>The high-performance mode was not enabled because the computer is on battery power.</value></data>
   <data name="Results.PowerUnsupported" xml:space="preserve"><value>This computer does not expose a compatible high-performance power plan.</value></data>
   <data name="Results.PowerAlreadyActive" xml:space="preserve"><value>The high-performance power plan was already active.</value></data>
@@ -1170,7 +1170,7 @@
   <data name="Results.GraphicsFiveMSettingsMissing" xml:space="preserve"><value>gta5_settings.xml does not exist yet; open FiveM once before applying the preset.</value></data>
   <data name="Results.GraphicsGtaSettingsMissing" xml:space="preserve"><value>settings.xml does not exist yet; open GTA V Legacy once before applying the preset.</value></data>
   <data name="Results.GraphicsAlreadyApplied" xml:space="preserve"><value>The allowlisted graphics settings already matched the requested preset.</value></data>
-  <data name="Results.GraphicsUpdated" xml:space="preserve"><value>A backup was created and {0} graphics option(s) were updated.</value></data>
+  <data name="Results.GraphicsUpdated" xml:space="preserve"><value>Graphics options updated: {0}. A backup was created.</value></data>
   <data name="Results.VisualEffectsAlreadyApplied" xml:space="preserve"><value>Windows visual effects already matched the requested state.</value></data>
   <data name="Results.VisualEffectsUpdated" xml:space="preserve"><value>Windows visual effects were updated through the official API.</value></data>
   <data name="Update.Available.Title" xml:space="preserve"><value>Ralven {0} is available</value></data>
@@ -1320,7 +1320,7 @@
   <data name="GtaVBenchmark.Details" xml:space="preserve"><value>How it works</value></data>
   <data name="GtaVBenchmark.RunButton" xml:space="preserve"><value>Run official benchmark</value></data>
   <data name="GtaVBenchmark.Running" xml:space="preserve"><value>Running the official GTA V benchmark (3 rounds)... this can take several minutes.</value></data>
-  <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Median of {4} round(s) — avg FPS: {0:0.#}, min FPS: {1:0.#}, 1% low: {2:0.#}, 0.1% low: {3:0.#}.</value></data>
+  <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Benchmark runs: {4}. Median — average FPS: {0:0.#}, minimum FPS: {1:0.#}, 1% low: {2:0.#}, 0.1% low: {3:0.#}.</value></data>
   <data name="GtaVBenchmark.Error" xml:space="preserve"><value>Could not run the official benchmark: {0}</value></data>
   <data name="GtaVBenchmark.Failure.NotDetected" xml:space="preserve"><value>GTA V was not detected on this computer.</value></data>
   <data name="GtaVBenchmark.Failure.StillRunning" xml:space="preserve"><value>GTA V is still running. Close it before running the official benchmark.</value></data>
@@ -1498,7 +1498,7 @@
   <data name="Account.Username.Available" xml:space="preserve"><value>This username is available.</value></data>
   <data name="Account.Username.Taken" xml:space="preserve"><value>This username is already taken.</value></data>
   <data name="Account.Password.PolicyMinimum" xml:space="preserve"><value>Use at least {0} characters.</value></data>
-  <data name="Account.Password.PolicyRemaining" xml:space="preserve"><value>{0} more character(s) needed to reach the minimum of {1}.</value></data>
+  <data name="Account.Password.PolicyRemaining" xml:space="preserve"><value>Characters remaining: {0} (minimum: {1}).</value></data>
   <data name="Account.Password.PolicyMet" xml:space="preserve"><value>Good! Your password meets the minimum requirement.</value></data>
   <data name="Account.Password.ConfirmMatch" xml:space="preserve"><value>Passwords match.</value></data>
   <data name="Account.Password.ConfirmMismatch" xml:space="preserve"><value>Passwords do not match.</value></data>
@@ -1695,7 +1695,7 @@
   <data name="ActionResults.StartupLoad.PartialSuffix" xml:space="preserve"><value> Partial read: some startup sources could not be queried.</value></data>
   <data name="ActionResults.StartupLoad.NoItems" xml:space="preserve"><value>No startup items were found in the monitored sources.</value></data>
   <data name="ActionResults.StartupLoad.NoItemsAccessible" xml:space="preserve"><value>No startup items were found in the accessible sources.</value></data>
-  <data name="ActionResults.StartupLoad.Summary" xml:space="preserve"><value>Detected {0} startup item(s) (registry: {1}; folders: {2}). Quantity alone does not determine impact; review measured impact in Task Manager.</value></data>
+  <data name="ActionResults.StartupLoad.Summary" xml:space="preserve"><value>Startup items detected: {0} (registry: {1}; folders: {2}). Quantity alone does not determine impact; review measured impact in Task Manager.</value></data>
   <data name="ActionResults.TrimStatus.AccessDenied" xml:space="preserve"><value>Windows did not allow the TRIM policy query without elevation; no volume was changed.</value></data>
   <data name="ActionResults.TrimStatus.Unsupported" xml:space="preserve"><value>This Windows installation does not support the TRIM policy query.</value></data>
   <data name="ActionResults.TrimStatus.Unavailable" xml:space="preserve"><value>The TRIM policy could not be queried right now.</value></data>
@@ -1946,4 +1946,30 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Dialog.Cancel" xml:space="preserve"><value>Cancel</value></data>
   <data name="Dialog.Confirm" xml:space="preserve"><value>Continue</value></data>
   <data name="Dialog.OptionalDetails" xml:space="preserve"><value>Optional details</value></data>
+  <data name="Launcher.Recovery.Title" xml:space="preserve"><value>Ralven recovery</value></data>
+  <data name="Launcher.Recovery.Message" xml:space="preserve"><value>The new version did not confirm a healthy startup. The previous version was restored and will be used the next time you open Ralven.</value></data>
+  <data name="Launcher.Error.ParentTimeout" xml:space="preserve"><value>The previous Ralven process did not close in time. Wait a moment and try opening it again.</value></data>
+  <data name="Launcher.Error.AccessDenied" xml:space="preserve"><value>Windows did not allow this version to open. Check the permission and try again.</value></data>
+  <data name="Launcher.Error.Security" xml:space="preserve"><value>This update could not be verified safely. Nothing was changed.</value></data>
+  <data name="Launcher.Error.MissingFiles" xml:space="preserve"><value>The files required to open Ralven were not found. Try repairing or reinstalling the app.</value></data>
+  <data name="Launcher.Error.Unexpected" xml:space="preserve"><value>Ralven could not open right now. Try again; if the problem persists, reinstall the app.</value></data>
+  <data name="Diagnostics.Notice.GtaVDetected" xml:space="preserve"><value>GTA V Legacy was detected; its executable and settings.xml will be included in compatible actions.</value></data>
+  <data name="Diagnostics.Notice.GtaVNotDetected" xml:space="preserve"><value>The GTA V Legacy executable was not confirmed automatically.</value></data>
+  <data name="Diagnostics.Notice.LargeCache" xml:space="preserve"><value>The regenerable server cache is above 8 GB; smart repair may free up space.</value></data>
+  <data name="Diagnostics.Notice.LowDiskSpace" xml:space="preserve"><value>The Windows drive is low on free space; safe cleanups may improve overall responsiveness.</value></data>
+  <data name="Diagnostics.Notice.Stable" xml:space="preserve"><value>This PC is stable; the suggested profile prioritizes consistency without risky tweaks.</value></data>
+  <data name="Broker.Error.Cancelled" xml:space="preserve"><value>The Windows confirmation was cancelled.</value></data>
+  <data name="Broker.Error.ConnectionTimeout" xml:space="preserve"><value>The administrative component did not connect to the local progress channel in time. This can happen when antivirus software or Windows SmartScreen interrupts the elevation of an unsigned executable; check Windows Defender protection history (or your antivirus history) before trying again.</value></data>
+  <data name="Broker.Error.OperationTimeout" xml:space="preserve"><value>The administrative component exceeded the safety time limit. Check the history before trying again.</value></data>
+  <data name="Broker.Error.InvalidArguments" xml:space="preserve"><value>The arguments sent to the administrative component were invalid.</value></data>
+  <data name="Broker.Error.ConnectionFailed" xml:space="preserve"><value>The administrative component could not connect to the local progress channel.</value></data>
+  <data name="Broker.Error.InvalidAdminToken" xml:space="preserve"><value>The administrative component did not receive a valid administrator token.</value></data>
+  <data name="Broker.Error.Interrupted" xml:space="preserve"><value>The administrative component was interrupted before confirming the result (exit code {0}). This usually happens when antivirus software or Windows SmartScreen stops an elevated unsigned executable; check Windows Defender protection history (or your antivirus history) before trying again.</value></data>
+  <data name="Runtime.BrokerActionDetail" xml:space="preserve"><value>Administrative step: {0}</value></data>
+  <data name="Runtime.BrokerStartedDetail" xml:space="preserve"><value>The administrative plan was validated and started.</value></data>
+  <data name="Runtime.BrokerCompletedDetail" xml:space="preserve"><value>The administrative changes were completed and recorded.</value></data>
+  <data name="Runtime.BrokerRollbackStartedDetail" xml:space="preserve"><value>Restoring the administrative changes.</value></data>
+  <data name="Runtime.BrokerRollbackCompletedDetail" xml:space="preserve"><value>The administrative changes were restored.</value></data>
+  <data name="Runtime.BrokerRejectedDetail" xml:space="preserve"><value>The administrative request was rejected safely.</value></data>
+  <data name="Runtime.BrokerFailedDetail" xml:space="preserve"><value>The administrative operation stopped safely. Check the report before trying again.</value></data>
 </root>

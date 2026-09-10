@@ -227,7 +227,7 @@ public sealed record AppHistoryRecord
 
 public sealed record AppSettings
 {
-    public AppLanguagePreference Language { get; init; } = AppLanguagePreference.Automatic;
+    public string Language { get; init; } = AppLanguagePreference.Automatic;
 
     public AppThemePreference Theme { get; init; } = AppThemePreference.System;
 

@@ -122,7 +122,7 @@ internal static class Program
             item => item.TransactionId = plan.PlanId);
 
         BrokerDiagnosticsLog.Record("action-started", plan.PlanId);
-        var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault();
+        var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault(command.CultureName);
         using var timeout = new CancellationTokenSource(ExecutionTimeout);
         WindowsTransactionResult result;
         try
@@ -186,7 +186,9 @@ internal static class Program
             "Iniciando reversão da transação elevada.",
             item => item.TransactionId = transactionId);
 
-        var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault(forRollback: true);
+        var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault(
+            command.CultureName,
+            forRollback: true);
         using var timeout = new CancellationTokenSource(ExecutionTimeout);
         WindowsTransactionResult result;
         try

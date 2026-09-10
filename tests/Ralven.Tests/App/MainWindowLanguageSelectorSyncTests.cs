@@ -18,7 +18,7 @@ public sealed class MainWindowLanguageSelectorSyncTests
         var source = ReadMainWindowSource();
 
         Assert.Contains("syncingLanguageSelector = true;", source, StringComparison.Ordinal);
-        Assert.Contains("LanguageSelector.SelectedIndex = viewModel.LanguagePreference switch", source, StringComparison.Ordinal);
+        Assert.Contains("PopulateLanguageSelector(viewModel.LanguagePreference)", source, StringComparison.Ordinal);
         Assert.Contains("syncingLanguageSelector = false;", source, StringComparison.Ordinal);
         // O try/finally garante que o flag nunca fica preso em true, mesmo se
         // a atribuição do SelectedIndex lançar uma exceção.
@@ -41,10 +41,19 @@ public sealed class MainWindowLanguageSelectorSyncTests
     {
         var source = ReadMainWindowSource();
 
-        Assert.Contains("AppLanguagePreference.PortugueseBrazil => 1", source, StringComparison.Ordinal);
-        Assert.Contains("AppLanguagePreference.English => 2", source, StringComparison.Ordinal);
-        Assert.Contains("AppLanguagePreference.Spanish => 3", source, StringComparison.Ordinal);
-        Assert.Contains("_ => 0", source, StringComparison.Ordinal);
+        Assert.Contains("LocalizationCatalog.SupportedLanguages", source, StringComparison.Ordinal);
+        Assert.Contains("language.CultureName.Equals(normalized", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("AppLanguagePreference.Spanish =>", source, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void VisualCapture_ChangesLanguageThroughTheViewModel()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var source = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "MainWindow.Capture.xaml.cs"));
+
+        Assert.Contains("viewModel.SelectLanguage(language)", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("LocalizationService.Current.SetLanguage(language)", source, StringComparison.Ordinal);
     }
 
     private static string ReadMainWindowSource() => TestHelpers.ReadMainWindowSource();

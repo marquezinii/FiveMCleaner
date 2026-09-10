@@ -1,0 +1,29 @@
+Ralven inclut le runtime .NET et toutes les dépendances nécessaires pour
+exécuter l'application sous Windows 10 version 2004 (build 19041) ou ultérieure
+et sous Windows 11 sur les systèmes compatibles x64. Aucun runtime, script ou
+paquet supplémentaire n'est téléchargé pendant l'installation.
+
+L'installation s'effectue par utilisateur et ne demande pas d'accès
+administrateur. Ralven demande une élévation uniquement lorsqu'une optimisation
+sélectionnée doit modifier un paramètre Windows protégé.
+
+Les paramètres, journaux, sauvegardes et mises à jour téléchargées se trouvent
+dans %LOCALAPPDATA%\Ralven, en dehors du dossier d'installation. Lors de la
+désinstallation, vous choisissez de conserver ou non ces données ; elles sont
+conservées par défaut.
+
+Le raccourci sur le Bureau est sélectionné par défaut. Le démarrage avec Windows
+est sélectionné par défaut. Ces deux options peuvent être modifiées
+ultérieurement et sont supprimées lors de la désinstallation.
+
+Les prochaines mises à jour sont proposées dans l'application après votre
+confirmation. Vous n'aurez normalement pas besoin de télécharger à nouveau ce
+programme d'installation.
+
+Téléchargez le programme d'installation uniquement depuis :
+https://vemryx.com/Ralven/
+ou depuis la page officielle des versions :
+https://vemryx.com/Ralven/
+
+Avant de l'exécuter, vérifiez le fichier .sha256 publié :
+  (Get-FileHash .\Ralven-Setup-*-win-x64.exe -Algorithm SHA256).Hash

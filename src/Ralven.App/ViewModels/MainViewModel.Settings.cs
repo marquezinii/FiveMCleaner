@@ -20,15 +20,9 @@ public sealed partial class MainViewModel
 
     public AppThemePreference ThemePreference => themePreference;
 
-    public AppLanguagePreference LanguagePreference => languagePreference;
+    public string LanguagePreference => languagePreference;
 
-    public AppLanguage CurrentLanguage => localization.CurrentLanguage;
-
-    public bool IsEnglishSelected => CurrentLanguage == AppLanguage.English;
-
-    public bool IsPortugueseSelected => CurrentLanguage == AppLanguage.PortugueseBrazil;
-
-    public bool IsSpanishSelected => CurrentLanguage == AppLanguage.Spanish;
+    public string CurrentLanguage => localization.CurrentLanguage;
 
     public bool IsCloseAppOnCloseSelected
     {
@@ -234,36 +228,30 @@ public sealed partial class MainViewModel
         SettingsChanged(refreshPlan: false);
     }
 
-    public void SelectLanguage(AppLanguage language)
+    public void SelectLanguage(string cultureName)
     {
-        if (!Enum.IsDefined(language))
+        if (!LocalizationCatalog.TryNormalizePreference(cultureName, out var preference))
         {
             return;
         }
 
-        SelectLanguagePreference(language switch
-        {
-            AppLanguage.English => AppLanguagePreference.English,
-            AppLanguage.PortugueseBrazil => AppLanguagePreference.PortugueseBrazil,
-            AppLanguage.Spanish => AppLanguagePreference.Spanish,
-            _ => AppLanguagePreference.English
-        });
+        SelectLanguagePreference(preference);
     }
 
-    public void SelectLanguagePreference(AppLanguagePreference preference)
+    public void SelectLanguagePreference(string preference)
     {
-        if (!Enum.IsDefined(preference))
+        if (!LocalizationCatalog.TryNormalizePreference(preference, out var normalized))
         {
             return;
         }
 
-        if (languagePreference == preference)
+        if (languagePreference == normalized)
         {
             return;
         }
 
-        localization.Apply(preference);
-        languagePreference = preference;
+        localization.Apply(normalized);
+        languagePreference = normalized;
         RefreshLocalizedState();
         SettingsChanged(refreshPlan: false);
     }
@@ -292,7 +280,7 @@ public sealed partial class MainViewModel
 
     private void ApplySettings(AppSettings settings)
     {
-        languagePreference = Enum.IsDefined(settings.Language)
+        languagePreference = LocalizationCatalog.TryNormalizePreference(settings.Language, out _)
             ? settings.Language
             : AppLanguagePreference.Automatic;
         localization.Apply(languagePreference);
@@ -319,9 +307,6 @@ public sealed partial class MainViewModel
 
         OnPropertyChanged(nameof(LanguagePreference));
         OnPropertyChanged(nameof(CurrentLanguage));
-        OnPropertyChanged(nameof(IsEnglishSelected));
-        OnPropertyChanged(nameof(IsPortugueseSelected));
-        OnPropertyChanged(nameof(IsSpanishSelected));
         OnPropertyChanged(nameof(ThemePreference));
         OnPropertyChanged(nameof(IsSystemThemeSelected));
         OnPropertyChanged(nameof(IsDarkThemeSelected));
@@ -539,9 +524,6 @@ public sealed partial class MainViewModel
         RefreshGreeting();
         OnPropertyChanged(nameof(LanguagePreference));
         OnPropertyChanged(nameof(CurrentLanguage));
-        OnPropertyChanged(nameof(IsEnglishSelected));
-        OnPropertyChanged(nameof(IsPortugueseSelected));
-        OnPropertyChanged(nameof(IsSpanishSelected));
         OnPropertyChanged(nameof(SelectedProfileLabel));
         OnPropertyChanged(nameof(SelectedProfileName));
         OnPropertyChanged(nameof(IsSelectedProfileRecommended));

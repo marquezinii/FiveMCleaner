@@ -356,13 +356,13 @@ Preserve:
 
 Não introduza texto localizado hardcoded.
 
-Ao adicionar/alterar texto público, mantenha a chave correspondente em:
+Ao adicionar/alterar texto público, edite a fonte canônica em inglês e execute
+`scripts/Sync-Localization.ps1 -Mode Sync`. Idiomas e conjuntos de recursos
+são declarados em `localization/locales.json`; o fluxo de revisão, o glossário
+e a pseudo-localização estão definidos em `docs/localization.md`.
 
-- `src/Ralven.App/Resources/Strings.resx`
-- `src/Ralven.App/Resources/Strings.pt-BR.resx`
-- `src/Ralven.App/Resources/Strings.es.resx`
-
-Use o mecanismo de localização existente no XAML/código.
+Use o mecanismo de localização existente no XAML/código e não adicione idiomas
+por switches, índices ou enums na lógica da aplicação.
 
 Isso inclui `Text`, `Content`, tooltips, mensagens, placeholders, diálogos e
 labels. Preserve placeholders e formatação entre os idiomas.

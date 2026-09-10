@@ -28,9 +28,11 @@ internal sealed class DemoModeSimulator
             GtaVIsRunning = false,
             GtaVExecutablePath = @"C:\Jogos\Grand Theft Auto V\GTA5.exe",
             GtaVGraphicsSettingsPath = @"C:\User\Documents\Rockstar Games\GTA V\settings.xml",
-            CpuName = localization.GetString("Demo.Cpu"),
-            GpuName = localization.GetString("Demo.Gpu"),
-            GpuNames = [localization.GetString("Demo.Gpu")],
+            // Synthetic hardware names behave like real model names: they must not
+            // become stale when the UI language changes after diagnosis.
+            CpuName = "Ralven Demo CPU",
+            GpuName = "Ralven Demo GPU • 8 GB",
+            GpuNames = ["Ralven Demo GPU • 8 GB"],
             TotalMemoryGiB = 16,
             AvailableMemoryGiB = 8,
             MemoryModuleLayout = "2×8 GB",
