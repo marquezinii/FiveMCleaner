@@ -1,4 +1,4 @@
-# Objetivo da tarefa
+# Objective
 
 - **Agente:** Codex
 - **Objetivo:** Unificar os switches do Ralven em um controle compacto, claro e acessível, adequado aos temas do aplicativo.

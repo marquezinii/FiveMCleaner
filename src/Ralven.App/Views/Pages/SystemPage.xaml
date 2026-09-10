@@ -359,15 +359,11 @@
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <Button Content="{Binding [System.Gaming.Apply], Source={StaticResource LocalizedStrings}}"
                                     Style="{StaticResource PrimaryButtonStyle}"
-                                    MinHeight="40"
-                                    Padding="16,0"
                                     Margin="0,0,8,0"
                                     IsEnabled="{Binding CanApplyWindowsGamingSettings}"
                                     Click="ApplyWindowsGaming_Click" />
                             <Button Content="{Binding [System.Gaming.Restore], Source={StaticResource LocalizedStrings}}"
                                     Style="{StaticResource SecondaryButtonStyle}"
-                                    MinHeight="40"
-                                    Padding="16,0"
                                     IsEnabled="{Binding CanRestoreWindowsGamingSettings}"
                                     Click="RestoreWindowsGaming_Click" />
                         </StackPanel>

@@ -1,8 +1,13 @@
 # Instalador, atualização e publicação
 
 O instalador oficial do Ralven é um executável Inno Setup moderno para
-Windows 11 e, em compatibilidade legada, Windows 10 build 19041 ou mais recente,
-em sistemas compatíveis com binários x64. Windows 11 é o sistema recomendado.
+Windows 10 versão 2004 (build 19041) ou mais recente e Windows 11, em sistemas
+compatíveis com binários x64. As duas plataformas são suportadas como ambientes
+de primeira classe; recursos visuais nativos sem suporte no Windows 10 usam o
+fallback equivalente documentado pelo aplicativo.
+
+O roteiro de aceite em uma máquina Windows 10 real está em
+[`windows10-validation.md`](windows10-validation.md).
 Em instalações novas, ele instala por usuário em `{autopf}\Ralven`; por padrão, isso corresponde
 à pasta de programas local do usuário e não exige UAC.
 
