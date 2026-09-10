@@ -90,6 +90,7 @@ Leia a [política de segurança](docs/safety.md) e as [evidências técnicas](do
 | Sistema | Informações internas do PC, saúde agregada informada pelo Windows e leitura/ajuste confirmado do Modo de Jogo e da gravação histórica; atalhos nativos ficam como ações secundárias. |
 | Aplicativos | Centro de pacotes com descoberta, instalados gerenciados, atualizações individuais/em lote, lista de ignorados e desinstalação via WinGet; limitado às origens confiáveis WinGet Community e Microsoft Store, com confirmação antes de cada mutação. O inventário local e os atalhos nativos continuam disponíveis. |
 | Jogos | Catálogo interno com um hub do FiveM sobre GTAV Legacy, reunindo o plano especializado, acesso ao otimizador geral, ao histórico/restauração e ao download oficial mais recente do ReShade, sem redistribuir seu instalador. |
+| Bandeja | Menu escuro com estado do aplicativo e acessos rápidos para abrir o Ralven, o Otimizador, o monitor local do FiveM, atualizações e Configurações; sair continua explícito e separado. |
 | Ralven AI | Orientação contextual em linguagem natural baseada no diagnóstico e no catálogo já conhecidos, sempre com revisão explícita antes de qualquer aplicação. |
 | Conta | Cadastro e login por e-mail, verificação, recuperação, senha, troca de credenciais e exclusão; Google usa OAuth 2.0 + PKCE quando a credencial desktop é fornecida ao build. |
 | Privacidade | ID token somente em memória, refresh token protegido por DPAPI e telemetria limitada por consentimento. |

@@ -1,7 +1,7 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** Refinar a experiência de atualização disponível e avisos ao vivo, incluindo uma notificação interna discreta, acessível e acionável.
-- **Escopo:** Interface, estados, dashboard administrativo e contrato allowlisted diretamente relacionados aos avisos de atualização e comunicados; não inclui mudança no mecanismo de instalação nem release/publicação.
-- **Critérios de conclusão:** Hierarquia e ações claras; descarte e reexibição coerentes; teclado, foco e DPI preservados; fluxos cobertos por validação focada e build aplicável.
-- **Resultado entregue:** Aviso de atualização refinado com CTA, detalhes e descarte/reabertura por sessão; avisos ao vivo tipados por impacto no dashboard e exibidos como notificação in-app reabrível, com cobertura de testes e migração compatível. O painel de desempenho ao vivo integrado mantém a coleta de processos FiveM somente leitura e suspensa fora do primeiro plano.
+- **Objetivo:** modernizar e ampliar a experiência do ícone do Ralven na bandeja do sistema com uma interface coerente com o produto e ações rápidas realmente úteis.
+- **Escopo:** investigar a integração Win32/WPF atual, implementar a melhor experiência de menu/popover da tray, ajustar interações de mouse/teclado, janela e estados relacionados, localizar textos públicos, atualizar documentação pública aplicável e adicionar testes; não alterar regras de otimização, broker, updater ou segurança da cadeia de release.
+- **Critérios de conclusão:** comportamento estável em Windows 10/11, DPI e múltiplos monitores; posicionamento e fechamento corretos; estados de hover, foco e disabled acessíveis; ações da tray integradas a fluxos existentes; build, testes, validação de segurança e inspeção visual aprovados.
+- **Resultado entregue:** o `NotifyIcon` nativo permanece como host da bandeja e encaminha o clique direito para um `ContextMenu` WPF escuro, localizado e acessível. O menu apresenta estado/versionamento e ações para abrir, otimizar, alternar o monitor local de FiveM, verificar atualizações, abrir Configurações e sair; usa os estados consolidados de atualização e alertas vivos, sem duplicar seus fluxos. Clique simples/duplo, visibilidade persistente, tooltip dinâmico, notificações temporárias e saída durante trabalho ativo foram endurecidos.

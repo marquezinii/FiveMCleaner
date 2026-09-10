@@ -151,6 +151,20 @@ public partial class MainWindow
 
     private void ViewModel_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
     {
+        if (e.PropertyName is nameof(MainViewModel.MinimizeToTrayOnClose)
+            or nameof(MainViewModel.IsBusy)
+            or nameof(MainViewModel.ProgressHeadline)
+            or nameof(MainViewModel.IsFiveMSessionMonitoring)
+            or nameof(MainViewModel.IsFiveMSessionActive)
+            or nameof(MainViewModel.FiveMSessionStatusLabel)
+            or nameof(MainViewModel.IsUpdateBannerVisible)
+            or nameof(MainViewModel.UpdateBannerTitle)
+            or nameof(MainViewModel.IsLiveAlertIconVisible)
+            or nameof(MainViewModel.LiveAlertMessage))
+        {
+            RefreshTrayIconPresentation();
+        }
+
         if (crashReportingConfigured
             && e.PropertyName == nameof(MainViewModel.ShareOptionalReports))
         {

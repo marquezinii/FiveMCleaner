@@ -591,9 +591,17 @@
   <data name="Runtime.RestoreCompleted" xml:space="preserve"><value>Settings restored</value></data>
   <data name="Runtime.RestoreCompletedDetail" xml:space="preserve"><value>Rollback respected newer changes and did not attempt to recover permanent cleanups.</value></data>
   <data name="Tray.Open" xml:space="preserve"><value>Open Ralven</value></data>
+  <data name="Tray.Optimize" xml:space="preserve"><value>Optimize PC</value></data>
+  <data name="Tray.CheckUpdates" xml:space="preserve"><value>Check for updates</value></data>
+  <data name="Tray.Settings" xml:space="preserve"><value>Settings</value></data>
   <data name="Tray.Exit" xml:space="preserve"><value>Exit</value></data>
+  <data name="Tray.MenuName" xml:space="preserve"><value>Ralven quick menu</value></data>
+  <data name="Tray.Status.Ready" xml:space="preserve"><value>Ready</value></data>
+  <data name="Tray.SessionUnavailable" xml:space="preserve"><value>Unavailable</value></data>
+  <data name="Tray.Tooltip" xml:space="preserve"><value>Ralven — {0}</value></data>
+  <data name="Tray.UpdateCheck.Title" xml:space="preserve"><value>Ralven updates</value></data>
   <data name="Tray.Title" xml:space="preserve"><value>Ralven is still running</value></data>
-  <data name="Tray.Message" xml:space="preserve"><value>Double-click the tray icon to return.</value></data>
+  <data name="Tray.Message" xml:space="preserve"><value>Click the tray icon to return.</value></data>
   <data name="Notification.UpdateAvailable.Title" xml:space="preserve"><value>Ralven update available</value></data>
   <data name="Notification.UpdateAvailable.Message" xml:space="preserve"><value>Version {0} is available. Click to open Ralven.</value></data>
   <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Closing the window keeps Ralven running in the notification area.</value></data>

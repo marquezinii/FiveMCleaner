@@ -49,6 +49,220 @@
         =====================================================================
     -->
 
+    <ui:FluentWindow.Resources>
+        <ContextMenu x:Key="TrayContextMenu"
+                     Style="{StaticResource TrayContextMenuStyle}"
+                     Placement="MousePoint"
+                     StaysOpen="False"
+                     Opened="TrayMenu_Opened"
+                     AutomationProperties.Name="{Binding [Tray.MenuName], Source={StaticResource LocalizedStrings}}">
+            <MenuItem Style="{StaticResource TrayMenuHeaderStyle}">
+                <MenuItem.Header>
+                    <Grid Margin="14,10,14,12">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Width="38"
+                                Height="38"
+                                Background="{StaticResource TrayMenuHoverBrush}"
+                                CornerRadius="{StaticResource RadiusMd}">
+                            <Image Source="Assets/Ralven.png"
+                                   Width="24"
+                                   Height="24"
+                                   Stretch="Uniform"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center" />
+                        </Border>
+                        <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
+                            <TextBlock Text="{Binding [Brand.ProductName], Source={StaticResource LocalizedStrings}}"
+                                       Style="{StaticResource BodyStrongText}"
+                                       Foreground="{StaticResource TrayMenuTextBrush}" />
+                            <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                <Ellipse Width="7" Height="7" Margin="0,0,7,0" VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{StaticResource TrayMenuMutedTextBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLiveAlertIconVisible}" Value="True">
+                                                    <Setter Property="Fill" Value="{DynamicResource WarningBaseBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsFiveMSessionMonitoring}" Value="True">
+                                                    <Setter Property="Fill" Value="{DynamicResource InfoBaseBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsFiveMSessionActive}" Value="True">
+                                                    <Setter Property="Fill" Value="{DynamicResource SuccessBaseBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsUpdateBannerVisible}" Value="True">
+                                                    <Setter Property="Fill" Value="{DynamicResource InfoBaseBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                    <Setter Property="Fill" Value="{StaticResource TrayMenuTextBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock MaxWidth="212"
+                                           Foreground="{StaticResource TrayMenuMutedTextBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           TextWrapping="NoWrap">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource CaptionText}">
+                                            <Setter Property="Foreground" Value="{StaticResource TrayMenuMutedTextBrush}" />
+                                            <Setter Property="Text" Value="{Binding [Tray.Status.Ready], Source={StaticResource LocalizedStrings}}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsLiveAlertIconVisible}" Value="True">
+                                                    <Setter Property="Text" Value="{Binding LiveAlertMessage}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource WarningBaseBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsFiveMSessionMonitoring}" Value="True">
+                                                    <Setter Property="Text" Value="{Binding FiveMSessionStatusLabel}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource InfoBaseBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsFiveMSessionActive}" Value="True">
+                                                    <Setter Property="Text" Value="{Binding FiveMSessionStatusLabel}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource SuccessBaseBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsUpdateBannerVisible}" Value="True">
+                                                    <Setter Property="Text" Value="{Binding UpdateBannerTitle}" />
+                                                    <Setter Property="Foreground" Value="{DynamicResource InfoBaseBrush}" />
+                                                </DataTrigger>
+                                                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                    <Setter Property="Text" Value="{Binding ProgressHeadline}" />
+                                                    <Setter Property="Foreground" Value="{StaticResource TrayMenuTextBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </StackPanel>
+                        <TextBlock Grid.Column="2"
+                                   Text="{Binding AppVersion, StringFormat=v{0}}"
+                                   Style="{StaticResource CaptionText}"
+                                   Foreground="{StaticResource TrayMenuMutedTextBrush}"
+                                   VerticalAlignment="Top" />
+                    </Grid>
+                </MenuItem.Header>
+            </MenuItem>
+
+            <Separator Style="{StaticResource TrayMenuSeparatorStyle}" />
+
+            <MenuItem Header="{Binding [Tray.Open], Source={StaticResource LocalizedStrings}}"
+                      Style="{StaticResource TrayMenuItemStyle}"
+                      Click="TrayOpen_Click"
+                      AutomationProperties.Name="{Binding [Tray.Open], Source={StaticResource LocalizedStrings}}">
+                <MenuItem.Icon>
+                    <Path Style="{StaticResource Icon20}"
+                          Data="{StaticResource IconStartup}"
+                          Stroke="{StaticResource TrayMenuMutedTextBrush}" />
+                </MenuItem.Icon>
+            </MenuItem>
+
+            <MenuItem Header="{Binding [Tray.Optimize], Source={StaticResource LocalizedStrings}}"
+                      Click="TrayOptimize_Click"
+                      AutomationProperties.Name="{Binding [Tray.Optimize], Source={StaticResource LocalizedStrings}}">
+                <MenuItem.Icon>
+                    <Path Style="{StaticResource Icon20}"
+                          Data="{StaticResource IconBolt}"
+                          Stroke="{StaticResource TrayMenuMutedTextBrush}" />
+                </MenuItem.Icon>
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource TrayMenuItemStyle}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                            <DataTrigger Binding="{Binding IsWindowsGamingBusy}" Value="True">
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+
+            <MenuItem Header="{Binding FiveMSessionActionLabel}"
+                      IsEnabled="{Binding CanToggleFiveMSessionMonitor}"
+                      Click="TraySessionMonitor_Click"
+                      AutomationProperties.Name="{Binding FiveMSessionActionLabel}"
+                      AutomationProperties.HelpText="{Binding FiveMSessionDetailLabel}">
+                <MenuItem.Icon>
+                    <Path Style="{StaticResource Icon20}"
+                          Data="{StaticResource IconGame}"
+                          Stroke="{StaticResource TrayMenuMutedTextBrush}" />
+                </MenuItem.Icon>
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource TrayMenuItemStyle}">
+                        <Setter Property="InputGestureText" Value="{Binding [Tray.SessionUnavailable], Source={StaticResource LocalizedStrings}}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsFiveMSessionMonitoring}" Value="True">
+                                <Setter Property="InputGestureText" Value="{Binding FiveMSessionStatusLabel}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+
+            <Separator Style="{StaticResource TrayMenuSeparatorStyle}" />
+
+            <MenuItem InputGestureText="{Binding AvailableUpdateVersion}"
+                      IsEnabled="{Binding CanCheckForUpdatesManually}"
+                      Click="TrayCheckUpdates_Click"
+                      AutomationProperties.Name="{Binding [Tray.CheckUpdates], Source={StaticResource LocalizedStrings}}">
+                <MenuItem.Icon>
+                    <Path Style="{StaticResource Icon20}"
+                          Data="{StaticResource IconRefresh}"
+                          Stroke="{StaticResource TrayMenuMutedTextBrush}" />
+                </MenuItem.Icon>
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource TrayMenuItemStyle}">
+                        <Setter Property="Header" Value="{Binding [Tray.CheckUpdates], Source={StaticResource LocalizedStrings}}" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsUpdateBannerVisible}" Value="True">
+                                <Setter Property="Header" Value="{Binding UpdateBannerTitle}" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+
+            <MenuItem Header="{Binding [Tray.Settings], Source={StaticResource LocalizedStrings}}"
+                      Style="{StaticResource TrayMenuItemStyle}"
+                      Click="TraySettings_Click"
+                      AutomationProperties.Name="{Binding [Tray.Settings], Source={StaticResource LocalizedStrings}}">
+                <MenuItem.Icon>
+                    <Path Style="{StaticResource Icon20}"
+                          Data="{StaticResource IconDefaults}"
+                          Stroke="{StaticResource TrayMenuMutedTextBrush}" />
+                </MenuItem.Icon>
+            </MenuItem>
+
+            <Separator Style="{StaticResource TrayMenuSeparatorStyle}" />
+
+            <MenuItem Header="{Binding [Tray.Exit], Source={StaticResource LocalizedStrings}}"
+                      Click="TrayExit_Click"
+                      AutomationProperties.Name="{Binding [Tray.Exit], Source={StaticResource LocalizedStrings}}">
+                <MenuItem.Icon>
+                    <Path Style="{StaticResource Icon20}"
+                          Data="{StaticResource IconClose}"
+                          Stroke="{DynamicResource DangerBaseBrush}" />
+                </MenuItem.Icon>
+                <MenuItem.Style>
+                    <Style TargetType="MenuItem" BasedOn="{StaticResource TrayMenuItemStyle}">
+                        <Setter Property="Tag" Value="Danger" />
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsWindowsGamingBusy}" Value="True">
+                                <Setter Property="IsEnabled" Value="False" />
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </MenuItem.Style>
+            </MenuItem>
+        </ContextMenu>
+    </ui:FluentWindow.Resources>
+
     <Grid Background="{DynamicResource CanvasBaseBrush}">
         <Grid.RowDefinitions>
             <RowDefinition Height="52" />

@@ -30,6 +30,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly MainViewModel viewModel;
     private readonly ThemeManager themeManager;
     private readonly TrayIconService trayIcon;
+    private readonly System.Windows.Controls.ContextMenu trayMenu;
     private readonly IReleaseUpdateService? releaseUpdateService;
     private readonly bool startupLaunch;
     private readonly bool demoMode;
@@ -141,6 +142,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         StartupTrace.Mark("initial-theme-ready");
         InitializeComponent();
         StartupTrace.Mark("window-xaml-ready");
+        trayMenu = (System.Windows.Controls.ContextMenu)Resources["TrayContextMenu"];
         CategoryGeneral.IsChecked = true;
         LocalizationService.Current.LanguageChanged += MainWindow_LanguageChanged;
 
@@ -157,7 +159,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
         trayIcon = new TrayIconService(LocalizationService.Current);
         trayIcon.ShowRequested += TrayIcon_ShowRequested;
-        trayIcon.ExitRequested += TrayIcon_ExitRequested;
+        trayIcon.MenuRequested += TrayIcon_MenuRequested;
         viewModel.UpdateAvailableDetected += ViewModel_UpdateAvailableDetected;
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
         DataContext = viewModel;
@@ -334,6 +336,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         await initialization;
         if (billingLifetime.IsCancellationRequested) return;
         StartupTrace.Mark("local-ready");
+        RefreshTrayIconPresentation();
         themeManager.Apply(viewModel.ThemePreference);
         StartupTrace.Mark("saved-theme-ready");
         SyncGeneralSettingsControls();
@@ -401,6 +404,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         viewModel.PropertyChanged -= ViewModel_PropertyChanged;
         LocalizationService.Current.LanguageChanged -= MainWindow_LanguageChanged;
         themeManager.Dispose();
+        trayMenu.IsOpen = false;
         trayIcon.Dispose();
         CancelAccountEntitlementExpiry();
         accountService?.Dispose();
@@ -411,6 +415,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         ApplyAccountEntitlementPresentation();
         proViewModel.Refresh();
+        RefreshTrayIconPresentation();
     }
 
     private void Application_SessionEnding(object? sender, SessionEndingCancelEventArgs e)

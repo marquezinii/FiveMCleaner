@@ -5,60 +5,78 @@ namespace Ralven.App.Services;
 
 public sealed class TrayIconService : IDisposable
 {
+    private const int MaximumToolTipLength = 127;
     private readonly ILocalizationService localization;
     private readonly Forms.NotifyIcon notifyIcon;
-    private readonly Forms.ToolStripMenuItem openItem;
-    private readonly Forms.ToolStripMenuItem exitItem;
+    private readonly Forms.ContextMenuStrip nativeMenuBridge;
+    private bool persistentVisible;
+    private bool temporaryVisible;
+    private int notificationGeneration;
     private bool disposed;
 
     public TrayIconService(ILocalizationService? localization = null)
     {
         this.localization = localization ?? LocalizationService.Current;
-        openItem = new Forms.ToolStripMenuItem();
-        exitItem = new Forms.ToolStripMenuItem();
-        openItem.Click += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
-        exitItem.Click += (_, _) => ExitRequested?.Invoke(this, EventArgs.Empty);
-
-        var menu = new Forms.ContextMenuStrip();
-        menu.Items.Add(openItem);
-        menu.Items.Add(new Forms.ToolStripSeparator());
-        menu.Items.Add(exitItem);
+        nativeMenuBridge = new Forms.ContextMenuStrip();
+        nativeMenuBridge.Opening += NativeMenuBridge_Opening;
 
         notifyIcon = new Forms.NotifyIcon
         {
-            ContextMenuStrip = menu,
+            // Keep the native tray invocation path. Its Opening event is
+            // cancelled and forwarded to the WPF menu, preserving the shell
+            // integration without accepting the generic ToolStrip surface.
+            ContextMenuStrip = nativeMenuBridge,
             Icon = LoadApplicationIcon(),
             Text = ProductIdentity.DisplayName,
             Visible = false
         };
-        notifyIcon.DoubleClick += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
+        notifyIcon.MouseClick += (_, args) => RequestShow(args);
+        notifyIcon.MouseDoubleClick += (_, args) => RequestShow(args);
         notifyIcon.BalloonTipClicked += (_, _) => ShowRequested?.Invoke(this, EventArgs.Empty);
-        this.localization.LanguageChanged += OnLanguageChanged;
-        UpdateText();
     }
 
     public event EventHandler? ShowRequested;
 
-    public event EventHandler? ExitRequested;
+    public event EventHandler? MenuRequested;
 
     public void Show(bool announce)
     {
         ThrowIfDisposed();
-        notifyIcon.Visible = true;
+        var wasVisible = notifyIcon.Visible;
+        persistentVisible = true;
+        ApplyVisibility();
         if (announce)
         {
-            notifyIcon.BalloonTipTitle = localization.GetString("Tray.Title");
-            notifyIcon.BalloonTipText = localization.GetString("Tray.Message");
-            notifyIcon.BalloonTipIcon = Forms.ToolTipIcon.Info;
-            notifyIcon.ShowBalloonTip(3500);
+            _ = ShowBalloonAsync(
+                localization.GetString("Tray.Title"),
+                localization.GetString("Tray.Message"),
+                3500,
+                wasVisible);
         }
+    }
+
+    public void SetPersistentVisibility(bool visible)
+    {
+        ThrowIfDisposed();
+        persistentVisible = visible;
+        ApplyVisibility();
+    }
+
+    public void UpdateToolTip(string text)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(text);
+        ThrowIfDisposed();
+        notifyIcon.Text = NormalizeToolTip(text);
     }
 
     public void Hide()
     {
         if (!disposed)
         {
-            notifyIcon.Visible = false;
+            notificationGeneration++;
+            persistentVisible = false;
+            temporaryVisible = false;
+            ApplyVisibility();
         }
     }
 
@@ -74,15 +92,29 @@ public sealed class TrayIconService : IDisposable
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(version);
         ThrowIfDisposed();
-        _ = ShowUpdateAvailableAsync(version);
+        _ = ShowBalloonAsync(
+            localization.GetString("Notification.UpdateAvailable.Title"),
+            localization.Format("Notification.UpdateAvailable.Message", version),
+            7000,
+            notifyIcon.Visible);
     }
 
-    private async Task ShowUpdateAvailableAsync(string version)
+    public void ShowInformation(string title, string message)
     {
-        var wasVisible = notifyIcon.Visible;
+        ArgumentException.ThrowIfNullOrWhiteSpace(title);
+        ArgumentException.ThrowIfNullOrWhiteSpace(message);
+        ThrowIfDisposed();
+        _ = ShowBalloonAsync(title, message, 4500, notifyIcon.Visible);
+    }
+
+    private async Task ShowBalloonAsync(string title, string message, int timeout, bool wasVisible)
+    {
+        var generation = ++notificationGeneration;
+        var ownsTemporaryVisibility = !persistentVisible;
         if (!wasVisible)
         {
-            notifyIcon.Visible = true;
+            temporaryVisible = ownsTemporaryVisibility;
+            ApplyVisibility();
 
             // Windows silently drops a balloon tip requested in the same
             // tick an icon first becomes visible (a well-documented
@@ -91,33 +123,43 @@ public sealed class TrayIconService : IDisposable
             // on it. Without this delay, the very first update notification
             // after the icon appears could be lost.
             await Task.Delay(TimeSpan.FromMilliseconds(300));
-            if (disposed)
+            if (disposed || generation != notificationGeneration)
             {
                 return;
             }
         }
 
-        notifyIcon.BalloonTipTitle = localization.GetString("Notification.UpdateAvailable.Title");
-        notifyIcon.BalloonTipText = localization.Format("Notification.UpdateAvailable.Message", version);
+        notifyIcon.BalloonTipTitle = title;
+        notifyIcon.BalloonTipText = message;
         notifyIcon.BalloonTipIcon = Forms.ToolTipIcon.Info;
-        notifyIcon.ShowBalloonTip(7000);
+        notifyIcon.ShowBalloonTip(timeout);
 
-        if (!wasVisible)
+        if (ownsTemporaryVisibility)
         {
             // The icon was only made visible to carry this notification (the
             // user does not have "minimize to tray" active); hide it again
             // once the balloon has had time to display instead of leaving a
             // tray icon behind that the user never asked for.
-            _ = HideAfterDelayAsync(TimeSpan.FromSeconds(8));
+            await Task.Delay(TimeSpan.FromMilliseconds(timeout + 1000));
+            if (!disposed && generation == notificationGeneration)
+            {
+                temporaryVisible = false;
+                ApplyVisibility();
+            }
         }
     }
 
-    private async Task HideAfterDelayAsync(TimeSpan delay)
+    private void NativeMenuBridge_Opening(object? sender, System.ComponentModel.CancelEventArgs e)
     {
-        await Task.Delay(delay);
-        if (!disposed)
+        e.Cancel = true;
+        MenuRequested?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void RequestShow(Forms.MouseEventArgs args)
+    {
+        if (args.Button == Forms.MouseButtons.Left)
         {
-            notifyIcon.Visible = false;
+            ShowRequested?.Invoke(this, EventArgs.Empty);
         }
     }
 
@@ -129,18 +171,24 @@ public sealed class TrayIconService : IDisposable
         }
 
         disposed = true;
-        localization.LanguageChanged -= OnLanguageChanged;
         notifyIcon.Visible = false;
         notifyIcon.ContextMenuStrip?.Dispose();
         notifyIcon.Dispose();
     }
 
-    private void OnLanguageChanged(object? sender, AppLanguageChangedEventArgs e) => UpdateText();
+    private void ApplyVisibility() => notifyIcon.Visible = persistentVisible || temporaryVisible;
 
-    private void UpdateText()
+    internal static string NormalizeToolTip(string text)
     {
-        openItem.Text = localization.GetString("Tray.Open");
-        exitItem.Text = localization.GetString("Tray.Exit");
+        if (text.Length <= MaximumToolTipLength)
+        {
+            return text;
+        }
+
+        var length = char.IsHighSurrogate(text[MaximumToolTipLength - 1])
+            ? MaximumToolTipLength - 1
+            : MaximumToolTipLength;
+        return text[..length];
     }
 
     private static Icon LoadApplicationIcon()
