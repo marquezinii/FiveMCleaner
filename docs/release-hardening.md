@@ -33,7 +33,7 @@ silently:
   types by string; the obfuscator does not read XAML.
 - `Ralven.Broker` — entry-point host (its own `Core`/`Windows` copy is
   hardened like the App's, see below — the project itself isn't touched).
-- `Ralven.UpdateRuntime` — the update/rollback state machine is
+- `Ralven.UpdateRuntime` — the update/activation state machine is
   safety-critical and low IP value; kept clean deliberately.
 
 `Ralven.Launcher` is a host too, but its `Core`/`Windows` *dependency
@@ -44,15 +44,17 @@ copies* need special handling — see "The Launcher's single-file bundle" below.
 The obfuscation config (`build/obfuscation/Ralven.Obfuscar.xml`) sets
 `KeepPublicApi=true` + `HidePrivateApi=true`. Because the non-obfuscated
 `App`/`Broker` and the JSON layer only ever touch the **public** surface of
-`Core`/`Windows`, keeping that surface intact means the app behaves exactly as
-built while only private/internal implementation is renamed. `HideStrings=true`
-additionally encrypts in-IL string literals (registry paths, WMI queries, log
-text).
+`Core`/`Windows`, keeping that surface intact lets the non-obfuscated hosts call
+the protected assemblies while private/internal implementation is renamed.
+`HideStrings=true` additionally transforms in-IL string literals (registry
+paths, WMI queries, log text). This transformation is reversible and therefore
+must never be treated as secret storage.
 
-This invariant is verified during the build: the public type set of each
-assembly is byte-identical before and after obfuscation, and the app is only
-composed through constructor calls (no reflection-by-name, no DI container
-scanning of internal types).
+Internal snapshot records serialized into the durable transaction journal are
+explicitly excluded from type/member renaming. Their JSON contract must remain
+readable across clean/protected builds and upgrades so rollback never depends
+on an obfuscator-generated name. `Invoke-Obfuscation.ps1` parses the generated
+map and fails unless every protected snapshot type was actually skipped.
 
 ## Where it runs
 
@@ -62,9 +64,12 @@ artifact — the runtime/portable ZIPs, the broker `SHA256SUMS.txt`, the release
 manifest and the signed update manifest — therefore covers the hardened
 binaries. `scripts/Build-Installer.ps1 -Harden` forwards the switch.
 
-The public release workflow (`.github/workflows/release.yml`) always builds with
-`-Harden`. Development builds, the dev shortcut and CI test builds do not, so
-day-to-day debugging is unaffected.
+The public release workflow (`.github/workflows/release.yml`) first builds and
+tests clean source, then rebuilds with `-Harden` inside the protected
+`release-signing` environment. Only that protected output advances to signing
+and publication; there is no unsigned clean candidate artifact to select by
+mistake. Development builds, the dev shortcut and ordinary CI test builds do
+not use `-Harden`, so day-to-day debugging is unaffected.
 
 ### The Launcher's single-file bundle
 
@@ -106,6 +111,11 @@ gated on `-p:RalvenHarden=true`:
   restores both canonical outputs from that backup, unconditionally, right
   after the bundle has been written.
 
+The obfuscation target also restores on its own error, and
+`Build-Portable.ps1` invokes the restoration target from `finally`. A failed
+single-file bundling step therefore cannot leave hardened shared build outputs
+behind for a later clean build.
+
 This backup/restore pair matters because the target above mutates a *shared*
 project build output — the same folder every other project reference to
 `Core`/`Windows` resolves from. Restoring it turns the hardening into a
@@ -124,14 +134,13 @@ these targets.
 
 ## Post-obfuscation verification
 
-Three gates run against the hardened output, and none of them trust that the
+Four gates run against the hardened output, and none of them trust that the
 steps above worked — each one proves it on the actual output bytes:
 
 1. **Structural** (`scripts/Invoke-Obfuscation.ps1`): each rewritten assembly
-   must be a valid .NET PE and must differ from its pre-obfuscation bytes, or
-   the build fails before anything is hashed or signed. This applies equally
-   to Broker's/App's loose copies and to the assemblies the Launcher's
-   `HardenBundledAssemblies` target hardens before bundling.
+   must be a valid .NET PE and must differ from its pre-obfuscation bytes. The
+   generated map must also prove that durable JSON snapshot contracts were not
+   renamed. Any failure stops the build before hashing or signing.
 2. **Fail-closed artifact scan** (`scripts/Test-NoUnobfuscatedAssemblies.ps1`):
    run automatically by `Build-Portable.ps1 -Harden` (against the assembled
    runtime tree and both ZIPs) and by `Build-Installer.ps1 -Harden` (against
@@ -145,14 +154,24 @@ steps above worked — each one proves it on the actual output bytes:
    metadata heap (ECMA-335) and, since single-file bundling isn't compressed
    here, in the raw bytes of a bundled `.exe` too — so their presence
    anywhere in a public artifact means hardening did not apply, and the build
-   throws instead of shipping it. The same script also fails the build if any
+   throws instead of shipping it. Every marker is first checked against its
+   source file so a stale marker cannot silently weaken the gate. Both
+   `Core.dll` and `Windows.dll` copies are checked in both ZIPs. The same script
+   also fails the build if any
    `.pdb` or `Mapping-*.txt` (obfuscation symbol map) file is found under the
    public runtime tree — neither is meant to leave the build machine; symbol
-   maps are uploaded separately as a private workflow artifact (see below).
+   maps are encrypted separately (see below).
 3. **Runtime smoke** (`scripts/Test-HardenedRuntime.ps1`): the hardened app is
-   launched in `--demo-synthetic --capture` mode and must render its pages and
-   exit cleanly. This proves the obfuscated `Core`/`Windows` load and execute —
-   renamed members dispatch and encrypted strings decrypt at runtime.
+   launched in `--demo-synthetic --capture` mode and must render the main
+   Overview, diagnostics, optimizers, history, settings, Pro, Ralven AI and
+   Ultra surfaces and exit cleanly. This exercises protected `Core`/`Windows`,
+   WPF bindings and integration composition without external network calls or
+   system mutation.
+4. **Installed payload** (`scripts/Test-Installer.ps1`): the final installer is
+   installed, upgraded and uninstalled in an isolated directory, and every
+   installed payload file is compared byte-for-byte with the already-protected
+   runtime. After the broker manifest is signed, the installer and both ZIPs
+   are rebuilt and the structural/runtime/installer checks are repeated.
 
 Gate 2 is deliberately structural (metadata identifier names), not a
 one-off manual check: it was validated both positively (a correctly hardened
@@ -161,10 +180,28 @@ listing every un-hardened location) before being wired into the pipeline.
 
 ## De-obfuscating crash reports
 
-Obfuscar emits a symbol map per assembly set. The release workflow uploads it as
-a private, non-release workflow artifact (`obfuscation-maps-<version>`, 90-day
-retention). Use it to translate obfuscated names in a Sentry stack trace back to
-the original symbols. The map is never attached to the public release.
+Obfuscar emits a symbol map per assembly set. Raw maps never leave the protected
+`release-signing` job: `scripts/Protect-ObfuscationMaps.ps1` bundles and encrypts
+them with AES-256-GCM using `OBFUSCATION_MAP_ENCRYPTION_KEY` and verifies a local
+round trip; the workflow then deletes the raw mapping directory. Only the
+authenticated ciphertext crosses jobs. For a published release, that bundle is
+preserved under `private/obfuscation-maps/<tag>/` in R2; it is never attached to
+the public release assets and the key remains only in the protected signing
+environment/operator secret store.
+
+To recover a map for a production stack trace, download the encrypted bundle
+through the authorized operator path and run locally:
+
+```powershell
+./scripts/Protect-ObfuscationMaps.ps1 `
+  -EncryptedPath ./Ralven-obfuscation-maps-<version>.bin `
+  -OutputDirectory ./artifacts/recovered-maps `
+  -EncryptionKey $env:OBFUSCATION_MAP_ENCRYPTION_KEY
+```
+
+The key must decode from Base64 to exactly 32 bytes. Losing it makes old maps
+unrecoverable; rotating it therefore requires retaining the prior key for the
+support lifetime of releases encrypted with that key.
 
 ## Local usage
 
@@ -183,6 +220,12 @@ the original symbols. The map is never attached to the public release.
 .\scripts\Test-NoUnobfuscatedAssemblies.ps1 -RuntimeDirectory .\artifacts\Ralven-win-x64 -Version <version> `
     -PortableZipPath .\artifacts\Ralven-win-x64.zip -RuntimeZipPath .\artifacts\Ralven-Runtime-win-x64.zip
 ```
+
+The release-signing GitHub Environment must define a Base64-encoded 32-byte
+`OBFUSCATION_MAP_ENCRYPTION_KEY` in addition to the existing signing and desktop
+OAuth configuration. The Google desktop client value still ships inside the
+application by design; it is not a confidential credential, and PKCE plus
+server-side validation remain the security boundary.
 
 The pinned obfuscator (`obfuscar.globaltool`) lives in
 `.config/dotnet-tools.json`; `Invoke-Obfuscation.ps1` restores it automatically.

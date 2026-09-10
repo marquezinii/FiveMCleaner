@@ -33,7 +33,7 @@ public sealed class PublicExposureHardeningTests
         var buildEnd = workflow.IndexOf("  sign_release:", StringComparison.Ordinal);
         var publishStart = workflow.IndexOf("  publish:", buildEnd, StringComparison.Ordinal);
 
-        Assert.True(buildEnd > 0, "The unsigned build and signing jobs must remain separate.");
+        Assert.True(buildEnd > 0, "The clean audit and protected signing jobs must remain separate.");
         Assert.True(publishStart > buildEnd, "The signing job must complete before publishing.");
         Assert.DoesNotContain("SIGNING_PRIVATE_KEY", workflow[..buildEnd], StringComparison.Ordinal);
         Assert.Contains("environment: release-signing", workflow, StringComparison.Ordinal);
@@ -71,17 +71,61 @@ public sealed class PublicExposureHardeningTests
 
         var hardenedBuild = workflow.IndexOf("Build-Installer.ps1 -Version $env:ASSET_VERSION -Harden", StringComparison.Ordinal);
         var finalizeBroker = workflow.IndexOf("Finalize-BrokerIntegrity.ps1", hardenedBuild, StringComparison.Ordinal);
-        var runtimeSmoke = workflow.IndexOf("Test-HardenedRuntime.ps1", finalizeBroker, StringComparison.Ordinal);
+        var structuralScan = workflow.IndexOf("Test-NoUnobfuscatedAssemblies.ps1", finalizeBroker, StringComparison.Ordinal);
+        var runtimeSmoke = workflow.IndexOf("Test-HardenedRuntime.ps1", structuralScan, StringComparison.Ordinal);
         var installerTest = workflow.IndexOf("Test-Installer.ps1", runtimeSmoke, StringComparison.Ordinal);
         var publish = workflow.IndexOf("- name: Create public release", installerTest, StringComparison.Ordinal);
 
         Assert.True(hardenedBuild >= 0);
         Assert.True(finalizeBroker > hardenedBuild);
+        Assert.True(structuralScan > finalizeBroker);
         Assert.True(runtimeSmoke > finalizeBroker);
         Assert.True(installerTest > runtimeSmoke);
         Assert.True(publish > installerTest);
-        Assert.Contains("name: obfuscation-maps-", workflow, StringComparison.Ordinal);
-        Assert.Contains("retention-days: 90", workflow, StringComparison.Ordinal);
+        Assert.Contains("OBFUSCATION_MAP_ENCRYPTION_KEY", workflow, StringComparison.Ordinal);
+        Assert.Contains("name: Ralven-protected-maps-", workflow, StringComparison.Ordinal);
+        Assert.Contains("private/obfuscation-maps/$env:RELEASE_TAG", workflow, StringComparison.Ordinal);
+        Assert.DoesNotContain("path: artifacts/obfuscation-maps/**", workflow, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Obfuscation_PreservesDurableRollbackSnapshotsAndRevalidatesFinalPackages()
+    {
+        var root = FindRepositoryRoot();
+        var configuration = File.ReadAllText(Path.Combine(root, "build", "obfuscation", "Ralven.Obfuscar.xml"));
+        var invocation = File.ReadAllText(Path.Combine(root, "scripts", "Invoke-Obfuscation.ps1"));
+        var finalizer = File.ReadAllText(Path.Combine(root, "scripts", "Finalize-BrokerIntegrity.ps1"));
+        var smoke = File.ReadAllText(Path.Combine(root, "scripts", "Test-HardenedRuntime.ps1"));
+        string[] durableTypes =
+        [
+            "QuarantinedFileSnapshot",
+            "CleanupScopeSnapshot",
+            "CleanupActionSnapshot",
+            "TerminatedProcessSnapshot",
+            "QuarantinedAuthEntry",
+            "QuarantinedAuthItem",
+            "AuthDataRepairSnapshot",
+            "CommandLineSnapshot",
+            "SafeXmlSettingsSnapshot",
+            "PointerAccelerationSnapshot",
+            "PowerPlanSnapshot",
+            "PciExpressAspmSnapshot",
+            "RegistryMutationSnapshotEntry",
+            "RegistryMutationSnapshot",
+            "VisualEffectsSnapshot",
+            "MenuShowDelaySnapshot",
+        ];
+
+        foreach (var type in durableTypes)
+        {
+            Assert.Contains($"<SkipType name=\"Ralven.Windows.Actions.{type}\"", configuration, StringComparison.Ordinal);
+            Assert.Contains($"'Ralven.Windows.Actions.{type}'", invocation, StringComparison.Ordinal);
+        }
+        Assert.Contains("type rule in configuration", invocation, StringComparison.Ordinal);
+        Assert.Contains("-SkipPortableBuild", finalizer, StringComparison.Ordinal);
+        Assert.Contains("-Harden", finalizer, StringComparison.Ordinal);
+        Assert.Contains("'RalvenAi'", smoke, StringComparison.Ordinal);
+        Assert.Contains("'Settings'", smoke, StringComparison.Ordinal);
     }
 
     [Fact]

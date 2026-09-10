@@ -25,11 +25,23 @@ if (-not (Test-Path -LiteralPath $appExecutable -PathType Leaf)) {
 $smokeRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("fmc-harden-smoke-" + [Guid]::NewGuid().ToString('N'))
 New-Item -ItemType Directory -Force -Path $smokeRoot | Out-Null
 
-# Rendering each page exercises a different slice of the obfuscated runtime:
-# Optimizer drives Core planning + the 3D scene; Overview drives the Windows
-# diagnostics adapters. If obfuscation broke a renamed member or a string that
-# is looked up at runtime, the app throws before the PNG is written.
-$pages = @('Optimizer', 'Overview')
+# Render the main navigation surfaces that cross Core/Windows, WPF bindings,
+# authentication configuration, Ralven AI and settings. Demo mode keeps this
+# post-obfuscation smoke deterministic and prevents external mutations/network.
+$pages = @(
+    'Overview',
+    'System',
+    'Applications',
+    'Games',
+    'FiveM',
+    'Optimizer',
+    'FiveMOptimizer',
+    'History',
+    'Settings',
+    'Pro',
+    'RalvenAi',
+    'Ultra'
+)
 
 try {
     foreach ($page in $pages) {

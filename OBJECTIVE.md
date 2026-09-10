@@ -1,9 +1,7 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** ampliar o Ralven AI para orientar e acionar capacidades locais já suportadas, sem expor shell, caminhos livres ou privilégios ao modelo.
-- **Escopo:** contratos tipados de intenção, fontes/evidências exibidas na conversa, ferramentas locais de leitura e transição explícita para a revisão do plano existente; integração Worker/Responses API para esses contratos.
-- **Fora do escopo:** comandos arbitrários, execução automática de mudanças persistentes, novos ajustes de Windows/FiveM, acesso a arquivos, telemetria ampliada, alteração de `main` ou publicação.
-- **Critérios de conclusão:** toda intenção da IA é validada localmente e só reutiliza fluxos existentes; alterações continuam passando pela revisão/confirmação transacional; fontes permanecem sanitizadas; testes e build aplicáveis passam.
-- **Resultado entregue:** solicitações de ferramentas locais fechadas, fontes
-  exibidas e revisão do plano validada; aguardando integração.
+- **Objetivo:** auditar e fortalecer a proteção dos builds oficiais do Ralven, mantendo o código de desenvolvimento limpo e validando diretamente os binários protegidos antes de assinatura e empacotamento.
+- **Escopo:** rastrear e ajustar somente ofuscação/proteção, validação pós-proteção, símbolos/mappings privados e gates do pipeline de release; preservar segurança, compatibilidade, updater, instalador, autenticação, UI, telemetria e integrações. Não publicar release, alterar versão ou enfraquecer assinatura/verificação.
+- **Critérios de conclusão:** documentar o fluxo atual e seus riscos; automatizar a sequência correta e impedir artefato limpo no caminho oficial; proteger componentes apenas onde compatível; manter símbolos/mappings fora dos pacotes públicos; executar build, testes e smoke tests aplicáveis sobre os artefatos protegidos; revisar tamanho, startup/performance e sinais de antivírus quando viável.
+- **Resultado entregue:** snapshots JSON duráveis foram excluídos de renaming e validados pelo mapping; o reempacotamento pós-assinatura agora repete o gate fail-closed sobre runtime, ZIPs e instalador; builds publicáveis nascem somente no ambiente protegido; mappings saem apenas como bundle AES-256-GCM; o smoke protegido cobre 12 superfícies. Build Release, 1.437 testes, publish protegido, varredura positiva/negativa, round-trip dos mappings e instalação/upgrade/desinstalação com 736 arquivos verificados passaram. A máquina não tinha antivírus ativo para uma varredura local representativa.

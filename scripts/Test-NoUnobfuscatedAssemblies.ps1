@@ -32,18 +32,23 @@ $ErrorActionPreference = 'Stop'
 # Launcher's bundle embeds a pre-hardening compile of Core/Windows - one of
 # these strings survives verbatim and this script fails loudly instead of
 # shipping the un-hardened bytes.
-# Maintenance: if any of these members is renamed/removed from source, pick a
-# replacement private member and update this list; a stale marker only
-# weakens the check, it does not make it silently wrong (a removed method
-# also can't appear in a hardened OR un-hardened build, so absence alone does
-# not create a false pass without also checking the array here is non-empty).
+# Maintenance: each marker is tied to its source file below. If a member is
+# renamed/removed, the gate fails until a current private member replaces it.
+$workspace = [System.IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot))
 $forbiddenMarkers = @(
-    'CreateVerificationAndBottleneckActions' # private method, Ralven.Core
-    'GraphicsTargetProcessGuard'             # internal sealed class, Ralven.Windows
-    'AddCitizenFxCandidate'                  # private method, Ralven.Windows
+    @{ Name = 'CreateVerificationAndBottleneckActions'; Source = 'src\Ralven.Core\Catalog\ActionCatalog.VerificationAndBottleneck.cs' }
+    @{ Name = 'GraphicsTargetProcessGuard'; Source = 'src\Ralven.Windows\Actions\GraphicsTargetProcessGuard.cs' }
+    @{ Name = 'AddCitizenFxCandidate'; Source = 'src\Ralven.Windows\Infrastructure\GtaVLocator.cs' }
 )
 if ($forbiddenMarkers.Count -eq 0) {
     throw 'No obfuscation markers configured; this check would silently pass everything.'
+}
+foreach ($marker in $forbiddenMarkers) {
+    $sourcePath = Join-Path $workspace $marker.Source
+    if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf) -or
+        (Get-Content -LiteralPath $sourcePath -Raw) -notmatch [regex]::Escape($marker.Name)) {
+        throw "Obfuscation marker '$($marker.Name)' is stale; choose a current private member before this gate can run."
+    }
 }
 
 function Test-BytesContainMarker {
@@ -52,15 +57,21 @@ function Test-BytesContainMarker {
         [Parameter(Mandatory)] [string]$Marker
     )
     $needle = [System.Text.Encoding]::UTF8.GetBytes($Marker)
-    $limit = $Bytes.Length - $needle.Length
-    for ($i = 0; $i -le $limit; $i++) {
-        $matched = $true
-        for ($j = 0; $j -lt $needle.Length; $j++) {
-            if ($Bytes[$i + $j] -ne $needle[$j]) { $matched = $false; break }
-        }
-        if ($matched) { return $true }
-    }
-    return $false
+    return [Ralven.Build.ByteSearch]::Contains($Bytes, $needle)
+}
+
+if (-not ('Ralven.Build.ByteSearch' -as [type])) {
+    Add-Type -TypeDefinition @'
+namespace Ralven.Build;
+
+using System;
+
+public static class ByteSearch
+{
+    public static bool Contains(byte[] bytes, byte[] marker) =>
+        bytes.AsSpan().IndexOf(marker) >= 0;
+}
+'@
 }
 
 $failures = [System.Collections.Generic.List[string]]::new()
@@ -79,8 +90,8 @@ function Test-FileHardened {
     }
     $bytes = [System.IO.File]::ReadAllBytes($Path)
     foreach ($marker in $forbiddenMarkers) {
-        if (Test-BytesContainMarker -Bytes $bytes -Marker $marker) {
-            $failures.Add("$Label - contains un-hardened marker '$marker': $Path")
+        if (Test-BytesContainMarker -Bytes $bytes -Marker $marker.Name) {
+            $failures.Add("$Label - contains un-hardened marker '$($marker.Name)': $Path")
         }
     }
     Write-Host "Checked (hardened): $Label ($Path)" -ForegroundColor Green
@@ -108,7 +119,9 @@ if ($PortableZipPath) {
         Expand-Archive -LiteralPath $PortableZipPath -DestinationPath $zipScratch
         $zipVersionRoot = Join-Path $zipScratch "Runtime\versions\$Version"
         Test-FileHardened -Path (Join-Path $zipVersionRoot 'Ralven.Core.dll') -Label 'Portable ZIP: App Core.dll'
+        Test-FileHardened -Path (Join-Path $zipVersionRoot 'Ralven.Windows.dll') -Label 'Portable ZIP: App Windows.dll'
         Test-FileHardened -Path (Join-Path $zipVersionRoot 'broker\Ralven.Core.dll') -Label 'Portable ZIP: Broker Core.dll'
+        Test-FileHardened -Path (Join-Path $zipVersionRoot 'broker\Ralven.Windows.dll') -Label 'Portable ZIP: Broker Windows.dll'
         Test-FileHardened -Path (Join-Path $zipScratch 'Ralven.Launcher.exe') -Label 'Portable ZIP: Launcher bundle'
     }
     finally {
@@ -121,7 +134,9 @@ if ($RuntimeZipPath) {
     try {
         Expand-Archive -LiteralPath $RuntimeZipPath -DestinationPath $runtimeZipScratch
         Test-FileHardened -Path (Join-Path $runtimeZipScratch 'Ralven.Core.dll') -Label 'Runtime ZIP: Core.dll'
+        Test-FileHardened -Path (Join-Path $runtimeZipScratch 'Ralven.Windows.dll') -Label 'Runtime ZIP: Windows.dll'
         Test-FileHardened -Path (Join-Path $runtimeZipScratch 'broker\Ralven.Core.dll') -Label 'Runtime ZIP: Broker Core.dll'
+        Test-FileHardened -Path (Join-Path $runtimeZipScratch 'broker\Ralven.Windows.dll') -Label 'Runtime ZIP: Broker Windows.dll'
     }
     finally {
         if (Test-Path -LiteralPath $runtimeZipScratch) { Remove-Item -LiteralPath $runtimeZipScratch -Recurse -Force }
