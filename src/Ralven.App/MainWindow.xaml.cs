@@ -30,6 +30,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly MainViewModel viewModel;
     private readonly ThemeManager themeManager;
     private readonly TrayIconService trayIcon;
+    private readonly System.Windows.Controls.ContextMenu trayMenu;
     private readonly IReleaseUpdateService? releaseUpdateService;
     private readonly bool startupLaunch;
     private readonly bool demoMode;
@@ -57,6 +58,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     public MainWindow()
     {
         InitializeComponent();
+        trayMenu = (System.Windows.Controls.ContextMenu)Resources["TrayContextMenu"];
         // Precisa ser marcado em código, não em XAML: setar IsChecked="True"
         // inline dispara o evento Checked durante o próprio parse do
         // documento, antes de os outros campos nomeados existirem.
@@ -149,7 +151,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         }
         trayIcon = new TrayIconService(LocalizationService.Current);
         trayIcon.ShowRequested += TrayIcon_ShowRequested;
-        trayIcon.ExitRequested += TrayIcon_ExitRequested;
+        trayIcon.MenuRequested += TrayIcon_MenuRequested;
         viewModel.UpdateAvailableDetected += ViewModel_UpdateAvailableDetected;
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
         DataContext = viewModel;
@@ -325,6 +327,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
             throw;
         }
+        RefreshTrayIconPresentation();
         if (accountService is not null)
         {
             _ = RestoreAccountSessionQuietlyAsync();
@@ -402,6 +405,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         viewModel.PropertyChanged -= ViewModel_PropertyChanged;
         LocalizationService.Current.LanguageChanged -= MainWindow_LanguageChanged;
         themeManager.Dispose();
+        trayMenu.IsOpen = false;
         trayIcon.Dispose();
         CancelAccountEntitlementExpiry();
         accountService?.Dispose();
@@ -412,6 +416,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     {
         ApplyAccountEntitlementPresentation();
         proViewModel.Refresh();
+        RefreshTrayIconPresentation();
     }
 
     private void Application_SessionEnding(object? sender, SessionEndingCancelEventArgs e)

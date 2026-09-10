@@ -579,9 +579,17 @@
   <data name="Runtime.RestoreCompleted" xml:space="preserve"><value>Configurações restauradas</value></data>
   <data name="Runtime.RestoreCompletedDetail" xml:space="preserve"><value>O rollback respeitou mudanças mais recentes e não tentou recuperar limpezas permanentes.</value></data>
   <data name="Tray.Open" xml:space="preserve"><value>Abrir Ralven</value></data>
+  <data name="Tray.Optimize" xml:space="preserve"><value>Otimizar PC</value></data>
+  <data name="Tray.CheckUpdates" xml:space="preserve"><value>Verificar atualizações</value></data>
+  <data name="Tray.Settings" xml:space="preserve"><value>Configurações</value></data>
   <data name="Tray.Exit" xml:space="preserve"><value>Sair</value></data>
+  <data name="Tray.MenuName" xml:space="preserve"><value>Menu rápido do Ralven</value></data>
+  <data name="Tray.Status.Ready" xml:space="preserve"><value>Pronto</value></data>
+  <data name="Tray.SessionUnavailable" xml:space="preserve"><value>Indisponível</value></data>
+  <data name="Tray.Tooltip" xml:space="preserve"><value>Ralven — {0}</value></data>
+  <data name="Tray.UpdateCheck.Title" xml:space="preserve"><value>Atualizações do Ralven</value></data>
   <data name="Tray.Title" xml:space="preserve"><value>Ralven continua em execução</value></data>
-  <data name="Tray.Message" xml:space="preserve"><value>Clique duas vezes no ícone da bandeja para voltar.</value></data>
+  <data name="Tray.Message" xml:space="preserve"><value>Clique no ícone da bandeja para voltar.</value></data>
   <data name="Notification.UpdateAvailable.Title" xml:space="preserve"><value>Atualização do Ralven disponível</value></data>
   <data name="Notification.UpdateAvailable.Message" xml:space="preserve"><value>A versão {0} já está disponível. Clique para abrir o Ralven.</value></data>
   <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Ao clicar no X, o Ralven passará a ser minimizado para a bandeja do sistema em vez de ser fechado.</value></data>

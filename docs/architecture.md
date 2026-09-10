@@ -86,6 +86,31 @@ argumentos, versões nem dados pessoais. A gravação usa arquivo temporário na
 mesma pasta antes da substituição. Ignorar afeta apenas a apresentação e a
 seleção em lote, nunca executa uma operação no sistema.
 
+### Bandeja do sistema
+
+`TrayIconService` mantém o `System.Windows.Forms.NotifyIcon` somente como
+integração com a área de notificação do Windows. O clique direito continua
+entrando pelo `ContextMenuStrip` associado ao ícone, mas o evento de abertura
+é cancelado e encaminhado ao `ContextMenu` WPF do shell. Assim, o Windows
+continua responsável pelo ciclo de vida do ícone, tooltip e notificações,
+enquanto o Ralven controla tema, tipografia, ícones, foco e estados do menu.
+
+Com **Minimizar para a bandeja** ativo, o ícone permanece disponível enquanto
+o aplicativo estiver aberto. Clique esquerdo restaura/ativa a janela; clique
+direito abre o menu rápido junto ao ponteiro; perder foco ou escolher uma ação
+fecha o menu pelo comportamento do próprio `ContextMenu`. As ações reutilizam
+os fluxos existentes do shell: abrir, navegar ao Otimizador, alternar o monitor
+local de sessão, verificar atualizações, abrir Configurações e sair. O menu não
+executa otimizações nem instalações diretamente e mantém as confirmações já
+exigidas por esses fluxos.
+
+O posicionamento usa `PlacementMode.MousePoint`, que acompanha o monitor do
+ícone e deixa o `Popup` WPF corrigir colisões com as bordas da área de trabalho.
+O manifesto `PerMonitorV2` continua sendo a fonte de escala por monitor. A API
+gerenciada de `NotifyIcon` não expõe um retângulo estável do ícone; portanto a
+âncora visual é o ponteiro usado para invocar o menu, sem tentar acessar a
+estrutura interna da barra de tarefas.
+
 ## Componentes
 
 ## Autenticação Firebase
