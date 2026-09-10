@@ -4,7 +4,7 @@
 
 - Estilo principal: aplicação desktop em camadas, com adaptadores Windows e processos auxiliares; backend e sites são deployables separados no mesmo repositório.
 - Classificação: `Contracts` e `Core` não dependem de WPF; `Windows` implementa efeitos concretos; `App` orquestra UI; o broker isola privilégio. As referências dos `.csproj` confirmam essas direções.
-- Restrições centrais: GTAV Legacy somente; descobrir antes de alterar; operações persistentes verificáveis e reversíveis; privilégio mínimo; contratos remotos allowlisted.
+- Restrições centrais: a integração FiveM atende somente GTAV Legacy; descobrir antes de alterar; operações persistentes verificáveis e reversíveis; privilégio mínimo; contratos remotos allowlisted.
 
 Não há contêiner de DI. A composição é explícita em factories como `WindowsOptimizationDependencies.CreateDefault` e no startup da janela, o que também simplifica doubles nos testes.
 

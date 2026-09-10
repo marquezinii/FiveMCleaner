@@ -7,7 +7,7 @@ O Ralven altera configurações de alto impacto potencial. Segurança, explicabi
 Uma ação aceita pelo produto precisa respeitar todos os itens abaixo:
 
 1. **Escopo conhecido** — instalação e edição foram identificadas sem ambiguidade.
-2. **Legacy somente** — GTAV Enhanced retorna bloqueio seguro.
+2. **FiveM Legacy dentro de Jogos** — a integração especializada bloqueia GTAV Enhanced com segurança.
 3. **Processos encerrados** — nenhuma nova escrita ou limpeza começa com
    processos FiveM ativos. A única exceção é a compensação imediata e estreita
    do snapshot criado pela própria execução que acabou de falhar, descrita em

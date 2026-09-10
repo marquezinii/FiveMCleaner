@@ -86,6 +86,12 @@ argumentos, versões nem dados pessoais. A gravação usa arquivo temporário na
 mesma pasta antes da substituição. Ignorar afeta apenas a apresentação e a
 seleção em lote, nunca executa uma operação no sistema.
 
+## Diálogos WPF
+
+As janelas secundárias compartilham `DialogWindow`, com modalidade nativa,
+backdrop visual e limites por monitor/DPI. A escolha por fluxo, os estilos e
+a validação reproduzível estão em [Janelas secundárias e diálogos](dialogs.md).
+
 ## Componentes
 
 ## Autenticação Firebase
@@ -147,7 +153,7 @@ exclusão do perfil pode remover o vínculo. Uma criação incerta continua bloq
 | `Ralven.App`       | WPF, navegação, prévia, progresso e confirmação                     | APIs administrativas ou detalhes de registro             |
 | `Ralven.Contracts` | DTOs, IDs, estados (inclusive transacionais), erros e contratos entre processos | WPF ou implementação Windows                  |
 | `Ralven.Core`      | casos de uso, composição de perfis, políticas, transação e rollback | controles visuais ou comandos shell                      |
-| `Ralven.Windows`   | descoberta de hardware/instalação e adaptadores Windows/FiveM       | decisão de qual perfil o usuário deve escolher           |
+| `Ralven.Windows`   | descoberta de hardware/instalação e adaptadores Windows/Jogos       | decisão de qual perfil o usuário deve escolher           |
 | `Ralven.Broker`    | executor elevado com allowlist mínima                               | navegação, telemetria ou lógica de produto ampla         |
 | `Ralven.Tests`     | contratos, políticas, falhas, rollback e doubles de sistema         | dependência de uma instalação real para testes unitários |
 
@@ -165,7 +171,7 @@ flowchart LR
   C --> W["Windows adapters · operações sem elevação"]
   C --> K["Contracts · mensagens tipadas"]
   K -->|"consentimento + UAC"| B["Broker elevado · allowlist"]
-  W --> F["FiveM Legacy e Windows"]
+  W --> F["Windows e integrações de Jogos"]
   B --> S["Configurações administrativas permitidas"]
   C --> R["Snapshots e relatório local"]
   W -. "Enhanced detectado" .-> X["Bloqueio seguro"]
@@ -555,6 +561,10 @@ Esses arquivos têm durabilidades diferentes e isso muda o que pode ser alterado
 
 - `Transactions/<id>.json` é **durável entre versões**. É o único registro que mantém uma execução passada auditável e reversível, e um journal escrito por uma versão anterior precisa continuar carregando. Enums serializam como string camelCase (`allowIntegerValues: false`), e `UnmappedMemberHandling.Disallow` significa que **remover** uma propriedade do journal quebra JSON antigo — acrescentar é seguro, remover não. Ver `TransactionState`/`ActionJournalState`/`ActionExecutionOutcome` em "Resultado".
 - `Requests/<id>.json` é **efêmero**: reivindicado e apagado pelo broker, com janela de validade curta. Seu schema pode evoluir junto com o build.
+- `settings.json` é lido de forma tolerante a chaves desconhecidas, diferenças
+  de capitalização e comentários, mas sempre gravado de forma atômica. A restauração
+  de padrões afeta somente preferências gerais; consentimento de privacidade,
+  conta e marcadores internos permanecem preservados.
 
 Caches não são copiados para o journal. Durante uma limpeza, arquivos allowlisted são movidos para uma quarentena dentro do próprio volume; a ação restaura essa quarentena se falhar antes do commit e a remove somente ao confirmar a transação.
 

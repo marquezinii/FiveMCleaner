@@ -130,9 +130,9 @@
 
     <SolidColorBrush x:Key="NeutralBaseBrush" Color="#2D2E33" />
 
-    <SolidColorBrush x:Key="ToggleTrackOffBrush" Color="#00000000" />
-    <SolidColorBrush x:Key="ToggleTrackOffHoverBrush" Color="#E8E8E9" />
-    <SolidColorBrush x:Key="ToggleThumbBrush" Color="#2D2E33" />
+    <SolidColorBrush x:Key="ToggleTrackOffBrush" Color="#D1D2D6" />
+    <SolidColorBrush x:Key="ToggleTrackOffHoverBrush" Color="#BFC1C7" />
+    <SolidColorBrush x:Key="ToggleThumbBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="ToggleThumbOnBrush" Color="#FFFFFF" />
     <SolidColorBrush x:Key="ScrollThumbBrush" Color="#A6A7AC" />
     <SolidColorBrush x:Key="ScrollThumbHoverBrush" Color="#2D2E33" />
@@ -146,4 +146,5 @@
         <GradientStop Color="#6842A0" Offset="0" />
         <GradientStop Color="#9C3FD1" Offset="1" />
     </LinearGradientBrush>
+    <SolidColorBrush x:Key="DialogBackdropBrush" Color="#28000000" />
 </ResourceDictionary>

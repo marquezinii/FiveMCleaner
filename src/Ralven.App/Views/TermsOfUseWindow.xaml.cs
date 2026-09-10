@@ -2,7 +2,7 @@ using Ralven.App.Services;
 
 namespace Ralven.App.Views;
 
-public partial class TermsOfUseWindow : Wpf.Ui.Controls.FluentWindow
+public partial class TermsOfUseWindow : Ralven.App.Controls.DialogWindow
 {
     public TermsOfUseWindow()
     {

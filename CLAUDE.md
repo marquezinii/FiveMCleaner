@@ -3,7 +3,7 @@
 Instruções persistentes específicas deste repositório. Mantenha este arquivo curto, estável e focado no que Claude não deve inferir sozinho.
 ## Missão e prioridades
 
-Ralven é um aplicativo Windows de diagnóstico, limpeza e otimização segura para FiveM sobre GTAV Legacy.
+Ralven é uma plataforma Windows de gerenciamento, manutenção e otimização segura com IA. FiveM sobre GTAV Legacy é uma integração especializada da área de Jogos, não a identidade principal do produto.
 
 Priorize, nesta ordem: segurança e dados do usuário; reversibilidade; correção/confiabilidade; transparência; UX; desempenho; conveniência de implementação.
 
@@ -79,7 +79,7 @@ Não crie dependência circular nem mova responsabilidades entre camadas por con
 
 O comportamento seguro existente é parte do produto:
 
-- FiveM/GTAV Legacy é o alvo suportado; não aplique otimizações ao GTAV Enhanced sem suporte validado.
+- A integração FiveM/GTAV Legacy é a integração de jogo suportada; não aplique suas otimizações ao GTAV Enhanced sem suporte validado.
 - Diagnostique antes de alterar e preserve prévia das ações relevantes.
 - Ações mutáveis devem respeitar snapshot, journal, validação e rollback quando aplicável.
 - Use privilégio mínimo.

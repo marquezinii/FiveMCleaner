@@ -1,4 +1,4 @@
-# Objetivo da tarefa
+# Objetivo
 
 - **Agente:** Codex
 - **Objetivo:** permitir que o usuário visualize e limpe com segurança os caches descartáveis gerados pelo Ralven e documentar a integração suportada com a limpeza de armazenamento do Windows.
