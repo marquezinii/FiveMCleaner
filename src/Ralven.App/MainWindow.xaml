@@ -115,7 +115,7 @@
                             </StackPanel.Style>
                             <Ellipse Width="7" Height="7" Fill="{DynamicResource WarningBaseBrush}" VerticalAlignment="Center" />
                             <TextBlock Text="{Binding LiveAlertMessage}" Style="{StaticResource CaptionText}" Foreground="{DynamicResource WarningBaseBrush}" Margin="9,0,0,0" VerticalAlignment="Center" MaxWidth="380" TextTrimming="CharacterEllipsis" />
-                            <Button Width="22" Height="22" Margin="8,0,0,0" Padding="0" Background="Transparent" BorderThickness="0" Cursor="Hand" Click="LiveAlertDismiss_Click"
+                            <Button Style="{StaticResource IconButtonStyle}" Margin="8,0,0,0" Click="LiveAlertDismiss_Click"
                                     ToolTip="{Binding [LiveAlert.Dismiss], Source={StaticResource LocalizedStrings}}"
                                     AutomationProperties.Name="{Binding [LiveAlert.Dismiss], Source={StaticResource LocalizedStrings}}">
                                 <Path Width="11" Height="11" Stretch="Uniform" StrokeThickness="1.5" Data="{StaticResource IconClose}" Stroke="{DynamicResource TextSecondaryBrush}" />
@@ -329,7 +329,7 @@
                                                     <TextBlock Text="{Binding [Settings.Account.PhotoLocalOnly], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
-                                                    <Button x:Name="ChangePhotoButton" Content="{Binding [Settings.Account.ChangePhoto], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="36" Padding="14,0" Click="ChangePhoto_Click" />
+                                                    <Button x:Name="ChangePhotoButton" Content="{Binding [Settings.Account.ChangePhoto], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Click="ChangePhoto_Click" />
                                                     <Button x:Name="RemovePhotoButton" Content="{Binding [Settings.Account.RemovePhoto], Source={StaticResource LocalizedStrings}}" Style="{StaticResource LinkButtonStyle}" Margin="10,0,0,0" Visibility="Collapsed" Click="RemovePhoto_Click" />
                                                 </StackPanel>
                                             </Grid>

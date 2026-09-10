@@ -1,7 +1,11 @@
 # Objetivo da tarefa
 
-- **Agente:** Codex
-- **Objetivo:** suavizar a hierarquia visual da tela Visão Geral com um recorte pequeno, sóbrio e coerente nos temas claro e escuro.
-- **Escopo:** ajustar somente o Overview e, se indispensável, estilos de superfície que ele já usa; não alterar cabeçalho/conta, autenticação, navegação, comportamento funcional ou textos.
-- **Critérios de conclusão:** reduzir caixas e divisórias duras nos pontos de maior impacto, reutilizar tokens existentes, preservar responsividade/acessibilidade e validar build, testes e renderização em tema claro e escuro quando o ambiente permitir.
-- **Resultado entregue:** o diagnóstico principal usa a superfície hero existente com raio amplo e sem contorno; os três KPIs são agrupados por espaço, sem divisórias; o monitor ao vivo fica aberto sobre o fundo e preserva o gráfico como poço funcional. O XAML foi inspecionado em tema escuro e claro, maximizado e em 1600×1000. Foram aprovados 78 testes focados de localização/tokens, o build Release da solução (0 avisos) e a suíte completa (1.434 testes).
+**Agente:** Codex
+
+**Objetivo:** Modernizar e padronizar o sistema visual de botões do aplicativo Ralven, preservando hierarquia, estados interativos e acessibilidade.
+
+**Escopo:** Estilos reutilizáveis de botões, tokens visuais relacionados e adoção consistente nas telas WPF existentes. Não inclui alterações de comportamento de otimizações, serviços, contratos ou textos públicos.
+
+**Critérios de conclusão:** Variantes primária, secundária, destrutiva, link, ícone e provedora são coerentes entre si; todos os estados suportados mantêm contraste, foco visível e alvo de clique adequado; build e testes aplicáveis passam; validação visual cobre telas e escalas disponíveis.
+
+**Resultado entregue:** Template base compartilhado e variantes primária, secundária, destrutiva, link, ícone e provedora aplicados ao aplicativo; exceções de dimensão excessiva removidas das telas e diálogos afetados; contratos de estilos e contraste ampliados. Build Release e 1.453 testes aprovados. A inspeção renderizada manual ficou pendente porque a automação deste host não disponibiliza aplicativos nativos.

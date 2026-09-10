@@ -34,12 +34,15 @@ public sealed class ThemeTokenContractTests
             data.Add(theme, "TextSecondaryBrush", "Surface1Color", 4.5);
             data.Add(theme, "TextTertiaryBrush", "Surface1Color", 4.5);
             data.Add(theme, "TextPrimaryBrush", "Surface2Color", 4.5);
+            data.Add(theme, "TextPrimaryBrush", "Surface3Color", 4.5);
             data.Add(theme, "TextSecondaryBrush", "Surface2Color", 4.5);
             data.Add(theme, "TextTertiaryBrush", "Surface2Color", 4.5);
+            data.Add(theme, "TextTertiaryBrush", "Surface3Color", 4.5);
             // Cabeçalho de tabela e coluna de notas ficam sobre o poço.
             data.Add(theme, "TextTertiaryBrush", "CanvasSunkenColor", 4.5);
             data.Add(theme, "AccentTextBrush", "Surface1Color", 4.5);
             data.Add(theme, "AccentTextBrush", "Surface2Color", 4.5);
+            data.Add(theme, "AccentTextBrush", "Surface3Color", 4.5);
             data.Add(theme, "SuccessBaseBrush", "Surface1Color", 4.5);
             data.Add(theme, "WarningBaseBrush", "Surface1Color", 4.5);
             data.Add(theme, "DangerBaseBrush", "Surface1Color", 4.5);
@@ -51,8 +54,15 @@ public sealed class ThemeTokenContractTests
             // não pode ser o único que fica ilegível).
             data.Add(theme, "AppTextOnAccentBrush", "AccentBrush", 4.5);
             data.Add(theme, "AppTextOnAccentBrush", "AccentBrightBrush", 4.5);
+            data.Add(theme, "AppTextOnAccentBrush", "AccentDeepBrush", 4.5);
+            // Ação destrutiva em hover: sem contraste suficiente, o feedback
+            // visual apagaria justamente a semântica que ela deve preservar.
+            data.Add(theme, "DangerBaseBrush", "DangerSurfaceBrush", 4.5);
             // Preenchimento do acento contra a folha: componente não textual.
             data.Add(theme, "AccentBrush", "Surface1Color", 3.0);
+            data.Add(theme, "FocusRingBrush", "Surface1Color", 3.0);
+            data.Add(theme, "FocusRingBrush", "Surface2Color", 3.0);
+            data.Add(theme, "FocusRingBrush", "Surface3Color", 3.0);
         }
 
         return data;

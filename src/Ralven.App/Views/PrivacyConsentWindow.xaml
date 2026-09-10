@@ -95,8 +95,6 @@
                             Content="{Binding [PrivacyConsent.Continue], Source={StaticResource LocalizedStrings}}"
                             Style="{StaticResource PrimaryButtonStyle}"
                             HorizontalAlignment="Right"
-                            Height="40"
-                            Padding="24,0"
                             IsDefault="True"
                             Click="Continue_Click" />
                 </Grid>

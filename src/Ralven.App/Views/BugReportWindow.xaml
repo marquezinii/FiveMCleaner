@@ -103,8 +103,8 @@
                 <Grid Margin="20,0">
                     <Button x:Name="CopyButton" Content="{Binding [BugReport.Copy], Source={StaticResource LocalizedStrings}}" Style="{StaticResource LinkButtonStyle}" HorizontalAlignment="Left" Click="Copy_Click" />
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                        <Button Content="{Binding [BugReport.Cancel], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Height="40" Padding="17,0" Margin="0,0,9,0" Click="Close_Click" />
-                        <Button x:Name="SendButton" Content="{Binding [BugReport.Send], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="40" Padding="20,0" Click="Send_Click" />
+                        <Button Content="{Binding [BugReport.Cancel], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,9,0" Click="Close_Click" />
+                        <Button x:Name="SendButton" Content="{Binding [BugReport.Send], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Click="Send_Click" />
                     </StackPanel>
                 </Grid>
             </Border>

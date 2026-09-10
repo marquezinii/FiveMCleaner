@@ -106,8 +106,6 @@
                     </StackPanel>
                     <Button x:Name="CloseIconButton"
                             Style="{StaticResource IconButtonStyle}"
-                            Width="32"
-                            Height="32"
                             HorizontalAlignment="Right"
                             AutomationProperties.Name="{Binding [ReleaseNotes.Close], Source={StaticResource LocalizedStrings}}"
                             Click="Close_Click">
@@ -139,8 +137,6 @@
                             Content="{Binding [ReleaseNotes.Close], Source={StaticResource LocalizedStrings}}"
                             Style="{StaticResource SecondaryButtonStyle}"
                             HorizontalAlignment="Right"
-                            Height="40"
-                            Padding="22,0"
                             IsDefault="True"
                             Click="Close_Click" />
                 </Grid>

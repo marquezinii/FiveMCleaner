@@ -72,6 +72,6 @@
             </FlowDocumentScrollViewer>
         </Border>
 
-        <Button Grid.Row="2" Content="{Binding [Terms.Close], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Height="42" Padding="28,0" Margin="0,18,0,0" HorizontalAlignment="Right" IsDefault="True" IsCancel="True" />
+        <Button Grid.Row="2" Content="{Binding [Terms.Close], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Margin="0,18,0,0" HorizontalAlignment="Right" IsDefault="True" IsCancel="True" />
     </Grid>
 </ui:FluentWindow>
