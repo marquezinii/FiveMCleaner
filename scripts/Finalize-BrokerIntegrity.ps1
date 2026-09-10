@@ -55,6 +55,7 @@ Set-Content -LiteralPath "$portableArchive.sha256" -Value "$portableHash  $([Sys
 & (Join-Path $PSScriptRoot 'Build-Installer.ps1') `
     -Version $Version `
     -SkipPortableBuild `
+    -Harden `
     -AllowDirtySource:$AllowDirtySource
 if ($LASTEXITCODE -ne 0) {
     throw "Rebuilding the installer after broker signing failed with exit code $LASTEXITCODE."

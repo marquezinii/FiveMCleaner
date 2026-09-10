@@ -58,7 +58,7 @@ exibição. A classificação e a limpeza manual estão em
 ## Build local reproduzível
 
 ```powershell
-.\scripts\Build-Installer.ps1 -Version 1.0.0
+.\scripts\Build-Installer.ps1 -Version 1.0.0 -Harden
 
 $installer = Resolve-Path .\artifacts\installer\Ralven-Setup-1.0.0-win-x64.exe
 .\scripts\Test-Installer.ps1 `
@@ -67,7 +67,9 @@ $installer = Resolve-Path .\artifacts\installer\Ralven-Setup-1.0.0-win-x64.exe
   -ExpectedVersion 1.0.0
 ```
 
-O script primeiro executa a verificação de segurança e o publish self-contained,
+Para uma simulação de release, `-Harden` é obrigatório; sem esse switch o build
+é deliberadamente limpo e serve apenas ao desenvolvimento. O script primeiro
+executa a verificação de segurança e o publish self-contained protegido,
 depois compila o instalador, gera SHA-256 e um manifesto de release. Se o Inno
 Setup 7.0.2 x64 não estiver instalado, o build baixa a release imutável oficial para
 um cache dentro de `artifacts/.tools`, exige o SHA-256 fixado no script e valida
@@ -126,11 +128,14 @@ anterior. Logs detalhados ficam locais; eventos essenciais sanitizados chegam à
 
 ## Publicação no GitHub
 
-O workflow `.github/workflows/release.yml` só aceita disparo manual. O job de
-build compila, testa e entrega um candidato **sem chaves de assinatura**. Um
-job separado, protegido pelo ambiente `release-signing`, recebe esse candidato,
-assina os manifestos de update e broker com chaves online distintas e devolve o
-artefato assinado. A criação pública exige uma tag exata (`vX.Y.Z` ou
+O workflow `.github/workflows/release.yml` só aceita disparo manual. O primeiro
+job compila e testa o código limpo sem produzir candidato publicável. Um job
+separado, protegido pelo ambiente `release-signing`, recompila, ofusca, valida
+diretamente o runtime protegido e então assina os manifestos de update e broker
+com chaves online distintas. Mappings de diagnóstico saem desse ambiente apenas
+como bundle AES-256-GCM autenticado; releases publicadas preservam esse bundle
+criptografado no R2 sem anexá-lo à release pública. A criação pública exige uma
+tag exata (`vX.Y.Z` ou
 `vX.Y.Z-preview`), `publish=true`, o canal correspondente e aprovação manual
 do ambiente GitHub `production`.
 
@@ -161,7 +166,8 @@ Fontes oficiais usadas no desenho:
 ## Procedimento de release
 
 1. Atualize `Directory.Build.props` e `CHANGELOG.md` com uma versão SemVer.
-2. Execute localmente `Verify-Safety.ps1`, os testes, `Build-Installer.ps1` e
+2. Execute localmente `Verify-Safety.ps1`, os testes,
+   `Build-Installer.ps1 -Harden`, `Test-HardenedRuntime.ps1` e
    `Test-Installer.ps1`.
 3. Faça commit, envie `main`, crie a tag exata `vX.Y.Z` e envie a tag.
 4. Em **Actions → Build installer and publish release**, escolha a tag, canal

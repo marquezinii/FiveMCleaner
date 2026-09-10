@@ -62,5 +62,28 @@
   <Var name="XmlMapping" value="false" />
 
   <Module file="$(InPath)\Ralven.Core.dll" />
-  <Module file="$(InPath)\Ralven.Windows.dll" />
+  <Module file="$(InPath)\Ralven.Windows.dll">
+    <!--
+      These internal records are persisted by System.Text.Json inside the
+      transaction journal. Their JSON property names must remain stable across
+      clean/protected builds and application upgrades so rollback can always
+      read snapshots written by an earlier version.
+    -->
+    <SkipType name="Ralven.Windows.Actions.QuarantinedFileSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.CleanupScopeSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.CleanupActionSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.TerminatedProcessSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.QuarantinedAuthEntry" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.QuarantinedAuthItem" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.AuthDataRepairSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.CommandLineSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.SafeXmlSettingsSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.PointerAccelerationSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.PowerPlanSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.PciExpressAspmSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.RegistryMutationSnapshotEntry" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.RegistryMutationSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.VisualEffectsSnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+    <SkipType name="Ralven.Windows.Actions.MenuShowDelaySnapshot" skipMethods="true" skipFields="true" skipProperties="true" skipEvents="true" />
+  </Module>
 </Obfuscator>

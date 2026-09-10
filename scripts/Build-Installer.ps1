@@ -15,7 +15,8 @@ param(
 
     # Forwarded to Build-Portable: obfuscate the internal-logic assemblies in
     # the published runtime before it is packaged, hashed and signed. Used by
-    # the public release workflow; ignored when -SkipPortableBuild is set.
+    # the public release workflow. With -SkipPortableBuild it verifies that
+    # the existing staged payload is still hardened before repackaging it.
     [switch]$Harden
 )
 
@@ -193,9 +194,6 @@ try {
             throw 'Portable self-contained publish failed.'
         }
     }
-    elseif ($Harden) {
-        throw 'Cannot honor -Harden together with -SkipPortableBuild: hardening happens during the portable publish.'
-    }
 
     foreach ($requiredPayload in @(
         'Ralven.Launcher.exe',
@@ -329,12 +327,14 @@ try {
         -ExpectedVersion $Version
 
     if ($Harden) {
-        # Build-Portable.ps1 already fail-closed-checked $publishDirectory and
-        # both ZIPs; this closes the loop on the compiled installer itself -
-        # the artifact users actually download and run.
+        # Revalidate the runtime, both ZIPs and the compiled installer whether
+        # the portable payload was built now or supplied by the post-signing
+        # broker finalizer.
         & (Join-Path $PSScriptRoot 'Test-NoUnobfuscatedAssemblies.ps1') `
             -RuntimeDirectory $publishDirectory `
             -Version $Version `
+            -PortableZipPath $portableArchive `
+            -RuntimeZipPath $runtimeArchive `
             -InstallerPath $stagedInstaller
         if ($LASTEXITCODE -ne 0) { throw 'Fail-closed hardening verification failed for the installer.' }
     }
