@@ -8,11 +8,11 @@
 #define StableAppId "{{35FF816F-9EFD-42C8-A63B-CC5EA138805A}"
 
 #ifndef AppVersion
-  #define AppVersion "1.5.1"
+  #error AppVersion must be provided by scripts/Build-Installer.ps1
 #endif
 
 #ifndef AppNumericVersion
-  #define AppNumericVersion "1.5.1.0"
+  #error AppNumericVersion must be provided by scripts/Build-Installer.ps1
 #endif
 
 #ifndef SourceDir

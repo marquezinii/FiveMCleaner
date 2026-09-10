@@ -26,7 +26,13 @@ Set-Location website
 npm test
 ```
 
-A CI também executa restore com auditoria NuGet, build, lint/typecheck do site, `npm audit` e geração de SBOM.
+A CI seleciona os jobs pela área alterada e mantém um único status obrigatório.
+Ela também valida o contrato do repositório (PR/objetivo, versões, catálogos de
+localização, placeholders, roadmap, códigos de bug entre .NET/Worker/dashboard
+e toolchain Node), executa formatação e
+restore com auditoria NuGet, build, lint/typecheck/build do site, `npm audit` e
+geração de SBOM. Mudanças no instalador executam build e smoke test próprios;
+uma rodada semanal repete as auditorias de dependências mesmo sem mudanças.
 O projeto xUnit v3 é executável; o comando usa `dotnet run` e exige ao menos
 um teste porque o caminho `dotnet test`/servidor do SDK 10 atualmente retorna
 zero testes nesta combinação WPF/MTP.
@@ -61,6 +67,8 @@ Falha comum a evitar: alterar contrato persistido, resource key ou metadata de a
 - coverlet gera Cobertura na CI; não há threshold mínimo configurado.
 - Cobertura atual: `[TODO]` nenhum percentual versionado no repositório.
 - A CI cancela execução anterior da mesma ref e guarda resultados por 14 dias.
+- Jobs não afetados são ignorados; execução manual roda a matriz completa e a
+  agenda semanal cobre .NET, Worker, dashboard e site sem gerar SBOM/instalador.
 - Gaps conhecidos: Authenticode real, comportamento em hardware/FiveM reais, fluxo UAC instalado e disponibilidade dos serviços publicados precisam de validação fora da suíte unitária.
 - Não há benchmark ou suíte de performance configurada.
 

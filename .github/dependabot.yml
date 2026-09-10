@@ -2,6 +2,7 @@ version: 2
 updates:
   - package-ecosystem: nuget
     directory: "/"
+    target-branch: dev/proxima-versao
     schedule:
       interval: weekly
       day: monday
@@ -9,7 +10,7 @@ updates:
       timezone: America/Sao_Paulo
     open-pull-requests-limit: 10
     commit-message:
-      prefix: deps
+      prefix: build(deps)
     groups:
       nuget-minor-and-patch:
         patterns:
@@ -20,6 +21,7 @@ updates:
 
   - package-ecosystem: github-actions
     directory: "/"
+    target-branch: dev/proxima-versao
     schedule:
       interval: weekly
       day: monday
@@ -27,7 +29,7 @@ updates:
       timezone: America/Sao_Paulo
     open-pull-requests-limit: 5
     commit-message:
-      prefix: ci
+      prefix: ci(deps)
     groups:
       github-actions:
         patterns:
@@ -35,6 +37,7 @@ updates:
 
   - package-ecosystem: npm
     directory: "/infra/cloudflare-worker"
+    target-branch: dev/proxima-versao
     schedule:
       interval: weekly
       day: monday
@@ -42,7 +45,7 @@ updates:
       timezone: America/Sao_Paulo
     open-pull-requests-limit: 10
     commit-message:
-      prefix: deps
+      prefix: build(deps)
     groups:
       worker-npm:
         patterns:
@@ -50,6 +53,7 @@ updates:
 
   - package-ecosystem: npm
     directory: "/infra/dashboard"
+    target-branch: dev/proxima-versao
     schedule:
       interval: weekly
       day: monday
@@ -57,8 +61,24 @@ updates:
       timezone: America/Sao_Paulo
     open-pull-requests-limit: 5
     commit-message:
-      prefix: deps
+      prefix: build(deps)
     groups:
       dashboard-npm:
+        patterns:
+          - "*"
+
+  - package-ecosystem: npm
+    directory: "/website"
+    target-branch: dev/proxima-versao
+    schedule:
+      interval: weekly
+      day: monday
+      time: "11:30"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build(deps)
+    groups:
+      website-npm:
         patterns:
           - "*"
