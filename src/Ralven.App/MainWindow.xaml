@@ -591,6 +591,19 @@
                                         <Grid>
                                             <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
                                             <StackPanel Margin="0,0,24,0">
+                                                <TextBlock Text="{Binding [Settings.Cache.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                                                <TextBlock Text="{Binding [Settings.Cache.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,3,0,0" TextWrapping="Wrap" />
+                                                <TextBlock Text="{Binding CacheStorageLabel}" Style="{StaticResource SecondaryText}" Foreground="{DynamicResource AccentTextBrush}" Margin="0,8,0,0" TextWrapping="Wrap" AutomationProperties.LiveSetting="Polite" />
+                                            </StackPanel>
+                                            <Button Grid.Column="1" VerticalAlignment="Center" Content="{Binding [Settings.Cache.Button], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}" IsEnabled="{Binding CanClearRalvenCache}" Click="ClearRalvenCache_Click"
+                                                    AutomationProperties.Name="{Binding [Settings.Cache.Button], Source={StaticResource LocalizedStrings}}"
+                                                    AutomationProperties.HelpText="{Binding [Settings.Cache.Description], Source={StaticResource LocalizedStrings}}" />
+                                        </Grid>
+                                    </Border>
+                                    <Border Style="{StaticResource SettingsCardStyle}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                            <StackPanel Margin="0,0,24,0">
                                                 <TextBlock Text="{Binding [GtaVBenchmark.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
                                                 <TextBlock Text="{Binding [GtaVBenchmark.Summary], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" Margin="0,3,0,0" TextWrapping="Wrap" />
                                                 <Expander Header="{Binding [GtaVBenchmark.Details], Source={StaticResource LocalizedStrings}}" Margin="0,6,0,0">

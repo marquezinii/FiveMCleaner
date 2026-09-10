@@ -1028,6 +1028,27 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("AutomationProperties.Name=\"{Binding AboutVersionDeveloper}\"", mainWindow, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void CacheCleanup_RequiresExplicitLocalizedConfirmation()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var settingsCode = File.ReadAllText(Path.Combine(
+            root,
+            "src",
+            "Ralven.App",
+            "MainWindow.Settings.xaml.cs"));
+
+        Assert.Contains("OptimizationConfirmationWindow.Confirm", settingsCode, StringComparison.Ordinal);
+        foreach (var key in new[] { "Settings.Cache.Confirm.Title", "Settings.Cache.Confirm.Message" })
+        {
+            foreach (var culture in new[] { "en-US", "pt-BR", "es" })
+            {
+                var localization = new LocalizationService(CultureInfo.GetCultureInfo(culture));
+                Assert.NotEqual(key, localization.GetString(key));
+            }
+        }
+    }
+
     /// <summary>
     /// Remove comentários XML da marcação antes de uma verificação textual.
     /// Sem isto, um comentário que explica por que uma regra existe conta

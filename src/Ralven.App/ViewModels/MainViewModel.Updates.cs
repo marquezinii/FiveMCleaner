@@ -50,6 +50,7 @@ public sealed partial class MainViewModel
     public bool CanDownloadUpdate => availableUpdate is not null
         && !IsUpdateDownloading
         && !IsInstallingUpdate
+        && !IsCacheOperationRunning
         && !IsBusy
         && !isWindowsGamingBusy;
 

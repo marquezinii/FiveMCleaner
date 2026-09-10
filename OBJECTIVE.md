@@ -1,7 +1,7 @@
 # Objetivo
 
 - **Agente:** Codex
-- **Objetivo:** Simplificar a aba Configurações para tornar suas preferências mais fáceis de escanear sem ocultar informações importantes.
-- **Escopo:** Hierarquia visual, microcopy, espaços e divulgação progressiva da tela de Configurações, suas localizações e a referência pública correspondente.
-- **Critérios de conclusão:** Cada opção mantém um rótulo claro e controle acessível; detalhes secundários continuam disponíveis sob demanda; as três localizações permanecem consistentes; build e testes aplicáveis passam.
-- **Resultado entregue:** Preferências simples foram convertidas em linhas compactas de rótulo e controle; dados de plano, conta, privacidade, benchmark e segurança agora usam divulgação progressiva; as três localizações foram atualizadas e a suíte aplicável passou.
+- **Objetivo:** permitir que o usuário visualize e limpe com segurança os caches descartáveis gerados pelo Ralven e documentar a integração suportada com a limpeza de armazenamento do Windows.
+- **Escopo:** auditar os dados locais do aplicativo; implementar inventário, cálculo, limpeza segura e UI localizada; ajustar instalação/identidade do aplicativo somente quando houver mecanismo oficial; preservar configurações, autenticação, dados do usuário, rollback e artefatos necessários ao funcionamento.
+- **Critérios de conclusão:** classificar os dados gerados; validar cálculo, limpeza completa/parcial, arquivos em uso, permissões, repetição, contenção de paths e atualização; executar build/testes aplicáveis; registrar limitações externas do Microsoft PC Manager sem hacks.
+- **Resultado entregue:** allowlist auditada e documentada; inventário e limpeza manual segura adicionados em Configurações > Ferramentas, com tamanho, resultados parciais e preservação explícita dos dados persistentes; resíduos das raízes legadas conhecidos são incluídos; atalhos do instalador agora carregam identidade de shell estável. Build Release, testes focados, suíte completa de segurança e contrato do instalador aprovados. O Microsoft PC Manager não oferece API pública de cadastro de cache e o reconhecimento final continua dependente da heurística da Microsoft, sem hacks no Ralven.

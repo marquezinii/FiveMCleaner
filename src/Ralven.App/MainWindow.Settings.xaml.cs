@@ -14,7 +14,7 @@ public partial class MainWindow
     /// de navegação — a rolagem e a categoria são independentes da página
     /// selecionada na barra lateral.
     /// </summary>
-    private void SettingsCategory_Changed(object sender, RoutedEventArgs e)
+    private async void SettingsCategory_Changed(object sender, RoutedEventArgs e)
     {
         AccountSettingsCard.Visibility = ReferenceEquals(sender, CategoryAccount) ? Visibility.Visible : Visibility.Collapsed;
         GeneralSettingsPanel.Visibility = ReferenceEquals(sender, CategoryGeneral) ? Visibility.Visible : Visibility.Collapsed;
@@ -22,6 +22,17 @@ public partial class MainWindow
         ToolsSettingsPanel.Visibility = ReferenceEquals(sender, CategoryTools) ? Visibility.Visible : Visibility.Collapsed;
         AboutSettingsPanel.Visibility = ReferenceEquals(sender, CategoryAbout) ? Visibility.Visible : Visibility.Collapsed;
         SettingsContentScrollViewer?.ScrollToTop();
+        if (ReferenceEquals(sender, CategoryTools))
+        {
+            if (demoMode)
+            {
+                viewModel.ShowCacheDemoState();
+            }
+            else
+            {
+                await viewModel.RefreshCacheStorageAsync();
+            }
+        }
     }
 
     private void SystemTheme_Checked(object sender, RoutedEventArgs e) => ApplyTheme(AppThemePreference.System);
@@ -113,6 +124,21 @@ public partial class MainWindow
     private async void RunGtaVBenchmark_Click(object sender, RoutedEventArgs e) => await viewModel.RunGtaVBenchmarkAsync();
 
     private async void CheckForUpdatesManually_Click(object sender, RoutedEventArgs e) => await viewModel.CheckForUpdatesManuallyAsync();
+
+    private async void ClearRalvenCache_Click(object sender, RoutedEventArgs e)
+    {
+        var localization = LocalizationService.Current;
+        if (!OptimizationConfirmationWindow.Confirm(
+                this,
+                localization.GetString("Settings.Cache.Confirm.Message"),
+                localization.GetString("Settings.Cache.Confirm.Title"),
+                localization.GetString("Settings.Cache.Button")))
+        {
+            return;
+        }
+
+        await viewModel.CleanRalvenCacheAsync();
+    }
 
     private async void RetrySaveSettings_Click(object sender, RoutedEventArgs e) => await viewModel.RetrySaveSettingsAsync();
 
