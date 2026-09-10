@@ -341,6 +341,14 @@ antigos e obtém uma amostra nova sem sobrepor coletas. A leitura da GPU consult
 a categoria de contadores em lote, pareando as duas amostras pelo nome da
 instância. Instâncias sem par não viram utilização inventada.
 
+O painel oferece uma série selecionada entre CPU, GPU, memória, disco e rede,
+com percentuais em escala fixa e throughput em escala dinâmica explicitamente
+rotulada. Quando uma raiz FiveM Legacy já foi diagnosticada, o alvo FiveM troca
+a captura geral por CPU e working set agregado apenas dos processos com nome e
+imagem validados dentro dessa raiz. Essa leitura usa contabilidade do processo
+fornecida pelo Windows; não lê conteúdo da memória, não usa hook/injeção e não
+estima GPU, disco, rede, FPS ou frame time por processo.
+
 Essa suspensão é exclusiva das métricas de apresentação. O monitor de sessão
 continua consultando a presença a cada cinco segundos; mudanças de estado
 atualizam as restrições do otimizador mesmo com a janela oculta. Rodadas sem

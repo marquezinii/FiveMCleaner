@@ -35,6 +35,8 @@
 
 Ralven reúne diagnóstico, manutenção, aplicativos, atualizações, otimização e orientação contextual por IA em uma única experiência para Windows. Otimizar analisa automaticamente o computador, recomenda Leve, Médio ou Agressivo conforme RAM, CPU, GPU/VRAM e espaço livre, e ajusta o Windows com ações conservadoras já tipadas. Sistema mostra as informações locais do PC e a saúde agregada informada pela Central de Segurança do Windows. Aplicativos reúne descoberta, instalação, inventário gerenciado, atualização individual ou em lote, atualizações ignoradas e desinstalação de pacotes das origens confiáveis `winget` e `msstore`, sempre mostrando pacote e origem antes de executar. Jogos reúne títulos compatíveis; hoje inclui um hub dedicado do FiveM sobre GTAV Legacy, com ferramentas especializadas, histórico/restauração e acesso oficial ao ReShade. Cada ação declara em qual escopo pode entrar, suas pré-condições, risco, resultado e rollback quando aplicável.
 
+Na Visão geral, o painel ao vivo permite selecionar CPU, GPU, memória, disco ou rede e acompanhar valor atual, média, pico e histórico de 60 segundos. Quando uma instalação Legacy é detectada, a visualização opcional do FiveM agrega somente CPU e memória dos processos cuja imagem pertence à instalação diagnosticada. A coleta pausa fora do primeiro plano, inclusive na bandeja, para não consumir recursos enquanto o painel não está sendo observado.
+
 | Você vê | O que isso significa |
 | --- | --- |
 | Diagnóstico local | CPU, GPU, memória, armazenamento/TRIM, rede, energia, drivers, tela, inicialização, proteções do Windows, mouse, estabilidade e, no módulo especializado, FiveM/GTA V. |

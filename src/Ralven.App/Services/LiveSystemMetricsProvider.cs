@@ -7,25 +7,37 @@ public sealed record LiveSystemMetricsSnapshot(
     double? GpuPercent,
     double? MemoryPercent,
     double? DiskPercent,
-    double NetworkThroughputMBps,
+    double? NetworkThroughputMBps,
     DateTimeOffset CapturedAt,
     /// <summary>Physical memory in use, in GiB, or null when Windows did not report it.</summary>
     double? UsedMemoryGiB = null,
     /// <summary>Total physical memory, in GiB, or null when Windows did not report it.</summary>
-    double? TotalMemoryGiB = null);
+    double? TotalMemoryGiB = null,
+    /// <summary>Verified FiveM process count, or null for system/indeterminate readings.</summary>
+    int? FiveMProcessCount = null);
 
 public interface ILiveSystemMetricsProvider
 {
     Task<LiveSystemMetricsSnapshot> CaptureAsync(CancellationToken cancellationToken = default);
+
+    Task<LiveSystemMetricsSnapshot> CaptureFiveMAsync(
+        string installationRoot,
+        CancellationToken cancellationToken = default);
 }
 
 public sealed class WindowsLiveSystemMetricsProvider : ILiveSystemMetricsProvider, IDisposable
 {
     private readonly ISystemResourceInspector systemInspector = new WindowsSystemResourceInspector();
     private readonly WindowsResourceUsageInspector resourceInspector = new();
+    private readonly WindowsFiveMResourceUsageInspector fiveMResourceInspector = new();
 
     public Task<LiveSystemMetricsSnapshot> CaptureAsync(CancellationToken cancellationToken = default) =>
         Task.Run(() => Capture(cancellationToken), cancellationToken);
+
+    public Task<LiveSystemMetricsSnapshot> CaptureFiveMAsync(
+        string installationRoot,
+        CancellationToken cancellationToken = default) =>
+        Task.Run(() => CaptureFiveM(installationRoot, cancellationToken), cancellationToken);
 
     private LiveSystemMetricsSnapshot Capture(CancellationToken cancellationToken)
     {
@@ -33,6 +45,29 @@ public sealed class WindowsLiveSystemMetricsProvider : ILiveSystemMetricsProvide
         var usage = resourceInspector.GetSnapshot(cancellationToken);
         cancellationToken.ThrowIfCancellationRequested();
         return CreateSnapshot(usage, systemInspector.GetSnapshot(), DateTimeOffset.UtcNow);
+    }
+
+    private LiveSystemMetricsSnapshot CaptureFiveM(
+        string installationRoot,
+        CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var capturedAt = DateTimeOffset.UtcNow;
+        var usage = fiveMResourceInspector.GetSnapshot(
+            installationRoot,
+            capturedAt,
+            cancellationToken);
+        cancellationToken.ThrowIfCancellationRequested();
+        return new LiveSystemMetricsSnapshot(
+            usage.CpuPercent,
+            GpuPercent: null,
+            MemoryPercent: null,
+            DiskPercent: null,
+            NetworkThroughputMBps: null,
+            CapturedAt: capturedAt,
+            UsedMemoryGiB: usage.WorkingSetGiB,
+            TotalMemoryGiB: null,
+            FiveMProcessCount: usage.ProcessCount);
     }
 
     internal static LiveSystemMetricsSnapshot CreateSnapshot(

@@ -517,15 +517,7 @@ public sealed partial class MainViewModel
 
         if (lastLiveMetrics is null)
         {
-            CpuUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            GpuUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            MemoryUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            DiskUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            NetworkUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            LiveMetricsUpdatedLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            MemoryUsageDetailLabel = string.Empty;
-            CpuTrendLabel = localization.GetString("Dashboard.LivePerformance.NotAvailable");
-            GpuTrendLabel = localization.GetString("Dashboard.LivePerformance.NotAvailable");
+            ResetLiveMetricPresentation();
         }
         else
         {
@@ -533,6 +525,7 @@ public sealed partial class MainViewModel
         }
 
         NotifyLivePerformanceStateChanged();
+        NotifyLiveMetricSelectionChanged();
         RefreshFiveMSessionMonitorPresentation();
         ApplyLastOptimization(historyRecords);
         RefreshWindowsGamingPresentation();

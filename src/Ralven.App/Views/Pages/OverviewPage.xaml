@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:Ralven.App.Controls"
+             xmlns:viewModels="clr-namespace:Ralven.App.ViewModels"
              xmlns:primitives="clr-namespace:System.Windows.Controls.Primitives;assembly=PresentationFramework"
              xmlns:automation="clr-namespace:System.Windows.Automation;assembly=PresentationCore"
              mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="820">
@@ -25,9 +26,11 @@
             </Border>
         </DataTemplate>
 
-        <!-- Uma leitura ao vivo: rótulo, número tabular, trilho. -->
-        <Style x:Key="LiveReadoutColumn" TargetType="StackPanel">
-            <Setter Property="Margin" Value="0,0,24,0" />
+        <Style x:Key="LiveMetricOptionStyle" TargetType="RadioButton" BasedOn="{StaticResource SegmentedOptionStyle}">
+            <Setter Property="Padding" Value="12,10" />
+            <Setter Property="Margin" Value="0,0,8,0" />
+            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+            <Setter Property="VerticalContentAlignment" Value="Stretch" />
         </Style>
     </UserControl.Resources>
 
@@ -176,9 +179,9 @@
                             <StackPanel Grid.Column="2" Width="220" Margin="18,0,0,0" VerticalAlignment="Center" ToolTip="{Binding ReadinessScoreExplanation}">
                                 <TextBlock Text="{Binding [Dashboard.Readiness], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
                                 <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                                    <!-- Reserva os três dígitos de 0–100 para não recortar a atualização da nota. -->
-                                    <TextBlock MinWidth="100" Text="{Binding ReadinessScore, Mode=OneWay}" FontFamily="{StaticResource AppFontMono}" FontSize="52" FontWeight="SemiBold" LineHeight="58" LineStackingStrategy="BlockLineHeight" Foreground="{DynamicResource TextPrimaryBrush}" Typography.NumeralAlignment="Tabular" />
-                                    <TextBlock Text="/100" Style="{StaticResource TickLabelText}" VerticalAlignment="Bottom" Margin="8,0,0,11" />
+                                    <!-- Mantém espaço para 100, mas ancora números menores junto ao sufixo. -->
+                                    <TextBlock Width="100" TextAlignment="Right" Text="{Binding ReadinessScore, Mode=OneWay}" FontFamily="{StaticResource AppFontMono}" FontSize="52" FontWeight="SemiBold" LineHeight="58" LineStackingStrategy="BlockLineHeight" Foreground="{DynamicResource TextPrimaryBrush}" Typography.NumeralAlignment="Tabular" />
+                                    <TextBlock Text="/100" Style="{StaticResource TickLabelText}" VerticalAlignment="Bottom" Margin="4,0,0,11" />
                                 </StackPanel>
                                 <TextBlock Text="{Binding ReadinessLevelLabel}" Style="{StaticResource BodyStrongText}" Foreground="{DynamicResource AccentTextBrush}" Margin="0,2,0,14" />
                                 <ProgressBar Style="{StaticResource ProgressRailStyle}" Height="8" Value="{Binding ReadinessScore, Mode=OneWay}"
@@ -229,14 +232,14 @@
                 </Border>
 
                 <!-- ============ Desempenho ao vivo ============ -->
-                <!-- Linha "*": o gráfico consome a altura restante, enquanto
-                     a seção aberta evita outra moldura grande na página. -->
+                <!-- A seção aberta evita outra moldura grande e mantém o
+                     gráfico em uma altura útil, sem criar um poço vazio. -->
                 <Border Grid.Row="2" Background="Transparent">
                     <Grid Margin="4,8,4,0">
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" MinHeight="120" />
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
@@ -244,14 +247,43 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding [Dashboard.LivePerformance.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" VerticalAlignment="Center" />
-                            <Border Grid.Column="1" Padding="10,4" VerticalAlignment="Center">
+                            <StackPanel Margin="0,0,20,0">
+                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" />
+                                <TextBlock Text="{Binding LiveMetricsTargetDescription}" Style="{StaticResource CaptionText}" Margin="0,5,0,0" TextWrapping="Wrap" MaxWidth="620" HorizontalAlignment="Left" />
+                            </StackPanel>
+
+                            <Border Grid.Column="1" Style="{StaticResource SegmentedHostStyle}" Margin="0,0,16,0" VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <RadioButton GroupName="LiveMetricsTarget"
+                                                 Style="{StaticResource SegmentedOptionStyle}"
+                                                 Content="{Binding [Dashboard.LivePerformance.Target.System], Source={StaticResource LocalizedStrings}}"
+                                                 IsChecked="{Binding IsSystemLiveMetricsTarget, Mode=OneWay}"
+                                                 Tag="{x:Static viewModels:LiveMetricsTarget.System}"
+                                                 Checked="LiveMetricsTarget_Checked" />
+                                    <RadioButton GroupName="LiveMetricsTarget"
+                                                 Style="{StaticResource SegmentedOptionStyle}"
+                                                 Content="{Binding [Dashboard.LivePerformance.Target.FiveM], Source={StaticResource LocalizedStrings}}"
+                                                 IsChecked="{Binding IsFiveMLiveMetricsTarget, Mode=OneWay}"
+                                                 IsEnabled="{Binding IsFiveMLiveMetricsTargetAvailable}"
+                                                 ToolTip="{Binding [Dashboard.LivePerformance.Target.FiveMHelp], Source={StaticResource LocalizedStrings}}"
+                                                 ToolTipService.ShowOnDisabled="True"
+                                                 Tag="{x:Static viewModels:LiveMetricsTarget.FiveM}"
+                                                 Checked="LiveMetricsTarget_Checked" />
+                                </StackPanel>
+                            </Border>
+
+                            <Border Grid.Column="2" Padding="10,4" VerticalAlignment="Center" ToolTip="{Binding LiveMetricsUpdatedExactLabel}">
                                 <Border.Style>
                                     <Style TargetType="Border" BasedOn="{StaticResource TagChipStyle}">
                                         <Setter Property="Background" Value="{DynamicResource SuccessSurfaceBrush}" />
                                         <Setter Property="BorderBrush" Value="{DynamicResource SuccessBorderBrush}" />
                                         <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsLivePerformancePaused}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
+                                            </DataTrigger>
                                             <DataTrigger Binding="{Binding IsLivePerformanceWaiting}" Value="True">
                                                 <Setter Property="Background" Value="{DynamicResource Surface2Brush}" />
                                                 <Setter Property="BorderBrush" Value="{DynamicResource BorderSubtleBrush}" />
@@ -267,8 +299,11 @@
                                     <Ellipse x:Name="LiveDot" Width="7" Height="7" VerticalAlignment="Center">
                                         <Ellipse.Style>
                                             <Style TargetType="Ellipse">
-                                                <Setter Property="Fill" Value="{DynamicResource SuccessBaseBrush}" />
-                                                <Style.Triggers>
+                                                 <Setter Property="Fill" Value="{DynamicResource SuccessBaseBrush}" />
+                                                 <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsLivePerformancePaused}" Value="True">
+                                                        <Setter Property="Fill" Value="{DynamicResource TextTertiaryBrush}" />
+                                                    </DataTrigger>
                                                     <DataTrigger Binding="{Binding IsLivePerformanceWaiting}" Value="True">
                                                         <Setter Property="Fill" Value="{DynamicResource TextTertiaryBrush}" />
                                                     </DataTrigger>
@@ -282,9 +317,13 @@
                                     <TextBlock Margin="8,0,0,0">
                                         <TextBlock.Style>
                                             <Style TargetType="TextBlock" BasedOn="{StaticResource OverlineText}">
-                                                <Setter Property="Text" Value="{Binding [Dashboard.LivePerformance.Live], Source={StaticResource LocalizedStrings}}" />
-                                                <Setter Property="Foreground" Value="{DynamicResource SuccessBaseBrush}" />
-                                                <Style.Triggers>
+                                                 <Setter Property="Text" Value="{Binding [Dashboard.LivePerformance.Live], Source={StaticResource LocalizedStrings}}" />
+                                                 <Setter Property="Foreground" Value="{DynamicResource SuccessBaseBrush}" />
+                                                 <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsLivePerformancePaused}" Value="True">
+                                                        <Setter Property="Text" Value="{Binding [Dashboard.LivePerformance.Paused], Source={StaticResource LocalizedStrings}}" />
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+                                                    </DataTrigger>
                                                     <DataTrigger Binding="{Binding IsLivePerformanceWaiting}" Value="True">
                                                         <Setter Property="Text" Value="{Binding [Dashboard.LivePerformance.Waiting], Source={StaticResource LocalizedStrings}}" />
                                                         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
@@ -301,93 +340,186 @@
                             </Border>
                         </Grid>
 
-                        <!-- Cinco leituras, uma por recurso. -->
+                        <!-- Cada leitura é um seletor nativo: mouse, Tab, setas e leitor de tela. -->
                         <Grid Grid.Row="1" Margin="0,20,0,0">
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" /><ColumnDefinition Width="*" />
                             </Grid.ColumnDefinitions>
-                            <StackPanel Grid.Column="0" Style="{StaticResource LiveReadoutColumn}">
-                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                                <TextBlock Text="{Binding CpuUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,8" />
-                                <ProgressBar Style="{StaticResource ProgressRailStyle}" Value="{Binding CpuUsagePercent, Mode=OneWay}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="1" Style="{StaticResource LiveReadoutColumn}">
-                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                                <TextBlock Text="{Binding GpuUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,8" />
-                                <ProgressBar Style="{StaticResource ProgressRailStyle}" Value="{Binding GpuUsagePercent, Mode=OneWay}" Foreground="{DynamicResource InfoBaseBrush}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="2" Style="{StaticResource LiveReadoutColumn}" ToolTip="{Binding MemoryUsageDetailLabel}">
-                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Memory], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                                <TextBlock Text="{Binding MemoryUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,8" />
-                                <ProgressBar Style="{StaticResource ProgressRailStyle}" Value="{Binding MemoryUsagePercent, Mode=OneWay}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="3" Style="{StaticResource LiveReadoutColumn}">
-                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Disk], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                                <TextBlock Text="{Binding DiskUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,8" />
-                                <ProgressBar Style="{StaticResource ProgressRailStyle}" Value="{Binding DiskUsagePercent, Mode=OneWay}" />
-                            </StackPanel>
-                            <StackPanel Grid.Column="4">
-                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Network], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                                <TextBlock Text="{Binding NetworkUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,6,0,0" />
-                            </StackPanel>
+                            <RadioButton Grid.Column="0" GroupName="LiveMetric" Style="{StaticResource LiveMetricOptionStyle}"
+                                         IsChecked="{Binding IsCpuLiveMetricSelected, Mode=OneWay}"
+                                         Tag="{x:Static viewModels:LiveMetricKind.Cpu}" Checked="LiveMetric_Checked"
+                                         AutomationProperties.HelpText="{Binding CpuTrendLabel}">
+                                <Grid MinHeight="86">
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Grid.Row="1" Text="{Binding CpuUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,0" />
+                                    <controls:LivePerformanceChart Grid.Row="2" Height="26" Margin="0,5,0,4" Capacity="60" CpuValues="{Binding CpuUsageSeries}"
+                                                                   CpuBrush="{DynamicResource AccentBrush}" MaximumValue="100" ShowGrid="False" ShowArea="False" ShowTooltip="False"
+                                                                   Focusable="False" IsHitTestVisible="False" />
+                                    <TextBlock Grid.Row="3" Text="{Binding CpuTrendLabel}" Style="{StaticResource TickLabelText}" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton Grid.Column="1" GroupName="LiveMetric" Style="{StaticResource LiveMetricOptionStyle}"
+                                         IsChecked="{Binding IsGpuLiveMetricSelected, Mode=OneWay}" IsEnabled="{Binding IsGpuLiveMetricAvailable}"
+                                         Tag="{x:Static viewModels:LiveMetricKind.Gpu}" Checked="LiveMetric_Checked"
+                                         AutomationProperties.HelpText="{Binding GpuTrendLabel}">
+                                <Grid MinHeight="86">
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Grid.Row="1" Text="{Binding GpuUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,0" />
+                                    <controls:LivePerformanceChart Grid.Row="2" Height="26" Margin="0,5,0,4" Capacity="60" CpuValues="{Binding GpuUsageSeries}"
+                                                                   CpuBrush="{DynamicResource AccentBrush}" MaximumValue="100" ShowGrid="False" ShowArea="False" ShowTooltip="False"
+                                                                   Focusable="False" IsHitTestVisible="False" />
+                                    <TextBlock Grid.Row="3" Text="{Binding GpuTrendLabel}" Style="{StaticResource TickLabelText}" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton Grid.Column="2" GroupName="LiveMetric" Style="{StaticResource LiveMetricOptionStyle}"
+                                         IsChecked="{Binding IsMemoryLiveMetricSelected, Mode=OneWay}"
+                                         Tag="{x:Static viewModels:LiveMetricKind.Memory}" Checked="LiveMetric_Checked"
+                                         ToolTip="{Binding MemoryUsageDetailLabel}" AutomationProperties.HelpText="{Binding MemoryUsageDetailLabel}">
+                                <Grid MinHeight="86">
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Memory], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Grid.Row="1" Text="{Binding MemoryUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,0" />
+                                    <controls:LivePerformanceChart Grid.Row="2" Height="26" Margin="0,5,0,4" Capacity="60" CpuValues="{Binding MemoryUsageSeries}"
+                                                                   CpuBrush="{DynamicResource AccentBrush}" MaximumValue="{Binding MemoryChartMaximum}" ShowGrid="False" ShowArea="False" ShowTooltip="False"
+                                                                   Focusable="False" IsHitTestVisible="False" />
+                                    <TextBlock Grid.Row="3" Text="{Binding MemoryTrendLabel}" Style="{StaticResource TickLabelText}" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton Grid.Column="3" GroupName="LiveMetric" Style="{StaticResource LiveMetricOptionStyle}"
+                                         IsChecked="{Binding IsDiskLiveMetricSelected, Mode=OneWay}" IsEnabled="{Binding IsDiskLiveMetricAvailable}"
+                                         Tag="{x:Static viewModels:LiveMetricKind.Disk}" Checked="LiveMetric_Checked"
+                                         AutomationProperties.HelpText="{Binding DiskTrendLabel}">
+                                <Grid MinHeight="86">
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Disk], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Grid.Row="1" Text="{Binding DiskUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,0" />
+                                    <controls:LivePerformanceChart Grid.Row="2" Height="26" Margin="0,5,0,4" Capacity="60" CpuValues="{Binding DiskUsageSeries}"
+                                                                   CpuBrush="{DynamicResource AccentBrush}" MaximumValue="100" ShowGrid="False" ShowArea="False" ShowTooltip="False"
+                                                                   Focusable="False" IsHitTestVisible="False" />
+                                    <TextBlock Grid.Row="3" Text="{Binding DiskTrendLabel}" Style="{StaticResource TickLabelText}" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                            </RadioButton>
+                            <RadioButton Grid.Column="4" GroupName="LiveMetric" Style="{StaticResource LiveMetricOptionStyle}" Margin="0"
+                                         IsChecked="{Binding IsNetworkLiveMetricSelected, Mode=OneWay}" IsEnabled="{Binding IsNetworkLiveMetricAvailable}"
+                                         Tag="{x:Static viewModels:LiveMetricKind.Network}" Checked="LiveMetric_Checked"
+                                         AutomationProperties.HelpText="{Binding NetworkTrendLabel}">
+                                <Grid MinHeight="86">
+                                    <Grid.RowDefinitions><RowDefinition Height="Auto" /><RowDefinition Height="Auto" /><RowDefinition Height="*" /><RowDefinition Height="Auto" /></Grid.RowDefinitions>
+                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Network], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Grid.Row="1" Text="{Binding NetworkUsageLabel}" Style="{StaticResource ReadoutSmallText}" Margin="0,4,0,0" />
+                                    <controls:LivePerformanceChart Grid.Row="2" Height="26" Margin="0,5,0,4" Capacity="60" CpuValues="{Binding NetworkUsageSeries}"
+                                                                   CpuBrush="{DynamicResource AccentBrush}" MaximumValue="{Binding NetworkChartMaximum}" ShowGrid="False" ShowArea="False" ShowTooltip="False"
+                                                                   Focusable="False" IsHitTestVisible="False" />
+                                    <TextBlock Grid.Row="3" Text="{Binding NetworkTrendLabel}" Style="{StaticResource TickLabelText}" TextTrimming="CharacterEllipsis" />
+                                </Grid>
+                            </RadioButton>
                         </Grid>
 
-                        <!--
-                            O poço do gráfico ocupa a altura restante — é o
-                            certo, porque com amostras reais o traçado usa
-                            toda ela. O que o tornava um retângulo morto no
-                            visual anterior era ser um chapado preto: o wash
-                            vertical logo abaixo dá material ao poço mesmo
-                            enquanto a primeira amostra não chegou.
-                        -->
-                        <Border Grid.Row="2" Style="{StaticResource InsetSurface}" Margin="0,20,0,0" ClipToBounds="True">
+                        <Border Grid.Row="2" Height="270" Style="{StaticResource InsetSurface}" Margin="0,18,0,0" ClipToBounds="True">
                             <Grid>
                                 <Rectangle Fill="{DynamicResource SheetGridBrush}" />
-                                <Grid Visibility="{Binding HasLiveMetricsSample, Converter={StaticResource BooleanToVisibilityConverter}}">
-                                    <controls:LivePerformanceChart Capacity="60"
-                                                                   SampleIntervalSeconds="1"
-                                                                   CpuValues="{Binding CpuUsageSeries}"
-                                                                   GpuValues="{Binding GpuUsageSeries}"
-                                                                   CpuBrush="{DynamicResource AccentBrush}"
-                                                                   GpuBrush="{DynamicResource InfoBaseBrush}"
-                                                                   GridBrush="{DynamicResource BorderSubtleBrush}"
-                                                                   LabelBrush="{DynamicResource TextTertiaryBrush}"
-                                                                   TooltipBackground="{DynamicResource Surface3Brush}"
-                                                                   TooltipBorderBrush="{DynamicResource BorderDefaultBrush}"
-                                                                   CpuLabel="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}}"
-                                                                   GpuLabel="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}}"
-                                                                   NowLabel="{Binding [Dashboard.LivePerformance.Now], Source={StaticResource LocalizedStrings}}"
-                                                                   AutomationProperties.Name="{Binding [Dashboard.LivePerformance.ChartDescription], Source={StaticResource LocalizedStrings}}" />
-                                    <TextBlock Text="{Binding LiveMetricsUpdatedLabel}" Style="{StaticResource TickLabelText}" Margin="16,14" HorizontalAlignment="Right" VerticalAlignment="Top" />
+                                <Grid Margin="16,12,16,10">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto" />
+                                        <RowDefinition Height="*" />
+                                    </Grid.RowDefinitions>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding SelectedLiveMetricName}" Style="{StaticResource BodyStrongText}" />
+                                            <TextBlock Text="{Binding [Dashboard.LivePerformance.Window], Source={StaticResource LocalizedStrings}}" Style="{StaticResource TickLabelText}" Margin="10,2,0,0" />
+                                        </StackPanel>
+                                        <TextBlock Grid.Column="1" Text="{Binding LiveMetricsUpdatedLabel}" ToolTip="{Binding LiveMetricsUpdatedExactLabel}"
+                                                   Style="{StaticResource TickLabelText}" VerticalAlignment="Center" />
+                                    </Grid>
+
+                                    <Grid Grid.Row="1" Margin="0,8,0,0">
+                                        <controls:LivePerformanceChart Capacity="60"
+                                                                       SampleIntervalSeconds="1"
+                                                                       CpuValues="{Binding SelectedLiveMetricSeries}"
+                                                                       CpuBrush="{DynamicResource AccentBrush}"
+                                                                       MaximumValue="{Binding SelectedLiveMetricMaximum}"
+                                                                       ValueFormat="{Binding SelectedLiveMetricValueFormat}"
+                                                                       ValueSuffix="{Binding SelectedLiveMetricValueSuffix}"
+                                                                       GridBrush="{DynamicResource BorderSubtleBrush}"
+                                                                       LabelBrush="{DynamicResource TextTertiaryBrush}"
+                                                                       TooltipBackground="{DynamicResource Surface3Brush}"
+                                                                       TooltipBorderBrush="{DynamicResource BorderDefaultBrush}"
+                                                                       CpuLabel="{Binding SelectedLiveMetricName}"
+                                                                       WindowLabel="{Binding [Dashboard.LivePerformance.Ago60Seconds], Source={StaticResource LocalizedStrings}}"
+                                                                       NowLabel="{Binding [Dashboard.LivePerformance.Now], Source={StaticResource LocalizedStrings}}"
+                                                                       Visibility="{Binding HasSelectedLiveMetricSamples, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                                       AutomationProperties.Name="{Binding SelectedLiveMetricAutomationLabel}"
+                                                                       AutomationProperties.HelpText="{Binding LiveMetricsTargetDescription}" />
+
+                                        <TextBlock Text="{Binding SelectedLiveMetricEmptyLabel}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource SecondaryText}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding HasLiveMetricsSample}" Value="True" />
+                                                                <Condition Binding="{Binding HasSelectedLiveMetricSamples}" Value="False" />
+                                                                <Condition Binding="{Binding IsLivePerformanceUnavailable}" Value="False" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding [Dashboard.LivePerformance.Waiting], Source={StaticResource LocalizedStrings}}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                                            <TextBlock.Style>
+                                                <Style TargetType="TextBlock" BasedOn="{StaticResource SecondaryText}">
+                                                    <Setter Property="Visibility" Value="Collapsed" />
+                                                    <Style.Triggers>
+                                                        <MultiDataTrigger>
+                                                            <MultiDataTrigger.Conditions>
+                                                                <Condition Binding="{Binding IsLivePerformanceWaiting}" Value="True" />
+                                                                <Condition Binding="{Binding HasLiveMetricsSample}" Value="False" />
+                                                            </MultiDataTrigger.Conditions>
+                                                            <Setter Property="Visibility" Value="Visible" />
+                                                        </MultiDataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </TextBlock.Style>
+                                        </TextBlock>
+                                        <TextBlock Text="{Binding [Dashboard.LivePerformance.Unavailable], Source={StaticResource LocalizedStrings}}"
+                                                   Style="{StaticResource SecondaryText}" Foreground="{DynamicResource DangerBaseBrush}"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center"
+                                                   Visibility="{Binding IsLivePerformanceUnavailable, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                   automation:AutomationProperties.LiveSetting="Polite" />
+                                    </Grid>
                                 </Grid>
-                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Waiting], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}"
-                                           HorizontalAlignment="Center" VerticalAlignment="Center"
-                                           Visibility="{Binding IsLivePerformanceWaiting, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                                <TextBlock Text="{Binding [Dashboard.LivePerformance.Unavailable], Source={StaticResource LocalizedStrings}}"
-                                           Style="{StaticResource SecondaryText}"
-                                           Foreground="{DynamicResource DangerBaseBrush}"
-                                           HorizontalAlignment="Center"
-                                           VerticalAlignment="Center"
-                                           Visibility="{Binding IsLivePerformanceUnavailable, Converter={StaticResource BooleanToVisibilityConverter}}"
-                                           automation:AutomationProperties.LiveSetting="Polite" />
                             </Grid>
                         </Border>
 
-                        <!-- Média e pico, das mesmas amostras desenhadas acima. -->
                         <Grid Grid.Row="3" Margin="0,12,0,0">
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding [Dashboard.LivePerformance.Trend], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" />
-                            <StackPanel Grid.Column="2" Orientation="Horizontal">
-                                <TextBlock Style="{StaticResource CaptionText}" VerticalAlignment="Center">
-                                    <Run Text="{Binding [Dashboard.LivePerformance.Cpu], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding CpuTrendLabel, Mode=OneWay}" Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource AppFontMono}" />
-                                </TextBlock>
-                                <TextBlock Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="20,0,0,0">
-                                    <Run Text="{Binding [Dashboard.LivePerformance.Gpu], Source={StaticResource LocalizedStrings}, Mode=OneWay}" /><Run Text=" " /><Run Text="{Binding GpuTrendLabel, Mode=OneWay}" Foreground="{DynamicResource TextSecondaryBrush}" FontFamily="{StaticResource AppFontMono}" />
-                                </TextBlock>
+                            <TextBlock Text="{Binding SelectedLiveMetricStatusLabel}"
+                                       Foreground="{Binding SelectedLiveMetricStatusBrushKey, Converter={StaticResource BrushKeyConverter}}"
+                                       Style="{StaticResource CaptionText}" VerticalAlignment="Center" TextWrapping="Wrap" Margin="0,0,24,0" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                <StackPanel MinWidth="74">
+                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Current], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding SelectedLiveMetricCurrentLabel}" Style="{StaticResource TickLabelText}" Margin="0,3,0,0" FontFamily="{StaticResource AppFontMono}" />
+                                </StackPanel>
+                                <StackPanel MinWidth="74" Margin="18,0,0,0">
+                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Average], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding SelectedLiveMetricAverageLabel}" Style="{StaticResource TickLabelText}" Margin="0,3,0,0" FontFamily="{StaticResource AppFontMono}" />
+                                </StackPanel>
+                                <StackPanel MinWidth="74" Margin="18,0,0,0">
+                                    <TextBlock Text="{Binding [Dashboard.LivePerformance.Peak], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding SelectedLiveMetricPeakLabel}" Style="{StaticResource TickLabelText}" Margin="0,3,0,0" FontFamily="{StaticResource AppFontMono}" />
+                                </StackPanel>
                             </StackPanel>
                         </Grid>
                     </Grid>

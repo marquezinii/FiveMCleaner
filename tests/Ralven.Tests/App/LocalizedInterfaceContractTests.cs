@@ -68,7 +68,7 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
-    public void Overview_SeparatesWindowsFromTheFiveMExperience()
+    public void Overview_LimitsFiveMToTheReadOnlyLiveMetricsTarget()
     {
         var root = TestHelpers.FindRepositoryRoot();
         var overview = File.ReadAllText(Path.Combine(
@@ -79,7 +79,8 @@ public sealed partial class LocalizedInterfaceContractTests
             "Pages",
             "OverviewPage.xaml"));
 
-        Assert.DoesNotContain("FiveM", overview, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Dashboard.LivePerformance.Target.FiveM", overview, StringComparison.Ordinal);
+        Assert.DoesNotContain("OptimizationScope.FiveMLegacy", overview, StringComparison.Ordinal);
         Assert.DoesNotContain("Gta", overview, StringComparison.OrdinalIgnoreCase);
         Assert.DoesNotContain("LegacyCache", overview, StringComparison.Ordinal);
     }
@@ -587,12 +588,13 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains("StreamingReadinessItems", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.LivePerformance.Title", dashboard, StringComparison.Ordinal);
-        // O histórico ao vivo é um gráfico 2D leve, que recebe as amostras
-        // cruas; o medidor de prontidão é um anel animado sobre o núcleo 3D.
+        // O histórico ao vivo é um gráfico 2D leve e selecionável.
         Assert.Contains("controls:LivePerformanceChart", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("PerformanceScene3D", dashboard, StringComparison.Ordinal);
-        Assert.Contains("CpuValues=\"{Binding CpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
-        Assert.Contains("GpuValues=\"{Binding GpuUsageSeries}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("CpuValues=\"{Binding SelectedLiveMetricSeries}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("LiveMetricsTarget_Checked", dashboard, StringComparison.Ordinal);
+        Assert.Contains("LiveMetric_Checked", dashboard, StringComparison.Ordinal);
+        Assert.Contains("IsLivePerformancePaused", dashboard, StringComparison.Ordinal);
         Assert.Contains("NetworkUsageLabel", dashboard, StringComparison.Ordinal);
         Assert.Contains("IsLivePerformanceUnavailable", dashboard, StringComparison.Ordinal);
         Assert.Contains("AutomationProperties.LiveSetting=\"Polite\"", dashboard, StringComparison.Ordinal);
@@ -604,7 +606,7 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("controls:CoreVisual", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("controls:ArcProgress", dashboard, StringComparison.Ordinal);
         Assert.Contains("Value=\"{Binding ReadinessScore, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
-        Assert.Contains("Value=\"{Binding CpuUsagePercent, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
+        Assert.Contains("IsChecked=\"{Binding IsCpuLiveMetricSelected, Mode=OneWay}\"", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.OpenOptimizer", dashboard, StringComparison.Ordinal);
         Assert.Contains("Dashboard.SystemOverview", dashboard, StringComparison.Ordinal);
         Assert.DoesNotContain("GroupName=\"Profile\"", dashboard, StringComparison.Ordinal);
