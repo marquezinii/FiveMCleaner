@@ -587,8 +587,11 @@
   <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Al hacer clic en X, Ralven se minimizará a la bandeja del sistema en lugar de cerrarse.</value></data>
   <data name="Settings.Telemetry.Title" xml:space="preserve"><value>Informes opcionales</value></data>
   <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Comparte contexto anónimo de uso y rendimiento, además de informes depurados de errores y fallos. Está activado por defecto y puedes desactivarlo cuando quieras.</value></data>
+  <data name="Settings.Telemetry.Summary" xml:space="preserve"><value>Ayuda a mejorar Ralven con datos técnicos anónimos.</value></data>
   <data name="Settings.Privacy.Title" xml:space="preserve"><value>Privacidad</value></data>
   <data name="Settings.Privacy.Description" xml:space="preserve"><value>Consulta los diagnósticos esenciales usados para mantener Ralven confiable y controla todos los informes opcionales en un solo lugar.</value></data>
+  <data name="Settings.Privacy.DataDetails" xml:space="preserve"><value>Ver detalles</value></data>
+  <data name="Settings.Privacy.ReportContents" xml:space="preserve"><value>Ver datos de los informes</value></data>
   <data name="Settings.CrashReports.Title" xml:space="preserve"><value>Enviar reportes de fallos automáticos</value></data>
   <data name="Settings.CrashReports.Description" xml:space="preserve"><value>Envía trazas de pila depuradas cuando Ralven falla o encuentra un error inesperado.</value></data>
   <data name="PrivacyConsent.WindowTitle" xml:space="preserve"><value>Privacidad y diagnósticos - Ralven</value></data>
@@ -600,6 +603,7 @@
   <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>Simplificamos los controles de privacidad sin añadir datos nuevos. Revisa la única opción a continuación antes de continuar.</value></data>
   <data name="PrivacyConsent.Essential.Title" xml:space="preserve"><value>Diagnósticos esenciales</value></data>
   <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>Recopilamos el mínimo necesario para actualizaciones, seguridad, estabilidad y diagnóstico: versión de la app y Windows, arquitectura, eventos del actualizador y resultados técnicos de optimización. No se puede desactivar.</value></data>
+  <data name="PrivacyConsent.Essential.Summary" xml:space="preserve"><value>Necesarios para actualizaciones, seguridad y estabilidad.</value></data>
   <data name="PrivacyConsent.Essential.Status" xml:space="preserve"><value>SIEMPRE ACTIVO</value></data>
   <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Informes opcionales</value></data>
   <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Comparte contexto anónimo de hardware, perfil y funciones usadas, además de informes depurados de errores y fallos. Está activado por defecto y puedes desactivarlo cuando quieras.</value></data>
@@ -1257,6 +1261,8 @@
   <data name="Update.ManualCheck.Failed" xml:space="preserve"><value>No se pudo buscar actualizaciones: {0}</value></data>
   <data name="GtaVBenchmark.Title" xml:space="preserve"><value>Benchmark oficial de GTA V</value></data>
   <data name="GtaVBenchmark.Description" xml:space="preserve"><value>Inicia GTA V independiente (nunca dentro de FiveM) con la propia bandera -benchmark de Rockstar, ejecuta 3 rondas e informa la mediana. GTA V debe estar cerrado primero.</value></data>
+  <data name="GtaVBenchmark.Summary" xml:space="preserve"><value>Ejecuta la prueba integrada de GTA V. Cierra el juego antes.</value></data>
+  <data name="GtaVBenchmark.Details" xml:space="preserve"><value>Cómo funciona</value></data>
   <data name="GtaVBenchmark.RunButton" xml:space="preserve"><value>Ejecutar benchmark oficial</value></data>
   <data name="GtaVBenchmark.Running" xml:space="preserve"><value>Ejecutando el benchmark oficial de GTA V (3 rondas)... esto puede tardar varios minutos.</value></data>
   <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Mediana de {4} ronda(s) — FPS promedio: {0:0.#}, FPS mínimo: {1:0.#}, 1% bajo: {2:0.#}, 0.1% bajo: {3:0.#}.</value></data>
@@ -1490,13 +1496,14 @@
   <data name="Settings.Account.Plan.Unavailable" xml:space="preserve"><value>No se pudo confirmar tu plan</value></data>
   <data name="Settings.Account.Plan.UnavailableDetail" xml:space="preserve"><value>No se pudo verificar tu acceso actual. Ninguna función Pro se habilita mientras este estado no esté disponible.</value></data>
   <data name="Settings.Account.Plan.Refresh" xml:space="preserve"><value>Actualizar</value></data>
+  <data name="Settings.Account.Plan.Details" xml:space="preserve"><value>Ver detalles del plan</value></data>
   <data name="Settings.Account.ChangePhoto" xml:space="preserve"><value>Cambiar foto</value></data>
   <data name="Settings.Account.PhotoLocalOnly" xml:space="preserve"><value>La foto de perfil se guarda solo en este equipo.</value></data>
   <data name="Settings.Account.Unavailable" xml:space="preserve"><value>El acceso a la cuenta no está disponible en esta instalación.</value></data>
   <data name="Report.ViewHistoryButton" xml:space="preserve"><value>Ver historial</value></data>
   <data name="Settings.Account.CurrentPasswordPlaceholder" xml:space="preserve"><value>Confirma para cambiar tu contraseña, correo o eliminar la cuenta</value></data>
   <data name="Settings.Account.Delete" xml:space="preserve"><value>Eliminar cuenta</value></data>
-  <data name="Settings.Tools.Title" xml:space="preserve"><value>Herramientas</value></data>
+  <data name="Settings.Tools.Title" xml:space="preserve"><value>Soporte y diagnóstico</value></data>
   <data name="Settings.Tools.Description" xml:space="preserve"><value>Acciones de mantenimiento y soporte para usar solo cuando sea necesario.</value></data>
   <data name="Settings.Account.CurrentPasswordLabel" xml:space="preserve"><value>Contraseña actual</value></data>
   <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Quitar</value></data>
