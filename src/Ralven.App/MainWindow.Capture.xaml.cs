@@ -89,7 +89,7 @@ public partial class MainWindow
                     "Games" => (Element: (UIElement)GamesPage, Nav: GamesNav),
                     "FiveM" => (Element: (UIElement)FiveMPage, Nav: GamesNav),
                     "Pro" => ConfigureProCapture(arguments),
-                    "RalvenAi" => ConfigureRalvenAiCapture(),
+                    "RalvenAi" => ConfigureRalvenAiCapture(arguments),
                     "Ultra" => ConfigureUltraCapture(true, arguments),
                     "UltraLocked" => ConfigureUltraCapture(false, arguments),
                     "Optimizer" => ConfigureOptimizerCapture(OptimizationScope.GeneralWindows, OptimizerNav),
@@ -199,10 +199,20 @@ public partial class MainWindow
         return (ProPage, ProNav);
     }
 
-    private (UIElement Element, Wpf.Ui.Controls.NavigationViewItem Nav) ConfigureRalvenAiCapture()
+    private (UIElement Element, Wpf.Ui.Controls.NavigationViewItem Nav) ConfigureRalvenAiCapture(
+        IReadOnlyList<string> arguments)
     {
         if (demoMode)
         {
+            var state = arguments.FirstOrDefault(value =>
+                value.StartsWith("--capture-ai-state=", StringComparison.OrdinalIgnoreCase))?
+                ["--capture-ai-state=".Length..];
+            if (string.Equals(state, "free", StringComparison.OrdinalIgnoreCase))
+            {
+                viewModel.SetProAccess(false);
+                viewModel.SetFreePlan(true);
+                return (RalvenAiPage, RalvenAiNav);
+            }
             viewModel.SetProAccess(true);
             viewModel.SetRalvenAiAccess(true);
         }

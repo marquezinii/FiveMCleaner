@@ -337,14 +337,65 @@
                        IsHitTestVisible="False"
                        HorizontalAlignment="Center"
                        Margin="0,0,0,20" />
-                <TextBlock Text="{Binding [RalvenAi.AccessRequired.Title], Source={StaticResource LocalizedStrings}}"
-                           Style="{StaticResource SectionText}"
-                           TextAlignment="Center" />
-                <TextBlock Text="{Binding [RalvenAi.AccessRequired.Detail], Source={StaticResource LocalizedStrings}}"
-                           Style="{StaticResource SecondaryText}"
-                           TextWrapping="Wrap"
-                           TextAlignment="Center"
-                           Margin="0,10,0,0" />
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Visible" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsFreePlan}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <TextBlock Text="{Binding [RalvenAi.AccessRequired.Title], Source={StaticResource LocalizedStrings}}"
+                               Style="{StaticResource SectionText}"
+                               TextAlignment="Center" />
+                    <TextBlock Text="{Binding [RalvenAi.AccessRequired.Detail], Source={StaticResource LocalizedStrings}}"
+                               Style="{StaticResource SecondaryText}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               Margin="0,10,0,0" />
+                </StackPanel>
+
+                <StackPanel>
+                    <StackPanel.Style>
+                        <Style TargetType="StackPanel">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsFreePlan}" Value="True">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </StackPanel.Style>
+                    <Border Background="{DynamicResource SuccessSurfaceBrush}"
+                            BorderBrush="{DynamicResource SuccessBorderBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource RadiusXs}"
+                            Padding="10,4"
+                            HorizontalAlignment="Center"
+                            Margin="0,0,0,14">
+                        <TextBlock Text="{Binding [RalvenAi.AccessRequired.Free.Plan], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource OverlineText}"
+                                   Foreground="{DynamicResource SuccessBaseBrush}" />
+                    </Border>
+                    <TextBlock Text="{Binding [RalvenAi.AccessRequired.Free.Title], Source={StaticResource LocalizedStrings}}"
+                               Style="{StaticResource SectionText}"
+                               TextAlignment="Center" />
+                    <TextBlock Text="{Binding [RalvenAi.AccessRequired.Free.Detail], Source={StaticResource LocalizedStrings}}"
+                               Style="{StaticResource SecondaryText}"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"
+                               Margin="0,10,0,0" />
+                </StackPanel>
+
+                <Button Content="{Binding [RalvenAi.AccessRequired.ViewPro], Source={StaticResource LocalizedStrings}}"
+                        Style="{StaticResource PrimaryButtonStyle}"
+                        HorizontalAlignment="Center"
+                        Margin="0,22,0,0"
+                        Click="ViewPro_Click"
+                        AutomationProperties.Name="{Binding [RalvenAi.AccessRequired.ViewPro], Source={StaticResource LocalizedStrings}}" />
             </StackPanel>
         </Border>
     </Grid>

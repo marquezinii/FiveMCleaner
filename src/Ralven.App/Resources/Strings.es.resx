@@ -21,6 +21,10 @@
   <data name="RalvenAi.Privacy.Detail" xml:space="preserve"><value>Tu pregunta, un resumen limitado del hardware, las acciones ya compatibles con Ralven y un identificador seudónimo de seguridad se envían a OpenAI para esta respuesta. Se excluyen rutas, archivos, credenciales y datos que identifican directamente la cuenta. Ralven no guarda la conversación. No introduzcas información personal ni secreta.</value></data>
   <data name="RalvenAi.AccessRequired.Title" xml:space="preserve"><value>Se requiere acceso a Ralven AI</value></data>
   <data name="RalvenAi.AccessRequired.Detail" xml:space="preserve"><value>Esta cuenta no tiene acceso a Ralven AI en este momento. Actualiza el estado del plan o inténtalo de nuevo más tarde.</value></data>
+  <data name="RalvenAi.AccessRequired.Free.Plan" xml:space="preserve"><value>TU PLAN ACTUAL: FREE</value></data>
+  <data name="RalvenAi.AccessRequired.Free.Title" xml:space="preserve"><value>Ralven AI forma parte de Pro</value></data>
+  <data name="RalvenAi.AccessRequired.Free.Detail" xml:space="preserve"><value>Habla sobre el diagnóstico de tu PC y recibe una recomendación segura de perfil para revisar antes de aplicarla.</value></data>
+  <data name="RalvenAi.AccessRequired.ViewPro" xml:space="preserve"><value>Conocer Ralven Pro</value></data>
   <data name="RalvenAi.InputPlaceholder" xml:space="preserve"><value>Mensaje para Ralven AI</value></data>
   <data name="RalvenAi.Welcome.Greeting1" xml:space="preserve"><value>¿Por dónde empezamos?</value></data>
   <data name="RalvenAi.Welcome.Greeting2" xml:space="preserve"><value>¿Qué mejoramos hoy?</value></data>
