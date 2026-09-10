@@ -139,6 +139,10 @@ se tornou estado oficial.
 - Cada tarefa que produzir alterações deve usar uma branch temporária baseada em
   `dev/proxima-versao`, nomeada pelo **objetivo da mudança**, não pela identidade
   da IA.
+- É **obrigatório** criar uma nova branch e uma nova worktree exclusivas para
+  cada tarefa que produzir alterações, mesmo que já exista uma branch ou
+  worktree semelhante, relacionada ou usada para o mesmo propósito. Nunca
+  reutilize uma branch ou worktree existente para iniciar a tarefa.
 
 Use, quando aplicável, os prefixos:
 
@@ -166,8 +170,9 @@ Para cada nova tarefa normal, o agente deve:
 4. partir do estado mais recente e seguro de `dev/proxima-versao` ou
    `origin/dev/proxima-versao`;
 5. criar a branch da tarefa automaticamente;
-6. criar ou reutilizar um **worktree exclusivo** para essa branch sempre que o
-   agente ainda não estiver em um checkout isolado da própria tarefa;
+6. criar um **novo worktree exclusivo** para essa branch; mesmo que já exista
+   uma branch ou worktree semelhante, relacionada ou usada para o mesmo
+   propósito, não reutilizar a existente;
 7. criar ou atualizar `OBJECTIVE.md` na raiz da branch, antes das alterações;
 8. executar alterações, testes e commits somente nesse checkout isolado.
 
@@ -753,7 +758,7 @@ Nova tarefa
 → ler AI_RULES + PROJECT_STATE + documentação relevante
 → inspecionar Git e atualizar referências remotas
 → criar branch pelo objetivo da mudança
-→ criar/reutilizar worktree exclusivo
+→ criar novo worktree exclusivo, sem reutilizar worktree semelhante
 → implementar e testar
 → reconstruir Ralven - Desenvolvimento (exceto tarefas de instalador/updater)
 → commit(s) profissionais
