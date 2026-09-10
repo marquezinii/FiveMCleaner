@@ -274,7 +274,7 @@ public sealed record AppSettings
     /// Id (o <c>updated_at</c> do servidor) do último aviso ao vivo que o
     /// usuário fechou explicitamente. <see langword="null"/> significa que
     /// nenhum aviso foi dispensado ainda. Usado só para não reexibir o
-    /// banner de um aviso já lido; o ícone de alerta no canto continua
+    /// notificação de um aviso já lido; o ícone de alerta no canto continua
     /// visível enquanto o aviso seguir ativo no servidor.
     /// </summary>
     public string? DismissedLiveAlertId { get; init; }

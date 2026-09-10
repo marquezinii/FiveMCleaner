@@ -4,7 +4,7 @@ using Ralven.App.Services;
 
 namespace Ralven.App.Views;
 
-public partial class PasswordSecurityWindow : Wpf.Ui.Controls.FluentWindow
+public partial class PasswordSecurityWindow : Ralven.App.Controls.DialogWindow
 {
     private readonly IFirebaseAuthService accounts;
     private readonly IGoogleOAuthClient googleOAuth;
@@ -19,8 +19,8 @@ public partial class PasswordSecurityWindow : Wpf.Ui.Controls.FluentWindow
         hasGoogle = accounts.Current.User?.HasGoogle == true;
         InitializeComponent();
 
-        TitleBarText.Text = T(hasPassword ? "PasswordSecurity.Reset.Title" : "PasswordSecurity.Create.Title");
-        TitleText.Text = TitleBarText.Text;
+        Title = T(hasPassword ? "PasswordSecurity.Reset.Title" : "PasswordSecurity.Create.Title");
+        TitleText.Text = Title;
         SubtitleText.Text = T(hasPassword ? "PasswordSecurity.Reset.Subtitle" : "PasswordSecurity.Create.Subtitle");
         SubmitButton.Content = T(hasPassword ? "PasswordSecurity.Reset.Action" : "PasswordSecurity.Create.Action");
         CurrentPasswordPanel.Visibility = hasPassword ? Visibility.Visible : Visibility.Collapsed;
@@ -132,6 +132,7 @@ public partial class PasswordSecurityWindow : Wpf.Ui.Controls.FluentWindow
 
     private void SetBusy(bool busy)
     {
+        CanDismiss = !busy;
         CurrentPasswordField.IsEnabled = !busy;
         CurrentMfaCodeBox.IsEnabled = !busy;
         NewPasswordField.IsEnabled = !busy;

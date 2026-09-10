@@ -195,13 +195,13 @@ test('D1 migrations adopt the historical schema.sql bootstrap before applying ne
 });
 
 test('AI foundation backfills only payment-backed Pro access', async (t) => {
-  const migrationIndex = migrationNames.indexOf('0011_ralven_ai_foundation.sql');
-  assert.notEqual(migrationIndex, -1);
+  const aiFoundationMigrationIndex = migrationNames.indexOf('0011_ralven_ai_foundation.sql');
+  assert.notEqual(aiFoundationMigrationIndex, -1);
   const root = await mkdtemp(join(tmpdir(), 'Ralven-d1-ai-foundation-'));
   t.after(() => rm(root, { recursive: true, force: true }));
 
   const stateDirectory = join(root, 'state');
-  const priorConfig = await createFixture(root, 'prior', migrationNames.slice(0, migrationIndex));
+  const priorConfig = await createFixture(root, 'prior', migrationNames.slice(0, aiFoundationMigrationIndex));
   apply(priorConfig, stateDirectory);
   execute(priorConfig, stateDirectory, `
     INSERT INTO account_profiles

@@ -18,17 +18,9 @@ public sealed record ReleaseNoteSectionDisplayItem(
     string BulletsText);
 
 /// <summary>
-/// Informational, non-blocking "What's New" panel shown at most once per app
-/// version — see <see cref="ReleaseNotesEvaluator"/> for when. Fixed size,
-/// centered over its owner, not draggable (same construction as
-/// <see cref="PrivacyConsentWindow"/>: no <c>ui:TitleBar</c> means no drag
-/// surface exists at all, so no extra move-blocking is needed). Unlike
-/// <see cref="PrivacyConsentWindow"/> this screen is purely informational, so
-/// closing it — by the X, the "Fechar" button, or Esc — is always allowed;
-/// this window itself has no knowledge of <c>AppSettings</c> persistence, it
-/// only presents one version's notes and lets the caller know when it closes.
+/// Version notes in the shared resizable modal reader. The caller owns seen-version persistence.
 /// </summary>
-public partial class ReleaseNotesWindow : Wpf.Ui.Controls.FluentWindow
+public partial class ReleaseNotesWindow : Ralven.App.Controls.DialogWindow
 {
     /// <summary>
     /// Categories render in this fixed order regardless of the order they

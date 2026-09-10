@@ -12,6 +12,25 @@ internal static class Program
     [STAThread]
     private static async Task<int> Main(string[] args)
     {
+        var dataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ralven");
+        var diagnostics = new UpdaterDiagnostics(dataRoot);
+        var telemetryAuthorized = UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot);
+        try
+        {
+            return Supervise(args, diagnostics, dataRoot, telemetryAuthorized);
+        }
+        finally
+        {
+            // Supervision has released its thread-owned lifecycle mutex. Remote
+            // delivery cannot delay launching the app or block another launcher.
+            await diagnostics.FlushPendingAsync(telemetryAuthorized);
+        }
+    }
+
+    // Named mutex ownership is thread-affine. This launcher has no UI dispatcher;
+    // keep local supervision on its acquiring thread and await network only after it returns.
+    private static int Supervise(string[] args, UpdaterDiagnostics diagnostics, string dataRoot, bool telemetryAuthorized)
+    {
         var forwardedArguments = args
             .Where(argument => !argument.StartsWith("--wait-for-pid=", StringComparison.OrdinalIgnoreCase)
                 && !argument.StartsWith("--wait-for-start=", StringComparison.OrdinalIgnoreCase))
@@ -19,13 +38,9 @@ internal static class Program
         var runtimeRoot = Path.Combine(AppContext.BaseDirectory, "Runtime");
         using var lifecycleLease = RuntimeUpdateLease.TryAcquire(runtimeRoot);
         if (lifecycleLease is null) return 0;
-        var dataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ralven");
-        var diagnostics = new UpdaterDiagnostics(dataRoot);
-        var telemetryAuthorized = UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot);
         UpdateTransaction? currentTransaction = null;
         try
         {
-            await diagnostics.FlushPendingAsync(telemetryAuthorized);
             // Read the journal before WaitForParent (not after): WaitForParent
             // is exactly the step that can fail (the previous process not
             // exiting in time), and the catch block below needs
@@ -37,7 +52,7 @@ internal static class Program
             var recovery = new RecoveryCoordinator(runtimeRoot);
             var initialDecision = recovery.Reconcile(DateTimeOffset.UtcNow, HealthTimeout);
             if (initialDecision == RecoveryDecision.RolledBack && currentTransaction is not null)
-                await RecordAsync(diagnostics, currentTransaction, "rollback", "rolled-back", UpdaterEventCodes.HealthCheckTimeout, null, dataRoot, telemetryAuthorized);
+                Record(diagnostics, currentTransaction, "rollback", "rolled-back", UpdaterEventCodes.HealthCheckTimeout, null, dataRoot, telemetryAuthorized);
             var activation = new RuntimeActivationStore(runtimeRoot);
             var version = activation.ReadActiveVersion();
             var floor = new VersionFloorStore(dataRoot).Read(version);
@@ -71,22 +86,22 @@ internal static class Program
             var receipt = new UpdateHealthReceiptStore(runtimeRoot);
             var deadline = DateTimeOffset.UtcNow + HealthTimeout;
 
-            async Task<bool> TryConfirmHealthAsync()
+            bool TryConfirmHealth()
             {
                 if (!receipt.Confirms(transaction)) return false;
                 recovery.Reconcile(DateTimeOffset.UtcNow, HealthTimeout);
-                await RecordAsync(diagnostics, transaction, "health-check", "completed", UpdaterEventCodes.HealthConfirmed, null, dataRoot, telemetryAuthorized);
+                Record(diagnostics, transaction, "health-check", "completed", UpdaterEventCodes.HealthConfirmed, null, dataRoot, telemetryAuthorized);
                 return true;
             }
 
             while (DateTimeOffset.UtcNow < deadline && !HasExitedSafely(process))
             {
-                if (await TryConfirmHealthAsync()) return 0;
-                await Task.Delay(250);
+                if (TryConfirmHealth()) return 0;
+                Thread.Sleep(250);
             }
-            if (await TryConfirmHealthAsync()) return 0;
+            if (TryConfirmHealth()) return 0;
             recovery.Reconcile(DateTimeOffset.UtcNow, TimeSpan.Zero);
-            await RecordAsync(diagnostics, transaction, "rollback", "rolled-back", UpdaterEventCodes.HealthCheckTimeout, null, dataRoot, telemetryAuthorized);
+            Record(diagnostics, transaction, "rollback", "rolled-back", UpdaterEventCodes.HealthCheckTimeout, null, dataRoot, telemetryAuthorized);
             MessageBox.Show(
                 "A nova versão não confirmou uma inicialização saudável. A versão anterior foi restaurada e será usada na próxima abertura.",
                 "Recuperação do Ralven", MessageBoxButtons.OK, MessageBoxIcon.Warning);
@@ -121,7 +136,7 @@ internal static class Program
                     OutOfMemoryException or StackOverflowException or AccessViolationException))
                 {
                 }
-                await RecordAsync(diagnostics, currentTransaction, "activation", "failed", Classify(exception), exception.ToString(), dataRoot, telemetryAuthorized);
+                Record(diagnostics, currentTransaction, "activation", "failed", Classify(exception), exception.ToString(), dataRoot, telemetryAuthorized);
             }
             MessageBox.Show(DescribeFailure(exception), "Ralven", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 2;
@@ -138,14 +153,14 @@ internal static class Program
         ParentProcessWait.WaitForExit(pid, expectedStart, 30_000, "O Ralven anterior não encerrou a tempo.");
     }
 
-    private static Task RecordAsync(
+    private static void Record(
         UpdaterDiagnostics diagnostics, UpdateTransaction transaction, string stage,
         string outcome, string code, string? detail, string dataRoot, bool telemetryAuthorized) =>
         diagnostics.RecordAsync(
             new UpdaterEvent(transaction.Id, stage, outcome, code, transaction.PreviousVersion,
                 transaction.CandidateVersion, UpdaterDiagnostics.ResolveEnvironment()),
             detail,
-            telemetryAuthorized);
+            telemetryAuthorized, flushPending: false).GetAwaiter().GetResult();
 
     // O processo pode sair entre o Process.Start e a leitura de HasExited, e
     // o Windows nega a consulta (Win32Exception) ou a propriedade

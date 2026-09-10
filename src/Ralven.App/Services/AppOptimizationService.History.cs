@@ -14,7 +14,13 @@ namespace Ralven.App.Services;
 /// </summary>
 public sealed partial class AppOptimizationService
 {
-    public async Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(
+    public Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(
+        CancellationToken cancellationToken = default) =>
+        // Directory enumeration, metadata and receipt reads are synchronous even
+        // when journal deserialization awaits; keep the entire scan off the UI.
+        Task.Run(() => LoadHistoryCoreAsync(cancellationToken), cancellationToken);
+
+    private async Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryCoreAsync(
         CancellationToken cancellationToken = default)
     {
         if (demoMode)

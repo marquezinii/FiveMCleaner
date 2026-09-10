@@ -1,9 +1,10 @@
 using System.Windows;
+using Ralven.App.Controls;
 using Ralven.App.Services;
 
 namespace Ralven.App.Views;
 
-public partial class TwoFactorSecurityWindow : Wpf.Ui.Controls.FluentWindow
+public partial class TwoFactorSecurityWindow : DialogWindow
 {
     private readonly IFirebaseAuthService accounts;
     private readonly IAccountSecurityService security;
@@ -187,7 +188,7 @@ public partial class TwoFactorSecurityWindow : Wpf.Ui.Controls.FluentWindow
     {
         var factor = TotpFactor;
         if (factor is null) return;
-        if (System.Windows.MessageBox.Show(T("TwoFactor.DisableConfirmation"), T("TwoFactor.Disable"), MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+        if (OptimizationConfirmationWindow.Confirm(this, T("TwoFactor.DisableConfirmation"), T("TwoFactor.Disable"), T("TwoFactor.Disable")) != true) return;
 
         await BusyAsync(async () =>
         {

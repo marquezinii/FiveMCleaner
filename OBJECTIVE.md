@@ -1,5 +1,4 @@
 # Objetivo
-
 ## Agente
 
 Codex
@@ -32,5 +31,6 @@ Interfaces e mensagens foram localizadas em inglês, português e espanhol.
 Validação concluída com formatação, build Release sem avisos, 1.472 testes .NET,
 suíte completa do Worker, matriz de migrações D1 e empacotamento Wrangler em
 dry-run. Não houve deploy: a ativação operacional requer aplicar a migration
-0012, configurar os novos secrets/bindings documentados e habilitar TOTP no
-Identity Platform.
+0013, configurar os novos secrets/bindings documentados e habilitar TOTP no
+Identity Platform. A integração também preserva as validações de perfil e
+sessão já consolidadas na próxima versão.

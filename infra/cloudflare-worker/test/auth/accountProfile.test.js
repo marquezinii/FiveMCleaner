@@ -47,6 +47,7 @@ test('validateAccountProfile rejects a payload that is not an object', () => {
 test('validateAccountProfile rejects a missing or non-string field', () => {
   assert.equal(validateAccountProfile({ firstName: 'João', lastName: 'Silva' }), null);
   assert.equal(validateAccountProfile({ ...VALID, username: 123 }), null);
+  assert.equal(validateAccountProfile({ ...VALID, ignoredByTheServer: true }), null);
 });
 
 test('validateAccountProfile requires the current terms version', () => {
@@ -92,7 +93,7 @@ test('validateAccountProfile accepts accented, hyphenated and apostrophe names',
   assert.equal(result.lastName, "O'Neil-Santos");
 });
 
-function fakeDb({ throwsWithMessage, billingCheckout = false } = {}) {
+function fakeDb({ throwsWithMessage, billingCheckout = false, insertChanges = 1, existingProfile = null } = {}) {
   const inserted = [];
   return {
     inserted,
@@ -102,9 +103,10 @@ function fakeDb({ throwsWithMessage, billingCheckout = false } = {}) {
           if (sql.startsWith('SELECT')) {
             return {
               async first() {
-                return billingCheckout && sql.includes('billing_checkout_intents')
-                  ? { blocked: 1 }
-                  : null;
+                if (billingCheckout && sql.includes('billing_checkout_intents')) {
+                  return { blocked: 1 };
+                }
+                return sql.includes('FROM account_profiles') ? existingProfile : null;
               },
             };
           }
@@ -114,7 +116,10 @@ function fakeDb({ throwsWithMessage, billingCheckout = false } = {}) {
                 throw new Error(throwsWithMessage);
               }
               inserted.push({ sql, params });
-              return { success: true };
+              return {
+                success: true,
+                meta: { changes: sql.includes('INSERT INTO account_profiles') ? insertChanges : 1 },
+              };
             },
           };
         },
@@ -141,10 +146,29 @@ test('createAccountProfile inserts a row keyed by the verified uid, never a clie
   ]);
 });
 
-test('createAccountProfile maps a username uniqueness violation to username-taken', async () => {
-  const db = fakeDb({ throwsWithMessage: 'UNIQUE constraint failed: idx_account_profiles_username_normalized' });
+test('createAccountProfile maps an ignored insert without its own uid to username-taken', async () => {
+  const db = fakeDb({ insertChanges: 0 });
   const result = await createAccountProfile(db, 'uid', validateAccountProfile(VALID));
   assert.deepEqual(result, { ok: false, code: 'username-taken' });
+});
+
+test('createAccountProfile accepts a retry only when it matches the existing uid profile', async () => {
+  const profile = validateAccountProfile(VALID);
+  const db = fakeDb({
+    insertChanges: 0,
+    existingProfile: {
+      username: profile.username,
+      first_name: profile.firstName,
+      last_name: profile.lastName,
+      terms_version: profile.termsVersion,
+    },
+  });
+
+  const result = await createAccountProfile(db, 'uid', profile);
+
+  assert.deepEqual(result, { ok: true });
+  assert.equal(db.inserted.filter(entry => entry.sql.includes('INSERT INTO account_profiles')).length, 1);
+  assert.equal(db.inserted.filter(entry => entry.sql.startsWith('UPDATE account_profiles')).length, 1);
 });
 
 test('createAccountProfile maps an unexpected D1 failure to unknown', async () => {

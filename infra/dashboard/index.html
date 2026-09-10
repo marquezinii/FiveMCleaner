@@ -171,8 +171,18 @@
         <section class="dashboard-section panel live-alert-section" aria-labelledby="live-alert-title">
           <div class="section-heading"><h2 id="live-alert-title">Aviso ao vivo</h2><p id="live-alert-status" class="refresh-status" aria-live="polite">Carregando…</p></div>
           <form id="live-alert-form" class="live-alert-form">
-            <div class="live-alert-templates"><button type="button" class="chip" data-template="Detectamos um problema no atualizador. Recomendamos reinstalar o Ralven pela última versão oficial do site.">Bug no atualizador</button><button type="button" class="chip" data-template="Ainda não está no nosso Discord oficial? Entre para ficar por dentro de novidades e suporte.">Entre no Discord</button></div>
-            <textarea id="live-alert-message" name="message" maxlength="300" rows="5" placeholder="Mensagem exibida no app dos usuários..."></textarea>
+            <p id="live-alert-hint" class="live-alert-hint">O aviso aparece no aplicativo como uma notificação discreta. Use o nível que corresponde ao impacto real.</p>
+            <div class="live-alert-templates"><button type="button" class="chip" data-template="Detectamos um problema no atualizador. Recomendamos reinstalar o Ralven pela última versão oficial do site." data-severity="critical">Problema no atualizador</button><button type="button" class="chip" data-template="Ainda não está no nosso Discord oficial? Entre para ficar por dentro de novidades e suporte." data-severity="info">Entre no Discord</button></div>
+            <label class="live-alert-severity-label" for="live-alert-severity">Impacto
+              <select id="live-alert-severity" name="severity">
+                <option value="info">Informativo</option>
+                <option value="important" selected>Importante</option>
+                <option value="critical">Crítico</option>
+              </select>
+            </label>
+            <label class="live-alert-severity-label" for="live-alert-message">Mensagem
+              <textarea id="live-alert-message" name="message" maxlength="300" rows="5" aria-describedby="live-alert-hint live-alert-counter" placeholder="Escreva o que a pessoa precisa saber..."></textarea>
+            </label>
             <div class="live-alert-footer"><span id="live-alert-counter" class="live-alert-counter">0/300</span><div class="live-alert-actions"><button type="button" id="live-alert-deactivate" class="link-button">Desativar</button><button type="submit">Enviar</button></div></div>
             <p id="live-alert-error" class="login-error" role="alert"></p>
           </form>

@@ -95,6 +95,46 @@ public sealed class MainViewModelBackgroundTests
     }
 
     [Fact]
+    public async Task FiveMTarget_UsesOnlyAvailableProcessMetricsAndTheirOwnScale()
+    {
+        var provider = new ControlledMetricsProvider();
+        using var viewModel = Create(provider);
+        await viewModel.InitializeAsync();
+        viewModel.SelectLiveMetricsTarget(LiveMetricsTarget.FiveM);
+        viewModel.SetLiveMetricsEnabled(true);
+        provider.Complete(0, new LiveSystemMetricsSnapshot(
+            CpuPercent: 12,
+            GpuPercent: null,
+            MemoryPercent: null,
+            DiskPercent: null,
+            NetworkThroughputMBps: null,
+            CapturedAt: DateTimeOffset.UtcNow,
+            UsedMemoryGiB: 3.2,
+            FiveMProcessCount: 2));
+        await WaitFor(() => viewModel.HasLiveMetricsSample);
+
+        viewModel.SelectLiveMetric(LiveMetricKind.Memory);
+
+        Assert.True(viewModel.IsFiveMLiveMetricsTarget);
+        Assert.False(viewModel.IsGpuLiveMetricAvailable);
+        Assert.Equal([3.2], viewModel.SelectedLiveMetricSeries);
+        Assert.Equal(5, viewModel.SelectedLiveMetricMaximum);
+        Assert.Equal(" GB", viewModel.SelectedLiveMetricValueSuffix);
+        Assert.Equal(1, provider.FiveMCalls);
+    }
+
+    [Theory]
+    [InlineData(0, 1)]
+    [InlineData(0.1, 1)]
+    [InlineData(1.1, 2)]
+    [InlineData(2.1, 5)]
+    [InlineData(51, 100)]
+    public void NiceMaximum_UsesReadableNonExaggeratedSteps(double value, double expected)
+    {
+        Assert.Equal(expected, MainViewModel.NiceMaximum([value]));
+    }
+
+    [Fact]
     public async Task HiddenSessionMonitor_KeepsStateAndAvoidsUnchangedPresentationWork()
     {
         var presence = FiveMSessionPresence.Present;
@@ -186,12 +226,21 @@ public sealed class MainViewModelBackgroundTests
     {
         private readonly List<(TaskCompletionSource<LiveSystemMetricsSnapshot> Completion, CancellationToken Token)> captures = [];
         public int Calls { get { lock (captures) return captures.Count; } }
+        public int FiveMCalls { get; private set; }
 
         public Task<LiveSystemMetricsSnapshot> CaptureAsync(CancellationToken cancellationToken = default)
         {
             var completion = new TaskCompletionSource<LiveSystemMetricsSnapshot>(TaskCreationOptions.RunContinuationsAsynchronously);
             lock (captures) captures.Add((completion, cancellationToken));
             return completion.Task;
+        }
+
+        public Task<LiveSystemMetricsSnapshot> CaptureFiveMAsync(
+            string installationRoot,
+            CancellationToken cancellationToken = default)
+        {
+            FiveMCalls++;
+            return CaptureAsync(cancellationToken);
         }
 
         public CancellationToken Token(int index) { lock (captures) return captures[index].Token; }
@@ -203,7 +252,13 @@ public sealed class MainViewModelBackgroundTests
 
         public void Complete(int index, double cpu)
         {
-            lock (captures) captures[index].Completion.SetResult(new(cpu, 10, 50, 10, 0, DateTimeOffset.UtcNow));
+            Complete(index, new LiveSystemMetricsSnapshot(
+                cpu, 10, 50, 10, 0, DateTimeOffset.UtcNow));
+        }
+
+        public void Complete(int index, LiveSystemMetricsSnapshot snapshot)
+        {
+            lock (captures) captures[index].Completion.SetResult(snapshot);
         }
     }
 }

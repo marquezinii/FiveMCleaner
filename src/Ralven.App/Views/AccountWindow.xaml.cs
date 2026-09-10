@@ -7,7 +7,7 @@ using Ralven.App.Services;
 
 namespace Ralven.App.Views;
 
-public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
+public partial class AccountWindow : Ralven.App.Controls.DialogWindow
 {
     private const int WM_SYSCOMMAND = 0x0112;
     private const int SC_MOVE = 0xF010;
@@ -85,15 +85,6 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
         }
 
         Render(state);
-    }
-
-    /// <summary>Esc cancels, exactly like the X in the title bar.</summary>
-    protected override void OnPreviewKeyDown(System.Windows.Input.KeyEventArgs e)
-    {
-        base.OnPreviewKeyDown(e);
-        if (e.Key != Key.Escape) return;
-        e.Handled = true;
-        Close();
     }
 
     /// <summary>
@@ -232,6 +223,7 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
     /// </summary>
     private void ApplyModeCopy()
     {
+        SetPreferredHeight(registering ? 780 : 620);
         TitleText.Text = registering ? T("Account.Register.Title") : T("Account.Welcome.Title");
         SubtitleText.Text = registering
             ? T("Account.Register.Subtitle")
@@ -477,16 +469,23 @@ public partial class AccountWindow : Wpf.Ui.Controls.FluentWindow
 
     private async Task PrefillProfileAsync()
     {
+        var expectedUid = accounts.Current.User?.Uid;
+        if (expectedUid is null) return;
         var token = await accounts.GetIdTokenAsync();
         if (token is null) return;
 
         var existing = await profiles.FetchAsync(token);
-        if (existing.Outcome != AccountProfileFetchOutcome.Found) return;
+        if (existing.Outcome != AccountProfileFetchOutcome.Found
+            || !IsCurrentProfilePrefill(expectedUid, accounts.Current)) return;
 
         UsernameBox.Text = existing.Username ?? UsernameBox.Text;
         FirstNameBox.Text = existing.FirstName ?? FirstNameBox.Text;
         LastNameBox.Text = existing.LastName ?? LastNameBox.Text;
     }
+
+    internal static bool IsCurrentProfilePrefill(string expectedUid, AuthenticationSnapshot? current) =>
+        current is { State: AuthenticationState.ProfileCompletionRequired, User: { } user }
+        && string.Equals(user.Uid, expectedUid, StringComparison.Ordinal);
 
     private bool ValidateTermsAcceptance()
     {

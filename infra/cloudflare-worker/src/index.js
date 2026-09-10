@@ -84,8 +84,8 @@ const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 //   GET     /api/stats/:name       -- one chart's data (requires a valid session)
 //   GET     /api/stats/:name.csv   -- same data as CSV (requires a valid session)
 //   GET     /api/bugs              -- recent bug reports, newest first (requires a valid session)
-//   GET     /live-alert            -- current admin-broadcast alert, { id, message, active } (no auth; rate limited per IP)
-//   POST    /admin/live-alert      -- { message?, active } -> upsert the single live alert row (requires a valid session)
+//   GET     /live-alert            -- current admin-broadcast alert, { id, message, active, severity } (no auth; rate limited per IP)
+//   POST    /admin/live-alert      -- { message?, active, severity? } -> upsert the single live alert row (requires a valid session)
 //   OPTIONS *                      -- CORS preflight for the routes above
 //
 // The dashboard is served from a different origin than this Worker (a
@@ -299,7 +299,7 @@ async function handleLiveAlertGet(request, env) {
   if (limited) return limited;
 
   const row = await env.TELEMETRY_DB
-    .prepare('SELECT message, active, updated_at FROM live_alert WHERE id = 1')
+    .prepare('SELECT message, active, severity, updated_at FROM live_alert WHERE id = 1')
     .first();
   return jsonResponse(toLiveAlertResponse(row));
 }

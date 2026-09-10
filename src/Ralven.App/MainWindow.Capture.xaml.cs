@@ -23,6 +23,8 @@ public partial class MainWindow
         try
         {
             var outputPath = Path.GetFullPath(argument["--capture=".Length..].Trim('"'));
+            var captureTrayMenu = arguments.Any(value =>
+                value.Equals("--capture-tray-menu", StringComparison.OrdinalIgnoreCase));
             var language = arguments.FirstOrDefault(value => value.StartsWith("--capture-language=", StringComparison.OrdinalIgnoreCase))?
                 ["--capture-language=".Length..];
             if (demoMode && language is not null)
@@ -109,14 +111,23 @@ public partial class MainWindow
 
             await Task.Delay(450);
             UpdateLayout();
-            var dpi = VisualTreeHelper.GetDpi(this);
+            FrameworkElement captureTarget = this;
+            if (captureTrayMenu)
+            {
+                ShowTrayMenu();
+                await Task.Delay(100);
+                trayMenu.UpdateLayout();
+                captureTarget = trayMenu;
+            }
+
+            var dpi = VisualTreeHelper.GetDpi(captureTarget);
             var bitmap = new RenderTargetBitmap(
-                Math.Max(1, (int)Math.Round(ActualWidth * dpi.DpiScaleX)),
-                Math.Max(1, (int)Math.Round(ActualHeight * dpi.DpiScaleY)),
+                Math.Max(1, (int)Math.Round(captureTarget.ActualWidth * dpi.DpiScaleX)),
+                Math.Max(1, (int)Math.Round(captureTarget.ActualHeight * dpi.DpiScaleY)),
                 dpi.PixelsPerInchX,
                 dpi.PixelsPerInchY,
                 PixelFormats.Pbgra32);
-            bitmap.Render(this);
+            bitmap.Render(captureTarget);
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bitmap));
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
@@ -133,6 +144,7 @@ public partial class MainWindow
         finally
         {
             allowClose = true;
+            trayMenu.IsOpen = false;
             trayIcon.Hide();
             // Capture mode is a one-shot smoke harness. Explicit shutdown is
             // required here because a headless WPF host may keep its dispatcher

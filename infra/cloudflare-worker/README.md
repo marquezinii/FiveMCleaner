@@ -191,7 +191,7 @@ Recovery uses the required, fail-closed `ACCOUNT_RECOVERY_LIMITER`, keyed by an
 HMAC of the stable enrollment and caller IP, so requesting new pending
 credentials does not reset the attempt budget. No password, pending credential,
 Firebase token, raw enrollment ID or plaintext recovery code is persisted or logged. Apply
-migrations through `0012_account_mfa_recovery.sql` and configure a service
+migrations through `0013_account_mfa_recovery.sql` and configure a service
 account limited to `firebaseauth.users.get`, `firebaseauth.users.update` and
 `firebaseauth.users.delete`:
 

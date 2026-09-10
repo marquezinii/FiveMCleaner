@@ -1,8 +1,13 @@
 # Instalador, atualização e publicação
 
 O instalador oficial do Ralven é um executável Inno Setup moderno para
-Windows 11 e, em compatibilidade legada, Windows 10 build 19041 ou mais recente,
-em sistemas compatíveis com binários x64. Windows 11 é o sistema recomendado.
+Windows 10 versão 2004 (build 19041) ou mais recente e Windows 11, em sistemas
+compatíveis com binários x64. As duas plataformas são suportadas como ambientes
+de primeira classe; recursos visuais nativos sem suporte no Windows 10 usam o
+fallback equivalente documentado pelo aplicativo.
+
+O roteiro de aceite em uma máquina Windows 10 real está em
+[`windows10-validation.md`](windows10-validation.md).
 Em instalações novas, ele instala por usuário em `{autopf}\Ralven`; por padrão, isso corresponde
 à pasta de programas local do usuário e não exige UAC.
 
@@ -26,8 +31,10 @@ Windows realmente for executada.
   clara e escura gerada a partir do ícone oficial;
 - ícone e imagem oficiais do Ralven;
 - atalhos do menu Iniciar e desinstalação completa, com rótulos localizados;
-- atalho de Área de Trabalho habilitado por padrão; inicialização com o Windows
-  desmarcada por padrão (ambas alteráveis na instalação e depois);
+- identidade de shell estável `Ralven.Ralven` nos atalhos, mantendo nome e ícone
+  oficiais independentemente do caminho de instalação;
+- atalhos da Área de Trabalho e de inicialização com o Windows habilitados por
+  padrão (ambos alteráveis na instalação e depois em Configurações);
 - página final lembra que atualizações futuras vêm pelo app, com confirmação;
 - compressão `lzma2/ultra` no pacote offline self-contained;
 - upgrade no mesmo diretório por meio de um `AppId` estável;
@@ -40,6 +47,13 @@ pasta de instalação, em `%LOCALAPPDATA%\Ralven` durante a ponte. Na desinstala
 interativa, a pessoa escolhe se deseja preservar ou remover esses dados. A
 opção padrão é preservar; uma desinstalação silenciosa também preserva os dados
 para nunca apagar histórico ou backup sem confirmação visível.
+
+Essa identidade é o mecanismo Win32 suportado para o shell, mas não existe API
+pública do Microsoft PC Manager para cadastrar caminhos em **Limpeza Profunda >
+Outros itens do aplicativo**. A associação eventual depende do scanner interno
+da Microsoft; o Ralven não cria registros ou pacotes artificiais para forçar a
+exibição. A classificação e a limpeza manual estão em
+[`docs/cache.md`](cache.md).
 
 ## Build local reproduzível
 
@@ -60,8 +74,8 @@ um cache dentro de `artifacts/.tools`, exige o SHA-256 fixado no script e valida
 a assinatura Authenticode de `Pyrsys B.V.` antes de executar o compilador.
 
 O teste instala silenciosamente em uma pasta temporária sob `artifacts`, confere
-byte a byte todo o payload, valida o padrão desktop-on/startup-off, a task de
-inicialização quando pedida, o handoff `/AUTOUPDATE=yes`, a preservação de
+byte a byte todo o payload, valida o padrão desktop-on/startup-on, o opt-out da
+inicialização, o handoff `/AUTOUPDATE=yes`, a preservação de
 dados em `%LOCALAPPDATA%\Ralven` no uninstall silencioso, executa a
 desinstalação e confirma a remoção. Ele se recusa a rodar se encontrar uma
 instalação real ou uma entrada de inicialização existente. Somente para uma

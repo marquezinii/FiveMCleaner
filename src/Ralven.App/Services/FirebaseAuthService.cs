@@ -443,27 +443,49 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
 
     private async Task<FirebaseAuthResult> RefreshAsync(string? refresh, bool persist, long generation, CancellationToken cancellationToken)
     {
-        if (string.IsNullOrWhiteSpace(refresh)) return Result();
+        FirebaseRefreshResponse? payload = null;
+        var signedOut = false;
         try
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, $"{SecureTokenBase}?key={apiKey}") { Content = new FormUrlEncodedContent(new Dictionary<string, string> { ["grant_type"] = "refresh_token", ["refresh_token"] = refresh }) };
-            using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
-            var payload = await response.Content.ReadFromJsonAsync<FirebaseRefreshResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
-
-            if (!response.IsSuccessStatusCode || string.IsNullOrWhiteSpace(payload?.id_token) || string.IsNullOrWhiteSpace(payload.refresh_token))
+            await sessionLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+            try
             {
-                await InvalidateGenerationAsync(generation).ConfigureAwait(false);
-                return new FirebaseAuthResult(AuthenticationState.SignedOut, null, localization["Account.Error.SessionInvalid"]);
+                if (generation != sessionGeneration || string.IsNullOrWhiteSpace(refresh)) return Result();
+                if (!string.IsNullOrWhiteSpace(idToken) && DateTimeOffset.UtcNow < tokenExpiresAt - TimeSpan.FromMinutes(5)) return Result();
+
+                using var request = new HttpRequestMessage(HttpMethod.Post, $"{SecureTokenBase}?key={apiKey}") { Content = new FormUrlEncodedContent(new Dictionary<string, string> { ["grant_type"] = "refresh_token", ["refresh_token"] = refresh }) };
+                using var response = await client.SendAsync(request, cancellationToken).ConfigureAwait(false);
+                payload = await response.Content.ReadFromJsonAsync<FirebaseRefreshResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                if (!response.IsSuccessStatusCode || string.IsNullOrWhiteSpace(payload?.id_token) || string.IsNullOrWhiteSpace(payload.refresh_token))
+                {
+                    Interlocked.Increment(ref sessionGeneration);
+                    await ClearSessionStateAsync().ConfigureAwait(false);
+                    Current = new AuthenticationSnapshot(AuthenticationState.SignedOut, null);
+                    signedOut = true;
+                }
+                else
+                {
+                    if (persist) await sessionStore.WriteAsync(payload.refresh_token, cancellationToken).ConfigureAwait(false);
+                    else await sessionStore.ClearAsync().ConfigureAwait(false);
+                    idToken = payload.id_token;
+                    refreshToken = payload.refresh_token;
+                    tokenExpiresAt = Expiry(payload.expires_in);
+                    persistSession = persist;
+                }
             }
-            return await AcceptTokensAsync(
-                new FirebaseTokenResponse(payload.user_id, payload.id_token, payload.refresh_token, payload.expires_in),
-                persist,
-                generation,
-                cancellationToken).ConfigureAwait(false);
+            finally { sessionLock.Release(); }
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested) { return Fail("NETWORK_REQUEST_FAILED"); }
         catch (OperationCanceledException) { throw; }
         catch (Exception exception) when (exception is HttpRequestException or JsonException or IOException) { return Fail("NETWORK_REQUEST_FAILED"); }
+        if (signedOut)
+        {
+            StateChanged?.Invoke(this, Current);
+            return new FirebaseAuthResult(AuthenticationState.SignedOut, null, localization["Account.Error.SessionInvalid"]);
+        }
+
+        return await LoadUserAsync(payload!.id_token!, cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<FirebaseAuthResult> UpdateAsync(string? password, string? email, CancellationToken cancellationToken)
@@ -586,6 +608,10 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
                 _ => (AuthenticationState.ProfileUnavailable, ProfileUnavailableError),
             };
         }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
         catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
         {
             return (AuthenticationState.ProfileUnavailable, ProfileUnavailableError);
@@ -669,7 +695,6 @@ public sealed class FirebaseAuthService : IFirebaseAuthService
         RestoreSignedOut(generation);
         return new FirebaseAuthResult(Current.State, Current.User, FirebaseAuthErrorMapper.Map(error, localization, sensitiveFlow));
     }
-
     private bool TryBeginMfaChallenge(FirebaseTokenResponse tokens, long generation, FirebaseUser? reauthenticationUser, out FirebaseAuthResult result)
     {
         if (string.IsNullOrWhiteSpace(tokens.mfaPendingCredential) || tokens.mfaInfo is not { Length: > 0 })
