@@ -226,7 +226,7 @@ public sealed partial class MainViewModel
         operationCancellation = new CancellationTokenSource();
         var progress = new Progress<AppProgressUpdate>(ApplyProgress);
         var completedSuccessfully = false;
-        var telemetryEventName = "optimization-failed";
+        var telemetryEventName = TelemetryEventNames.OptimizationFailed;
         string? telemetryErrorCategory = null;
         BugCode? telemetryBugCode = null;
         try
@@ -236,8 +236,8 @@ public sealed partial class MainViewModel
             var result = await service.ExecuteAsync(currentPlan!, progress, operationCancellation.Token);
             completedSuccessfully = result.Succeeded;
             telemetryEventName = result.WasCancelled
-                ? "optimization-cancelled"
-                : result.Succeeded ? "optimization-completed" : "optimization-failed";
+                ? TelemetryEventNames.OptimizationCancelled
+                : result.Succeeded ? TelemetryEventNames.OptimizationCompleted : TelemetryEventNames.OptimizationFailed;
             if (!result.Succeeded)
             {
                 telemetryErrorCategory = result.FailureErrorCategory ?? "unexpected";
@@ -260,14 +260,14 @@ public sealed partial class MainViewModel
         }
         catch (OperationCanceledException)
         {
-            telemetryEventName = "optimization-cancelled";
+            telemetryEventName = TelemetryEventNames.OptimizationCancelled;
             telemetryErrorCategory = "cancelled";
             telemetryBugCode = BugCode.APP_OPT_CANCELLED;
             HandleOptimizationCancelled();
         }
         catch (Exception exception)
         {
-            telemetryEventName = "optimization-failed";
+            telemetryEventName = TelemetryEventNames.OptimizationFailed;
             telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
             telemetryBugCode = BugCodeClassifier.ClassifyException(exception, "optimization");
             if (exception is ProAccessRequiredException)
@@ -307,6 +307,7 @@ public sealed partial class MainViewModel
         ProgressPercent = 0;
         ClearProgressHistory();
         StartOperationTiming();
+        TrackOptimizationStartedTelemetry();
         StepLedger.Clear();
         ApplyReport(null);
         ApplyComparison(null);
@@ -344,7 +345,12 @@ public sealed partial class MainViewModel
     {
         var executionTime = operationStopwatch?.Elapsed ?? TimeSpan.Zero;
         StopOperationTiming(completedSuccessfully);
-        TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory, bugCode);
+        TrackOptimizationTelemetry(
+            telemetryEventName,
+            executionTime,
+            telemetryErrorCategory,
+            bugCode,
+            currentPlan?.PlanId);
         // operationCancellation foi atribuído antes do try em StartOptimizationAsync.
         operationCancellation!.Dispose();
         operationCancellation = null;
@@ -372,22 +378,41 @@ public sealed partial class MainViewModel
         IsGtaVBenchmarkRunning = true;
         GtaVBenchmarkStatusLabel = localization.GetString("GtaVBenchmark.Running");
         RaiseCommandState();
+        var stopwatch = Stopwatch.StartNew();
+        var telemetryEventName = TelemetryEventNames.GtaVBenchmarkFailed;
+        string? telemetryErrorCategory = "unexpected";
         try
         {
             var result = await service.RunGtaVBenchmarkAsync(3);
             GtaVBenchmarkStatusLabel = DescribeGtaVBenchmarkResult(result);
+            telemetryEventName = result.Succeeded
+                ? TelemetryEventNames.GtaVBenchmarkCompleted
+                : TelemetryEventNames.GtaVBenchmarkFailed;
+            telemetryErrorCategory = result.Succeeded ? null : ClassifyBenchmarkFailure(result.FailureReason);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             GtaVBenchmarkStatusLabel = localization.Format("GtaVBenchmark.Error", localization.DescribeException(exception));
+            telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
         }
         finally
         {
+            stopwatch.Stop();
+            TrackGtaVBenchmarkTelemetry(telemetryEventName, stopwatch.Elapsed, telemetryErrorCategory);
             IsGtaVBenchmarkRunning = false;
             RaiseCommandState();
         }
     }
+
+    private static string? ClassifyBenchmarkFailure(string? reason) => reason switch
+    {
+        "benchmark-did-not-exit-in-time" => "timeout",
+        "profile-folder-not-found" or "benchmark-output-file-not-found" => "io",
+        "benchmark-output-file-not-recognized" => "invalid-data",
+        "gtav-not-detected" or "gtav-still-running" or "gta-executable-not-found" => null,
+        _ => "unexpected"
+    };
 
     private string DescribeGtaVBenchmarkResult(AppGtaVBenchmarkResult result)
     {

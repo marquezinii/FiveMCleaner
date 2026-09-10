@@ -6,6 +6,9 @@ import {
   appVersionBreakdown,
   averageOptimizationTimeMs,
   successRate,
+  appInitializationsPerDay,
+  abandonedOptimizationFlows,
+  gtaVBenchmarkOutcomes,
   errorsByVersion,
   errorCategoryBreakdown,
   bugCodeBreakdown,
@@ -69,6 +72,19 @@ test('successRate counts completed runs against the total', () => {
 
   assert.match(sql, /SUM\(CASE WHEN event_name = 'optimization-completed'/);
   assert.match(sql, /COUNT\(\*\) AS total/);
+  assert.match(sql, /optimization-cancelled/);
+});
+
+test('expanded health and adoption queries stay scoped to their closed event families', () => {
+  const startup = appInitializationsPerDay();
+  const abandoned = abandonedOptimizationFlows();
+  const benchmark = gtaVBenchmarkOutcomes();
+
+  assert.match(startup.sql, /event_name = 'app-initialized'/);
+  assert.match(abandoned.sql, /operation_id IS NOT NULL/);
+  assert.match(abandoned.sql, /NOT EXISTS/);
+  assert.match(benchmark.sql, /gtav-benchmark-completed/);
+  assert.match(benchmark.sql, /AVG\(execution_time_ms\)/);
 });
 
 test('errorsByVersion only counts failed runs with a known error category', () => {

@@ -620,13 +620,13 @@
   <data name="PrivacyConsent.Heading.Renewal" xml:space="preserve"><value>Atualizamos nossa política de privacidade</value></data>
   <data name="PrivacyConsent.Intro.FirstInstallation" xml:space="preserve"><value>Relatórios técnicos ajudam a identificar bugs e melhorar o Ralven. Diagnósticos essenciais e relatórios opcionais estão separados abaixo.</value></data>
   <data name="PrivacyConsent.Intro.Upgrade" xml:space="preserve"><value>Reunimos a telemetria anônima de uso e os relatórios sanitizados de falhas em um único controle opcional. Revise antes de continuar.</value></data>
-  <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>Simplificamos os controles de privacidade sem adicionar novos dados. Revise a única escolha opcional abaixo antes de continuar.</value></data>
+  <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>Atualizamos os diagnósticos de estabilidade e os relatórios opcionais. Revise a única escolha opcional abaixo antes de continuar.</value></data>
   <data name="PrivacyConsent.Essential.Title" xml:space="preserve"><value>Diagnósticos essenciais</value></data>
-  <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>Coletamos o mínimo necessário para atualizações, segurança, estabilidade e diagnóstico: versão do app e Windows, arquitetura, eventos do atualizador e resultado técnico das otimizações. Não pode ser desativado.</value></data>
+  <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>Coletamos o mínimo necessário para atualizações, segurança, estabilidade e diagnóstico: versão do app e Windows, arquitetura, eventos do atualizador, resultado técnico das otimizações e uma confirmação diária de inicialização saudável. Não pode ser desativado.</value></data>
   <data name="PrivacyConsent.Essential.Summary" xml:space="preserve"><value>Necessários para atualizações, segurança e estabilidade.</value></data>
   <data name="PrivacyConsent.Essential.Status" xml:space="preserve"><value>SEMPRE ATIVO</value></data>
   <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Relatórios opcionais</value></data>
-  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Compartilha contexto anônimo de hardware, perfil e recursos usados, além de relatórios sanitizados de erros e falhas. Vem ativado por padrão e pode ser desativado quando quiser.</value></data>
+  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Compartilha contexto anônimo de hardware, perfil, início de otimização e resultado do benchmark oficial, além de relatórios sanitizados de erros e falhas. Vem ativado por padrão e pode ser desativado quando quiser.</value></data>
   <data name="PrivacyConsent.PrivacyNote" xml:space="preserve"><value>O Ralven não inclui senhas, dados da conta, arquivos pessoais, caminhos locais completos nem identificador único da máquina nesses relatórios.</value></data>
   <data name="PrivacyConsent.CrashReports.Title" xml:space="preserve"><value>Enviar relatórios automáticos de erros e falhas</value></data>
   <data name="PrivacyConsent.CrashReports.Description" xml:space="preserve"><value>Stack traces sanitizados e versão do aplicativo quando o Ralven travar ou encontrar um erro inesperado.</value></data>

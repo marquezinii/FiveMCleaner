@@ -15,6 +15,7 @@
 import { appendEnvironmentClause, appendDateRangeClauses } from '../filters.js';
 
 const DEFAULT_TOP_N = 10;
+const OPTIMIZATION_OUTCOMES = "event_name IN ('optimization-completed', 'optimization-failed', 'optimization-cancelled')";
 
 function buildFilters({ from, to, appVersion, environment = 'Production' } = {}) {
   const clauses = [];
@@ -42,7 +43,7 @@ export function optimizationRunsPerDay(filters) {
   return {
     sql: `SELECT substr(received_at, 1, 10) AS day, COUNT(*) AS runs
           FROM telemetry_events
-          WHERE ${whereSql}
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES}
           GROUP BY day
           ORDER BY day ASC`,
     params,
@@ -55,7 +56,7 @@ export function osVersionBreakdown(filters) {
   return {
     sql: `SELECT os_version, COUNT(*) AS runs
           FROM telemetry_events
-          WHERE ${whereSql} AND os_version IS NOT NULL
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND os_version IS NOT NULL
           GROUP BY os_version
           ORDER BY runs DESC`,
     params,
@@ -68,7 +69,7 @@ export function appVersionBreakdown(filters) {
   return {
     sql: `SELECT app_version, COUNT(*) AS runs
           FROM telemetry_events
-          WHERE ${whereSql}
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES}
           GROUP BY app_version
           ORDER BY runs DESC`,
     params,
@@ -94,7 +95,54 @@ export function successRate(filters) {
             SUM(CASE WHEN event_name = 'optimization-completed' THEN 1 ELSE 0 END) AS completed,
             COUNT(*) AS total
           FROM telemetry_events
-          WHERE ${whereSql}`,
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES}`,
+    params,
+  };
+}
+
+/** Successful, consented app initialization health events, limited client-side to one per day/version. */
+export function appInitializationsPerDay(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT substr(received_at, 1, 10) AS day, COUNT(*) AS initializations
+          FROM telemetry_events
+          WHERE ${whereSql} AND event_name = 'app-initialized'
+          GROUP BY day
+          ORDER BY day ASC`,
+    params,
+  };
+}
+
+/** Started optional optimization flows that have no terminal event yet. */
+export function abandonedOptimizationFlows(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT app_version, profile, COUNT(*) AS abandoned
+          FROM telemetry_events AS started
+          WHERE ${whereSql}
+            AND started.event_name = 'optimization-started'
+            AND started.operation_id IS NOT NULL
+            AND NOT EXISTS (
+              SELECT 1 FROM telemetry_events AS terminal
+              WHERE terminal.operation_id = started.operation_id
+                AND terminal.event_name IN ('optimization-completed', 'optimization-failed', 'optimization-cancelled')
+            )
+          GROUP BY app_version, profile
+          ORDER BY abandoned DESC`,
+    params,
+  };
+}
+
+/** Benchmark adoption, failure rate and duration without collecting FPS or output files. */
+export function gtaVBenchmarkOutcomes(filters) {
+  const { whereSql, params } = buildFilters(filters);
+  return {
+    sql: `SELECT event_name, COUNT(*) AS runs, AVG(execution_time_ms) AS average_ms
+          FROM telemetry_events
+          WHERE ${whereSql}
+            AND event_name IN ('gtav-benchmark-completed', 'gtav-benchmark-failed')
+          GROUP BY event_name
+          ORDER BY event_name ASC`,
     params,
   };
 }
@@ -118,7 +166,7 @@ export function topCpuModels(filters, topN = DEFAULT_TOP_N) {
   return {
     sql: `SELECT cpu_model, COUNT(*) AS runs
           FROM telemetry_events
-          WHERE ${whereSql} AND cpu_model IS NOT NULL
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND cpu_model IS NOT NULL
           GROUP BY cpu_model
           ORDER BY runs DESC
           LIMIT ?`,
@@ -132,7 +180,7 @@ export function topGpuModels(filters, topN = DEFAULT_TOP_N) {
   return {
     sql: `SELECT gpu_model, COUNT(*) AS runs
           FROM telemetry_events
-          WHERE ${whereSql} AND gpu_model IS NOT NULL
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND gpu_model IS NOT NULL
           GROUP BY gpu_model
           ORDER BY runs DESC
           LIMIT ?`,
@@ -146,7 +194,7 @@ export function ramBucketBreakdown(filters) {
   return {
     sql: `SELECT ram_bucket_gib, COUNT(*) AS runs
           FROM telemetry_events
-          WHERE ${whereSql} AND ram_bucket_gib IS NOT NULL
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND ram_bucket_gib IS NOT NULL
           GROUP BY ram_bucket_gib
           ORDER BY ram_bucket_gib ASC`,
     params,
@@ -216,7 +264,7 @@ export function gtaEditionBreakdown(filters) {
   return {
     sql: `SELECT gta_edition, COUNT(*) AS runs
           FROM telemetry_events
-          WHERE ${whereSql} AND gta_edition IS NOT NULL
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND gta_edition IS NOT NULL
           GROUP BY gta_edition
           ORDER BY runs DESC`,
     params,
@@ -231,7 +279,7 @@ export function fiveMInstallDetectionRate(filters) {
             SUM(CASE WHEN five_m_install_detected = 1 THEN 1 ELSE 0 END) AS detected,
             COUNT(*) AS total
           FROM telemetry_events
-          WHERE ${whereSql} AND five_m_install_detected IS NOT NULL`,
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND five_m_install_detected IS NOT NULL`,
     params,
   };
 }
@@ -242,7 +290,7 @@ export function diskTypeBreakdown(filters) {
   return {
     sql: `SELECT disk_type, COUNT(*) AS runs
           FROM telemetry_events
-          WHERE ${whereSql} AND disk_type IS NOT NULL
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND disk_type IS NOT NULL
           GROUP BY disk_type
           ORDER BY runs DESC`,
     params,
@@ -255,7 +303,7 @@ export function averageOptimizationTargetCount(filters) {
   return {
     sql: `SELECT AVG(optimization_target_count) AS average_count, COUNT(*) AS runs
           FROM telemetry_events
-          WHERE ${whereSql} AND optimization_target_count IS NOT NULL`,
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND optimization_target_count IS NOT NULL`,
     params,
   };
 }
@@ -269,7 +317,7 @@ export function backupStats(filters) {
             SUM(CASE WHEN backup_restored = 1 THEN 1 ELSE 0 END) AS restored,
             COUNT(*) AS total
           FROM telemetry_events
-          WHERE ${whereSql} AND (backup_created IS NOT NULL OR backup_restored IS NOT NULL)`,
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND (backup_created IS NOT NULL OR backup_restored IS NOT NULL)`,
     params,
   };
 }
@@ -282,7 +330,7 @@ export function elevationUsageRate(filters) {
             SUM(CASE WHEN elevation_used = 1 THEN 1 ELSE 0 END) AS elevated,
             COUNT(*) AS total
           FROM telemetry_events
-          WHERE ${whereSql} AND elevation_used IS NOT NULL`,
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND elevation_used IS NOT NULL`,
     params,
   };
 }
@@ -293,7 +341,7 @@ export function windowsBuildBreakdown(filters) {
   return {
     sql: `SELECT windows_build, COUNT(*) AS runs
           FROM telemetry_events
-          WHERE ${whereSql} AND windows_build IS NOT NULL
+          WHERE ${whereSql} AND ${OPTIMIZATION_OUTCOMES} AND windows_build IS NOT NULL
           GROUP BY windows_build
           ORDER BY runs DESC
           LIMIT 10`,

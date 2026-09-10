@@ -355,6 +355,9 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         {
             await ShowPrivacyConsentIfNeededAsync();
             await ShowReleaseNotesIfNeededAsync();
+            InitializeCrashReportingIfAuthorized();
+            await FlushPendingTelemetryIfAnyAsync();
+            await TrackAppInitializedTelemetryIfAuthorizedAsync();
         }
         startupCompleted = true;
         RefreshLiveMetricsActivity();

@@ -620,13 +620,13 @@
   <data name="PrivacyConsent.Heading.Renewal" xml:space="preserve"><value>We updated our privacy policy</value></data>
   <data name="PrivacyConsent.Intro.FirstInstallation" xml:space="preserve"><value>Technical reports help us find bugs and improve Ralven. Essential diagnostics and optional reports are clearly separated below.</value></data>
   <data name="PrivacyConsent.Intro.Upgrade" xml:space="preserve"><value>We grouped anonymous usage telemetry and sanitized crash reports under one optional control. Review it before continuing.</value></data>
-  <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>We simplified the privacy controls without adding new data. Review the single optional choice below before continuing.</value></data>
+  <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>We updated stability diagnostics and optional reports. Review the single optional choice below before continuing.</value></data>
   <data name="PrivacyConsent.Essential.Title" xml:space="preserve"><value>Essential diagnostics</value></data>
-  <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>We collect the minimum needed for updates, security, stability and troubleshooting: app and Windows version, architecture, updater events and technical optimization outcomes. This cannot be turned off.</value></data>
+  <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>We collect the minimum needed for updates, security, stability and troubleshooting: app and Windows version, architecture, updater events, technical optimization outcomes and one daily healthy-start confirmation. This cannot be turned off.</value></data>
   <data name="PrivacyConsent.Essential.Summary" xml:space="preserve"><value>Required for updates, security, and stability.</value></data>
   <data name="PrivacyConsent.Essential.Status" xml:space="preserve"><value>ALWAYS ON</value></data>
   <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Optional reports</value></data>
-  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Shares anonymous hardware, profile and feature-use context plus sanitized error and crash reports. Enabled by default; you can turn it off at any time.</value></data>
+  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Shares anonymous hardware, profile, optimization-start and official benchmark outcomes plus sanitized error and crash reports. Enabled by default; you can turn it off at any time.</value></data>
   <data name="PrivacyConsent.PrivacyNote" xml:space="preserve"><value>Ralven does not include passwords, account details, personal files, full local paths or a unique machine identifier in these reports.</value></data>
   <data name="PrivacyConsent.CrashReports.Title" xml:space="preserve"><value>Send automatic error and crash reports</value></data>
   <data name="PrivacyConsent.CrashReports.Description" xml:space="preserve"><value>Sanitized stack traces and app version when Ralven crashes or hits an unexpected error.</value></data>

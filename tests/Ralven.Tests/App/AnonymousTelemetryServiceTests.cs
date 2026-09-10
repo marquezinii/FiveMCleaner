@@ -92,7 +92,8 @@ public sealed class AnonymousTelemetryEventPrivacyTests
             BackupCreated: true,
             BackupRestored: false,
             ElevationUsed: true,
-            ProcessCountAtStart: 2);
+            ProcessCountAtStart: 2,
+            OperationId: Guid.NewGuid());
 
         var filtered = original.WithoutOptionalData();
 
@@ -119,5 +120,6 @@ public sealed class AnonymousTelemetryEventPrivacyTests
         Assert.Null(filtered.BackupRestored);
         Assert.Null(filtered.ElevationUsed);
         Assert.Null(filtered.ProcessCountAtStart);
+        Assert.Null(filtered.OperationId);
     }
 }

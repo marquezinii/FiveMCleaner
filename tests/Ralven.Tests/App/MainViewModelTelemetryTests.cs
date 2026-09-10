@@ -184,7 +184,10 @@ public sealed class MainViewModelTelemetryTests
 
         public Task TrackAsync(AnonymousTelemetryEvent telemetryEvent, CancellationToken cancellationToken = default)
         {
-            captured.TrySetResult(telemetryEvent);
+            if (telemetryEvent.EventName != TelemetryEventNames.OptimizationStarted)
+            {
+                captured.TrySetResult(telemetryEvent);
+            }
             return Task.CompletedTask;
         }
 

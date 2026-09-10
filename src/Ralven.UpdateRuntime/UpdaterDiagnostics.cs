@@ -15,7 +15,7 @@ public sealed record UpdaterEvent(
 
 public sealed class UpdaterDiagnostics
 {
-    private const int MinimumEssentialDiagnosticsNoticeVersion = 8;
+    private const int MinimumEssentialDiagnosticsNoticeVersion = 9;
     private const string EnvironmentVariableName = "RALVEN_ENVIRONMENT";
 
     /// <summary>
