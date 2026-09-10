@@ -1353,6 +1353,29 @@
   <data name="Dashboard.LivePerformance.Trend" xml:space="preserve"><value>MEDIA Y PICO</value></data>
   <data name="Dashboard.LivePerformance.Window" xml:space="preserve"><value>Último minuto</value></data>
   <data name="Dashboard.LivePerformance.Now" xml:space="preserve"><value>ahora</value></data>
+  <data name="Dashboard.LivePerformance.FiveMDescription" xml:space="preserve"><value>Uso local de CPU y memoria de los procesos verificados de FiveM Legacy, sin hooks ni inyección.</value></data>
+  <data name="Dashboard.LivePerformance.Target.System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Dashboard.LivePerformance.Target.FiveM" xml:space="preserve"><value>FiveM</value></data>
+  <data name="Dashboard.LivePerformance.Target.FiveMHelp" xml:space="preserve"><value>Disponible cuando se detecta una instalación de FiveM Legacy.</value></data>
+  <data name="Dashboard.LivePerformance.Paused" xml:space="preserve"><value>EN PAUSA</value></data>
+  <data name="Dashboard.LivePerformance.PausedDetail" xml:space="preserve"><value>Actualización en pausa</value></data>
+  <data name="Dashboard.LivePerformance.UpdatedNow" xml:space="preserve"><value>Actualizado ahora</value></data>
+  <data name="Dashboard.LivePerformance.Ago60Seconds" xml:space="preserve"><value>hace 60 s</value></data>
+  <data name="Dashboard.LivePerformance.Current" xml:space="preserve"><value>ACTUAL</value></data>
+  <data name="Dashboard.LivePerformance.Average" xml:space="preserve"><value>MEDIA</value></data>
+  <data name="Dashboard.LivePerformance.Peak" xml:space="preserve"><value>PICO</value></data>
+  <data name="Dashboard.LivePerformance.ChartAutomation" xml:space="preserve"><value>Historial de {0}. Actual: {1}; media: {2}; pico: {3}.</value></data>
+  <data name="Dashboard.LivePerformance.TrendValueNetwork" xml:space="preserve"><value>media {0:0.0} MB/s · pico {1:0.0} MB/s</value></data>
+  <data name="Dashboard.LivePerformance.TrendValueGigabytes" xml:space="preserve"><value>media {0:0.0} GB · pico {1:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.GigabytesValue" xml:space="preserve"><value>{0:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.FiveMProcessCount" xml:space="preserve"><value>Procesos verificados: {0}</value></data>
+  <data name="Dashboard.LivePerformance.Status.Collecting" xml:space="preserve"><value>Recopilando muestras suficientes para una lectura sostenida.</value></data>
+  <data name="Dashboard.LivePerformance.Status.FiveMNotRunning" xml:space="preserve"><value>FiveM no está en ejecución.</value></data>
+  <data name="Dashboard.LivePerformance.Status.FiveMReadOnly" xml:space="preserve"><value>Medición local y de solo lectura de los procesos verificados de FiveM.</value></data>
+  <data name="Dashboard.LivePerformance.Status.MetricUnavailable" xml:space="preserve"><value>Este recurso no está disponible en Windows ahora.</value></data>
+  <data name="Dashboard.LivePerformance.Status.Network" xml:space="preserve"><value>La tasa de transferencia usa su propia escala dinámica.</value></data>
+  <data name="Dashboard.LivePerformance.Status.SustainedHigh" xml:space="preserve"><value>Uso elevado sostenido durante los últimos segundos.</value></data>
+  <data name="Dashboard.LivePerformance.Status.NoSustainedHigh" xml:space="preserve"><value>Sin uso elevado sostenido en las muestras más recientes.</value></data>
   <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>ÚLTIMA OPTIMIZACIÓN</value></data>
   <data name="Dashboard.LastRun.None.Title" xml:space="preserve"><value>Aún sin optimizaciones</value></data>
   <data name="Dashboard.LastRun.None.Detail" xml:space="preserve"><value>Ejecuta el optimizador para crear un punto de restauración y un informe que podrás consultar aquí.</value></data>

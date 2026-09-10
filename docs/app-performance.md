@@ -6,6 +6,20 @@ o timer e cancelam a captura em andamento. Reabrir obtém uma leitura nova;
 ativação repetida não dispara coletas extras. Uma captura cancelada não publica
 resultado nem indisponibilidade depois de uma retomada rápida.
 
+CPU, GPU, memória, disco e rede mantêm no máximo 60 amostras locais. Os cinco
+minigráficos e o gráfico selecionado só redesenham quando uma dessas amostras
+chega, a 1 Hz; não existe laço de animação. Percentuais permanecem na escala
+fixa de 0–100%. Rede e memória absoluta usam uma escala legível calculada a
+partir da janela atual, sempre acompanhada da unidade.
+
+O alvo FiveM fica disponível somente após detectar uma instalação Legacy. Ele
+substitui a coleta geral por uma enumeração local dos processos cuja imagem foi
+validada dentro dessa raiz e mostra apenas CPU e working set agregado. A primeira
+leitura de CPU estabelece a base; intervalos maiores que três segundos são
+descartados para que tempo em segundo plano não reapareça como uso atual. GPU,
+disco, rede, FPS e frame time por processo permanecem indisponíveis em vez de
+serem estimados.
+
 O monitor local de sessão continua opt-in e somente leitura, com a mesma
 cadência de cinco segundos e validações de identidade/caminho. Pausar as
 métricas não pausa esse monitor, nem operações explícitas de otimização,
@@ -104,3 +118,13 @@ sessão nessa amostra**. Zero CPU registrado reflete
 a resolução do contador nesse intervalo; não promete custo absoluto zero.
 O resultado sustenta redução de trabalho e alocações, sem promessa universal de
 memória mínima, FPS ou impacto em qualquer máquina.
+
+## Validação do painel seletivo em 09/09/2026
+
+O mesmo harness, após o painel ganhar seleção e minigráficos, aprovou as seis
+fases e a estabilidade da janela. Em 20 segundos, primeiro plano e retomada
+registraram 20 amostras; sem foco, minimizada e as duas fases de bandeja
+registraram zero. A fase de bandeja sem monitor alocou 0,003 MiB; com o monitor
+opt-in, 2,863 MiB. Primeiro plano consumiu 859,375 ms de CPU e alocou 34,706 MiB;
+na retomada foram 515,625 ms e 37,091 MiB. Esses valores descrevem uma execução
+local e comprovam a política de suspensão, não um limite universal de consumo.

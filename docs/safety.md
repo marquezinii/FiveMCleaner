@@ -304,6 +304,14 @@ altera FiveM, GTA V ou Windows. Sua existência não autoriza prioridade,
 afinidade, plano de energia, timer resolution ou qualquer outra mutação por
 sessão sem arquitetura própria de rollback e recuperação.
 
+O alvo FiveM do painel de desempenho é uma leitura separada e ainda mais
+restrita ao primeiro plano: só consulta tempo de CPU e working set que o Windows
+expõe para processos com imagem validada dentro da raiz Legacy diagnosticada.
+Ele pausa com a Visão geral, não lê o conteúdo da memória do processo e não
+autoriza hooks, injeção, overlay, telemetria, persistência ou qualquer mutação.
+Métricas por processo que não possam ser obtidas com esse contrato aparecem
+como indisponíveis.
+
 ### Encerramento de processo travado
 
 A ação opt-in `fivem.legacy.stuck-process.terminate`

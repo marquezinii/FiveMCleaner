@@ -13,12 +13,12 @@
       "id": "background-efficiency",
       "status": { "pt": "Em desenvolvimento", "en": "In development" },
       "title": {
-        "pt": "Coleta de métricas sob demanda",
-        "en": "On-demand resource monitoring"
+        "pt": "Painel de recursos sob demanda",
+        "en": "On-demand resource dashboard"
       },
       "description": {
-        "pt": "As métricas ao vivo pausam quando a janela perde o foco, é minimizada ou vai para a bandeja, e retomam ao voltar à Visão geral. O monitor local de sessão continua funcionando quando ativado.",
-        "en": "Live metrics pause when the window loses focus, is minimized or moves to the tray, and resume when returning to Overview. The local session monitor keeps running when enabled."
+        "pt": "O painel ao vivo ganha métricas selecionáveis, escala e resumo por recurso, além de CPU e memória locais dos processos verificados do FiveM Legacy. A coleta visual continua pausando fora do primeiro plano.",
+        "en": "The live dashboard adds selectable metrics, per-resource scales and summaries, plus local CPU and memory readings from verified FiveM Legacy processes. Visual collection still pauses outside the foreground."
       }
     },
     {
