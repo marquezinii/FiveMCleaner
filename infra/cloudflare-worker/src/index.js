@@ -109,6 +109,17 @@ const STATS_BUILDERS = {
   'top-cpu': queries.topCpuModels,
   'top-gpu': queries.topGpuModels,
   'ram-buckets': queries.ramBucketBreakdown,
+  'outcomes': queries.optimizationOutcomeBreakdown,
+  'profiles': queries.profileBreakdown,
+  'actions': queries.actionUsage,
+  'reliability-by-version': queries.reliabilityByVersion,
+  'account-summary': queries.accountSummary,
+  'accounts-per-day': queries.accountsPerDay,
+  'ai-summary': queries.aiUsageSummary,
+  'ai-per-day': queries.aiUsagePerDay,
+  'billing-subscriptions': queries.billingSubscriptionBreakdown,
+  'billing-payments': queries.billingPaymentSummary,
+  'updater-summary': queries.updaterSummary,
 };
 
 // Every route below answers with a JSON body -- this is the one shared shape

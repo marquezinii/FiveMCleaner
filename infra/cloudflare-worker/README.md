@@ -61,12 +61,14 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
   Sales are disabled by default until provider sandbox validation. See
   [`docs/billing.md`](../../docs/billing.md).
 - `src/stats/` — `queries.js` (pure SQL+params builders, one per dashboard
-  chart) and `csv.js` (pure CSV serialization for the export feature).
-  Available `:name` values: `runs-per-day`, `os-versions`, `app-versions`,
-  `top-cpu`, `top-gpu`, `ram-buckets`, `average-time`, `success-rate`,
-  `error-categories`, `errors-by-version`, `recent-failures`. Every
-  one accepts `?from=&to=&version=&environment=` query filters (`environment`
-  defaults to `Production`; pass `All` to look across both).
+  metric) and `csv.js` (pure CSV serialization for exports). In addition to
+  optimization, version, hardware and failure statistics, protected aggregate
+  metrics cover account growth, action/profile adoption, reliability by
+  release, updater outcomes, Ralven AI volume/cost and billing health. Account,
+  AI and billing queries never select user/profile/provider identifiers or
+  interactive content. Telemetry/updater metrics accept
+  `?from=&to=&version=&environment=`; account, AI and payment metrics use the
+  same period while ignoring filters that do not apply to their domain.
 - `test/` — unit tests for everything pure-logic above, run with Node's
   built-in test runner (no Miniflare/wrangler required):
 
