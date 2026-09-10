@@ -304,10 +304,9 @@ export async function verifyFirebaseIdToken(token, options = {}) {
     throw new Error('expired');
   }
 
-  if (typeof payload.iat === 'number' && Number.isFinite(payload.iat)) {
-    if (payload.iat > nowSeconds + skewSeconds) {
-      throw new Error('bad-iat');
-    }
+  if (typeof payload.iat !== 'number' || !Number.isFinite(payload.iat)
+    || payload.iat > nowSeconds + skewSeconds) {
+    throw new Error('bad-iat');
   }
 
   if (typeof payload.sub !== 'string' || payload.sub.length === 0 || payload.sub.length > 128) {
@@ -322,7 +321,7 @@ export async function verifyFirebaseIdToken(token, options = {}) {
  *
  * @param {Request} request
  * @param {Parameters<typeof verifyFirebaseIdToken>[1]} [options]
- * @returns {Promise<{ authorized: true, uid: string, emailVerified: boolean, email: string | null } | { authorized: false, response: Response }>}
+ * @returns {Promise<{ authorized: true, uid: string, emailVerified: boolean, email: string | null, issuedAt: number, authTime: number | null } | { authorized: false, response: Response }>}
  */
 export async function requireFirebaseUser(request, options = {}) {
   const header = request.headers.get('Authorization');
@@ -339,7 +338,16 @@ export async function requireFirebaseUser(request, options = {}) {
     const { uid, payload } = await verifyFirebaseIdToken(match[1], options);
     const email = payload.email_verified === true && typeof payload.email === 'string'
       && payload.email.length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(payload.email) ? payload.email : null;
-    return { authorized: true, uid, emailVerified: payload.email_verified === true, email };
+    return {
+      authorized: true,
+      uid,
+      emailVerified: payload.email_verified === true,
+      email,
+      issuedAt: payload.iat,
+      authTime: typeof payload.auth_time === 'number' && Number.isFinite(payload.auth_time)
+        ? payload.auth_time
+        : null,
+    };
   } catch {
     return { authorized: false, response: unauthorizedResponse() };
   }

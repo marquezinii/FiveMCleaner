@@ -77,6 +77,18 @@
         "pt": "A aba Aplicativos simplifica instalar, atualizar e desinstalar pacotes das fontes confiáveis. Configurações passa a mostrar e limpar somente o cache descartável do Ralven, preservando login, preferências e rollback. Relatos de erro e o painel operacional ganham contexto para acelerar a investigação.",
         "en": "The Applications tab simplifies installing, updating and removing packages from trusted sources. Settings now reports and clears only Ralven's disposable cache while preserving sign-in, preferences, and rollback data. Error reports and the operational dashboard gain context to speed investigation."
       }
+    },
+    {
+      "id": "account-security",
+      "status": { "pt": "Em desenvolvimento", "en": "In development" },
+      "title": {
+        "pt": "Conta e acesso mais seguros",
+        "en": "Safer accounts and access"
+      },
+      "description": {
+        "pt": "Senha e Google podem ser vinculados com reautenticação, mudanças sensíveis ganham validação consistente e a conta passa a oferecer autenticação de dois fatores TOTP com códigos de recuperação de uso único.",
+        "en": "Password and Google can be linked with reauthentication, sensitive changes gain consistent validation, and accounts add TOTP two-factor authentication with single-use recovery codes."
+      }
     }
   ]
 }

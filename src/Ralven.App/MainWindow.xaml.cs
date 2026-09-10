@@ -45,6 +45,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private RalvenAiPage? ralvenAiPage;
     private readonly IFirebaseAuthService? accountService;
     private readonly IAccountProfileService profileService;
+    private readonly IAccountSecurityService accountSecurityService;
     private readonly CloudflareAccountEntitlementService? entitlementService;
     private readonly RalvenAiService? ralvenAiService;
     private readonly IGoogleOAuthClient googleOAuth;
@@ -80,6 +81,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         if (TryCreateHttpsEndpoint(remoteServicesOptions.AccountProfileEndpoint, out var profileEndpoint))
         {
             profileService = new CloudflareAccountProfileService(profileEndpoint);
+            accountSecurityService = new CloudflareAccountSecurityService(profileEndpoint);
             entitlementService = new CloudflareAccountEntitlementService(profileEndpoint);
             billingService = new CloudflareBillingService(profileEndpoint);
             ralvenAiService = new RalvenAiService(profileEndpoint);
@@ -87,6 +89,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         else
         {
             profileService = new DisabledAccountProfileService();
+            accountSecurityService = new DisabledAccountSecurityService();
             entitlementService = null;
             billingService = null;
             ralvenAiService = null;

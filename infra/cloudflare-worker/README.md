@@ -136,7 +136,7 @@ is called out rather than assumed harmless.
 
 The desktop application uses Firebase Authentication directly through its
 official REST API. This Worker does not receive account passwords or refresh
-tokens. Future account-specific routes must accept a Firebase ID token over
+tokens. Authenticated account-specific routes accept a Firebase ID token over
 HTTPS as `Authorization: Bearer <idToken>`, verify it with
 `src/auth/firebaseIdToken.js` (`requireFirebaseUser` /
 `verifyFirebaseIdToken`), and use only the Firebase UID (`sub`) as the
@@ -146,19 +146,61 @@ Verification is fail-closed: RS256 only, Google JWKS
 (`securetoken@system.gserviceaccount.com`), required claims
 `aud = fivemcleaner-app`,
 `iss = https://securetoken.google.com/fivemcleaner-app`, unexpired `exp`, and
-non-empty `sub`. Invalid tokens produce a generic HTTP 401
+required `iat` and non-empty `sub`. Invalid tokens produce a generic HTTP 401
 `{ "error": "unauthorized" }` with no claim detail. The pure verifier is unit
 tested.
 
-`POST /account/profile` is the first route built on it: Firebase manages
+All authenticated `/account/*` routes share a required, fail-closed
+`ACCOUNT_ROUTE_LIMITER` bucket keyed by verified UID. They also consult
+`account_auth_cutoffs`, including `/ai/message`, so recovery and deletion close
+the otherwise valid offline ID-token window. Critical mutations require
+`auth_time` within five minutes. The Worker also compares every account token's
+`iat` with Firebase `validSince`, rejecting disabled users and sessions revoked
+by password or other credential changes.
+
+`POST /account/profile` is built on it: Firebase manages
 email/password/uid only, so this route stores the fields it doesn't —
 username (globally unique, case-insensitive), first name, last name and the
 accepted current terms version — in `account_profiles`, keyed by the verified
 Firebase UID. It accepts only an `email_verified=true` token. A username
 conflict returns `409 { "error": "username-taken" }`; the client is expected
 to let the user pick another one without discarding the Firebase account
-already created. `DELETE /account/profile` removes only that same verified
-UID's row as part of account deletion. See `src/auth/accountProfile.js`.
+already created. `DELETE /account` checks the billing block, persists a cutoff
+and durable deletion job, deletes Firebase through the administrative API, and
+only then removes the D1 profile and cascading account data. A scheduled retry
+resumes an interrupted deletion every 15 minutes; the cutoff and job do not
+cascade with the profile. The old `DELETE /account/profile` returns 410 and can
+no longer create split state. See `src/auth/accountProfile.js`.
+
+TOTP recovery uses three endpoints:
+
+- `POST /account/mfa/recovery-codes` with `{ "mfaEnrollmentId": "..." }`
+  requires recent authentication, verifies enrollment ownership, atomically
+  replaces prior codes and returns ten plaintext codes once. D1 stores only
+  keyed SHA-256 HMACs.
+- `DELETE /account/mfa/recovery-codes` with the same body idempotently removes
+  that generation after normal MFA withdrawal.
+- `POST /account/mfa/recover` accepts `mfaPendingCredential`,
+  `mfaEnrollmentId` and `recoveryCode`. It first proves that Firebase accepts
+  the pending/enrollment pair as a TOTP challenge, reserves the code, removes
+  MFA and revokes refresh tokens administratively, then consumes the code.
+  Any Firebase token from the deliberately invalid probe is verified internally
+  and never returned.
+
+Recovery uses the required, fail-closed `ACCOUNT_RECOVERY_LIMITER`, keyed by an
+HMAC of the stable enrollment and caller IP, so requesting new pending
+credentials does not reset the attempt budget. No password, pending credential,
+Firebase token, raw enrollment ID or plaintext recovery code is persisted or logged. Apply
+migrations through `0013_account_mfa_recovery.sql` and configure a service
+account limited to `firebaseauth.users.get`, `firebaseauth.users.update` and
+`firebaseauth.users.delete`:
+
+```bash
+wrangler secret put FIREBASE_WEB_API_KEY
+wrangler secret put FIREBASE_ADMIN_CLIENT_EMAIL
+wrangler secret put FIREBASE_ADMIN_PRIVATE_KEY
+wrangler secret put MFA_RECOVERY_CODE_HMAC_SECRET
+```
 
 `GET /account/username-available?u=<name>` answers `{ "available": true|false }`
 for the registration form, so a taken name is reported while the user types
@@ -281,6 +323,10 @@ wrangler secret put IP_HASH_SECRET   # any long random string
 wrangler secret put ADMIN_CSRF_SECRET # distinct long random string
 wrangler secret put ASAAS_ACCESS_TOKEN
 wrangler secret put ASAAS_WEBHOOK_TOKEN
+wrangler secret put FIREBASE_WEB_API_KEY
+wrangler secret put FIREBASE_ADMIN_CLIENT_EMAIL
+wrangler secret put FIREBASE_ADMIN_PRIVATE_KEY
+wrangler secret put MFA_RECOVERY_CODE_HMAC_SECRET
 
 wrangler d1 migrations apply TELEMETRY_DB --remote   # captures a D1 backup; touches the real database — ask first
 wrangler deploy   # touches Cloudflare — ask first

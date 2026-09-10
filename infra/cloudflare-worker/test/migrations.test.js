@@ -23,7 +23,10 @@ test('production config keeps the existing Cloudflare resource identifiers', asy
   assert.match(config, /^database_name = "fivemcleaner-telemetry"\r?$/m);
   assert.match(config, /^database_id = "fe276121-a71a-4ba4-ab62-81cccdf601c6"\r?$/m);
   assert.match(config, /^RALVEN_AI_ENABLED = "false"\r?$/m);
-  assert.doesNotMatch(config, /^(?:OPENAI_API_KEY|RALVEN_AI_SAFETY_IDENTIFIER_SECRET)\s*=/m);
+  assert.match(config, /^name = "ACCOUNT_ROUTE_LIMITER"\r?$/m);
+  assert.match(config, /^name = "ACCOUNT_RECOVERY_LIMITER"\r?$/m);
+  assert.doesNotMatch(config,
+    /^(?:OPENAI_API_KEY|RALVEN_AI_SAFETY_IDENTIFIER_SECRET|FIREBASE_WEB_API_KEY|FIREBASE_ADMIN_CLIENT_EMAIL|FIREBASE_ADMIN_PRIVATE_KEY|MFA_RECOVERY_CODE_HMAC_SECRET)\s*=/m);
 });
 
 function run(args, { expectSuccess = true } = {}) {
@@ -252,7 +255,7 @@ test('AI foundation backfills only payment-backed Pro access', async (t) => {
        '2026-01-01T00:01:00.000Z', '2026-01-01T00:01:00.000Z');
   `);
 
-  const currentConfig = await createFixture(root, 'current', migrationNames);
+  const currentConfig = await createFixture(root, 'current', migrationNames.slice(0, aiFoundationMigrationIndex + 1));
   apply(currentConfig, stateDirectory);
   const result = execute(currentConfig, stateDirectory, `
     SELECT account_uid, entitlement_key FROM account_entitlements
@@ -396,6 +399,46 @@ test('billing migration enforces ownership, deduplicates events, and cascades ac
     entitlement_count: 0,
     webhook_count: 2,
   }]);
+});
+
+test('MFA recovery migration removes recovery codes but preserves revocation and deletion jobs', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'Ralven-d1-mfa-recovery-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+
+  const stateDirectory = join(root, 'state');
+  const config = await createFixture(root, 'current', migrationNames);
+  apply(config, stateDirectory);
+  const result = execute(config, stateDirectory, `
+    INSERT INTO account_profiles
+      (uid, username, username_normalized, first_name, last_name, terms_version, terms_accepted_at, created_at)
+    VALUES ('mfa-user', 'MfaUser', 'mfauser', 'Mfa', 'User', 'v1',
+      '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
+    INSERT INTO account_mfa_recovery_codes
+      (account_uid, enrollment_tag, code_hash, generation_id, created_at)
+    VALUES ('mfa-user', '${'a'.repeat(64)}', '${'b'.repeat(64)}',
+      '00000000-0000-4000-8000-000000000000', '2026-01-01T00:00:00.000Z');
+    INSERT INTO account_auth_cutoffs (account_uid, valid_after, updated_at)
+    VALUES ('mfa-user', 100, '2026-01-01T00:00:00.000Z');
+    INSERT INTO account_deletion_jobs (account_uid, requested_at)
+    VALUES ('mfa-user', '2026-01-01T00:00:00.000Z');
+    DELETE FROM account_profiles WHERE uid = 'mfa-user';
+    SELECT
+      (SELECT COUNT(*) FROM account_mfa_recovery_codes) AS recovery_count,
+      (SELECT COUNT(*) FROM account_auth_cutoffs) AS cutoff_count,
+      (SELECT COUNT(*) FROM account_deletion_jobs) AS deletion_job_count;
+  `);
+  assert.deepEqual(result.at(-1).results, [{ recovery_count: 0, cutoff_count: 1, deletion_job_count: 1 }]);
+
+  execute(config, stateDirectory, `
+    INSERT INTO account_profiles
+      (uid, username, username_normalized, first_name, last_name, terms_version, terms_accepted_at, created_at)
+    VALUES ('mfa-user-2', 'MfaUser2', 'mfauser2', 'Mfa', 'User', 'v1',
+      '2026-01-01T00:00:00.000Z', '2026-01-01T00:00:00.000Z');
+    INSERT INTO account_mfa_recovery_codes
+      (account_uid, enrollment_tag, code_hash, generation_id, created_at)
+    VALUES ('mfa-user-2', 'short', '${'b'.repeat(64)}',
+      '00000000-0000-4000-8000-000000000000', '2026-01-01T00:00:00.000Z');
+  `, false);
 });
 
 test('a failed D1 migration is atomic and is not recorded as applied', async (t) => {

@@ -147,6 +147,41 @@ CREATE TABLE IF NOT EXISTS account_profiles (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_account_profiles_username_normalized
     ON account_profiles (username_normalized);
 
+-- One-time TOTP recovery material. Enrollment identifiers and codes are
+-- represented only by keyed SHA-256 HMACs; plaintext codes leave the Worker
+-- once, in the generation response. Reservations serialize concurrent use
+-- without consuming a code before the Firebase administrator operation wins.
+CREATE TABLE IF NOT EXISTS account_mfa_recovery_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_uid TEXT NOT NULL REFERENCES account_profiles(uid) ON DELETE CASCADE,
+    enrollment_tag TEXT NOT NULL CHECK(length(enrollment_tag) = 64),
+    code_hash TEXT NOT NULL CHECK(length(code_hash) = 64),
+    generation_id TEXT NOT NULL CHECK(length(generation_id) = 36),
+    created_at TEXT NOT NULL,
+    reserved_until TEXT,
+    used_at TEXT,
+    UNIQUE(enrollment_tag, code_hash),
+    CHECK(used_at IS NULL OR reserved_until IS NULL)
+);
+
+CREATE INDEX IF NOT EXISTS idx_account_mfa_recovery_lookup
+    ON account_mfa_recovery_codes(enrollment_tag, code_hash, used_at);
+
+-- Local revocation cutoff closes the normal one-hour offline JWT window after
+-- recovery. Firebase validSince separately revokes refresh tokens.
+CREATE TABLE IF NOT EXISTS account_auth_cutoffs (
+    account_uid TEXT PRIMARY KEY,
+    valid_after INTEGER NOT NULL CHECK(valid_after > 0),
+    updated_at TEXT NOT NULL
+);
+
+-- Durable outbox for deletion retries. It intentionally has no profile FK:
+-- the identity may already be gone when D1 cleanup resumes.
+CREATE TABLE IF NOT EXISTS account_deletion_jobs (
+    account_uid TEXT PRIMARY KEY,
+    requested_at TEXT NOT NULL
+);
+
 -- Billing state is keyed only by the Firebase UID already verified by the
 -- Worker. Provider references are opaque identifiers; no email, checkout URL,
 -- webhook body, credential, or secret is persisted here.

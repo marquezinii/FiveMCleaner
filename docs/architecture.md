@@ -132,12 +132,22 @@ use o Firebase UID como identificador interno. No Worker, a verificação fica e
 `aud`/`iss`/`exp`/`sub`). Com `emailVerified=false`, o estado é
 `EmailVerificationRequired` e recursos autenticados ficam bloqueados.
 
-O estado carregado pelo `accounts:lookup` também identifica se o provedor
-`password` está vinculado. Contas criadas por e-mail redefinem a senha somente
-depois de reautenticar com a senha atual; contas criadas apenas pelo Google
-confirmam novamente a mesma identidade Google e então vinculam a primeira senha
-com `accounts:update`. Um token Google de outro UID é rejeitado antes de substituir
-a sessão local.
+O estado carregado pelo `accounts:lookup` identifica os provedores vinculados e
+os fatores MFA. Senha, Google e TOTP são tratados como capacidades independentes
+da mesma UID: vinculação, desvinculação e mudanças sensíveis exigem
+reautenticação; a última forma de acesso não pode ser removida. A primeira senha
+é vinculada por `accounts:signUp` com o ID token atual, preservando a proteção
+contra enumeração do Identity Platform. Troca de e-mail usa verificação prévia do
+novo endereço (`VERIFY_AND_CHANGE_EMAIL`). Um token Google de outro UID é
+rejeitado antes de substituir a sessão local.
+
+TOTP usa os endpoints MFA nativos do Identity Platform. O segredo só aparece
+durante a ativação, que apenas termina após um código válido. O login entra em
+`MfaChallengeRequired` até confirmar o segundo fator. Códigos de recuperação são
+aleatórios, armazenados apenas como hash no Worker, exibidos uma única vez e
+consumidos atomicamente; seu uso remove o fator perdido e revoga refresh tokens,
+obrigando novo login. Criar, substituir ou apagar esses códigos exige token com
+autenticação recente.
 
 `POST /account/profile` é a primeira rota de produto sobre esse verificador:
 como o Firebase só administra e-mail/senha/uid, essa rota guarda o que ele
@@ -150,9 +160,11 @@ existirem, a conta fica em `ProfileCompletionRequired`, não em `SignedIn`.
 da confirmação de e-mail; se o usuário escolhido já existir, a resposta é
 `409 username-taken` e a conta Firebase já criada é preservada — a janela de
 conta pede outro nome de usuário em vez de descartar o cadastro. A exclusão
-remove primeiro o perfil pelo UID autenticado e só então a conta Firebase;
-se o Firebase recusar a exclusão, o perfil é restaurado antes de informar a
-falha.
+autenticada é coordenada pelo Worker: bloqueia assinaturas que exigem
+cancelamento, grava cutoff e job durável, remove a conta Firebase e só depois os
+dados em D1. Um agendamento retoma jobs interrompidos sem permitir que tokens
+anteriores recriem dados; assim, uma falha de identidade não deixa uma conta
+ativa sem seus dados associados.
 
 ## Cobrança e entitlements
 

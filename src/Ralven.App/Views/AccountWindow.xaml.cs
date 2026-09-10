@@ -21,6 +21,7 @@ public partial class AccountWindow : Ralven.App.Controls.DialogWindow
     private readonly IFirebaseAuthService accounts;
     private readonly IAccountProfileService profiles;
     private readonly IGoogleOAuthClient googleOAuth;
+    private readonly IAccountSecurityService? accountSecurity;
     private readonly ILocalizationService localization;
     private bool registering;
 
@@ -37,16 +38,20 @@ public partial class AccountWindow : Ralven.App.Controls.DialogWindow
     /// anything or losing the account. See <see cref="SaveProfileAsync"/>.
     /// </summary>
     private bool requiresProfileSetup;
+    private FirebaseMfaChallenge? pendingMfaChallenge;
+    private bool pendingMfaKeepSignedIn;
 
     public AccountWindow(
         IFirebaseAuthService accounts,
         IAccountProfileService profiles,
         IGoogleOAuthClient googleOAuth,
-        ILocalizationService? localization = null)
+        ILocalizationService? localization = null,
+        IAccountSecurityService? accountSecurity = null)
     {
         this.accounts = accounts;
         this.profiles = profiles;
         this.googleOAuth = googleOAuth;
+        this.accountSecurity = accountSecurity;
         this.localization = localization ?? LocalizationService.Current;
         InitializeComponent();
         accounts.StateChanged += Accounts_StateChanged;
@@ -126,12 +131,13 @@ public partial class AccountWindow : Ralven.App.Controls.DialogWindow
         }
 
         var verification = state.State == AuthenticationState.EmailVerificationRequired;
+        var mfaChallenge = state.State == AuthenticationState.MfaChallengeRequired;
         var profileUnavailable = state.State == AuthenticationState.ProfileUnavailable;
         var hasUser = state.User is not null;
         var showRegistrationExtras = registering && !requiresProfileSetup;
         var collectingCredentials = !profileUnavailable && (!hasUser || requiresProfileSetup);
 
-        AuthenticationPanel.Visibility = Show(collectingCredentials);
+        AuthenticationPanel.Visibility = Show(collectingCredentials && !mfaChallenge);
         ProfileFieldsPanel.Visibility = Show(registering || requiresProfileSetup);
         CredentialFieldsPanel.Visibility = Show(!requiresProfileSetup);
         CredentialsSectionLabel.Visibility = ConfirmPanel.Visibility = PasswordPolicyPanel.Visibility = Show(showRegistrationExtras);
@@ -141,12 +147,13 @@ public partial class AccountWindow : Ralven.App.Controls.DialogWindow
         // Once Firebase has authenticated someone -- including the Google
         // user still choosing a username -- offering it again would just
         // restart a flow that already succeeded.
-        ProviderPanel.Visibility = Show(!hasUser && googleOAuth.IsConfigured);
+        ProviderPanel.Visibility = Show(!hasUser && !mfaChallenge && googleOAuth.IsConfigured);
 
         VerificationPanel.Visibility = Show(verification && !requiresProfileSetup);
-        LogoutButton.Visibility = Show(hasUser);
-        SubmitButton.Visibility = Show(collectingCredentials || profileUnavailable);
-        SwitchButton.Visibility = Show(!hasUser && !requiresProfileSetup);
+        MfaPanel.Visibility = Show(mfaChallenge);
+        LogoutButton.Visibility = Show(hasUser || mfaChallenge);
+        SubmitButton.Visibility = Show((collectingCredentials || profileUnavailable) && !mfaChallenge);
+        SwitchButton.Visibility = Show(!hasUser && !requiresProfileSetup && !mfaChallenge);
 
         SubmitButton.Content = profileUnavailable
             ? T("Common.Retry")
@@ -154,7 +161,14 @@ public partial class AccountWindow : Ralven.App.Controls.DialogWindow
                 ? T("Account.Actions.FinishRegistration")
                 : registering ? T("Account.Actions.CreateAccount") : T("Account.Actions.SignIn");
 
-        if (profileUnavailable)
+        if (mfaChallenge)
+        {
+            TitleText.Text = T("Account.Mfa.Challenge.Title");
+            SubtitleText.Text = T("Account.Mfa.Challenge.Subtitle");
+            ResetPasswordButton.Visibility = Visibility.Collapsed;
+            MfaCodeBox.Focus();
+        }
+        else if (profileUnavailable)
         {
             TitleText.Text = T("Account.ProfileUnavailable.Title");
             SubtitleText.Text = T("Account.ProfileUnavailable.Description");
@@ -280,6 +294,11 @@ public partial class AccountWindow : Ralven.App.Controls.DialogWindow
         }
 
         var result = await RunAsync(() => accounts.SignInAsync(EmailBox.Text.Trim(), PasswordField.Password, KeepSignedInBox.IsChecked == true));
+        CaptureMfaChallenge(result, KeepSignedInBox.IsChecked == true);
+        if (result.State == AuthenticationState.MfaChallengeRequired)
+        {
+            return;
+        }
 
         // Firebase deliberately does not tell us whether it was the e-mail or
         // the password that was wrong (that would let anyone probe which
@@ -407,6 +426,11 @@ public partial class AccountWindow : Ralven.App.Controls.DialogWindow
             if (ticket.IdToken is null) { Status(ticket.Error ?? T("Account.Google.Failed"), true); return; }
 
             var federated = await accounts.SignInWithGoogleAsync(ticket.IdToken, KeepSignedInBox.IsChecked == true);
+            CaptureMfaChallenge(federated.Result, KeepSignedInBox.IsChecked == true);
+            if (federated.Result.State == AuthenticationState.MfaChallengeRequired)
+            {
+                return;
+            }
             if (!federated.Result.Succeeded)
             {
                 Status(FriendlyAccountError(federated.Result.Error) ?? T("Account.Google.Failed"), true);
@@ -606,12 +630,104 @@ public partial class AccountWindow : Ralven.App.Controls.DialogWindow
     private async void RefreshVerification_Click(object sender, RoutedEventArgs e) =>
         await RunAsync(() => accounts.RefreshEmailVerificationAsync());
 
+    private void CaptureMfaChallenge(FirebaseAuthResult result, bool keepSignedIn)
+    {
+        if (result.State != AuthenticationState.MfaChallengeRequired || result.MfaChallenge is null)
+        {
+            return;
+        }
+
+        pendingMfaChallenge = result.MfaChallenge;
+        pendingMfaKeepSignedIn = keepSignedIn;
+        Render(accounts.Current);
+    }
+
+    private async void VerifyMfa_Click(object sender, RoutedEventArgs e)
+    {
+        var enrollment = pendingMfaChallenge?.Enrollments.FirstOrDefault(factor =>
+            factor.FactorType == FirebaseMfaFactorType.Totp);
+        var code = MfaCodeBox.Text.Trim();
+        if (enrollment is null)
+        {
+            Status(T("Account.Mfa.UnsupportedFactor"), true);
+            return;
+        }
+        if (code.Length != 6 || !code.All(char.IsAsciiDigit))
+        {
+            Reject(T("Account.Mfa.InvalidCode"), MfaCodeBox);
+            return;
+        }
+
+        var result = await RunAsync(() => accounts.CompleteMfaSignInAsync(
+            enrollment.Id,
+            code,
+            pendingMfaKeepSignedIn));
+        if (result.Succeeded)
+        {
+            pendingMfaChallenge = null;
+            MfaCodeBox.Clear();
+            RecoveryCodeBox.Clear();
+        }
+    }
+
+    private void ShowRecoveryCode_Click(object sender, RoutedEventArgs e)
+    {
+        RecoveryCodePanel.Visibility = Visibility.Visible;
+        ShowRecoveryCodeButton.Visibility = Visibility.Collapsed;
+        RecoveryCodeBox.Focus();
+    }
+
+    private async void RecoverMfa_Click(object sender, RoutedEventArgs e)
+    {
+        var enrollment = pendingMfaChallenge?.Enrollments.FirstOrDefault(factor =>
+            factor.FactorType == FirebaseMfaFactorType.Totp);
+        if (accountSecurity is null || enrollment is null || string.IsNullOrWhiteSpace(pendingMfaChallenge?.PendingCredential))
+        {
+            Status(T("Account.Mfa.RecoveryUnavailable"), true);
+            return;
+        }
+
+        var recoveryCode = RecoveryCodeBox.Text.Trim();
+        if (recoveryCode.Length < 8)
+        {
+            Reject(T("Account.Mfa.InvalidRecoveryCode"), RecoveryCodeBox);
+            return;
+        }
+
+        SetBusy(true);
+        try
+        {
+            var recovered = await accountSecurity.RecoverAsync(
+                pendingMfaChallenge.PendingCredential,
+                enrollment.Id,
+                recoveryCode);
+            if (!recovered.Succeeded)
+            {
+                Status(RecoveryError(recovered.Outcome), true);
+                return;
+            }
+
+            await accounts.LogoutAsync();
+            pendingMfaChallenge = null;
+            MfaCodeBox.Clear();
+            RecoveryCodeBox.Clear();
+            PasswordField.Clear();
+            Status(T("Account.Mfa.Recovered"), false);
+            Render(accounts.Current);
+        }
+        finally
+        {
+            SetBusy(false);
+        }
+    }
+
     private async void Logout_Click(object sender, RoutedEventArgs e)
     {
         SetBusy(true);
         try
         {
             await accounts.LogoutAsync();
+            pendingMfaChallenge = null;
             CloseAfterSignIn();
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
@@ -652,6 +768,9 @@ public partial class AccountWindow : Ralven.App.Controls.DialogWindow
         SubmitButton.IsEnabled = SwitchButton.IsEnabled = GoogleButton.IsEnabled = LogoutButton.IsEnabled = !busy;
         ResendVerificationButton.IsEnabled = !busy;
         RefreshVerificationButton.IsEnabled = !busy;
+        VerifyMfaButton.IsEnabled = !busy;
+        RecoverMfaButton.IsEnabled = !busy;
+        ShowRecoveryCodeButton.IsEnabled = !busy;
         Cursor = busy ? System.Windows.Input.Cursors.Wait : null;
     }
 
@@ -665,6 +784,15 @@ public partial class AccountWindow : Ralven.App.Controls.DialogWindow
     {
         FirebaseAuthService.ProfileUnavailableError => T("Account.ProfileUnavailable.Description"),
         _ => error,
+    };
+
+    private string RecoveryError(AccountRecoveryOutcome outcome) => outcome switch
+    {
+        AccountRecoveryOutcome.InvalidInput => T("Account.Mfa.InvalidRecoveryCode"),
+        AccountRecoveryOutcome.InvalidOrUsedCode => T("Account.Mfa.InvalidRecoveryCode"),
+        AccountRecoveryOutcome.RateLimited => T("Account.Error.TooManyAttempts"),
+        AccountRecoveryOutcome.ReauthenticationRequired => T("Account.Error.ReauthenticationRequired"),
+        _ => T("Account.Mfa.RecoveryUnavailable"),
     };
 
     private void ClearStatus() => StatusPanel.Visibility = Visibility.Collapsed;

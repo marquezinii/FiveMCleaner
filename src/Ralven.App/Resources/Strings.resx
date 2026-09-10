@@ -1861,6 +1861,67 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Personal.Export.Failed" xml:space="preserve"><value>Could not export the history. Check the selected location and try again.</value></data>
   <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>You enter the payer information on the secure Asaas page. Ralven stores billing references, amounts, statuses and dates; never card details. Any completed refund, including a partial refund, removes access for the related paid period.</value></data>
   <data name="RalvenAi.Logo.Animate" xml:space="preserve"><value>Animate Ralven AI logo</value></data>
+  <data name="Common.Close" xml:space="preserve"><value>Close</value></data>
+  <data name="Account.Mfa.Challenge.Title" xml:space="preserve"><value>Confirm the second step</value></data>
+  <data name="Account.Verification.SendFailed" xml:space="preserve"><value>Your account was created, but the verification message could not be sent. Use Resend email to try again.</value></data>
+  <data name="Account.Error.ProviderConflict" xml:space="preserve"><value>This email already belongs to an account using another sign-in method. Sign in to that account first, then link Google in Settings.</value></data>
+  <data name="Account.Error.GoogleAlreadyLinkedElsewhere" xml:space="preserve"><value>This Google account is already linked to another Ralven account.</value></data>
+  <data name="Account.Mfa.Challenge.Subtitle" xml:space="preserve"><value>Your password or Google account was confirmed. Enter the code from your authenticator app.</value></data>
+  <data name="Account.Mfa.Challenge.Description" xml:space="preserve"><value>Open your authenticator app and enter the current 6-digit code.</value></data>
+  <data name="Account.Mfa.CodeLabel" xml:space="preserve"><value>Authenticator code</value></data>
+  <data name="Account.Mfa.Verify" xml:space="preserve"><value>Verify and sign in</value></data>
+  <data name="Account.Mfa.UseRecoveryCode" xml:space="preserve"><value>I cannot access my authenticator</value></data>
+  <data name="Account.Mfa.RecoveryCodeLabel" xml:space="preserve"><value>Recovery code</value></data>
+  <data name="Account.Mfa.Recover" xml:space="preserve"><value>Recover access</value></data>
+  <data name="Account.Mfa.UnsupportedFactor" xml:space="preserve"><value>This account uses a second factor that this Ralven version does not support.</value></data>
+  <data name="Account.Mfa.InvalidCode" xml:space="preserve"><value>Enter a valid 6-digit code.</value></data>
+  <data name="Account.Mfa.ChallengeExpired" xml:space="preserve"><value>This confirmation expired. Start the sign-in or identity confirmation again.</value></data>
+  <data name="Account.Mfa.RecoveryUnavailable" xml:space="preserve"><value>Access could not be recovered right now. Try again later.</value></data>
+  <data name="Account.Mfa.InvalidRecoveryCode" xml:space="preserve"><value>The recovery code is invalid, already used, or expired.</value></data>
+  <data name="Account.Mfa.Recovered" xml:space="preserve"><value>The second factor was removed securely. Sign in again to continue.</value></data>
+  <data name="Settings.Account.GoogleLabel" xml:space="preserve"><value>Google account</value></data>
+  <data name="Settings.Account.GoogleLinked" xml:space="preserve"><value>Linked</value></data>
+  <data name="Settings.Account.GoogleNotLinked" xml:space="preserve"><value>Not linked</value></data>
+  <data name="Settings.Account.GoogleLink" xml:space="preserve"><value>Link</value></data>
+  <data name="Settings.Account.GoogleUnlink" xml:space="preserve"><value>Unlink</value></data>
+  <data name="Settings.Account.GoogleLinkedSuccess" xml:space="preserve"><value>Google account linked.</value></data>
+  <data name="Settings.Account.GoogleUnlinked" xml:space="preserve"><value>Google account unlinked.</value></data>
+  <data name="Settings.Account.LastSignInMethod" xml:space="preserve"><value>Create a password before removing your only sign-in method.</value></data>
+  <data name="Settings.Account.GoogleRequiredForSensitiveActions" xml:space="preserve"><value>Ralven will confirm your Google account before sensitive changes.</value></data>
+  <data name="Settings.Account.EmailChangeSent" xml:space="preserve"><value>We sent a confirmation to the new address. It changes only after you open the link.</value></data>
+  <data name="Settings.Account.TwoFactorLabel" xml:space="preserve"><value>Two-factor authentication</value></data>
+  <data name="Settings.Account.TwoFactorEnabled" xml:space="preserve"><value>Enabled with an authenticator app</value></data>
+  <data name="Settings.Account.TwoFactorDisabled" xml:space="preserve"><value>Disabled</value></data>
+  <data name="Settings.Account.TwoFactorManage" xml:space="preserve"><value>Manage</value></data>
+  <data name="TwoFactor.Title" xml:space="preserve"><value>Two-factor authentication</value></data>
+  <data name="TwoFactor.Description" xml:space="preserve"><value>Add confirmation through an authenticator app. Changes require your identity and, once enabled, the current code.</value></data>
+  <data name="TwoFactor.GoogleConfirmation" xml:space="preserve"><value>Your identity will be confirmed again through your Google account.</value></data>
+  <data name="TwoFactor.CurrentCodeLabel" xml:space="preserve"><value>Current authenticator code</value></data>
+  <data name="TwoFactor.Enable" xml:space="preserve"><value>Enable two-factor authentication</value></data>
+  <data name="TwoFactor.EnabledDescription" xml:space="preserve"><value>The second factor is requested after your password or Google account on every new sign-in.</value></data>
+  <data name="TwoFactor.RegenerateCodes" xml:space="preserve"><value>Generate new recovery codes</value></data>
+  <data name="TwoFactor.Disable" xml:space="preserve"><value>Disable two-factor authentication</value></data>
+  <data name="TwoFactor.DisableConfirmation" xml:space="preserve"><value>Disabling the second step reduces account protection. Continue?</value></data>
+  <data name="TwoFactor.Setup.Title" xml:space="preserve"><value>Set up the authenticator</value></data>
+  <data name="TwoFactor.Setup.Description" xml:space="preserve"><value>Add an account manually in your authenticator with the key below. The key is shown only during setup.</value></data>
+  <data name="TwoFactor.CopySecret" xml:space="preserve"><value>Copy key</value></data>
+  <data name="TwoFactor.NewCodeLabel" xml:space="preserve"><value>Code generated by the authenticator</value></data>
+  <data name="TwoFactor.Confirm" xml:space="preserve"><value>Confirm activation</value></data>
+  <data name="TwoFactor.RecoveryCodes.Title" xml:space="preserve"><value>Recovery codes</value></data>
+  <data name="TwoFactor.RecoveryCodes.Description" xml:space="preserve"><value>Keep these codes in a safe place. Each code works once; generating new codes invalidates the old ones.</value></data>
+  <data name="TwoFactor.CopyCodes" xml:space="preserve"><value>Copy codes</value></data>
+  <data name="TwoFactor.RecoveryCodes.Regenerated" xml:space="preserve"><value>New codes generated. The previous codes no longer work.</value></data>
+  <data name="TwoFactor.FactorName" xml:space="preserve"><value>Authenticator app</value></data>
+  <data name="TwoFactor.Enabled" xml:space="preserve"><value>Two-factor authentication enabled.</value></data>
+  <data name="TwoFactor.Disabled" xml:space="preserve"><value>Two-factor authentication disabled.</value></data>
+  <data name="TwoFactor.Error.Session" xml:space="preserve"><value>Your session expired. Sign in again.</value></data>
+  <data name="TwoFactor.Error.Unavailable" xml:space="preserve"><value>This change could not be completed right now.</value></data>
+  <data name="TwoFactor.Error.RecoveryCodesRequired" xml:space="preserve"><value>Recovery codes could not be created, so activation was undone to prevent account lockout.</value></data>
+  <data name="TwoFactor.Error.RecoveryCodesRollbackFailed" xml:space="preserve"><value>Recovery codes could not be created and two-factor authentication could not be undone. Keep this window open and try disabling it with your current code.</value></data>
+  <data name="TwoFactor.Error.CopyFailed" xml:space="preserve"><value>Windows could not copy this value. Select and copy it manually.</value></data>
+  <data name="PasswordSecurity.GoogleFallback" xml:space="preserve"><value>Use your current password, or leave it blank to confirm with your linked Google account.</value></data>
+  <data name="Settings.Account.DeleteBillingRequired" xml:space="preserve"><value>Cancel the active subscription or checkout before deleting the account.</value></data>
+  <data name="Settings.Account.DeleteUnavailable" xml:space="preserve"><value>Account deletion is unavailable right now. Your account was not changed.</value></data>
   <data name="Startup.Initializing" xml:space="preserve"><value>Initializing</value></data>
   <data name="Startup.Close" xml:space="preserve"><value>Close</value></data>
   <data name="Dialog.Close" xml:space="preserve"><value>Close</value></data>

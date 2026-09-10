@@ -84,14 +84,31 @@ public partial class MainWindow
         AccountSettingsPasswordButton.ToolTip = passwordAction;
         AutomationProperties.SetName(AccountSettingsPasswordButton, passwordAction);
         AccountSettingsCurrentPasswordPanel.Visibility = hasPassword ? Visibility.Visible : Visibility.Collapsed;
-        AccountSettingsPasswordRequiredHint.Visibility = hasPassword ? Visibility.Collapsed : Visibility.Visible;
-        AccountSettingsChangeEmailButton.IsEnabled = hasPassword;
-        AccountSettingsDeleteAccountButton.IsEnabled = hasPassword;
-        ToolTipService.SetShowOnDisabled(AccountSettingsChangeEmailButton, !hasPassword);
-        ToolTipService.SetShowOnDisabled(AccountSettingsDeleteAccountButton, !hasPassword);
-        var passwordRequired = LocalizationService.Current.GetString("Settings.Account.PasswordRequiredForSensitiveActions");
-        AccountSettingsChangeEmailButton.ToolTip = hasPassword ? null : passwordRequired;
-        AccountSettingsDeleteAccountButton.ToolTip = hasPassword ? null : passwordRequired;
+        AccountSettingsCurrentMfaPanel.Visibility = user.Factors.Any(
+            factor => factor.FactorType == FirebaseMfaFactorType.Totp)
+            ? Visibility.Visible
+            : Visibility.Collapsed;
+        AccountSettingsPasswordRequiredHint.Visibility = user.HasGoogle ? Visibility.Visible : Visibility.Collapsed;
+        AccountSettingsPasswordRequiredHint.Text = LocalizationService.Current.GetString(
+            hasPassword ? "PasswordSecurity.GoogleFallback" : "Settings.Account.GoogleRequiredForSensitiveActions");
+        var canConfirmIdentity = hasPassword || user.HasGoogle && googleOAuth.IsConfigured;
+        AccountSettingsChangeEmailButton.IsEnabled = canConfirmIdentity;
+        AccountSettingsDeleteAccountButton.IsEnabled = canConfirmIdentity;
+        AccountSettingsChangeEmailButton.ToolTip = null;
+        AccountSettingsDeleteAccountButton.ToolTip = null;
+        AccountSettingsGoogleValue.Text = LocalizationService.Current.GetString(
+            user.HasGoogle ? "Settings.Account.GoogleLinked" : "Settings.Account.GoogleNotLinked");
+        AccountSettingsGoogleButton.Content = LocalizationService.Current.GetString(
+            user.HasGoogle ? "Settings.Account.GoogleUnlink" : "Settings.Account.GoogleLink");
+        AccountSettingsGoogleButton.IsEnabled = googleOAuth.IsConfigured
+            && (!user.HasGoogle || user.HasPassword);
+        AccountSettingsGoogleButton.ToolTip = user.HasGoogle && !user.HasPassword
+            ? LocalizationService.Current.GetString("Settings.Account.LastSignInMethod")
+            : null;
+        AccountSettingsMfaValue.Text = LocalizationService.Current.GetString(
+            user.Factors.Any(factor => factor.FactorType == FirebaseMfaFactorType.Totp)
+                ? "Settings.Account.TwoFactorEnabled"
+                : "Settings.Account.TwoFactorDisabled");
         RemovePhotoButton.Visibility = File.Exists(avatarStore.PathFor(user.Uid)) ? Visibility.Visible : Visibility.Collapsed;
 
         var avatar = avatarStore.TryLoad(user.Uid);
@@ -382,6 +399,73 @@ public partial class MainWindow
         }
     }
 
+    private async void AccountSettingsGoogle_Click(object sender, RoutedEventArgs e)
+    {
+        if (accountService?.Current.User is not { } user || !googleOAuth.IsConfigured)
+        {
+            AccountSettingsStatus(LocalizationService.Current.GetString("Account.Google.NotConfigured"), true);
+            return;
+        }
+
+        if (user.HasGoogle && !user.HasPassword)
+        {
+            AccountSettingsStatus(LocalizationService.Current.GetString("Settings.Account.LastSignInMethod"), true);
+            return;
+        }
+
+        SetAccountSettingsBusy(true);
+        try
+        {
+            var reauthenticated = await ReauthenticateAccountSettingsAsync(user);
+            if (!reauthenticated.Succeeded)
+            {
+                AccountSettingsStatus(
+                    reauthenticated.Error ?? LocalizationService.Current.GetString("Account.Error.ReauthenticationRequired"),
+                    true);
+                return;
+            }
+
+            FirebaseAuthResult result;
+            if (user.HasGoogle)
+            {
+                result = await accountService.UnlinkGoogleAsync();
+            }
+            else
+            {
+                var ticket = await googleOAuth.AuthenticateAsync();
+                if (ticket.IdToken is null)
+                {
+                    AccountSettingsStatus(ticket.Error ?? LocalizationService.Current.GetString("Account.Google.Failed"), true);
+                    return;
+                }
+                result = await accountService.LinkGoogleAsync(ticket.IdToken);
+            }
+
+            AccountSettingsStatus(
+                result.Error ?? LocalizationService.Current.GetString(
+                    user.HasGoogle ? "Settings.Account.GoogleUnlinked" : "Settings.Account.GoogleLinkedSuccess"),
+                result.Error is not null);
+            RefreshAccountSettingsCard();
+        }
+        finally
+        {
+            ClearAccountSettingsCredentials();
+            SetAccountSettingsBusy(false);
+        }
+    }
+
+    private void AccountSettingsMfa_Click(object sender, RoutedEventArgs e)
+    {
+        if (accountService is null)
+        {
+            return;
+        }
+
+        var dialog = new TwoFactorSecurityWindow(accountService, accountSecurityService, googleOAuth) { Owner = this };
+        dialog.ShowDialog();
+        RefreshAccountSettingsCard();
+    }
+
     private async void AccountSettingsChangeEmail_Click(object sender, RoutedEventArgs e)
     {
         if (accountService is null)
@@ -389,12 +473,7 @@ public partial class MainWindow
             return;
         }
 
-        if (AccountSettingsCurrentPasswordField.Password.Length == 0)
-        {
-            AccountSettingsStatus(LocalizationService.Current.GetString("Settings.Account.CurrentPasswordRequiredForEmail"), error: true);
-            AccountSettingsCurrentPasswordField.Focus();
-            return;
-        }
+        var user = accountService.Current.User;
 
         if (!AccountValidation.IsValidEmail(AccountSettingsNewEmailBox.Text))
         {
@@ -403,8 +482,33 @@ public partial class MainWindow
             return;
         }
 
-        await RunAccountSettingsActionAsync(
-            () => accountService.ChangeEmailAsync(AccountSettingsCurrentPasswordField.Password, AccountSettingsNewEmailBox.Text.Trim()));
+        try
+        {
+            SetAccountSettingsBusy(true);
+            if (user is null)
+            {
+                return;
+            }
+
+            var reauthenticated = await ReauthenticateAccountSettingsAsync(user);
+            if (!reauthenticated.Succeeded)
+            {
+                AccountSettingsStatus(
+                    reauthenticated.Error ?? LocalizationService.Current.GetString("Account.Error.ReauthenticationRequired"),
+                    true);
+                return;
+            }
+
+            await RunAccountSettingsActionAsync(
+                () => accountService.RequestEmailChangeAfterReauthenticationAsync(AccountSettingsNewEmailBox.Text.Trim()),
+                success: LocalizationService.Current.GetString("Settings.Account.EmailChangeSent"));
+        }
+        finally
+        {
+            ClearAccountSettingsCredentials();
+            AccountSettingsNewEmailBox.Clear();
+            SetAccountSettingsBusy(false);
+        }
     }
 
     private async void AccountSettingsDeleteAccount_Click(object sender, RoutedEventArgs e)
@@ -414,14 +518,7 @@ public partial class MainWindow
             return;
         }
 
-        if (AccountSettingsCurrentPasswordField.Password.Length == 0)
-        {
-            AccountSettingsStatus(LocalizationService.Current.GetString("Settings.Account.CurrentPasswordRequiredForDeletion"), error: true);
-            AccountSettingsCurrentPasswordField.Focus();
-            return;
-        }
-
-        if (Ralven.App.Views.OptimizationConfirmationWindow.Confirm(this,
+        if (OptimizationConfirmationWindow.Confirm(this,
                 LocalizationService.Current.GetString("Settings.Account.DeleteConfirmation"),
                 LocalizationService.Current.GetString("Settings.Account.Delete"),
                 LocalizationService.Current.GetString("Settings.Account.Delete")) != true)
@@ -430,9 +527,32 @@ public partial class MainWindow
         }
 
         var user = accountService.Current.User;
-        var result = await RunAccountSettingsActionAsync(
-            () => accountService.DeleteAccountAsync(AccountSettingsCurrentPasswordField.Password),
-            errorKey: "Account.Profile.DeleteFailed");
+        if (user is null)
+        {
+            return;
+        }
+        FirebaseAuthResult result;
+        try
+        {
+            SetAccountSettingsBusy(true);
+            var reauthenticated = await ReauthenticateAccountSettingsAsync(user);
+            if (!reauthenticated.Succeeded)
+            {
+                AccountSettingsStatus(
+                    reauthenticated.Error ?? LocalizationService.Current.GetString("Account.Error.ReauthenticationRequired"),
+                    true);
+                return;
+            }
+
+            result = await RunAccountSettingsActionAsync(
+                () => accountService.DeleteAccountAfterReauthenticationAsync(),
+                errorKey: "Account.Profile.DeleteFailed");
+        }
+        finally
+        {
+            ClearAccountSettingsCredentials();
+            SetAccountSettingsBusy(false);
+        }
         if (result.Succeeded && user is not null)
         {
             // The account is gone; a leftover local photo would just be an
@@ -479,6 +599,14 @@ public partial class MainWindow
             {
                 FirebaseAuthService.ProfileDeletionFailedError when errorKey is not null =>
                     LocalizationService.Current.GetString(errorKey),
+                FirebaseAuthService.AccountDeletionBillingRequiredError =>
+                    LocalizationService.Current.GetString("Settings.Account.DeleteBillingRequired"),
+                FirebaseAuthService.AccountDeletionReauthenticationRequiredError =>
+                    LocalizationService.Current.GetString("Account.Error.ReauthenticationRequired"),
+                FirebaseAuthService.AccountDeletionRateLimitedError =>
+                    LocalizationService.Current.GetString("Account.Error.TooManyAttempts"),
+                FirebaseAuthService.AccountDeletionUnavailableError =>
+                    LocalizationService.Current.GetString("Settings.Account.DeleteUnavailable"),
                 FirebaseAuthService.ProfileUnavailableError =>
                     LocalizationService.Current.GetString("Account.ProfileUnavailable.Description"),
                 _ => result.Error,
@@ -506,11 +634,79 @@ public partial class MainWindow
         ChangePhotoButton.IsEnabled = !busy;
         RemovePhotoButton.IsEnabled = !busy;
         AccountSettingsPasswordButton.IsEnabled = !busy;
-        var hasPassword = accountService?.Current.User?.HasPassword == true;
-        AccountSettingsChangeEmailButton.IsEnabled = !busy && hasPassword;
-        AccountSettingsDeleteAccountButton.IsEnabled = !busy && hasPassword;
+        AccountSettingsGoogleButton.IsEnabled = !busy
+            && googleOAuth.IsConfigured
+            && !(accountService?.Current.User is { HasGoogle: true, HasPassword: false });
+        AccountSettingsMfaButton.IsEnabled = !busy;
+        var hasIdentityProvider = accountService?.Current.User is { HasPassword: true }
+            || accountService?.Current.User is { HasGoogle: true } && googleOAuth.IsConfigured;
+        AccountSettingsChangeEmailButton.IsEnabled = !busy && hasIdentityProvider;
+        AccountSettingsDeleteAccountButton.IsEnabled = !busy && hasIdentityProvider;
         AccountSettingsLogoutButton.IsEnabled = !busy;
         Cursor = busy ? System.Windows.Input.Cursors.Wait : null;
+    }
+
+    private async Task<FirebaseAuthResult> ReauthenticateAccountSettingsAsync(FirebaseUser user)
+    {
+        FirebaseAuthResult result;
+        if (user.HasPassword && (AccountSettingsCurrentPasswordField.Password.Length > 0 || !user.HasGoogle))
+        {
+            if (AccountSettingsCurrentPasswordField.Password.Length == 0)
+            {
+                AccountSettingsCurrentPasswordField.Focus();
+                return new FirebaseAuthResult(
+                    AuthenticationState.ReauthenticationRequired,
+                    user,
+                    LocalizationService.Current.GetString("PasswordSecurity.Validation.CurrentPasswordRequired"));
+            }
+
+            result = await accountService!.ReauthenticateWithPasswordAsync(AccountSettingsCurrentPasswordField.Password);
+        }
+        else
+        {
+            if (!googleOAuth.IsConfigured)
+            {
+                return new FirebaseAuthResult(
+                    AuthenticationState.ReauthenticationRequired,
+                    user,
+                    LocalizationService.Current.GetString("PasswordSecurity.GoogleUnavailable"));
+            }
+
+            var ticket = await googleOAuth.AuthenticateAsync();
+            if (ticket.IdToken is null)
+            {
+                return new FirebaseAuthResult(
+                    AuthenticationState.ReauthenticationRequired,
+                    user,
+                    ticket.Error ?? LocalizationService.Current.GetString("Account.Google.Failed"));
+            }
+            result = await accountService!.ReauthenticateWithGoogleAsync(ticket.IdToken);
+        }
+
+        if (result.State != AuthenticationState.MfaChallengeRequired)
+        {
+            return result;
+        }
+
+        var factor = result.MfaChallenge?.Enrollments.FirstOrDefault(
+            item => item.FactorType == FirebaseMfaFactorType.Totp);
+        var code = AccountSettingsCurrentMfaCodeBox.Text.Trim();
+        if (factor is null || code.Length != 6 || !code.All(char.IsAsciiDigit))
+        {
+            AccountSettingsCurrentMfaCodeBox.Focus();
+            return new FirebaseAuthResult(
+                AuthenticationState.MfaChallengeRequired,
+                user,
+                LocalizationService.Current.GetString("Account.Mfa.InvalidCode"));
+        }
+
+        return await accountService!.CompleteMfaReauthenticationAsync(factor.Id, code);
+    }
+
+    private void ClearAccountSettingsCredentials()
+    {
+        AccountSettingsCurrentPasswordField.Clear();
+        AccountSettingsCurrentMfaCodeBox.Clear();
     }
 
     private void AccountSettingsStatus(string text, bool error)
@@ -583,7 +779,7 @@ public partial class MainWindow
 
     private void OpenAccountWindow()
     {
-        var dialog = new AccountWindow(accountService!, profileService, googleOAuth) { Owner = this };
+        var dialog = new AccountWindow(accountService!, profileService, googleOAuth, accountSecurity: accountSecurityService) { Owner = this };
         if (dialog.ShowDialog() == true) UpdateAccountButton();
     }
 
