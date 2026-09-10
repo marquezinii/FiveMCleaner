@@ -402,9 +402,9 @@
   <data name="Settings.SaveFailed" xml:space="preserve"><value>We couldn't save your settings. Your latest choices may not persist after restart.</value></data>
   <data name="Settings.SaveRetry" xml:space="preserve"><value>Try again</value></data>
   <data name="Settings.General.Title" xml:space="preserve"><value>General</value></data>
-  <data name="Settings.General.Description" xml:space="preserve"><value>Choose how Ralven looks, starts, and stays up to date.</value></data>
+  <data name="Settings.General.Description" xml:space="preserve"><value>Choose how Ralven looks, starts, runs in the background, and checks for updates.</value></data>
   <data name="Settings.General.Interface" xml:space="preserve"><value>Interface</value></data>
-  <data name="Settings.General.Startup" xml:space="preserve"><value>Startup and background</value></data>
+  <data name="Settings.General.Startup" xml:space="preserve"><value>Startup and notification area</value></data>
   <data name="Settings.General.Updates" xml:space="preserve"><value>Updates</value></data>
   <data name="Settings.Language.Title" xml:space="preserve"><value>Language</value></data>
   <data name="Settings.Language.Description" xml:space="preserve"><value>Follow Windows automatically or choose a language.</value></data>
@@ -418,15 +418,23 @@
   <data name="Settings.Appearance.System" xml:space="preserve"><value>System</value></data>
   <data name="Settings.Appearance.Dark" xml:space="preserve"><value>Dark</value></data>
   <data name="Settings.Appearance.Light" xml:space="preserve"><value>Light</value></data>
-  <data name="Settings.CloseBehavior.Title" xml:space="preserve"><value>Minimize to system tray</value></data>
+  <data name="Settings.CloseBehavior.Title" xml:space="preserve"><value>Keep running in the background</value></data>
   <data name="Settings.StartWithWindows.Title" xml:space="preserve"><value>Start with Windows</value></data>
-  <data name="Settings.StartWithWindows.Description" xml:space="preserve"><value>Open Ralven after you sign in.</value></data>
-  <data name="Settings.StartMinimized.Title" xml:space="preserve"><value>Start minimized</value></data>
-  <data name="Settings.StartMinimized.Description" xml:space="preserve"><value>When opened with Windows, keep Ralven in the notification area.</value></data>
+  <data name="Settings.StartWithWindows.Description" xml:space="preserve"><value>Open Ralven automatically after you sign in to Windows.</value></data>
+  <data name="Settings.StartMinimized.Title" xml:space="preserve"><value>Start in the background</value></data>
+  <data name="Settings.StartMinimized.Description" xml:space="preserve"><value>When opened with Windows, start only in the notification area.</value></data>
   <data name="Settings.AutomaticUpdates.Title" xml:space="preserve"><value>Check for updates automatically</value></data>
   <data name="Settings.AutomaticUpdates.Description" xml:space="preserve"><value>Check for a newer public version when Ralven starts.</value></data>
-  <data name="Settings.UpdateNotifications.Title" xml:space="preserve"><value>Update notifications</value></data>
-  <data name="Settings.UpdateNotifications.Description" xml:space="preserve"><value>Show a Windows notification when Ralven finds a new version.</value></data>
+  <data name="Settings.UpdateNotifications.Title" xml:space="preserve"><value>Notify me about new versions</value></data>
+  <data name="Settings.UpdateNotifications.Description" xml:space="preserve"><value>Show a Windows notification when the automatic check finds a new version.</value></data>
+  <data name="Settings.RestoreDefaults.Section" xml:space="preserve"><value>Defaults</value></data>
+  <data name="Settings.RestoreDefaults.Title" xml:space="preserve"><value>Restore default settings</value></data>
+  <data name="Settings.RestoreDefaults.Description" xml:space="preserve"><value>Restores language, appearance, startup, background, and update preferences. Account and privacy settings are not changed.</value></data>
+  <data name="Settings.RestoreDefaults.Button" xml:space="preserve"><value>Restore</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Title" xml:space="preserve"><value>Restore default settings?</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Message" xml:space="preserve"><value>Your general preferences will return to Ralven defaults. Account and privacy settings will be preserved.</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Confirm" xml:space="preserve"><value>Restore</value></data>
   <data name="Safety.Limits.Title" xml:space="preserve"><value>Safety limits</value></data>
   <data name="Safety.Limits.Description" xml:space="preserve"><value>Ralven never disables Defender, Firewall, UAC, Windows Update, the page file or critical services; it does not use BCDEdit/HPET, injection, hooks or Realtime priority.</value></data>
   <data name="Safety.EnhancedBlocked" xml:space="preserve"><value>FiveM Enhanced: blocked in this version until its official layout has been tested.</value></data>
@@ -584,7 +592,7 @@
   <data name="Tray.Message" xml:space="preserve"><value>Double-click the tray icon to return.</value></data>
   <data name="Notification.UpdateAvailable.Title" xml:space="preserve"><value>Ralven update available</value></data>
   <data name="Notification.UpdateAvailable.Message" xml:space="preserve"><value>Version {0} is available. Click to open Ralven.</value></data>
-  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>When clicking X, Ralven will minimize to the system tray instead of closing.</value></data>
+  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Closing the window keeps Ralven running in the notification area.</value></data>
   <data name="Settings.Telemetry.Title" xml:space="preserve"><value>Optional reports</value></data>
   <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Share anonymous usage and performance context plus sanitized error and crash reports. Enabled by default; you can turn it off at any time.</value></data>
   <data name="Settings.Privacy.Title" xml:space="preserve"><value>Privacy</value></data>
@@ -1496,8 +1504,8 @@
   <data name="Report.ViewHistoryButton" xml:space="preserve"><value>View history</value></data>
   <data name="Settings.Account.CurrentPasswordPlaceholder" xml:space="preserve"><value>Confirm to change your password, e-mail, or delete your account</value></data>
   <data name="Settings.Account.Delete" xml:space="preserve"><value>Delete account</value></data>
-  <data name="Settings.Tools.Title" xml:space="preserve"><value>Tools</value></data>
-  <data name="Settings.Tools.Description" xml:space="preserve"><value>Maintenance and support actions to use only when needed.</value></data>
+  <data name="Settings.Tools.Title" xml:space="preserve"><value>Diagnostics and support</value></data>
+  <data name="Settings.Tools.Description" xml:space="preserve"><value>Measure GTA V, report problems, and find help when you need it.</value></data>
   <data name="Settings.Account.CurrentPasswordLabel" xml:space="preserve"><value>Current password</value></data>
   <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Remove</value></data>
   <data name="Progress.CancelHelp" xml:space="preserve"><value>The current step finishes before stopping.</value></data>

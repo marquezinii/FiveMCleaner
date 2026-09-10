@@ -7,6 +7,33 @@ namespace Ralven.Tests.App;
 
 public sealed class AppSettingsLenientReadTests
 {
+    [Fact]
+    public async Task SaveAndLoadSettingsAsync_RoundTripsEveryUserPreference()
+    {
+        using var temporaryDirectory = new TemporaryDirectory();
+        var service = new AppOptimizationService(temporaryDirectory.Path);
+        var expected = new AppSettings
+        {
+            Language = AppLanguagePreference.Spanish,
+            Theme = AppThemePreference.Light,
+            MinimizeToTrayOnClose = false,
+            LaunchAtStartup = false,
+            StartMinimized = true,
+            CheckForUpdates = false,
+            NotifyWhenUpdateAvailable = false,
+            ShareAnonymousTelemetry = false,
+            ShareCrashReports = false,
+            PrivacyConsentVersion = 3,
+            DismissedLiveAlertId = "alert-42",
+            LastSeenReleaseNotesVersion = "1.2.3"
+        };
+
+        await service.SaveSettingsAsync(expected);
+
+        Assert.True(service.SettingsFileExists());
+        Assert.Equal(expected, await service.LoadSettingsAsync());
+    }
+
     // Under the old strict read (RalvenJson.Options:
     // UnmappedMemberHandling.Disallow, PropertyNameCaseInsensitive=false,
     // comments disallowed) any schema drift in settings.json threw a

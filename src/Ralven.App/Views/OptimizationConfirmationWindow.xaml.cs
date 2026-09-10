@@ -3,8 +3,8 @@ using System.Windows;
 namespace Ralven.App.Views;
 
 /// <summary>
-/// Confirma interrupções de uma otimização sem recorrer ao MessageBox do
-/// Windows, preservando o tema e a linguagem do aplicativo.
+/// Confirma ações importantes sem recorrer ao MessageBox do Windows,
+/// preservando o tema e a linguagem do aplicativo.
 /// </summary>
 public partial class OptimizationConfirmationWindow : Ralven.App.Controls.DialogWindow
 {

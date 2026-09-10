@@ -554,6 +554,10 @@ Esses arquivos têm durabilidades diferentes e isso muda o que pode ser alterado
 
 - `Transactions/<id>.json` é **durável entre versões**. É o único registro que mantém uma execução passada auditável e reversível, e um journal escrito por uma versão anterior precisa continuar carregando. Enums serializam como string camelCase (`allowIntegerValues: false`), e `UnmappedMemberHandling.Disallow` significa que **remover** uma propriedade do journal quebra JSON antigo — acrescentar é seguro, remover não. Ver `TransactionState`/`ActionJournalState`/`ActionExecutionOutcome` em "Resultado".
 - `Requests/<id>.json` é **efêmero**: reivindicado e apagado pelo broker, com janela de validade curta. Seu schema pode evoluir junto com o build.
+- `settings.json` é lido de forma tolerante a chaves desconhecidas, diferenças
+  de capitalização e comentários, mas sempre gravado de forma atômica. A restauração
+  de padrões afeta somente preferências gerais; consentimento de privacidade,
+  conta e marcadores internos permanecem preservados.
 
 Caches não são copiados para o journal. Durante uma limpeza, arquivos allowlisted são movidos para uma quarentena dentro do próprio volume; a ação restaura essa quarentena se falhar antes do commit e a remove somente ao confirmar a transação.
 

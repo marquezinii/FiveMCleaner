@@ -29,8 +29,8 @@
         "en": "Clearer experience and diagnostics"
       },
       "description": {
-        "pt": "O Otimizador ganha uma leitura mais direta do plano e dos resultados. A aba Sistema organiza informações essenciais do PC e da proteção, e Jogos abre um hub dedicado do FiveM com acesso ao download oficial mais recente do ReShade. Login, cadastro, relatos de bug e demais diálogos compartilham superfícies mais leves, ações consistentes e melhor adaptação ao espaço disponível.",
-        "en": "The Optimizer gets a more direct view of plans and results. The System tab organizes essential PC and protection information, and Games opens a dedicated FiveM hub with access to the latest official ReShade download. Sign-in, registration, bug reports and other dialogs share lighter surfaces, consistent actions and better adaptation to available space."
+        "pt": "O Otimizador ganha uma leitura mais direta do plano e dos resultados. Sistema organiza informações essenciais do PC e da proteção; Jogos abre um hub dedicado do FiveM com acesso ao ReShade oficial; Configurações reúne preferências com nomes e padrões mais claros; e diálogos de conta, relatos e confirmação compartilham superfícies mais leves, ações consistentes e melhor adaptação ao espaço disponível.",
+        "en": "The Optimizer gets a more direct view of plans and results. System organizes essential PC and protection information; Games opens a dedicated FiveM hub with access to the official ReShade; Settings groups preferences with clearer names and defaults; and account, report, and confirmation dialogs share lighter surfaces, consistent actions, and better adaptation to available space."
       }
     },
     {

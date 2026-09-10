@@ -66,6 +66,50 @@ public partial class MainWindow
         }
     }
 
+    private void SyncGeneralSettingsControls()
+    {
+        syncingLanguageSelector = true;
+        try
+        {
+            LanguageSelector.SelectedIndex = viewModel.LanguagePreference switch
+            {
+                AppLanguagePreference.PortugueseBrazil => 1,
+                AppLanguagePreference.English => 2,
+                AppLanguagePreference.Spanish => 3,
+                _ => 0
+            };
+        }
+        finally
+        {
+            syncingLanguageSelector = false;
+        }
+
+        ThemeSystemOption.IsChecked = viewModel.ThemePreference == AppThemePreference.System;
+        ThemeDarkOption.IsChecked = viewModel.ThemePreference == AppThemePreference.Dark;
+        ThemeLightOption.IsChecked = viewModel.ThemePreference == AppThemePreference.Light;
+    }
+
+    private async void RestoreGeneralDefaults_Click(object sender, RoutedEventArgs e)
+    {
+        var localization = LocalizationService.Current;
+        var dialog = new OptimizationConfirmationWindow(
+            localization.GetString("Settings.RestoreDefaults.Dialog.Title"),
+            localization.GetString("Settings.RestoreDefaults.Dialog.Message"),
+            localization.GetString("Settings.RestoreDefaults.Dialog.Cancel"),
+            localization.GetString("Settings.RestoreDefaults.Dialog.Confirm"))
+        {
+            Owner = this
+        };
+        if (dialog.ShowDialog() != true)
+        {
+            return;
+        }
+
+        await viewModel.RestoreGeneralSettingsDefaultsAsync();
+        themeManager.Apply(viewModel.ThemePreference);
+        SyncGeneralSettingsControls();
+    }
+
     private async void RunGtaVBenchmark_Click(object sender, RoutedEventArgs e) => await viewModel.RunGtaVBenchmarkAsync();
 
     private async void CheckForUpdatesManually_Click(object sender, RoutedEventArgs e) => await viewModel.CheckForUpdatesManuallyAsync();

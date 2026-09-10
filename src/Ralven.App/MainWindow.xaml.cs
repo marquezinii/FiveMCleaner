@@ -330,36 +330,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             _ = RestoreAccountSessionQuietlyAsync();
         }
         themeManager.Apply(viewModel.ThemePreference);
-        // A sincronização programática do seletor não pode acionar o
-        // SelectionChanged: ele converteria uma preferência "Automatic" em
-        // um idioma fixo (o detectado), gravando o pin no primeiro launch.
-        syncingLanguageSelector = true;
-        try
-        {
-            LanguageSelector.SelectedIndex = viewModel.LanguagePreference switch
-            {
-                AppLanguagePreference.PortugueseBrazil => 1,
-                AppLanguagePreference.English => 2,
-                AppLanguagePreference.Spanish => 3,
-                _ => 0
-            };
-        }
-        finally
-        {
-            syncingLanguageSelector = false;
-        }
-        switch (viewModel.ThemePreference)
-        {
-            case AppThemePreference.Dark:
-                ThemeDarkOption.IsChecked = true;
-                break;
-            case AppThemePreference.Light:
-                ThemeLightOption.IsChecked = true;
-                break;
-            default:
-                ThemeSystemOption.IsChecked = true;
-                break;
-        }
+        SyncGeneralSettingsControls();
         if (!demoMode)
         {
             await ShowPrivacyConsentIfNeededAsync();
