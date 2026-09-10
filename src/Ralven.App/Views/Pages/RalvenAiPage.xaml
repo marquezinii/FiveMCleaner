@@ -369,8 +369,8 @@
                             </Style.Triggers>
                         </Style>
                     </StackPanel.Style>
-                    <Border Background="{DynamicResource AccentSoftBrush}"
-                            BorderBrush="{DynamicResource ProAccentBrush}"
+                    <Border Background="{DynamicResource SuccessSurfaceBrush}"
+                            BorderBrush="{DynamicResource SuccessBorderBrush}"
                             BorderThickness="1"
                             CornerRadius="{StaticResource RadiusXs}"
                             Padding="10,4"
@@ -378,7 +378,7 @@
                             Margin="0,0,0,14">
                         <TextBlock Text="{Binding [RalvenAi.AccessRequired.Free.Plan], Source={StaticResource LocalizedStrings}}"
                                    Style="{StaticResource OverlineText}"
-                                   Foreground="{DynamicResource ProAccentBrush}" />
+                                   Foreground="{DynamicResource SuccessBaseBrush}" />
                     </Border>
                     <TextBlock Text="{Binding [RalvenAi.AccessRequired.Free.Title], Source={StaticResource LocalizedStrings}}"
                                Style="{StaticResource SectionText}"
