@@ -293,6 +293,7 @@ public sealed partial class MainViewModel
         notifyWhenUpdateAvailable = settings.NotifyWhenUpdateAvailable;
         shareAnonymousTelemetry = settings.ShareAnonymousTelemetry;
         shareCrashReports = settings.ShareCrashReports;
+        manualFiveMInstallationRoot = settings.ManualFiveMInstallationRoot;
         privacyConsentVersion = settings.PrivacyConsentVersion;
         dismissedLiveAlertId = settings.DismissedLiveAlertId;
         lastSeenReleaseNotesVersion = settings.LastSeenReleaseNotesVersion;
@@ -321,6 +322,7 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(ShareAnonymousTelemetry));
         OnPropertyChanged(nameof(ShareCrashReports));
         OnPropertyChanged(nameof(ShareOptionalReports));
+        OnPropertyChanged(nameof(HasManualFiveMInstallation));
         ResetLocalizedPlaceholders(preserveDiagnostic: true);
     }
 
@@ -337,7 +339,8 @@ public sealed partial class MainViewModel
         ShareCrashReports = ShareCrashReports,
         PrivacyConsentVersion = privacyConsentVersion,
         DismissedLiveAlertId = dismissedLiveAlertId,
-        LastSeenReleaseNotesVersion = lastSeenReleaseNotesVersion
+        LastSeenReleaseNotesVersion = lastSeenReleaseNotesVersion,
+        ManualFiveMInstallationRoot = manualFiveMInstallationRoot
     };
 
     private void SettingsChanged(bool refreshPlan = true)

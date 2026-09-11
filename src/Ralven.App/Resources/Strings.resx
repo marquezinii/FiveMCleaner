@@ -79,6 +79,13 @@
   <data name="FiveMHub.Scopes.Title" xml:space="preserve"><value>One PC, two optimization scopes</value></data>
   <data name="FiveMHub.Scopes.Description" xml:space="preserve"><value>Each run checks the current state first. Settings already at their target are verified without being applied again; restoration remains tied to the transaction that changed them.</value></data>
   <data name="FiveMHub.Actions.Title" xml:space="preserve"><value>What do you want to do?</value></data>
+  <data name="FiveMHub.Detection.Title" xml:space="preserve"><value>Can't find FiveM?</value></data>
+  <data name="FiveMHub.Detection.Description" xml:space="preserve"><value>Choose the folder that contains FiveM.exe only when automatic detection cannot identify a valid Legacy installation. Ralven validates it before use.</value></data>
+  <data name="FiveMHub.Detection.Select" xml:space="preserve"><value>Choose FiveM folder</value></data>
+  <data name="FiveMHub.Detection.AutomaticAction" xml:space="preserve"><value>Use automatic detection</value></data>
+  <data name="FiveMHub.Detection.Automatic" xml:space="preserve"><value>Automatic detection is active.</value></data>
+  <data name="FiveMHub.Detection.Manual" xml:space="preserve"><value>Using selected folder: {0}</value></data>
+  <data name="FiveMHub.Detection.Invalid" xml:space="preserve"><value>The selected folder is not a valid FiveM Legacy installation. Select the folder that contains FiveM.exe and FiveM.app\data.</value></data>
   <data name="FiveMHub.Actions.Description" xml:space="preserve"><value>Choose the area that matches your goal. No action starts until you review and confirm its plan.</value></data>
   <data name="FiveMHub.Optimizer.Title" xml:space="preserve"><value>Optimize FiveM</value></data>
   <data name="FiveMHub.Optimizer.Description" xml:space="preserve"><value>Analyze the detected Legacy installation and review the game-specific diagnostics, settings and reversible actions.</value></data>

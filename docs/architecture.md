@@ -361,7 +361,20 @@ módulo de manutenção separado e não entra implicitamente nesses perfis.
 
 Responsabilidades:
 
-- localizar instalação padrão e personalizada;
+- localizar instalação padrão e personalizada por camadas: seleção manual
+  validada, processo em execução, cache com fingerprint do executável, App
+  Paths/registro de desinstalação, atalhos do usuário/Start Menu e diretórios
+  conhecidos; a busca nunca percorre o disco inteiro nem perfis de outros
+  usuários;
+- aceitar uma raiz Legacy somente com `FiveM.exe`, `FiveM.app` e
+  `FiveM.app\data`, todos canonizados e sem reparse points; dados CitizenFX
+  isolados, caminhos quebrados e instalações parciais não são instalação;
+- priorizar uma escolha manual, processo ou cache ainda válido; se restarem
+  várias raízes automáticas válidas sem uma fonte decisiva, declarar estado
+  ambíguo e pedir que o usuário selecione uma raiz, em vez de alterar uma
+  instalação arbitrária;
+- invalidar o cache quando o executável some ou muda de tamanho/data e voltar
+  à descoberta completa após movimentação, reinstalação ou atualização;
 - validar `CitizenFX.ini` e `IVPath` sem reescrevê-los por conveniência;
 - mapear somente diretórios conhecidos sob `FiveM.app`;
 - identificar processos por caminho da imagem, não só por nome;
