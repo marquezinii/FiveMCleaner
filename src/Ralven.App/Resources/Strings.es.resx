@@ -79,6 +79,13 @@
   <data name="FiveMHub.Scopes.Title" xml:space="preserve"><value>Un PC, dos ámbitos de optimización</value></data>
   <data name="FiveMHub.Scopes.Description" xml:space="preserve"><value>Cada ejecución comprueba primero el estado actual. La configuración que ya está en su objetivo se verifica sin volver a aplicarse; la restauración sigue vinculada a la transacción que realmente la cambió.</value></data>
   <data name="FiveMHub.Actions.Title" xml:space="preserve"><value>¿Qué quieres hacer?</value></data>
+  <data name="FiveMHub.Detection.Title" xml:space="preserve"><value>¿No encuentras FiveM?</value><comment>TODO(i18n): source changed in en-US</comment></data>
+  <data name="FiveMHub.Detection.Description" xml:space="preserve"><value>Elige la carpeta que contiene FiveM.exe solo cuando la detección automática no pueda identificar una instalación Legacy válida. Ralven la valida antes de usarla.</value><comment>TODO(i18n): source changed in en-US</comment></data>
+  <data name="FiveMHub.Detection.Select" xml:space="preserve"><value>Elegir carpeta de FiveM</value><comment>TODO(i18n): source changed in en-US</comment></data>
+  <data name="FiveMHub.Detection.AutomaticAction" xml:space="preserve"><value>Usar detección automática</value><comment>TODO(i18n): source changed in en-US</comment></data>
+  <data name="FiveMHub.Detection.Automatic" xml:space="preserve"><value>La detección automática está activa.</value><comment>TODO(i18n): source changed in en-US</comment></data>
+  <data name="FiveMHub.Detection.Manual" xml:space="preserve"><value>Usando la carpeta elegida: {0}</value><comment>TODO(i18n): source changed in en-US</comment></data>
+  <data name="FiveMHub.Detection.Invalid" xml:space="preserve"><value>La carpeta elegida no es una instalación FiveM Legacy válida. Elige la carpeta que contiene FiveM.exe y FiveM.app\data.</value><comment>TODO(i18n): source changed in en-US</comment></data>
   <data name="FiveMHub.Actions.Description" xml:space="preserve"><value>Elige el área que corresponde a tu objetivo. Ninguna acción comienza antes de revisar y confirmar el plan.</value></data>
   <data name="FiveMHub.Optimizer.Title" xml:space="preserve"><value>Optimizar FiveM</value></data>
   <data name="FiveMHub.Optimizer.Description" xml:space="preserve"><value>Analiza la instalación Legacy detectada y revisa diagnósticos, ajustes y acciones reversibles específicos del juego.</value></data>

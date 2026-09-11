@@ -17,6 +17,7 @@ public sealed partial class AppOptimizationService : IAppOptimizationService
     private readonly string journalDirectory;
     private readonly string logsDirectory;
     private readonly string settingsPath;
+    private readonly string fiveMInstallationCachePath;
     private readonly JsonSerializerOptions indentedJson;
     private readonly ElevatedBrokerClient brokerClient;
     private readonly ILocalizationService localization;
@@ -67,6 +68,7 @@ public sealed partial class AppOptimizationService : IAppOptimizationService
         journalDirectory = Path.Combine(appDataDirectory, "Transactions");
         logsDirectory = Path.Combine(appDataDirectory, "Logs");
         settingsPath = Path.Combine(appDataDirectory, "settings.json");
+        fiveMInstallationCachePath = Path.Combine(appDataDirectory, "fivem-installation.json");
         indentedJson = new JsonSerializerOptions(RalvenJson.Options) { WriteIndented = true };
         brokerClient = new ElevatedBrokerClient(appDataDirectory, localization);
         demoSimulator = new DemoModeSimulator(this.localization);
@@ -513,24 +515,21 @@ public sealed partial class AppOptimizationService : IAppOptimizationService
             JournalDirectory = journalDirectory
         };
         var root = detectedLegacyRoot;
-        if (!string.IsNullOrWhiteSpace(root))
+        if (FiveMInstallationLocator.TryValidateLegacyCandidate(
+                root,
+                FiveMInstallationSource.Cache,
+                out var installation))
         {
-            var fullRoot = Path.GetFullPath(root);
-            var appRoot = Path.Combine(fullRoot, "FiveM.app");
-            var executable = Path.Combine(fullRoot, "FiveM.exe");
-            if (Directory.Exists(appRoot))
+            var gtaV = GtaVLocator.Detect(installation.Root);
+            environment = environment with
             {
-                var gtaV = GtaVLocator.Detect(fullRoot);
-                environment = environment with
-                {
-                    FiveMInstallationRoot = fullRoot,
-                    FiveMAppRoot = appRoot,
-                    FiveMExecutablePath = executable,
-                    GtaVInstallationRoot = gtaV.InstallationRoot,
-                    GtaVExecutablePath = gtaV.ExecutablePath,
-                    GtaVGraphicsSettingsPath = gtaV.GraphicsSettingsPath
-                };
-            }
+                FiveMInstallationRoot = installation.Root,
+                FiveMAppRoot = installation.AppRoot,
+                FiveMExecutablePath = installation.ExecutablePath,
+                GtaVInstallationRoot = gtaV.InstallationRoot,
+                GtaVExecutablePath = gtaV.ExecutablePath,
+                GtaVGraphicsSettingsPath = gtaV.GraphicsSettingsPath
+            };
         }
 
         return WindowsOptimizationRuntime.Create(

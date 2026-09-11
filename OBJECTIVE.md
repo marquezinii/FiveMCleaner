@@ -1,7 +1,8 @@
-# Objetivo da tarefa
+# Objetivo
 
 - **Agente:** Codex
-- **Objetivo:** Garantir cobertura completa de localização em português, inglês, espanhol e francês e tornar a manutenção dos catálogos verificável e escalável.
-- **Escopo:** Auditar textos públicos do aplicativo e componentes auxiliares, corrigir catálogos e consumo de cultura, adicionar francês, criar sincronização/validação versionada e validar os quatro idiomas. Não inclui tradução dinâmica em runtime, publicação ou alteração de versão.
-- **Critérios de conclusão:** Todos os catálogos possuem o mesmo conjunto de chaves e placeholders; textos públicos usam a infraestrutura de localização; francês pode ser selecionado sem alterar lógica da aplicação; validações automatizadas falham para chaves ausentes, órfãs, duplicadas ou placeholders divergentes; build, testes e validação visual aplicáveis são executados.
-- **Resultado entregue:** Catálogo declarativo com inglês canônico e cobertura equivalente em português, espanhol e francês para aplicativo, atualizador e ações Windows; sincronização, revisão por hash, glossário, pseudo-localização e gates de CI/release adicionados. Foram validadas 2.008 chaves em três conjuntos, build Release sem avisos, 1.446 testes, contrato do instalador e 70 capturas visuais (mais recapturas dos ajustes de expansão no Overview).
+- **Objetivo:** Tornar a detecção do FiveM resiliente a instalações válidas em locais e estados suportados, sem ampliar o escopo de acesso nem aceitar falsos positivos.
+- **Escopo:** Centralizar descoberta, validação, cache e fallback manual usados pela área Jogos/FiveM, com testes de regressão e textos localizados necessários.
+- **Fora de escopo:** Alterar arquivos do FiveM/GTA V, executar reparos, instalar software ou suportar GTAV Enhanced.
+- **Critérios de conclusão:** Fontes de descoberta são combinadas por camadas, candidatos são validados e classificados de modo determinístico, consumidores usam o resultado central, e as validações aplicáveis passam.
+- **Resultado entregue:** Localizador central em camadas, cache invalidável, seleção manual validada, consumidor de runtime unificado e 10 testes focados; build Release e suíte .NET aprovadas. A aprovação humana contextual das novas traduções ainda é exigida pelo verificador de localização antes do commit/PR.
