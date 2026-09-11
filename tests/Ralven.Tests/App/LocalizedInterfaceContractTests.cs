@@ -708,8 +708,8 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.Contains("FocusVisualStyle\" Value=\"{StaticResource KeyboardFocusVisual}\"", baseButtonStyle, StringComparison.Ordinal);
         Assert.DoesNotContain("x:Name=\"FocusRing\"", baseButtonStyle, StringComparison.Ordinal);
         Assert.DoesNotContain("Property=\"IsKeyboardFocused\"", baseButtonStyle, StringComparison.Ordinal);
-        Assert.Contains("Property=\"Opacity\" Value=\"0.55\"", baseButtonStyle, StringComparison.Ordinal);
-        Assert.Contains("TextElement.Foreground=\"{TemplateBinding Foreground}\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.Contains("Property=\"Foreground\" Value=\"{DynamicResource TextTertiaryBrush}\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.Contains("RelativeSource={RelativeSource AncestorType=Button}", baseButtonStyle, StringComparison.Ordinal);
         Assert.Contains("BasedOn=\"{StaticResource ButtonBaseStyle}\"", styleMarkup, StringComparison.Ordinal);
         Assert.Contains("Property=\"Background\" Value=\"{DynamicResource Surface3Brush}\"", styleMarkup, StringComparison.Ordinal);
         Assert.DoesNotContain("ScaleTransform", styleMarkup, StringComparison.Ordinal);
