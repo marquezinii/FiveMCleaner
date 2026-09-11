@@ -1,7 +1,7 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** Refinar visualmente o selo de recomendação na página Ralven Pro para uma aparência roxa mais premium, preenchida e equilibrada.
-- **Escopo:** Estilo visual do selo e sua validação no contexto da página Pro. Não inclui mudanças de preço, planos, textos, contratos ou checkout.
-- **Critérios de conclusão:** O selo preserva a identidade visual e a localização existentes, com contraste, acabamento e hierarquia visual aprimorados; a página é compilada e inspecionada visualmente.
-- **Resultado entregue:** O selo recebeu gradiente roxo preenchido, borda, sombra discreta, maior área de toque visual e tipografia em alto contraste; sem alterar textos, fluxos de assinatura ou layout dos cartões. Compilado, testado e inspecionado por capturas da página Pro nos temas claro/escuro e em francês.
+- **Objetivo:** Remover os anéis brancos indevidos de toggles e controles relacionados, preservando o foco visível por teclado.
+- **Escopo:** Estilos WPF compartilhados e validação focada; sem mudança de comportamento de produto ou textos públicos.
+- **Critérios de conclusão:** A interação pelo ponteiro não deixa anel de foco branco; a navegação por teclado mantém indicador claro; build e testes aplicáveis passam.
+- **Resultado entregue:** Os controles compartilhados agora usam o foco visual do WPF exclusivo da navegação por teclado, então a ativação pelo ponteiro não deixa anel de foco. Build e 1.570 testes passaram; a página Configurações/Privacidade foi capturada no tema escuro.

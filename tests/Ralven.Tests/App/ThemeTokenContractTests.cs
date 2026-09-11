@@ -157,6 +157,10 @@ public sealed class ThemeTokenContractTests
         Assert.Contains("Width=\"36\" Height=\"20\"", controls, StringComparison.Ordinal);
         Assert.Contains("Width=\"16\" Height=\"16\"", controls, StringComparison.Ordinal);
         Assert.Contains("To=\"16\"", controls, StringComparison.Ordinal);
+        var toggleStyle = controls[controls.IndexOf("x:Key=\"ToggleSwitchStyle\"", StringComparison.Ordinal)..controls.IndexOf("x:Key=\"SegmentedOptionStyle\"", StringComparison.Ordinal)];
+        Assert.Contains("FocusVisualStyle\" Value=\"{StaticResource KeyboardFocusVisual}\"", toggleStyle, StringComparison.Ordinal);
+        Assert.DoesNotContain("x:Name=\"FocusRing\"", toggleStyle, StringComparison.Ordinal);
+        Assert.DoesNotContain("Property=\"IsKeyboardFocused\"", toggleStyle, StringComparison.Ordinal);
     }
 
     private static SortedSet<string> ReadKeys(string fileName)
