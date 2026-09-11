@@ -1,7 +1,7 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** Garantir cobertura completa de localização em português, inglês, espanhol e francês e tornar a manutenção dos catálogos verificável e escalável.
-- **Escopo:** Auditar textos públicos do aplicativo e componentes auxiliares, corrigir catálogos e consumo de cultura, adicionar francês, criar sincronização/validação versionada e validar os quatro idiomas. Não inclui tradução dinâmica em runtime, publicação ou alteração de versão.
-- **Critérios de conclusão:** Todos os catálogos possuem o mesmo conjunto de chaves e placeholders; textos públicos usam a infraestrutura de localização; francês pode ser selecionado sem alterar lógica da aplicação; validações automatizadas falham para chaves ausentes, órfãs, duplicadas ou placeholders divergentes; build, testes e validação visual aplicáveis são executados.
-- **Resultado entregue:** Catálogo declarativo com inglês canônico e cobertura equivalente em português, espanhol e francês para aplicativo, atualizador e ações Windows; sincronização, revisão por hash, glossário, pseudo-localização e gates de CI/release adicionados. Foram validadas 2.008 chaves em três conjuntos, build Release sem avisos, 1.446 testes, contrato do instalador e 70 capturas visuais (mais recapturas dos ajustes de expansão no Overview).
+- **Objetivo:** Corrigir o contraste dos botões do aplicativo nos temas claro e escuro, inclusive no estado padrão sem foco ou hover.
+- **Escopo:** Estilos compartilhados de botões e suas verificações visuais. Não inclui alterações de comportamento, textos ou navegação.
+- **Critérios de conclusão:** Botões compartilhados mantêm texto e superfície legíveis nos dois temas, sem regressão nos estados hover, foco e desabilitado; build e testes aplicáveis aprovados.
+- **Resultado entregue:** O template compartilhado agora propaga o `Foreground` da variante para o conteúdo, preservando o contraste definido pelos tokens nos estados padrão, hover e pressionado. Build Release sem avisos e 1.570 testes aprovados.

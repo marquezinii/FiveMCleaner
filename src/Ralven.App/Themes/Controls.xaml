@@ -90,7 +90,8 @@
                                 CornerRadius="{StaticResource RadiusSm}">
                             <ContentPresenter Margin="{TemplateBinding Padding}"
                                               HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                              TextElement.Foreground="{TemplateBinding Foreground}" />
                         </Border>
                         <Border x:Name="FocusRing"
                                 BorderBrush="{DynamicResource FocusRingBrush}"
