@@ -5,6 +5,43 @@ segue [Semantic Versioning](https://semver.org/lang/pt-BR/): correções usam
 `patch`, melhorias compatíveis usam `minor` e mudanças incompatíveis usam
 `major`.
 
+## [1.7.0] - 2026-09-11
+
+### Adicionado
+
+- Adicionado o centro de Aplicativos para pesquisar, instalar, atualizar e
+  desinstalar pacotes suportados com origem e confirmação explícitas.
+- Adicionados o hub dedicado do FiveM Legacy, seleção manual validada da
+  instalação e suporte da interface em francês.
+- Reforçada a proteção de contas com autenticação em dois fatores e códigos de
+  recuperação.
+
+### Melhorado
+
+- Refinadas as experiências de Visão geral, Sistema, Jogos, bandeja, diálogos e
+  instalador, com diagnósticos mais claros e menos coleta em segundo plano.
+- Ampliados os diagnósticos e relatórios para identificar falhas por ação sem
+  esconder o resultado real da execução.
+
+### Corrigido
+
+- Corrigidos contraste, foco e cortes visuais em controles e cartões da
+  interface.
+- Corrigida a preservação da ordem da fila de telemetria após períodos sem
+  conexão.
+- Recursos Pro e Ralven AI agora permanecem claramente bloqueados enquanto
+  estão em desenvolvimento, sem compra, ativação ou cobrança.
+
+### Segurança
+
+- Restringidas as ações de pacotes ao alias oficial do WinGet e reforçada a
+  validação do ciclo de atualização e dos artefatos de release.
+
+### Alterações técnicas
+
+- Atualizados Worker, dashboard, dependências compatíveis e automações de CI
+  para manter a publicação e a operação administrativa verificáveis.
+
 ## [1.6.1] - 2026-09-01
 
 ### Alterações técnicas

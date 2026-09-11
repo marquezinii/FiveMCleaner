@@ -2018,4 +2018,11 @@ Excepción: {3}
   <data name="Pro.Development.Detail" xml:space="preserve"><value>Las funciones Pro, los pagos y Ralven AI estarán disponibles próximamente. Aún no se puede comprar ni activar nada.</value></data>
   <data name="Pro.Development.Action" xml:space="preserve"><value>Próximamente</value></data>
   <data name="Pro.DiscoverDevelopment" xml:space="preserve"><value>Descubre Ralven Pro · Próximamente</value></data>
-  <data name="Navigation.ProDevelopment" xml:space="preserve"><value>Pro · Próximamente</value></data></root>
+  <data name="Navigation.ProDevelopment" xml:space="preserve"><value>Pro · Próximamente</value></data>
+  <data name="ReleaseNotes.1_7_0.Added" xml:space="preserve"><value>• Se añadió un centro de Aplicaciones para buscar, instalar, actualizar y desinstalar paquetes compatibles con confirmación.
+• Se añadió soporte de interfaz en francés y autenticación en dos pasos con códigos de recuperación.</value></data>
+  <data name="ReleaseNotes.1_7_0.Improved" xml:space="preserve"><value>• Se mejoró la detección de FiveM Legacy con selección manual validada y flujos más claros de Sistema, bandeja e instalador.
+• Se redujo el trabajo de supervisión en segundo plano, conservando las métricas en vivo seleccionadas.</value></data>
+  <data name="ReleaseNotes.1_7_0.Fixed" xml:space="preserve"><value>• Pro y Ralven AI ahora permanecen claramente no disponibles mientras están en desarrollo.
+• Se corrigieron problemas de contraste, foco, diseño y orden de telemetría pendiente.</value></data>
+  <data name="ReleaseNotes.1_7_0.Security" xml:space="preserve"><value>• Se restringieron las acciones de paquetes al alias oficial de WinGet y se reforzó la validación de actualizaciones y publicaciones.</value></data></root>

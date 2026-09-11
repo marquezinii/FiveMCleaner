@@ -7,8 +7,8 @@
 
 - **Produto:** Ralven, plataforma de gerenciamento e otimização do Windows com IA, transparente, reversível e orientada por diagnóstico. FiveM para **GTAV Legacy** é a integração especializada atual da área de Jogos.
 - **Integração:** `dev/proxima-versao` é a branch de integração da próxima versão; `main` representa a linha pública/estável. O fluxo de branches, worktrees, Pull Requests, integração e release é definido em `AI_RULES.md`.
-- **Último estado consolidado:** 11/09/2026, após a integração dos PRs #178–#200: correções de contraste, foco, bandeja e visão geral; experiência de falhas e notas de versão; Command Center do dashboard; detecção FiveM Legacy em camadas com seleção manual validada; fila de telemetria ordenada; atualizações compatíveis de dependências e publicação contínua do dashboard. O handoff de tarefas agora vive no corpo do PR, sem `OBJECTIVE.md` obrigatório na raiz. Confirme o estado real com Git e testes atuais antes de trabalhar.
-- **Release pública atual:** `v1.6.1`, publicada a partir de `main`. A próxima versão só é definida no fluxo oficial de release a partir das mudanças posteriores a essa tag.
+- **Último estado consolidado:** 11/09/2026, após a integração dos PRs #178–#201: correções de contraste, foco, bandeja e visão geral; experiência de falhas e notas de versão; Command Center do dashboard; detecção FiveM Legacy em camadas com seleção manual validada; fila de telemetria ordenada; atualizações compatíveis de dependências e publicação contínua do dashboard. Pro e Ralven AI permanecem bloqueados como recursos em desenvolvimento, sem compra, ativação ou cobrança. O handoff de tarefas agora vive no corpo do PR, sem `OBJECTIVE.md` obrigatório na raiz. Confirme o estado real com Git e testes atuais antes de trabalhar.
+- **Release pública atual:** `v1.7.0`, publicada a partir de `main`. A próxima versão só é definida no fluxo oficial de release a partir das mudanças posteriores a essa tag.
 - **Atalho de desenvolvimento:** `Ralven - Desenvolvimento` usa `scripts\Start-DevelopmentApp.ps1`. Conforme `AI_RULES.md`, deve ser reconstruído com `scripts\Install-DevelopmentShortcut.ps1 -Build` quando aplicável. O script espelha a árvore para a pasta irmã fixa `Ralven-dev-shortcut`, sem ficar órfão após a remoção de um worktree.
 
 ## 2. Objetivo e invariantes de segurança
@@ -155,7 +155,7 @@ Somente itens ainda relevantes devem permanecer aqui. Quando resolvidos e integr
 
 Estes números são **referência do último estado validado**, não substituem testes da branch atual.
 
-- **11/09/2026 — `dev/proxima-versao` integrada:** build Release sem avisos e **1.587 testes .NET** aprovados após os PRs #178–#200. As CI aplicáveis aprovaram política/escopo, .NET, Worker, dashboard, site, SBOM, build/smoke do instalador e gate obrigatório. A versão pública permanece `v1.6.1`; publicação continua dependente do fluxo oficial.
+- **11/09/2026 — `v1.7.0`:** build Release sem avisos e **1.587 testes .NET** aprovados para o estado integrado, incluindo política/escopo, Worker, dashboard, site, SBOM e build/smoke do instalador nas CI aplicáveis.
 
 ## 7. Comandos essenciais
 

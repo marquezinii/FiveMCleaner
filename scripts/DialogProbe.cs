@@ -42,7 +42,7 @@ internal static class DialogProbe
         {
             ("login", () => new AccountWindow(auth, profiles, google), null),
             ("registration", () => new AccountWindow(auth, profiles, google), window => Click(window, "SwitchButton")),
-            ("bug", () => new BugReportWindow(new DisabledBugReportService(), "1.6.1", "Leve", "Legacy"), null),
+            ("bug", () => new BugReportWindow(new DisabledBugReportService(), ReleaseNotesCatalog.Versions[0].Version, "Leve", "Legacy"), null),
             ("password", () => new PasswordSecurityWindow(auth, google), null),
             ("privacy", () => new PrivacyConsentWindow(PrivacyConsentScreenVariant.FirstInstallation, true), null),
             ("release", () => new ReleaseNotesWindow(ReleaseNotesCatalog.Versions[0]), null),

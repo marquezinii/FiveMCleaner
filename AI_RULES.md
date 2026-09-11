@@ -450,10 +450,17 @@ Ao ser disparada, a IA deve:
    Release estável publicada**;
 4. atualizar todos os arquivos de versão, `CHANGELOG.md`, notas de release,
    instalador, site e demais artefatos de distribuição, sem divergências;
-5. fazer merge de `dev/proxima-versao` para `main`, salvo se uma comparação
-   explícita de histórico e conteúdo provar que ambas já são idênticas;
-6. criar a tag da versão, publicar `main`, a tag, os artefatos oficiais e a
-   GitHub Release, cujo corpo segue obrigatoriamente o
+5. promover `dev/proxima-versao` para `main` pelo Pull Request exigido pela
+   proteção, aguardando os checks obrigatórios e confirmando que o commit da
+   release já é exatamente `origin/main`; salvo se uma comparação explícita de
+   histórico e conteúdo provar que ambas já são idênticas;
+6. somente após o passo 5, executar
+   `scripts/Test-ReleaseTagTarget.ps1 -Version <versão>` no commit limpo que
+   será marcado; criar e publicar a tag em comando separado, verificando o
+   resultado do comando nativo antes de qualquer passo seguinte. Nunca crie uma
+   tag em paralelo, em sequência não verificada com o push/merge de `main`, ou
+   antes de `HEAD` coincidir com `origin/main`. Em seguida, publicar os
+   artefatos oficiais e a GitHub Release, cujo corpo segue obrigatoriamente o
    [Padrão das GitHub Releases](#padrão-das-github-releases-release-notes)
    definido abaixo;
 7. validar o atualizador de ponta a ponta e sincronizar `dev/proxima-versao`
