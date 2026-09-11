@@ -153,6 +153,15 @@ a mesma sanitização de caminhos já usada no relatório técnico
 que o SDK tente preencher automaticamente — nome da máquina, IP e
 identificador de usuário são sempre sobrescritos/limpos, nunca enviados.
 
+Quando o processo ainda tem uma interface WPF funcional, o Ralven apresenta a
+falha em uma janela própria antes de encerrar ou permitir a continuação segura.
+Os detalhes técnicos exibidos, copiados para a área de transferência e gravados
+no log local passam por `ReportSanitizer`; o envio automático continua opcional
+e depende exclusivamente do consentimento já descrito nesta seção. Falhas de
+baixo nível, como término abrupto de uma thread sem Dispatcher, estouro de
+pilha, corrupção de memória ou indisponibilidade do próprio subsistema gráfico,
+podem impedir essa janela e dependem do fallback do Windows/.NET.
+
 ### Configuração centralizada e ambientes
 
 O DSN do Sentry não é um literal espalhado pelo código: fica em

@@ -39,7 +39,7 @@ test('sensitive live-message changes keep confirmation and CSRF protection', asy
 test('partial source failures are surfaced instead of becoming zero-value metrics', async () => {
   const [, app] = await files;
 
-  assert.match(app, /result\?\.error \? '—' : value/);
+  assert.match(app, /result\?\.error \|\| !hasRows\(result\) \? '—' : value/);
   assert.match(app, /Fonte indisponível; tente atualizar novamente/);
   assert.match(app, /aria-busy/);
 });
@@ -50,4 +50,25 @@ test('operational health consumes the current telemetry stability signals', asyn
   for (const signal of ['app-initializations-per-day', 'abandoned-optimizations', 'gtav-benchmark-outcomes']) {
     assert.match(app, new RegExp(signal));
   }
+});
+
+test('command deck prioritizes real operational signals and keeps telemetry gaps explicit', async () => {
+  const [html, app] = await files;
+
+  assert.match(html, /id="command-posture"/);
+  assert.match(html, /id="command-priorities"/);
+  assert.match(html, /id="coverage-available"/);
+  assert.match(html, /Instrumentação ainda pendente/);
+  assert.match(html, /ainda não são emitidos pelo aplicativo/);
+  assert.match(app, /function renderCommandBrief/);
+  assert.match(app, /não substitui uma fonte indisponível por valores nulos/);
+});
+
+test('empty charts explain both unavailable sources and the event needed to populate the view', async () => {
+  const [, app] = await files;
+
+  assert.match(app, /function renderChartEmpty/);
+  assert.match(app, /Fonte indisponível/);
+  assert.match(app, /definition\.empty/);
+  assert.match(app, /chart-empty-state/);
 });
