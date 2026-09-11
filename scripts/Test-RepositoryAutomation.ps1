@@ -125,17 +125,9 @@ try {
         git add .
         git commit --quiet -m 'test: initialize policy fixture'
         $baseSha = (git rev-parse HEAD).Trim()
-        @'
-# Objetivo da tarefa
-
-- **Agente:** teste
-- **Objetivo:** validar política de pull request.
-- **Escopo:** fixture local sem publicação.
-- **Critérios de conclusão:** política aceita o contrato completo.
-- **Resultado entregue:** fixture validada.
-'@ | Set-Content -LiteralPath OBJECTIVE.md -Encoding utf8
-        git add OBJECTIVE.md
-        git commit --quiet -m 'test: add objective'
+        Set-Content -LiteralPath policy-fixture.txt -Value 'valid pull request fixture' -Encoding utf8
+        git add policy-fixture.txt
+        git commit --quiet -m 'test: add policy fixture'
         $headSha = (git rev-parse HEAD).Trim()
         & (Join-Path $PSScriptRoot 'Test-RepositoryPolicy.ps1') `
             -Workspace $prFixture `
