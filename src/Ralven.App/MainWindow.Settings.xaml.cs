@@ -124,6 +124,11 @@ public partial class MainWindow
 
     private void ReportBug_Click(object sender, RoutedEventArgs e)
     {
+        OpenBugReport();
+    }
+
+    internal void OpenBugReport(string? initialLogText = null)
+    {
         IBugReportService bugReportService = TryCreateHttpsEndpoint(remoteServicesOptions.BugReportEndpoint, out var bugReportEndpoint)
             ? new CloudflareBugReportService(bugReportEndpoint, remoteServicesOptions.Environment)
             : new DisabledBugReportService();
@@ -132,7 +137,8 @@ public partial class MainWindow
             bugReportService,
             viewModel.AppVersion,
             viewModel.SelectedProfileName,
-            viewModel.EditionBadgeLabel)
+            viewModel.EditionBadgeLabel,
+            initialLogText)
         {
             Owner = this
         };
