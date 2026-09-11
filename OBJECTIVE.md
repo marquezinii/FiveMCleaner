@@ -1,8 +1,8 @@
 # Objective
 
 - **Agente:** Codex
-- **Objetivo:** Integrate the Worker dependency update into `dev/proxima-versao` without changing the protected `main` branch.
-- **Escopo:** Update the Worker lockfile and its direct Wrangler development dependency while preserving the current Worker configuration.
-- **Fora do escopo:** Worker behavior, migrations, application code, and release publication.
-- **Critérios de conclusão:** `wrangler` and its resolved dependency tree are updated in the Worker manifest and lockfile, and Worker tests pass.
-- **Resultado entregue:** Updated Wrangler and the resolved Worker lockfile while preserving the existing D1 configuration; Worker tests were run after installing the locked dependencies.
+- **Objetivo:** Reconstruir o dashboard administrativo do Ralven como centro de comando premium, com arquitetura de informação, estados vazios e interações proporcionais aos dados reais disponíveis.
+- **Escopo:** `infra/dashboard`, contratos/agregações administrativas do Worker estritamente necessários, documentação e testes associados.
+- **Fora do escopo:** Release do aplicativo, mudança de dados pessoais/telemetria sem contrato, alteração de billing, autenticação ou operações privilegiadas.
+- **Critérios de conclusão:** A experiência organiza decisões por domínio operacional, explica dados ausentes, oferece drill-down e filtros úteis, preserva acessibilidade/responsividade e passa pelas validações aplicáveis.
+- **Resultado entregue:** Centro de comando monocromático em preto, branco e cinzas, com leitura executiva, fila de prioridades derivada somente de agregados reais, estados vazios explicativos e proteção contra converter agregados ausentes em zero. Validado com as 63 verificações do dashboard e em prévia local com dados e sem dados, nos layouts widescreen e reduzido.
