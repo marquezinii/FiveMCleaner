@@ -1,8 +1,8 @@
-# Objetivo da tarefa
+# Objetivo
 
 - **Agente:** Codex
-- **Objetivo:** Atualizar as dependências compatíveis do site e manter o lint e a tipagem funcionais.
-- **Escopo:** `website/package.json` e `website/package-lock.json`.
-- **Fora de escopo:** Atualizar TypeScript para 7 ou ESLint para 10 antes de a cadeia do `eslint-config-next` oferecer suporte compatível.
-- **Critérios de conclusão:** O site usa as versões compatíveis do Next, tipos, TypeScript e ESLint, e as validações do site passam no ambiente suportado.
-- **Resultado entregue:** Atualizados Next e tipos; TypeScript 6 e ESLint 9 foram mantidos após a CI do Dependabot provar incompatibilidade com TypeScript 7 e ESLint 10.
+- **Objetivo:** Tornar a detecção do FiveM resiliente a instalações válidas em locais e estados suportados, sem ampliar o escopo de acesso nem aceitar falsos positivos.
+- **Escopo:** Centralizar descoberta, validação, cache e fallback manual usados pela área Jogos/FiveM, com testes de regressão e textos localizados necessários.
+- **Fora de escopo:** Alterar arquivos do FiveM/GTA V, executar reparos, instalar software ou suportar GTAV Enhanced.
+- **Critérios de conclusão:** Fontes de descoberta são combinadas por camadas, candidatos são validados e classificados de modo determinístico, consumidores usam o resultado central, e as validações aplicáveis passam.
+- **Resultado entregue:** Localizador central em camadas, cache invalidável, seleção manual validada, consumidor de runtime unificado e 10 testes focados; build Release e suíte .NET aprovadas. O fluxo de sincronização gerou rascunhos para revisão humana contextual das novas traduções.

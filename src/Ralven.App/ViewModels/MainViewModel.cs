@@ -128,6 +128,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private bool notifyWhenUpdateAvailable = true;
     private bool shareAnonymousTelemetry;
     private bool shareCrashReports;
+    private string? manualFiveMInstallationRoot;
     private int? privacyConsentVersion;
     private string? lastSeenReleaseNotesVersion;
     private ReleaseUpdate? availableUpdate;
