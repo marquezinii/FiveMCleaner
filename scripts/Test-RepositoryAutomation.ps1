@@ -159,6 +159,45 @@ try {
         throw 'Release note generation did not normalize the changelog headings.'
     }
 
+    $multiSectionChangelog = Join-Path $temporaryRoot 'multiple-release-sections.md'
+    @'
+## [9.9.8] - 2026-01-01
+
+### Adicionado
+
+- Added.
+
+### Melhorado
+
+- Improved.
+
+### Corrigido
+
+- Fixed.
+
+### Segurança
+
+- Secured.
+
+### Alterações técnicas
+
+- Maintained.
+'@ | Set-Content -LiteralPath $multiSectionChangelog -Encoding utf8
+    & (Join-Path $PSScriptRoot 'New-ReleaseNotes.ps1') `
+        -Version '9.9.8' -ChangelogPath $multiSectionChangelog -OutputPath $notes
+    $multiSectionNotes = Get-Content -LiteralPath $notes -Raw
+    foreach ($heading in @(
+        '## ✨ Novidades',
+        '## 🔧 Melhorias',
+        '## 🐛 Correções',
+        '## 🔒 Segurança',
+        '## ⚙️ Alterações técnicas'
+    )) {
+        if (-not $multiSectionNotes.Contains($heading, [StringComparison]::Ordinal)) {
+            throw "Release note generation omitted '$heading' from a multi-section changelog."
+        }
+    }
+
     $invalidChangelog = Join-Path $temporaryRoot 'CHANGELOG.md'
     "## [9.9.9] - 2026-01-01`n`n### Experimental`n`n- Unsupported." |
         Set-Content -LiteralPath $invalidChangelog -Encoding utf8

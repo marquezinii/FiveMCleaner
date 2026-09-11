@@ -29,19 +29,19 @@ $headings = [ordered]@{
 }
 $headingOrder = @($headings.Keys)
 $body = $release.Groups['body'].Value
-$matches = @([regex]::Matches($body, '(?m)^### (?<name>[^\r\n]+)\r?$'))
-if ($matches.Count -eq 0) {
+$sectionMatches = @([regex]::Matches($body, '(?m)^### (?<name>[^\r\n]+)\r?$'))
+if ($sectionMatches.Count -eq 0) {
     throw "CHANGELOG.md entry $Version has no supported release sections."
 }
-if (-not [string]::IsNullOrWhiteSpace($body.Substring(0, $matches[0].Index))) {
+if (-not [string]::IsNullOrWhiteSpace($body.Substring(0, $sectionMatches[0].Index))) {
     throw "CHANGELOG.md entry $Version contains content before its first release section."
 }
 
 $result = [Collections.Generic.List[string]]::new()
 $seen = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
 $lastOrder = -1
-for ($index = 0; $index -lt $matches.Count; $index++) {
-    $match = $matches[$index]
+for ($index = 0; $index -lt $sectionMatches.Count; $index++) {
+    $match = $sectionMatches[$index]
     $name = $match.Groups['name'].Value.Trim()
     if (-not $headings.Contains($name)) {
         throw "CHANGELOG.md entry $Version uses unsupported section '$name'."
@@ -57,7 +57,7 @@ for ($index = 0; $index -lt $matches.Count; $index++) {
     $lastOrder = $order
 
     $contentStart = $match.Index + $match.Length
-    $contentEnd = if ($index + 1 -lt $matches.Count) { $matches[$index + 1].Index } else { $body.Length }
+    $contentEnd = if ($index + 1 -lt $sectionMatches.Count) { $sectionMatches[$index + 1].Index } else { $body.Length }
     $content = $body.Substring($contentStart, $contentEnd - $contentStart).Trim()
     if ($content -notmatch '(?m)^- \S') {
         throw "CHANGELOG.md entry $Version section '$name' must contain at least one bullet."

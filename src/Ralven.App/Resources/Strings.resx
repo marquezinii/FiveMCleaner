@@ -686,6 +686,13 @@
   <data name="ReleaseNotes.Heading" xml:space="preserve"><value>What's new</value></data>
   <data name="ReleaseNotes.Acknowledge" xml:space="preserve"><value>Got it</value></data>
   <data name="ReleaseNotes.Summary" xml:space="preserve"><value>A brief overview of what changed in this release.</value></data>
+  <data name="ReleaseNotes.1_7_0.Added" xml:space="preserve"><value>• Added an application center to search, install, update, and uninstall supported packages with confirmation.
+• Added French interface support and two-factor authentication with recovery codes.</value></data>
+  <data name="ReleaseNotes.1_7_0.Improved" xml:space="preserve"><value>• Improved FiveM Legacy detection with validated manual selection and clearer system, tray, and installer flows.
+• Reduced background monitoring work while preserving the selected live metrics.</value></data>
+  <data name="ReleaseNotes.1_7_0.Fixed" xml:space="preserve"><value>• Pro and Ralven AI now clearly remain unavailable while they are in development.
+• Fixed contrast, focus, layout, and pending telemetry-order issues.</value></data>
+  <data name="ReleaseNotes.1_7_0.Security" xml:space="preserve"><value>• Restricted package actions to the official WinGet alias and reinforced update and release validation.</value></data>
   <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Updated the publishing infrastructure and browser compatibility baseline, with full validation in continuous integration.</value></data>
   <data name="ReleaseNotes.VersionLabel" xml:space="preserve"><value>Version {0}</value></data>
   <data name="ReleaseNotes.VersionLabelWithDate" xml:space="preserve"><value>Version {0} • {1}</value></data>

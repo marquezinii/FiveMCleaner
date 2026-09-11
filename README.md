@@ -51,23 +51,18 @@ Na Visão geral, o painel ao vivo permite selecionar CPU, GPU, memória, disco o
 | **Leve** | Ajustes suaves, com prioridade para preservar a experiência visual. |
 | **Médio** | Equilíbrio entre qualidade, responsividade e consistência. |
 | **Agressivo** | Reduz efeitos e opções pesadas para máquinas mais limitadas. |
-| **Pessoal (Pro)** | Preferências por rotina, recomendações conforme o diagnóstico, acompanhamento local de mudanças e medições guiadas com comparação e exportação. |
+| **Pessoal (Pro)** | Em desenvolvimento; não inicia operações nem salva preferências enquanto o Pro estiver bloqueado. |
 
-Leve, Médio e Agressivo continuam gratuitos. O [espaço pessoal](docs/ultra.md) adapta ações
-seguras ao uso e ao diagnóstico, com uma preferência exclusiva e reversível para
-o ponteiro; não promete ser mais agressivo. Requer
-acesso Pro confirmado pelo servidor. A página **Ralven Pro** reúne comparação de
-planos, checkout hospedado do Asaas, atualização do status e cancelamento
-de renovação. A oferta mensal padrão é R$ 19,90, configurada no servidor; vendas
-ficam desabilitadas até a configuração e homologação do provedor. Consulte
-[cobrança e acesso pago](docs/billing.md) para implantação e testes externos.
-Para configurar o provedor, siga o [guia do Asaas](docs/asaas-setup.md).
+Leve, Médio e Agressivo continuam gratuitos. O espaço pessoal, o Ralven Pro e o
+Ralven AI estão em desenvolvimento: a comparação de planos pode ser exibida,
+mas o cliente não oferece compra, ativação, atualização ou cancelamento, e as
+vendas permanecem desabilitadas. As fundações de cobrança e acesso seguem
+documentadas para implantação futura em [cobrança e acesso pago](docs/billing.md)
+e no [guia do Asaas](docs/asaas-setup.md), sem constituir uma oferta pública.
 
 Diagnóstico, perfis gratuitos, ferramentas FiveM Legacy, histórico, relatórios e
-restauração continuam Free. Pro acrescenta conveniência e acompanhamento:
-quatro rotinas pessoais, leituras locais opt-in e comparação de medições
-compatíveis. O histórico pessoal completo e a exportação dos registros já
-criados continuam disponíveis após o vencimento da assinatura.
+restauração continuam Free. Nenhum recurso em desenvolvimento inicia operações
+ou altera o sistema até sua ativação explícita e validada.
 
 Perfis são composições de ações conhecidas — não listas genéricas de "tweaks". Manutenção de dados é sempre opt-in; caches protegidos, entitlements, plugins e autenticação nunca são tratados como lixo.
 
@@ -92,7 +87,7 @@ Leia a [política de segurança](docs/safety.md) e as [evidências técnicas](do
 | Jogos | Catálogo interno com um hub do FiveM sobre GTAV Legacy, reunindo o plano especializado, acesso ao otimizador geral, ao histórico/restauração e ao download oficial mais recente do ReShade, sem redistribuir seu instalador. |
 | Conta | Cadastro e login por e-mail ou Google, vinculação segura de provedores, verificação e troca de e-mail, recuperação e troca de senha, TOTP 2FA com códigos de recuperação e exclusão; Google usa OAuth 2.0 + PKCE quando a credencial desktop é fornecida ao build. |
 | Bandeja | Menu escuro com estado do aplicativo e acessos rápidos para abrir o Ralven, o Otimizador, o monitor local do FiveM, atualizações e Configurações; sair continua explícito e separado. |
-| Ralven AI | Orientação contextual em linguagem natural baseada no diagnóstico e no catálogo já conhecidos, sempre com revisão explícita antes de qualquer aplicação. |
+| Ralven AI | Em desenvolvimento e indisponível no cliente atual; quando ativado, exigirá revisão explícita antes de qualquer aplicação. |
 | Privacidade | ID token somente em memória, refresh token protegido por DPAPI e telemetria limitada por consentimento. |
 | Relatos de bug | Envio explícito com campos validados, e-mail e trecho de log opcionais — sem anexos automáticos. |
 | Atualizações | Feed assinado, validação de origem/tamanho/SHA-256, staging, ativação atômica, health-check e rollback. |
