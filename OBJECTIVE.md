@@ -1,8 +1,7 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** Tornar o painel de Notas da Versão legível, compacto e fixo no centro do aplicativo.
-- **Escopo:** Conteúdo localizado, layout e comportamento da janela de Notas da Versão, com testes de regressão relacionados.
-- **Fora do escopo:** Catálogo de versões, fluxo de atualização, preferências persistidas e demais telas.
-- **Critérios de conclusão:** A nota da versão 1.6.1 mostra texto localizado, o modal não pode ser movido, preserva acessibilidade e tem tamanho proporcional ao conteúdo.
-- **Resultado entregue:** Painel compacto e não redimensionável, centralizado pelo proprietário, com resumo e confirmação localizados; a nota 1.6.1 deixou de expor uma chave interna. Testes, build, localização e formatação foram validados.
+- **Objetivo:** Refinar o indicador de versão no rodapé inferior esquerdo para que permaneça claro, discreto e visualmente integrado à interface do Ralven.
+- **Escopo:** Ajustar somente a apresentação do indicador de versão e os recursos visuais diretamente necessários. Não inclui alteração do valor da versão, navegação, atualização, release ou redesign da barra lateral.
+- **Critérios de conclusão:** O rótulo e o número apresentam hierarquia clara, legibilidade preservada nos temas suportados e aparência coerente com o restante do aplicativo; o resultado é renderizado e inspecionado no layout real; build e validações aplicáveis passam.
+- **Resultado entregue:** O card genérico foi substituído por um indicador compacto sem moldura externa, composto pela linha de acento do design system, rótulo secundário e versão monoespaçada em badge tonal. O resultado foi inspecionado em capturas 1440×900 nos temas claro e escuro; build Release sem avisos, 1.570 testes, formatação, segurança e localização foram validados.
