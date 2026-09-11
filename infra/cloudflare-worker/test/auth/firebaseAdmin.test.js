@@ -53,13 +53,20 @@ function jsonResponse(body, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
 }
 
+function isOAuthTokenRequest(url) {
+  const requestUrl = new URL(url);
+  return requestUrl.protocol === 'https:'
+    && requestUrl.hostname === 'oauth2.googleapis.com'
+    && requestUrl.pathname === '/token';
+}
+
 test('admin lookup binds enrollment ownership to the requested uid', async () => {
   clearFirebaseAdminTokenCache();
   const env = await adminEnv();
   const requests = [];
   const fetch = async (url, init) => {
     requests.push({ url, init });
-    if (url.includes('oauth2.googleapis.com')) return jsonResponse({ access_token: 'access', expires_in: 3600 });
+    if (isOAuthTokenRequest(url)) return jsonResponse({ access_token: 'access', expires_in: 3600 });
     return jsonResponse({ users: [{ localId: 'uid-1', mfaInfo: [{ mfaEnrollmentId: 'totp-1', totpInfo: {} }] }] });
   };
   assert.equal(await accountHasTotpEnrollment(env, 'uid-1', 'totp-1', { fetch }), true);
@@ -71,7 +78,7 @@ test('admin session check rejects disabled, revoked, and missing accounts', asyn
   clearFirebaseAdminTokenCache();
   const env = await adminEnv();
   const check = body => accountSessionIsCurrent(env, 'uid-1', 200, {
-    fetch: async url => url.includes('oauth2.googleapis.com')
+    fetch: async url => isOAuthTokenRequest(url)
       ? jsonResponse({ access_token: 'access', expires_in: 3600 })
       : jsonResponse(body),
   });
@@ -88,7 +95,7 @@ test('admin recovery removes all MFA enrollments and advances validSince without
   const requests = [];
   const fetch = async (url, init) => {
     requests.push({ url, init });
-    return url.includes('oauth2.googleapis.com')
+    return isOAuthTokenRequest(url)
       ? jsonResponse({ access_token: 'access', expires_in: 3600 })
       : jsonResponse({ idToken: 'must-not-be-returned', refreshToken: 'must-not-be-returned' });
   };
@@ -104,7 +111,7 @@ test('admin account deletion is scoped to the server-verified uid', async () => 
   const requests = [];
   const fetch = async (url, init) => {
     requests.push({ url, init });
-    return url.includes('oauth2.googleapis.com')
+    return isOAuthTokenRequest(url)
       ? jsonResponse({ access_token: 'access', expires_in: 3600 })
       : jsonResponse({});
   };
@@ -116,7 +123,7 @@ test('admin account deletion is scoped to the server-verified uid', async () => 
 test('admin account deletion is idempotent when Firebase already removed the uid', async () => {
   clearFirebaseAdminTokenCache();
   const env = await adminEnv();
-  const fetch = async url => url.includes('oauth2.googleapis.com')
+  const fetch = async url => isOAuthTokenRequest(url)
     ? jsonResponse({ access_token: 'access', expires_in: 3600 })
     : jsonResponse({ error: { message: 'USER_NOT_FOUND' } }, 400);
 
