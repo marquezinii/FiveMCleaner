@@ -1972,4 +1972,7 @@ CPU moyen {3} · GPU {4} · RAM {5} · Disque {6}</value></data>
   <data name="Dialog.Close" xml:space="preserve"><value>Fermer</value></data>
   <data name="Dialog.Cancel" xml:space="preserve"><value>Annuler</value></data>
   <data name="Dialog.Confirm" xml:space="preserve"><value>Continuer</value></data>
-  <data name="Dialog.OptionalDetails" xml:space="preserve"><value>Détails facultatifs</value></data></root>
+  <data name="Dialog.OptionalDetails" xml:space="preserve"><value>Détails facultatifs</value></data>
+  <data name="ReleaseNotes.Acknowledge" xml:space="preserve"><value>Compris</value></data>
+  <data name="ReleaseNotes.Summary" xml:space="preserve"><value>Un aperçu rapide des changements de cette version.</value></data>
+  <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Mise à jour de l’infrastructure de publication et de la base de compatibilité des navigateurs, avec une validation complète dans l’intégration continue.</value></data></root>

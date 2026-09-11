@@ -1972,4 +1972,7 @@ Média CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Runtime.BrokerRollbackCompletedDetail" xml:space="preserve"><value>As alterações administrativas foram restauradas.</value></data>
   <data name="Runtime.BrokerRejectedDetail" xml:space="preserve"><value>A solicitação administrativa foi recusada com segurança.</value></data>
   <data name="Runtime.BrokerFailedDetail" xml:space="preserve"><value>A operação administrativa foi interrompida com segurança. Consulte o relatório antes de tentar novamente.</value></data>
-</root>
+
+  <data name="ReleaseNotes.Acknowledge" xml:space="preserve"><value>Entendi</value></data>
+  <data name="ReleaseNotes.Summary" xml:space="preserve"><value>Um resumo rápido do que mudou nesta versão.</value></data>
+  <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Atualizada a infraestrutura de publicação e a base de compatibilidade dos navegadores, com validação completa na integração contínua.</value></data></root>
