@@ -165,6 +165,7 @@ public static class TelemetryEventValidator
 /// </summary>
 public sealed class LocalTelemetryQueue
 {
+    private static long lastQueuedUtcTicks;
     private readonly string queueDirectory;
     private readonly JsonSerializerOptions jsonOptions;
 
@@ -182,7 +183,8 @@ public sealed class LocalTelemetryQueue
         ArgumentNullException.ThrowIfNull(telemetryEvent);
         Directory.CreateDirectory(queueDirectory);
 
-        var fileName = $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}.json";
+        var enqueuedAt = new DateTimeOffset(NextQueuedUtcTicks(), TimeSpan.Zero);
+        var fileName = $"{enqueuedAt:yyyyMMddHHmmssfffffff}_{Guid.NewGuid():N}.json";
         var temporaryPath = Path.Combine(queueDirectory, $".{fileName}.tmp");
         var finalPath = Path.Combine(queueDirectory, fileName);
 
@@ -199,6 +201,19 @@ public sealed class LocalTelemetryQueue
         }
 
         File.Move(temporaryPath, finalPath, overwrite: true);
+    }
+
+    private static long NextQueuedUtcTicks()
+    {
+        while (true)
+        {
+            var previous = Volatile.Read(ref lastQueuedUtcTicks);
+            var next = Math.Max(DateTime.UtcNow.Ticks, previous + 1);
+            if (Interlocked.CompareExchange(ref lastQueuedUtcTicks, next, previous) == previous)
+            {
+                return next;
+            }
+        }
     }
 
     /// <summary>
