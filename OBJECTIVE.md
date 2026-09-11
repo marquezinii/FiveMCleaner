@@ -1,7 +1,8 @@
-# Objetivo da tarefa
+# Objective
 
 - **Agente:** Codex
-- **Objetivo:** Impedir que a moldura circular do acesso à conta seja cortada no cabeçalho.
-- **Escopo:** Ajustar somente o layout/estilo responsável pelo recorte visual do botão de conta.
-- **Critérios de conclusão:** A moldura permanece completamente visível e as validações aplicáveis passam.
-- **Resultado entregue:** O botão de conta passou a ter 36 px de altura, deixando folga vertical para a borda interna de 32 px. A compilação final passou; a suíte aplicável teve 1.570 testes aprovados antes do ajuste estritamente visual final.
+- **Objetivo:** Integrate the Worker dependency update into `dev/proxima-versao` without changing the protected `main` branch.
+- **Escopo:** Update the Worker lockfile and its direct Wrangler development dependency while preserving the current Worker configuration.
+- **Fora do escopo:** Worker behavior, migrations, application code, and release publication.
+- **Critérios de conclusão:** `wrangler` and its resolved dependency tree are updated in the Worker manifest and lockfile, and Worker tests pass.
+- **Resultado entregue:** Updated Wrangler and the resolved Worker lockfile while preserving the existing D1 configuration; Worker tests were run after installing the locked dependencies.
