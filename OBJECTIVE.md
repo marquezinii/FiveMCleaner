@@ -1,7 +1,8 @@
-# Objetivo da tarefa
+# Objective
 
 - **Agente:** Codex
-- **Objetivo:** Garantir cobertura completa de localização em português, inglês, espanhol e francês e tornar a manutenção dos catálogos verificável e escalável.
-- **Escopo:** Auditar textos públicos do aplicativo e componentes auxiliares, corrigir catálogos e consumo de cultura, adicionar francês, criar sincronização/validação versionada e validar os quatro idiomas. Não inclui tradução dinâmica em runtime, publicação ou alteração de versão.
-- **Critérios de conclusão:** Todos os catálogos possuem o mesmo conjunto de chaves e placeholders; textos públicos usam a infraestrutura de localização; francês pode ser selecionado sem alterar lógica da aplicação; validações automatizadas falham para chaves ausentes, órfãs, duplicadas ou placeholders divergentes; build, testes e validação visual aplicáveis são executados.
-- **Resultado entregue:** Catálogo declarativo com inglês canônico e cobertura equivalente em português, espanhol e francês para aplicativo, atualizador e ações Windows; sincronização, revisão por hash, glossário, pseudo-localização e gates de CI/release adicionados. Foram validadas 2.008 chaves em três conjuntos, build Release sem avisos, 1.446 testes, contrato do instalador e 70 capturas visuais (mais recapturas dos ajustes de expansão no Overview).
+- **Objetivo:** Reconstruir o dashboard administrativo do Ralven como centro de comando premium, com arquitetura de informação, estados vazios e interações proporcionais aos dados reais disponíveis.
+- **Escopo:** `infra/dashboard`, contratos/agregações administrativas do Worker estritamente necessários, documentação e testes associados.
+- **Fora do escopo:** Release do aplicativo, mudança de dados pessoais/telemetria sem contrato, alteração de billing, autenticação ou operações privilegiadas.
+- **Critérios de conclusão:** A experiência organiza decisões por domínio operacional, explica dados ausentes, oferece drill-down e filtros úteis, preserva acessibilidade/responsividade e passa pelas validações aplicáveis.
+- **Resultado entregue:** Centro de comando monocromático em preto, branco e cinzas, com leitura executiva, fila de prioridades derivada somente de agregados reais, estados vazios explicativos e proteção contra converter agregados ausentes em zero. Validado com as 63 verificações do dashboard e em prévia local com dados e sem dados, nos layouts widescreen e reduzido.
