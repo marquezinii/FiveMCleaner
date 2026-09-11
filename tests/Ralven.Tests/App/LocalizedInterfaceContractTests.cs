@@ -487,6 +487,22 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void ReleaseNotesWindow_IsCompactAndFixed()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var document = XDocument.Load(Path.Combine(
+            root,
+            "src",
+            "Ralven.App",
+            "Views",
+            "ReleaseNotesWindow.xaml"));
+
+        var window = document.Root!;
+        Assert.Equal("NoResize", (string?)window.Attribute("ResizeMode"));
+        Assert.Equal("440", (string?)window.Attribute("Height"));
+    }
+
+    [Fact]
     public void PrivacyConsentWindow_CanOnlyCloseAfterContinue()
     {
         var root = TestHelpers.FindRepositoryRoot();
@@ -688,8 +704,9 @@ public sealed partial class LocalizedInterfaceContractTests
         var baseButtonStyle = styleMarkup[styleMarkup.IndexOf("x:Key=\"ButtonBaseStyle\"", StringComparison.Ordinal)..styleMarkup.IndexOf("x:Key=\"PrimaryButtonStyle\"", StringComparison.Ordinal)];
         Assert.Contains("Property=\"Height\" Value=\"36\"", baseButtonStyle, StringComparison.Ordinal);
         Assert.Contains("Property=\"MinHeight\" Value=\"36\"", baseButtonStyle, StringComparison.Ordinal);
-        Assert.Contains("x:Name=\"FocusRing\"", baseButtonStyle, StringComparison.Ordinal);
-        Assert.Contains("Property=\"IsKeyboardFocused\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.Contains("FocusVisualStyle\" Value=\"{StaticResource KeyboardFocusVisual}\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.DoesNotContain("x:Name=\"FocusRing\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.DoesNotContain("Property=\"IsKeyboardFocused\"", baseButtonStyle, StringComparison.Ordinal);
         Assert.Contains("Property=\"Opacity\" Value=\"0.55\"", baseButtonStyle, StringComparison.Ordinal);
         Assert.Contains("TextElement.Foreground=\"{TemplateBinding Foreground}\"", baseButtonStyle, StringComparison.Ordinal);
         Assert.Contains("BasedOn=\"{StaticResource ButtonBaseStyle}\"", styleMarkup, StringComparison.Ordinal);
@@ -697,7 +714,7 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("ScaleTransform", styleMarkup, StringComparison.Ordinal);
         Assert.DoesNotContain("ScaleTransform", WithoutXmlComments(overview), StringComparison.Ordinal);
         Assert.DoesNotContain("ScaleTransform", WithoutXmlComments(optimizer), StringComparison.Ordinal);
-        Assert.True(Regex.Matches(styles, "Property=\"IsKeyboardFocused\"").Count >= 1);
+        Assert.Contains("x:Key=\"KeyboardFocusVisual\"", styles, StringComparison.Ordinal);
         Assert.Contains("<Style TargetType=\"ScrollBar\">", styles, StringComparison.Ordinal);
         Assert.Contains("HorizontalAlignment=\"Right\"", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"5\"", styles, StringComparison.Ordinal);
@@ -909,8 +926,9 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains(baseStyle.Descendants(presentation + "ControlTemplate"), template =>
             (string?)template.Attribute("TargetType") == "Button");
-        Assert.Contains(baseStyle.Descendants(presentation + "Trigger"), trigger =>
-            (string?)trigger.Attribute("Property") == "IsKeyboardFocused");
+        Assert.Contains(baseStyle.Elements(presentation + "Setter"), setter =>
+            (string?)setter.Attribute("Property") == "FocusVisualStyle"
+            && (string?)setter.Attribute("Value") == "{StaticResource KeyboardFocusVisual}");
 
         foreach (var key in new[]
                  {
@@ -987,7 +1005,7 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
-    public void VersionCard_RemovesProtectionStatusAndShowsTheInstalledVersion()
+    public void VersionBadge_RemovesProtectionStatusAndShowsTheInstalledVersion()
     {
         var root = TestHelpers.FindRepositoryRoot();
         var mainWindow = File.ReadAllText(Path.Combine(
@@ -998,7 +1016,10 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("Safety.Active", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Safety.SnapshotRollback", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Style=\"{StaticResource FieldSurface}\" Padding=\"12,8\"", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Style=\"{StaticResource FieldSurface}\" Padding=\"12,8\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource HeroAccentRule}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Background=\"{DynamicResource AccentWashBrush}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("CornerRadius=\"{StaticResource RadiusXs}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding AppVersion, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Style=\"{StaticResource OverlineText}\"", mainWindow, StringComparison.Ordinal);
