@@ -17,7 +17,6 @@ public sealed partial class MainViewModel
     private bool isUltraSelected;
     private bool hasProAccess;
     private bool hasRalvenAiAccess;
-    private bool isFreePlan;
     private bool isPersonalBusy;
     private bool refreshingUltra;
     private string ultraStatus = string.Empty;
@@ -72,7 +71,7 @@ public sealed partial class MainViewModel
     public bool IsUltraSelected => isUltraSelected && IsGeneralWindowsOptimization;
     public bool HasProAccess => hasProAccess;
     public bool HasRalvenAiAccess => hasRalvenAiAccess;
-    public bool IsFreePlan => isFreePlan;
+    public bool IsRalvenAiAvailable => ProFeatureAvailability.Enabled && hasRalvenAiAccess;
     public bool IsPersonalBusy => isPersonalBusy;
     public bool CanEditPersonalPreferences => !IsBusy && !isPersonalBusy && !isWindowsGamingBusy;
     public bool CanSavePersonalProfile => hasProAccess && CanEditPersonalPreferences;
@@ -189,10 +188,11 @@ public sealed partial class MainViewModel
         RaiseCommandState();
     }
 
-    public void SetRalvenAiAccess(bool available) =>
+    public void SetRalvenAiAccess(bool available)
+    {
         SetProperty(ref hasRalvenAiAccess, available && hasProAccess);
-
-    public void SetFreePlan(bool available) => SetProperty(ref isFreePlan, available);
+        OnPropertyChanged(nameof(IsRalvenAiAvailable));
+    }
 
     private void UpdatePersonalPreferences(PersonalOptimizationPreferencesDto preferences)
     {
@@ -344,7 +344,7 @@ public sealed partial class MainViewModel
         refreshingUltra = true;
         foreach (var property in new[]
         {
-            nameof(IsUltraSelected), nameof(HasProAccess), nameof(IsPersonalBusy), nameof(CanEditPersonalPreferences),
+            nameof(IsUltraSelected), nameof(HasProAccess), nameof(IsRalvenAiAvailable), nameof(IsPersonalBusy), nameof(CanEditPersonalPreferences),
             nameof(CanSavePersonalProfile), nameof(CanUsePersonalTools), nameof(CanCheckPersonalTracking), nameof(CanStopPersonalTracking),
             nameof(PersonalUsageLabels), nameof(PersonalUsageIndex), nameof(PersonalUsageDetail), nameof(PersonalPreserveAppearance),
             nameof(PersonalPreserveCapture), nameof(PersonalAllowPerformancePower), nameof(PersonalCleanTemporaryFiles),

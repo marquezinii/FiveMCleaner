@@ -34,15 +34,9 @@ public partial class MainWindow
         UpdateBillingSession();
         ActivateNavItem(ProNav);
         Navigate(ProPage);
-        _ = RequestRefreshBillingAsync();
     }
 
     private void OpenPro_Click(object sender, RoutedEventArgs e) => RequestNavigateToPro();
-    internal void RequestExplorePro()
-    {
-        RequestNavigateToOptimizer(OptimizationScope.GeneralWindows);
-        viewModel.SelectUltra();
-    }
     internal void RequestProSignIn()
     {
         if (accountService is null) { proViewModel.ShowMessage("Pro.Unavailable.Description"); return; }

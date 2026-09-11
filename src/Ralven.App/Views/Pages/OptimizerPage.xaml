@@ -277,7 +277,7 @@
                                                         Option0Label="{Binding [Profiles.Light.Name], Source={StaticResource LocalizedStrings}}"
                                                         Option1Label="{Binding [Profiles.Balanced.Name], Source={StaticResource LocalizedStrings}}"
                                                         Option2Label="{Binding [Profiles.Aggressive.Name], Source={StaticResource LocalizedStrings}}"
-                                                        Option3Label="{Binding [Ultra.Name], Source={StaticResource LocalizedStrings}}"
+                                                        Option3Label="{Binding [Ultra.Development.Name], Source={StaticResource LocalizedStrings}}"
                                                         ShowOption3="{Binding IsGeneralWindowsOptimization}"
                                                         RecommendedLabel="{Binding [Profiles.RecommendedBadge], Source={StaticResource LocalizedStrings}}"
                                                         SelectionChanged="ProfileSpectrum_SelectionChanged" />

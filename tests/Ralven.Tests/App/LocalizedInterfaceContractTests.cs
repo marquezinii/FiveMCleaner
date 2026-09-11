@@ -75,6 +75,7 @@ public sealed partial class LocalizedInterfaceContractTests
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "GamesPage.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "FiveMPage.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "RalvenAiPage.xaml"),
+            Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "ProPage.xaml"),
             Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "OptimizerPage.xaml")
         };
         var keys = sources
@@ -551,7 +552,7 @@ public sealed partial class LocalizedInterfaceContractTests
         // "recomendado" chega via RecommendedIndex, calculado a partir das
         // mesmas três propriedades do ViewModel.
         Assert.Contains("SpectrumSelector", optimizer, StringComparison.Ordinal);
-        Assert.Contains("Option3Label=\"{Binding [Ultra.Name]", optimizer, StringComparison.Ordinal);
+        Assert.Contains("Option3Label=\"{Binding [Ultra.Development.Name]", optimizer, StringComparison.Ordinal);
         Assert.DoesNotContain("ExclusiveLabel=", optimizer, StringComparison.Ordinal);
         Assert.Contains("[Ultra.Exclusive]", ultraPanel, StringComparison.Ordinal);
         Assert.DoesNotContain("SelectUltra_Click", optimizer, StringComparison.Ordinal);

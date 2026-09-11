@@ -209,7 +209,6 @@ public partial class MainWindow
             if (string.Equals(state, "free", StringComparison.OrdinalIgnoreCase))
             {
                 viewModel.SetProAccess(false);
-                viewModel.SetFreePlan(true);
                 return (RalvenAiPage, RalvenAiNav);
             }
             viewModel.SetProAccess(true);

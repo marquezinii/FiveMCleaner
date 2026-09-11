@@ -110,7 +110,7 @@ public sealed class CloudflareBillingServiceTests
     }
 
     [Fact]
-    public void CheckoutRequiresCurrentConsentAndCannotRunInDemoOrDuringAnotherRequest()
+    public void CheckoutRemainsLockedWhileProIsInDevelopment()
     {
         var vm = new ProPageViewModel();
         var offer = new BillingOffer("ralven_pro_monthly_1990", 1990, "BRL", 1);
@@ -118,7 +118,8 @@ public sealed class CloudflareBillingServiceTests
         vm.SetSnapshot(new(offer, true, null));
         Assert.False(vm.CanCheckout);
         vm.Consent = true;
-        Assert.True(vm.CanCheckout);
+        Assert.False(vm.CanCheckout);
+        Assert.False(vm.CanRefresh);
         vm.SetBusy(true);
         Assert.False(vm.CanCheckout);
         vm.SetBusy(false);

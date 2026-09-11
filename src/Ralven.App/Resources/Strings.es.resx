@@ -2009,4 +2009,12 @@ Excepción: {3}
   <data name="ErrorDialog.ClosePreview" xml:space="preserve"><value>Cerrar vista previa</value></data>
   <data name="ReleaseNotes.Acknowledge" xml:space="preserve"><value>Entendido</value></data>
   <data name="ReleaseNotes.Summary" xml:space="preserve"><value>Un breve resumen de los cambios de esta versión.</value></data>
-  <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Se actualizaron la infraestructura de publicación y la base de compatibilidad de los navegadores, con validación completa en la integración continua.</value></data></root>
+  <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Se actualizaron la infraestructura de publicación y la base de compatibilidad de los navegadores, con validación completa en la integración continua.</value></data>
+  <data name="Navigation.RalvenAiDevelopment" xml:space="preserve"><value>Ralven AI · Próximamente</value></data>
+  <data name="RalvenAi.Development.Title" xml:space="preserve"><value>Ralven AI está en desarrollo</value></data>
+  <data name="RalvenAi.Development.Detail" xml:space="preserve"><value>Ralven AI llegará con Ralven Pro. Aún no se puede activar ni usar.</value></data>
+  <data name="Ultra.Development.Name" xml:space="preserve"><value>Personalizado · Próximamente</value></data>
+  <data name="Pro.Development.Title" xml:space="preserve"><value>Pro está en desarrollo</value></data>
+  <data name="Pro.Development.Detail" xml:space="preserve"><value>Las funciones Pro, los pagos y Ralven AI estarán disponibles próximamente. Aún no se puede comprar ni activar nada.</value></data>
+  <data name="Pro.Development.Action" xml:space="preserve"><value>Próximamente</value></data>
+  <data name="Pro.DiscoverDevelopment" xml:space="preserve"><value>Descubre Ralven Pro · Próximamente</value></data></root>
