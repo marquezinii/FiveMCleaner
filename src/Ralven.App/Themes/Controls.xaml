@@ -31,6 +31,22 @@
     -->
     <local:PercentWidthConverter x:Key="PercentWidthConverter" />
 
+    <!-- FocusVisualStyle is rendered only for keyboard navigation. Template
+         triggers on IsKeyboardFocused also fire after a mouse click. -->
+    <Style x:Key="KeyboardFocusVisual" TargetType="Control">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Control">
+                    <Border Margin="-3"
+                            BorderBrush="{DynamicResource FocusRingBrush}"
+                            BorderThickness="2"
+                            CornerRadius="{StaticResource RadiusMd}"
+                            IsHitTestVisible="False" />
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style TargetType="ToolTip">
         <Setter Property="Background" Value="{DynamicResource Surface3Brush}" />
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
@@ -78,32 +94,20 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="HorizontalContentAlignment" Value="Center" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="Button">
-                    <Grid>
-                        <Border x:Name="Root"
-                                Background="{TemplateBinding Background}"
-                                BorderBrush="{TemplateBinding BorderBrush}"
-                                BorderThickness="{TemplateBinding BorderThickness}"
-                                CornerRadius="{StaticResource RadiusSm}">
-                            <ContentPresenter Margin="{TemplateBinding Padding}"
-                                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
-                                              VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
-                        </Border>
-                        <Border x:Name="FocusRing"
-                                BorderBrush="{DynamicResource FocusRingBrush}"
-                                BorderThickness="2"
-                                CornerRadius="{StaticResource RadiusMd}"
-                                IsHitTestVisible="False"
-                                Margin="-3"
-                                Opacity="0" />
-                    </Grid>
+                    <Border x:Name="Root"
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="{StaticResource RadiusSm}">
+                        <ContentPresenter Margin="{TemplateBinding Padding}"
+                                          HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                          VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+                    </Border>
                     <ControlTemplate.Triggers>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="FocusRing" Property="Opacity" Value="1" />
-                        </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.55" />
                             <Setter Property="Cursor" Value="Arrow" />
@@ -282,7 +286,7 @@
         <Setter Property="FontSize" Value="13" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
@@ -328,10 +332,6 @@
                         <Trigger Property="IsPressed" Value="True">
                             <Setter TargetName="Box" Property="Opacity" Value="0.8" />
                         </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Box" Property="BorderBrush" Value="{DynamicResource FocusRingBrush}" />
-                            <Setter TargetName="Box" Property="BorderThickness" Value="2" />
-                        </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.5" />
                             <Setter Property="Cursor" Value="Arrow" />
@@ -349,7 +349,7 @@
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="VerticalContentAlignment" Value="Center" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="CheckBox">
@@ -360,11 +360,6 @@
                         </Grid.ColumnDefinitions>
                         <ContentPresenter VerticalAlignment="Center" />
                         <Grid Grid.Column="1" Width="44" Height="32" Margin="16,0,0,0" VerticalAlignment="Center">
-                            <Border x:Name="FocusRing"
-                                    CornerRadius="{StaticResource RadiusMd}"
-                                    BorderBrush="{DynamicResource FocusRingBrush}"
-                                    BorderThickness="2"
-                                    Opacity="0" />
                             <Border x:Name="Track"
                                     Width="36" Height="20"
                                     HorizontalAlignment="Center"
@@ -430,9 +425,6 @@
                             <Setter TargetName="Track" Property="Background" Value="{DynamicResource AccentBrightBrush}" />
                             <Setter TargetName="Track" Property="BorderBrush" Value="{DynamicResource AccentBrightBrush}" />
                         </MultiTrigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="FocusRing" Property="Opacity" Value="1" />
-                        </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.45" />
                             <Setter Property="Cursor" Value="Arrow" />
@@ -458,7 +450,7 @@
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
@@ -480,9 +472,6 @@
                             <Setter TargetName="Root" Property="Background" Value="{DynamicResource Surface3Brush}" />
                             <Setter TargetName="Root" Property="Effect" Value="{DynamicResource Elevation1Shadow}" />
                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource FocusRingBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.45" />
@@ -512,7 +501,6 @@
                             <Setter TargetName="Root" Property="Background" Value="{DynamicResource Surface3Brush}" />
                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                         </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True"><Setter TargetName="FocusMark" Property="Visibility" Value="Visible" /></Trigger>
                         <Trigger Property="IsEnabled" Value="False"><Setter TargetName="Root" Property="Opacity" Value="0.45" /></Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -538,7 +526,7 @@
         <Setter Property="BorderThickness" Value="1" />
         <Setter Property="FontSize" Value="13" />
         <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="ItemContainerStyle">
             <Setter.Value>
                 <Style TargetType="ComboBoxItem">
@@ -633,11 +621,6 @@
                             </Border>
                         </Popup>
                     </Grid>
-                    <ControlTemplate.Triggers>
-                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                            <Setter TargetName="ToggleButton" Property="BorderBrush" Value="{DynamicResource FocusRingBrush}" />
-                        </Trigger>
-                    </ControlTemplate.Triggers>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
@@ -754,7 +737,7 @@
         <Setter Property="Height" Value="40" />
         <Setter Property="Cursor" Value="Hand" />
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="RadioButton">
@@ -774,9 +757,6 @@
                             <Setter TargetName="Root" Property="Background" Value="{DynamicResource AccentSoftBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
                             <Setter Property="FontWeight" Value="SemiBold" />
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocused" Value="True">
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource FocusRingBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>

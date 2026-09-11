@@ -688,15 +688,16 @@ public sealed partial class LocalizedInterfaceContractTests
         var baseButtonStyle = styleMarkup[styleMarkup.IndexOf("x:Key=\"ButtonBaseStyle\"", StringComparison.Ordinal)..styleMarkup.IndexOf("x:Key=\"PrimaryButtonStyle\"", StringComparison.Ordinal)];
         Assert.Contains("Property=\"Height\" Value=\"36\"", baseButtonStyle, StringComparison.Ordinal);
         Assert.Contains("Property=\"MinHeight\" Value=\"36\"", baseButtonStyle, StringComparison.Ordinal);
-        Assert.Contains("x:Name=\"FocusRing\"", baseButtonStyle, StringComparison.Ordinal);
-        Assert.Contains("Property=\"IsKeyboardFocused\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.Contains("FocusVisualStyle\" Value=\"{StaticResource KeyboardFocusVisual}\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.DoesNotContain("x:Name=\"FocusRing\"", baseButtonStyle, StringComparison.Ordinal);
+        Assert.DoesNotContain("Property=\"IsKeyboardFocused\"", baseButtonStyle, StringComparison.Ordinal);
         Assert.Contains("Property=\"Opacity\" Value=\"0.55\"", baseButtonStyle, StringComparison.Ordinal);
         Assert.Contains("BasedOn=\"{StaticResource ButtonBaseStyle}\"", styleMarkup, StringComparison.Ordinal);
         Assert.Contains("Property=\"Background\" Value=\"{DynamicResource Surface3Brush}\"", styleMarkup, StringComparison.Ordinal);
         Assert.DoesNotContain("ScaleTransform", styleMarkup, StringComparison.Ordinal);
         Assert.DoesNotContain("ScaleTransform", WithoutXmlComments(overview), StringComparison.Ordinal);
         Assert.DoesNotContain("ScaleTransform", WithoutXmlComments(optimizer), StringComparison.Ordinal);
-        Assert.True(Regex.Matches(styles, "Property=\"IsKeyboardFocused\"").Count >= 1);
+        Assert.Contains("x:Key=\"KeyboardFocusVisual\"", styles, StringComparison.Ordinal);
         Assert.Contains("<Style TargetType=\"ScrollBar\">", styles, StringComparison.Ordinal);
         Assert.Contains("HorizontalAlignment=\"Right\"", styles, StringComparison.Ordinal);
         Assert.DoesNotContain("DropShadowEffect Color=\"#000000\" BlurRadius=\"5\"", styles, StringComparison.Ordinal);
@@ -908,8 +909,9 @@ public sealed partial class LocalizedInterfaceContractTests
 
         Assert.Contains(baseStyle.Descendants(presentation + "ControlTemplate"), template =>
             (string?)template.Attribute("TargetType") == "Button");
-        Assert.Contains(baseStyle.Descendants(presentation + "Trigger"), trigger =>
-            (string?)trigger.Attribute("Property") == "IsKeyboardFocused");
+        Assert.Contains(baseStyle.Elements(presentation + "Setter"), setter =>
+            (string?)setter.Attribute("Property") == "FocusVisualStyle"
+            && (string?)setter.Attribute("Value") == "{StaticResource KeyboardFocusVisual}");
 
         foreach (var key in new[]
                  {
