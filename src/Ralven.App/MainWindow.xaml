@@ -405,7 +405,7 @@
                 <ui:NavigationViewItem x:Name="SettingsNav" Content="{Binding [Navigation.Settings], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon Settings24}" Tag="Settings" Click="NavItem_Click" />
             </ui:NavigationView.MenuItems>
             <ui:NavigationView.FooterMenuItems>
-                <ui:NavigationViewItem x:Name="ProNav" Content="{Binding [Pro.DiscoverDevelopment], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon LockClosed24}" Tag="Pro" Click="NavItem_Click" />
+                <ui:NavigationViewItem x:Name="ProNav" Content="{Binding [Navigation.ProDevelopment], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon LockClosed24}" Tag="Pro" Click="NavItem_Click" />
                 <ui:NavigationViewItem IsHitTestVisible="False"
                                        Focusable="False"
                                        IsTabStop="False"

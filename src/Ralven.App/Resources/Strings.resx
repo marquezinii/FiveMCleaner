@@ -8,6 +8,7 @@
   <data name="Navigation.Overview" xml:space="preserve"><value>Overview</value></data>
   <data name="Navigation.RalvenAi" xml:space="preserve"><value>Ralven AI</value></data>
   <data name="Navigation.RalvenAiDevelopment" xml:space="preserve"><value>Ralven AI · Coming soon</value></data>
+  <data name="Navigation.ProDevelopment" xml:space="preserve"><value>Pro · Coming soon</value></data>
   <data name="Navigation.System" xml:space="preserve"><value>System</value></data>
   <data name="Navigation.Applications" xml:space="preserve"><value>Applications</value></data>
   <data name="Navigation.Games" xml:space="preserve"><value>Games</value></data>
