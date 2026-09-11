@@ -21,9 +21,8 @@ test("keeps the dashboard on the Ralven public brand", async () => {
   assert.match(brandStyles, /fonts\/InterVariable\.woff2/);
   assert.match(headers, /connect-src 'self' https:\/\/api\.vemryx\.com/);
   assert.match(app, /DEFAULT_API_BASE = 'https:\/\/api\.vemryx\.com'/);
-  assert.match(readme, /--project-name=ralven-dashboard/);
-  assert.match(readme, /https:\/\/ralven-dashboard\.pages\.dev/);
-  assert.match(diagnostics, /DashboardUrl = 'https:\/\/ralven-dashboard\.pages\.dev'/);
+  assert.match(readme, /https:\/\/dashboard\.vemryx\.com/);
+  assert.match(diagnostics, /DashboardUrl = 'https:\/\/dashboard\.vemryx\.com'/);
   assert.match(html, /<option value="Production">Produção<\/option>/);
   await access(new URL("../assets/fonts/InterVariable.woff2", import.meta.url));
 });

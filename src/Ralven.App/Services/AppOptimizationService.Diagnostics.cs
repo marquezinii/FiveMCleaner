@@ -1,14 +1,11 @@
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Management;
 using System.Runtime.InteropServices;
-using System.Security;
 using Ralven.Contracts;
 using Ralven.Core.Catalog;
 using Ralven.Windows.Actions;
 using Ralven.Windows.Infrastructure;
-using Microsoft.Win32;
 
 namespace Ralven.App.Services;
 
@@ -33,7 +30,7 @@ public sealed partial class AppOptimizationService
             cancellationToken.ThrowIfCancellationRequested();
 
             // Run independent I/O-bound operations concurrently to reduce total diagnosis time
-            var installationTask = Task.Run(() => DetectFiveMInstallation(), cancellationToken);
+            var installationTask = Task.Run(() => DetectFiveMInstallationAsync(cancellationToken), cancellationToken);
             var systemResourcesTask = Task.Run(
                 () => new WindowsSystemResourceInspector().GetSnapshot(),
                 cancellationToken);
@@ -50,17 +47,17 @@ public sealed partial class AppOptimizationService
 
             var installation = await installationTask.ConfigureAwait(false);
             StartupTrace.Mark("installation-ready");
-            var gtaV = GtaVLocator.Detect(installation.Root);
+            var gtaV = GtaVLocator.Detect(installation.Installation?.Root);
             var gtaVIsRunning = new WindowsGtaVProcessInspector()
                 .IsRunningFrom(gtaV.InstallationRoot);
-            detectedLegacyRoot = installation.Edition == FiveMEdition.Legacy
-                ? installation.Root
+            detectedLegacyRoot = installation.IsLegacy
+                ? installation.Installation!.Root
                 : null;
 
             var systemResources = await systemResourcesTask.ConfigureAwait(false);
             StartupTrace.Mark("system-resources-ready");
-            var cacheBytes = installation.Edition == FiveMEdition.Legacy && installation.Root is not null
-                ? GetLegacyServerCacheBytes(installation.Root, cancellationToken)
+            var cacheBytes = installation.IsLegacy
+                ? GetLegacyServerCacheBytes(installation.Installation!.Root, cancellationToken)
                 : 0L;
 
             var gpuDetails = await gpuDetailsTask.ConfigureAwait(false);
@@ -81,7 +78,10 @@ public sealed partial class AppOptimizationService
             var availableMemoryGiB = systemResources.AvailableMemoryBytes / 1024d / 1024d / 1024d;
             var logicalProcessorCount = systemResources.LogicalProcessorCount;
             var freeDiskGiB = systemResources.SystemDriveFreeBytes / 1024d / 1024d / 1024d;
-            var running = IsFiveMRunning();
+            var processInspector = new WindowsFiveMProcessInspector();
+            var running = installation.Installation is { } detected
+                ? processInspector.IsRunningFrom(detected.Root)
+                : processInspector.IsAnyRunning();
             StartupTrace.Mark("processes-ready");
 
             var assessment = HardwareProfileAdvisor.Assess(
@@ -102,9 +102,14 @@ public sealed partial class AppOptimizationService
 
             return new AppDiagnostic
             {
-                Edition = installation.Edition,
+                Edition = installation.Status switch
+                {
+                    FiveMInstallationDetectionStatus.Legacy => FiveMEdition.Legacy,
+                    FiveMInstallationDetectionStatus.Enhanced => FiveMEdition.Enhanced,
+                    _ => FiveMEdition.Unknown
+                },
                 IsFiveMRunning = running,
-                FiveMRoot = installation.Root,
+                FiveMRoot = installation.Installation?.Root,
                 GtaVDetected = gtaV.IsInstalled,
                 GtaVIsRunning = gtaVIsRunning,
                 GtaVExecutablePath = gtaV.ExecutablePath,
@@ -248,60 +253,32 @@ public sealed partial class AppOptimizationService
         }
     }
 
-    private static (FiveMEdition Edition, string? Root) DetectFiveMInstallation()
+    private async Task<FiveMInstallationDetectionResult> DetectFiveMInstallationAsync(
+        CancellationToken cancellationToken)
     {
-        var candidates = new List<string>();
-        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        candidates.Add(Path.Combine(localAppData, "FiveM"));
-
-        foreach (var registryView in new[] { RegistryView.Registry64, RegistryView.Registry32 })
-        {
-            using var baseKey = RegistryKey.OpenBaseKey(RegistryHive.LocalMachine, registryView);
-            using var uninstall = baseKey.OpenSubKey(@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall");
-            if (uninstall is null)
-            {
-                continue;
-            }
-
-            foreach (var subkeyName in uninstall.GetSubKeyNames())
-            {
-                using var subkey = uninstall.OpenSubKey(subkeyName);
-                var displayName = subkey?.GetValue("DisplayName") as string;
-                var installLocation = subkey?.GetValue("InstallLocation") as string;
-                if (!string.IsNullOrWhiteSpace(displayName)
-                    && displayName.Contains("FiveM", StringComparison.OrdinalIgnoreCase)
-                    && !string.IsNullOrWhiteSpace(installLocation))
-                {
-                    if (displayName.Contains("Enhanced", StringComparison.OrdinalIgnoreCase))
-                    {
-                        return (FiveMEdition.Enhanced, Path.GetFullPath(installLocation));
-                    }
-
-                    candidates.Add(installLocation);
-                }
-            }
-        }
-
-        foreach (var candidate in candidates.Distinct(StringComparer.OrdinalIgnoreCase))
+        var settings = await LoadSettingsAsync(cancellationToken).ConfigureAwait(false);
+        var cachedRoot = demoMode
+            ? null
+            : await FiveMInstallationCache.ReadValidRootAsync(
+                fiveMInstallationCachePath,
+                cancellationToken).ConfigureAwait(false);
+        var result = new FiveMInstallationLocator().Detect(settings.ManualFiveMInstallationRoot, cachedRoot);
+        if (!demoMode && result.IsLegacy)
         {
             try
             {
-                var fullPath = Path.GetFullPath(candidate);
-                if (Directory.Exists(Path.Combine(fullPath, "FiveM.app", "data")))
-                {
-                    return (FiveMEdition.Legacy, fullPath);
-                }
+                await FiveMInstallationCache.WriteAsync(
+                    fiveMInstallationCachePath,
+                    result.Installation!,
+                    cancellationToken).ConfigureAwait(false);
             }
-            catch (Exception exception) when (exception is ArgumentException or NotSupportedException)
+            catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
             {
-                // Ignore malformed registry entries and continue with known locations.
+                // A discovery result remains valid even if the optional cache cannot be updated.
             }
         }
 
-        var enhancedCandidate = Path.Combine(localAppData, "FiveM Enhanced");
-        return Directory.Exists(enhancedCandidate)
-            ? (FiveMEdition.Enhanced, enhancedCandidate)
-            : (FiveMEdition.Unknown, null);
+        return result;
     }
 
     private static long GetLegacyServerCacheBytes(string root, CancellationToken cancellationToken)
@@ -359,40 +336,6 @@ public sealed partial class AppOptimizationService
         }
 
         return total;
-    }
-
-    private static bool IsFiveMRunning()
-    {
-        Process[] processes;
-        try
-        {
-            processes = Process.GetProcesses();
-        }
-        catch (System.ComponentModel.Win32Exception)
-        {
-            return false;
-        }
-
-        foreach (var process in processes)
-        {
-            using (process)
-            {
-                try
-                {
-                    if (WindowsFiveMProcessInspector.LooksLikeFiveMProcessName(process.ProcessName))
-                    {
-                        return true;
-                    }
-                }
-                catch (Exception exception) when (exception is InvalidOperationException
-                    or System.ComponentModel.Win32Exception
-                    or NotSupportedException)
-                {
-                }
-            }
-        }
-
-        return false;
     }
 
     private static string GetArchitectureLabel() => RuntimeInformation.OSArchitecture switch

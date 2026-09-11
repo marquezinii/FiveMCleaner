@@ -446,7 +446,7 @@ jobs:
 
           Push-Location ./infra/cloudflare-worker
           try {
-            npx.cmd wrangler pages deploy $deployRoot --project-name=ralven-dashboard --branch=production
+            npx.cmd wrangler pages deploy $deployRoot --project-name=fivemcleaner-dashboard --branch=production
             if ($LASTEXITCODE -ne 0) { throw 'Deploying the production dashboard failed.' }
           }
           finally { Pop-Location }
@@ -455,7 +455,7 @@ jobs:
           foreach ($attempt in 1..6) {
             try {
               $marker = Invoke-RestMethod `
-                -Uri "https://ralven-dashboard.pages.dev/deployment.json?source=$env:TRUSTED_COMMIT" `
+                -Uri "https://dashboard.vemryx.com/deployment.json?source=$env:TRUSTED_COMMIT" `
                 -Headers @{ 'Cache-Control' = 'no-cache' }
               if ($marker.sourceCommit -eq $env:TRUSTED_COMMIT) {
                 $verified = $true

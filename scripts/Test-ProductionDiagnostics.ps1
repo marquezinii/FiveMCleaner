@@ -5,7 +5,7 @@ param(
     [string]$AppVersion,
     [string]$ProductionConfigPath = (Join-Path $PSScriptRoot '..\src\Ralven.App\Config\appsettings.Production.json'),
     [string]$WorkerDirectory = (Join-Path $PSScriptRoot '..\infra\cloudflare-worker'),
-    [string]$DashboardUrl = 'https://ralven-dashboard.pages.dev'
+    [string]$DashboardUrl = 'https://dashboard.vemryx.com'
 )
 
 Set-StrictMode -Version Latest

@@ -61,6 +61,13 @@
   <data name="FiveMHub.Scopes.Title" xml:space="preserve"><value>Un PC, deux périmètres d'optimisation</value></data>
   <data name="FiveMHub.Scopes.Description" xml:space="preserve"><value>Chaque exécution vérifie d'abord l'état actuel. Les paramètres déjà atteints sont vérifiés sans être réappliqués ; la restauration reste liée à la transaction qui les a modifiés.</value></data>
   <data name="FiveMHub.Actions.Title" xml:space="preserve"><value>Que souhaitez-vous faire ?</value></data>
+  <data name="FiveMHub.Detection.Title" xml:space="preserve"><value>FiveM est introuvable ?</value></data>
+  <data name="FiveMHub.Detection.Description" xml:space="preserve"><value>Choisissez le dossier contenant FiveM.exe seulement si la détection automatique ne trouve pas une installation Legacy valide. Ralven le valide avant utilisation.</value></data>
+  <data name="FiveMHub.Detection.Select" xml:space="preserve"><value>Choisir le dossier FiveM</value></data>
+  <data name="FiveMHub.Detection.AutomaticAction" xml:space="preserve"><value>Utiliser la détection automatique</value></data>
+  <data name="FiveMHub.Detection.Automatic" xml:space="preserve"><value>La détection automatique est active.</value></data>
+  <data name="FiveMHub.Detection.Manual" xml:space="preserve"><value>Dossier sélectionné utilisé : {0}</value></data>
+  <data name="FiveMHub.Detection.Invalid" xml:space="preserve"><value>Le dossier sélectionné n'est pas une installation FiveM Legacy valide. Choisissez le dossier contenant FiveM.exe et FiveM.app\data.</value></data>
   <data name="FiveMHub.Actions.Description" xml:space="preserve"><value>Choisissez la zone qui correspond à votre objectif. Aucune action ne commence tant que vous n'avez pas examiné et confirmé son plan.</value></data>
   <data name="FiveMHub.Optimizer.Title" xml:space="preserve"><value>Optimiser FiveM</value></data>
   <data name="FiveMHub.Optimizer.Description" xml:space="preserve"><value>Analysez l'installation Legacy détectée et examinez les diagnostics, les paramètres et les actions réversibles spécifiques au jeu.</value></data>
@@ -1972,4 +1979,34 @@ CPU moyen {3} · GPU {4} · RAM {5} · Disque {6}</value></data>
   <data name="Dialog.Close" xml:space="preserve"><value>Fermer</value></data>
   <data name="Dialog.Cancel" xml:space="preserve"><value>Annuler</value></data>
   <data name="Dialog.Confirm" xml:space="preserve"><value>Continuer</value></data>
-  <data name="Dialog.OptionalDetails" xml:space="preserve"><value>Détails facultatifs</value></data></root>
+  <data name="Dialog.OptionalDetails" xml:space="preserve"><value>Détails facultatifs</value></data>
+  <data name="ErrorDialog.WindowTitle" xml:space="preserve"><value>Ralven doit se fermer</value></data>
+  <data name="ErrorDialog.Fatal.Headline" xml:space="preserve"><value>Ralven a rencontré un problème</value></data>
+  <data name="ErrorDialog.Fatal.Message" xml:space="preserve"><value>Ralven doit se fermer pour préserver votre session actuelle. Aucune nouvelle modification ne sera appliquée.</value></data>
+  <data name="ErrorDialog.Fatal.Guidance" xml:space="preserve"><value>Vous pouvez rouvrir Ralven maintenant. Si cela se reproduit, copiez les détails techniques et ajoutez-les à un rapport de problème depuis les Paramètres.</value></data>
+  <data name="ErrorDialog.Recoverable.Headline" xml:space="preserve"><value>Nous n'avons pas pu terminer cette action</value></data>
+  <data name="ErrorDialog.Recoverable.Message" xml:space="preserve"><value>Ralven reste ouvert et cette action échouée n'a effectué aucune modification.</value></data>
+  <data name="ErrorDialog.Recoverable.Guidance" xml:space="preserve"><value>Réessayez dans un instant. Si le problème persiste, vous pouvez envoyer un rapport avec les détails déjà préparés.</value></data>
+  <data name="ErrorDialog.Test.WindowTitle" xml:space="preserve"><value>Aperçu de l'expérience d'erreur</value></data>
+  <data name="ErrorDialog.Test.Headline" xml:space="preserve"><value>Ceci est un aperçu d'erreur contrôlé</value></data>
+  <data name="ErrorDialog.Test.Message" xml:space="preserve"><value>Aucune défaillance réelle ne s'est produite et aucune information n'a été envoyée. Cet aperçu permet de vérifier l'expérience d'erreur en toute sécurité.</value></data>
+  <data name="ErrorDialog.Test.Guidance" xml:space="preserve"><value>Vérifiez la hiérarchie, le panneau de détails techniques et l'action de copie. Fermez l'aperçu lorsque vous avez terminé.</value></data>
+  <data name="ErrorDialog.Details.Title" xml:space="preserve"><value>Détails techniques</value></data>
+  <data name="ErrorDialog.Details.Help" xml:space="preserve"><value>Informations facultatives pour le support. Les chemins personnels sont retirés avant l'affichage ou la copie de ce texte.</value></data>
+  <data name="ErrorDialog.Details.Template" xml:space="preserve"><value>{0}
+Version : {1}
+Heure (UTC) : {2}
+Exception : {3}
+
+{4}</value></data>
+  <data name="ErrorDialog.Copy" xml:space="preserve"><value>Copier les détails</value></data>
+  <data name="ErrorDialog.Copy.Success" xml:space="preserve"><value>Détails techniques copiés.</value></data>
+  <data name="ErrorDialog.Copy.Failed" xml:space="preserve"><value>Windows n'a pas pu copier les détails : {0}</value></data>
+  <data name="ErrorDialog.Report" xml:space="preserve"><value>Signaler un problème</value></data>
+  <data name="ErrorDialog.Restart" xml:space="preserve"><value>Rouvrir Ralven</value></data>
+  <data name="ErrorDialog.Restart.Failed" xml:space="preserve"><value>Ralven n'a pas pu être rouvert automatiquement. Fermez cette fenêtre et ouvrez-le depuis le menu Démarrer.</value></data>
+  <data name="ErrorDialog.Exit" xml:space="preserve"><value>Fermer Ralven</value></data>
+  <data name="ErrorDialog.ClosePreview" xml:space="preserve"><value>Fermer l'aperçu</value></data>
+  <data name="ReleaseNotes.Acknowledge" xml:space="preserve"><value>Compris</value></data>
+  <data name="ReleaseNotes.Summary" xml:space="preserve"><value>Un aperçu rapide des changements de cette version.</value></data>
+  <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Mise à jour de l’infrastructure de publication et de la base de compatibilité des navigateurs, avec une validation complète dans l’intégration continue.</value></data></root>

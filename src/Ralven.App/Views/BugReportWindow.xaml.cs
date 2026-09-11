@@ -29,7 +29,8 @@ public partial class BugReportWindow : Ralven.App.Controls.DialogWindow
         IBugReportService service,
         string appVersion,
         string profile,
-        string edition)
+        string edition,
+        string? initialLogText = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
         this.appVersion = appVersion;
@@ -37,6 +38,7 @@ public partial class BugReportWindow : Ralven.App.Controls.DialogWindow
         this.edition = edition;
         localization = LocalizationService.Current;
         InitializeComponent();
+        LogTextBox.Text = initialLogText ?? string.Empty;
         PopulateBugCodeComboBox();
         Closing += BugReportWindow_Closing;
     }
