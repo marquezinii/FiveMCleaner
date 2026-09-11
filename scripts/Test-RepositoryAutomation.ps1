@@ -242,6 +242,37 @@ try {
         Pop-Location
     }
 
+    $tagFixture = Join-Path $temporaryRoot 'release-tag'
+    $tagRemote = Join-Path $temporaryRoot 'release-tag-remote.git'
+    New-Item -ItemType Directory -Path $tagFixture | Out-Null
+    git init --bare --quiet $tagRemote
+    Push-Location $tagFixture
+    try {
+        git init --quiet
+        git checkout --quiet -b main
+        git config user.name 'Ralven Automation Test'
+        git config user.email 'automation-test@localhost'
+        '<Project><PropertyGroup><Version>1.1.100</Version></PropertyGroup></Project>' |
+            Set-Content -LiteralPath ./Directory.Build.props -Encoding utf8
+        git add Directory.Build.props
+        git commit --quiet -m 'test: initialize release tag fixture'
+        git remote add origin $tagRemote
+        git push --quiet --set-upstream origin main
+
+        & (Join-Path $PSScriptRoot 'Test-ReleaseTagTarget.ps1') -Version '1.1.100' -Workspace $tagFixture
+
+        git checkout --quiet -b chore/unmerged
+        'unmerged' | Set-Content -LiteralPath ./release.txt -Encoding utf8
+        git add release.txt
+        git commit --quiet -m 'test: unmerged release candidate'
+        Invoke-ExpectedFailure {
+            & (Join-Path $PSScriptRoot 'Test-ReleaseTagTarget.ps1') -Version '1.1.100' -Workspace $tagFixture
+        } 'only after the release commit is current origin/main'
+    }
+    finally {
+        Pop-Location
+    }
+
     Write-Host 'Repository automation tests passed.' -ForegroundColor Green
 }
 finally {
