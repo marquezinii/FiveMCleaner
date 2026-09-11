@@ -95,6 +95,44 @@
                 </Grid>
             </Border>
 
+            <Border Style="{StaticResource AlertRowInfoStyle}" Margin="0,0,16,18">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <Path Style="{StaticResource Icon20}"
+                          Data="{StaticResource IconInfo}"
+                          Stroke="{DynamicResource AccentTextBrush}"
+                          Margin="0,1,12,0"
+                          VerticalAlignment="Top" />
+                    <StackPanel Grid.Column="1">
+                        <TextBlock Text="{Binding [FiveMHub.Detection.Title], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource BodyStrongText}" />
+                        <TextBlock Text="{Binding [FiveMHub.Detection.Description], Source={StaticResource LocalizedStrings}}"
+                                   Style="{StaticResource SecondaryText}"
+                                   Margin="0,5,0,0"
+                                   TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding FiveMInstallationSelectionMessage}"
+                                   Style="{StaticResource CaptionText}"
+                                   Margin="0,8,0,0"
+                                   TextWrapping="Wrap"
+                                   AutomationProperties.LiveSetting="Polite" />
+                        <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                            <Button Content="{Binding [FiveMHub.Detection.Select], Source={StaticResource LocalizedStrings}}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
+                                    IsEnabled="{Binding CanRefresh}"
+                                    Click="SelectFiveMInstallation_Click" />
+                            <Button Content="{Binding [FiveMHub.Detection.AutomaticAction], Source={StaticResource LocalizedStrings}}"
+                                    Style="{StaticResource LinkButtonStyle}"
+                                    Margin="12,0,0,0"
+                                    IsEnabled="{Binding HasManualFiveMInstallation}"
+                                    Click="UseAutomaticFiveMDetection_Click" />
+                        </StackPanel>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
             <Border Style="{StaticResource AlertRowInfoStyle}" Margin="0,0,16,24">
                 <Grid>
                     <Grid.ColumnDefinitions>

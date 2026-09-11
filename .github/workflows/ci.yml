@@ -249,6 +249,82 @@ jobs:
       - name: Audit dependencies
         run: npm audit --audit-level=high
 
+  deploy_worker:
+    name: Deploy Cloudflare Worker
+    needs: [scope, worker]
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/dev/proxima-versao' &&
+      needs.scope.outputs.worker == 'true' &&
+      needs.worker.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: infra/cloudflare-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: infra/cloudflare-worker/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+
+  deploy_dashboard:
+    name: Deploy dashboard
+    needs: [scope, dashboard]
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/dev/proxima-versao' &&
+      needs.scope.outputs.dashboard == 'true' &&
+      needs.dashboard.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: infra/cloudflare-worker/package-lock.json
+      - name: Install deployment tooling
+        working-directory: infra/cloudflare-worker
+        run: npm ci
+      - name: Deploy and verify
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TRUSTED_COMMIT: ${{ github.sha }}
+        run: |
+          deploy_root="$RUNNER_TEMP/ralven-dashboard"
+          mkdir -p "$deploy_root"
+          cp infra/dashboard/index.html infra/dashboard/_headers "$deploy_root"
+          cp -R infra/dashboard/assets "$deploy_root/assets"
+          printf '{"sourceCommit":"%s"}\n' "$TRUSTED_COMMIT" > "$deploy_root/deployment.json"
+          cd infra/cloudflare-worker
+          npx wrangler pages deploy "$deploy_root" --project-name=fivemcleaner-dashboard --branch=production
+          for attempt in 1 2 3 4 5 6; do
+            if curl --fail --silent --show-error --header 'Cache-Control: no-cache' \
+              "https://dashboard.vemryx.com/deployment.json?source=$TRUSTED_COMMIT" | \
+              grep --fixed-strings --quiet "$TRUSTED_COMMIT"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'The canonical dashboard did not serve the trusted commit.' >&2
+          exit 1
+
   website:
     name: Website
     needs: scope
@@ -315,7 +391,7 @@ jobs:
   required:
     name: Required CI gate
     if: always()
-    needs: [scope, dotnet, sbom, worker, dashboard, website, installer]
+    needs: [scope, dotnet, sbom, worker, dashboard, deploy_worker, deploy_dashboard, website, installer]
     runs-on: ubuntu-latest
     timeout-minutes: 2
     steps:

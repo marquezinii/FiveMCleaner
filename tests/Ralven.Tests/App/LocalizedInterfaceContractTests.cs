@@ -487,6 +487,22 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void ReleaseNotesWindow_IsCompactAndFixed()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var document = XDocument.Load(Path.Combine(
+            root,
+            "src",
+            "Ralven.App",
+            "Views",
+            "ReleaseNotesWindow.xaml"));
+
+        var window = document.Root!;
+        Assert.Equal("NoResize", (string?)window.Attribute("ResizeMode"));
+        Assert.Equal("440", (string?)window.Attribute("Height"));
+    }
+
+    [Fact]
     public void PrivacyConsentWindow_CanOnlyCloseAfterContinue()
     {
         var root = TestHelpers.FindRepositoryRoot();

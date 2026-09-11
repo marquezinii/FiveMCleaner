@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#090a0c" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Ralven · Centro de comando</title>
   <link rel="icon" href="assets/img/logo.png" />
@@ -14,7 +15,7 @@
 
   <section id="login-view" class="login-view" aria-labelledby="login-title">
     <form id="login-form" class="login-card">
-      <div class="login-mark"><img class="login-logo" src="assets/img/logo.png" alt="" /></div>
+      <div class="login-mark"><img class="login-logo" src="assets/img/logo.png" alt="" width="512" height="512" /></div>
       <p class="eyebrow">Operações Ralven</p>
       <h1 id="login-title">Centro de comando</h1>
       <p class="login-subtitle">Telemetria, confiabilidade e operação do produto em um só lugar.</p>
@@ -28,16 +29,21 @@
   <section id="dashboard-view" class="dashboard-view hidden">
     <aside class="sidebar">
       <div class="brand">
-        <img class="brand-logo" src="assets/img/logo.png" alt="" />
+        <img class="brand-logo" src="assets/img/logo.png" alt="" width="512" height="512" />
         <div><strong>Ralven</strong><span>Command Center</span></div>
       </div>
       <nav class="side-nav" aria-label="Navegação principal">
-        <a href="#overview" class="active"><span>01</span>Visão geral</a>
+        <a href="#overview" class="active"><span>01</span>Comando</a>
         <a href="#growth"><span>02</span>Crescimento</a>
         <a href="#reliability"><span>03</span>Confiabilidade</a>
-        <a href="#compatibility"><span>04</span>Compatibilidade</a>
+        <a href="#compatibility"><span>04</span>Base instalada</a>
         <a href="#operations"><span>05</span>Operações</a>
       </nav>
+      <section class="sidebar-readout" aria-label="Estado atual do produto">
+        <span class="readout-label">Postura atual</span>
+        <strong id="sidebar-health">Aguardando dados</strong>
+        <span id="sidebar-health-detail">A sessão atualizará o diagnóstico.</span>
+      </section>
       <div class="sidebar-foot">
         <p><span class="privacy-dot"></span>Dados agregados e minimizados</p>
         <button id="logout-button" type="button" class="link-button">Encerrar sessão</button>
@@ -46,7 +52,7 @@
 
     <div class="workspace">
       <header class="command-header">
-        <div><p class="eyebrow">Saúde do produto</p><h1>Centro de comando</h1></div>
+        <div><p class="eyebrow">Produtos · operações · decisão</p><h1>Centro de comando</h1></div>
         <div class="header-actions">
           <p id="refresh-status" class="refresh-status" aria-live="polite">Dados prontos para consulta</p>
           <button id="refresh-button" type="button" class="secondary-button">Atualizar</button>
@@ -60,9 +66,9 @@
           <button type="button" data-days="30" class="active">30 dias</button>
           <button type="button" data-days="90">90 dias</button>
         </fieldset>
-        <label>De<input type="date" name="from" aria-label="Data inicial em UTC" /></label>
-        <label>Até<input type="date" name="to" aria-label="Data final em UTC" /></label>
-        <label>Versão<input type="search" name="version" placeholder="Todas" inputmode="numeric" /></label>
+        <label>De<input type="date" name="from" aria-label="Data inicial em UTC" autocomplete="off" /></label>
+        <label>Até<input type="date" name="to" aria-label="Data final em UTC" autocomplete="off" /></label>
+        <label>Versão<input type="search" name="version" placeholder="Todas as versões" inputmode="numeric" autocomplete="off" /></label>
         <label>Ambiente<select name="environment"><option value="Production">Produção</option><option value="Development">Desenvolvimento</option><option value="All">Todos</option></select></label>
         <button type="submit" class="primary-button">Aplicar filtros</button>
       </form>
@@ -72,26 +78,49 @@
 
         <section id="overview" class="page-section" aria-labelledby="overview-title">
           <div class="section-intro">
-            <div><p class="eyebrow">Visão geral</p><h2 id="overview-title">Pulso do produto</h2></div>
+            <div><p class="eyebrow">Visão executiva</p><h2 id="overview-title">O que precisa de atenção agora</h2></div>
             <p id="period-label" class="section-note">Últimos 30 dias · Produção</p>
           </div>
+          <div class="command-deck">
+            <article id="command-posture" class="command-posture" data-tone="neutral">
+              <div class="posture-orbit" aria-hidden="true"><span></span><i></i></div>
+              <div class="posture-copy">
+                <p class="eyebrow">Leitura do recorte</p>
+                <h3 id="command-health-title">Preparando a leitura operacional</h3>
+                <p id="command-health-description">As fontes administrativas serão consultadas para classificar os sinais que exigem acompanhamento.</p>
+              </div>
+              <span id="command-health-badge" class="health-badge" aria-live="polite">AGUARDANDO</span>
+            </article>
+            <aside class="priority-panel" aria-labelledby="priority-title">
+              <div class="card-heading"><div><p class="eyebrow">Fila de decisão</p><h3 id="priority-title">Prioridades do período</h3></div><span class="card-kicker">ordenada por impacto</span></div>
+              <ol id="command-priorities" class="priority-list" aria-live="polite"><li class="priority-empty">Os sinais relevantes aparecem após a atualização.</li></ol>
+            </aside>
+          </div>
           <div class="signal-grid">
-            <article class="signal-card"><span>Execuções</span><strong id="tile-total-runs">—</strong><small>operações no período</small></article>
-            <article class="signal-card"><span>Sucesso</span><strong id="tile-success-rate">—</strong><small>concluídas sem falha</small></article>
-            <article class="signal-card"><span>Contas</span><strong id="tile-total-accounts">—</strong><small id="tile-new-accounts">— novas no período</small></article>
-            <article class="signal-card"><span>Ralven AI</span><strong id="tile-ai-active">—</strong><small>contas ativas no período</small></article>
-            <article class="signal-card"><span>Assinaturas</span><strong id="tile-active-subscriptions">—</strong><small>autorizadas agora</small></article>
-            <article class="signal-card"><span>Receita líquida</span><strong id="tile-net-revenue">—</strong><small>pagamentos no período</small></article>
+            <article class="signal-card" data-lift><span>Execuções</span><strong id="tile-total-runs">—</strong><small>operações no período</small></article>
+            <article class="signal-card" data-lift><span>Sucesso</span><strong id="tile-success-rate">—</strong><small>concluídas sem falha</small></article>
+            <article class="signal-card" data-lift><span>Contas</span><strong id="tile-total-accounts">—</strong><small id="tile-new-accounts">— novas no período</small></article>
+            <article class="signal-card" data-lift><span>Ralven AI</span><strong id="tile-ai-active">—</strong><small>contas ativas no período</small></article>
+            <article class="signal-card" data-lift><span>Assinaturas</span><strong id="tile-active-subscriptions">—</strong><small>autorizadas agora</small></article>
+            <article class="signal-card" data-lift><span>Receita líquida</span><strong id="tile-net-revenue" class="currency-value">—</strong><small>pagamentos no período</small></article>
           </div>
           <div id="health-signals" class="health-signals" aria-live="polite"><p class="empty-state">Os sinais operacionais aparecem após a atualização.</p></div>
           <div class="overview-grid">
             <article class="panel chart-card span-2"><div class="card-heading"><div><p class="eyebrow">Demanda</p><h3>Otimizações ao longo do tempo</h3></div><a id="csv-runs-per-day" class="csv-link" download>CSV</a></div><div class="chart-plot tall"><canvas id="chart-runs-per-day" width="760" height="250" tabindex="0" aria-label="Otimizações por dia" aria-describedby="chart-help" role="img"></canvas></div></article>
             <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Adoção</p><h3>Versões em uso</h3></div><a id="csv-app-versions" class="csv-link" download>CSV</a></div><div class="distribution-content"><div class="chart-plot"><canvas id="chart-app-versions" width="220" height="220" tabindex="0" aria-label="Versões do Ralven em uso" aria-describedby="chart-help" role="img"></canvas></div><div id="legend-app-versions" class="chart-legend"></div></div></article>
           </div>
+          <section class="coverage-panel" aria-labelledby="coverage-title">
+            <div class="coverage-copy"><p class="eyebrow">Cobertura de dados</p><h3 id="coverage-title">O painel distingue sinal disponível de instrumentação pendente.</h3><p>Não transformamos ausência de evento em zero: cada gráfico explica o que depende daquela fonte quando o recorte ainda não contém dados.</p></div>
+            <div class="coverage-items">
+              <div><span class="coverage-dot available"></span><strong id="coverage-available">Fontes em leitura</strong><small id="coverage-available-detail">O estado será confirmado após a atualização.</small></div>
+              <div><span class="coverage-dot pending"></span><strong>Instrumentação ainda pendente</strong><small>FiveM/GTAV detalhado, tipo de disco e uso de elevação já têm modelo no backend, mas ainda não são emitidos pelo aplicativo.</small></div>
+              <div><span class="coverage-dot protected"></span><strong>Limite de privacidade preservado</strong><small>Eventos anônimos não são tratados como usuários únicos; contas e cobrança permanecem apenas agregadas.</small></div>
+            </div>
+          </section>
         </section>
 
         <section id="growth" class="page-section" aria-labelledby="growth-title">
-          <div class="section-intro"><div><p class="eyebrow">Crescimento e adoção</p><h2 id="growth-title">O que está ganhando tração</h2></div><p class="section-note">Contas são agregadas; telemetria continua anônima.</p></div>
+          <div class="section-intro"><div><p class="eyebrow">Crescimento e adoção</p><h2 id="growth-title">Adoção que sustenta o produto</h2></div><p class="section-note">Contas são agregadas; telemetria continua anônima.</p></div>
           <div class="metric-strip">
             <article><span>Requisições de IA</span><strong id="metric-ai-requests">—</strong></article>
             <article><span>Conclusão da IA</span><strong id="metric-ai-success">—</strong></article>
@@ -108,7 +137,7 @@
         </section>
 
         <section id="reliability" class="page-section" aria-labelledby="reliability-title">
-          <div class="section-intro"><div><p class="eyebrow">Confiabilidade</p><h2 id="reliability-title">Falhas, regressões e versões</h2></div><p class="section-note">Códigos allowlisted; sem stack trace ou caminhos pessoais.</p></div>
+          <div class="section-intro"><div><p class="eyebrow">Confiabilidade</p><h2 id="reliability-title">O caminho da falha até a versão</h2></div><p class="section-note">Códigos allowlisted; sem stack trace ou caminhos pessoais.</p></div>
           <div class="metric-strip danger-strip">
             <article><span>Falhas</span><strong id="tile-total-failures">—</strong></article>
             <article><span>Tempo médio</span><strong id="tile-average-time">—</strong></article>
@@ -121,12 +150,12 @@
             <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Categorias</p><h3>Tipos de erro</h3></div><a id="csv-error-categories" class="csv-link" download>CSV</a></div><div class="distribution-content compact"><div class="chart-plot"><canvas id="chart-error-categories" width="220" height="220" tabindex="0" aria-label="Tipos de erro" aria-describedby="chart-help" role="img"></canvas></div><div id="legend-error-categories" class="chart-legend"></div></div></article>
             <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Regressões</p><h3>Erros por versão</h3></div><a id="csv-errors-by-version" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-errors-by-version" width="520" height="230" tabindex="0" aria-label="Erros por versão" aria-describedby="chart-help" role="img"></canvas></div></article>
             <article class="panel chart-card"><div class="card-heading"><div><p class="eyebrow">Diagnóstico</p><h3>Códigos mais frequentes</h3></div><a id="csv-bug-codes" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-bug-codes" width="520" height="230" tabindex="0" aria-label="Códigos de falha mais frequentes" aria-describedby="chart-help" role="img"></canvas></div></article>
-            <article class="panel table-panel span-3"><div class="card-heading"><div><p class="eyebrow">Investigação</p><h3>Falhas recentes</h3></div><div class="table-actions"><input id="incident-search" type="search" placeholder="Buscar código, versão ou perfil" aria-label="Buscar falhas recentes" /><a id="csv-recent-failures" class="csv-link" download>CSV</a><button id="recent-failures-toggle" class="icon-button feed-toggle" type="button" aria-controls="recent-failures-body" aria-expanded="false" hidden>+</button></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Quando</th><th>Código</th><th>Categoria</th><th>Versão</th><th>Perfil</th><th>Ambiente</th><th><span class="visually-hidden">Detalhes</span></th></tr></thead><tbody id="recent-failures-body"><tr><td colspan="7" class="empty-row">Sem dados no período</td></tr></tbody></table></div></article>
+            <article class="panel table-panel span-3"><div class="card-heading"><div><p class="eyebrow">Investigação</p><h3>Falhas recentes</h3></div><div class="table-actions"><input id="incident-search" type="search" placeholder="Buscar código, versão ou perfil…" aria-label="Buscar falhas recentes" autocomplete="off" /><a id="csv-recent-failures" class="csv-link" download>CSV</a><button id="recent-failures-toggle" class="icon-button feed-toggle" type="button" aria-controls="recent-failures-body" aria-expanded="false" hidden>+</button></div></div><div class="table-scroll"><table class="data-table"><thead><tr><th>Quando</th><th>Código</th><th>Categoria</th><th>Versão</th><th>Perfil</th><th>Ambiente</th><th><span class="visually-hidden">Detalhes</span></th></tr></thead><tbody id="recent-failures-body"><tr><td colspan="7" class="empty-row">Sem dados no período</td></tr></tbody></table></div></article>
           </div>
         </section>
 
         <section id="compatibility" class="page-section" aria-labelledby="compatibility-title">
-          <div class="section-intro"><div><p class="eyebrow">Compatibilidade</p><h2 id="compatibility-title">Ambiente real da base</h2></div><p class="section-note">Hardware opcional e agregado para orientar suporte.</p></div>
+          <div class="section-intro"><div><p class="eyebrow">Base instalada</p><h2 id="compatibility-title">Onde o produto está operando</h2></div><p class="section-note">Hardware opcional e agregado para orientar suporte.</p></div>
           <div class="content-grid three-columns">
             <article class="panel chart-card"><div class="card-heading"><h3>Windows</h3><a id="csv-os-versions" class="csv-link" download>CSV</a></div><div class="distribution-content compact"><div class="chart-plot"><canvas id="chart-os-versions" width="220" height="220" tabindex="0" aria-label="Versões do Windows" aria-describedby="chart-help" role="img"></canvas></div><div id="legend-os-versions" class="chart-legend"></div></div></article>
             <article class="panel chart-card"><div class="card-heading"><h3>CPUs mais comuns</h3><a id="csv-top-cpu" class="csv-link" download>CSV</a></div><div class="chart-plot"><canvas id="chart-top-cpu" width="520" height="240" tabindex="0" aria-label="CPUs mais comuns" aria-describedby="chart-help" role="img"></canvas></div></article>
@@ -150,7 +179,7 @@
                   <select id="live-alert-severity" name="severity"><option value="info">Informativo</option><option value="important" selected>Importante</option><option value="critical">Crítico</option></select>
                 </label>
                 <label for="live-alert-message">Mensagem</label>
-                <textarea id="live-alert-message" name="message" maxlength="300" rows="5" aria-describedby="live-alert-counter" placeholder="Mensagem exibida no app dos usuários..."></textarea>
+                <textarea id="live-alert-message" name="message" maxlength="300" rows="5" aria-describedby="live-alert-counter" placeholder="Mensagem exibida no app dos usuários…"></textarea>
                 <div class="live-alert-footer"><span id="live-alert-counter">0/300</span><div class="live-alert-actions"><button type="button" id="live-alert-deactivate" class="secondary-button">Desativar</button><button type="submit" class="danger-button">Publicar aviso</button></div></div>
                 <p id="live-alert-error" class="form-error" role="alert"></p>
               </form>

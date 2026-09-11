@@ -71,6 +71,8 @@ public partial class ReleaseNotesWindow : Ralven.App.Controls.DialogWindow
 
     public string WindowTitleText => F("ReleaseNotes.WindowTitle", Entry.Version);
 
+    public string SummaryText => F("ReleaseNotes.Summary");
+
     public string VersionLabel => Entry.ReleaseDate is { } date
         ? F(
             "ReleaseNotes.VersionLabelWithDate",

@@ -38,13 +38,17 @@ public sealed record WindowsOptimizationEnvironment
             throw new InvalidOperationException("Windows user profile directories are unavailable.");
         }
 
-        var installationRoot = Path.Combine(localAppData, "FiveM");
+        var detectedInstallation = new FiveMInstallationLocator().Detect();
+        var installationRoot = detectedInstallation.Installation?.Root
+            ?? Path.Combine(localAppData, "FiveM");
         var gtaV = GtaVLocator.Detect(installationRoot);
         return new WindowsOptimizationEnvironment
         {
             FiveMInstallationRoot = installationRoot,
-            FiveMAppRoot = Path.Combine(installationRoot, "FiveM.app"),
-            FiveMExecutablePath = Path.Combine(installationRoot, "FiveM.exe"),
+            FiveMAppRoot = detectedInstallation.Installation?.AppRoot
+                ?? Path.Combine(installationRoot, "FiveM.app"),
+            FiveMExecutablePath = detectedInstallation.Installation?.ExecutablePath
+                ?? Path.Combine(installationRoot, "FiveM.exe"),
             LegacyGraphicsSettingsPath = Path.Combine(
                 roamingAppData,
                 "CitizenFX",

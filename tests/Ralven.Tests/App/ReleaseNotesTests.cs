@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Ralven.App.Services;
 using Ralven.App.Views;
@@ -34,6 +35,25 @@ public sealed class ReleaseNotesCatalogTests
 
         Assert.NotNull(entry);
         Assert.Equal("1.6.1", entry!.Version);
+    }
+
+    [Fact]
+    public void Versions_HaveLocalizedSummaryAndCategoryText()
+    {
+        foreach (var culture in new[] { "en-US", "pt-BR", "es-ES", "fr-FR" })
+        {
+            var localization = new LocalizationService(CultureInfo.GetCultureInfo(culture));
+            Assert.NotEqual("ReleaseNotes.Summary", localization.GetString("ReleaseNotes.Summary"));
+
+            foreach (var entry in ReleaseNotesCatalog.Versions)
+            {
+                foreach (var category in entry.Categories)
+                {
+                    var key = $"ReleaseNotes.{entry.Version.Replace('.', '_')}.{category}";
+                    Assert.NotEqual(key, localization.GetString(key));
+                }
+            }
+        }
     }
 }
 
