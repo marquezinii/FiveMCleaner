@@ -1979,4 +1979,31 @@ Média CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Runtime.BrokerRollbackCompletedDetail" xml:space="preserve"><value>As alterações administrativas foram restauradas.</value></data>
   <data name="Runtime.BrokerRejectedDetail" xml:space="preserve"><value>A solicitação administrativa foi recusada com segurança.</value></data>
   <data name="Runtime.BrokerFailedDetail" xml:space="preserve"><value>A operação administrativa foi interrompida com segurança. Consulte o relatório antes de tentar novamente.</value></data>
-</root>
+
+  <data name="ErrorDialog.WindowTitle" xml:space="preserve"><value>O Ralven precisa ser fechado</value></data>
+  <data name="ErrorDialog.Fatal.Headline" xml:space="preserve"><value>O Ralven encontrou um problema</value></data>
+  <data name="ErrorDialog.Fatal.Message" xml:space="preserve"><value>O Ralven precisa ser fechado para manter sua sessão atual segura. Nenhuma nova alteração será aplicada.</value></data>
+  <data name="ErrorDialog.Fatal.Guidance" xml:space="preserve"><value>Você pode abrir o Ralven novamente agora. Se isso acontecer de novo, copie os detalhes técnicos e inclua-os em um relato de erro nas Configurações.</value></data>
+  <data name="ErrorDialog.Recoverable.Headline" xml:space="preserve"><value>Não foi possível concluir esta ação</value></data>
+  <data name="ErrorDialog.Recoverable.Message" xml:space="preserve"><value>O Ralven continua aberto e nenhuma alteração foi feita por esta ação que falhou.</value></data>
+  <data name="ErrorDialog.Recoverable.Guidance" xml:space="preserve"><value>Tente novamente em instantes. Se o problema continuar, você pode enviar um relato com os detalhes já preparados.</value></data>
+  <data name="ErrorDialog.Test.WindowTitle" xml:space="preserve"><value>Prévia da experiência de erro</value></data>
+  <data name="ErrorDialog.Test.Headline" xml:space="preserve"><value>Esta é uma prévia controlada de erro</value></data>
+  <data name="ErrorDialog.Test.Message" xml:space="preserve"><value>Nenhuma falha real ocorreu e nenhuma informação foi enviada. Esta prévia permite verificar a experiência de erro com segurança.</value></data>
+  <data name="ErrorDialog.Test.Guidance" xml:space="preserve"><value>Verifique a hierarquia, os detalhes técnicos expansíveis e a ação de cópia. Feche a prévia quando terminar.</value></data>
+  <data name="ErrorDialog.Details.Title" xml:space="preserve"><value>Detalhes técnicos</value></data>
+  <data name="ErrorDialog.Details.Help" xml:space="preserve"><value>Informações opcionais para suporte. Caminhos pessoais são removidos antes de este texto ser exibido ou copiado.</value></data>
+  <data name="ErrorDialog.Details.Template" xml:space="preserve"><value>{0}
+Versão: {1}
+Horário (UTC): {2}
+Exceção: {3}
+
+{4}</value></data>
+  <data name="ErrorDialog.Copy" xml:space="preserve"><value>Copiar detalhes</value></data>
+  <data name="ErrorDialog.Copy.Success" xml:space="preserve"><value>Detalhes técnicos copiados.</value></data>
+  <data name="ErrorDialog.Copy.Failed" xml:space="preserve"><value>O Windows não conseguiu copiar os detalhes: {0}</value></data>
+  <data name="ErrorDialog.Report" xml:space="preserve"><value>Relatar problema</value></data>
+  <data name="ErrorDialog.Restart" xml:space="preserve"><value>Abrir o Ralven novamente</value></data>
+  <data name="ErrorDialog.Restart.Failed" xml:space="preserve"><value>O Ralven não pôde ser reaberto automaticamente. Feche esta janela e abra-o pelo menu Iniciar.</value></data>
+  <data name="ErrorDialog.Exit" xml:space="preserve"><value>Fechar o Ralven</value></data>
+  <data name="ErrorDialog.ClosePreview" xml:space="preserve"><value>Fechar prévia</value></data></root>
