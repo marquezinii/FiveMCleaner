@@ -71,6 +71,8 @@ public sealed record AppDiagnostic
     public IReadOnlyList<string> Notices { get; init; } = [];
 }
 
+public sealed record FiveMInstallationSelectionResult(bool Succeeded, string? Root);
+
 public enum AppProgressKind
 {
     Preparing,
@@ -289,4 +291,10 @@ public sealed record AppSettings
     /// staying silenced forever.
     /// </summary>
     public string? LastSeenReleaseNotesVersion { get; init; }
+
+    /// <summary>
+    /// Caminho escolhido explicitamente pelo usuário após a validação do
+    /// localizador central. Nulo mantém a descoberta automática como padrão.
+    /// </summary>
+    public string? ManualFiveMInstallationRoot { get; init; }
 }
