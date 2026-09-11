@@ -79,13 +79,13 @@
   <data name="FiveMHub.Scopes.Title" xml:space="preserve"><value>Um PC, dois escopos de otimização</value></data>
   <data name="FiveMHub.Scopes.Description" xml:space="preserve"><value>Cada execução verifica primeiro o estado atual. Configurações que já estão no alvo são verificadas sem nova aplicação; a restauração continua vinculada à transação que realmente as alterou.</value></data>
   <data name="FiveMHub.Actions.Title" xml:space="preserve"><value>O que você quer fazer?</value></data>
-  <data name="FiveMHub.Detection.Title" xml:space="preserve"><value>Não encontrou o FiveM?</value><comment>TODO(i18n): source changed in en-US</comment></data>
-  <data name="FiveMHub.Detection.Description" xml:space="preserve"><value>Escolha a pasta que contém FiveM.exe somente quando a detecção automática não identificar uma instalação Legacy válida. O Ralven valida a pasta antes de usá-la.</value><comment>TODO(i18n): source changed in en-US</comment></data>
-  <data name="FiveMHub.Detection.Select" xml:space="preserve"><value>Escolher pasta do FiveM</value><comment>TODO(i18n): source changed in en-US</comment></data>
-  <data name="FiveMHub.Detection.AutomaticAction" xml:space="preserve"><value>Usar detecção automática</value><comment>TODO(i18n): source changed in en-US</comment></data>
-  <data name="FiveMHub.Detection.Automatic" xml:space="preserve"><value>A detecção automática está ativa.</value><comment>TODO(i18n): source changed in en-US</comment></data>
-  <data name="FiveMHub.Detection.Manual" xml:space="preserve"><value>Usando a pasta selecionada: {0}</value><comment>TODO(i18n): source changed in en-US</comment></data>
-  <data name="FiveMHub.Detection.Invalid" xml:space="preserve"><value>A pasta selecionada não é uma instalação FiveM Legacy válida. Escolha a pasta que contém FiveM.exe e FiveM.app\data.</value><comment>TODO(i18n): source changed in en-US</comment></data>
+  <data name="FiveMHub.Detection.Title" xml:space="preserve"><value>Não encontrou o FiveM?</value></data>
+  <data name="FiveMHub.Detection.Description" xml:space="preserve"><value>Escolha a pasta que contém FiveM.exe somente quando a detecção automática não identificar uma instalação Legacy válida. O Ralven valida a pasta antes de usá-la.</value></data>
+  <data name="FiveMHub.Detection.Select" xml:space="preserve"><value>Escolher pasta do FiveM</value></data>
+  <data name="FiveMHub.Detection.AutomaticAction" xml:space="preserve"><value>Usar detecção automática</value></data>
+  <data name="FiveMHub.Detection.Automatic" xml:space="preserve"><value>A detecção automática está ativa.</value></data>
+  <data name="FiveMHub.Detection.Manual" xml:space="preserve"><value>Usando a pasta selecionada: {0}</value></data>
+  <data name="FiveMHub.Detection.Invalid" xml:space="preserve"><value>A pasta selecionada não é uma instalação FiveM Legacy válida. Escolha a pasta que contém FiveM.exe e FiveM.app\data.</value></data>
   <data name="FiveMHub.Actions.Description" xml:space="preserve"><value>Escolha a área que corresponde ao seu objetivo. Nenhuma ação começa antes da revisão e confirmação do plano.</value></data>
   <data name="FiveMHub.Optimizer.Title" xml:space="preserve"><value>Otimizar FiveM</value></data>
   <data name="FiveMHub.Optimizer.Description" xml:space="preserve"><value>Analise a instalação Legacy detectada e revise diagnósticos, configurações e ações reversíveis específicas do jogo.</value></data>
