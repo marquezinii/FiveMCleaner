@@ -41,7 +41,9 @@
                             BorderBrush="{DynamicResource FocusRingBrush}"
                             BorderThickness="2"
                             CornerRadius="{StaticResource RadiusMd}"
-                            IsHitTestVisible="False" />
+                            IsHitTestVisible="False">
+                        <AdornedElementPlaceholder />
+                    </Border>
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
