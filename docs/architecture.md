@@ -361,7 +361,20 @@ módulo de manutenção separado e não entra implicitamente nesses perfis.
 
 Responsabilidades:
 
-- localizar instalação padrão e personalizada;
+- localizar instalação padrão e personalizada por camadas: seleção manual
+  validada, processo em execução, cache com fingerprint do executável, App
+  Paths/registro de desinstalação, atalhos do usuário/Start Menu e diretórios
+  conhecidos; a busca nunca percorre o disco inteiro nem perfis de outros
+  usuários;
+- aceitar uma raiz Legacy somente com `FiveM.exe`, `FiveM.app` e
+  `FiveM.app\data`, todos canonizados e sem reparse points; dados CitizenFX
+  isolados, caminhos quebrados e instalações parciais não são instalação;
+- priorizar uma escolha manual, processo ou cache ainda válido; se restarem
+  várias raízes automáticas válidas sem uma fonte decisiva, declarar estado
+  ambíguo e pedir que o usuário selecione uma raiz, em vez de alterar uma
+  instalação arbitrária;
+- invalidar o cache quando o executável some ou muda de tamanho/data e voltar
+  à descoberta completa após movimentação, reinstalação ou atualização;
 - validar `CitizenFX.ini` e `IVPath` sem reescrevê-los por conveniência;
 - mapear somente diretórios conhecidos sob `FiveM.app`;
 - identificar processos por caminho da imagem, não só por nome;
@@ -473,6 +486,16 @@ por configuração de build), permitindo separar no Sentry os erros do
 desenvolvedor dos erros de usuários finais sem duplicar DSN nem projeto.
 Todo evento passa por `CrashReportSanitizer` (reaproveitando
 `ReportSanitizer`) antes de sair do processo. Detalhes: [telemetry.md](telemetry.md).
+
+`App` registra as fronteiras globais do WPF (`DispatcherUnhandledException`,
+`UnhandledException` e `UnobservedTaskException`). A primeira, e falhas de
+startup que ainda alcancem o Dispatcher, usam `ErrorDialog`: uma superfície
+localizada com orientação simples, detalhes técnicos sanitizados sob demanda e
+ações de cópia, reabertura ou fechamento. `UnhandledException` de thread sem
+Dispatcher só registra e tenta reportar, pois o processo pode já estar sendo
+encerrado. As falhas esperadas de fluxos específicos continuam no contexto que
+as recupera (estado inline, resultado transacional ou diálogo da funcionalidade),
+sem promover todo problema a uma falha fatal.
 
 ## Interrupção de otimização pela interface
 

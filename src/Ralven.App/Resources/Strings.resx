@@ -79,6 +79,13 @@
   <data name="FiveMHub.Scopes.Title" xml:space="preserve"><value>One PC, two optimization scopes</value></data>
   <data name="FiveMHub.Scopes.Description" xml:space="preserve"><value>Each run checks the current state first. Settings already at their target are verified without being applied again; restoration remains tied to the transaction that changed them.</value></data>
   <data name="FiveMHub.Actions.Title" xml:space="preserve"><value>What do you want to do?</value></data>
+  <data name="FiveMHub.Detection.Title" xml:space="preserve"><value>Can't find FiveM?</value></data>
+  <data name="FiveMHub.Detection.Description" xml:space="preserve"><value>Choose the folder that contains FiveM.exe only when automatic detection cannot identify a valid Legacy installation. Ralven validates it before use.</value></data>
+  <data name="FiveMHub.Detection.Select" xml:space="preserve"><value>Choose FiveM folder</value></data>
+  <data name="FiveMHub.Detection.AutomaticAction" xml:space="preserve"><value>Use automatic detection</value></data>
+  <data name="FiveMHub.Detection.Automatic" xml:space="preserve"><value>Automatic detection is active.</value></data>
+  <data name="FiveMHub.Detection.Manual" xml:space="preserve"><value>Using selected folder: {0}</value></data>
+  <data name="FiveMHub.Detection.Invalid" xml:space="preserve"><value>The selected folder is not a valid FiveM Legacy installation. Select the folder that contains FiveM.exe and FiveM.app\data.</value></data>
   <data name="FiveMHub.Actions.Description" xml:space="preserve"><value>Choose the area that matches your goal. No action starts until you review and confirm its plan.</value></data>
   <data name="FiveMHub.Optimizer.Title" xml:space="preserve"><value>Optimize FiveM</value></data>
   <data name="FiveMHub.Optimizer.Description" xml:space="preserve"><value>Analyze the detected Legacy installation and review the game-specific diagnostics, settings and reversible actions.</value></data>
@@ -673,6 +680,9 @@
 • Personal paths without sanitization</value></data>
   <data name="ReleaseNotes.WindowTitle" xml:space="preserve"><value>What's new - Ralven</value></data>
   <data name="ReleaseNotes.Heading" xml:space="preserve"><value>What's new</value></data>
+  <data name="ReleaseNotes.Acknowledge" xml:space="preserve"><value>Got it</value></data>
+  <data name="ReleaseNotes.Summary" xml:space="preserve"><value>A brief overview of what changed in this release.</value></data>
+  <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Updated the publishing infrastructure and browser compatibility baseline, with full validation in continuous integration.</value></data>
   <data name="ReleaseNotes.VersionLabel" xml:space="preserve"><value>Version {0}</value></data>
   <data name="ReleaseNotes.VersionLabelWithDate" xml:space="preserve"><value>Version {0} • {1}</value></data>
   <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Added</value></data>
@@ -1972,4 +1982,31 @@ Average CPU {3} · GPU {4} · RAM {5} · Disk {6}</value></data>
   <data name="Runtime.BrokerRollbackCompletedDetail" xml:space="preserve"><value>The administrative changes were restored.</value></data>
   <data name="Runtime.BrokerRejectedDetail" xml:space="preserve"><value>The administrative request was rejected safely.</value></data>
   <data name="Runtime.BrokerFailedDetail" xml:space="preserve"><value>The administrative operation stopped safely. Check the report before trying again.</value></data>
+  <data name="ErrorDialog.WindowTitle" xml:space="preserve"><value>Ralven needs to close</value></data>
+  <data name="ErrorDialog.Fatal.Headline" xml:space="preserve"><value>Ralven ran into a problem</value></data>
+  <data name="ErrorDialog.Fatal.Message" xml:space="preserve"><value>Ralven needs to close to keep your current session safe. No new change will be applied.</value></data>
+  <data name="ErrorDialog.Fatal.Guidance" xml:space="preserve"><value>You can reopen Ralven now. If this happens again, copy the technical details and include them in a bug report from Settings.</value></data>
+  <data name="ErrorDialog.Recoverable.Headline" xml:space="preserve"><value>We could not complete that action</value></data>
+  <data name="ErrorDialog.Recoverable.Message" xml:space="preserve"><value>Ralven is still open and no change was made by this failed action.</value></data>
+  <data name="ErrorDialog.Recoverable.Guidance" xml:space="preserve"><value>Try again in a moment. If the problem continues, you can send a report with the details already prepared.</value></data>
+  <data name="ErrorDialog.Test.WindowTitle" xml:space="preserve"><value>Error experience preview</value></data>
+  <data name="ErrorDialog.Test.Headline" xml:space="preserve"><value>This is a controlled error preview</value></data>
+  <data name="ErrorDialog.Test.Message" xml:space="preserve"><value>No real failure occurred and no information was sent. This preview lets you check the error experience safely.</value></data>
+  <data name="ErrorDialog.Test.Guidance" xml:space="preserve"><value>Check the hierarchy, technical-details expander and copy action. Close the preview when you are done.</value></data>
+  <data name="ErrorDialog.Details.Title" xml:space="preserve"><value>Technical details</value></data>
+  <data name="ErrorDialog.Details.Help" xml:space="preserve"><value>Optional information for support. Personal paths are removed before this text is shown or copied.</value></data>
+  <data name="ErrorDialog.Details.Template" xml:space="preserve"><value>{0}
+Version: {1}
+Time (UTC): {2}
+Exception: {3}
+
+{4}</value></data>
+  <data name="ErrorDialog.Copy" xml:space="preserve"><value>Copy details</value></data>
+  <data name="ErrorDialog.Copy.Success" xml:space="preserve"><value>Technical details copied.</value></data>
+  <data name="ErrorDialog.Copy.Failed" xml:space="preserve"><value>Windows could not copy the details: {0}</value></data>
+  <data name="ErrorDialog.Report" xml:space="preserve"><value>Report problem</value></data>
+  <data name="ErrorDialog.Restart" xml:space="preserve"><value>Reopen Ralven</value></data>
+  <data name="ErrorDialog.Restart.Failed" xml:space="preserve"><value>Ralven could not be reopened automatically. Close this window and open it again from the Start menu.</value></data>
+  <data name="ErrorDialog.Exit" xml:space="preserve"><value>Close Ralven</value></data>
+  <data name="ErrorDialog.ClosePreview" xml:space="preserve"><value>Close preview</value></data>
 </root>

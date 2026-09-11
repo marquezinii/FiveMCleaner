@@ -36,20 +36,20 @@ const brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' 
 const usd = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'USD', minimumFractionDigits: 4 });
 
 const CHARTS = [
-  { name: 'runs-per-day', type: 'line', x: 'day', y: 'runs', label: 'execuções', color: CHART_COLORS[0] },
-  { name: 'accounts-per-day', type: 'line', x: 'day', y: 'accounts', label: 'contas', color: CHART_COLORS[1] },
-  { name: 'ai-per-day', type: 'line', x: 'day', y: 'requests', label: 'requisições', color: CHART_COLORS[2] },
-  { name: 'app-versions', type: 'donut', key: 'app_version', value: 'runs', label: 'eventos', format: formatAppVersion, legend: 'legend-app-versions' },
-  { name: 'billing-subscriptions', type: 'donut', key: 'state', value: 'subscriptions', label: 'assinaturas', legend: 'legend-billing-subscriptions' },
-  { name: 'profiles', type: 'donut', key: 'profile', value: 'runs', label: 'execuções', legend: 'legend-profiles' },
-  { name: 'outcomes', type: 'donut', key: 'event_name', value: 'occurrences', label: 'eventos', format: formatOutcome, legend: 'legend-outcomes' },
-  { name: 'error-categories', type: 'donut', key: 'error_category', value: 'occurrences', label: 'falhas', legend: 'legend-error-categories' },
-  { name: 'actions', type: 'bar', key: 'action_id', value: 'runs', label: 'execuções', horizontal: true, limit: 10, color: CHART_COLORS[0] },
-  { name: 'errors-by-version', type: 'bar', keys: ['app_version', 'error_category'], value: 'occurrences', label: 'falhas', horizontal: true, limit: 8, color: CHART_COLORS[4] },
-  { name: 'bug-codes', type: 'bar', key: 'bug_code', value: 'occurrences', label: 'falhas', horizontal: true, limit: 8, color: CHART_COLORS[3] },
-  { name: 'os-versions', type: 'donut', key: 'os_version', value: 'runs', label: 'eventos', legend: 'legend-os-versions' },
-  { name: 'top-cpu', type: 'bar', key: 'cpu_model', value: 'runs', label: 'eventos', horizontal: true, limit: 6, color: CHART_COLORS[1] },
-  { name: 'top-gpu', type: 'bar', key: 'gpu_model', value: 'runs', label: 'eventos', horizontal: true, limit: 6, color: CHART_COLORS[0] },
+  { name: 'runs-per-day', type: 'line', x: 'day', y: 'runs', label: 'execuções', color: CHART_COLORS[0], empty: ['Ainda não há atividade no recorte', 'Este histórico aparece quando o aplicativo envia eventos de conclusão ou falha de otimização.'] },
+  { name: 'accounts-per-day', type: 'line', x: 'day', y: 'accounts', label: 'contas', color: CHART_COLORS[1], empty: ['Nenhuma nova conta no recorte', 'Este gráfico recebe apenas agregados diários de criação de conta.'] },
+  { name: 'ai-per-day', type: 'line', x: 'day', y: 'requests', label: 'requisições', color: CHART_COLORS[2], empty: ['Ralven AI ainda não foi usado no recorte', 'As requisições aparecem aqui quando o uso opcional do Ralven AI é registrado.'] },
+  { name: 'app-versions', type: 'donut', key: 'app_version', value: 'runs', label: 'eventos', format: formatAppVersion, legend: 'legend-app-versions', empty: ['Nenhuma versão observada', 'A distribuição será preenchida pelas execuções de otimização recebidas.'] },
+  { name: 'billing-subscriptions', type: 'donut', key: 'state', value: 'subscriptions', label: 'assinaturas', legend: 'legend-billing-subscriptions', empty: ['Nenhuma assinatura no recorte', 'Os estados autorizados e não autorizados aparecem quando há cobrança vinculada.'] },
+  { name: 'profiles', type: 'donut', key: 'profile', value: 'runs', label: 'execuções', legend: 'legend-profiles', empty: ['Nenhum perfil registrado', 'A preferência será exibida após uma otimização concluir com perfil informado.'] },
+  { name: 'outcomes', type: 'donut', key: 'event_name', value: 'occurrences', label: 'eventos', format: formatOutcome, legend: 'legend-outcomes', empty: ['Sem desfechos no período', 'O gráfico compara otimizações concluídas, falhas e cancelamentos quando houver eventos.'] },
+  { name: 'error-categories', type: 'donut', key: 'error_category', value: 'occurrences', label: 'falhas', legend: 'legend-error-categories', empty: ['Nenhuma categoria de falha', 'Categorias allowlisted surgirão quando uma execução reportar uma falha.'] },
+  { name: 'actions', type: 'bar', key: 'action_id', value: 'runs', label: 'execuções', horizontal: true, limit: 10, color: CHART_COLORS[0], empty: ['Nenhuma ação observada', 'As ações mais usadas aparecem depois que planos concluídos são recebidos.'] },
+  { name: 'errors-by-version', type: 'bar', keys: ['app_version', 'error_category'], value: 'occurrences', label: 'falhas', horizontal: true, limit: 8, color: CHART_COLORS[4], empty: ['Sem regressões para comparar', 'A relação entre versão e categoria aparece quando existem falhas no recorte.'] },
+  { name: 'bug-codes', type: 'bar', key: 'bug_code', value: 'occurrences', label: 'falhas', horizontal: true, limit: 8, color: CHART_COLORS[3], empty: ['Nenhum código recorrente', 'Os códigos allowlisted aparecerão aqui quando a telemetria registrar falhas.'] },
+  { name: 'os-versions', type: 'donut', key: 'os_version', value: 'runs', label: 'eventos', legend: 'legend-os-versions', empty: ['Nenhuma versão do Windows observada', 'A compatibilidade será preenchida por eventos de execução anônimos.'] },
+  { name: 'top-cpu', type: 'bar', key: 'cpu_model', value: 'runs', label: 'eventos', horizontal: true, limit: 6, color: CHART_COLORS[1], empty: ['Nenhuma CPU agregada no recorte', 'Este ranking aparece quando o envio opcional de hardware acompanha uma execução.'] },
+  { name: 'top-gpu', type: 'bar', key: 'gpu_model', value: 'runs', label: 'eventos', horizontal: true, limit: 6, color: CHART_COLORS[0], empty: ['Nenhuma GPU agregada no recorte', 'Este ranking aparece quando o envio opcional de hardware acompanha uma execução.'] },
 ];
 
 const SUMMARY_STATS = [
@@ -276,7 +276,8 @@ async function main() {
     }
 
     renderSummary(results, bugs);
-    renderReliabilityTable(results['reliability-by-version']?.data);
+    renderCommandBrief(results, bugs, updaterEvents);
+    renderReliabilityTable(results['reliability-by-version']);
     feeds.set('recentFailures', results['recent-failures']?.data, Boolean(results['recent-failures']?.error));
     feeds.set('bugReports', bugs.data, Boolean(bugs.error));
     feeds.set('updaterEvents', updaterEvents.data, Boolean(updaterEvents.error));
@@ -359,7 +360,7 @@ function renderHealthSignals(results, bugReportsResult) {
     else signals.push(['', `Confiabilidade das otimizações em ${formatPercent(success)}.`]);
   }
 
-  if (!results['app-initializations-per-day']?.error && initializations) {
+  if (hasRows(results['app-initializations-per-day']) && initializations) {
     signals.push(['', `Sinais de inicialização saudável recebidos: ${number.format(initializations)}.`]);
   }
   if (!results['abandoned-optimizations']?.error && abandoned) {
@@ -369,10 +370,10 @@ function renderHealthSignals(results, bugReportsResult) {
     signals.push(['warning', `${number.format(benchmarkFailures)} benchmark(s) do GTAV falharam no período.`]);
   }
 
-  if (!results['updater-summary']?.error) signals.push(updaterFailed
+  if (hasRows(results['updater-summary'])) signals.push(updaterFailed
     ? ['danger', `${number.format(updaterFailed)} falha(s) de atualização no período.`]
     : ['', 'Nenhuma falha de atualização registrada no período.']);
-  if (!results['billing-payments']?.error) signals.push(paymentProblems
+  if (hasRows(results['billing-payments'])) signals.push(paymentProblems
     ? ['warning', `${number.format(paymentProblems)} pagamento(s) rejeitado(s) ou contestado(s).`]
     : ['', 'Nenhum pagamento problemático registrado no período.']);
 
@@ -390,10 +391,78 @@ function renderHealthSignals(results, bugReportsResult) {
   }));
 }
 
-function renderReliabilityTable(rows = []) {
+function renderCommandBrief(results, bugReportsResult, updaterEventsResult) {
+  const success = computeSuccessRatePercent(results['success-rate']?.data?.[0]);
+  const updaterFailed = Number(results['updater-summary']?.data?.[0]?.failed) || 0;
+  const paymentProblems = Number(results['billing-payments']?.data?.[0]?.problem_payments) || 0;
+  const abandoned = sumBy(results['abandoned-optimizations']?.data ?? [], 'abandoned');
+  const bugReports = bugReportsResult.data ?? [];
+  const sourceFailures = [...Object.values(results), bugReportsResult, updaterEventsResult].filter((result) => result?.error).length;
+  const priorities = [];
+
+  if (sourceFailures) priorities.push(['attention', 'Restaurar a leitura das fontes', `${sourceFailures} fonte(s) administrativa(s) não respondeu(ram); nenhum valor foi convertido em zero.`, '#overview']);
+  if (success !== null && success < 95) priorities.push(['critical', 'Investigar a confiabilidade por versão', `A taxa de sucesso está em ${formatPercent(success)} no recorte atual.`, '#reliability']);
+  if (updaterFailed) priorities.push(['critical', 'Verificar falhas do updater', `${number.format(updaterFailed)} falha(s) foram registradas no período.`, '#operations']);
+  if (abandoned) priorities.push(['attention', 'Analisar fluxos sem desfecho', `${number.format(abandoned)} otimização(ões) foi(ram) iniciada(s) sem evento terminal.`, '#reliability']);
+  if (paymentProblems) priorities.push(['attention', 'Acompanhar pagamentos problemáticos', `${number.format(paymentProblems)} pagamento(s) foi(ram) rejeitado(s) ou contestado(s).`, '#growth']);
+  if (bugReports.length) priorities.push(['watch', 'Classificar relatos do suporte', `${number.format(bugReports.length)} relato(s) aguarda(m) leitura no recorte.`, '#operations']);
+  if (success === null && !sourceFailures) priorities.push(['watch', 'Aguardar uma amostra operacional', 'Ainda não há otimizações suficientes para calcular a confiabilidade do produto.', '#overview']);
+  if (!priorities.length) priorities.push(['healthy', 'Nenhuma exceção acionável', 'As fontes disponíveis não indicam uma prioridade operacional para este recorte.', '#overview']);
+
+  const hasData = !results['runs-per-day']?.error && (results['runs-per-day']?.data?.length ?? 0) > 0;
+  const critical = priorities.some(([tone]) => tone === 'critical');
+  const attention = priorities.some(([tone]) => tone === 'attention');
+  const posture = critical
+    ? ['critical', 'Ação imediata recomendada', 'Há sinais que merecem investigação antes de tomar decisões de produto ou distribuição.']
+    : attention
+      ? ['attention', 'Acompanhar de perto', 'Há sinais relevantes no recorte, sem evidência de incidente sistêmico.']
+      : hasData
+        ? ['healthy', 'Operação dentro do esperado', 'As fontes disponíveis não indicam uma exceção operacional no recorte atual.']
+        : ['neutral', 'Aguardando sinal operacional', 'O painel está conectado, mas ainda não há eventos suficientes neste recorte para uma leitura de saúde.'];
+
+  const [tone, title, description] = posture;
+  const postureElement = byId('command-posture');
+  postureElement.dataset.tone = tone;
+  setText('command-health-title', title);
+  setText('command-health-description', description);
+  setText('command-health-badge', { critical: 'AÇÃO', attention: 'ATENÇÃO', healthy: 'ESTÁVEL', neutral: 'SEM AMOSTRA' }[tone]);
+  setText('sidebar-health', { critical: 'Ação necessária', attention: 'Acompanhar', healthy: 'Operação estável', neutral: 'Aguardando dados' }[tone]);
+  setText('sidebar-health-detail', description);
+
+  const priorityList = byId('command-priorities');
+  priorityList.replaceChildren(...priorities.slice(0, 4).map(([priorityTone, priorityTitle, priorityDescription, href]) => {
+    const item = document.createElement('li');
+    item.className = `priority-item ${priorityTone}`;
+    const link = document.createElement('a');
+    link.href = href;
+    const heading = document.createElement('strong');
+    heading.textContent = priorityTitle;
+    const detail = document.createElement('span');
+    detail.textContent = priorityDescription;
+    link.append(heading, detail);
+    item.append(link);
+    return item;
+  }));
+
+  const responding = [...Object.values(results), bugReportsResult, updaterEventsResult].filter((result) => !result?.error).length;
+  const withRows = [...Object.values(results), bugReportsResult, updaterEventsResult].filter((result) => !result?.error && (result?.data?.length ?? 0) > 0).length;
+  setText('coverage-available', `${number.format(responding)} fontes administrativas responderam`);
+  setText('coverage-available-detail', withRows
+    ? `${number.format(withRows)} fonte(s) retornaram dados no recorte selecionado.`
+    : 'As fontes responderam, mas ainda não há linhas de dados para este recorte.');
+}
+
+function renderReliabilityTable(result) {
   const body = byId('reliability-versions-body');
+  const rows = result?.error ? [] : result?.data ?? [];
   body.replaceChildren();
-  if (!rows.length) return body.append(emptyRow(6, 'Sem versões no período'));
+  if (!rows.length) return body.append(emptyRow(
+    6,
+    result?.error ? 'Fonte de confiabilidade indisponível' : 'Nenhuma versão no período',
+    result?.error
+      ? 'Atualize para tentar novamente. O painel não substitui uma fonte indisponível por valores nulos.'
+      : 'Esta comparação será preenchida após execuções com versão do aplicativo no recorte selecionado.',
+  ));
   rows.forEach((row) => {
     const total = Number(row.total) || 0;
     const completed = Number(row.completed) || 0;
@@ -424,6 +493,13 @@ function renderChart(definition, result, filters) {
   const rows = result?.error || result?.unauthorized ? [] : result?.data ?? [];
   const options = { horizontal: definition.horizontal, color: definition.color, valueLabel: definition.label };
 
+  if (result?.error || result?.unauthorized || !rows.length) {
+    renderChartEmpty(canvas, definition, result?.error || result?.unauthorized ? 'source' : 'empty');
+    renderLegend(definition.legend, []);
+    return;
+  }
+  clearChartEmpty(canvas);
+
   if (definition.type === 'line') {
     drawLineChart(canvas, toLineSeries(rows, definition.x, definition.y), options);
     return;
@@ -449,15 +525,15 @@ function renderChart(definition, result, filters) {
 function createFeeds(detailDialog, setClipboard) {
   const definitions = {
     recentFailures: {
-      body: byId('recent-failures-body'), button: byId('recent-failures-toggle'), label: 'falhas recentes', colspan: 7,
+      body: byId('recent-failures-body'), button: byId('recent-failures-toggle'), label: 'falhas recentes', colspan: 7, empty: 'As falhas recentes surgirão aqui quando houver eventos de erro no recorte.',
       map: toRecentFailureRow, detail: openFailureDetails, classes: (index) => index === 1 ? 'failure-code' : '',
     },
     bugReports: {
-      body: byId('bug-reports-body'), button: byId('bug-reports-toggle'), label: 'bugs reportados', colspan: 6,
+      body: byId('bug-reports-body'), button: byId('bug-reports-toggle'), label: 'bugs reportados', colspan: 6, empty: 'Os relatos enviados pelo aplicativo aparecerão aqui quando existirem no recorte.',
       map: toBugReportRow, detail: openBugReportDetails, classes: (index) => index === 1 ? 'failure-code' : index === 2 ? 'summary-cell' : '',
     },
     updaterEvents: {
-      body: byId('updater-events-body'), button: byId('updater-events-toggle'), label: 'eventos do updater', colspan: 8,
+      body: byId('updater-events-body'), button: byId('updater-events-toggle'), label: 'eventos do updater', colspan: 8, empty: 'Os diagnósticos do atualizador aparecerão quando o cliente registrar eventos no recorte.',
       map: toUpdaterEventRow,
     },
   };
@@ -478,7 +554,11 @@ function createFeeds(detailDialog, setClipboard) {
     const shown = limitFeedRows(rows, state[name].expanded);
     definition.body.replaceChildren();
     if (!shown.length) {
-      definition.body.append(emptyRow(definition.colspan, state[name].error ? 'Fonte indisponível; tente atualizar novamente' : 'Nenhum resultado para os filtros atuais'));
+      definition.body.append(emptyRow(
+        definition.colspan,
+        state[name].error ? 'Fonte indisponível; tente atualizar novamente' : 'Nenhum resultado para os filtros atuais',
+        state[name].error ? 'Atualize para tentar novamente. Nenhum dado foi estimado para preencher esta tabela.' : definition.empty,
+      ));
     } else {
       shown.forEach((source, rowIndex) => {
         const tr = document.createElement('tr');
@@ -575,12 +655,23 @@ function createFeeds(detailDialog, setClipboard) {
 }
 
 function metricText(result, value) {
-  return result?.error ? '—' : value;
+  return result?.error || !hasRows(result) ? '—' : value;
+}
+
+function hasRows(result) {
+  return !result?.error && Array.isArray(result?.data) && result.data.length > 0;
 }
 
 function renderLegend(id, series) {
   const container = byId(id);
   if (!container) return;
+  if (!series.length) {
+    const empty = document.createElement('p');
+    empty.className = 'legend-empty';
+    empty.textContent = 'A distribuição aparecerá quando houver dados no recorte.';
+    container.replaceChildren(empty);
+    return;
+  }
   container.replaceChildren(...toDistributionRows(series).map((point, index) => {
     const row = document.createElement('div');
     row.className = 'legend-row';
@@ -596,6 +687,34 @@ function renderLegend(id, series) {
     row.append(swatch, label, value);
     return row;
   }));
+}
+
+function renderChartEmpty(canvas, definition, reason) {
+  const plot = canvas.parentElement;
+  if (!plot) return;
+  clearChartEmpty(canvas);
+  canvas.hidden = true;
+  plot.classList.add('is-empty');
+  const state = document.createElement('div');
+  state.className = 'chart-empty-state';
+  const title = document.createElement('strong');
+  const copy = document.createElement('span');
+  if (reason === 'source') {
+    title.textContent = 'Fonte indisponível';
+    copy.textContent = 'Não foi possível consultar esta métrica. Atualize para tentar novamente; nenhum dado foi estimado.';
+  } else {
+    [title.textContent, copy.textContent] = definition.empty;
+  }
+  state.append(title, copy);
+  plot.append(state);
+}
+
+function clearChartEmpty(canvas) {
+  const plot = canvas.parentElement;
+  if (!plot) return;
+  canvas.hidden = false;
+  plot.classList.remove('is-empty');
+  plot.querySelector('.chart-empty-state')?.remove();
 }
 
 function currentFilters(form) {
@@ -656,12 +775,19 @@ function sumRows(rows, key) {
   return rows.reduce((total, row) => total + (Number(row[key]) || 0), 0);
 }
 
-function emptyRow(colspan, message) {
+function emptyRow(colspan, title, description = '') {
   const tr = document.createElement('tr');
   const td = document.createElement('td');
   td.colSpan = colspan;
   td.className = 'empty-row';
-  td.textContent = message;
+  const heading = document.createElement('strong');
+  heading.textContent = title;
+  td.append(heading);
+  if (description) {
+    const copy = document.createElement('span');
+    copy.textContent = description;
+    td.append(copy);
+  }
   tr.appendChild(td);
   return tr;
 }

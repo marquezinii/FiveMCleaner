@@ -2,6 +2,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using Ralven.App.Services;
+using Ralven.App.Views;
 using Ralven.Contracts;
 
 namespace Ralven.App;
@@ -139,6 +140,11 @@ public partial class App : System.Windows.Application
                 new System.Windows.Interop.WindowInteropHelper(window).Handle);
             window.Show();
             if (activationPending) window.RequestActivation();
+            var errorTestMode = ErrorExperienceTest.Parse(e.Args, AppEnvironment.Resolve());
+            if (errorTestMode != ErrorExperienceTestMode.None)
+            {
+                _ = Dispatcher.BeginInvoke(() => ErrorDialog.ShowTest(window, errorTestMode));
+            }
         }
         catch (Exception exception)
         {
@@ -271,13 +277,7 @@ public partial class App : System.Windows.Application
             // Includes failures from the independent splash dispatcher, which
             // do not unwind through MainWindow_Loaded's initialization catch.
             (Current?.MainWindow as MainWindow)?.InvalidateStartupHealthIfPending();
-            System.Windows.MessageBox.Show(
-                Services.LocalizationService.Current.Format(
-                    "Dialog.FatalError.Message",
-                    Services.LocalizationService.Current.DescribeException(exception)),
-                ProductIdentity.DisplayName,
-                MessageBoxButton.OK,
-                MessageBoxImage.Error);
+            ErrorDialog.ShowFatal(Current?.MainWindow, exception);
         }
         catch
         {
@@ -296,7 +296,7 @@ public partial class App : System.Windows.Application
             Directory.CreateDirectory(directory);
             File.AppendAllText(
                 Path.Combine(directory, "crash.log"),
-                $"[{DateTimeOffset.Now:O}] {exception}\n\n");
+                $"[{DateTimeOffset.Now:O}] {ReportSanitizer.Sanitize(exception.ToString())}\n\n");
         }
         catch
         {

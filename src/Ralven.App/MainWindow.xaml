@@ -58,24 +58,24 @@
                      AutomationProperties.Name="{Binding [Tray.MenuName], Source={StaticResource LocalizedStrings}}">
             <MenuItem Style="{StaticResource TrayMenuHeaderStyle}">
                 <MenuItem.Header>
-                    <Grid Margin="14,10,14,12">
+                    <Grid Margin="12,8,12,10">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Border Width="38"
-                                Height="38"
+                        <Border Width="34"
+                                Height="34"
                                 Background="{StaticResource TrayMenuHoverBrush}"
                                 CornerRadius="{StaticResource RadiusMd}">
                             <Image Source="Assets/Ralven.png"
-                                   Width="24"
-                                   Height="24"
+                                   Width="22"
+                                   Height="22"
                                    Stretch="Uniform"
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center" />
                         </Border>
-                        <StackPanel Grid.Column="1" Margin="12,0,12,0" VerticalAlignment="Center">
+                        <StackPanel Grid.Column="1" Margin="10,0,10,0" VerticalAlignment="Center">
                             <TextBlock Text="{Binding [Brand.ProductName], Source={StaticResource LocalizedStrings}}"
                                        Style="{StaticResource BodyStrongText}"
                                        Foreground="{StaticResource TrayMenuTextBrush}" />
@@ -104,7 +104,7 @@
                                         </Style>
                                     </Ellipse.Style>
                                 </Ellipse>
-                                <TextBlock MaxWidth="212"
+                                <TextBlock MaxWidth="188"
                                            Foreground="{StaticResource TrayMenuMutedTextBrush}"
                                            TextTrimming="CharacterEllipsis"
                                            TextWrapping="NoWrap">
@@ -413,18 +413,28 @@
                                        AutomationProperties.Name="{Binding AboutVersionDeveloper}"
                                        Visibility="{Binding IsPaneOpen, ElementName=RootNavigationView, Converter={StaticResource BooleanToVisibilityConverter}}">
                     <ui:NavigationViewItem.Content>
-                        <Border Style="{StaticResource FieldSurface}" Padding="12,8" Margin="0,4">
-                            <StackPanel Orientation="Horizontal">
+                        <Grid Margin="6,6,4,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <Rectangle Style="{StaticResource HeroAccentRule}" />
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0" VerticalAlignment="Center">
                                 <TextBlock Text="{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}, Mode=OneWay}"
                                            Style="{StaticResource OverlineText}"
                                            VerticalAlignment="Center" />
-                                <TextBlock Text="{Binding AppVersion, Mode=OneWay}"
-                                           Style="{StaticResource BodyStrongText}"
-                                           FontFamily="{StaticResource AppFontMono}"
-                                           Margin="12,0,0,0"
-                                           VerticalAlignment="Center" />
+                                <Border Background="{DynamicResource AccentWashBrush}"
+                                        CornerRadius="{StaticResource RadiusXs}"
+                                        Padding="8,3"
+                                        Margin="10,0,0,0">
+                                    <TextBlock Text="{Binding AppVersion, Mode=OneWay}"
+                                               Style="{StaticResource BodyStrongText}"
+                                               Foreground="{DynamicResource AccentTextBrush}"
+                                               FontFamily="{StaticResource AppFontMono}"
+                                               VerticalAlignment="Center" />
+                                </Border>
                             </StackPanel>
-                        </Border>
+                        </Grid>
                     </ui:NavigationViewItem.Content>
                 </ui:NavigationViewItem>
             </ui:NavigationView.FooterMenuItems>
