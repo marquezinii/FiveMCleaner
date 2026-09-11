@@ -31,7 +31,7 @@ da plataforma e do navegador. O site usa Next e React nas versões fixadas em
 | Microsoft.Testing.Platform + xUnit v3 | Suíte .NET | `global.json`, `tests/Ralven.Tests/Ralven.Tests.csproj` |
 | coverlet.MTP | Cobertura .NET na CI | `Directory.Packages.props`, `.github/workflows/ci.yml` |
 | `node:test` | Testes do Worker e dashboard | manifests em `infra/` |
-| Wrangler 4.129 | Desenvolvimento, migrations e deploy do Worker | `infra/cloudflare-worker/package.json` |
+| Wrangler 4.131 | Desenvolvimento, migrations e deploy do Worker | `infra/cloudflare-worker/package.json` |
 | Obfuscar / SBOM Tool | Hardening e SBOM dos artefatos | `.config/dotnet-tools.json`, `.github/workflows/ci.yml` |
 | PowerShell / Inno Setup | Build, verificações e instalador | `scripts/`, `installer/Ralven.iss` |
 
