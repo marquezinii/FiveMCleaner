@@ -2006,4 +2006,7 @@ Exception : {3}
   <data name="ErrorDialog.Restart" xml:space="preserve"><value>Rouvrir Ralven</value></data>
   <data name="ErrorDialog.Restart.Failed" xml:space="preserve"><value>Ralven n'a pas pu être rouvert automatiquement. Fermez cette fenêtre et ouvrez-le depuis le menu Démarrer.</value></data>
   <data name="ErrorDialog.Exit" xml:space="preserve"><value>Fermer Ralven</value></data>
-  <data name="ErrorDialog.ClosePreview" xml:space="preserve"><value>Fermer l'aperçu</value></data></root>
+  <data name="ErrorDialog.ClosePreview" xml:space="preserve"><value>Fermer l'aperçu</value></data>
+  <data name="ReleaseNotes.Acknowledge" xml:space="preserve"><value>Compris</value></data>
+  <data name="ReleaseNotes.Summary" xml:space="preserve"><value>Un aperçu rapide des changements de cette version.</value></data>
+  <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Mise à jour de l’infrastructure de publication et de la base de compatibilité des navigateurs, avec une validation complète dans l’intégration continue.</value></data></root>

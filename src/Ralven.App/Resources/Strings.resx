@@ -680,6 +680,9 @@
 • Personal paths without sanitization</value></data>
   <data name="ReleaseNotes.WindowTitle" xml:space="preserve"><value>What's new - Ralven</value></data>
   <data name="ReleaseNotes.Heading" xml:space="preserve"><value>What's new</value></data>
+  <data name="ReleaseNotes.Acknowledge" xml:space="preserve"><value>Got it</value></data>
+  <data name="ReleaseNotes.Summary" xml:space="preserve"><value>A brief overview of what changed in this release.</value></data>
+  <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Updated the publishing infrastructure and browser compatibility baseline, with full validation in continuous integration.</value></data>
   <data name="ReleaseNotes.VersionLabel" xml:space="preserve"><value>Version {0}</value></data>
   <data name="ReleaseNotes.VersionLabelWithDate" xml:space="preserve"><value>Version {0} • {1}</value></data>
   <data name="ReleaseNotes.Category.Added" xml:space="preserve"><value>Added</value></data>
