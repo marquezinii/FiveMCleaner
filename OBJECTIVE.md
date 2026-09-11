@@ -1,7 +1,8 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** Impedir que a moldura circular do acesso à conta seja cortada no cabeçalho.
-- **Escopo:** Ajustar somente o layout/estilo responsável pelo recorte visual do botão de conta.
-- **Critérios de conclusão:** A moldura permanece completamente visível e as validações aplicáveis passam.
-- **Resultado entregue:** O botão de conta passou a ter 36 px de altura, deixando folga vertical para a borda interna de 32 px. A compilação final passou; a suíte aplicável teve 1.570 testes aprovados antes do ajuste estritamente visual final.
+- **Objetivo:** Atualizar as dependências compatíveis do site e manter o lint e a tipagem funcionais.
+- **Escopo:** `website/package.json` e `website/package-lock.json`.
+- **Fora de escopo:** Atualizar TypeScript para 7 ou ESLint para 10 antes de a cadeia do `eslint-config-next` oferecer suporte compatível.
+- **Critérios de conclusão:** O site usa as versões compatíveis do Next, tipos, TypeScript e ESLint, e as validações do site passam no ambiente suportado.
+- **Resultado entregue:** Atualizados Next e tipos; TypeScript 6 e ESLint 9 foram mantidos após a CI do Dependabot provar incompatibilidade com TypeScript 7 e ESLint 10.
