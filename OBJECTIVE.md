@@ -1,8 +1,7 @@
-# Objective
+# Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** Integrate the Worker dependency update into `dev/proxima-versao` without changing the protected `main` branch.
-- **Escopo:** Update the Worker lockfile and its direct Wrangler development dependency while preserving the current Worker configuration.
-- **Fora do escopo:** Worker behavior, migrations, application code, and release publication.
-- **Critérios de conclusão:** `wrangler` and its resolved dependency tree are updated in the Worker manifest and lockfile, and Worker tests pass.
-- **Resultado entregue:** Updated Wrangler and the resolved Worker lockfile while preserving the existing D1 configuration; Worker tests were run after installing the locked dependencies.
+- **Objetivo:** Remover os anéis brancos indevidos de toggles e controles relacionados, preservando o foco visível por teclado.
+- **Escopo:** Estilos WPF compartilhados e validação focada; sem mudança de comportamento de produto ou textos públicos.
+- **Critérios de conclusão:** A interação pelo ponteiro não deixa anel de foco branco; a navegação por teclado mantém indicador claro; build e testes aplicáveis passam.
+- **Resultado entregue:** Os controles compartilhados agora usam o foco visual do WPF exclusivo da navegação por teclado, então a ativação pelo ponteiro não deixa anel de foco. Build e 1.570 testes passaram; a página Configurações/Privacidade foi capturada no tema escuro.
