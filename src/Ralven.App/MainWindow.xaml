@@ -354,7 +354,7 @@
                         <Path Style="{StaticResource Icon20}" Data="{StaticResource IconDiscord}" Stroke="{x:Null}" Fill="{DynamicResource TextSecondaryBrush}" />
                     </Button>
                     <Border Style="{StaticResource VerticalHairlineDivider}" Height="22" Margin="8,0" VerticalAlignment="Center" />
-                    <Button x:Name="AccountButton" Style="{StaticResource IconButtonStyle}" Width="Auto" Padding="4,0,10,0" Click="Account_Click"
+                    <Button x:Name="AccountButton" Style="{StaticResource IconButtonStyle}" Width="Auto" Height="36" MinHeight="36" Padding="4,0,10,0" Click="Account_Click"
                             ToolTip="{Binding [Account.TitleBar.SignInPrompt], Source={StaticResource LocalizedStrings}}"
                             AutomationProperties.Name="{Binding [Account.TitleBar.SignInPrompt], Source={StaticResource LocalizedStrings}}">
                         <StackPanel Orientation="Horizontal">
