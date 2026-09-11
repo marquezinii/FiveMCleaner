@@ -1,8 +1,8 @@
 # Objective
 
 - **Agente:** Codex
-- **Objetivo:** Integrate the Worker dependency update into `dev/proxima-versao` without changing the protected `main` branch.
-- **Escopo:** Update the Worker lockfile and its direct Wrangler development dependency while preserving the current Worker configuration.
-- **Fora do escopo:** Worker behavior, migrations, application code, and release publication.
-- **Critérios de conclusão:** `wrangler` and its resolved dependency tree are updated in the Worker manifest and lockfile, and Worker tests pass.
-- **Resultado entregue:** Updated Wrangler and the resolved Worker lockfile while preserving the existing D1 configuration; Worker tests were run after installing the locked dependencies.
+- **Objetivo:** Publicar o painel administrativo integrado na `dev/proxima-versao` sem depender de uma release do aplicativo e retirar os endereços legados.
+- **Escopo:** Automação de deploy do Worker/painel, configuração de origem e documentação do dashboard; exclusão do projeto Cloudflare Pages legado após validação.
+- **Fora do escopo:** Release do aplicativo Windows, alterações de dados D1 e mudanças de contratos de telemetria.
+- **Critérios de conclusão:** O Pages canônico serve o commit integrado, aponta somente para `api.vemryx.com`, e o projeto Pages legado deixa de resolver.
+- **Resultado entregue:** O dashboard integrado na `dev/proxima-versao` foi publicado em `dashboard.vemryx.com`; o projeto Pages `ralven-dashboard` foi excluído e o subdomínio técnico remanescente redireciona permanentemente ao domínio canônico. A automação passa a publicar mudanças de Worker e dashboard após a CI da `dev`.
