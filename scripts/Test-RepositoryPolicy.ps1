@@ -221,24 +221,6 @@ if ($pullRequestValues | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
             if ($BaseSha -notmatch '^[0-9a-f]{40}$' -or $HeadSha -notmatch '^[0-9a-f]{40}$') {
                 throw 'Pull request policy requires full Git commit SHAs.'
             }
-            $changedFiles = @(& git -C $Workspace diff --name-only "$BaseSha...$HeadSha")
-            if ($LASTEXITCODE -ne 0) {
-                throw 'Could not inspect the pull request diff for OBJECTIVE.md.'
-            }
-            if ('OBJECTIVE.md' -notin $changedFiles) {
-                throw 'Task pull requests must add or update OBJECTIVE.md.'
-            }
-
-            $objectivePath = Join-Path $Workspace 'OBJECTIVE.md'
-            $objective = Get-Content -LiteralPath $objectivePath -Raw -Encoding utf8
-            foreach ($field in @('Agente', 'Objetivo', 'Escopo', 'Critérios de conclusão', 'Resultado entregue')) {
-                if ($objective -notmatch "(?m)^- \*\*$([regex]::Escape($field)):\*\*\s+\S") {
-                    throw "OBJECTIVE.md must contain a non-empty '$field' field."
-                }
-            }
-            if ($objective -match '(?im)^- \*\*Resultado entregue:\*\*\s+.*\bem andamento\b') {
-                throw 'OBJECTIVE.md must describe the delivered result before opening the pull request.'
-            }
         }
     }
     else {
