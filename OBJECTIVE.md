@@ -1,8 +1,8 @@
 # Objective
 
 - **Agente:** Codex
-- **Objetivo:** Integrate the Worker dependency update into `dev/proxima-versao` without changing the protected `main` branch.
-- **Escopo:** Update the Worker lockfile and its direct Wrangler development dependency while preserving the current Worker configuration.
-- **Fora do escopo:** Worker behavior, migrations, application code, and release publication.
-- **Critérios de conclusão:** `wrangler` and its resolved dependency tree are updated in the Worker manifest and lockfile, and Worker tests pass.
-- **Resultado entregue:** Updated Wrangler and the resolved Worker lockfile while preserving the existing D1 configuration; Worker tests were run after installing the locked dependencies.
+- **Objetivo:** Corrigir o estado infinito de carregamento da última varredura na Visão geral após reanalisar o PC.
+- **Escopo:** Fluxo de diagnóstico e apresentação da última varredura na Visão geral, com regressão focada se viável.
+- **Fora do escopo:** Alterações nos diagnósticos do Windows e no comportamento de otimização.
+- **Critérios de conclusão:** A interface deixa o estado de carregamento quando a reanálise termina e a regressão aplicável é validada.
+- **Resultado entregue:** O rótulo da Visão geral passou a reservar largura suficiente para exibir a última varredura e seu horário, sem confundir o truncamento visual com atividade de análise. Build Release e 1.570 testes passaram.
