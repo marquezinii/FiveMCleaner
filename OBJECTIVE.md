@@ -1,7 +1,8 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** Garantir cobertura completa de localização em português, inglês, espanhol e francês e tornar a manutenção dos catálogos verificável e escalável.
-- **Escopo:** Auditar textos públicos do aplicativo e componentes auxiliares, corrigir catálogos e consumo de cultura, adicionar francês, criar sincronização/validação versionada e validar os quatro idiomas. Não inclui tradução dinâmica em runtime, publicação ou alteração de versão.
-- **Critérios de conclusão:** Todos os catálogos possuem o mesmo conjunto de chaves e placeholders; textos públicos usam a infraestrutura de localização; francês pode ser selecionado sem alterar lógica da aplicação; validações automatizadas falham para chaves ausentes, órfãs, duplicadas ou placeholders divergentes; build, testes e validação visual aplicáveis são executados.
-- **Resultado entregue:** Catálogo declarativo com inglês canônico e cobertura equivalente em português, espanhol e francês para aplicativo, atualizador e ações Windows; sincronização, revisão por hash, glossário, pseudo-localização e gates de CI/release adicionados. Foram validadas 2.008 chaves em três conjuntos, build Release sem avisos, 1.446 testes, contrato do instalador e 70 capturas visuais (mais recapturas dos ajustes de expansão no Overview).
+- **Objetivo:** Substituir, quando o processo ainda estiver recuperável, a apresentação genérica de falhas por uma experiência de erro própria, segura e útil do Ralven.
+- **Escopo:** Captura global WPF, exibição fatal e recuperável, detalhes técnicos sanitizados, ações de reinício/fechamento/relato, integração ao diagnóstico existente, modo controlado de validação, testes e localização.
+- **Fora de escopo:** Capturar crashes irrecuperáveis do processo, reduzir proteções de crash reporting, alterar o broker, updater ou o comportamento de ações de otimização fora da apresentação de erro.
+- **Critérios de conclusão:** Erros de dispatcher e falhas recuperáveis usam UI própria quando disponível; dados técnicos permanecem sanitizados; o fallback é seguro; ações funcionam; textos são localizados; build e testes aplicáveis passam.
+- **Resultado entregue:** Janela localizada de falha com divulgação progressiva, cópia sanitizada, reinício seguro e encaminhamento ao formulário de bug para falhas recuperáveis; captura WPF e startup usam essa superfície; logs locais são sanitizados; prévia controlada fica restrita a desenvolvimento; testes, build e validação de localização foram executados.

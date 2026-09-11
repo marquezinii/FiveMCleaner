@@ -19,11 +19,11 @@ public static class ExternalLauncher
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
-            Ralven.App.Views.OptimizationConfirmationWindow.Inform(System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive),
-                LocalizationService.Current.Format(
-                    "Dialog.OpenExternal.Message",
-                    LocalizationService.Current.DescribeException(exception)),
-                LocalizationService.Current.GetString("Dialog.OpenExternal.Title"));
+            var owner = System.Windows.Application.Current?.Windows.OfType<Window>().FirstOrDefault(window => window.IsActive);
+            Ralven.App.Views.ErrorDialog.ShowRecoverable(
+                owner,
+                exception,
+                owner is Ralven.App.MainWindow mainWindow ? mainWindow.OpenBugReport : null);
         }
     }
 }

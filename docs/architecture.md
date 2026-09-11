@@ -474,6 +474,16 @@ desenvolvedor dos erros de usuários finais sem duplicar DSN nem projeto.
 Todo evento passa por `CrashReportSanitizer` (reaproveitando
 `ReportSanitizer`) antes de sair do processo. Detalhes: [telemetry.md](telemetry.md).
 
+`App` registra as fronteiras globais do WPF (`DispatcherUnhandledException`,
+`UnhandledException` e `UnobservedTaskException`). A primeira, e falhas de
+startup que ainda alcancem o Dispatcher, usam `ErrorDialog`: uma superfície
+localizada com orientação simples, detalhes técnicos sanitizados sob demanda e
+ações de cópia, reabertura ou fechamento. `UnhandledException` de thread sem
+Dispatcher só registra e tenta reportar, pois o processo pode já estar sendo
+encerrado. As falhas esperadas de fluxos específicos continuam no contexto que
+as recupera (estado inline, resultado transacional ou diálogo da funcionalidade),
+sem promover todo problema a uma falha fatal.
+
 ## Interrupção de otimização pela interface
 
 O `MainWindow` não encerra nem chama `MainViewModel.CancelOptimization()`
