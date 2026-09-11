@@ -75,18 +75,13 @@ interactive AI content.
 
 ## Deploy
 
-O push de uma tag estável dispara o workflow de release. Depois dos gates dos
-ambientes `release-signing` e `production`, ele publica somente `index.html`,
-`_headers` e `assets/` com `--project-name=ralven-dashboard` e confirma no
-endereço público o commit implantado. Para
-retomar uma publicação interrompida, use o `workflow_dispatch` com a mesma tag
-e `publish=true`; o fluxo repete as validações e preserva os mesmos gates.
+Depois que a CI valida uma mudança em `infra/dashboard` integrada em
+`dev/proxima-versao`, ela publica somente `index.html`, `_headers` e `assets/`
+no projeto Pages que atende o domínio canônico e confirma o commit implantado.
+O painel não depende de uma release do aplicativo Windows.
 
 `assets/app.js` usa `https://api.vemryx.com` como API padrão; `location.origin`
-continua sendo o endereço do próprio dashboard. O nome do projeto Pages e os
-identificadores legados do Worker são mantidos somente por compatibilidade com
-clientes já publicados. O endereço do dashboard do Ralven é
-`https://ralven-dashboard.pages.dev`. During the cutover, the previous
-`dashboard.vemryx.com` and `fivemcleaner-dashboard.pages.dev` origins remain in
-the Worker CORS allowlist so existing sessions and bookmarks do not break before
-the new Pages project is deployed and verified.
+continua sendo o endereço do próprio dashboard. O único endereço canônico do dashboard do Ralven é
+`https://dashboard.vemryx.com`. Os subdomínios técnicos `*.pages.dev` são
+redirecionados para ele por uma regra de redirecionamento em massa da conta
+Cloudflare e não fazem parte da allowlist CORS.

@@ -74,8 +74,8 @@
         "en": "More reliable packages and operations"
       },
       "description": {
-        "pt": "A aba Aplicativos simplifica instalar, atualizar e desinstalar pacotes das fontes confiáveis. Configurações passa a mostrar e limpar somente o cache descartável do Ralven, preservando login, preferências e rollback. Relatos de erro e o painel operacional ganham contexto para acelerar a investigação.",
-        "en": "The Applications tab simplifies installing, updating and removing packages from trusted sources. Settings now reports and clears only Ralven's disposable cache while preserving sign-in, preferences, and rollback data. Error reports and the operational dashboard gain context to speed investigation."
+        "pt": "A aba Aplicativos simplifica instalar, atualizar e desinstalar pacotes das fontes confiáveis. Configurações passa a mostrar e limpar somente o cache descartável do Ralven, preservando login, preferências e rollback. Falhas inesperadas ganham uma janela própria com ações claras e detalhes técnicos opcionais, enquanto relatos de erro e o painel operacional ganham contexto para acelerar a investigação.",
+        "en": "The Applications tab simplifies installing, updating and removing packages from trusted sources. Settings now reports and clears only Ralven's disposable cache while preserving sign-in, preferences, and rollback data. Unexpected failures gain a dedicated window with clear actions and optional technical details, while error reports and the operational dashboard gain context to speed investigation."
       }
     },
     {

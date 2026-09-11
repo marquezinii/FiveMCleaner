@@ -487,6 +487,22 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
+    public void ReleaseNotesWindow_IsCompactAndFixed()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var document = XDocument.Load(Path.Combine(
+            root,
+            "src",
+            "Ralven.App",
+            "Views",
+            "ReleaseNotesWindow.xaml"));
+
+        var window = document.Root!;
+        Assert.Equal("NoResize", (string?)window.Attribute("ResizeMode"));
+        Assert.Equal("440", (string?)window.Attribute("Height"));
+    }
+
+    [Fact]
     public void PrivacyConsentWindow_CanOnlyCloseAfterContinue()
     {
         var root = TestHelpers.FindRepositoryRoot();
@@ -988,7 +1004,7 @@ public sealed partial class LocalizedInterfaceContractTests
     }
 
     [Fact]
-    public void VersionCard_RemovesProtectionStatusAndShowsTheInstalledVersion()
+    public void VersionBadge_RemovesProtectionStatusAndShowsTheInstalledVersion()
     {
         var root = TestHelpers.FindRepositoryRoot();
         var mainWindow = File.ReadAllText(Path.Combine(
@@ -999,7 +1015,10 @@ public sealed partial class LocalizedInterfaceContractTests
         Assert.DoesNotContain("Safety.Active", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Safety.SnapshotRollback", mainWindow, StringComparison.Ordinal);
         Assert.DoesNotContain("Icon=\"{ui:SymbolIcon Shield24}\"", mainWindow, StringComparison.Ordinal);
-        Assert.Contains("Style=\"{StaticResource FieldSurface}\" Padding=\"12,8\"", mainWindow, StringComparison.Ordinal);
+        Assert.DoesNotContain("Style=\"{StaticResource FieldSurface}\" Padding=\"12,8\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Style=\"{StaticResource HeroAccentRule}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("Background=\"{DynamicResource AccentWashBrush}\"", mainWindow, StringComparison.Ordinal);
+        Assert.Contains("CornerRadius=\"{StaticResource RadiusXs}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding [Sidebar.Version], Source={StaticResource LocalizedStrings}, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding AppVersion, Mode=OneWay}\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Style=\"{StaticResource OverlineText}\"", mainWindow, StringComparison.Ordinal);

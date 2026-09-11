@@ -79,6 +79,13 @@
   <data name="FiveMHub.Scopes.Title" xml:space="preserve"><value>Um PC, dois escopos de otimização</value></data>
   <data name="FiveMHub.Scopes.Description" xml:space="preserve"><value>Cada execução verifica primeiro o estado atual. Configurações que já estão no alvo são verificadas sem nova aplicação; a restauração continua vinculada à transação que realmente as alterou.</value></data>
   <data name="FiveMHub.Actions.Title" xml:space="preserve"><value>O que você quer fazer?</value></data>
+  <data name="FiveMHub.Detection.Title" xml:space="preserve"><value>Não encontrou o FiveM?</value></data>
+  <data name="FiveMHub.Detection.Description" xml:space="preserve"><value>Escolha a pasta que contém FiveM.exe somente quando a detecção automática não identificar uma instalação Legacy válida. O Ralven valida a pasta antes de usá-la.</value></data>
+  <data name="FiveMHub.Detection.Select" xml:space="preserve"><value>Escolher pasta do FiveM</value></data>
+  <data name="FiveMHub.Detection.AutomaticAction" xml:space="preserve"><value>Usar detecção automática</value></data>
+  <data name="FiveMHub.Detection.Automatic" xml:space="preserve"><value>A detecção automática está ativa.</value></data>
+  <data name="FiveMHub.Detection.Manual" xml:space="preserve"><value>Usando a pasta selecionada: {0}</value></data>
+  <data name="FiveMHub.Detection.Invalid" xml:space="preserve"><value>A pasta selecionada não é uma instalação FiveM Legacy válida. Escolha a pasta que contém FiveM.exe e FiveM.app\data.</value></data>
   <data name="FiveMHub.Actions.Description" xml:space="preserve"><value>Escolha a área que corresponde ao seu objetivo. Nenhuma ação começa antes da revisão e confirmação do plano.</value></data>
   <data name="FiveMHub.Optimizer.Title" xml:space="preserve"><value>Otimizar FiveM</value></data>
   <data name="FiveMHub.Optimizer.Description" xml:space="preserve"><value>Analise a instalação Legacy detectada e revise diagnósticos, configurações e ações reversíveis específicas do jogo.</value></data>
@@ -1972,4 +1979,34 @@ Média CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
   <data name="Runtime.BrokerRollbackCompletedDetail" xml:space="preserve"><value>As alterações administrativas foram restauradas.</value></data>
   <data name="Runtime.BrokerRejectedDetail" xml:space="preserve"><value>A solicitação administrativa foi recusada com segurança.</value></data>
   <data name="Runtime.BrokerFailedDetail" xml:space="preserve"><value>A operação administrativa foi interrompida com segurança. Consulte o relatório antes de tentar novamente.</value></data>
-</root>
+
+  <data name="ErrorDialog.WindowTitle" xml:space="preserve"><value>O Ralven precisa ser fechado</value></data>
+  <data name="ErrorDialog.Fatal.Headline" xml:space="preserve"><value>O Ralven encontrou um problema</value></data>
+  <data name="ErrorDialog.Fatal.Message" xml:space="preserve"><value>O Ralven precisa ser fechado para manter sua sessão atual segura. Nenhuma nova alteração será aplicada.</value></data>
+  <data name="ErrorDialog.Fatal.Guidance" xml:space="preserve"><value>Você pode abrir o Ralven novamente agora. Se isso acontecer de novo, copie os detalhes técnicos e inclua-os em um relato de erro nas Configurações.</value></data>
+  <data name="ErrorDialog.Recoverable.Headline" xml:space="preserve"><value>Não foi possível concluir esta ação</value></data>
+  <data name="ErrorDialog.Recoverable.Message" xml:space="preserve"><value>O Ralven continua aberto e nenhuma alteração foi feita por esta ação que falhou.</value></data>
+  <data name="ErrorDialog.Recoverable.Guidance" xml:space="preserve"><value>Tente novamente em instantes. Se o problema continuar, você pode enviar um relato com os detalhes já preparados.</value></data>
+  <data name="ErrorDialog.Test.WindowTitle" xml:space="preserve"><value>Prévia da experiência de erro</value></data>
+  <data name="ErrorDialog.Test.Headline" xml:space="preserve"><value>Esta é uma prévia controlada de erro</value></data>
+  <data name="ErrorDialog.Test.Message" xml:space="preserve"><value>Nenhuma falha real ocorreu e nenhuma informação foi enviada. Esta prévia permite verificar a experiência de erro com segurança.</value></data>
+  <data name="ErrorDialog.Test.Guidance" xml:space="preserve"><value>Verifique a hierarquia, os detalhes técnicos expansíveis e a ação de cópia. Feche a prévia quando terminar.</value></data>
+  <data name="ErrorDialog.Details.Title" xml:space="preserve"><value>Detalhes técnicos</value></data>
+  <data name="ErrorDialog.Details.Help" xml:space="preserve"><value>Informações opcionais para suporte. Caminhos pessoais são removidos antes de este texto ser exibido ou copiado.</value></data>
+  <data name="ErrorDialog.Details.Template" xml:space="preserve"><value>{0}
+Versão: {1}
+Horário (UTC): {2}
+Exceção: {3}
+
+{4}</value></data>
+  <data name="ErrorDialog.Copy" xml:space="preserve"><value>Copiar detalhes</value></data>
+  <data name="ErrorDialog.Copy.Success" xml:space="preserve"><value>Detalhes técnicos copiados.</value></data>
+  <data name="ErrorDialog.Copy.Failed" xml:space="preserve"><value>O Windows não conseguiu copiar os detalhes: {0}</value></data>
+  <data name="ErrorDialog.Report" xml:space="preserve"><value>Relatar problema</value></data>
+  <data name="ErrorDialog.Restart" xml:space="preserve"><value>Abrir o Ralven novamente</value></data>
+  <data name="ErrorDialog.Restart.Failed" xml:space="preserve"><value>O Ralven não pôde ser reaberto automaticamente. Feche esta janela e abra-o pelo menu Iniciar.</value></data>
+  <data name="ErrorDialog.Exit" xml:space="preserve"><value>Fechar o Ralven</value></data>
+  <data name="ErrorDialog.ClosePreview" xml:space="preserve"><value>Fechar prévia</value></data>
+  <data name="ReleaseNotes.Acknowledge" xml:space="preserve"><value>Entendi</value></data>
+  <data name="ReleaseNotes.Summary" xml:space="preserve"><value>Um resumo rápido do que mudou nesta versão.</value></data>
+  <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Atualizada a infraestrutura de publicação e a base de compatibilidade dos navegadores, com validação completa na integração contínua.</value></data></root>

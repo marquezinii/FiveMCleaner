@@ -13,7 +13,7 @@
         SnapsToDevicePixels="True"
         KeyboardNavigation.TabNavigation="Cycle"
         Background="{DynamicResource Surface1Brush}"
-        Width="760" Height="720" MinWidth="460" MinHeight="360" ResizeMode="CanResize">
+        Width="620" Height="440" MinWidth="460" ResizeMode="NoResize">
 
     <controls:DialogWindow.InputBindings>
         <KeyBinding Key="Escape" Command="{x:Static SystemCommands.CloseWindowCommand}" />
@@ -87,29 +87,30 @@
 
             <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                 <StackPanel Margin="32,8,32,16">
-                <TextBlock Text="{Binding [ReleaseNotes.Heading], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" />
-                <TextBlock Text="{Binding VersionLabel}" Style="{StaticResource SecondaryText}" Margin="0,8,0,28" />
-                <ItemsControl ItemsSource="{Binding Sections}" Focusable="False">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <StackPanel Margin="0,0,0,18">
-                                <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
-                                    <Path Style="{StaticResource ReleaseNoteCategoryIconStyle}" Margin="0,0,7,0" />
-                                    <TextBlock Text="{Binding Label}" Style="{StaticResource ReleaseNoteCategoryLabelStyle}" VerticalAlignment="Center" />
+                    <TextBlock Text="{Binding [ReleaseNotes.Heading], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PageTitleText}" />
+                    <TextBlock Text="{Binding VersionLabel}" Style="{StaticResource SecondaryText}" Margin="0,8,0,8" />
+                    <TextBlock Text="{Binding SummaryText}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" LineHeight="20" Margin="0,0,0,28" />
+                    <ItemsControl ItemsSource="{Binding Sections}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,18">
+                                    <StackPanel Orientation="Horizontal" Margin="0,0,0,7">
+                                        <Path Style="{StaticResource ReleaseNoteCategoryIconStyle}" Margin="0,0,7,0" />
+                                        <TextBlock Text="{Binding Label}" Style="{StaticResource ReleaseNoteCategoryLabelStyle}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <TextBlock Text="{Binding BulletsText}" Style="{StaticResource SecondaryText}" TextWrapping="WrapWithOverflow" LineHeight="20" />
+                                    <Border Style="{StaticResource HairlineDivider}" Margin="0,18,0,0" />
                                 </StackPanel>
-                                <TextBlock Text="{Binding BulletsText}" Style="{StaticResource SecondaryText}" LineHeight="18" />
-                                <Border Style="{StaticResource HairlineDivider}" Margin="0,18,0,0" />
-                            </StackPanel>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                 </StackPanel>
             </ScrollViewer>
 
             <Border Grid.Row="1" Style="{StaticResource DialogFooterStyle}">
                 <Grid Margin="0">
                     <Button x:Name="CloseButton"
-                            Content="{Binding [ReleaseNotes.Close], Source={StaticResource LocalizedStrings}}"
+                            Content="{Binding [ReleaseNotes.Acknowledge], Source={StaticResource LocalizedStrings}}"
                             Style="{StaticResource DialogSecondaryButtonStyle}"
                             HorizontalAlignment="Right"
                             IsDefault="True"
