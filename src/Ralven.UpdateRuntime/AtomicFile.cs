@@ -11,17 +11,25 @@ internal static class AtomicFile
 {
     public static void WriteBytes(string path, byte[] bytes)
     {
+        path = UpdatePathSafety.EnsureNoReparsePoints(path);
         EnsureDirectory(path);
+        path = UpdatePathSafety.EnsureNoReparsePoints(path);
         var temporary = TemporaryPathFor(path);
+        UpdatePathSafety.EnsureNoReparsePoints(temporary);
         File.WriteAllBytes(temporary, bytes);
+        UpdatePathSafety.EnsureNoReparsePoints(path);
         ReplaceInto(path, temporary);
     }
 
     public static void WriteText(string path, string contents)
     {
+        path = UpdatePathSafety.EnsureNoReparsePoints(path);
         EnsureDirectory(path);
+        path = UpdatePathSafety.EnsureNoReparsePoints(path);
         var temporary = TemporaryPathFor(path);
+        UpdatePathSafety.EnsureNoReparsePoints(temporary);
         File.WriteAllText(temporary, contents);
+        UpdatePathSafety.EnsureNoReparsePoints(path);
         ReplaceInto(path, temporary);
     }
 

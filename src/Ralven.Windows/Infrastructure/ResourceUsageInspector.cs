@@ -29,14 +29,17 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
     private static readonly TimeSpan SampleInterval = TimeSpan.FromMilliseconds(300);
     private static bool? gpuEngineCategoryExists;
 
-    public ResourceUsageSnapshot GetSnapshot()
+    public ResourceUsageSnapshot GetSnapshot() => GetSnapshot(CancellationToken.None);
+
+    public ResourceUsageSnapshot GetSnapshot(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         var cpuTask = Task.Run(() => ReadPdhCounterAsync(
-            "\\Processor(_Total)\\% Processor Time"));
+            "\\Processor(_Total)\\% Processor Time", cancellationToken));
         var diskTask = Task.Run(() => ReadPdhCounterAsync(
-            "\\PhysicalDisk(_Total)\\% Disk Time"));
-        var gpuTask = Task.Run(() => TryReadGpuUsageAsync());
-        var networkTask = Task.Run(() => TryReadNetworkThroughputMBpsAsync());
+            "\\PhysicalDisk(_Total)\\% Disk Time", cancellationToken));
+        var gpuTask = Task.Run(() => TryReadGpuUsageAsync(cancellationToken));
+        var networkTask = Task.Run(() => TryReadNetworkThroughputMBpsAsync(cancellationToken));
 
         try
         {
@@ -46,6 +49,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
         {
         }
 
+        cancellationToken.ThrowIfCancellationRequested();
         return new ResourceUsageSnapshot(
             cpuTask.IsCompletedSuccessfully ? cpuTask.Result : null,
             diskTask.IsCompletedSuccessfully ? diskTask.Result : null,
@@ -53,8 +57,9 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
             networkTask.IsCompletedSuccessfully ? networkTask.Result : 0);
     }
 
-    private static async Task<double?> ReadPdhCounterAsync(string englishCounterPath)
+    private static async Task<double?> ReadPdhCounterAsync(string englishCounterPath, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         IntPtr queryHandle = IntPtr.Zero;
         IntPtr counterHandle = IntPtr.Zero;
         try
@@ -76,7 +81,7 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
                 return null;
             }
 
-            await Task.Delay(SampleInterval).ConfigureAwait(false);
+            await Task.Delay(SampleInterval, cancellationToken).ConfigureAwait(false);
 
             collectStatus = PdhCollectQueryData(queryHandle);
             if (collectStatus != 0)
@@ -114,8 +119,9 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
         }
     }
 
-    private static async Task<double?> TryReadGpuUsageAsync()
+    private static async Task<double?> TryReadGpuUsageAsync(CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
             gpuEngineCategoryExists ??= PerformanceCounterCategory.Exists("GPU Engine");
@@ -124,36 +130,17 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
                 return null;
             }
 
-            var instances = new PerformanceCounterCategory("GPU Engine").GetInstanceNames()
-                .Where(name => name.Contains("engtype_3D", StringComparison.OrdinalIgnoreCase))
-                .ToArray();
-            if (instances.Length == 0)
+            // NextValue reads the category for each instance. Read it once per
+            // sample instead: GPU Engine can contain hundreds of instances.
+            var category = new PerformanceCounterCategory("GPU Engine");
+            var before = ReadGpuSamples(category);
+            if (before.Count == 0)
             {
                 return null;
             }
 
-            var counters = instances
-                .Select(instance => new PerformanceCounter(
-                    "GPU Engine", "Utilization Percentage", instance, true))
-                .ToArray();
-            try
-            {
-                foreach (var counter in counters)
-                {
-                    counter.NextValue();
-                }
-
-                await Task.Delay(SampleInterval).ConfigureAwait(false);
-                var total = counters.Sum(counter => counter.NextValue());
-                return Math.Clamp(total, 0, 100);
-            }
-            finally
-            {
-                foreach (var counter in counters)
-                {
-                    counter.Dispose();
-                }
-            }
+            await Task.Delay(SampleInterval, cancellationToken).ConfigureAwait(false);
+            return CalculateGpuUsage(before, ReadGpuSamples(category));
         }
         catch (Exception exception) when (exception is InvalidOperationException
             or UnauthorizedAccessException
@@ -163,8 +150,38 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
         }
     }
 
-    private static async Task<double> TryReadNetworkThroughputMBpsAsync()
+    private static Dictionary<string, CounterSample> ReadGpuSamples(PerformanceCounterCategory category) =>
+        category.ReadCategory()["Utilization Percentage"].Values.Cast<InstanceData>()
+            .Where(instance => instance.InstanceName.Contains("engtype_3D", StringComparison.OrdinalIgnoreCase))
+            .ToDictionary(instance => instance.InstanceName, instance => instance.Sample, StringComparer.OrdinalIgnoreCase);
+
+    internal static double? CalculateGpuUsage(
+        IReadOnlyDictionary<string, CounterSample> before,
+        IReadOnlyDictionary<string, CounterSample> after)
     {
+        double total = 0;
+        var hasSample = false;
+        foreach (var (name, current) in after)
+        {
+            // New/disappeared engines have no comparable pair; never reuse a
+            // sample from a different instance or report fabricated zero usage.
+            if (before.TryGetValue(name, out var previous))
+            {
+                var value = CounterSample.Calculate(previous, current);
+                if (float.IsFinite(value))
+                {
+                    total += Math.Max(0, value);
+                    hasSample = true;
+                }
+            }
+        }
+
+        return hasSample ? Math.Clamp(total, 0, 100) : null;
+    }
+
+    private static async Task<double> TryReadNetworkThroughputMBpsAsync(CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
         try
         {
             var interfaces = NetworkInterface.GetAllNetworkInterfaces()
@@ -179,9 +196,10 @@ public sealed class WindowsResourceUsageInspector : IResourceUsageInspector
             });
 
             var before = Sample();
-            await Task.Delay(SampleInterval).ConfigureAwait(false);
+            var elapsed = Stopwatch.StartNew();
+            await Task.Delay(SampleInterval, cancellationToken).ConfigureAwait(false);
             var after = Sample();
-            var bytesPerSecond = (after - before) / SampleInterval.TotalSeconds;
+            var bytesPerSecond = (after - before) / elapsed.Elapsed.TotalSeconds;
             return Math.Max(0, bytesPerSecond / (1024d * 1024d));
         }
         catch (NetworkInformationException)

@@ -22,7 +22,7 @@ public static class PrivacyConsentPolicy
     /// including those who already accepted an older version, will be asked
     /// to confirm again.
     /// </summary>
-    public const int CurrentVersion = 8;
+    public const int CurrentVersion = 9;
 
     /// <summary>
     /// Full history of consent versions, oldest first, each with a short
@@ -73,7 +73,12 @@ public static class PrivacyConsentPolicy
             8,
             "Consolida telemetria detalhada e relatórios de falha sanitizados em uma única opção, habilitada por padrão " +
             "em instalações novas e desativável a qualquer momento. Diagnósticos essenciais allowlisted continuam ativos " +
-            "após a confirmação deste aviso, sem ampliar os campos coletados.")
+            "após a confirmação deste aviso, sem ampliar os campos coletados."),
+        new PrivacyConsentVersionEntry(
+            9,
+            "Adiciona um sinal essencial de inicialização saudável, limitado a uma vez por dia e versão, e eventos opcionais " +
+            "de início de otimização e resultado do benchmark oficial. O início e o resultado da otimização podem usar um UUID " +
+            "efêmero apenas para identificar abandono do fluxo; ele não identifica pessoa, conta ou máquina.")
     ];
 
     /// <summary>

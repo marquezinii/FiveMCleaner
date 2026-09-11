@@ -14,6 +14,9 @@ public sealed record OptimizationReportLineDto
     public required ActionExecutionOutcome Outcome { get; init; }
 
     public string? Reason { get; init; }
+
+    /// <summary>Stable classification of the failure, when one was caught.</summary>
+    public BugCode? BugCode { get; init; }
 }
 
 /// <summary>
@@ -26,6 +29,9 @@ public sealed record OptimizationReportDto
     public required Guid TransactionId { get; init; }
 
     public required OptimizationProfile Profile { get; init; }
+
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public PersonalUsage? PersonalUsage { get; init; }
 
     public required DateTimeOffset CreatedAtUtc { get; init; }
 

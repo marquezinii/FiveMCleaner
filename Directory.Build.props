@@ -5,6 +5,10 @@
     <RalvenWindowsTargetFramework>net10.0-windows10.0.19041.0</RalvenWindowsTargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <AnalysisMode>Default</AnalysisMode>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <Deterministic>true</Deterministic>
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
     <Authors>Ralven</Authors>
@@ -13,6 +17,12 @@
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/marquezinii/Ralven</RepositoryUrl>
     <Product>Ralven</Product>
+    <AssemblyTitle>Ralven — AI-powered Windows Management Platform</AssemblyTitle>
+    <Description>AI-powered Windows management and optimization platform.</Description>
     <Version>1.6.1</Version>
   </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Meziantou.Analyzer" PrivateAssets="all" />
+    <PackageReference Include="Roslynator.Analyzers" PrivateAssets="all" />
+  </ItemGroup>
 </Project>

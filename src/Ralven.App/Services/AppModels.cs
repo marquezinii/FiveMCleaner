@@ -71,6 +71,8 @@ public sealed record AppDiagnostic
     public IReadOnlyList<string> Notices { get; init; } = [];
 }
 
+public sealed record FiveMInstallationSelectionResult(bool Succeeded, string? Root);
+
 public enum AppProgressKind
 {
     Preparing,
@@ -125,6 +127,12 @@ public sealed record AppOptimizationResult
 
     /// <summary>Before/after resource comparison, when one could be captured.</summary>
     public OptimizationComparisonResult? Comparison { get; init; }
+
+    /// <summary>Allowlisted run-level cause, when the service observed one directly.</summary>
+    public BugCode? FailureBugCode { get; init; }
+
+    /// <summary>Allowlisted run-level category, without exception text.</summary>
+    public string? FailureErrorCategory { get; init; }
 }
 
 /// <summary>
@@ -208,6 +216,8 @@ public sealed record AppHistoryRecord
 
     public required OptimizationProfile Profile { get; init; }
 
+    public PersonalUsage? PersonalUsage { get; init; }
+
     public AppHistoryKind Kind { get; init; }
 
     public required string State { get; init; }
@@ -219,7 +229,7 @@ public sealed record AppHistoryRecord
 
 public sealed record AppSettings
 {
-    public AppLanguagePreference Language { get; init; } = AppLanguagePreference.Automatic;
+    public string Language { get; init; } = AppLanguagePreference.Automatic;
 
     public AppThemePreference Theme { get; init; } = AppThemePreference.System;
 
@@ -266,7 +276,7 @@ public sealed record AppSettings
     /// Id (o <c>updated_at</c> do servidor) do último aviso ao vivo que o
     /// usuário fechou explicitamente. <see langword="null"/> significa que
     /// nenhum aviso foi dispensado ainda. Usado só para não reexibir o
-    /// banner de um aviso já lido; o ícone de alerta no canto continua
+    /// notificação de um aviso já lido; o ícone de alerta no canto continua
     /// visível enquanto o aviso seguir ativo no servidor.
     /// </summary>
     public string? DismissedLiveAlertId { get; init; }
@@ -281,4 +291,10 @@ public sealed record AppSettings
     /// staying silenced forever.
     /// </summary>
     public string? LastSeenReleaseNotesVersion { get; init; }
+
+    /// <summary>
+    /// Caminho escolhido explicitamente pelo usuário após a validação do
+    /// localizador central. Nulo mantém a descoberta automática como padrão.
+    /// </summary>
+    public string? ManualFiveMInstallationRoot { get; init; }
 }

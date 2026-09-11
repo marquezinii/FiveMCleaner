@@ -30,6 +30,7 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private readonly MainViewModel viewModel;
     private readonly ThemeManager themeManager;
     private readonly TrayIconService trayIcon;
+    private readonly System.Windows.Controls.ContextMenu trayMenu;
     private readonly IReleaseUpdateService? releaseUpdateService;
     private readonly bool startupLaunch;
     private readonly bool demoMode;
@@ -38,11 +39,15 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private SystemPage? systemPage;
     private ApplicationsPage? applicationsPage;
     private GamesPage? gamesPage;
+    private FiveMPage? fiveMPage;
     private OptimizerPage? optimizerPage;
     private HistoryPage? historyPage;
+    private RalvenAiPage? ralvenAiPage;
     private readonly IFirebaseAuthService? accountService;
     private readonly IAccountProfileService profileService;
+    private readonly IAccountSecurityService accountSecurityService;
     private readonly CloudflareAccountEntitlementService? entitlementService;
+    private readonly RalvenAiService? ralvenAiService;
     private readonly IGoogleOAuthClient googleOAuth;
     private HwndSource? windowSource;
     private bool allowClose;
@@ -51,15 +56,12 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
     private bool systemSessionEnding;
     private bool syncingLanguageSelector;
     private bool crashReportingConfigured;
+    private readonly Task initialization;
+    private bool startupCompleted;
+    private bool activationRequested;
     public MainWindow()
     {
-        InitializeComponent();
-        // Precisa ser marcado em código, não em XAML: setar IsChecked="True"
-        // inline dispara o evento Checked durante o próprio parse do
-        // documento, antes de os outros campos nomeados existirem.
-        CategoryGeneral.IsChecked = true;
-        themeManager = new ThemeManager();
-        themeManager.Apply(AppThemePreference.System);
+        StartupTrace.Mark("window-construct-start");
 
         var commandLine = ParseCommandLine();
         demoMode = commandLine.DemoMode;
@@ -79,12 +81,18 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         if (TryCreateHttpsEndpoint(remoteServicesOptions.AccountProfileEndpoint, out var profileEndpoint))
         {
             profileService = new CloudflareAccountProfileService(profileEndpoint);
+            accountSecurityService = new CloudflareAccountSecurityService(profileEndpoint);
             entitlementService = new CloudflareAccountEntitlementService(profileEndpoint);
+            billingService = new CloudflareBillingService(profileEndpoint);
+            ralvenAiService = new RalvenAiService(profileEndpoint);
         }
         else
         {
             profileService = new DisabledAccountProfileService();
+            accountSecurityService = new DisabledAccountSecurityService();
             entitlementService = null;
+            billingService = null;
+            ralvenAiService = null;
         }
 
         // Demo runs never poll the live alert -- same trade as telemetry below.
@@ -105,26 +113,17 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             accountService.StateChanged += AccountService_StateChanged;
         }
 
-        // StateChanged only fires once RestoreSessionAsync actually finds a
-        // stored session; a fresh install or an already-signed-out user
-        // never raises it, so the Settings card needs one explicit call here
-        // to land on the right panel (unavailable/signed-out/signed-in)
-        // instead of relying on whatever Visibility happens to be XAML's
-        // default.
-        RefreshAccountSettingsCard();
-
         // Plan.Title and the Refresh button follow the language automatically
         // through their {Binding [key], Source={StaticResource
         // LocalizedStrings}} markup, but the entitlement value/detail text is
         // set imperatively (it depends on server state, not just a static
         // key), so it needs its own re-render on language change.
-        LocalizationService.Current.LanguageChanged += MainWindow_LanguageChanged;
 
         var telemetry = CreateTelemetryServices(demoMode, remoteServicesOptions, runtimeEnvironment);
         queuedCloudflareTelemetry = telemetry.Queued;
 
         viewModel = new MainViewModel(
-            new AppOptimizationService(demoMode, commandLine.SyntheticDemo),
+            new AppOptimizationService(demoMode, commandLine.SyntheticDemo) { AuthorizePro = AuthorizeProOperationAsync },
             localization: LocalizationService.Current,
             startupRegistration: startupRegistration,
             releaseUpdateService: releaseUpdateService,
@@ -134,14 +133,36 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             windowsGamingControls: new WindowsGamingControlsService(demoMode),
             windowsSystemHealthInspector: demoMode
                 ? new SyntheticWindowsSystemHealthInspector()
-                : new WindowsSystemHealthInspector());
+                : new WindowsSystemHealthInspector(),
+            personalWorkspaceService: new PersonalWorkspaceService(AuthorizeProOperationAsync, inMemory: demoMode));
+
+        StartupTrace.Mark("window-services-ready");
+        // Independent disk/system reads overlap WPF construction. The awaited
+        // continuation still applies bindable state on this Dispatcher.
+        initialization = viewModel.InitializeAsync(startBackgroundServices: false);
+        themeManager = new ThemeManager();
+        themeManager.Apply(viewModel.ThemePreference);
+        StartupTrace.Mark("initial-theme-ready");
+        InitializeComponent();
+        StartupTrace.Mark("window-xaml-ready");
+        trayMenu = (System.Windows.Controls.ContextMenu)Resources["TrayContextMenu"];
+        CategoryGeneral.IsChecked = true;
+        LocalizationService.Current.LanguageChanged += MainWindow_LanguageChanged;
+
+        // StateChanged only fires once RestoreSessionAsync actually finds a
+        // stored session; a fresh install or an already-signed-out user
+        // never raises it, so the Settings card needs one explicit call here
+        // to land on the right panel (unavailable/signed-out/signed-in)
+        // instead of relying on whatever Visibility happens to be XAML's
+        // default.
+        RefreshAccountSettingsCard();
         if (!string.IsNullOrWhiteSpace(commandLine.JustUpdatedVersion))
         {
             viewModel.ReportCompletedUpdate(commandLine.JustUpdatedVersion);
         }
         trayIcon = new TrayIconService(LocalizationService.Current);
         trayIcon.ShowRequested += TrayIcon_ShowRequested;
-        trayIcon.ExitRequested += TrayIcon_ExitRequested;
+        trayIcon.MenuRequested += TrayIcon_MenuRequested;
         viewModel.UpdateAvailableDetected += ViewModel_UpdateAvailableDetected;
         viewModel.PropertyChanged += ViewModel_PropertyChanged;
         DataContext = viewModel;
@@ -150,7 +171,14 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         SourceInitialized += MainWindow_SourceInitialized;
         Closing += MainWindow_Closing;
         Closed += MainWindow_Closed;
+        Activated += BillingWindow_Activated;
+        Activated += MainWindow_ActivityChanged;
+        Deactivated += MainWindow_ActivityChanged;
+        StateChanged += MainWindow_ActivityChanged;
+        IsVisibleChanged += (_, _) => RefreshLiveMetricsActivity();
         System.Windows.Application.Current.SessionEnding += Application_SessionEnding;
+        ContentRendered += (_, _) => StartupTrace.Mark("main-rendered");
+        StartupTrace.Mark("window-constructed");
     }
 
     private void MainWindow_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -279,6 +307,21 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
     {
+        Loaded -= MainWindow_Loaded;
+        try
+        {
+            await InitializeWindowAsync();
+        }
+        catch
+        {
+            if (!demoMode) InvalidateUpdateHealthReceiptIfRequested();
+            throw;
+        }
+    }
+
+    private async Task InitializeWindowAsync()
+    {
+        StartupTrace.Mark("main-loaded");
         ActivateNavItem(DashboardNav);
         Navigate(DashboardPage);
         if (!demoMode)
@@ -293,48 +336,12 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
             ConfirmUpdateHealthIfRequested();
         }
 
-        try
-        {
-            await viewModel.InitializeAsync();
-        }
-        catch
-        {
-            // O recibo já foi confirmado acima (por desenho, antes da
-            // inicialização terminar). Se a própria inicialização falhar
-            // logo em seguida, invalidar o recibo garante que o launcher
-            // ainda enxergue esta versão como não confirmada e possa
-            // reverter dentro da janela de saúde, em vez de confiar num
-            // recibo escrito antes da falha.
-            if (!demoMode)
-            {
-                InvalidateUpdateHealthReceiptIfRequested();
-            }
-
-            throw;
-        }
-        if (accountService is not null)
-        {
-            _ = RestoreAccountSessionQuietlyAsync();
-        }
+        await initialization;
+        if (billingLifetime.IsCancellationRequested) return;
+        StartupTrace.Mark("local-ready");
+        RefreshTrayIconPresentation();
         themeManager.Apply(viewModel.ThemePreference);
-        // A sincronização programática do seletor não pode acionar o
-        // SelectionChanged: ele converteria uma preferência "Automatic" em
-        // um idioma fixo (o detectado), gravando o pin no primeiro launch.
-        syncingLanguageSelector = true;
-        try
-        {
-            LanguageSelector.SelectedIndex = viewModel.LanguagePreference switch
-            {
-                AppLanguagePreference.PortugueseBrazil => 1,
-                AppLanguagePreference.English => 2,
-                AppLanguagePreference.Spanish => 3,
-                _ => 0
-            };
-        }
-        finally
-        {
-            syncingLanguageSelector = false;
-        }
+        PopulateLanguageSelector(viewModel.LanguagePreference);
         switch (viewModel.ThemePreference)
         {
             case AppThemePreference.Dark:
@@ -347,18 +354,44 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
                 ThemeSystemOption.IsChecked = true;
                 break;
         }
+        StartupTrace.Mark("saved-theme-ready");
+        // Allow the completed bindings/layout to render before dismissing the
+        // splash. Consent dialogs must never sit behind the startup window.
+        await Dispatcher.InvokeAsync(() => { }, System.Windows.Threading.DispatcherPriority.ContextIdle);
+        if (System.Windows.Application.Current is App app)
+        {
+            await app.CompleteStartupPresentationAsync();
+        }
+        if (billingLifetime.IsCancellationRequested) return;
         if (!demoMode)
         {
             await ShowPrivacyConsentIfNeededAsync();
             await ShowReleaseNotesIfNeededAsync();
             InitializeCrashReportingIfAuthorized();
             await FlushPendingTelemetryIfAnyAsync();
+            await TrackAppInitializedTelemetryIfAuthorizedAsync();
         }
-        if (startupLaunch && viewModel.StartMinimized)
+        startupCompleted = true;
+        RefreshLiveMetricsActivity();
+        if (startupLaunch && viewModel.StartMinimized && !activationRequested)
         {
             HideToTray();
         }
+        StartupTrace.Mark("startup-ready");
+        _ = Dispatcher.InvokeAsync(StartBackgroundServices, System.Windows.Threading.DispatcherPriority.Background);
         await CaptureIfRequestedAsync();
+    }
+
+    private void StartBackgroundServices()
+    {
+        if (billingLifetime.IsCancellationRequested) return;
+        viewModel.StartBackgroundServices();
+        if (accountService is not null) _ = RestoreAccountSessionQuietlyAsync();
+        if (!demoMode)
+        {
+            InitializeCrashReportingIfAuthorized();
+            _ = FlushPendingTelemetryIfAnyAsync();
+        }
     }
 
     private static bool TryCreateHttpsEndpoint(string? value, out Uri endpoint)
@@ -377,7 +410,11 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
 
     private void MainWindow_Closed(object? sender, EventArgs e)
     {
+        billingLifetime.Cancel();
+        billingLifetime.Dispose();
+        Activated -= BillingWindow_Activated;
         applicationsPage?.Dispose();
+        ralvenAiPage?.Dispose();
         viewModel.Dispose();
         windowSource?.RemoveHook(WindowMessageHook);
         System.Windows.Application.Current.SessionEnding -= Application_SessionEnding;
@@ -385,14 +422,58 @@ public partial class MainWindow : Wpf.Ui.Controls.FluentWindow
         viewModel.PropertyChanged -= ViewModel_PropertyChanged;
         LocalizationService.Current.LanguageChanged -= MainWindow_LanguageChanged;
         themeManager.Dispose();
+        trayMenu.IsOpen = false;
         trayIcon.Dispose();
         CancelAccountEntitlementExpiry();
         accountService?.Dispose();
         (releaseUpdateService as IDisposable)?.Dispose();
     }
 
-    private void MainWindow_LanguageChanged(object? sender, AppLanguageChangedEventArgs e) =>
+    private void MainWindow_LanguageChanged(object? sender, AppLanguageChangedEventArgs e)
+    {
+        PopulateLanguageSelector(e.Preference);
         ApplyAccountEntitlementPresentation();
+        proViewModel.Refresh();
+        RefreshTrayIconPresentation();
+    }
+
+    private void PopulateLanguageSelector(string preference)
+    {
+        // A sincronização programática não pode transformar "automatic" no
+        // idioma detectado e persistir esse pin durante o startup.
+        syncingLanguageSelector = true;
+        try
+        {
+            LanguageSelector.Items.Clear();
+            LanguageSelector.Items.Add(new System.Windows.Controls.ComboBoxItem
+            {
+                Tag = AppLanguagePreference.Automatic,
+                Content = LocalizationService.Current.GetString("Settings.Language.Automatic")
+            });
+            foreach (var language in LocalizationCatalog.SupportedLanguages)
+            {
+                LanguageSelector.Items.Add(new System.Windows.Controls.ComboBoxItem
+                {
+                    Tag = language.CultureName,
+                    Content = language.DisplayName
+                });
+            }
+
+            var normalized = LocalizationCatalog.NormalizePreference(preference);
+            LanguageSelector.SelectedIndex = normalized == AppLanguagePreference.Automatic
+                ? 0
+                : LocalizationCatalog.SupportedLanguages
+                    .Select((language, index) => (language, index))
+                    .Where(item => item.language.CultureName.Equals(normalized, StringComparison.OrdinalIgnoreCase))
+                    .Select(item => item.index + 1)
+                    .DefaultIfEmpty(0)
+                    .First();
+        }
+        finally
+        {
+            syncingLanguageSelector = false;
+        }
+    }
 
     private void Application_SessionEnding(object? sender, SessionEndingCancelEventArgs e)
     {

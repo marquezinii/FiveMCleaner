@@ -30,9 +30,9 @@ export function appendEnvironmentClause(clauses, params, environment) {
   }
 }
 
-export function appendDateRangeClauses(clauses, params, { from, to } = {}) {
+export function appendDateRangeClauses(clauses, params, { from, to } = {}, column = 'received_at') {
   if (from && isValidIsoDate(from)) {
-    clauses.push('received_at >= ?');
+    clauses.push(`${column} >= ?`);
     params.push(from);
   }
 
@@ -40,7 +40,7 @@ export function appendDateRangeClauses(clauses, params, { from, to } = {}) {
     // The dashboard sends a calendar date, while received_at is UTC with a
     // time component. An inclusive string comparison would exclude every
     // event later on the selected final day.
-    clauses.push("received_at < date(?, '+1 day')");
+    clauses.push(`${column} < date(?, '+1 day')`);
     params.push(to);
   }
 }

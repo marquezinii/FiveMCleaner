@@ -1,5 +1,6 @@
 using Ralven.App.Services;
 using Ralven.Contracts;
+using Ralven.Windows.Diagnostics;
 using Ralven.Windows.Infrastructure;
 
 namespace Ralven.App.ViewModels;
@@ -19,6 +20,7 @@ public sealed partial class MainViewModel
     private WindowsSystemHealthSnapshot? windowsSystemHealth;
     private bool isWindowsSystemHealthBusy;
     private string windowsSystemHealthStatusKey = "System.Health.Status.Loading";
+    private BugCode? windowsSystemHealthBugCode;
 
     public bool IsWindowsGamingBusy => isWindowsGamingBusy;
 
@@ -41,8 +43,15 @@ public sealed partial class MainViewModel
     public string WindowsAutomaticUpdatesHealthLabel => DescribeWindowsSecurityHealth(
         windowsSystemHealth?.AutomaticUpdates.State);
 
-    public string WindowsSystemHealthStatusMessage => localization.GetString(
-        windowsSystemHealthStatusKey);
+    public string WindowsSystemHealthStatusMessage => OptimizationFailureMessageFormatter.AppendCode(
+        localization.GetString(windowsSystemHealthStatusKey),
+        windowsSystemHealthStatusKey != "System.Health.Status.Unavailable"
+            ? null
+            : windowsSystemHealthBugCode
+                ?? windowsSystemHealth?.Antivirus.BugCode
+                ?? windowsSystemHealth?.Firewall.BugCode
+                ?? windowsSystemHealth?.AutomaticUpdates.BugCode,
+        code => localization.Format("Report.ErrorCodeSuffix", code))!;
 
     public string WindowsSystemHealthUpdatedLabel => windowsSystemHealth is null
         ? localization.GetString("System.Health.Updated.Pending")
@@ -53,6 +62,7 @@ public sealed partial class MainViewModel
                 localization.CurrentCulture));
 
     public bool CanRefreshWindowsGamingSettings => !IsBusy
+        && !isPersonalBusy
         && !isInitializing
         && !isWindowsGamingBusy
         && !IsUpdateDownloading
@@ -121,6 +131,7 @@ public sealed partial class MainViewModel
         try
         {
             windowsSystemHealth = await windowsSystemHealthInspector.InspectAsync();
+            windowsSystemHealthBugCode = null;
             windowsSystemHealthStatusKey = !windowsSystemHealth.Antivirus.IsAvailable
                 && !windowsSystemHealth.Firewall.IsAvailable
                 && !windowsSystemHealth.AutomaticUpdates.IsAvailable
@@ -133,6 +144,7 @@ public sealed partial class MainViewModel
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             windowsSystemHealth = null;
+            windowsSystemHealthBugCode = BugCodeClassifier.ClassifyException(exception, "security-health");
             windowsSystemHealthStatusKey = "System.Health.Status.Unavailable";
         }
         finally

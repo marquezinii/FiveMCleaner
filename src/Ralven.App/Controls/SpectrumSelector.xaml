@@ -11,6 +11,7 @@
             <Setter Property="Cursor" Value="Hand" />
             <Setter Property="Height" Value="40" />
             <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="FocusVisualStyle" Value="{StaticResource KeyboardFocusVisual}" />
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="RadioButton">
@@ -20,9 +21,6 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter TargetName="Root" Property="Background" Value="{DynamicResource Surface2Brush}" />
-                            </Trigger>
-                            <Trigger Property="IsKeyboardFocused" Value="True">
-                                <Setter TargetName="Root" Property="BorderBrush" Value="{DynamicResource FocusRingBrush}" />
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -67,6 +65,7 @@
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
+                        <ColumnDefinition x:Name="Option3Column" Width="*" />
                     </Grid.ColumnDefinitions>
                     <RadioButton x:Name="Option0Button" Grid.Column="0" GroupName="SpectrumOptions" Style="{StaticResource SpectrumOptionButtonStyle}" Checked="OnOptionChecked">
                         <TextBlock x:Name="Option0Text" Style="{StaticResource BodyStrongText}" HorizontalAlignment="Center" />
@@ -77,6 +76,9 @@
                     <RadioButton x:Name="Option2Button" Grid.Column="2" GroupName="SpectrumOptions" Style="{StaticResource SpectrumOptionButtonStyle}" Checked="OnOptionChecked">
                         <TextBlock x:Name="Option2Text" Style="{StaticResource BodyStrongText}" HorizontalAlignment="Center" />
                     </RadioButton>
+                    <RadioButton x:Name="Option3Button" Grid.Column="3" GroupName="SpectrumOptions" Style="{StaticResource SpectrumOptionButtonStyle}" Checked="OnOptionChecked">
+                        <TextBlock x:Name="Option3Text" Style="{StaticResource BodyStrongText}" Foreground="{DynamicResource ProAccentGradientBrush}" HorizontalAlignment="Center" />
+                    </RadioButton>
                 </Grid>
             </Grid>
         </Border>
@@ -86,19 +88,26 @@
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition x:Name="Option3MarkColumn" Width="*" />
             </Grid.ColumnDefinitions>
-            <StackPanel x:Name="Recommended0" Grid.Column="0" HorizontalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
-                <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                <TextBlock x:Name="RecommendedText0" Style="{StaticResource OverlineText}" Foreground="{DynamicResource AccentTextBrush}" />
-            </StackPanel>
-            <StackPanel x:Name="Recommended1" Grid.Column="1" HorizontalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
-                <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                <TextBlock x:Name="RecommendedText1" Style="{StaticResource OverlineText}" Foreground="{DynamicResource AccentTextBrush}" />
-            </StackPanel>
-            <StackPanel x:Name="Recommended2" Grid.Column="2" HorizontalAlignment="Center" Orientation="Horizontal" Visibility="Collapsed">
-                <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
-                <TextBlock x:Name="RecommendedText2" Style="{StaticResource OverlineText}" Foreground="{DynamicResource AccentTextBrush}" />
-            </StackPanel>
+            <Viewbox x:Name="Recommended0" Grid.Column="0" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="RecommendedText0" Style="{StaticResource OverlineText}" FontSize="10" Foreground="{DynamicResource AccentTextBrush}" />
+                </StackPanel>
+            </Viewbox>
+            <Viewbox x:Name="Recommended1" Grid.Column="1" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="RecommendedText1" Style="{StaticResource OverlineText}" FontSize="10" Foreground="{DynamicResource AccentTextBrush}" />
+                </StackPanel>
+            </Viewbox>
+            <Viewbox x:Name="Recommended2" Grid.Column="2" Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <Rectangle Width="8" Height="2" Fill="{DynamicResource AccentBrush}" Margin="0,0,4,0" VerticalAlignment="Center" />
+                    <TextBlock x:Name="RecommendedText2" Style="{StaticResource OverlineText}" FontSize="10" Foreground="{DynamicResource AccentTextBrush}" />
+                </StackPanel>
+            </Viewbox>
         </Grid>
     </Grid>
 </UserControl>

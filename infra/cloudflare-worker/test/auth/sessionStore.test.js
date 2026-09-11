@@ -31,13 +31,13 @@ test('isSessionValid is true before expiry and false after', () => {
   assert.equal(isSessionValid(row, new Date('2026-01-01T12:01:00Z')), false);
 });
 
-test('createSessionRow sets expires_at 12 hours after now by default', () => {
+test('createSessionRow sets expires_at 30 days after now by default', () => {
   const now = new Date('2026-01-01T00:00:00Z');
 
   const row = createSessionRow(now);
 
   assert.equal(row.created_at, now.toISOString());
-  assert.equal(row.expires_at, '2026-01-01T12:00:00.000Z');
+  assert.equal(row.expires_at, '2026-01-31T00:00:00.000Z');
   assert.equal(row.revoked_at, null);
   assert.ok(row.id.length >= 32);
 });

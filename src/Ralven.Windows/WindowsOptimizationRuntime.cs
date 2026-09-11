@@ -38,13 +38,17 @@ public sealed record WindowsOptimizationEnvironment
             throw new InvalidOperationException("Windows user profile directories are unavailable.");
         }
 
-        var installationRoot = Path.Combine(localAppData, "FiveM");
+        var detectedInstallation = new FiveMInstallationLocator().Detect();
+        var installationRoot = detectedInstallation.Installation?.Root
+            ?? Path.Combine(localAppData, "FiveM");
         var gtaV = GtaVLocator.Detect(installationRoot);
         return new WindowsOptimizationEnvironment
         {
             FiveMInstallationRoot = installationRoot,
-            FiveMAppRoot = Path.Combine(installationRoot, "FiveM.app"),
-            FiveMExecutablePath = Path.Combine(installationRoot, "FiveM.exe"),
+            FiveMAppRoot = detectedInstallation.Installation?.AppRoot
+                ?? Path.Combine(installationRoot, "FiveM.app"),
+            FiveMExecutablePath = detectedInstallation.Installation?.ExecutablePath
+                ?? Path.Combine(installationRoot, "FiveM.exe"),
             LegacyGraphicsSettingsPath = Path.Combine(
                 roamingAppData,
                 "CitizenFX",
@@ -86,7 +90,7 @@ public sealed record WindowsOptimizationDependencies
 
     public required ITrimStatusInspector TrimStatus { get; init; }
 
-    public required IMouseAccelerationInspector MouseAcceleration { get; init; }
+    public required IMouseAccelerationController MouseAcceleration { get; init; }
 
     public required IOverlaySoftwareInspector OverlaySoftware { get; init; }
 
@@ -290,6 +294,7 @@ public sealed class WindowsOptimizationActionFactory
             CreateAction(OptimizationActionIds.ToggleHags, options),
             CreateAction(OptimizationActionIds.EnableSessionPerformancePowerPlan, options),
             CreateAction(OptimizationActionIds.AdjustPciExpressPowerManagement, options),
+            CreateAction(OptimizationActionIds.DisableMouseAcceleration, options),
             CreateAction(OptimizationActionIds.GuideMousePollingRate, options)
         ];
     }
@@ -401,7 +406,6 @@ public sealed class WindowsOptimizationActionFactory
                 dependencies.SystemResources,
                 dependencies.ResourceUsage,
                 dependencies.Thermal,
-                dependencies.NetworkHealth,
                 dependencies.GpuDetails,
                 dependencies.BackgroundProcess),
             OptimizationActionIds.DiagnoseGtaVLaunchParameters => new GtaVLaunchParametersDiagnosisAction(
@@ -477,6 +481,9 @@ public sealed class WindowsOptimizationActionFactory
                 environment.FiveMExecutablePath,
                 environment.GtaVExecutablePath),
             OptimizationActionIds.ToggleHags => new HagsToggleAction(dependencies.Registry),
+            OptimizationActionIds.DisableMouseAcceleration => new PointerAccelerationAction(
+                dependencies.MouseAcceleration,
+                dependencies.ActionText),
             OptimizationActionIds.EnableSessionPerformancePowerPlan =>
                 new SessionPerformancePowerPlanAction(
                     dependencies.PowerPlans,
@@ -614,6 +621,7 @@ public sealed class WindowsOptimizationActionFactory
             PlanBuilder.CanonicalRequestFor(plan),
             PlanBuildContext.For(plan));
         if (!canonical.IsExecutable
+            || canonical.Options != plan.Options
             || canonical.Scope != plan.Scope
             || canonical.Actions.Count != plan.Actions.Count
             || canonical.RequiresElevation != plan.RequiresElevation
@@ -748,7 +756,10 @@ public sealed class WindowsOptimizationRuntime
     {
         var factory = new WindowsOptimizationActionFactory(environment, dependencies);
         var catalog = new WindowsActionCatalog(factory.CreateCatalogActions());
-        var engine = new WindowsTransactionEngine(catalog, dependencies.JournalStore);
+        var engine = new WindowsTransactionEngine(
+            catalog,
+            dependencies.JournalStore,
+            dependencies.ActionText);
         return new WindowsOptimizationRuntime(factory, catalog, engine);
     }
 
@@ -799,7 +810,7 @@ public sealed class WindowsOptimizationRuntime
     {
         return Engine.ExecuteAsync(
             ResolveActions(plan),
-            context with { Profile = plan.Profile },
+            context with { Profile = plan.Profile, PersonalUsage = plan.PersonalPreferences?.Usage },
             options,
             cancellationToken);
     }

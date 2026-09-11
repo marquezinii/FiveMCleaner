@@ -23,6 +23,12 @@ public partial class MainWindow
         try
         {
             var outputPath = Path.GetFullPath(argument["--capture=".Length..].Trim('"'));
+            var captureTrayMenu = arguments.Any(value =>
+                value.Equals("--capture-tray-menu", StringComparison.OrdinalIgnoreCase));
+            var language = arguments.FirstOrDefault(value => value.StartsWith("--capture-language=", StringComparison.OrdinalIgnoreCase))?
+                ["--capture-language=".Length..];
+            if (demoMode && language is not null)
+                viewModel.SelectLanguage(language);
 
             // O modo demo devolve AppSettings padrão de propósito (nunca lê
             // nem grava o arquivo do usuário), então o tema capturado sempre
@@ -39,6 +45,16 @@ public partial class MainWindow
                 themeManager.Apply(requested.Equals("light", StringComparison.OrdinalIgnoreCase)
                     ? AppThemePreference.Light
                     : AppThemePreference.Dark);
+            }
+
+            var accountUsername = arguments
+                .FirstOrDefault(value => value.StartsWith("--capture-account-username=", StringComparison.OrdinalIgnoreCase));
+            if (demoMode && accountUsername is not null)
+            {
+                AccountLabel.Text = FormatAccountUsername(
+                    accountUsername["--capture-account-username=".Length..].Trim('"'));
+                AccountLabel.MaxWidth = 120;
+                AccountLabel.Visibility = Visibility.Visible;
             }
 
             var size = arguments
@@ -66,26 +82,51 @@ public partial class MainWindow
                     "System" => (Element: (UIElement)SystemPage, Nav: SystemNav),
                     "Applications" => (Element: (UIElement)ApplicationsPage, Nav: ApplicationsNav),
                     "Games" => (Element: (UIElement)GamesPage, Nav: GamesNav),
+                    "FiveM" => (Element: (UIElement)FiveMPage, Nav: GamesNav),
+                    "Pro" => ConfigureProCapture(arguments),
+                    "RalvenAi" => ConfigureRalvenAiCapture(arguments),
+                    "Ultra" => ConfigureUltraCapture(true, arguments),
+                    "UltraLocked" => ConfigureUltraCapture(false, arguments),
                     "Optimizer" => ConfigureOptimizerCapture(OptimizationScope.GeneralWindows, OptimizerNav),
                     "FiveMOptimizer" => ConfigureOptimizerCapture(OptimizationScope.FiveMLegacy, GamesNav),
                     "History" => (HistoryPage, HistoryNav),
+                    "HistoryPopulated" => (HistoryPage, HistoryNav),
                     "Settings" => ConfigureSettingsCapture(arguments),
                     _ => (DashboardPage, DashboardNav)
                 };
                 ActivateNavItem(target.Nav);
                 Navigate(target.Element);
+                if (demoMode && tag == "HistoryPopulated")
+                {
+                    var l = LocalizationService.Current;
+                    var firstDate = new DateTime(2026, 9, 6, 14, 30, 0).ToString("g", l.CurrentCulture);
+                    var secondDate = new DateTime(2026, 9, 5, 20, 10, 0).ToString("g", l.CurrentCulture);
+                    var thirdDate = new DateTime(2026, 9, 4, 10, 0, 0).ToString("g", l.CurrentCulture);
+                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), l.Format("History.ProfileTitle", l.GetString("Ultra.Name")), firstDate, l.Format("History.AdjustmentsState", 6, l.GetString("History.State.Committed")), true));
+                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), l.Format("History.ProfileTitle", l.GetString("Profiles.Balanced.Name")), secondDate, l.Format("History.AdjustmentsState", 4, l.GetString("History.State.CommittedWithErrors")), true));
+                    viewModel.HistoryItems.Add(new ViewModels.HistoryDisplayItem(Guid.NewGuid(), l.Format("History.ProfileTitle", l.GetString("Profiles.Light.Name")), thirdDate, l.Format("History.AdjustmentsState", 2, l.GetString("History.State.RolledBack")), false));
+                }
             }
 
             await Task.Delay(450);
             UpdateLayout();
-            var dpi = VisualTreeHelper.GetDpi(this);
+            FrameworkElement captureTarget = this;
+            if (captureTrayMenu)
+            {
+                ShowTrayMenu();
+                await Task.Delay(100);
+                trayMenu.UpdateLayout();
+                captureTarget = trayMenu;
+            }
+
+            var dpi = VisualTreeHelper.GetDpi(captureTarget);
             var bitmap = new RenderTargetBitmap(
-                Math.Max(1, (int)Math.Round(ActualWidth * dpi.DpiScaleX)),
-                Math.Max(1, (int)Math.Round(ActualHeight * dpi.DpiScaleY)),
+                Math.Max(1, (int)Math.Round(captureTarget.ActualWidth * dpi.DpiScaleX)),
+                Math.Max(1, (int)Math.Round(captureTarget.ActualHeight * dpi.DpiScaleY)),
                 dpi.PixelsPerInchX,
                 dpi.PixelsPerInchY,
                 PixelFormats.Pbgra32);
-            bitmap.Render(this);
+            bitmap.Render(captureTarget);
             var encoder = new PngBitmapEncoder();
             encoder.Frames.Add(BitmapFrame.Create(bitmap));
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
@@ -102,12 +143,78 @@ public partial class MainWindow
         finally
         {
             allowClose = true;
+            trayMenu.IsOpen = false;
             trayIcon.Hide();
             // Capture mode is a one-shot smoke harness. Explicit shutdown is
             // required here because a headless WPF host may keep its dispatcher
             // alive after the window closes, making the release gate hang.
             System.Windows.Application.Current.Shutdown(0);
         }
+    }
+
+    private (UIElement Element, Wpf.Ui.Controls.NavigationViewItem Nav) ConfigureUltraCapture(bool pro, IReadOnlyList<string> arguments)
+    {
+        var target = ConfigureOptimizerCapture(OptimizationScope.GeneralWindows, OptimizerNav);
+        if (demoMode) viewModel.SetProAccess(pro);
+        viewModel.SelectUltra();
+        var section = arguments.FirstOrDefault(value => value.StartsWith("--capture-ultra-section=", StringComparison.OrdinalIgnoreCase))?
+            ["--capture-ultra-section=".Length..];
+        var expander = section switch
+        {
+            "Profiles" => OptimizerPage.UltraWorkspace.RoutineExpander,
+            "Tracking" => OptimizerPage.UltraWorkspace.TrackingExpander,
+            "Measurements" => OptimizerPage.UltraWorkspace.MeasurementExpander,
+            _ => null
+        };
+        if (expander is not null)
+        {
+            expander.IsExpanded = true;
+            Dispatcher.InvokeAsync(expander.BringIntoView, System.Windows.Threading.DispatcherPriority.Loaded);
+        }
+        return target;
+    }
+
+    private (UIElement Element, Wpf.Ui.Controls.NavigationViewItem Nav) ConfigureProCapture(IReadOnlyList<string> arguments)
+    {
+        UpdateBillingSession();
+        var state = arguments.FirstOrDefault(value => value.StartsWith("--capture-billing-state=", StringComparison.OrdinalIgnoreCase))?
+            ["--capture-billing-state=".Length..];
+        if (demoMode && state is not null)
+        {
+            // Presentation fixtures only: the shell still refuses every billing operation in demoMode.
+            proViewModel.SetSession(true, false);
+            var offer = new BillingOffer("ralven_pro_monthly_1990", 1990, "BRL", 1);
+            proViewModel.SetSnapshot(state switch
+            {
+                "checkout" => new(offer, true, null),
+                "pending" => new(offer, true, new("pending", null, null, true)),
+                "paid" => new(offer, false, new("authorized", null, DateTimeOffset.UtcNow.AddDays(20), true)),
+                "cancelled" => new(offer, true, new("cancelled", null, DateTimeOffset.UtcNow.AddDays(20), false)),
+                _ => null,
+            });
+            if (state == "loading") proViewModel.SetBusy(true);
+            if (state == "error") proViewModel.ShowMessage("Pro.Error.Request");
+        }
+        return (ProPage, ProNav);
+    }
+
+    private (UIElement Element, Wpf.Ui.Controls.NavigationViewItem Nav) ConfigureRalvenAiCapture(
+        IReadOnlyList<string> arguments)
+    {
+        if (demoMode)
+        {
+            var state = arguments.FirstOrDefault(value =>
+                value.StartsWith("--capture-ai-state=", StringComparison.OrdinalIgnoreCase))?
+                ["--capture-ai-state=".Length..];
+            if (string.Equals(state, "free", StringComparison.OrdinalIgnoreCase))
+            {
+                viewModel.SetProAccess(false);
+                return (RalvenAiPage, RalvenAiNav);
+            }
+            viewModel.SetProAccess(true);
+            viewModel.SetRalvenAiAccess(true);
+        }
+        return (RalvenAiPage, RalvenAiNav);
     }
 
     internal static bool TryParseCaptureSize(string value, out int width, out int height)

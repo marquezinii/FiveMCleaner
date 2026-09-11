@@ -53,6 +53,57 @@ public sealed class QualityGraphicsPresetTests
         Assert.Equal(original, File.ReadAllText(settingsPath));
     }
 
+    /// <summary>
+    /// A direção do preset é a única coisa que decide se um valor pode ser
+    /// tocado: <c>LowerOnly</c> nunca aumenta e <c>RaiseOnly</c> nunca reduz,
+    /// tanto para valores booleanos quanto numéricos. Fixa o contrato das duas
+    /// direções em um único teste para que elas não possam divergir.
+    /// </summary>
+    [Theory]
+    [InlineData(GraphicsPresetDirection.LowerOnly, "false", "0", "true", "1", "false", "0")]
+    [InlineData(GraphicsPresetDirection.RaiseOnly, "true", "3", "false", "2", "true", "3")]
+    public async Task Direction_NeverMovesAValueAgainstItself(
+        GraphicsPresetDirection direction,
+        string originalBoolean,
+        string originalNumeric,
+        string desiredBoolean,
+        string desiredNumeric,
+        string expectedBoolean,
+        string expectedNumeric)
+    {
+        using var temporaryDirectory = new TemporaryDirectory();
+        var fiveMRoot = temporaryDirectory.Combine("FiveM");
+        var settingsPath = temporaryDirectory.Combine("Roaming", "CitizenFX", "gta5_settings.xml");
+        Directory.CreateDirectory(fiveMRoot);
+        Directory.CreateDirectory(Path.GetDirectoryName(settingsPath)!);
+        var original =
+            "<Settings><graphics>"
+            + $"<FXAA value=\"{originalBoolean}\"/>"
+            + $"<ShadowQuality value=\"{originalNumeric}\"/>"
+            + "</graphics></Settings>";
+        File.WriteAllText(settingsPath, original);
+        var action = new LegacyGraphicsPresetAction(
+            settingsPath,
+            fiveMRoot,
+            GraphicsSettingsTarget.FiveM,
+            new FakeProcessInspector(),
+            new FakeGtaVProcessInspector(),
+            OptimizationActionIds.ApplyQualityLegacyGraphics,
+            new Dictionary<string, string>(StringComparer.Ordinal)
+            {
+                ["FXAA"] = desiredBoolean,
+                ["ShadowQuality"] = desiredNumeric
+            },
+            direction);
+
+        var result = await action.ApplyAsync(Context(), CancellationToken.None);
+
+        Assert.False(result.Changed);
+        var document = XDocument.Load(settingsPath);
+        Assert.Equal(expectedBoolean, Value(document, "FXAA"));
+        Assert.Equal(expectedNumeric, Value(document, "ShadowQuality"));
+    }
+
     [Fact]
     public void QualityPreset_NeverIncludesMsaaOrExtendedDistanceSettings()
     {
@@ -196,7 +247,7 @@ public sealed class GraphicsPresetRecommendationTests
     {
         var gpus = new[] { new GpuAdapterDetails("Intel(R) UHD Graphics", 1L * 1024 * 1024 * 1024, GpuKindGuess.LikelyIntegrated) };
         var cpu = new CpuSnapshot(2, 4, 3000, 3500);
-        var ram = new RamDetailsSnapshot([new RamModuleInfo(8L * 1024 * 1024 * 1024, 2666, 2666)]);
+        var ram = new RamDetailsSnapshot([new RamModuleInfo(8L * 1024 * 1024 * 1024, 2666)]);
 
         var message = GraphicsPresetRecommendationAction.Recommend(gpus, cpu, ram, display: null);
 
@@ -208,7 +259,7 @@ public sealed class GraphicsPresetRecommendationTests
     {
         var gpus = new[] { new GpuAdapterDetails("NVIDIA GeForce RTX 4070", 12L * 1024 * 1024 * 1024, GpuKindGuess.LikelyDiscrete) };
         var cpu = new CpuSnapshot(8, 16, 4200, 5000);
-        var ram = new RamDetailsSnapshot([new RamModuleInfo(32L * 1024 * 1024 * 1024, 3200, 3200)]);
+        var ram = new RamDetailsSnapshot([new RamModuleInfo(32L * 1024 * 1024 * 1024, 3200)]);
         var display = new DisplayConfigurationSnapshot(1920, 1080, 60, 60, HardwareGpuSchedulingState.NotSupportedOrUnknown);
 
         var message = GraphicsPresetRecommendationAction.Recommend(gpus, cpu, ram, display);
@@ -221,7 +272,7 @@ public sealed class GraphicsPresetRecommendationTests
     {
         var gpus = new[] { new GpuAdapterDetails("NVIDIA GeForce GTX 1660", 6L * 1024 * 1024 * 1024, GpuKindGuess.LikelyDiscrete) };
         var cpu = new CpuSnapshot(6, 12, 3600, 4200);
-        var ram = new RamDetailsSnapshot([new RamModuleInfo(16L * 1024 * 1024 * 1024, 3000, 3000)]);
+        var ram = new RamDetailsSnapshot([new RamModuleInfo(16L * 1024 * 1024 * 1024, 3000)]);
 
         var message = GraphicsPresetRecommendationAction.Recommend(gpus, cpu, ram, display: null);
 

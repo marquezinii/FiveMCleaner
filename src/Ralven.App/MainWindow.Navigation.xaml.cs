@@ -15,15 +15,40 @@ public partial class MainWindow
     private SystemPage SystemPage => systemPage ??= CreateDeferredPage<SystemPage>();
     private ApplicationsPage ApplicationsPage => applicationsPage ??= CreateApplicationsPage();
     private GamesPage GamesPage => gamesPage ??= CreateDeferredPage<GamesPage>();
+    private FiveMPage FiveMPage => fiveMPage ??= CreateDeferredPage<FiveMPage>();
     private OptimizerPage OptimizerPage => optimizerPage ??= CreateDeferredPage<OptimizerPage>();
     private HistoryPage HistoryPage => historyPage ??= CreateDeferredPage<HistoryPage>();
+    private RalvenAiPage RalvenAiPage => ralvenAiPage ??= CreateRalvenAiPage();
+
+    private RalvenAiPage CreateRalvenAiPage()
+    {
+        var page = new RalvenAiPage(
+            ralvenAiService,
+            cancellationToken => accountService?.GetIdTokenAsync(cancellationToken)
+                ?? Task.FromResult<string?>(null),
+            demoMode)
+        {
+            Visibility = Visibility.Collapsed
+        };
+        PageContentHost.Children.Add(page);
+        return page;
+    }
 
     private ApplicationsPage CreateApplicationsPage()
     {
         IWindowsApplicationInventoryInspector inspector = demoMode
             ? new SyntheticWindowsApplicationInventoryInspector()
             : new WindowsApplicationInventoryInspector();
-        var page = new ApplicationsPage(inspector) { Visibility = Visibility.Collapsed };
+        IWindowsApplicationPackageService packageService = demoMode
+            ? new SyntheticWindowsApplicationPackageService()
+            : new WinGetApplicationPackageService();
+        IApplicationUpdateIgnoreStore ignoreStore = demoMode
+            ? new InMemoryApplicationUpdateIgnoreStore()
+            : new JsonApplicationUpdateIgnoreStore();
+        var page = new ApplicationsPage(inspector, packageService, ignoreStore)
+        {
+            Visibility = Visibility.Collapsed
+        };
         PageContentHost.Children.Add(page);
         return page;
     }
@@ -48,10 +73,17 @@ public partial class MainWindow
             return;
         }
 
+        if (tag == "Pro")
+        {
+            RequestNavigateToPro();
+            return;
+        }
+
         ActivateNavItem(item);
         Navigate(tag switch
         {
             "System" => SystemPage,
+            "RalvenAi" => RalvenAiPage,
             "Applications" => ApplicationsPage,
             "Games" => GamesPage,
             "History" => HistoryPage,
@@ -63,12 +95,14 @@ public partial class MainWindow
     private void ActivateNavItem(Wpf.Ui.Controls.NavigationViewItem selected)
     {
         DashboardNav.IsActive = ReferenceEquals(selected, DashboardNav);
+        RalvenAiNav.IsActive = ReferenceEquals(selected, RalvenAiNav);
         OptimizerNav.IsActive = ReferenceEquals(selected, OptimizerNav);
         SystemNav.IsActive = ReferenceEquals(selected, SystemNav);
         ApplicationsNav.IsActive = ReferenceEquals(selected, ApplicationsNav);
         GamesNav.IsActive = ReferenceEquals(selected, GamesNav);
         HistoryNav.IsActive = ReferenceEquals(selected, HistoryNav);
         SettingsNav.IsActive = ReferenceEquals(selected, SettingsNav);
+        ProNav.IsActive = ReferenceEquals(selected, ProNav);
     }
 
     private void Navigate(UIElement page)
@@ -86,6 +120,10 @@ public partial class MainWindow
         {
             gamesPage.Visibility = Visibility.Collapsed;
         }
+        if (fiveMPage is not null)
+        {
+            fiveMPage.Visibility = Visibility.Collapsed;
+        }
         if (optimizerPage is not null)
         {
             optimizerPage.Visibility = Visibility.Collapsed;
@@ -94,9 +132,14 @@ public partial class MainWindow
         {
             historyPage.Visibility = Visibility.Collapsed;
         }
+        if (ralvenAiPage is not null)
+        {
+            ralvenAiPage.Visibility = Visibility.Collapsed;
+        }
         SettingsPage.Visibility = Visibility.Collapsed;
+        if (proPage is not null) proPage.Visibility = Visibility.Collapsed;
         page.Visibility = Visibility.Visible;
-        viewModel.SetLiveMetricsEnabled(ReferenceEquals(page, DashboardPage));
+        RefreshLiveMetricsActivity();
     }
 
     // ===================== Pontes para as páginas extraídas =====================
@@ -106,9 +149,27 @@ public partial class MainWindow
     // confirmação nativos ou cruzam para outra página — precisam voltar para
     // o shell, que continua sendo o único dono desse estado.
 
+    internal void RequestNavigateToGames()
+    {
+        ActivateNavItem(GamesNav);
+        Navigate(GamesPage);
+    }
+
+    internal void RequestNavigateToFiveM()
+    {
+        ActivateNavItem(GamesNav);
+        Navigate(FiveMPage);
+    }
+
     internal void RequestNavigateToOptimizer(OptimizationScope scope = OptimizationScope.GeneralWindows)
     {
         viewModel.SetOptimizationScope(scope);
+        ActivateNavItem(viewModel.OptimizationScope == OptimizationScope.FiveMLegacy ? GamesNav : OptimizerNav);
+        Navigate(OptimizerPage);
+    }
+
+    internal void RequestNavigateToOptimizerReport()
+    {
         ActivateNavItem(viewModel.OptimizationScope == OptimizationScope.FiveMLegacy ? GamesNav : OptimizerNav);
         Navigate(OptimizerPage);
     }
@@ -117,6 +178,51 @@ public partial class MainWindow
     {
         ActivateNavItem(HistoryNav);
         Navigate(HistoryPage);
+    }
+
+    internal void RequestReviewRalvenAiPlan(OptimizationProfile profile)
+    {
+        viewModel.SetOptimizationScope(OptimizationScope.GeneralWindows);
+        viewModel.SelectProfile(profile);
+        ActivateNavItem(OptimizerNav);
+        Navigate(OptimizerPage);
+    }
+
+    internal async Task RequestExecuteRalvenAiToolAsync(RalvenAiToolRequest request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        switch (request.Tool)
+        {
+            case RalvenAiTool.RefreshDiagnostic:
+                await viewModel.RefreshDiagnosticAsync();
+                return;
+            case RalvenAiTool.ReviewProfile when request.Profile is { } profile:
+                RequestReviewRalvenAiPlan(profile);
+                return;
+            case RalvenAiTool.OpenOverview:
+                ActivateNavItem(DashboardNav);
+                Navigate(DashboardPage);
+                return;
+            case RalvenAiTool.OpenSystem:
+                ActivateNavItem(SystemNav);
+                Navigate(SystemPage);
+                return;
+            case RalvenAiTool.OpenApplications:
+                ActivateNavItem(ApplicationsNav);
+                Navigate(ApplicationsPage);
+                return;
+            case RalvenAiTool.OpenGames:
+                RequestNavigateToGames();
+                return;
+            case RalvenAiTool.OpenFiveM:
+                RequestNavigateToFiveM();
+                return;
+            case RalvenAiTool.OpenHistory:
+                RequestNavigateToHistory();
+                return;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(request));
+        }
     }
 
     internal async Task RequestStartOptimizationAsync()
@@ -158,12 +264,11 @@ public partial class MainWindow
             return;
         }
 
-        var decision = System.Windows.MessageBox.Show(
+        var decision = Ralven.App.Views.OptimizationConfirmationWindow.Confirm(this,
             LocalizationService.Current.Format("Dialog.UpdateInstall.Message", pendingVersion),
             LocalizationService.Current.GetString("Dialog.UpdateInstall.Title"),
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Information);
-        if (decision != MessageBoxResult.Yes)
+            LocalizationService.Current.GetString("Dialog.UpdateInstall.Title"));
+        if (decision != true)
         {
             return;
         }

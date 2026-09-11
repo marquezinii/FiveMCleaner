@@ -1,16 +1,19 @@
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
+using System.Web;
 using Ralven.App.Services;
 using Xunit;
 
 namespace Ralven.Tests.App;
 
 /// <summary>
-/// The interactive half of <see cref="GoogleOAuthClient"/> needs a real
-/// browser and a real Google account, so it is verified manually. What is
-/// covered here is the part that must hold without either: an unconfigured
-/// build never opens a browser, never reaches the network, and never
-/// pretends to have signed anyone in.
+/// The real browser handoff remains manual. The deterministic security
+/// boundaries around it — PKCE/nonce construction, callback correlation and
+/// token claim checks before Firebase receives the assertion — stay covered
+/// here without a Google account or network access.
 /// </summary>
 public sealed class GoogleOAuthClientTests
 {
@@ -58,6 +61,137 @@ public sealed class GoogleOAuthClientTests
         Assert.NotEqual("Account.Google.NotConfigured", ticket.Error);
     }
 
+    [Fact]
+    public void BuildAuthorizeUrl_BindsPkceStateAndNonce()
+    {
+        using var client = new HttpClient(new ThrowingHandler(() => { }));
+        var oauth = new GoogleOAuthClient(client, "client-id", clientSecret: null);
+
+        var url = new Uri(oauth.BuildAuthorizeUrl("http://127.0.0.1:1234/", "verifier", "state", "nonce"));
+        var query = HttpUtility.ParseQueryString(url.Query);
+
+        Assert.Equal("client-id", query["client_id"]);
+        Assert.Equal("state", query["state"]);
+        Assert.Equal("nonce", query["nonce"]);
+        Assert.Equal("S256", query["code_challenge_method"]);
+        Assert.Equal(Base64Url(SHA256.HashData(Encoding.ASCII.GetBytes("verifier"))), query["code_challenge"]);
+    }
+
+    [Fact]
+    public void TryParseCallback_IgnoresWrongStateAndAcceptsTheValidCallback()
+    {
+        Assert.False(GoogleOAuthClient.TryParseCallback(
+            "/?code=attacker-code&state=wrong", "expected", out _, out _));
+
+        Assert.True(GoogleOAuthClient.TryParseCallback(
+            "/?code=real-code&state=expected", "expected", out var code, out var error));
+        Assert.Equal("real-code", code);
+        Assert.Null(error);
+    }
+
+    [Fact]
+    public void HasExpectedIdTokenClaims_RequiresIssuerAudienceExpirySubjectAndNonce()
+    {
+        var now = DateTimeOffset.FromUnixTimeSeconds(1_800_000_000);
+        var valid = new Dictionary<string, object?>
+        {
+            ["iss"] = "https://accounts.google.com",
+            ["aud"] = "client-id",
+            ["exp"] = now.ToUnixTimeSeconds() + 60,
+            ["sub"] = "google-subject",
+            ["nonce"] = "expected-nonce",
+        };
+
+        Assert.True(GoogleOAuthClient.HasExpectedIdTokenClaims(
+            IdToken(valid), "client-id", "expected-nonce", now));
+
+        foreach (var invalid in new[]
+        {
+            Changed(valid, "iss", "https://issuer.example"),
+            Changed(valid, "aud", "other-client"),
+            Changed(valid, "exp", now.ToUnixTimeSeconds()),
+            Changed(valid, "sub", string.Empty),
+            Changed(valid, "sub", "   "),
+            Changed(valid, "nonce", "wrong-nonce"),
+        })
+        {
+            Assert.False(GoogleOAuthClient.HasExpectedIdTokenClaims(
+                IdToken(invalid), "client-id", "expected-nonce", now));
+        }
+
+        Assert.False(GoogleOAuthClient.HasExpectedIdTokenClaims(
+            "not-a-jwt", "client-id", "expected-nonce", now));
+    }
+
+    [Fact]
+    public async Task ExchangeCodeAsync_RejectsAnIdTokenWithTheWrongNonce()
+    {
+        var now = DateTimeOffset.UtcNow;
+        var token = IdToken(new Dictionary<string, object?>
+        {
+            ["iss"] = "accounts.google.com",
+            ["aud"] = new[] { "client-id" },
+            ["exp"] = now.ToUnixTimeSeconds() + 60,
+            ["sub"] = "google-subject",
+            ["nonce"] = "wrong-nonce",
+        });
+        using var client = new HttpClient(new ResponseHandler(
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(new { id_token = token }), Encoding.UTF8, "application/json"),
+            }));
+        var localization = new LocalizationService(System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+        var oauth = new GoogleOAuthClient(client, "client-id", clientSecret: null, localization);
+
+        var ticket = await oauth.ExchangeCodeAsync(
+            "code", "verifier", "http://127.0.0.1:1234/", "expected-nonce",
+            global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Null(ticket.IdToken);
+        Assert.Equal(localization["Account.Google.InvalidResponse"], ticket.Error);
+    }
+
+    [Fact]
+    public async Task ExchangeCodeAsync_ReturnsOnlyACorrelatedIdTokenForFirebaseValidation()
+    {
+        var token = IdToken(new Dictionary<string, object?>
+        {
+            ["iss"] = "https://accounts.google.com",
+            ["aud"] = "client-id",
+            ["exp"] = DateTimeOffset.UtcNow.ToUnixTimeSeconds() + 60,
+            ["sub"] = "google-subject",
+            ["nonce"] = "expected-nonce",
+        });
+        using var client = new HttpClient(new ResponseHandler(
+            new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(new { id_token = token }), Encoding.UTF8, "application/json"),
+            }));
+        var oauth = new GoogleOAuthClient(client, "client-id", clientSecret: null);
+
+        var ticket = await oauth.ExchangeCodeAsync(
+            "code", "verifier", "http://127.0.0.1:1234/", "expected-nonce",
+            global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Equal(token, ticket.IdToken);
+        Assert.Null(ticket.Error);
+    }
+
+    private static Dictionary<string, object?> Changed(
+        Dictionary<string, object?> source,
+        string key,
+        object? value)
+    {
+        var copy = new Dictionary<string, object?>(source) { [key] = value };
+        return copy;
+    }
+
+    private static string IdToken(Dictionary<string, object?> payload) =>
+        $"{Base64Url(Encoding.UTF8.GetBytes("{}"))}.{Base64Url(JsonSerializer.SerializeToUtf8Bytes(payload))}.signature";
+
+    private static string Base64Url(byte[] value) =>
+        Convert.ToBase64String(value).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+
     private sealed class ThrowingHandler(Action onSend) : HttpMessageHandler
     {
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -65,5 +199,11 @@ public sealed class GoogleOAuthClientTests
             onSend();
             return Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK));
         }
+    }
+
+    private sealed class ResponseHandler(HttpResponseMessage response) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken) =>
+            Task.FromResult(response);
     }
 }

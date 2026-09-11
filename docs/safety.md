@@ -7,7 +7,7 @@ O Ralven altera configurações de alto impacto potencial. Segurança, explicabi
 Uma ação aceita pelo produto precisa respeitar todos os itens abaixo:
 
 1. **Escopo conhecido** — instalação e edição foram identificadas sem ambiguidade.
-2. **Legacy somente** — GTAV Enhanced retorna bloqueio seguro.
+2. **FiveM Legacy dentro de Jogos** — a integração especializada bloqueia GTAV Enhanced com segurança.
 3. **Processos encerrados** — nenhuma nova escrita ou limpeza começa com
    processos FiveM ativos. A única exceção é a compensação imediata e estreita
    do snapshot criado pela própria execução que acabou de falhar, descrita em
@@ -70,8 +70,9 @@ O primeiro escopo geral reutiliza somente capacidades já estreitas e testadas:
 - ASPM PCI Express apenas quando a configuração existe no plano ativo, com
   captura separada de AC/DC, compensação de falha parcial, pós-verificação e
   restauração dos dois valores sem sobrescrever uma escolha posterior;
-- efeitos visuais e atraso de menus allowlisted via `SystemParametersInfo`, com
-  verificação e rollback, preservando legibilidade e suavização de fontes.
+- efeitos visuais, atraso de menus e aceleração do ponteiro allowlisted via
+  `SystemParametersInfo`, com verificação e rollback. A ação do ponteiro é opt-in
+  do Ultra, preserva a velocidade escolhida e restaura os três valores anteriores.
 
 Nenhuma dessas ações autoriza mudar pagefile, limpar standby list, instalar ou
 remover driver, alterar taxa de atualização, desabilitar item de inicialização,
@@ -83,9 +84,10 @@ Quando o Windows não fornece o fato necessário, o resultado é indisponível o
 Os diagnósticos de TRIM e aceleração do mouse são consultas fixas e somente
 leitura: respectivamente `fsutil behavior query DisableDeleteNotify` e
 `SystemParametersInfo(SPI_GETMOUSE)`. O primeiro relata apenas a política de
-delete notification para NTFS/ReFS, sem afirmar suporte do dispositivo; o
-segundo não altera preferências do usuário nem presume que um jogo use o caminho
-de ponteiro do Windows. Nenhum deles atravessa o broker.
+delete notification para NTFS/ReFS, sem afirmar suporte do dispositivo. O
+diagnóstico do mouse não altera preferências nem presume que um jogo use o
+caminho de ponteiro do Windows; a alteração separada por `SPI_SETMOUSE` só entra
+quando a preferência explícita do Ultra compõe a ação. Nenhuma delas atravessa o broker.
 
 As ações compartilhadas de Modo de Jogo e captura preservam a verificação já
 existente de processo FiveM. Assim, uma instalação ausente não impede a
@@ -102,13 +104,15 @@ estado de atualização automática não comprova que o Windows está atualizado
 o painel não busca, baixa, instala ou aprova atualizações. Essas leituras não
 usam broker, elevação, PowerShell, linha de comando ou acesso de rede.
 
-As ações que abrem Segurança do Windows, Windows Update e Sobre continuam
-secundárias e delegam qualquer alteração às superfícies protegidas do próprio
-sistema operacional.
+A página Sistema não abre Segurança do Windows, Windows Update ou Sobre. Ela
+mostra somente os dados que o Ralven consegue ler com segurança e oferece apenas
+as ações tipadas de jogos implementadas dentro do aplicativo. Um estado de
+proteção que exige atenção permanece informativo; ele não autoriza correção
+automática, alteração de antivírus, firewall ou Windows Update.
 
-O painel **Sistema > Jogos do Windows** é uma exceção explícita ao antigo
-comportamento somente de atalhos da página Sistema, não uma autorização para
-alterações genéricas no Windows. Seu escopo é fixo:
+O painel **Sistema > Preparar o Windows para jogos** é uma exceção explícita ao
+antigo comportamento somente de atalhos da página Sistema, não uma autorização
+para alterações genéricas no Windows. Seu escopo é fixo:
 
 - lê e altera somente `HKCU\Software\Microsoft\GameBar\AutoGameModeEnabled`
   e `HKCU\Software\Microsoft\Windows\CurrentVersion\GameDVR\HistoricalCaptureEnabled`;
@@ -136,9 +140,10 @@ O painel nunca aceita caminho, hive, nome de valor, ação ou comando fornecido
 pela UI. Qualquer novo ajuste geral do Windows exige ação própria, evidência,
 detecção, confirmação, validação, reversibilidade e testes independentes.
 
-## Inventário de aplicativos e inicialização
+## Inventário e atualização de aplicativos
 
-A página **Aplicativos** faz somente descoberta local como usuário padrão:
+O inventário da página **Aplicativos** faz somente descoberta local como
+usuário padrão:
 
 - lê os registros de desinstalação em HKCU/HKLM nas visões de 32 e 64 bits para
   nome, versão, fabricante e tamanho estimado;
@@ -148,13 +153,38 @@ A página **Aplicativos** faz somente descoberta local como usuário padrão:
   `StartupApproved`;
 - trata acesso negado e fontes indisponíveis como resultado parcial explícito,
   sem transformar ausência de dados em sucesso completo;
-- não instala, atualiza, desinstala, habilita ou desabilita software e não usa o
-  broker.
+- não instala, desinstala, habilita ou desabilita software e não usa o broker.
 
-As ações secundárias continuam abrindo superfícies confiáveis do Windows para
-qualquer alteração. Uma futura operação de pacote ou inicialização exige
-contrato tipado, confirmação, verificação e rollback próprios; texto descoberto
-no registro nunca pode ser promovido a comando executável.
+O centro de pacotes é uma superfície separada, limitada ao Windows Package
+Manager:
+
+- o Ralven consulta somente as origens padrão confiáveis `winget` e `msstore`;
+  fontes personalizadas, Windows Update e drivers ficam fora do escopo;
+- consultas não aceitam termos silenciosamente. Instalação e atualização só
+  aceitam termos depois da confirmação que os apresenta ao usuário;
+- somente IDs de pacote que passaram pela validação local e vieram do snapshot
+  atual podem ser enviados a instalação, atualização ou desinstalação;
+- o comando usa argumentos fixos, `--id` com correspondência exata e a origem
+  validada na allowlist; nenhum texto, caminho ou argumento livre fornecido
+  pela UI é executado;
+- o usuário confirma nome, ID, origem, possível UAC e ausência de rollback antes
+  de cada instalação/desinstalação ou do lote selecionado de atualizações;
+- o lote é sequencial, para em pontos seguros no cancelamento e nunca transforma
+  sucesso parcial em sucesso total;
+- o Ralven não usa `--force`, `--ignore-security-hash`, `--allow-reboot`, scripts,
+  shell ou broker. As verificações do WinGet permanecem ativas;
+- o processo principal continua sem elevação. O instalador do fabricante pode
+  abrir e o Windows pode solicitar UAC diretamente quando necessário;
+- sucesso e falha vêm do código de saída do WinGet. Uma falha nunca é mostrada
+  como atualização concluída.
+
+Instalar, atualizar ou desinstalar software de terceiros não entra no motor
+transacional de otimizações: o instalador de cada fabricante controla arquivos,
+processos e eventual recuperação, portanto o Ralven não promete rollback.
+Atualizações ignoradas são apenas uma preferência local `origem|id`, não alteram
+o pacote e podem ser restauradas na própria página. Alterações de inicialização
+continuam nas superfícies confiáveis do Windows. Texto descoberto no registro
+nunca pode ser promovido a comando executável.
 
 ## Escopo de edição gráfica
 
@@ -258,6 +288,14 @@ condições abaixo simultaneamente:
 
 A limpeza de cache não entra implicitamente nos modos Leve, Médio ou Agressivo.
 
+A limpeza do cache gerado pelo próprio Ralven é uma ferramenta manual separada
+dos perfis e das ações sobre o FiveM. Ela aceita somente os roots e padrões
+descartáveis documentados em [`docs/cache.md`](cache.md), revalida contenção e
+reparse points antes da exclusão e preserva configurações, sessão, dados do
+usuário, telemetria pendente, transações, quarentenas e segurança do updater.
+Falhas de acesso ou arquivos em uso produzem sucesso parcial verificável; nunca
+ampliam o escopo da exclusão.
+
 ### Monitor de sessão somente leitura
 
 O monitor de sessão da Visão geral é uma capacidade manual e local, limitada ao
@@ -273,6 +311,14 @@ telemetria, persistência, broker, leitura de memória, hooks ou injeção e nã
 altera FiveM, GTA V ou Windows. Sua existência não autoriza prioridade,
 afinidade, plano de energia, timer resolution ou qualquer outra mutação por
 sessão sem arquitetura própria de rollback e recuperação.
+
+O alvo FiveM do painel de desempenho é uma leitura separada e ainda mais
+restrita ao primeiro plano: só consulta tempo de CPU e working set que o Windows
+expõe para processos com imagem validada dentro da raiz Legacy diagnosticada.
+Ele pausa com a Visão geral, não lê o conteúdo da memória do processo e não
+autoriza hooks, injeção, overlay, telemetria, persistência ou qualquer mutação.
+Métricas por processo que não possam ser obtidas com esse contrato aparecem
+como indisponíveis.
 
 ### Encerramento de processo travado
 
@@ -356,6 +402,21 @@ adulterado. Rollback elevado falha fechado quando o recibo não existe, está
 corrompido ou não corresponde à identidade das ações; recibos terminais são
 retidos para impedir replay. Registros legados sem recibo continuam visíveis no
 histórico, mas não oferecem rollback administrativo.
+
+A restauração solicitada pelo usuário segue a ordem inversa das fases:
+primeiro o broker restaura as ações administrativas, depois o app restaura as
+ações de usuário padrão. Isso devolve o plano de energia original antes de
+restaurar sua política ASPM. Cancelamento do UAC ou falha administrativa impede
+a fase local; mudanças posteriores do usuário continuam protegidas pelas
+verificações de snapshot. `AwaitingStandardRollback` confirma somente o término
+da etapa administrativa, nunca a restauração completa.
+
+Uma falha local isolada permite executar ações administrativas ainda pendentes;
+a falha original permanece no journal e no relatório. Ações falhadas não são
+reexecutadas e uma falha crítica continua impedindo as etapas restantes.
+Cancelamento, inclusive entre ações, finaliza a transação como
+`CommittedWithErrors`, registra as ações não executadas e preserva os snapshots
+das mudanças confirmadas para o histórico e rollback.
 
 Esse modelo atende ao requisito de "tratar erro sem interromper
 inutilmente todo o processo" sem abrir mão de nenhum dos invariantes de
@@ -467,6 +528,18 @@ Uma exceção de antivírus recomendada pelo suporte do FiveM para um erro espec
 
 ## Dados e privacidade
 
+O Ralven AI é um fluxo remoto explícito e separado da telemetria. Ele não pode
+receber paths do diagnóstico, arquivos, credenciais, tokens ou dados que
+identifiquem diretamente a conta, nem executar a saída do modelo. A resposta
+pode solicitar somente uma ferramenta local allowlisted sem argumentos livres:
+atualizar diagnóstico, abrir uma tela existente ou preparar a revisão de um
+perfil. O App revalida a solicitação; nenhuma ferramenta escreve no PC e toda
+alteração posterior continua no fluxo transacional confirmado pelo usuário. Um
+identificador HMAC pseudônimo, com segredo exclusivo do Worker e separação de
+domínio, é o único vínculo de conta enviado ao provedor. O UUID de idempotência
+do cliente não é encaminhado. O contrato e os limites estão em
+[`docs/ralven-ai.md`](ralven-ai.md).
+
 O diagnóstico permanece local por padrão. Relatórios exportados devem:
 
 - remover nome de usuário dos caminhos;
@@ -511,3 +584,13 @@ A cópia é sempre uma ação explícita do usuário; nada é enviado pela rede.
 ## Comunicação de vulnerabilidades
 
 Não publique exploits ou bypasses em issues. Siga [SECURITY.md](../SECURITY.md).
+
+## Ultra e acesso Pro
+
+O [Ultra](ultra.md) compõe apenas ações tipadas e suportadas no Windows geral.
+Sua ação exclusiva de resposta do ponteiro só pode ser selecionada por uma
+preferência pessoal presente no plano; não é habilitada por opções dos perfis
+gratuitos. Runtime e broker recompõem o plano e rejeitam opções divergentes.
+Limpeza permanece opt-in; ASPM não entra no perfil pessoal. Acompanhamento e
+medições somente leem o PC e não reaplicam ajustes. Pro é revalidado antes de novas operações, preservando transações em
+andamento, registros locais e rollback após expiração.

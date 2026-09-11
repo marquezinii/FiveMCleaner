@@ -15,6 +15,7 @@ namespace Ralven.Contracts;
 /// - FIVEM_: FiveM Legacy specific (cache, installation, logs, crashes)
 /// - GTAV_: GTA V Legacy specific (settings, launch, graphics)
 /// - WIN_: Windows/UAC/environment (privilege, services, drivers)
+/// - SEC_: Windows Security Center health (antivirus, firewall, automatic updates)
 /// - CFG_: Configuration/settings (persistence, migration, validation)
 /// - SYS_: System/runtime (memory, process, filesystem, serialization)
 /// </remarks>
@@ -106,6 +107,9 @@ public enum BugCode
     /// <summary>Tray icon or background service failure.</summary>
     APP_TRAY_SERVICE = 406,
 
+    /// <summary>Aplicativos/Startup inventory scan failed (partial or total).</summary>
+    APP_INV_SCAN = 407,
+
     // ========== UPDATER (UPD_) ==========
 
     /// <summary>Update manifest download failed.</summary>
@@ -193,6 +197,9 @@ public enum BugCode
 
     /// <summary>Broker process crashed or exited unexpectedly.</summary>
     BRK_PROCESS_CRASH = 610,
+
+    /// <summary>Broker files or signed integrity metadata failed pre-elevation validation.</summary>
+    BRK_INTEGRITY_VALIDATION = 611,
 
     // ========== NETWORK (NET_) ==========
 
@@ -300,6 +307,11 @@ public enum BugCode
 
     /// <summary>Windows BIOS/UEFI query failed.</summary>
     WIN_BIOS = 1011,
+
+    // ========== SECURITY HEALTH (SEC_) ==========
+
+    /// <summary>Windows Security Center health read (antivirus, firewall, updates) failed.</summary>
+    SEC_HEALTH_QUERY = 1300,
 
     // ========== CONFIGURATION (CFG_) ==========
 

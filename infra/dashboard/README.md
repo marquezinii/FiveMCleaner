@@ -1,6 +1,6 @@
 # Ralven dashboard
 
-Static admin dashboard for the telemetry and bug reports collected by
+Static admin command center for the operational data collected by
 [`infra/cloudflare-worker`](../cloudflare-worker/README.md). Plain HTML/CSS/JS,
 no build step, no framework — served as-is by Cloudflare Pages. The .NET
 client sends telemetry to the Worker's `/telemetry` route and bug reports to
@@ -9,16 +9,13 @@ attachment/screenshot, no R2) — see `infra/cloudflare-worker/README.md`.
 
 ## What's here
 
-- `index.html` — login screen + the dashboard itself (one page, toggled by
-  whether a session cookie is currently valid), branded with the Ralven
-  logo, and organized into four sections: **Adoção** (usage/version/profile
-  charts), **Hardware** (CPU/GPU/RAM breakdowns), **Diagnóstico de bugs**
-  (error categories, actions most associated with failures, errors by
-  version, and a raw "últimos erros" table for spotting a fresh bug without
-  waiting for it to show up in an aggregate), and **Bugs reportados** (the
-  "Reportar um bug" submissions from `/api/bugs` — category, summary,
-  version, profile, environment, optional email, and whether a log excerpt
-  was included; no attachment/screenshot, that feature was dropped).
+- `index.html` — login screen + responsive command center organized into
+  **Visão geral**, **Crescimento**, **Confiabilidade**, **Compatibilidade** and
+  **Operações**. It combines anonymous optimization telemetry with aggregate
+  account growth, Ralven AI usage/cost, subscription/payment health, updater
+  outcomes and support reports. Recent errors and reports open a native detail
+  dialog; incident search and global period/version/environment filters keep
+  investigation focused.
 - `assets/img/logo.png` — the app's own icon, reused as-is (same asset as
   `assets/brand/export/app-icon/ralven-app-icon-512.png`).
 - `assets/api.js` — pure URL-building and response-shaping for the Worker's
@@ -27,14 +24,15 @@ attachment/screenshot, no R2) — see `infra/cloudflare-worker/README.md`.
   chart-ready series, formatting durations/percentages/timestamps, mapping a
   `recentFailures` row into the raw-feed table's columns). Unit tested
   (`test/charts.test.js`).
-- `assets/rendering.js` — canvas drawing (bar/line charts). Touches the DOM
-  directly, so unlike the two files above it is **not** covered by an
-  automated test (no headless-canvas dependency was introduced for that) —
-  verify visually once deployed.
-- `assets/app.js` — DOM wiring: login/logout, filters (date range, version,
-  environment), fetching every stat, drawing every chart, rendering the
-  recent-failures table, and the CSV export links. Thin glue over the tested
-  modules above.
+- `assets/rendering.js` — responsive, high-DPI canvas drawing (bar/line/donut
+  charts), with pointer tooltips, keyboard exploration and resize handling.
+  Pure hit-testing and tooltip formatting are unit tested without adding a
+  headless-canvas dependency; final rendering still requires browser QA.
+- `assets/app.js` — DOM wiring: persistent session recovery, period presets,
+  global filters, aggregate health signals, charts, searchable incident feeds,
+  CSV exports and the live-alert workflow. Publishing or deactivating a live
+  alert requires an explicit confirmation and the existing session-bound CSRF
+  token.
 - `_headers` — Cloudflare Pages headers that forbid framing, plugins and
   third-party scripts while allowing requests only to the deployed Worker.
 
@@ -52,14 +50,15 @@ npm test
 ## Authentication
 
 The dashboard has no login logic of its own — it just posts the password to
-the Worker's `/admin/login` and relies on the `HttpOnly` session cookie the
-Worker sets. See
+the Worker's `/admin/login` and relies on the 30-day `HttpOnly` session cookie
+the Worker sets. It never stores the password; logging out or clearing the
+site data ends access. See
 [`infra/cloudflare-worker/README.md`](../cloudflare-worker/README.md) for the
 full auth design (custom password + PBKDF2 hash + brute-force lockout +
 server-side revocable sessions — no Google/GitHub OAuth, no Cloudflare
 Access, no custom domain required).
 
-## "Active users" honesty note
+## Growth and "active users" honesty note
 
 Ralven's telemetry never includes a device or machine identifier (see
 `docs/telemetry.md`) — that is a deliberate privacy invariant, not a gap. As
@@ -68,16 +67,21 @@ every "per day"/"in period" number is a count of *optimization runs*
 (events), which the UI and this README say plainly rather than mislabeling
 it as "usuários online" the way an early sketch of this dashboard did.
 
-## Re-deploying
+The account total and new-account series come from aggregate queries over
+`account_profiles`. "Contas ativas no Ralven AI" means distinct authenticated
+accounts that made an AI request in the selected period; it is not presented as
+general app activity. No endpoint returns UID, username, e-mail, provider ID or
+interactive AI content.
 
-```bash
-npx wrangler pages deploy . --project-name=fivemcleaner-dashboard --branch=production
-```
+## Deploy
 
-`assets/app.js` hardcodes the Worker's `workers.dev` URL as the default API
-base (no custom domain connects the two, so `location.origin` would point
-at the dashboard's own, wrong origin) — update that constant first if the
-Worker is ever redeployed under a different URL. The Pages project name and
-Worker hostname are retained external infrastructure identifiers, not public
-brand names. No custom domain has been configured; ask before adding one,
-because that requires DNS changes to a real zone.
+Depois que a CI valida uma mudança em `infra/dashboard` integrada em
+`dev/proxima-versao`, ela publica somente `index.html`, `_headers` e `assets/`
+no projeto Pages que atende o domínio canônico e confirma o commit implantado.
+O painel não depende de uma release do aplicativo Windows.
+
+`assets/app.js` usa `https://api.vemryx.com` como API padrão; `location.origin`
+continua sendo o endereço do próprio dashboard. O único endereço canônico do dashboard do Ralven é
+`https://dashboard.vemryx.com`. Os subdomínios técnicos `*.pages.dev` são
+redirecionados para ele por uma regra de redirecionamento em massa da conta
+Cloudflare e não fazem parte da allowlist CORS.

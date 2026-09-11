@@ -1,8 +1,13 @@
 # Instalador, atualização e publicação
 
 O instalador oficial do Ralven é um executável Inno Setup moderno para
-Windows 11 e, em compatibilidade legada, Windows 10 build 19041 ou mais recente,
-em sistemas compatíveis com binários x64. Windows 11 é o sistema recomendado.
+Windows 10 versão 2004 (build 19041) ou mais recente e Windows 11, em sistemas
+compatíveis com binários x64. As duas plataformas são suportadas como ambientes
+de primeira classe; recursos visuais nativos sem suporte no Windows 10 usam o
+fallback equivalente documentado pelo aplicativo.
+
+O roteiro de aceite em uma máquina Windows 10 real está em
+[`windows10-validation.md`](windows10-validation.md).
 Em instalações novas, ele instala por usuário em `{autopf}\Ralven`; por padrão, isso corresponde
 à pasta de programas local do usuário e não exige UAC.
 
@@ -21,13 +26,26 @@ Windows realmente for executada.
 
 ## Experiência do instalador
 
-- português do Brasil e inglês, escolhidos pela interface do Windows;
-- tema moderno que acompanha o modo claro/escuro do sistema, com arte lateral
-  clara e escura gerada a partir do ícone oficial;
-- ícone e imagem oficiais do Ralven;
+- português do Brasil, inglês, espanhol e francês, escolhidos pela interface do Windows;
+- entrada limpa com a marca do Ralven, explicação breve e uma ação principal;
+- tema moderno que acompanha o modo claro/escuro do sistema, com ícone oficial,
+  tipografia Segoe UI, arte lateral e dimensões confortáveis para Windows 10 e 11;
+- licença e informações completas convertidas para RTF no build. Títulos,
+  listas, destaques, caracteres Unicode e links são preservados, e o texto
+  extraído do RTF é comparado semanticamente com a fonte antes da compilação;
+- instalação apresentada em quatro etapas reais: preparação, cópia do pacote,
+  criação dos atalhos/preferências e finalização. O percentual exibido vem do
+  progresso nativo do Inno, sem atraso ou valor simulado;
+- detalhes técnicos recolhidos por padrão e exibidos, sem trocar de página,
+  somente quando a pessoa escolhe **Mostrar detalhes**;
+- etapas distinguem pendente, em andamento e concluído; falhas interrompem o
+  fluxo e permanecem evidentes nos diálogos nativos do instalador;
 - atalhos do menu Iniciar e desinstalação completa, com rótulos localizados;
-- atalho de Área de Trabalho habilitado por padrão; inicialização com o Windows
-  desmarcada por padrão (ambas alteráveis na instalação e depois);
+- identidade de shell estável `Ralven.Ralven` nos atalhos, mantendo nome e ícone
+  oficiais independentemente do caminho de instalação;
+- atalhos da Área de Trabalho e de inicialização com o Windows habilitados por
+  padrão em instalações novas, ambos podendo ser desmarcados pela pessoa e
+  alterados depois em Configurações;
 - página final lembra que atualizações futuras vêm pelo app, com confirmação;
 - compressão `lzma2/ultra` no pacote offline self-contained;
 - upgrade no mesmo diretório por meio de um `AppId` estável;
@@ -41,10 +59,17 @@ interativa, a pessoa escolhe se deseja preservar ou remover esses dados. A
 opção padrão é preservar; uma desinstalação silenciosa também preserva os dados
 para nunca apagar histórico ou backup sem confirmação visível.
 
+Essa identidade é o mecanismo Win32 suportado para o shell, mas não existe API
+pública do Microsoft PC Manager para cadastrar caminhos em **Limpeza Profunda >
+Outros itens do aplicativo**. A associação eventual depende do scanner interno
+da Microsoft; o Ralven não cria registros ou pacotes artificiais para forçar a
+exibição. A classificação e a limpeza manual estão em
+[`docs/cache.md`](cache.md).
+
 ## Build local reproduzível
 
 ```powershell
-.\scripts\Build-Installer.ps1 -Version 1.0.0
+.\scripts\Build-Installer.ps1 -Version 1.0.0 -Harden
 
 $installer = Resolve-Path .\artifacts\installer\Ralven-Setup-1.0.0-win-x64.exe
 .\scripts\Test-Installer.ps1 `
@@ -53,15 +78,18 @@ $installer = Resolve-Path .\artifacts\installer\Ralven-Setup-1.0.0-win-x64.exe
   -ExpectedVersion 1.0.0
 ```
 
-O script primeiro executa a verificação de segurança e o publish self-contained,
-depois compila o instalador, gera SHA-256 e um manifesto de release. Se o Inno
+Para uma simulação de release, `-Harden` é obrigatório; sem esse switch o build
+é deliberadamente limpo e serve apenas ao desenvolvimento. O script primeiro
+executa a verificação de segurança e o publish self-contained protegido,
+gera e valida os documentos RTF, depois compila o instalador, gera SHA-256 e um
+manifesto de release. Se o Inno
 Setup 7.0.2 x64 não estiver instalado, o build baixa a release imutável oficial para
 um cache dentro de `artifacts/.tools`, exige o SHA-256 fixado no script e valida
 a assinatura Authenticode de `Pyrsys B.V.` antes de executar o compilador.
 
 O teste instala silenciosamente em uma pasta temporária sob `artifacts`, confere
-byte a byte todo o payload, valida o padrão desktop-on/startup-off, a task de
-inicialização quando pedida, o handoff `/AUTOUPDATE=yes`, a preservação de
+byte a byte todo o payload, valida o padrão desktop-on/startup-on e o opt-out
+individual de cada task, o handoff `/AUTOUPDATE=yes`, a preservação de
 dados em `%LOCALAPPDATA%\Ralven` no uninstall silencioso, executa a
 desinstalação e confirma a remoção. Ele se recusa a rodar se encontrar uma
 instalação real ou uma entrada de inicialização existente. Somente para uma
@@ -112,18 +140,24 @@ anterior. Logs detalhados ficam locais; eventos essenciais sanitizados chegam à
 
 ## Publicação no GitHub
 
-O workflow `.github/workflows/release.yml` só aceita disparo manual. O job de
-build compila, testa e entrega um candidato **sem chaves de assinatura**. Um
-job separado, protegido pelo ambiente `release-signing`, recebe esse candidato,
-assina os manifestos de update e broker com chaves online distintas e devolve o
-artefato assinado. A criação pública exige uma tag exata (`vX.Y.Z` ou
-`vX.Y.Z-preview`), `publish=true`, o canal correspondente e aprovação manual
-do ambiente GitHub `production`.
+O workflow `.github/workflows/release.yml` é iniciado por uma tag estável exata
+`vX.Y.Z` ou por `workflow_dispatch` controlado. Antes de qualquer segredo, ele
+confirma que a tag identifica o `origin/main` atual e compila/testa somente o
+código limpo, sem produzir candidato publicável. Um job separado, protegido
+pelo ambiente `release-signing`, recompila, ofusca e valida diretamente o
+runtime protegido antes de assinar os manifestos de update e broker com chaves
+online distintas. Mappings de diagnóstico saem desse ambiente apenas como bundle
+AES-256-GCM autenticado, preservado no R2 e nunca anexado à release pública. A
+publicação exige também a aprovação manual do ambiente GitHub `production`; o
+`workflow_dispatch` permite validar uma tag sem publicar ou retomar de forma
+controlada uma publicação interrompida.
 
 Antes de criar a release, o workflow repete build, testes, instalação e
 desinstalação; gera checksums; assina e verifica os manifestos do runtime e do
-broker; aplica o schema D1; implanta o Worker/feed; e produz uma atestação de
-proveniência do instalador. O binário permanece sem assinatura de código até
+broker; aplica o schema D1; implanta e verifica o Worker, o dashboard e o feed;
+gera as notas a partir do `CHANGELOG.md`; e produz uma atestação de proveniência
+do instalador. Quando a GitHub Release é criada, um dispatch explícito aciona a
+notificação estável no Discord. O binário permanece sem assinatura de código até
 existir um certificado Authenticode. SHA-256 e atestação aumentam a
 transparência, mas não substituem reputação ou uma assinatura pública.
 
@@ -142,22 +176,24 @@ Fontes oficiais usadas no desenho:
 - [Inno Setup: tema moderno e dinâmico](https://jrsoftware.org/ishelp/topic_setup_wizardstyle.htm)
 - [Inno Setup: Restart Manager](https://jrsoftware.org/ishelp/topic_setup_closeapplications.htm)
 - [Inno Setup: verificação dos downloads oficiais](https://jrsoftware.org/isdl-verify.php)
-- [GitHub: releases em workflows](https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch)
+- [GitHub: releases em workflows](https://docs.github.com/actions/using-workflows/events-that-trigger-workflows#push)
 
 ## Procedimento de release
 
 1. Atualize `Directory.Build.props` e `CHANGELOG.md` com uma versão SemVer.
-2. Execute localmente `Verify-Safety.ps1`, os testes, `Build-Installer.ps1` e
+2. Execute localmente `Verify-Safety.ps1`, os testes,
+   `Build-Installer.ps1 -Harden`, `Test-HardenedRuntime.ps1` e
    `Test-Installer.ps1`.
 3. Faça commit, envie `main`, crie a tag exata `vX.Y.Z` e envie a tag.
-4. Em **Actions → Build installer and publish release**, escolha a tag, canal
-   `stable` e `publish=true`.
+4. Aprove os ambientes `release-signing` e `production` após conferir o
+   candidato e a origem validada pelo workflow.
 5. Verifique a GitHub Release de notas e, em `vemryx.com/Ralven/`, o instalador,
-   runtime ZIP, checksums e os dois manifestos assinados antes de divulgar.
+   runtime ZIP, checksums e os dois manifestos assinados; confira também o
+   dashboard publicado antes de divulgar.
 
-O workflow nunca publica por `push`; a etapa de criação de release exige o
-disparo manual com `publish=true`. A página pública de download é
-`https://vemryx.com/Ralven/`, gratuita e sem login para
+O push da tag prepara automaticamente a release, mas os ambientes protegidos
+mantêm as duas confirmações humanas nos pontos que acessam chaves ou alteram
+produção. A página pública de download é `https://vemryx.com/Ralven/`, gratuita e sem login para
 visitantes. O botão da página usa `Ralven-Setup-latest-win-x64.exe`; a mesma
 release também publica o instalador versionado e o alias
 `Ralven-Setup-latest-win-x64.exe` no bucket privado da Vemryx.

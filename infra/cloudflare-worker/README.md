@@ -1,12 +1,12 @@
 # Ralven telemetry + dashboard API Worker
 
 **Deployed** at
-`https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`.
+`https://api.vemryx.com`.
 
-The hostname, Cloudflare Worker name, D1 database name/ID and Firebase project
-ID are pre-existing external infrastructure identifiers. They remain unchanged
-until a separately provisioned migration exists; none of them is exposed as
-Ralven product branding in the UI.
+The Cloudflare Worker name, D1 database name/ID and Firebase project ID remain
+as compatibility identifiers until a separately provisioned migration exists.
+The legacy `workers.dev` route is disabled; public clients use only the Ralven
+domain above.
 
 This is the Cloudflare Worker + D1 backend for the anonymous telemetry
 pipeline described in [`docs/telemetry.md`](../../docs/telemetry.md) and the
@@ -57,16 +57,18 @@ summary, optional email, optional plain-text log excerpt capped at 100 KB).
   `docs/superpowers/specs/2026-08-17-live-alerts-design.md`.
 - `src/auth/` — the custom admin authentication (see below).
 - `src/billing/` — provider webhook verification/reconciliation and the
-  authenticated, provider-neutral entitlement read model. This is a safe
-  foundation only: no public checkout or automatic Pro grant exists yet. See
+  authenticated checkout/cancellation and payment-backed entitlement read model.
+  Sales are disabled by default until provider sandbox validation. See
   [`docs/billing.md`](../../docs/billing.md).
 - `src/stats/` — `queries.js` (pure SQL+params builders, one per dashboard
-  chart) and `csv.js` (pure CSV serialization for the export feature).
-  Available `:name` values: `runs-per-day`, `os-versions`, `app-versions`,
-  `top-cpu`, `top-gpu`, `ram-buckets`, `average-time`, `success-rate`,
-  `error-categories`, `errors-by-version`, `recent-failures`. Every
-  one accepts `?from=&to=&version=&environment=` query filters (`environment`
-  defaults to `Production`; pass `All` to look across both).
+  metric) and `csv.js` (pure CSV serialization for exports). In addition to
+  optimization, version, hardware and failure statistics, protected aggregate
+  metrics cover account growth, action/profile adoption, reliability by
+  release, updater outcomes, Ralven AI volume/cost and billing health. Account,
+  AI and billing queries never select user/profile/provider identifiers or
+  interactive content. Telemetry/updater metrics accept
+  `?from=&to=&version=&environment=`; account, AI and payment metrics use the
+  same period while ignoring filters that do not apply to their domain.
 - `test/` — unit tests for everything pure-logic above, run with Node's
   built-in test runner (no Miniflare/wrangler required):
 
@@ -98,18 +100,18 @@ URL), authentication is a small, self-contained system:
   Worker secret — the real IP itself is never stored). Five failed attempts
   within 15 minutes locks that IP out for 15 minutes; the counter resets once
   the window passes.
-- **Sessions**: server-side, revocable (`admin_sessions`, `src/auth/
+- **Sessions**: server-side, revocable and persisted for 30 days (`admin_sessions`, `src/auth/
   sessionStore.js`) — a random 256-bit session ID is the *only* thing stored
   in the browser cookie (`__Host-`, `HttpOnly`, `Secure`, `SameSite=None`), so logout
-  or manually clearing the table actually invalidates it immediately, unlike
+  or manually clearing the site data or the table actually invalidates it immediately, unlike
   a stateless signed token that can only be waited out. `SameSite=None`
   (not `Strict`/`Lax`) is required because the dashboard (`*.pages.dev`) and
   this Worker (`*.workers.dev`) are genuinely different registrable
   domains — a stricter policy silently never sends the cookie back on a
   cross-site `fetch`, which is exactly what made the first deployment's
   login appear to succeed but leave the dashboard stuck on the login screen.
-- **CSRF e limites de entrada**: a publicação do alerta exige o `Origin`
-  exato de `DASHBOARD_ORIGIN`, o cabeçalho `X-Ralven-Csrf-Token` e
+- **CSRF e limites de entrada**: a publicação do alerta exige um dos origins
+  exatos de `DASHBOARD_ORIGIN`, o cabeçalho `X-Ralven-Csrf-Token` e
   `Content-Type: application/json` exato. O token é derivado no Worker da
   sessão e de `ADMIN_CSRF_SECRET`, fica somente em memória no dashboard e é
   recuperado em `GET /admin/csrf` após um recarregamento. Todos os JSON
@@ -136,7 +138,7 @@ is called out rather than assumed harmless.
 
 The desktop application uses Firebase Authentication directly through its
 official REST API. This Worker does not receive account passwords or refresh
-tokens. Future account-specific routes must accept a Firebase ID token over
+tokens. Authenticated account-specific routes accept a Firebase ID token over
 HTTPS as `Authorization: Bearer <idToken>`, verify it with
 `src/auth/firebaseIdToken.js` (`requireFirebaseUser` /
 `verifyFirebaseIdToken`), and use only the Firebase UID (`sub`) as the
@@ -146,19 +148,61 @@ Verification is fail-closed: RS256 only, Google JWKS
 (`securetoken@system.gserviceaccount.com`), required claims
 `aud = fivemcleaner-app`,
 `iss = https://securetoken.google.com/fivemcleaner-app`, unexpired `exp`, and
-non-empty `sub`. Invalid tokens produce a generic HTTP 401
+required `iat` and non-empty `sub`. Invalid tokens produce a generic HTTP 401
 `{ "error": "unauthorized" }` with no claim detail. The pure verifier is unit
 tested.
 
-`POST /account/profile` is the first route built on it: Firebase manages
+All authenticated `/account/*` routes share a required, fail-closed
+`ACCOUNT_ROUTE_LIMITER` bucket keyed by verified UID. They also consult
+`account_auth_cutoffs`, including `/ai/message`, so recovery and deletion close
+the otherwise valid offline ID-token window. Critical mutations require
+`auth_time` within five minutes. The Worker also compares every account token's
+`iat` with Firebase `validSince`, rejecting disabled users and sessions revoked
+by password or other credential changes.
+
+`POST /account/profile` is built on it: Firebase manages
 email/password/uid only, so this route stores the fields it doesn't —
 username (globally unique, case-insensitive), first name, last name and the
 accepted current terms version — in `account_profiles`, keyed by the verified
 Firebase UID. It accepts only an `email_verified=true` token. A username
 conflict returns `409 { "error": "username-taken" }`; the client is expected
 to let the user pick another one without discarding the Firebase account
-already created. `DELETE /account/profile` removes only that same verified
-UID's row as part of account deletion. See `src/auth/accountProfile.js`.
+already created. `DELETE /account` checks the billing block, persists a cutoff
+and durable deletion job, deletes Firebase through the administrative API, and
+only then removes the D1 profile and cascading account data. A scheduled retry
+resumes an interrupted deletion every 15 minutes; the cutoff and job do not
+cascade with the profile. The old `DELETE /account/profile` returns 410 and can
+no longer create split state. See `src/auth/accountProfile.js`.
+
+TOTP recovery uses three endpoints:
+
+- `POST /account/mfa/recovery-codes` with `{ "mfaEnrollmentId": "..." }`
+  requires recent authentication, verifies enrollment ownership, atomically
+  replaces prior codes and returns ten plaintext codes once. D1 stores only
+  keyed SHA-256 HMACs.
+- `DELETE /account/mfa/recovery-codes` with the same body idempotently removes
+  that generation after normal MFA withdrawal.
+- `POST /account/mfa/recover` accepts `mfaPendingCredential`,
+  `mfaEnrollmentId` and `recoveryCode`. It first proves that Firebase accepts
+  the pending/enrollment pair as a TOTP challenge, reserves the code, removes
+  MFA and revokes refresh tokens administratively, then consumes the code.
+  Any Firebase token from the deliberately invalid probe is verified internally
+  and never returned.
+
+Recovery uses the required, fail-closed `ACCOUNT_RECOVERY_LIMITER`, keyed by an
+HMAC of the stable enrollment and caller IP, so requesting new pending
+credentials does not reset the attempt budget. No password, pending credential,
+Firebase token, raw enrollment ID or plaintext recovery code is persisted or logged. Apply
+migrations through `0013_account_mfa_recovery.sql` and configure a service
+account limited to `firebaseauth.users.get`, `firebaseauth.users.update` and
+`firebaseauth.users.delete`:
+
+```bash
+wrangler secret put FIREBASE_WEB_API_KEY
+wrangler secret put FIREBASE_ADMIN_CLIENT_EMAIL
+wrangler secret put FIREBASE_ADMIN_PRIVATE_KEY
+wrangler secret put MFA_RECOVERY_CODE_HMAC_SECRET
+```
 
 `GET /account/username-available?u=<name>` answers `{ "available": true|false }`
 for the registration form, so a taken name is reported while the user types
@@ -193,31 +237,68 @@ lookup (`LIVE_ALERT_LIMITER`, 30/60s per IP) — it is read-only, unauthenticate
 by necessity (every installed app reads it), and never exposes anything more
 sensitive than the one message an admin chose to broadcast.
 
-## Billing foundation
+## Ralven AI
+
+`POST /ai/message` is an authenticated, verified-email route that requires both
+`ralven_pro` and the separate `ralven_ai` entitlement. It validates a bounded
+allowlisted diagnostic summary, applies a required rate limit per Firebase UID,
+deduplicates client requests and reserves budget in D1 before calling the
+OpenAI Responses API. It exposes no tools and returns only an answer plus one
+standard profile name. Provider responses are capped at 64 KiB; ambiguous
+failures retain the reservation when measured usage is unavailable. See
+[`docs/ralven-ai.md`](../../docs/ralven-ai.md).
+
+Activation requires migrations through `0011_ralven_ai_foundation.sql`, the
+distinct Worker secrets `OPENAI_API_KEY` and
+`RALVEN_AI_SAFETY_IDENTIFIER_SECRET`, and an explicit
+`RALVEN_AI_ENABLED=true`. The non-secret model, price and budget values are
+declared in `wrangler.toml`; missing or inconsistent limits and limiter
+bindings fail closed.
+
+## Billing and recurring subscriptions
 
 `GET /account/entitlements` uses the same verified Firebase UID as the profile
 routes and returns only the current tier, entitlement keys and validity. Missing
 or expired access is a normal `free` response; provider identifiers are never
 returned.
 
-`POST /billing/mercado-pago/webhook` verifies the Mercado Pago signature over
-the signed request envelope, fetches `GET /preapproval/{id}` with a Worker-only
-Access Token, and matches the canonical reference, BRL amount and currency to a
-server-side checkout intent before updating billing state. It deliberately does
-not trust or persist the webhook body and does not grant Pro in this foundation.
+`POST /billing/asaas/webhook` validates a dedicated `asaas-access-token`,
+deduplicates the event ID, and fetches the canonical payment and subscription
+with a Worker-only API key. Only a `CONFIRMED` or `RECEIVED` card payment
+linked to the server checkout, without completed refund or chargeback, grants
+the independent `ralven_pro` and `ralven_ai` keys for its monthly period.
+Checkout or subscription status alone never grants either entitlement.
 Both required credentials are Worker secrets:
 
 ```bash
-wrangler secret put MERCADO_PAGO_ACCESS_TOKEN
-wrangler secret put MERCADO_PAGO_WEBHOOK_SECRET
+wrangler secret put ASAAS_ACCESS_TOKEN
+wrangler secret put ASAAS_WEBHOOK_TOKEN
 ```
 
-Do not apply the billing migration or configure production credentials until
-the activation blockers in [`docs/billing.md`](../../docs/billing.md) are
-resolved. Until a provider cancellation flow exists, account deletion returns
-`409 billing-cancellation-required` when a local checkout or subscription is
-linked, so it cannot remove the only mapping while the provider may continue
-charging.
+`GET /account/billing`, `POST /account/billing/checkout` (`{ offerKey }`) and
+`POST /account/billing/cancel` (`{}`) use Firebase authentication. Offers include
+their price in the key to prevent stale consent from accepting another price.
+Checkout creation is serialized by a durable intent. Because Asaas Checkout
+does not document an idempotency key, an ambiguous create is never retried.
+Cancellation stops the checkout or subscription, preserves already paid access
+and permits account deletion only after the provider accepts it.
+
+Apply migrations through `0011_ralven_ai_foundation.sql` with this code.
+`ASAAS_BILLING_ENABLED` remains `false` in the committed configuration;
+activation requires the two secrets, `ASAAS_RETURN_URL` (HTTPS),
+`ASAAS_ENVIRONMENT`, `ASAAS_AMOUNT_CENTS` (default 1990, monthly BRL), and the required
+`BILLING_WRITE_LIMITER` / `BILLING_READ_LIMITER` bindings. Account refresh
+reconciles payments linked to the checkout, recovering missed notifications.
+Configure Checkout, subscription and payment events in the Asaas dashboard.
+Complete the sandbox and commercial-readiness
+steps in [`docs/billing.md`](../../docs/billing.md) before enabling sales.
+
+The Worker itself serves a script-free, query-independent return page at
+`GET /billing/return`. After deploying this code, use
+`https://api.vemryx.com/billing/return`
+as `ASAAS_RETURN_URL`. It directs the user back to Ralven Pro and
+**Atualizar assinatura**, makes no approval claim, and uses CSP with a style
+nonce, `no-store`, `no-referrer` and frame protection.
 
 Legacy Worker product tables (`user_accounts` / sessions), if still present on
 remote D1 from the pre-Firebase system, are not migrated. There are no real
@@ -225,11 +306,10 @@ users to preserve; cleanup is a separate authorized deploy/migration task.
 
 ## Verified end-to-end
 
-Confirmed against the real, deployed Worker + dashboard: sent a test
-telemetry event via `curl`, logged in through the actual browser at
-`https://fivemcleaner-dashboard.pages.dev`, and saw the event reflected in
-the tiles and charts (then deleted that test row from the real database —
-no test data was left behind).
+The ingestion-to-dashboard flow was verified against the real deployed Worker
+with a temporary telemetry event that was removed afterwards. The production
+dashboard now lives at `https://dashboard.vemryx.com`; authentication and live
+statistics were verified there after the custom domain became active.
 
 ## Deploying and rotating secrets
 
@@ -243,10 +323,14 @@ npm run hash-admin-password       # prints the ADMIN_PASSWORD_HASH value
 wrangler secret put ADMIN_PASSWORD_HASH
 wrangler secret put IP_HASH_SECRET   # any long random string
 wrangler secret put ADMIN_CSRF_SECRET # distinct long random string
-wrangler secret put MERCADO_PAGO_ACCESS_TOKEN
-wrangler secret put MERCADO_PAGO_WEBHOOK_SECRET
+wrangler secret put ASAAS_ACCESS_TOKEN
+wrangler secret put ASAAS_WEBHOOK_TOKEN
+wrangler secret put FIREBASE_WEB_API_KEY
+wrangler secret put FIREBASE_ADMIN_CLIENT_EMAIL
+wrangler secret put FIREBASE_ADMIN_PRIVATE_KEY
+wrangler secret put MFA_RECOVERY_CODE_HMAC_SECRET
 
-wrangler d1 migrations apply fivemcleaner-telemetry --remote   # captures a D1 backup; touches the real database — ask first
+wrangler d1 migrations apply TELEMETRY_DB --remote   # captures a D1 backup; touches the real database — ask first
 wrangler deploy   # touches Cloudflare — ask first
 ```
 

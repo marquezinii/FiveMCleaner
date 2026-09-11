@@ -15,7 +15,8 @@ param(
 
     # Forwarded to Build-Portable: obfuscate the internal-logic assemblies in
     # the published runtime before it is packaged, hashed and signed. Used by
-    # the public release workflow; ignored when -SkipPortableBuild is set.
+    # the public release workflow. With -SkipPortableBuild it verifies that
+    # the existing staged payload is still hardened before repackaging it.
     [switch]$Harden
 )
 
@@ -29,6 +30,12 @@ $publishDirectory = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'Ral
 $installerOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer'))
 $installerArtworkLight = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-artwork\Ralven-wizard-side-light.png'))
 $installerArtworkDark = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-artwork\Ralven-wizard-side-dark.png'))
+$installerDocuments = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot 'installer-documents'))
+$installerLicense = Join-Path $installerDocuments 'license.rtf'
+$installerInfoEnglish = Join-Path $installerDocuments 'install-info.en.rtf'
+$installerInfoPortuguese = Join-Path $installerDocuments 'install-info.pt-BR.rtf'
+$installerInfoSpanish = Join-Path $installerDocuments 'install-info.es.rtf'
+$installerInfoFrench = Join-Path $installerDocuments 'install-info.fr.rtf'
 $stagingOutput = [System.IO.Path]::GetFullPath((Join-Path $artifactsRoot ".installer-staging-$([Guid]::NewGuid().ToString('N'))"))
 $innoVersion = '7.0.2'
 $innoAssetName = "innosetup-$innoVersion-x64.exe"
@@ -157,20 +164,34 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
     $Version = Get-ProjectVersion -Workspace $workspace
 }
 
-$versionMatch = [regex]::Match($Version, '^(?<core>\d+\.\d+\.\d+)(?<suffix>-[0-9A-Za-z][0-9A-Za-z.-]*)?$')
+$versionMatch = [regex]::Match($Version, '^\d+\.\d+\.\d+$')
 if (-not $versionMatch.Success) {
-    throw "Version must be SemVer-like (for example 1.2.3 or 1.2.3-preview): $Version"
+    throw "Version must be numeric SemVer (for example 1.2.3): $Version"
 }
-$numericVersion = "$($versionMatch.Groups['core'].Value).0"
+$numericVersion = "$Version.0"
 
 Assert-UnderArtifacts $publishDirectory
 Assert-UnderArtifacts $installerOutput
 Assert-UnderArtifacts $installerArtworkLight
 Assert-UnderArtifacts $installerArtworkDark
+Assert-UnderArtifacts $installerDocuments
+Assert-UnderArtifacts $installerLicense
+Assert-UnderArtifacts $installerInfoEnglish
+Assert-UnderArtifacts $installerInfoPortuguese
+Assert-UnderArtifacts $installerInfoSpanish
+Assert-UnderArtifacts $installerInfoFrench
 Assert-UnderArtifacts $stagingOutput
 New-Item -ItemType Directory -Force -Path $artifactsRoot, $installerOutput, $stagingOutput | Out-Null
 
 try {
+    & (Join-Path $PSScriptRoot 'New-InstallerDocuments.ps1') `
+        -LicensePath (Join-Path $workspace 'LICENSE') `
+        -EnglishInfoPath (Join-Path $workspace 'installer\install-info.en.txt') `
+        -PortugueseInfoPath (Join-Path $workspace 'installer\install-info.pt-BR.txt') `
+        -SpanishInfoPath (Join-Path $workspace 'installer\install-info.es.txt') `
+        -FrenchInfoPath (Join-Path $workspace 'installer\install-info.fr.txt') `
+        -OutputDirectory $installerDocuments
+
     & (Join-Path $PSScriptRoot 'Verify-Installer.ps1') -ScriptOnly
 
     $gitStatusProbe = @(& git -C $workspace status --porcelain=v1 --untracked-files=all)
@@ -192,9 +213,6 @@ try {
         if ($LASTEXITCODE -ne 0) {
             throw 'Portable self-contained publish failed.'
         }
-    }
-    elseif ($Harden) {
-        throw 'Cannot honor -Harden together with -SkipPortableBuild: hardening happens during the portable publish.'
     }
 
     foreach ($requiredPayload in @(
@@ -234,6 +252,11 @@ try {
         "/DRepositoryRoot=$workspace",
         "/DInstallerArtworkPath=$installerArtworkLight",
         "/DInstallerArtworkPathDark=$installerArtworkDark",
+        "/DInstallerLicensePath=$installerLicense",
+        "/DInstallerInfoEnglishPath=$installerInfoEnglish",
+        "/DInstallerInfoPortuguesePath=$installerInfoPortuguese",
+        "/DInstallerInfoSpanishPath=$installerInfoSpanish",
+        "/DInstallerInfoFrenchPath=$installerInfoFrench",
         $installerScript
     )
     & $compiler @arguments
@@ -329,12 +352,14 @@ try {
         -ExpectedVersion $Version
 
     if ($Harden) {
-        # Build-Portable.ps1 already fail-closed-checked $publishDirectory and
-        # both ZIPs; this closes the loop on the compiled installer itself -
-        # the artifact users actually download and run.
+        # Revalidate the runtime, both ZIPs and the compiled installer whether
+        # the portable payload was built now or supplied by the post-signing
+        # broker finalizer.
         & (Join-Path $PSScriptRoot 'Test-NoUnobfuscatedAssemblies.ps1') `
             -RuntimeDirectory $publishDirectory `
             -Version $Version `
+            -PortableZipPath $portableArchive `
+            -RuntimeZipPath $runtimeArchive `
             -InstallerPath $stagedInstaller
         if ($LASTEXITCODE -ne 0) { throw 'Fail-closed hardening verification failed for the installer.' }
     }

@@ -67,7 +67,7 @@ public sealed class GeneralWindowsDiagnosticActionsTests
         Assert.False(result.Changed);
         Assert.Null(result.SnapshotJson);
         var message = Assert.Single(result.Messages);
-        Assert.Contains("2 item(ns)", message, StringComparison.Ordinal);
+        Assert.Contains("Itens de inicialização detectados: 2", message, StringComparison.Ordinal);
         Assert.Contains("registro: 1; pastas: 1", message, StringComparison.Ordinal);
         Assert.DoesNotContain("Private app", message, StringComparison.Ordinal);
         Assert.DoesNotContain(@"C:\Users\Private", message, StringComparison.Ordinal);
@@ -158,9 +158,9 @@ public sealed class GeneralWindowsDiagnosticActionsTests
     }
 
     [Theory]
-    [InlineData("en-US", "healthy state", "startup item", "TRIM policy", "pointer acceleration")]
-    [InlineData("pt-BR", "estado saudável", "item(ns) de inicialização", "Política de TRIM", "aceleração do ponteiro")]
-    [InlineData("es", "estado saludable", "elemento(s) de inicio", "Política de TRIM", "aceleración del puntero")]
+    [InlineData("en-US", "healthy state", "Startup items detected", "TRIM policy", "pointer acceleration")]
+    [InlineData("pt-BR", "estado saudável", "Itens de inicialização detectados", "Política de TRIM", "aceleração do ponteiro")]
+    [InlineData("es", "estado saludable", "Elementos de inicio detectados", "Política de TRIM", "aceleración del puntero")]
     public async Task Diagnostics_UseTheSelectedLanguage(
         string cultureName,
         string securityText,

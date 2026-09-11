@@ -61,18 +61,36 @@ public partial class HistoryPage : UserControl
         }
 
         var isWindowsGaming = item.Kind == AppHistoryKind.WindowsGaming;
-        var decision = System.Windows.MessageBox.Show(
+        var decision = Ralven.App.Views.OptimizationConfirmationWindow.Confirm(Window.GetWindow(this),
             LocalizationService.Current.GetString(isWindowsGaming
                 ? "System.Gaming.RestoreConfirm.Message"
                 : "Dialog.Rollback.Message"),
             LocalizationService.Current.GetString(isWindowsGaming
                 ? "System.Gaming.RestoreConfirm.Title"
-                : "Dialog.Rollback.Title"),
-            MessageBoxButton.YesNo,
-            MessageBoxImage.Question);
-        if (decision == MessageBoxResult.Yes)
+                : "Dialog.Rollback.Title"));
+        if (decision == true)
         {
             await vm.RollbackAsync(item);
         }
+    }
+
+    private async void OpenHistoryReport_Click(object sender, RoutedEventArgs e)
+    {
+        if (ViewModel is not { } vm
+            || sender is not FrameworkElement { Tag: HistoryDisplayItem item })
+        {
+            return;
+        }
+
+        if (await vm.OpenHistoryReportAsync(item)
+            && Window.GetWindow(this) is MainWindow shell)
+        {
+            shell.RequestNavigateToOptimizerReport();
+            return;
+        }
+
+        Ralven.App.Views.OptimizationConfirmationWindow.Inform(Window.GetWindow(this),
+            LocalizationService.Current.GetString("History.ReportUnavailable.Message"),
+            LocalizationService.Current.GetString("History.ReportUnavailable.Title"));
     }
 }

@@ -20,6 +20,31 @@
     <NoWarn>$(NoWarn);WFO0003</NoWarn>
     <AssemblyName>Ralven</AssemblyName>
   </PropertyGroup>
+  <PropertyGroup Condition="'$(RalvenPerformanceProbe)' == 'true'">
+    <StartupObject>Program</StartupObject>
+    <OutputType>Exe</OutputType>
+    <OutputPath>../../artifacts/performance-probe/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(RalvenPerformanceProbe)' == 'true'">
+    <Compile Include="../../scripts/PerformanceProbe.cs" />
+  </ItemGroup>
+  <PropertyGroup Condition="'$(RalvenStartupProbe)' == 'true'">
+    <StartupObject>StartupProbe</StartupObject>
+    <OutputType>Exe</OutputType>
+    <OutputPath>../../artifacts/startup-probe/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(RalvenStartupProbe)' == 'true'">
+    <Compile Include="../../scripts/StartupProbe.cs" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="'$(RalvenDialogProbe)' == 'true'">
+    <StartupObject>DialogProbe</StartupObject>
+    <OutputType>Exe</OutputType>
+    <OutputPath>../../artifacts/dialog-probe/</OutputPath>
+  </PropertyGroup>
+  <ItemGroup Condition="'$(RalvenDialogProbe)' == 'true'">
+    <Compile Include="../../scripts/DialogProbe.cs" />
+  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="System.Management" />
     <PackageReference Include="Sentry" />
@@ -33,10 +58,16 @@
   <ItemGroup>
     <Resource Include="Assets/Ralven.png" />
     <Resource Include="Assets/FiveM.png" />
+    <Resource Include="Assets/ReShade.png" />
+    <Resource Include="Assets/RalvenAi.Black.png" />
+    <Resource Include="Assets/RalvenAi.White.png" />
     <Resource Include="../../assets/brand/fonts/inter-4.1/InterVariable.ttf" Link="Assets/Fonts/InterVariable.ttf" />
     <Resource Include="../../assets/brand/fonts/inter-4.1/InterVariable-Italic.ttf" Link="Assets/Fonts/InterVariable-Italic.ttf" />
+    <Resource Include="../../assets/brand/fonts/geist-1.1.0/GeistVariableVF.ttf" Link="Assets/Fonts/GeistVariableVF.ttf" />
     <EmbeddedResource Include="Assets/update-manifest-public-key.pem" />
     <EmbeddedResource Include="Assets/broker-integrity-public-key.pem" />
+    <EmbeddedResource Include="../../localization/locales.json" Link="Resources/locales.json" LogicalName="Ralven.App.Resources.locales.json" />
+    <None Update="Assets/ReShade.LICENSE.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Config/appsettings.json;Config/appsettings.Development.json;Config/appsettings.Production.json">

@@ -17,8 +17,8 @@ public sealed class DiagnosticActionsTests
             AvailableMemoryBytes: 512L * 1024 * 1024,
             LogicalProcessorCount: 16,
             SystemDriveFreeBytes: 100L * 1024 * 1024 * 1024,
-            TotalPageFileBytes: 24L * 1024 * 1024 * 1024,
-            AvailablePageFileBytes: 20L * 1024 * 1024 * 1024);
+            CommitLimitBytes: 24L * 1024 * 1024 * 1024,
+            AvailableCommitBytes: 20L * 1024 * 1024 * 1024);
 
         var message = BottleneckDiagnosisAction.Classify(snapshot);
 
@@ -33,8 +33,8 @@ public sealed class DiagnosticActionsTests
             AvailableMemoryBytes: 10L * 1024 * 1024 * 1024,
             LogicalProcessorCount: 2,
             SystemDriveFreeBytes: 100L * 1024 * 1024 * 1024,
-            TotalPageFileBytes: 24L * 1024 * 1024 * 1024,
-            AvailablePageFileBytes: 20L * 1024 * 1024 * 1024);
+            CommitLimitBytes: 24L * 1024 * 1024 * 1024,
+            AvailableCommitBytes: 20L * 1024 * 1024 * 1024);
 
         var message = BottleneckDiagnosisAction.Classify(snapshot);
 
@@ -49,8 +49,8 @@ public sealed class DiagnosticActionsTests
             AvailableMemoryBytes: 10L * 1024 * 1024 * 1024,
             LogicalProcessorCount: 16,
             SystemDriveFreeBytes: 2L * 1024 * 1024 * 1024,
-            TotalPageFileBytes: 24L * 1024 * 1024 * 1024,
-            AvailablePageFileBytes: 20L * 1024 * 1024 * 1024);
+            CommitLimitBytes: 24L * 1024 * 1024 * 1024,
+            AvailableCommitBytes: 20L * 1024 * 1024 * 1024);
 
         var message = BottleneckDiagnosisAction.Classify(snapshot);
 
@@ -65,8 +65,8 @@ public sealed class DiagnosticActionsTests
             AvailableMemoryBytes: 20L * 1024 * 1024 * 1024,
             LogicalProcessorCount: 16,
             SystemDriveFreeBytes: 200L * 1024 * 1024 * 1024,
-            TotalPageFileBytes: 24L * 1024 * 1024 * 1024,
-            AvailablePageFileBytes: 20L * 1024 * 1024 * 1024);
+            CommitLimitBytes: 24L * 1024 * 1024 * 1024,
+            AvailableCommitBytes: 20L * 1024 * 1024 * 1024);
 
         var message = BottleneckDiagnosisAction.Classify(snapshot);
 
@@ -167,7 +167,7 @@ public sealed class DiagnosticActionsTests
         Assert.False(result.Changed);
         var message = Assert.Single(result.Messages);
         Assert.Contains("recent.log", message, StringComparison.Ordinal);
-        Assert.Contains("1 linha(s)", message, StringComparison.Ordinal);
+        Assert.Contains("Linhas com possíveis erros: 1", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -186,10 +186,10 @@ public sealed class DiagnosticActionsTests
     }
 
     [Theory]
-    [InlineData(true, 0, 0, "Nenhum sinal local")]
-    [InlineData(true, 5, 0, "Sinais locais de instabilidade")]
-    [InlineData(true, 0, 3, "Sinais locais de instabilidade")]
-    [InlineData(false, 0, 0, "Não foi possível ler estatísticas")]
+    [InlineData(true, 0, 0, "não registram")]
+    [InlineData(true, 5, 0, "contadores acumulados")]
+    [InlineData(true, 0, 3, "contadores acumulados")]
+    [InlineData(false, 0, 0, "estatísticas de uma placa de rede ativa")]
     public void NetworkHealthDiagnosis_ClassifiesFromLocalCountersOnly(
         bool hasActiveInterface,
         long discarded,
@@ -252,12 +252,13 @@ public sealed class DiagnosticActionsTests
             AvailableMemoryBytes: 8L * 1024 * 1024 * 1024,
             LogicalProcessorCount: 8,
             SystemDriveFreeBytes: 50L * 1024 * 1024 * 1024,
-            TotalPageFileBytes: 20L * 1024 * 1024 * 1024,
-            AvailablePageFileBytes: 1L * 1024 * 1024 * 1024);
+            CommitLimitBytes: 20L * 1024 * 1024 * 1024,
+            AvailableCommitBytes: 1L * 1024 * 1024 * 1024);
 
         var message = PagefileCommitDiagnosisAction.Classify(snapshot);
 
         Assert.Contains("próximo do limite", message, StringComparison.Ordinal);
+        Assert.Contains("alocações podem falhar", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -268,8 +269,8 @@ public sealed class DiagnosticActionsTests
             AvailableMemoryBytes: 8L * 1024 * 1024 * 1024,
             LogicalProcessorCount: 8,
             SystemDriveFreeBytes: 50L * 1024 * 1024 * 1024,
-            TotalPageFileBytes: 20L * 1024 * 1024 * 1024,
-            AvailablePageFileBytes: 16L * 1024 * 1024 * 1024);
+            CommitLimitBytes: 20L * 1024 * 1024 * 1024,
+            AvailableCommitBytes: 16L * 1024 * 1024 * 1024);
 
         var message = PagefileCommitDiagnosisAction.Classify(snapshot);
 

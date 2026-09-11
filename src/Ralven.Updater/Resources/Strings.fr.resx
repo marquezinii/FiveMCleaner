@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Updater.Title" xml:space="preserve"><value>Mise à jour de Ralven</value></data>
+  <data name="Updater.Failure" xml:space="preserve"><value>La mise à jour de Ralven n'a pas pu être effectuée.&#xA;&#xA;{0}&#xA;&#xA;Rouvrez l'application et réessayez.</value></data>
+  <data name="Updater.Error.InvalidHandoff" xml:space="preserve"><value>Les données de mise à jour ne sont pas valides.</value></data>
+  <data name="Updater.Error.Timeout" xml:space="preserve"><value>La mise à jour a pris plus de temps que prévu et a été interrompue. Rouvrez Ralven pour réessayer.</value></data>
+  <data name="Updater.Error.AccessDenied" xml:space="preserve"><value>Windows n'a pas autorisé la fin de la mise à jour. Vérifiez les autorisations, puis réessayez.</value></data>
+  <data name="Updater.Error.Security" xml:space="preserve"><value>La vérification de sécurité du programme d'installation a échoué. Aucune modification n'a été effectuée.</value></data>
+  <data name="Updater.Error.MissingInstaller" xml:space="preserve"><value>Le programme d'installation vérifié n'est plus disponible. Ouvrez Ralven et téléchargez à nouveau la mise à jour.</value></data>
+  <data name="Updater.Error.Unexpected" xml:space="preserve"><value>Le programme de mise à jour a rencontré un problème inattendu. Ouvrez Ralven et réessayez.</value></data>
+</root>
+

@@ -8,6 +8,6 @@
   },
   "description": "Private admin dashboard for Ralven telemetry (static site for Cloudflare Pages).",
   "scripts": {
-    "test": "node --test test/api.test.js test/branding.test.js test/charts.test.js"
+    "test": "node --test test/*.test.js"
   }
 }

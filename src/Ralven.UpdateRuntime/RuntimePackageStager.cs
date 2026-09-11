@@ -10,8 +10,8 @@ public sealed class RuntimePackageStager
 
     public RuntimePackageStager(string runtimeRoot)
     {
-        this.runtimeRoot = Path.GetFullPath(runtimeRoot);
-        activation = new RuntimeActivationStore(runtimeRoot);
+        this.runtimeRoot = UpdatePathSafety.EnsureNoReparsePoints(runtimeRoot);
+        activation = new RuntimeActivationStore(this.runtimeRoot);
     }
 
     public string Stage(
@@ -19,6 +19,7 @@ public sealed class RuntimePackageStager
         CancellationToken cancellationToken = default)
     {
         if (!Version.TryParse(version, out _)) throw new ArgumentException("Versão inválida.", nameof(version));
+        archivePath = UpdatePathSafety.EnsureNoReparsePoints(archivePath);
         using var packageStream = new FileStream(
             archivePath, FileMode.Open, FileAccess.Read, FileShare.Read);
         if (packageStream.Length != expectedSize) throw new InvalidDataException("Tamanho do pacote não confere.");
@@ -27,10 +28,13 @@ public sealed class RuntimePackageStager
             throw new InvalidDataException("SHA-256 do pacote não confere.");
         packageStream.Position = 0;
 
+        UpdatePathSafety.EnsureNoReparsePoints(activation.VersionsRoot);
         Directory.CreateDirectory(activation.VersionsRoot);
+        UpdatePathSafety.EnsureNoReparsePoints(activation.VersionsRoot);
         var destination = Path.Combine(activation.VersionsRoot, version);
         if (Directory.Exists(destination))
         {
+            UpdatePathSafety.EnsureNoReparsePoints(destination);
             try
             {
                 VerifyFileManifest(destination, cancellationToken);
@@ -49,6 +53,7 @@ public sealed class RuntimePackageStager
         cancellationToken.ThrowIfCancellationRequested();
         var staging = Path.Combine(runtimeRoot, "staging", Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(staging);
+        UpdatePathSafety.EnsureNoReparsePoints(staging);
         try
         {
             using var archive = new ZipArchive(packageStream, ZipArchiveMode.Read, leaveOpen: true);
@@ -62,23 +67,36 @@ public sealed class RuntimePackageStager
                 var output = Path.GetFullPath(Path.Combine(staging, entry.FullName.Replace('/', Path.DirectorySeparatorChar)));
                 if (!output.StartsWith(Path.TrimEndingDirectorySeparator(staging) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
                     throw new InvalidDataException("Pacote contém caminho fora do runtime.");
-                Directory.CreateDirectory(Path.GetDirectoryName(output)!);
+                var outputDirectory = Path.GetDirectoryName(output)!;
+                UpdatePathSafety.EnsureNoReparsePoints(outputDirectory);
+                Directory.CreateDirectory(outputDirectory);
+                UpdatePathSafety.EnsureNoReparsePoints(outputDirectory);
                 entry.ExtractToFile(output, overwrite: false);
             }
             VerifyFileManifest(staging, cancellationToken);
+            UpdatePathSafety.EnsureNoReparsePoints(destination);
             Directory.Move(staging, destination);
             return destination;
         }
         finally
         {
-            try { if (Directory.Exists(staging)) Directory.Delete(staging, recursive: true); }
+            try
+            {
+                if (Directory.Exists(staging))
+                {
+                    UpdatePathSafety.EnsureNoReparsePoints(staging);
+                    Directory.Delete(staging, recursive: true);
+                }
+            }
             catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
         }
     }
 
     private static void VerifyFileManifest(string root, CancellationToken cancellationToken = default)
     {
+        UpdatePathSafety.EnsureNoReparsePoints(root);
         var manifest = Path.Combine(root, "SHA256SUMS.txt");
+        UpdatePathSafety.EnsureNoReparsePoints(manifest);
         if (!File.Exists(manifest)) throw new InvalidDataException("Pacote não contém manifesto de arquivos.");
         var declared = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (var line in File.ReadLines(manifest).Where(line => !string.IsNullOrWhiteSpace(line)))
@@ -93,6 +111,7 @@ public sealed class RuntimePackageStager
             var file = Path.GetFullPath(Path.Combine(root, relative));
             if (!file.StartsWith(Path.TrimEndingDirectorySeparator(root) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
                 || !File.Exists(file)) throw new InvalidDataException("Arquivo declarado ausente.");
+            UpdatePathSafety.EnsureNoReparsePoints(file);
             using var stream = File.OpenRead(file);
             var actualHash = SHA256.HashData(stream);
             // Constant-time compare, igual ao restante do pipeline de update
@@ -102,7 +121,11 @@ public sealed class RuntimePackageStager
                 throw new InvalidDataException("Integridade de arquivo extraído falhou.");
         }
         var actual = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
-            .Select(path => Path.GetRelativePath(root, path))
+            .Select(path =>
+            {
+                UpdatePathSafety.EnsureNoReparsePoints(path);
+                return Path.GetRelativePath(root, path);
+            })
             .Where(path => !path.Equals("SHA256SUMS.txt", StringComparison.OrdinalIgnoreCase));
         if (actual.Any(path => !declared.Contains(path)))
             throw new InvalidDataException("Pacote contém arquivo não declarado.");

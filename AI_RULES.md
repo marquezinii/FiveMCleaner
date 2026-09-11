@@ -42,6 +42,25 @@ compatibilidade legada, migração, release passada ou outro contexto histórico
 não esteja suficientemente explicado pelo código, pelo Git recente ou pela
 documentação atual. Se a tarefa não exige arqueologia, não o leia.
 
+## Roadmap público
+
+`docs/public-roadmap.json` é a fonte de verdade do Roadmap da próxima versão em
+`https://vemryx.com/Ralven/`. Ele é publicado automaticamente pelo workflow após
+uma alteração integrada em `dev/proxima-versao`; nunca depende de pedido manual
+do usuário ou de uma release.
+
+Ao concluir uma capacidade que será integrada e possa ser comunicada
+publicamente, o agente responsável deve atualizar esse arquivo no **mesmo Pull
+Request**, com textos precisos em PT e EN, sem solicitar confirmação adicional.
+O integrador deve conferir essa atualização antes de integrar a tarefa. Se a
+mudança não tiver impacto público claro — por exemplo, refatoração, dependência,
+teste, infraestrutura ou experimento — o arquivo deve permanecer inalterado.
+
+Nunca infira itens a partir de mensagens de commit nem prometa recursos, datas,
+resultados ou desempenho. Inclua somente comportamento real que o Pull Request
+integrará ou que já esteja integrado, e preserve o `id` estável e o status
+definidos em `docs/public-roadmap.md`.
+
 Código-fonte e testes vigentes prevalecem sobre documentação desatualizada. Entre
 os documentos de estado, `PROJECT_STATE.md` representa a visão canônica atual;
 `PROJECT_HISTORY.md` nunca deve sobrescrever uma decisão atual apenas por conter
@@ -120,6 +139,10 @@ se tornou estado oficial.
 - Cada tarefa que produzir alterações deve usar uma branch temporária baseada em
   `dev/proxima-versao`, nomeada pelo **objetivo da mudança**, não pela identidade
   da IA.
+- É **obrigatório** criar uma nova branch e uma nova worktree exclusivas para
+  cada tarefa que produzir alterações, mesmo que já exista uma branch ou
+  worktree semelhante, relacionada ou usada para o mesmo propósito. Nunca
+  reutilize uma branch ou worktree existente para iniciar a tarefa.
 
 Use, quando aplicável, os prefixos:
 
@@ -147,9 +170,12 @@ Para cada nova tarefa normal, o agente deve:
 4. partir do estado mais recente e seguro de `dev/proxima-versao` ou
    `origin/dev/proxima-versao`;
 5. criar a branch da tarefa automaticamente;
-6. criar ou reutilizar um **worktree exclusivo** para essa branch sempre que o
-   agente ainda não estiver em um checkout isolado da própria tarefa;
-7. executar alterações, testes e commits somente nesse checkout isolado.
+6. criar um **novo worktree exclusivo** para essa branch; mesmo que já exista
+   uma branch ou worktree semelhante, relacionada ou usada para o mesmo
+   propósito, não reutilizar a existente;
+7. planejar o handoff no corpo do Pull Request, sem criar arquivo compartilhado
+   na raiz da branch;
+8. executar alterações, testes e commits somente nesse checkout isolado.
 
 Nunca troque a branch de um checkout que possa estar sendo usado por outro agente
 ou processo. Se um worktree não for tecnicamente possível, preserve o checkout
@@ -227,12 +253,14 @@ Ao terminar uma tarefa, o agente deve automaticamente:
    aplicáveis;
 3. corrigir falhas introduzidas pela própria tarefa;
 4. criar os commits finais profissionais;
-5. quando houver remoto e autenticação disponíveis, enviar **somente a branch da
+5. preparar no corpo do Pull Request o objetivo, escopo, critérios e resultado
+   factual da tarefa;
+6. quando houver remoto e autenticação disponíveis, enviar **somente a branch da
    tarefa** para o remoto;
-6. criar ou atualizar um Pull Request dessa branch para `dev/proxima-versao`;
-7. deixar no PR um resumo objetivo das mudanças, validações executadas,
+7. criar ou atualizar um Pull Request dessa branch para `dev/proxima-versao`;
+8. deixar no PR um resumo objetivo das mudanças, validações executadas,
    limitações/riscos conhecidos e dependências de outros PRs quando existirem;
-8. informar ao usuário o resultado da tarefa, incluindo branch, PR, testes e
+9. informar ao usuário o resultado da tarefa, incluindo branch, PR, testes e
    qualquer limitação relevante.
 
 A criação e atualização desse PR são autorizadas por estas regras e não exigem
@@ -254,6 +282,19 @@ Use título curto e orientado à mudança. O corpo deve conter, quando aplicáve
 
 Não inclua segredos, caminhos locais desnecessários, prompts ou detalhes internos
 da ferramenta/agente.
+
+### Handoff obrigatório no Pull Request
+
+Toda tarefa que produzir um Pull Request deve registrar no corpo do PR:
+objetivo, escopo (incluindo fora de escopo quando relevante), critérios de
+conclusão, resultado entregue, validações executadas e limitações reais. O
+integrador compara esse handoff com o diff e os testes, sem tratar a
+autoavaliação como evidência suficiente.
+
+Não use `OBJECTIVE.md` na raiz para contratos por tarefa. Esse arquivo é
+compartilhado por todas as branches e cria conflitos textuais sem relação com
+o código, serializando indevidamente a integração. Use `.ai/tasks/` somente
+quando houver necessidade real de estado persistente fora do PR.
 
 O PR pode conter detalhes de implementação e validação que **não devem ser
 copiados integralmente para `PROJECT_STATE.md`**. O PR é o handoff detalhado; o
@@ -294,7 +335,10 @@ No modo integrador, o agente deve:
    incompletos, falhos ou dependentes de outro trabalho;
 4. determinar uma ordem de integração baseada em dependências, áreas
    sobrepostas e risco;
-5. para cada PR, revisar o diff, testes, contratos afetados e possíveis conflitos
+5. para cada PR, ler primeiro o handoff no corpo do PR e comparar seu objetivo,
+   escopo e critérios de conclusão com o diff, os testes e o resultado entregue;
+   avaliar se a solução cumpre esse objetivo com escopo proporcional antes de
+   revisar contratos afetados e possíveis conflitos
    **textuais e lógicos** com a `dev` atual e com os demais PRs;
 6. atualizar a branch do PR com a base atual quando necessário e resolver
    conflitos preservando a intenção válida dos dois lados;
@@ -702,7 +746,7 @@ Nova tarefa
 → ler AI_RULES + PROJECT_STATE + documentação relevante
 → inspecionar Git e atualizar referências remotas
 → criar branch pelo objetivo da mudança
-→ criar/reutilizar worktree exclusivo
+→ criar novo worktree exclusivo, sem reutilizar worktree semelhante
 → implementar e testar
 → reconstruir Ralven - Desenvolvimento (exceto tarefas de instalador/updater)
 → commit(s) profissionais

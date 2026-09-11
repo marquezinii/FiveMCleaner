@@ -1,4 +1,5 @@
 using System.Globalization;
+using Ralven.UpdateRuntime;
 
 namespace Ralven.Updater;
 
@@ -8,6 +9,7 @@ public sealed record UpdateHandoff(
     string InstallerSha256,
     int ParentProcessId,
     long ParentStartTimeUtcFileTime,
+    string CultureName,
     string? LogPath)
 {
     public string LogHint => LogPath is null ? string.Empty : $"Log: {LogPath}";
@@ -22,8 +24,8 @@ public sealed record UpdateHandoff(
     public static bool TryParse(string[] args, out UpdateHandoff handoff, out string error)
     {
         handoff = null!;
-        error = "Os dados da atualização são inválidos.";
-        if (args is null || args.Length is 0 or > 12 || args.Length % 2 != 0) return false;
+        error = "Updater.Error.InvalidHandoff";
+        if (args is null || args.Length is 0 or > 14 || args.Length % 2 != 0) return false;
         var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
         for (var index = 0; index < args.Length; index += 2)
         {
@@ -40,23 +42,46 @@ public sealed record UpdateHandoff(
             || !int.TryParse(pidText, NumberStyles.None, CultureInfo.InvariantCulture, out var pid) || pid <= 0
             || !values.TryGetValue("--parent-start-time", out var startTimeText)
             || !long.TryParse(startTimeText, NumberStyles.None, CultureInfo.InvariantCulture, out var startTime) || startTime <= 0
-            || values.Keys.Any(key => key is not "--installer" and not "--installer-size" and not "--installer-sha256" and not "--parent-pid" and not "--parent-start-time" and not "--log")) return false;
+            || !values.TryGetValue("--culture", out var cultureName)
+            || !IsCultureName(cultureName)
+            || values.Keys.Any(key => key is not "--installer" and not "--installer-size" and not "--installer-sha256" and not "--parent-pid" and not "--parent-start-time" and not "--culture" and not "--log")) return false;
 
         values.TryGetValue("--log", out var logPath);
         if (logPath is not null && !IsUnderLocalData("Logs", logPath)) return false;
-        handoff = new UpdateHandoff(Path.GetFullPath(installerPath), size, hash, pid, startTime, logPath);
+        handoff = new UpdateHandoff(Path.GetFullPath(installerPath), size, hash, pid, startTime, cultureName, logPath);
         return true;
+    }
+
+    private static bool IsCultureName(string value)
+    {
+        if (value.Length is < 2 or > 20 || value.Any(character => !char.IsAsciiLetter(character) && character != '-')) return false;
+        try
+        {
+            _ = CultureInfo.GetCultureInfo(value);
+            return true;
+        }
+        catch (CultureNotFoundException)
+        {
+            return false;
+        }
     }
 
     private static bool IsUnderLocalData(string directoryName, string path)
     {
-        if (!Path.IsPathFullyQualified(path)) return false;
-        var root = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
-            "Ralven",
-            directoryName);
-        var fullRoot = Path.TrimEndingDirectorySeparator(Path.GetFullPath(root));
-        var fullPath = Path.GetFullPath(path);
-        return fullPath.StartsWith(fullRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        try
+        {
+            if (!Path.IsPathFullyQualified(path)) return false;
+            var root = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Ralven",
+                directoryName);
+            var fullRoot = Path.TrimEndingDirectorySeparator(UpdatePathSafety.EnsureNoReparsePoints(root));
+            var fullPath = UpdatePathSafety.EnsureNoReparsePoints(path);
+            return fullPath.StartsWith(fullRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
     }
 }

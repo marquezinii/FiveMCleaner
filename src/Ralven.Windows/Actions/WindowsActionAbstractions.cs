@@ -44,6 +44,8 @@ public sealed record WindowsActionContext
     /// <summary>The profile that created the transaction, when execution came from a plan.</summary>
     public OptimizationProfile? Profile { get; init; }
 
+    public PersonalUsage? PersonalUsage { get; init; }
+
     /// <summary>
     /// True only while the engine is restoring snapshots created by the same
     /// execution after that execution failed or was cancelled. User-requested

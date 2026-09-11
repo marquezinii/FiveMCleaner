@@ -61,7 +61,7 @@ então ser revisado e publicado manualmente no
 
 A rota `/bugs` (ingestão) e `/api/bugs` (listagem autenticada) estão
 **implantadas e testadas em produção** no mesmo Worker que já servia `/telemetry`
-(`https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`), com a
+(`https://api.vemryx.com`), com a
 tabela `bug_reports` do D1 já migrada para o contrato anterior (colunas
 `email`/`log_text`, sem `attachment_key`). Um envio sintético de ponta a ponta foi validado após o
 deploy (HTTP 202, linha conferida no D1 e removida em seguida). O app já

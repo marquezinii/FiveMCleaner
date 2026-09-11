@@ -15,7 +15,8 @@ public sealed record UpdateTransaction(
 public sealed class UpdateRecoveryJournal
 {
     private readonly string path;
-    public UpdateRecoveryJournal(string runtimeRoot) => path = Path.Combine(Path.GetFullPath(runtimeRoot), "recovery.json");
+    public UpdateRecoveryJournal(string runtimeRoot) =>
+        path = Path.Combine(UpdatePathSafety.EnsureNoReparsePoints(runtimeRoot), "recovery.json");
 
     public UpdateTransaction Begin(string previousVersion, string candidateVersion)
     {
@@ -30,6 +31,7 @@ public sealed class UpdateRecoveryJournal
 
     public UpdateTransaction Read()
     {
+        UpdatePathSafety.EnsureNoReparsePoints(path);
         var transaction = JsonSerializer.Deserialize<UpdateTransaction>(File.ReadAllText(path))
             ?? throw new InvalidDataException("Journal de recuperação inválido.");
         if (transaction.Id.Length != 32 || !transaction.Id.All(char.IsAsciiHexDigit)
@@ -51,6 +53,7 @@ public sealed class UpdateRecoveryJournal
     public bool TryRead(out UpdateTransaction transaction)
     {
         transaction = null!;
+        UpdatePathSafety.EnsureNoReparsePoints(path);
         if (!File.Exists(path)) return false;
         try
         {
@@ -75,13 +78,19 @@ public sealed class UpdateRecoveryJournal
 
     public void Complete()
     {
-        try { if (File.Exists(path)) File.Delete(path); }
+        try
+        {
+            UpdatePathSafety.EnsureNoReparsePoints(path);
+            if (File.Exists(path)) File.Delete(path);
+        }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException) { }
     }
 
     private void Write(UpdateTransaction transaction)
     {
+        UpdatePathSafety.EnsureNoReparsePoints(path);
         Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+        UpdatePathSafety.EnsureNoReparsePoints(path);
         AtomicFile.WriteText(path, JsonSerializer.Serialize(transaction));
     }
 }

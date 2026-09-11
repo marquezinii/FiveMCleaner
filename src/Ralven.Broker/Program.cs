@@ -122,7 +122,7 @@ internal static class Program
             item => item.TransactionId = plan.PlanId);
 
         BrokerDiagnosticsLog.Record("action-started", plan.PlanId);
-        var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault();
+        var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault(command.CultureName);
         using var timeout = new CancellationTokenSource(ExecutionTimeout);
         WindowsTransactionResult result;
         try
@@ -143,7 +143,7 @@ internal static class Program
         }
 
         BrokerDiagnosticsLog.Record("journal-saved", plan.PlanId);
-        if (result.State != TransactionState.Committed)
+        if (!IsAdministratorExecutionComplete(result))
         {
             BrokerDiagnosticsLog.Record("execution-failed", plan.PlanId);
             events.Publish(
@@ -186,7 +186,9 @@ internal static class Program
             "Iniciando reversão da transação elevada.",
             item => item.TransactionId = transactionId);
 
-        var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault(forRollback: true);
+        var runtime = WindowsAdministratorRuntimeAdapter.CreateDefault(
+            command.CultureName,
+            forRollback: true);
         using var timeout = new CancellationTokenSource(ExecutionTimeout);
         WindowsTransactionResult result;
         try
@@ -206,7 +208,7 @@ internal static class Program
                 BrokerExitCode.RollbackFailed);
         }
 
-        if (result.State != TransactionState.RolledBack)
+        if (!IsAdministratorRollbackComplete(result))
         {
             BrokerDiagnosticsLog.Record("rollback-failed", transactionId);
             events.Publish(
@@ -236,6 +238,16 @@ internal static class Program
             });
         return BrokerExitCode.Success;
     }
+
+    internal static bool IsAdministratorExecutionComplete(WindowsTransactionResult result) =>
+        result.State is TransactionState.Committed or TransactionState.CommittedWithErrors
+        && result.Error is null
+        && result.DeferredAdministratorActionIds.Count == 0;
+
+    internal static bool IsAdministratorRollbackComplete(WindowsTransactionResult result) =>
+        result.State is TransactionState.RolledBack or TransactionState.AwaitingStandardRollback
+            or TransactionState.CommittedWithErrors
+        && result.Error is null;
 
     private static int PublishTimeout(NamedPipeEventWriter events, Guid planId)
     {

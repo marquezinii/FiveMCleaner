@@ -2,8 +2,12 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { buildCorsHeaders, isAllowedDashboardOrigin, withCorsHeaders } from '../src/cors.js';
 
-test('isAllowedDashboardOrigin requires the exact configured origin', () => {
+test('isAllowedDashboardOrigin requires an exact configured origin', () => {
   assert.equal(isAllowedDashboardOrigin('https://dashboard.example', 'https://dashboard.example'), true);
+  assert.equal(isAllowedDashboardOrigin(
+    'https://legacy-dashboard.example',
+    'https://dashboard.example, https://legacy-dashboard.example',
+  ), true);
   assert.equal(isAllowedDashboardOrigin('https://evil.example', 'https://dashboard.example'), false);
   assert.equal(isAllowedDashboardOrigin(null, 'https://dashboard.example'), false);
 });

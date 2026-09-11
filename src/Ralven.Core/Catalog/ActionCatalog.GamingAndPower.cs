@@ -95,7 +95,24 @@ public sealed partial class ActionCatalog
                 confirmationSummary: "Relê AC e DC e confirma Off (0) depois de reativar o plano.",
                 undoSummary: "Totalmente reversível: restaura e confirma separadamente os valores AC e DC anteriores.",
                 riskLimitations: "Nem todo hardware expõe essa configuração; nesse caso a ação é ignorada. Pode aumentar consumo e temperatura, e não há garantia de ganho perceptível em todo computador.",
-                version: 2)
+                version: 2),
+            Define(
+                OptimizationActionIds.DisableMouseAcceleration,
+                "Usar resposta consistente do ponteiro",
+                "Desativa a aceleração do ponteiro do Windows sem alterar a velocidade escolhida pelo usuário.",
+                ActionCategory.WindowsGaming,
+                ActionRisk.Low,
+                ActionReversibility.FullyReversible,
+                RequiredPrivilege.StandardUser,
+                AggressiveOnly,
+                requiresFiveMStopped: false,
+                progressWeight: 2,
+                expectedImpact: "Mantém a relação entre movimento físico e deslocamento do ponteiro em aplicativos que usam a configuração do Windows.",
+                ActionOptionGate.UseConsistentPointerResponse,
+                detectionSummary: "Lê os limiares e o nível de aceleração pela API SystemParametersInfo do Windows.",
+                confirmationSummary: "Relê e confirma que os limiares e o nível de aceleração ficaram em zero.",
+                undoSummary: "Totalmente reversível: restaura os três valores anteriores sem alterar a velocidade do ponteiro.",
+                riskLimitations: "Muda a sensação do mouse no desktop; jogos com Raw Input podem ignorar esta configuração.")
         ];
     }
 
@@ -119,7 +136,7 @@ public sealed partial class ActionCatalog
                 detectionSummary: "Lê o atraso atual de abertura dos menus pela API oficial SystemParametersInfo do Windows.",
                 confirmationSummary: "Relê e confirma que o atraso não ultrapassa 100 ms.",
                 undoSummary: "Totalmente reversível: o atraso anterior é restaurado no rollback.",
-                riskLimitations: "Muda somente a velocidade de abertura de menus em cascata; o efeito percebido varia conforme o uso."),
+                riskLimitations: "Muda somente a velocidade de abertura dos menus do Windows; o efeito percebido varia conforme o PC e o uso."),
             Define(
                 OptimizationActionIds.ReduceWindowsVisualEffects,
                 "Reduzir efeitos visuais do Windows",

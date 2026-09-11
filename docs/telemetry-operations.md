@@ -6,7 +6,7 @@ O aplicativo envia lotes JSON por `POST` para a rota HTTPS `/telemetry` do
 Worker Cloudflare. Cada evento deve conter `eventName`, `executionTimeMs`,
 `appVersion` e `environment` (`Development` ou `Production`), além dos campos
 opcionais documentados em `telemetry.md`. O Worker valida o lote inteiro,
-persiste-o no D1 `fivemcleaner-telemetry` e retorna `202 Accepted`.
+persiste-o no D1 de produção e retorna `202 Accepted`.
 
 O dashboard usa a mesma origem do Worker e filtra `Production` por padrão.
 Assim, um evento marcado como `Development` não aparece no painel padrão até
@@ -25,12 +25,12 @@ rota autorizados.
 ## Checklist obrigatório antes de uma release
 
 - confirme que `Config/appsettings.Production.json` está no publish e aponta
-  para `https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry`;
+  para `https://api.vemryx.com/telemetry`;
 - valide a serialização do cliente, incluindo `environment: Production`;
 - execute `npm.cmd test` em `infra/cloudflare-worker` e `infra/dashboard`;
 - execute o build e os testes Release do .NET;
 - usando credenciais Cloudflare, aplique as migrations com
-  `wrangler d1 migrations apply fivemcleaner-telemetry --remote` antes do
+  `wrangler d1 migrations apply TELEMETRY_DB --remote` antes do
   deploy do Worker e antes de criar a GitHub Release; o Wrangler captura o
   backup D1 dessa operação;
 - execute `scripts/Test-ProductionDiagnostics.ps1`: o gate envia um evento
@@ -58,9 +58,9 @@ campo explicitamente; `null` ou valores desconhecidos continuam rejeitados.
 ## Comandos remotos (exigem autenticação Cloudflare)
 
 ```powershell
-npx.cmd wrangler d1 execute fivemcleaner-telemetry --remote --command "SELECT COUNT(*) AS total, MAX(received_at) AS last_received FROM telemetry_events"
-npx.cmd wrangler d1 execute fivemcleaner-telemetry --remote --command "SELECT five_m_install_detected FROM telemetry_events LIMIT 1; SELECT terms_version FROM account_profiles LIMIT 1; SELECT message, active, updated_at FROM live_alert WHERE id = 1"
-npx.cmd wrangler deployments list --name fivemcleaner-telemetry
+npx.cmd wrangler d1 execute TELEMETRY_DB --remote --command "SELECT COUNT(*) AS total, MAX(received_at) AS last_received FROM telemetry_events"
+npx.cmd wrangler d1 execute TELEMETRY_DB --remote --command "SELECT five_m_install_detected, operation_id FROM telemetry_events LIMIT 1; SELECT terms_version FROM account_profiles LIMIT 1; SELECT message, active, updated_at FROM live_alert WHERE id = 1"
+npx.cmd wrangler deployments list
 ```
 
 Nunca coloque `CLOUDFLARE_API_TOKEN`, segredos do Worker ou credenciais D1 no

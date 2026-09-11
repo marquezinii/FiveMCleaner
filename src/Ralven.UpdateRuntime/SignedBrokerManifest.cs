@@ -30,6 +30,8 @@ public static class BrokerTrustPolicy
     public const string ManifestFileName = "broker-integrity.json";
     public const string ExpectedProduct = "Ralven";
     public const string ExpectedFileManifestRelativePath = "broker/SHA256SUMS.txt";
+    public const int MaximumSignedManifestBytes = 16 * 1024;
+    public const int MaximumFileManifestBytes = 64 * 1024;
 
     public static void VerifySignature(
         SignedBrokerManifest manifest,

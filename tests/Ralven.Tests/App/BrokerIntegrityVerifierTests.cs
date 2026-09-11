@@ -30,6 +30,39 @@ public sealed class BrokerIntegrityVerifierTests : IDisposable
     }
 
     [Fact]
+    public void Verify_AcceptsRealisticFileManifestLargerThanSixteenKibibytes()
+    {
+        using var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var fixture = CreateSignedFixture(key, dependencyCount: 202);
+        var manifestPath = Path.Combine(fixture.VersionRoot, "broker", "SHA256SUMS.txt");
+
+        Assert.InRange(
+            new FileInfo(manifestPath).Length,
+            16 * 1024 + 1,
+            BrokerTrustPolicy.MaximumFileManifestBytes);
+        using var lease = BrokerIntegrityVerifier.Verify(
+            fixture.VersionRoot,
+            fixture.BrokerPath,
+            key.ExportSubjectPublicKeyInfo(),
+            requireSignedManifest: true);
+    }
+
+    [Fact]
+    public void Verify_RejectsFileManifestLargerThanPolicyLimit()
+    {
+        using var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var fixture = CreateSignedFixture(
+            key,
+            manifestPadding: new string(' ', BrokerTrustPolicy.MaximumFileManifestBytes));
+
+        Assert.Throws<InvalidDataException>(() => BrokerIntegrityVerifier.Verify(
+            fixture.VersionRoot,
+            fixture.BrokerPath,
+            key.ExportSubjectPublicKeyInfo(),
+            requireSignedManifest: true));
+    }
+
+    [Fact]
     public void Verify_RejectsBrokerFileChangedAfterSigning()
     {
         using var key = ECDsa.Create(ECCurve.NamedCurves.nistP256);
@@ -84,23 +117,28 @@ public sealed class BrokerIntegrityVerifierTests : IDisposable
         }
     }
 
-    private BrokerFixture CreateSignedFixture(ECDsa key)
+    private BrokerFixture CreateSignedFixture(
+        ECDsa key,
+        int dependencyCount = 1,
+        string manifestPadding = "")
     {
         var versionRoot = Path.Combine(temporaryRoot, "Runtime", "versions", "1.3.2");
         var brokerDirectory = Path.Combine(versionRoot, "broker");
         Directory.CreateDirectory(brokerDirectory);
         var brokerPath = Path.Combine(brokerDirectory, "Ralven.Broker.exe");
-        var dependencyPath = Path.Combine(brokerDirectory, "Ralven.Contracts.dll");
         File.WriteAllText(brokerPath, "broker-binary");
-        File.WriteAllText(dependencyPath, "dependency-binary");
-
-        var checksumLines = new[]
+        var checksumLines = new List<string> { ChecksumLine(brokerPath, "Ralven.Broker.exe") };
+        for (var index = 0; index < dependencyCount; index++)
         {
-            ChecksumLine(brokerPath, "Ralven.Broker.exe"),
-            ChecksumLine(dependencyPath, "Ralven.Contracts.dll")
-        };
+            var name = $"Ralven.Dependency.{index:D3}.dll";
+            var dependencyPath = Path.Combine(brokerDirectory, name);
+            File.WriteAllText(dependencyPath, $"dependency-{index}");
+            checksumLines.Add(ChecksumLine(dependencyPath, name));
+        }
+
         var fileManifestPath = Path.Combine(brokerDirectory, "SHA256SUMS.txt");
         File.WriteAllLines(fileManifestPath, checksumLines);
+        File.AppendAllText(fileManifestPath, manifestPadding);
         var fileManifestHash = Convert.ToHexString(
             SHA256.HashData(File.ReadAllBytes(fileManifestPath))).ToLowerInvariant();
         var unsigned = new SignedBrokerManifest(

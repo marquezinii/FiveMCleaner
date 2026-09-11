@@ -6,8 +6,12 @@ import {
   appVersionBreakdown,
   averageOptimizationTimeMs,
   successRate,
+  appInitializationsPerDay,
+  abandonedOptimizationFlows,
+  gtaVBenchmarkOutcomes,
   errorsByVersion,
   errorCategoryBreakdown,
+  bugCodeBreakdown,
   recentFailures,
   topCpuModels,
   topGpuModels,
@@ -19,6 +23,17 @@ import {
   backupStats,
   elevationUsageRate,
   windowsBuildBreakdown,
+  optimizationOutcomeBreakdown,
+  profileBreakdown,
+  actionUsage,
+  reliabilityByVersion,
+  accountSummary,
+  accountsPerDay,
+  aiUsageSummary,
+  aiUsagePerDay,
+  billingSubscriptionBreakdown,
+  billingPaymentSummary,
+  updaterSummary,
 } from '../../src/stats/queries.js';
 
 test('optimizationRunsPerDay defaults to the Production environment', () => {
@@ -68,6 +83,19 @@ test('successRate counts completed runs against the total', () => {
 
   assert.match(sql, /SUM\(CASE WHEN event_name = 'optimization-completed'/);
   assert.match(sql, /COUNT\(\*\) AS total/);
+  assert.match(sql, /optimization-cancelled/);
+});
+
+test('expanded health and adoption queries stay scoped to their closed event families', () => {
+  const startup = appInitializationsPerDay();
+  const abandoned = abandonedOptimizationFlows();
+  const benchmark = gtaVBenchmarkOutcomes();
+
+  assert.match(startup.sql, /event_name = 'app-initialized'/);
+  assert.match(abandoned.sql, /operation_id IS NOT NULL/);
+  assert.match(abandoned.sql, /NOT EXISTS/);
+  assert.match(benchmark.sql, /gtav-benchmark-completed/);
+  assert.match(benchmark.sql, /AVG\(execution_time_ms\)/);
 });
 
 test('errorsByVersion only counts failed runs with a known error category', () => {
@@ -103,10 +131,21 @@ test('errorCategoryBreakdown counts failed runs grouped only by category, across
   assert.doesNotMatch(sql, /app_version/);
 });
 
+test('bugCodeBreakdown groups exact allowlisted codes for incident recognition', () => {
+  const { sql } = bugCodeBreakdown();
+
+  assert.match(sql, /event_name = 'optimization-failed'/);
+  assert.match(sql, /bug_code IS NOT NULL/);
+  assert.match(sql, /GROUP BY bug_code/);
+});
+
 test('recentFailures orders by received_at descending and applies a limit', () => {
   const { sql, params } = recentFailures({}, 15);
 
   assert.match(sql, /event_name = 'optimization-failed'/);
+  assert.match(sql, /event_id/);
+  assert.match(sql, /bug_code/);
+  assert.match(sql, /GROUP_CONCAT\(action_id/);
   assert.match(sql, /ORDER BY received_at DESC/);
   assert.equal(params.at(-1), 15);
 });
@@ -200,4 +239,60 @@ test('windowsBuildBreakdown excludes nulls and limits to the top 10', () => {
 
   assert.match(sql, /windows_build IS NOT NULL/);
   assert.match(sql, /LIMIT 10/);
+});
+
+test('product adoption queries remain aggregate and use bound telemetry filters', () => {
+  const outcomes = optimizationOutcomeBreakdown({ appVersion: '1.6.1' });
+  const profiles = profileBreakdown();
+  const actions = actionUsage({ from: '2026-09-01' });
+
+  assert.match(outcomes.sql, /GROUP BY event_name/);
+  assert.deepEqual(outcomes.params, ['Production', '1.6.1']);
+  assert.match(profiles.sql, /profile IS NOT NULL/);
+  assert.match(actions.sql, /JOIN telemetry_events/);
+  assert.doesNotMatch(actions.sql, /SELECT.*event_id/i);
+  assert.deepEqual(actions.params, ['Production', '2026-09-01']);
+});
+
+test('reliability comparison keeps completed, failed and cancelled outcomes separate', () => {
+  const { sql } = reliabilityByVersion();
+
+  assert.match(sql, /AS completed/);
+  assert.match(sql, /AS failed/);
+  assert.match(sql, /AS cancelled/);
+  assert.match(sql, /GROUP BY app_version/);
+});
+
+test('account and AI queries expose only aggregates and filter their own timestamps', () => {
+  const accounts = accountSummary({ from: '2026-09-01', to: '2026-09-10' });
+  const growth = accountsPerDay({ from: '2026-09-01' });
+  const ai = aiUsageSummary({ to: '2026-09-10' });
+  const aiDaily = aiUsagePerDay();
+
+  assert.match(accounts.sql, /total_accounts/);
+  assert.doesNotMatch(accounts.sql, /username|first_name|last_name|\buid\b/i);
+  assert.deepEqual(accounts.params, ['2026-09-01', '2026-09-10']);
+  assert.match(growth.sql, /created_at >= \?/);
+  assert.match(ai.sql, /COUNT\(DISTINCT account_uid\) AS active_accounts/);
+  assert.doesNotMatch(ai.sql, /SELECT\s+account_uid/i);
+  assert.match(aiDaily.sql, /GROUP BY day/);
+});
+
+test('billing queries summarize state and money without provider or account identifiers', () => {
+  const subscriptions = billingSubscriptionBreakdown();
+  const payments = billingPaymentSummary({ from: '2026-09-01' });
+
+  assert.match(subscriptions.sql, /GROUP BY state/);
+  assert.match(payments.sql, /net_revenue_cents/);
+  assert.match(payments.sql, /updated_at >= \?/);
+  assert.doesNotMatch(payments.sql, /account_uid|provider_payment_id/);
+});
+
+test('updater dashboard queries honor environment, date and candidate version filters', () => {
+  const filters = { environment: 'Production', from: '2026-09-01', to: '2026-09-10', appVersion: '1.6.1' };
+  const summary = updaterSummary(filters);
+
+  assert.deepEqual(summary.params, ['Production', '2026-09-01', '2026-09-10', '1.6.1']);
+  assert.match(summary.sql, /outcome = 'failed'/);
+  assert.match(summary.sql, /candidate_version/);
 });

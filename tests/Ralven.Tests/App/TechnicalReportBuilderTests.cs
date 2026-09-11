@@ -119,4 +119,46 @@ public sealed class TechnicalReportBuilderTests
 
         Assert.Contains("Falhou", text);
     }
+
+    [Fact]
+    public void Build_FailedLineWithBugCode_IncludesLocalizedErrorCodeSuffix()
+    {
+        var localization = new LocalizationService(
+            System.Globalization.CultureInfo.GetCultureInfo("pt-BR"));
+        var report = new OptimizationReportDto
+        {
+            TransactionId = Guid.NewGuid(),
+            Profile = OptimizationProfile.Balanced,
+            CreatedAtUtc = DateTimeOffset.UtcNow,
+            VerifiedCount = 0,
+            ChangedCount = 0,
+            SkippedCount = 0,
+            WarningCount = 0,
+            FailedCount = 1,
+            RollbackFailedCount = 0,
+            NotRunCount = 0,
+            RequiresRestart = false,
+            RestorePossible = false,
+            Succeeded = false,
+            Lines =
+            [
+                new OptimizationReportLineDto
+                {
+                    Sequence = 1,
+                    ActionId = OptimizationActionIds.EnableGameMode,
+                    ActionName = "Ativar Modo de Jogo",
+                    Category = ActionCategory.WindowsGaming,
+                    Outcome = ActionExecutionOutcome.Failed,
+                    Reason = "Acesso negado",
+                    BugCode = BugCode.WIN_PRIVILEGE
+                }
+            ]
+        };
+
+        var text = TechnicalReportBuilder.Build(report, diagnostic: null, localization);
+
+        Assert.Contains(
+            localization.Format("Report.ErrorCodeSuffix", BugCode.WIN_PRIVILEGE),
+            text);
+    }
 }

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Numerics;
 using System.Text.RegularExpressions;
+using Ralven.UpdateRuntime;
 
 namespace Ralven.App.Services;
 
@@ -195,8 +196,11 @@ public readonly record struct UpdateDownloadProgress(long BytesReceived, long To
 
 public sealed class UpdateSecurityException : Exception
 {
-    public UpdateSecurityException(string message)
+    public UpdateSecurityException(string message, string diagnosticCode = UpdaterEventCodes.Unexpected)
         : base(message)
     {
+        DiagnosticCode = diagnosticCode;
     }
+
+    public string DiagnosticCode { get; }
 }

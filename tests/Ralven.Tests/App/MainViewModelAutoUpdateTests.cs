@@ -153,6 +153,10 @@ public sealed class MainViewModelAutoUpdateTests
         public Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<AppHistoryRecord>>([]);
 
+        public Task<OptimizationReportDto?> LoadReportAsync(
+            Guid transactionId,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
         public Task<AppOptimizationResult> ExecuteAsync(
             OptimizationPlanDto plan,
             IProgress<AppProgressUpdate> progress,

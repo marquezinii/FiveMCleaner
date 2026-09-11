@@ -151,7 +151,7 @@ public sealed class GraphicsActionOutcomeTests
             new FakeRamDetailsInspector
             {
                 Snapshot = new RamDetailsSnapshot(
-                    [new RamModuleInfo(16L * 1024 * 1024 * 1024, 3200, 3200)])
+                    [new RamModuleInfo(16L * 1024 * 1024 * 1024, 3200)])
             },
             new FakeDisplayConfigurationInspector());
 

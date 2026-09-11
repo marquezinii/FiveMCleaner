@@ -130,12 +130,12 @@ public abstract class AllowlistedRegistryAction : WindowsOptimizationAction
         if (applied.Count == 0)
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Nenhum valor compatível precisou ser alterado."));
+                WindowsActionText.Format("ActionResults.Registry.NoChange")));
         }
 
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
             new RegistryMutationSnapshot(applied),
-            $"{applied.Count} configuração(ões) allowlisted atualizada(s)."));
+            WindowsActionText.Format("ActionResults.Registry.Applied", applied.Count)));
     }
 
     public override Task RollbackAsync(
@@ -333,45 +333,51 @@ public abstract class AllowlistedRegistryAction : WindowsOptimizationAction
     }
 }
 
-public sealed class GameModeRegistryAction : AllowlistedRegistryAction
+/// <summary>
+/// Base das configurações de jogo do Windows que o Ralven alterna em um único
+/// valor DWORD booleano do HKCU do próprio usuário, sempre com o FiveM parado.
+/// As regras que precisam valer igualmente para todas elas — recusar um valor
+/// existente fora de 0/1, exigir o jogo fechado (exceto na recuperação
+/// imediata de falha) e limitar o rollback a um estado ausente ou booleano —
+/// ficam aqui para que uma ação nova não possa nascer com apenas parte delas.
+/// </summary>
+public abstract class GameBooleanRegistryAction : AllowlistedRegistryAction
 {
     private readonly IFiveMProcessInspector processInspector;
     private readonly string? installationRoot;
+    private readonly RegistryAddress address;
+    private readonly int desiredValue;
+    private readonly string unsupportedValueMessage;
 
-    internal static readonly RegistryAddress Address = new(
-        RegistryHive.CurrentUser,
-        @"Software\Microsoft\GameBar",
-        "AutoGameModeEnabled");
-
-    public GameModeRegistryAction(
+    protected GameBooleanRegistryAction(
         IRegistryStore registry,
         IFiveMProcessInspector processInspector,
-        string? installationRoot = null)
+        string? installationRoot,
+        RegistryAddress address,
+        int desiredValue,
+        string unsupportedValueMessage)
         : base(registry)
     {
         this.processInspector = processInspector
             ?? throw new ArgumentNullException(nameof(processInspector));
         this.installationRoot = installationRoot;
+        this.address = address;
+        this.desiredValue = desiredValue;
+        this.unsupportedValueMessage = unsupportedValueMessage;
     }
-
-    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
-        OptimizationActionIds.EnableGameMode);
 
     protected override IReadOnlyList<RegistryMutation> GetMutations()
     {
-        return [new RegistryMutation(Address, RegistryValueState.FromDword(1))];
+        return [new RegistryMutation(address, RegistryValueState.FromDword(desiredValue))];
     }
 
     protected override void ValidateCurrentValueForApply(
         RegistryMutation mutation,
         RegistryValueState currentValue)
     {
-        if (currentValue.Exists
-            && (currentValue.Kind != RegistryValueKind.DWord
-                || currentValue.NumericValue is not (0 or 1)))
+        if (currentValue.Exists && !IsMissingOrDwordBoolean(currentValue))
         {
-            throw new InvalidDataException(
-                "Game Mode has an unsupported registry value and will not be overwritten.");
+            throw new InvalidDataException(unsupportedValueMessage);
         }
     }
 
@@ -398,11 +404,33 @@ public sealed class GameModeRegistryAction : AllowlistedRegistryAction
     }
 }
 
-public sealed class GameDvrRegistryAction : AllowlistedRegistryAction
+public sealed class GameModeRegistryAction : GameBooleanRegistryAction
 {
-    private readonly IFiveMProcessInspector processInspector;
-    private readonly string? installationRoot;
+    internal static readonly RegistryAddress Address = new(
+        RegistryHive.CurrentUser,
+        @"Software\Microsoft\GameBar",
+        "AutoGameModeEnabled");
 
+    public GameModeRegistryAction(
+        IRegistryStore registry,
+        IFiveMProcessInspector processInspector,
+        string? installationRoot = null)
+        : base(
+            registry,
+            processInspector,
+            installationRoot,
+            Address,
+            desiredValue: 1,
+            "Game Mode has an unsupported registry value and will not be overwritten.")
+    {
+    }
+
+    public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
+        OptimizationActionIds.EnableGameMode);
+}
+
+public sealed class GameDvrRegistryAction : GameBooleanRegistryAction
+{
     internal static readonly RegistryAddress HistoricalCaptureAddress = new(
         RegistryHive.CurrentUser,
         @"Software\Microsoft\Windows\CurrentVersion\GameDVR",
@@ -412,59 +440,18 @@ public sealed class GameDvrRegistryAction : AllowlistedRegistryAction
         IRegistryStore registry,
         IFiveMProcessInspector processInspector,
         string? installationRoot = null)
-        : base(registry)
+        : base(
+            registry,
+            processInspector,
+            installationRoot,
+            HistoricalCaptureAddress,
+            desiredValue: 0,
+            "Historical capture has an unsupported registry value and will not be overwritten.")
     {
-        this.processInspector = processInspector
-            ?? throw new ArgumentNullException(nameof(processInspector));
-        this.installationRoot = installationRoot;
     }
 
     public override ActionMetadataDto Metadata { get; } = WindowsActionMetadata.For(
         OptimizationActionIds.DisableBackgroundCapture);
-
-    protected override IReadOnlyList<RegistryMutation> GetMutations()
-    {
-        var disabled = RegistryValueState.FromDword(0);
-        return
-        [
-            new RegistryMutation(HistoricalCaptureAddress, disabled)
-        ];
-    }
-
-    protected override void ValidateCurrentValueForApply(
-        RegistryMutation mutation,
-        RegistryValueState currentValue)
-    {
-        if (currentValue.Exists
-            && (currentValue.Kind != RegistryValueKind.DWord
-                || currentValue.NumericValue is not (0 or 1)))
-        {
-            throw new InvalidDataException(
-                "Historical capture has an unsupported registry value and will not be overwritten.");
-        }
-    }
-
-    protected override void ValidateMutationSafety(WindowsActionContext context)
-    {
-        if (!context.IsImmediateFailureRecovery)
-        {
-            EnsureFiveMStopped(processInspector, installationRoot);
-        }
-    }
-
-    protected override bool IsAllowedRollbackEntry(
-        RegistryAddress address,
-        RegistryValueState previousValue,
-        RegistryValueState appliedValue,
-        IReadOnlyList<RegistryMutation> currentMutations)
-    {
-        return IsMissingOrDwordBoolean(previousValue)
-            && base.IsAllowedRollbackEntry(
-                address,
-                previousValue,
-                appliedValue,
-                currentMutations);
-    }
 }
 
 public sealed class GpuPreferenceRegistryAction : AllowlistedRegistryAction

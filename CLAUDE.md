@@ -3,7 +3,7 @@
 Instruções persistentes específicas deste repositório. Mantenha este arquivo curto, estável e focado no que Claude não deve inferir sozinho.
 ## Missão e prioridades
 
-Ralven é um aplicativo Windows de diagnóstico, limpeza e otimização segura para FiveM sobre GTAV Legacy.
+Ralven é uma plataforma Windows de gerenciamento, manutenção e otimização segura com IA. FiveM sobre GTAV Legacy é uma integração especializada da área de Jogos, não a identidade principal do produto.
 
 Priorize, nesta ordem: segurança e dados do usuário; reversibilidade; correção/confiabilidade; transparência; UX; desempenho; conveniência de implementação.
 
@@ -79,7 +79,7 @@ Não crie dependência circular nem mova responsabilidades entre camadas por con
 
 O comportamento seguro existente é parte do produto:
 
-- FiveM/GTAV Legacy é o alvo suportado; não aplique otimizações ao GTAV Enhanced sem suporte validado.
+- A integração FiveM/GTAV Legacy é a integração de jogo suportada; não aplique suas otimizações ao GTAV Enhanced sem suporte validado.
 - Diagnostique antes de alterar e preserve prévia das ações relevantes.
 - Ações mutáveis devem respeitar snapshot, journal, validação e rollback quando aplicável.
 - Use privilégio mínimo.
@@ -97,6 +97,25 @@ Nova ação de sistema precisa ter risco, pré-condições, efeito, privilégio,
 ## C# / .NET
 
 O repositório usa .NET 10, nullable habilitado, implicit usings e C# `latest`.
+
+### SharpLens MCP
+
+SharpLens está configurado localmente para `Ralven.slnx`. Para C#, prefira sua
+análise semântica à busca textual quando a decisão depender de símbolos,
+sobrecargas, referências, herança, callers/callees ou impacto:
+
+- use `search_symbols`, `get_symbol_info`, `find_references`,
+  `find_implementations`, `find_callers` e `get_call_graph` antes de mudar uma
+  API ou fluxo relevante;
+- rode `health_check` antes de uma refatoração ampla; se o carregamento estiver
+  parcial ou apresentar `loadFailures`, resolva isso antes de inferir impacto;
+- antes de aplicar refactorings mutáveis do SharpLens, gere e revise o
+  `preview: true`; preserve comportamento observável e não crie abstrações
+  especulativas;
+- após editar, criar ou apagar arquivos `.cs` por ferramentas externas ao MCP,
+  execute `sync_documents` para esses caminhos (ou sem argumentos após lote);
+- após alterar `.csproj`, `Directory.Build.*`, `Directory.Packages.props` ou a
+  solution, rode `load_solution` novamente antes da próxima consulta semântica.
 
 - Respeite `.editorconfig`: 4 espaços em C#/XAML/MSBuild; 2 em Markdown/JSON/YAML; CRLF e newline final.
 - Investigue warnings novos; não os esconda.

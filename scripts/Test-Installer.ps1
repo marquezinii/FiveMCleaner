@@ -32,6 +32,7 @@ $runValueName = 'Ralven'
 $userDataMarkerRoot = Join-Path $env:LOCALAPPDATA "Ralven\.installer-smoke-$smokeId"
 $userDataMarker = Join-Path $userDataMarkerRoot 'preserve-me.txt'
 $installed = $false
+$smokeSucceeded = $false
 $commonSilentArguments = @('/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART')
 
 . (Join-Path $PSScriptRoot 'Installer.Common.ps1')
@@ -125,6 +126,16 @@ if ($AllowExistingInstallation) {
     -InstallerPath $resolvedInstaller `
     -PublishDirectory $resolvedPublish `
     -ExpectedVersion $ExpectedVersion
+
+$runningInstaller = Get-CimInstance -ClassName Win32_Process -ErrorAction SilentlyContinue |
+    Where-Object {
+        -not [string]::IsNullOrWhiteSpace($_.ExecutablePath) -and
+        [IO.Path]::GetFileName($_.ExecutablePath) -like 'Ralven-Setup-*-win-x64.exe'
+    } |
+    Select-Object -First 1
+if ($null -ne $runningInstaller) {
+    throw "Another Ralven installer is already running: $($runningInstaller.ExecutablePath)"
+}
 
 New-Item -ItemType Directory -Force -Path $smokeRoot | Out-Null
 
@@ -311,6 +322,7 @@ try {
         throw 'The explicit interactive removal path for user data is missing.'
     }
 
+    $smokeSucceeded = $true
     Write-Host 'Installer install/upgrade/uninstall smoke test: OK' -ForegroundColor Green
 }
 finally {
@@ -338,8 +350,11 @@ finally {
         Remove-Item -LiteralPath $userDataMarkerRoot -Recurse -Force -ErrorAction SilentlyContinue
     }
 
-    if (Test-Path -LiteralPath $smokeRoot) {
+    if ($smokeSucceeded -and (Test-Path -LiteralPath $smokeRoot)) {
         Assert-UnderArtifacts $smokeRoot
         Remove-Item -LiteralPath $smokeRoot -Recurse -Force -ErrorAction SilentlyContinue
+    }
+    elseif (Test-Path -LiteralPath $smokeRoot) {
+        Write-Warning "Installer smoke diagnostics preserved at $smokeRoot"
     }
 }

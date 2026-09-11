@@ -3,9 +3,12 @@ import assert from 'node:assert/strict';
 import {
   validateAccountProfile,
   createAccountProfile,
+  deleteAccount,
   deleteAccountProfile,
   fetchAccountProfile,
+  isAccountDeletionBlocked,
   normalizeUsername,
+  resumeAccountDeletions,
   isUsernameAvailable,
 } from '../../src/auth/accountProfile.js';
 
@@ -44,6 +47,7 @@ test('validateAccountProfile rejects a payload that is not an object', () => {
 test('validateAccountProfile rejects a missing or non-string field', () => {
   assert.equal(validateAccountProfile({ firstName: 'João', lastName: 'Silva' }), null);
   assert.equal(validateAccountProfile({ ...VALID, username: 123 }), null);
+  assert.equal(validateAccountProfile({ ...VALID, ignoredByTheServer: true }), null);
 });
 
 test('validateAccountProfile requires the current terms version', () => {
@@ -89,7 +93,7 @@ test('validateAccountProfile accepts accented, hyphenated and apostrophe names',
   assert.equal(result.lastName, "O'Neil-Santos");
 });
 
-function fakeDb({ throwsWithMessage, billingCheckout = false } = {}) {
+function fakeDb({ throwsWithMessage, billingCheckout = false, insertChanges = 1, existingProfile = null } = {}) {
   const inserted = [];
   return {
     inserted,
@@ -99,9 +103,10 @@ function fakeDb({ throwsWithMessage, billingCheckout = false } = {}) {
           if (sql.startsWith('SELECT')) {
             return {
               async first() {
-                return billingCheckout && sql.includes('billing_checkout_intents')
-                  ? { blocked: 1 }
-                  : null;
+                if (billingCheckout && sql.includes('billing_checkout_intents')) {
+                  return { blocked: 1 };
+                }
+                return sql.includes('FROM account_profiles') ? existingProfile : null;
               },
             };
           }
@@ -111,7 +116,10 @@ function fakeDb({ throwsWithMessage, billingCheckout = false } = {}) {
                 throw new Error(throwsWithMessage);
               }
               inserted.push({ sql, params });
-              return { success: true };
+              return {
+                success: true,
+                meta: { changes: sql.includes('INSERT INTO account_profiles') ? insertChanges : 1 },
+              };
             },
           };
         },
@@ -138,10 +146,29 @@ test('createAccountProfile inserts a row keyed by the verified uid, never a clie
   ]);
 });
 
-test('createAccountProfile maps a username uniqueness violation to username-taken', async () => {
-  const db = fakeDb({ throwsWithMessage: 'UNIQUE constraint failed: idx_account_profiles_username_normalized' });
+test('createAccountProfile maps an ignored insert without its own uid to username-taken', async () => {
+  const db = fakeDb({ insertChanges: 0 });
   const result = await createAccountProfile(db, 'uid', validateAccountProfile(VALID));
   assert.deepEqual(result, { ok: false, code: 'username-taken' });
+});
+
+test('createAccountProfile accepts a retry only when it matches the existing uid profile', async () => {
+  const profile = validateAccountProfile(VALID);
+  const db = fakeDb({
+    insertChanges: 0,
+    existingProfile: {
+      username: profile.username,
+      first_name: profile.firstName,
+      last_name: profile.lastName,
+      terms_version: profile.termsVersion,
+    },
+  });
+
+  const result = await createAccountProfile(db, 'uid', profile);
+
+  assert.deepEqual(result, { ok: true });
+  assert.equal(db.inserted.filter(entry => entry.sql.includes('INSERT INTO account_profiles')).length, 1);
+  assert.equal(db.inserted.filter(entry => entry.sql.startsWith('UPDATE account_profiles')).length, 1);
 });
 
 test('createAccountProfile maps an unexpected D1 failure to unknown', async () => {
@@ -174,14 +201,86 @@ test('fetchAccountProfile maps the stored row to camelCase and reads by the give
 
 test('deleteAccountProfile scopes the deletion to the verified uid', async () => {
   const db = fakeDb();
-  assert.equal(await deleteAccountProfile(db, 'firebase-uid-123'), true);
-  assert.deepEqual(db.inserted[0].params, ['firebase-uid-123', 'firebase-uid-123']);
+  await deleteAccountProfile(db, 'firebase-uid-123');
+  assert.deepEqual(db.inserted[0].params, ['firebase-uid-123']);
 });
 
-test('deleteAccountProfile blocks deletion while a checkout or subscription flow is linked', async () => {
+test('isAccountDeletionBlocked detects an active billing flow', async () => {
   const db = fakeDb({ billingCheckout: true });
-  assert.equal(await deleteAccountProfile(db, 'firebase-uid-123'), false);
-  assert.deepEqual(db.inserted[0].params, ['firebase-uid-123', 'firebase-uid-123']);
+  assert.equal(await isAccountDeletionBlocked(db, 'firebase-uid-123'), true);
+});
+
+test('account deletion is allowed only when no active billing flow remains', async () => {
+  assert.equal(await isAccountDeletionBlocked(fakeDb(), 'firebase-uid-123'), false);
+});
+
+test('account deletion records a durable cutoff and retries when Firebase is unavailable', async () => {
+  const db = fakeDb();
+  const pending = await deleteAccount(db, 'firebase-uid-123', async () => { throw new Error('firebase failed'); });
+  assert.deepEqual(pending, { ok: true, pending: true });
+  assert.equal(db.inserted.some(entry => entry.sql.includes('account_auth_cutoffs')), true);
+  assert.equal(db.inserted.some(entry => entry.sql.includes('account_deletion_jobs')), true);
+  assert.equal(db.inserted.some(entry => entry.sql.includes('DELETE FROM account_profiles')), false);
+
+  const order = [];
+  const orderedDb = fakeDb();
+  const originalPrepare = orderedDb.prepare;
+  orderedDb.prepare = (sql) => {
+    const statement = originalPrepare.call(orderedDb, sql);
+    const originalBind = statement.bind;
+    statement.bind = (...params) => {
+      const bound = originalBind.call(statement, ...params);
+      if (typeof bound.run === 'function') {
+        const originalRun = bound.run;
+        bound.run = async () => {
+          order.push(sql.includes('account_auth_cutoffs') ? 'cutoff'
+            : sql.startsWith('INSERT INTO account_deletion_jobs') ? 'job'
+              : sql.startsWith('DELETE FROM account_profiles') ? 'profile'
+                : 'job-delete');
+          return originalRun.call(bound);
+        };
+      }
+      return bound;
+    };
+    return statement;
+  };
+  assert.deepEqual(await deleteAccount(orderedDb, 'firebase-uid-123', async () => { order.push('firebase'); }), { ok: true, pending: false });
+  assert.deepEqual(order, ['cutoff', 'job', 'firebase', 'profile', 'job-delete']);
+});
+
+test('account deletion does not call Firebase while billing remains active', async () => {
+  let called = false;
+  const result = await deleteAccount(fakeDb({ billingCheckout: true }), 'uid', async () => { called = true; });
+  assert.deepEqual(result, { ok: false, code: 'billing-cancellation-required' });
+  assert.equal(called, false);
+});
+
+test('scheduled deletion retry clears completed jobs and preserves failed jobs', async () => {
+  const jobs = new Set(['uid-ok', 'uid-retry']);
+  const deletedProfiles = [];
+  const db = {
+    prepare(sql) {
+      return {
+        bind(...params) {
+          if (sql.startsWith('SELECT account_uid')) {
+            return { async all() { return { results: [...jobs].map(account_uid => ({ account_uid })) }; } };
+          }
+          return { async run() {
+            if (sql.startsWith('DELETE FROM account_profiles')) deletedProfiles.push(params[0]);
+            if (sql.startsWith('DELETE FROM account_deletion_jobs')) jobs.delete(params[0]);
+            return { success: true };
+          } };
+        },
+      };
+    },
+  };
+
+  await resumeAccountDeletions(db, async uid => {
+    if (uid === 'uid-retry') throw new Error('temporary Firebase failure');
+  });
+
+  assert.deepEqual(deletedProfiles, ['uid-ok']);
+  assert.deepEqual([...jobs], ['uid-retry']);
 });
 
 test('fetchAccountProfile returns null when the account has no profile row', async () => {

@@ -12,7 +12,7 @@ namespace Ralven.App.Views;
 /// only presents the optional-reports toggle and reports back the choice confirmed by
 /// the user with "Continue".
 /// </summary>
-public partial class PrivacyConsentWindow : Wpf.Ui.Controls.FluentWindow
+public partial class PrivacyConsentWindow : Ralven.App.Controls.DialogWindow
 {
     private readonly ILocalizationService localization;
     private bool confirmedByUser;

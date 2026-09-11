@@ -6,28 +6,9 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:controls="clr-namespace:Ralven.App.Controls"
              mc:Ignorable="d" d:DesignWidth="1400" d:DesignHeight="820">
-    <!--
-        OTIMIZADOR — direção Ralven.
-
-        O fluxo trabalha em ESTAÇÕES, e a página é essa sequência:
-        preparar → executar → resultado. A espinha de estações no cabeçalho
-        mostra as três de uma vez, com a corrente em alto contraste — no visual
-        anterior eram três traços soltos a 38% de opacidade, que não
-        conectavam nada e não diziam qual vinha depois.
-
-        Três painéis irmãos:
-          controle — a fase corrente (perfil, execução ou resultado);
-          plano    — a tabela de ações, sempre presente;
-          registro — passo a passo ao vivo ou relatório; só existe quando há
-                     execução ou resultado, e some quando não há.
-
-        Redundância removida: o subtítulo da página (o resumo do plano logo
-        acima da tabela já diz melhor o mesmo), a segunda cópia das
-        categorias do perfil, e o bloco de "limites de segurança" — que
-        aparecia aqui, no Histórico e em Configurações ao mesmo tempo e agora
-        existe uma vez, em Configurações › Sobre. O que ficou é a promessa
-        concreta desta tela: snapshot e reversão.
-    -->
+    <!-- O fluxo preserva os dois grandes cards existentes: a etapa corrente
+         e o plano. Conteúdo técnico é progressivo, nunca uma terceira coluna
+         permanente. -->
     <UserControl.Resources>
         <CollectionViewSource x:Key="GroupedPlannedAdjustments" Source="{Binding DataContext.PlannedAdjustments, ElementName=Root}">
             <CollectionViewSource.GroupDescriptions>
@@ -68,75 +49,62 @@
             <Setter Property="VerticalAlignment" Value="Center" />
         </Style>
 
-        <!--
-            Linha da tabela de plano. As larguras são idênticas às do
-            cabeçalho logo acima, então as colunas alinham sem
-            SharedSizeScope. Risco é lido por cor do texto + rótulo, nunca por
-            faixa lateral colorida.
-        -->
+        <!-- A linha principal responde "o que muda". Implementação,
+             verificação e risco ficam disponíveis sob demanda. -->
         <DataTemplate x:Key="PlanActionTemplate">
-            <Border Style="{StaticResource TableRowStyle}" Padding="12,13">
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
-                    </Grid.RowDefinitions>
-                    <Grid>
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="72" />
-                            <ColumnDefinition Width="110" />
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding Name}" Style="{StaticResource BodyStrongText}" TextWrapping="Wrap" Margin="0,0,18,0" />
-                        <TextBlock Grid.Column="1" Text="{Binding Description}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,1,18,0" />
-                        <TextBlock Grid.Column="2" Text="{Binding RiskLabel}" Style="{StaticResource CaptionText}" VerticalAlignment="Top" Margin="0,2,12,0"
-                                   Foreground="{Binding RiskBrushKey, Converter={StaticResource BrushKeyConverter}}" TextWrapping="Wrap" />
-                        <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Top" Margin="0,2,0,0">
-                            <Path Width="13" Height="13" Stretch="Uniform" StrokeThickness="1.4" Margin="0,1,6,0" VerticalAlignment="Top"
-                                  Data="{StaticResource IconShield}" Stroke="{DynamicResource TextTertiaryBrush}"
-                                  Visibility="{Binding RequiresElevation, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                            <TextBlock Text="{Binding PrivilegeLabel}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
-                        </StackPanel>
-                    </Grid>
+            <Border Style="{StaticResource TableRowStyle}" Padding="12,14">
+                <StackPanel>
+                    <TextBlock Text="{Binding Name}" Style="{StaticResource BodyStrongText}" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,5,0,0" />
+                    <TextBlock Text="{Binding PrimaryCautionLabel}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,6,0,0"
+                               Foreground="{DynamicResource WarningBaseBrush}"
+                               Visibility="{Binding PrimaryCautionLabel, Converter={StaticResource StringToVisibilityConverter}}" />
 
-                    <Expander Grid.Row="1"
+                    <Expander
                               Header="{Binding [Optimizer.ShowDetails], Source={StaticResource LocalizedStrings}}"
+                              IsExpanded="False"
                               HorizontalContentAlignment="Stretch"
                               Background="Transparent"
                               Foreground="{DynamicResource AccentTextBrush}"
                               Margin="0,10,0,0"
-                              AutomationProperties.Name="{Binding Name}"
-                              AutomationProperties.HelpText="{Binding [Optimizer.ShowDetails], Source={StaticResource LocalizedStrings}}">
-                        <Grid Margin="24,13,0,4">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height="Auto" />
-                                <RowDefinition Height="Auto" />
-                            </Grid.RowDefinitions>
+                              AutomationProperties.Name="{Binding [Optimizer.ShowDetails], Source={StaticResource LocalizedStrings}}"
+                              AutomationProperties.HelpText="{Binding Name}">
+                        <StackPanel Margin="24,13,0,4">
+                            <Grid Margin="0,0,0,17">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" Margin="0,0,24,0">
+                                    <TextBlock Text="{Binding [Optimizer.Details.Risk], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding RiskLabel}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                               Foreground="{Binding RiskBrushKey, Converter={StaticResource BrushKeyConverter}}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="1">
+                                    <TextBlock Text="{Binding [Optimizer.Details.Access], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding PrivilegeLabel}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                                </StackPanel>
+                            </Grid>
 
-                            <StackPanel Grid.Row="0" Grid.Column="0" Margin="0,0,24,17">
+                            <StackPanel Margin="0,0,0,17">
                                 <TextBlock Text="{Binding [Optimizer.Details.Detection], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
                                 <TextBlock Text="{Binding DetectionSummary}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,0" />
                             </StackPanel>
-                            <StackPanel Grid.Row="0" Grid.Column="1" Margin="0,0,0,17">
+                            <StackPanel Margin="0,0,0,17">
                                 <TextBlock Text="{Binding [Optimizer.Details.Confirmation], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
                                 <TextBlock Text="{Binding ConfirmationSummary}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,0" />
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="0" Margin="0,0,24,0">
+                            <StackPanel Margin="0,0,0,17">
                                 <TextBlock Text="{Binding [Optimizer.Details.Undo], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
                                 <TextBlock Text="{Binding UndoSummary}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,0" />
                             </StackPanel>
-                            <StackPanel Grid.Row="1" Grid.Column="1">
+                            <StackPanel>
                                 <TextBlock Text="{Binding [Optimizer.Details.Limitations], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
                                 <TextBlock Text="{Binding RiskLimitations}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,0" />
                             </StackPanel>
-                        </Grid>
+                        </StackPanel>
                     </Expander>
-                </Grid>
+                </StackPanel>
             </Border>
         </DataTemplate>
 
@@ -195,10 +163,8 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center" Margin="0,0,32,0">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="{Binding OptimizerTitle}" Style="{StaticResource PageTitleText}" />
-                        <TextBlock Text="{Binding PlanHeader}" Style="{StaticResource TickLabelText}" VerticalAlignment="Bottom" Margin="14,0,0,5" />
-                    </StackPanel>
+                    <TextBlock Text="{Binding OptimizerTitle}" Style="{StaticResource PageTitleText}"
+                               AutomationProperties.HeadingLevel="Level1" />
                     <TextBlock Text="{Binding OptimizerSubtitle}" Style="{StaticResource SecondaryText}" Margin="0,8,0,0" TextWrapping="Wrap" MaxWidth="680" />
                     <Rectangle Style="{StaticResource TitleAccentRule}" Margin="0,10,0,0" />
                 </StackPanel>
@@ -287,31 +253,20 @@
 
         <!--
             ===================== Corpo: controle | plano | registro =====================
-            Controle e plano precisam de 856px. O piso de 1272px só é
-            necessário quando o registro aparece; o ScrollViewer preserva o
-            acesso às três colunas numa janela estreita.
+            Controle e plano permanecem como os dois grandes cards da tela.
+            Detalhes de execução e resultado vivem em disclosure, evitando uma
+            terceira coluna técnica em janelas menores.
         -->
         <ScrollViewer x:Name="OptimizerBody" Grid.Row="1" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-        <Grid Width="{Binding ActualWidth, ElementName=OptimizerBody}">
-            <Grid.Style>
-                <Style TargetType="Grid">
-                    <Setter Property="MinWidth" Value="856" />
-                    <Style.Triggers>
-                        <DataTrigger Binding="{Binding IsBusy}" Value="True"><Setter Property="MinWidth" Value="1272" /></DataTrigger>
-                        <DataTrigger Binding="{Binding IsReportAvailable}" Value="True"><Setter Property="MinWidth" Value="1272" /></DataTrigger>
-                    </Style.Triggers>
-                </Style>
-            </Grid.Style>
+        <Grid Width="{Binding ActualWidth, ElementName=OptimizerBody}" MinWidth="820">
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="Auto" />
                 <ColumnDefinition Width="20" />
                 <ColumnDefinition Width="*" MinWidth="420" />
-                <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
 
             <!-- ================ Painel de controle ================ -->
-            <Border Grid.Column="0" Width="416" Style="{StaticResource PanelSurface}">
+            <Border Grid.Column="0" Width="376" Style="{StaticResource PanelSurface}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled" Padding="26,24,22,24">
                     <StackPanel>
 
@@ -322,33 +277,51 @@
                                                         Option0Label="{Binding [Profiles.Light.Name], Source={StaticResource LocalizedStrings}}"
                                                         Option1Label="{Binding [Profiles.Balanced.Name], Source={StaticResource LocalizedStrings}}"
                                                         Option2Label="{Binding [Profiles.Aggressive.Name], Source={StaticResource LocalizedStrings}}"
+                                                        Option3Label="{Binding [Ultra.Development.Name], Source={StaticResource LocalizedStrings}}"
+                                                        ShowOption3="{Binding IsGeneralWindowsOptimization}"
                                                         RecommendedLabel="{Binding [Profiles.RecommendedBadge], Source={StaticResource LocalizedStrings}}"
                                                         SelectionChanged="ProfileSpectrum_SelectionChanged" />
-                            <TextBlock Text="{Binding SelectedProfileName}" Style="{StaticResource PageTitleText}" Margin="0,24,0,0" />
+                            <TextBlock Text="{Binding SelectedProfileName}" Margin="0,24,0,0">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource PageTitleText}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsUltraSelected}" Value="True">
+                                                <Setter Property="Foreground" Value="{DynamicResource ProAccentBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <TextBlock Text="{Binding ProfilePresentationBenefits}" Style="{StaticResource SecondaryText}" Margin="0,10,0,0" TextWrapping="Wrap" />
+                            <controls:UltraPanel x:Name="UltraWorkspace" Margin="0,18,0,0" Visibility="{Binding IsUltraSelected, Converter={StaticResource BooleanToVisibilityConverter}}" />
 
-                            <Border Style="{StaticResource HairlineDivider}" Margin="0,24" />
+                            <Border Style="{StaticResource HairlineDivider}" Margin="0,22" />
 
-                            <StackPanel>
-                                <TextBlock Text="{Binding [Plan.AppliedAdjustments.Label], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                                <TextBlock Text="{Binding SelectedActionCount}" Style="{StaticResource ReadoutSmallText}" Margin="0,5,0,0" />
-
-                                <TextBlock Text="{Binding [Optimizer.Impact], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,22,0,0" />
-                                <TextBlock Text="{Binding ProfilePresentationImpact}" Style="{StaticResource BodyStrongText}" Margin="0,5,0,0" TextWrapping="Wrap" />
-
-                                <TextBlock Text="{Binding [Optimizer.Execution], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,22,0,0" />
-                                <TextBlock Text="{Binding ElevationLabel}" Style="{StaticResource BodyStrongText}" Margin="0,5,0,0" TextWrapping="Wrap" />
-                                <TextBlock Text="{Binding SafetySummary}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
-                            </StackPanel>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="20" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0">
+                                    <TextBlock Text="{Binding [Optimizer.Impact], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding ProfilePresentationImpact}" Style="{StaticResource BodyStrongText}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2">
+                                    <TextBlock Text="{Binding [Optimizer.Execution], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
+                                    <TextBlock Text="{Binding ElevationLabel}" Style="{StaticResource BodyStrongText}" Margin="0,5,0,0" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding SafetySummary}" Style="{StaticResource CaptionText}" Margin="0,4,0,0" TextWrapping="Wrap" />
+                                </StackPanel>
+                            </Grid>
 
                             <Button Style="{StaticResource PrimaryButtonStyle}" Content="{Binding [Plan.OptimizeNow], Source={StaticResource LocalizedStrings}}"
-                                    Margin="0,28,0,0" HorizontalAlignment="Stretch" Height="46"
+                                    Margin="0,28,0,0" HorizontalAlignment="Stretch"
                                     Click="StartOptimization_Click" IsEnabled="{Binding CanStart}" />
 
                             <!-- A promessa concreta desta tela. Os "limites de
                                  segurança" gerais saíram daqui: existiam em
                                  três telas ao mesmo tempo. -->
-                            <Grid Margin="0,18,0,0">
+                            <Grid Margin="0,16,0,0">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
@@ -379,7 +352,8 @@
 
                             <StackPanel Margin="0,22,0,0">
                                 <TextBlock Text="{Binding [Progress.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" />
-                                <TextBlock Text="{Binding ProgressHeadline, Mode=OneWay}" Style="{StaticResource BodyStrongText}" Margin="0,6,0,0" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding ProgressHeadline, Mode=OneWay}" Style="{StaticResource BodyStrongText}" Margin="0,6,0,0" TextWrapping="Wrap"
+                                           AutomationProperties.LiveSetting="Polite" />
                                 <TextBlock Text="{Binding PreviousProgressHeadline, Mode=OneWay}" Style="{StaticResource SecondaryText}" Margin="0,6,0,0" TextWrapping="Wrap"
                                            Visibility="{Binding HasPreviousProgressHeadline, Converter={StaticResource BooleanToVisibilityConverter}}" />
                             </StackPanel>
@@ -390,6 +364,15 @@
                                     AutomationProperties.Name="{Binding [Progress.CancelAfterStep], Source={StaticResource LocalizedStrings}}"
                                     AutomationProperties.HelpText="{Binding [Progress.CancelHelp], Source={StaticResource LocalizedStrings}}" />
                             <TextBlock Text="{Binding [Progress.CancelHelp], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,10,0,0" TextWrapping="Wrap" />
+
+                            <Expander Header="{Binding [Optimizer.ExecutionDetails], Source={StaticResource LocalizedStrings}}"
+                                      IsExpanded="False"
+                                      HorizontalContentAlignment="Stretch"
+                                      Margin="0,18,0,0"
+                                      Visibility="{Binding HasStepLedgerItems, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                      AutomationProperties.Name="{Binding [Optimizer.ExecutionDetails], Source={StaticResource LocalizedStrings}}">
+                                <ItemsControl x:Name="StepLedgerList" ItemsSource="{Binding StepLedger}" ItemTemplate="{StaticResource StepLedgerRowTemplate}" Margin="0,8,0,0" />
+                            </Expander>
                         </StackPanel>
 
                         <!-- Estação: Resultado -->
@@ -456,16 +439,18 @@
                                             </TextBlock.Style>
                                         </TextBlock>
                                     </Grid>
-                                    <TextBlock Text="{Binding ReportSummaryLabel}" Style="{StaticResource SecondaryText}" Margin="0,12,0,0" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding ReportSummaryLabel}" Style="{StaticResource SecondaryText}" Margin="0,12,0,0" TextWrapping="Wrap"
+                                               AutomationProperties.LiveSetting="Polite" />
                                 </StackPanel>
                             </Border>
 
-                            <TextBlock Text="{Binding ReportRestartLabel}" Style="{StaticResource SecondaryText}" Margin="0,16,0,0" TextWrapping="Wrap" />
+                            <TextBlock Text="{Binding ReportRestartLabel}" Style="{StaticResource SecondaryText}" Margin="0,16,0,0" TextWrapping="Wrap"
+                                       Visibility="{Binding ReportRestartLabel, Converter={StaticResource StringToVisibilityConverter}}" />
 
                             <StackPanel Margin="0,20,0,0">
-                                <Button Style="{StaticResource SecondaryButtonStyle}" Content="{Binding [Report.CopyButton], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Stretch" Click="CopyTechnicalReport_Click" />
-                                <Button Style="{StaticResource SecondaryButtonStyle}" Content="{Binding [Report.SaveButton], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Stretch" Margin="0,10,0,0" Click="SaveTechnicalReport_Click" IsEnabled="{Binding CanShareReport}" />
-                                <Button Style="{StaticResource LinkButtonStyle}" Content="{Binding [Report.ViewHistoryButton], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Left" Margin="-6,12,0,0" Click="OpenHistory_Click" />
+                                <Button Style="{StaticResource PrimaryButtonStyle}" Content="{Binding [Optimizer.PrepareAgain], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Stretch" Margin="0,0,0,10"
+                                        Click="PrepareNewOptimization_Click" IsEnabled="{Binding CanEditPersonalPreferences}" />
+                                <Button Style="{StaticResource LinkButtonStyle}" Content="{Binding [Report.ViewHistoryButton], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Left" Margin="-6,2,0,0" Click="OpenHistory_Click" />
                             </StackPanel>
 
                             <!-- Comparação antes/depois. -->
@@ -473,11 +458,26 @@
                                 <Border Style="{StaticResource HairlineDivider}" Margin="0,22" />
                                 <TextBlock Text="{Binding [Comparison.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SubsectionText}" />
                                 <TextBlock Text="{Binding ComparisonSummaryLabel}" Style="{StaticResource SecondaryText}" Margin="0,10,0,0" TextWrapping="Wrap" />
-                                <TextBlock Text="{Binding ComparisonHardwareProfileLabel}" Style="{StaticResource CaptionText}" Margin="0,8,0,0" TextWrapping="Wrap" />
                                 <Button Style="{StaticResource SecondaryButtonStyle}" Content="{Binding [Comparison.RevertButton], Source={StaticResource LocalizedStrings}}" Margin="0,16,0,0" HorizontalAlignment="Stretch"
                                         Visibility="{Binding ComparisonRegressionSuspected, Converter={StaticResource BooleanToVisibilityConverter}}"
                                         IsEnabled="{Binding CanRevertLastOptimization}" Click="RevertLastOptimization_Click" />
                             </StackPanel>
+
+                            <Expander Header="{Binding [Optimizer.ResultDetails], Source={StaticResource LocalizedStrings}}"
+                                      IsExpanded="False"
+                                      HorizontalContentAlignment="Stretch"
+                                      Margin="0,20,0,0"
+                                      AutomationProperties.Name="{Binding [Optimizer.ResultDetails], Source={StaticResource LocalizedStrings}}">
+                                <StackPanel Margin="0,10,0,0">
+                                    <TextBlock Text="{Binding ReportDetailSummaryLabel}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding ComparisonHardwareProfileLabel}" Style="{StaticResource CaptionText}" Margin="0,8,0,0" TextWrapping="Wrap"
+                                               Visibility="{Binding ComparisonHardwareProfileLabel, Converter={StaticResource StringToVisibilityConverter}}" />
+                                    <TextBlock Text="{Binding [Optimizer.ResultActions], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}" Margin="0,18,0,6" />
+                                    <ItemsControl ItemsSource="{Binding ReportLines}" ItemTemplate="{StaticResource ReportLineRowTemplate}" />
+                                    <Button Style="{StaticResource SecondaryButtonStyle}" Content="{Binding [Report.CopyButton], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Stretch" Margin="0,18,0,0" Click="CopyTechnicalReport_Click" />
+                                    <Button Style="{StaticResource SecondaryButtonStyle}" Content="{Binding [Report.SaveButton], Source={StaticResource LocalizedStrings}}" HorizontalAlignment="Stretch" Margin="0,10,0,0" Click="SaveTechnicalReport_Click" IsEnabled="{Binding CanShareReport}" />
+                                </StackPanel>
+                            </Expander>
                         </StackPanel>
                     </StackPanel>
                 </ScrollViewer>
@@ -488,52 +488,25 @@
                 <Grid Margin="26,24,26,20">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
-                        <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
                     <StackPanel Grid.Row="0" Margin="0,0,0,18">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="{Binding [Optimizer.PlanTitle], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}" VerticalAlignment="Center" />
-                            <TextBlock Grid.Column="1" Text="{Binding ProfilePresentationCategories}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="20,0,0,0" TextTrimming="CharacterEllipsis" />
+                            <TextBlock Text="{Binding [Optimizer.PlanTitle], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SectionText}"
+                                       AutomationProperties.HeadingLevel="Level2" />
+                            <TextBlock Grid.Column="1" Text="{Binding PlanHeader}" Style="{StaticResource TickLabelText}" VerticalAlignment="Center" Margin="18,0,0,0" />
                         </Grid>
                         <TextBlock Text="{Binding PlanSummary}" Style="{StaticResource SecondaryText}" Margin="0,7,0,0" TextWrapping="Wrap" />
-                        <!-- Sem tinta de alerta: são ressalvas do plano, não
-                             erros. Três linhas em amarelo no topo da tabela
-                             gritavam mais que o próprio plano. -->
                         <TextBlock Text="{Binding PlanNoticesText}" Style="{StaticResource CaptionText}" Margin="0,8,0,0" TextWrapping="Wrap"
                                    Visibility="{Binding PlanNoticesText, Converter={StaticResource StringToVisibilityConverter}}" />
                     </StackPanel>
 
-                    <!-- Cabeçalho da tabela: mesmas larguras do PlanActionTemplate. -->
-                    <Border Grid.Row="1" Padding="12,10">
-                        <Border.Style>
-                            <Style TargetType="Border" BasedOn="{StaticResource TableHeaderRowStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding HasPlannedAdjustments}" Value="False">
-                                        <Setter Property="Visibility" Value="Collapsed" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="72" />
-                                <ColumnDefinition Width="110" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0" Text="{Binding [Optimizer.Table.Action], Source={StaticResource LocalizedStrings}}" Style="{StaticResource TableHeaderCellText}" Margin="0,0,18,0" TextWrapping="Wrap" />
-                            <TextBlock Grid.Column="1" Text="{Binding [Optimizer.Table.Description], Source={StaticResource LocalizedStrings}}" Style="{StaticResource TableHeaderCellText}" Margin="0,0,18,0" TextWrapping="Wrap" />
-                            <TextBlock Grid.Column="2" Text="{Binding [Optimizer.Table.Risk], Source={StaticResource LocalizedStrings}}" Style="{StaticResource TableHeaderCellText}" Margin="0,0,12,0" TextWrapping="Wrap" />
-                            <TextBlock Grid.Column="3" Text="{Binding [Optimizer.Table.Privilege], Source={StaticResource LocalizedStrings}}" Style="{StaticResource TableHeaderCellText}" TextWrapping="Wrap" />
-                        </Grid>
-                    </Border>
-
-                    <TextBlock Grid.Row="2" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" MaxWidth="440">
+                    <TextBlock Grid.Row="1" TextWrapping="Wrap" HorizontalAlignment="Center" VerticalAlignment="Center" TextAlignment="Center" MaxWidth="440">
                         <TextBlock.Style>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource SecondaryText}">
                                 <Setter Property="Visibility" Value="Collapsed" />
@@ -549,7 +522,7 @@
                         <Run Text="{Binding EmptyPlanMessage, Mode=OneWay}" />
                     </TextBlock>
 
-                    <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                         <ScrollViewer.Style>
                             <Style TargetType="ScrollViewer">
                                 <Style.Triggers>
@@ -615,61 +588,6 @@
                 </Grid>
             </Border>
 
-            <!-- ================ Painel de registro ================ -->
-            <!-- Existe só quando há execução ou resultado; caso contrário a
-                 coluna colapsa e o plano ocupa toda a largura. O espaçador
-                 acompanha, para não sobrar uma faixa de 20px vazia. -->
-            <Border Grid.Column="3" Width="20">
-                <Border.Style>
-                    <Style TargetType="Border">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsBusy}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
-                            <DataTrigger Binding="{Binding IsReportAvailable}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-            </Border>
-            <Border Grid.Column="4" Width="396" Padding="24,22">
-                <Border.Style>
-                    <Style TargetType="Border" BasedOn="{StaticResource NotesColumnSurface}">
-                        <Setter Property="Visibility" Value="Collapsed" />
-                        <Style.Triggers>
-                            <DataTrigger Binding="{Binding IsBusy}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
-                            <DataTrigger Binding="{Binding IsReportAvailable}" Value="True"><Setter Property="Visibility" Value="Visible" /></DataTrigger>
-                        </Style.Triggers>
-                    </Style>
-                </Border.Style>
-                <Grid>
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="Auto" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <TextBlock Grid.Row="0" Margin="0,0,0,14">
-                        <TextBlock.Style>
-                            <Style TargetType="TextBlock" BasedOn="{StaticResource SubsectionText}">
-                                <Setter Property="Text" Value="{Binding [Progress.Title], Source={StaticResource LocalizedStrings}}" />
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsReportAvailable}" Value="True">
-                                        <Setter Property="Text" Value="{Binding [Optimizer.Stage.Result], Source={StaticResource LocalizedStrings}}" />
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </TextBlock.Style>
-                    </TextBlock>
-
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                        <StackPanel>
-                            <ItemsControl x:Name="StepLedgerList" ItemsSource="{Binding StepLedger}" ItemTemplate="{StaticResource StepLedgerRowTemplate}"
-                                          Visibility="{Binding IsBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                            <!-- Falhas primeiro, sempre — nunca ler como sucesso quando há falha real. -->
-                            <ItemsControl ItemsSource="{Binding ReportLines}" ItemTemplate="{StaticResource ReportLineRowTemplate}"
-                                          Visibility="{Binding IsReportAvailable, Converter={StaticResource BooleanToVisibilityConverter}}" />
-                        </StackPanel>
-                    </ScrollViewer>
-                </Grid>
-            </Border>
         </Grid>
         </ScrollViewer>
     </Grid>

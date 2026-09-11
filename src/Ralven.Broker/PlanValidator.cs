@@ -77,6 +77,7 @@ internal sealed class PlanValidator
         }
 
         Require(expected.IsExecutable, "plan-rebuild-failed", "The plan cannot be rebuilt safely.");
+        Require(expected.Options == plan.Options, "plan-options-invalid", "The plan options do not match its preferences.");
         Require(
             expected.Scope == plan.Scope,
             "plan-scope-mismatch",

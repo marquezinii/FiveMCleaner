@@ -142,7 +142,7 @@ public sealed class RemoteServicesOptionsLoaderTests : IDisposable
     {
         WriteConfigFile(
             "appsettings.Production.json",
-            """{ "environment": "Development", "telemetryEndpoint": "https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry" }""");
+            """{ "environment": "Development", "telemetryEndpoint": "https://api.vemryx.com/telemetry" }""");
 
         var options = RemoteServicesOptionsLoader.Load(AppRuntimeEnvironment.Production, tempDirectory);
 
@@ -231,21 +231,21 @@ public sealed class TelemetryEndpointPolicyTests
     public void TryCreate_ProductionWorkerEndpoint_IsAccepted()
     {
         var accepted = TelemetryEndpointPolicy.TryCreate(
-            "https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry",
+            "https://api.vemryx.com/telemetry",
             AppRuntimeEnvironment.Production,
             out var endpoint,
             out var error);
 
         Assert.True(accepted);
         Assert.Null(error);
-        Assert.Equal("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry", endpoint.AbsoluteUri);
+        Assert.Equal("https://api.vemryx.com/telemetry", endpoint.AbsoluteUri);
     }
 
     [Theory]
-    [InlineData("http://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry")]
+    [InlineData("http://api.vemryx.com/telemetry")]
     [InlineData("https://telemetry.example.test/telemetry")]
-    [InlineData("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/other")]
-    [InlineData("https://fivemcleaner-telemetry.felipemarquesini10.workers.dev/telemetry?redirect=1")]
+    [InlineData("https://api.vemryx.com/other")]
+    [InlineData("https://api.vemryx.com/telemetry?redirect=1")]
     public void TryCreate_UnsafeProductionEndpoint_IsRejected(string value)
     {
         var accepted = TelemetryEndpointPolicy.TryCreate(

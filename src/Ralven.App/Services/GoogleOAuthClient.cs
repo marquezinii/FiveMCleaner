@@ -105,6 +105,7 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
 
         var verifier = CreateRandomToken();
         var state = CreateRandomToken();
+        var nonce = CreateRandomToken();
 
         var listener = new TcpListener(IPAddress.Loopback, 0);
         try
@@ -121,7 +122,7 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
             var port = ((IPEndPoint)listener.LocalEndpoint).Port;
             var redirectUri = $"http://127.0.0.1:{port}/";
 
-            if (!TryOpenBrowser(BuildAuthorizeUrl(redirectUri, verifier, state)))
+            if (!TryOpenBrowser(BuildAuthorizeUrl(redirectUri, verifier, state, nonce)))
             {
                 return GoogleSignInTicket.Fail(T("Account.Google.BrowserOpenFailed"));
             }
@@ -129,20 +130,13 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
             timeout.CancelAfter(BrowserTimeout);
 
-            var callback = await WaitForCallbackAsync(listener, timeout.Token, cancellationToken).ConfigureAwait(false);
+            var callback = await WaitForCallbackAsync(listener, state, timeout.Token, cancellationToken).ConfigureAwait(false);
             if (callback.Error is not null)
             {
                 return GoogleSignInTicket.Fail(callback.Error);
             }
 
-            if (!CryptographicOperations.FixedTimeEquals(
-                    Encoding.UTF8.GetBytes(callback.State ?? string.Empty),
-                    Encoding.UTF8.GetBytes(state)))
-            {
-                return GoogleSignInTicket.Fail(T("Account.Google.InvalidResponse"));
-            }
-
-            return await ExchangeCodeAsync(callback.Code!, verifier, redirectUri, cancellationToken).ConfigureAwait(false);
+            return await ExchangeCodeAsync(callback.Code!, verifier, redirectUri, nonce, cancellationToken).ConfigureAwait(false);
         }
         finally
         {
@@ -150,7 +144,7 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
         }
     }
 
-    private string BuildAuthorizeUrl(string redirectUri, string verifier, string state)
+    internal string BuildAuthorizeUrl(string redirectUri, string verifier, string state, string nonce)
     {
         var challenge = Base64Url(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
         var query = new Dictionary<string, string>
@@ -162,6 +156,7 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
             ["code_challenge"] = challenge,
             ["code_challenge_method"] = "S256",
             ["state"] = state,
+            ["nonce"] = nonce,
             // Always let the user pick which Google account to use: silently
             // reusing whichever one the browser happens to be signed into is
             // a common source of "it created the wrong account" reports.
@@ -191,6 +186,7 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
     /// </summary>
     private async Task<CallbackResult> WaitForCallbackAsync(
         TcpListener listener,
+        string expectedState,
         CancellationToken timeoutToken,
         CancellationToken cancellationToken)
     {
@@ -222,17 +218,12 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
                     continue;
                 }
 
-                var query = HttpUtility.ParseQueryString(
-                    requestTarget.Contains('?', StringComparison.Ordinal)
-                        ? requestTarget[(requestTarget.IndexOf('?', StringComparison.Ordinal) + 1)..]
-                        : string.Empty);
-
-                var code = query["code"];
-                var error = query["error"];
-                if (code is null && error is null)
+                if (!TryParseCallback(requestTarget, expectedState, out var code, out var error))
                 {
-                    // Not the redirect (favicon and friends): answer 404 and
-                    // keep waiting for the real one.
+                    // Ignore favicon/pre-warming requests and callbacks with
+                    // the wrong state. A local process that discovers the
+                    // ephemeral port must not be able to terminate the real
+                    // authorization attempt with a forged callback.
                     await WriteResponseAsync(
                         connection,
                         "404 Not Found",
@@ -251,12 +242,35 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
                     timeoutToken).ConfigureAwait(false);
 
                 return succeeded
-                    ? new CallbackResult(code, query["state"], null)
+                    ? new CallbackResult(code, null)
                     : CallbackResult.Failed(error == "access_denied"
                         ? T("Account.Google.ProviderCancelled")
                         : T("Account.Google.ProviderFailed"));
             }
         }
+    }
+
+    internal static bool TryParseCallback(
+        string requestTarget,
+        string expectedState,
+        out string? code,
+        out string? error)
+    {
+        code = error = null;
+        var query = HttpUtility.ParseQueryString(
+            requestTarget.Contains('?', StringComparison.Ordinal)
+                ? requestTarget[(requestTarget.IndexOf('?', StringComparison.Ordinal) + 1)..]
+                : string.Empty);
+        code = query["code"];
+        error = query["error"];
+        if ((code is null) == (error is null)
+            || !FixedTimeEquals(query["state"], expectedState))
+        {
+            code = error = null;
+            return false;
+        }
+
+        return true;
     }
 
     private static async Task<string?> ReadRequestTargetAsync(TcpClient connection, CancellationToken cancellationToken)
@@ -470,10 +484,11 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
         }
     }
 
-    private async Task<GoogleSignInTicket> ExchangeCodeAsync(
+    internal async Task<GoogleSignInTicket> ExchangeCodeAsync(
         string code,
         string verifier,
         string redirectUri,
+        string nonce,
         CancellationToken cancellationToken)
     {
         var form = new Dictionary<string, string>
@@ -511,7 +526,9 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
 
             return string.IsNullOrWhiteSpace(payload?.IdToken)
                 ? GoogleSignInTicket.Fail(T("Account.Google.MissingAccountInfo"))
-                : new GoogleSignInTicket(payload!.IdToken, null);
+                : HasExpectedIdTokenClaims(payload.IdToken, clientId!, nonce, DateTimeOffset.UtcNow)
+                    ? new GoogleSignInTicket(payload.IdToken, null)
+                    : GoogleSignInTicket.Fail(T("Account.Google.InvalidResponse"));
         }
         catch (OperationCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
@@ -529,6 +546,99 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
 
     private static string CreateRandomToken() => Base64Url(RandomNumberGenerator.GetBytes(32));
 
+    internal static bool HasExpectedIdTokenClaims(
+        string idToken,
+        string expectedAudience,
+        string expectedNonce,
+        DateTimeOffset now)
+    {
+        if (idToken.Length is 0 or > 16 * 1024)
+        {
+            return false;
+        }
+
+        var parts = idToken.Split('.');
+        if (parts.Length != 3 || !TryDecodeBase64Url(parts[1], out var payloadBytes))
+        {
+            return false;
+        }
+
+        try
+        {
+            using var payload = JsonDocument.Parse(payloadBytes);
+            var root = payload.RootElement;
+            if (root.ValueKind != JsonValueKind.Object
+                || !root.TryGetProperty("iss", out var issuer)
+                || issuer.ValueKind != JsonValueKind.String
+                || issuer.GetString() is not ("https://accounts.google.com" or "accounts.google.com")
+                || !root.TryGetProperty("aud", out var audience)
+                || !AudienceContains(audience, expectedAudience)
+                || !root.TryGetProperty("exp", out var expiry)
+                || !expiry.TryGetInt64(out var expirySeconds)
+                || expirySeconds <= now.ToUnixTimeSeconds()
+                || !root.TryGetProperty("sub", out var subject)
+                || subject.ValueKind != JsonValueKind.String
+                || !IsValidSubject(subject.GetString())
+                || !root.TryGetProperty("nonce", out var nonce)
+                || nonce.ValueKind != JsonValueKind.String
+                || !FixedTimeEquals(nonce.GetString(), expectedNonce))
+            {
+                return false;
+            }
+
+            // This is a defensive OIDC correlation check only. The token is
+            // not authenticated until Firebase validates Google's signature.
+            return true;
+        }
+        catch (JsonException)
+        {
+            return false;
+        }
+        finally
+        {
+            CryptographicOperations.ZeroMemory(payloadBytes);
+        }
+    }
+
+    private static bool AudienceContains(JsonElement audience, string expectedAudience) =>
+        audience.ValueKind == JsonValueKind.String
+            ? string.Equals(audience.GetString(), expectedAudience, StringComparison.Ordinal)
+            : audience.ValueKind == JsonValueKind.Array
+              && audience.EnumerateArray().Any(value =>
+                  value.ValueKind == JsonValueKind.String
+                  && string.Equals(value.GetString(), expectedAudience, StringComparison.Ordinal));
+
+    private static bool IsValidSubject(string? subject) =>
+        !string.IsNullOrWhiteSpace(subject) && subject.Length <= 255;
+
+    private static bool TryDecodeBase64Url(string value, out byte[] bytes)
+    {
+        try
+        {
+            var padded = value.Replace('-', '+').Replace('_', '/');
+            padded += new string('=', (4 - padded.Length % 4) % 4);
+            bytes = Convert.FromBase64String(padded);
+            return true;
+        }
+        catch (FormatException)
+        {
+            bytes = [];
+            return false;
+        }
+    }
+
+    private static bool FixedTimeEquals(string? actual, string expected)
+    {
+        if (actual is null)
+        {
+            return false;
+        }
+
+        return CryptographicOperations.FixedTimeEquals(
+            Encoding.UTF8.GetBytes(actual),
+            Encoding.UTF8.GetBytes(expected));
+    }
+
     private static string Base64Url(byte[] value) =>
         Convert.ToBase64String(value).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 
@@ -536,9 +646,9 @@ public sealed class GoogleOAuthClient : IGoogleOAuthClient
 
     private string H(string key) => WebUtility.HtmlEncode(T(key));
 
-    private sealed record CallbackResult(string? Code, string? State, string? Error)
+    private sealed record CallbackResult(string? Code, string? Error)
     {
-        public static CallbackResult Failed(string message) => new(null, null, message);
+        public static CallbackResult Failed(string message) => new(null, message);
     }
 
     private sealed record GoogleTokenResponse([property: JsonPropertyName("id_token")] string? IdToken);

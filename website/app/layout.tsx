@@ -5,16 +5,17 @@ const assetPrefix = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const socialImagePath = `${assetPrefix || "/Ralven"}/og.png`;
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://marquezinii.github.io/"),
-  title: "Ralven — Mais desempenho. Menos complicação.",
+  metadataBase: new URL("https://vemryx.com/"),
+  title: "Ralven — Gerenciamento do Windows com IA.",
   description:
-    "Diagnóstico, manutenção e otimização transparente do Windows, com recursos especializados para FiveM em GTA V Legacy.",
+    "Plataforma de gerenciamento e otimização do Windows com IA para diagnóstico, manutenção, aplicativos, atualizações e automações seguras.",
   applicationName: "Ralven",
   keywords: [
     "Ralven",
-    "FiveM",
-    "otimização Windows",
-    "GTA V Legacy",
+    "gerenciamento do Windows",
+    "IA para Windows",
+    "manutenção do PC",
+    "otimização do Windows",
     "rollback",
     "Windows 11",
   ],
@@ -24,16 +25,16 @@ export const metadata: Metadata = {
     type: "website",
     locale: "pt_BR",
     alternateLocale: "en_US",
-    title: "Ralven — Mais desempenho. Menos complicação.",
+    title: "Ralven — Gerenciamento do Windows com IA.",
     description:
-      "Otimização transparente do Windows, com diagnóstico, progresso claro, rollback e recursos especializados para FiveM.",
+      "Gerenciamento inteligente do Windows com diagnóstico, manutenção, aplicativos, atualizações, otimização e rollback.",
     siteName: "Ralven",
     images: [{ url: socialImagePath, width: 1672, height: 941 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Ralven",
-    description: "Otimização transparente do Windows, com recursos especializados para FiveM.",
+    description: "Plataforma de gerenciamento e otimização do Windows com IA.",
     images: [socialImagePath],
   },
   icons: {

@@ -1,0 +1,148 @@
+using System.IO;
+using System.Text.Json;
+using Ralven.Contracts;
+using Ralven.Windows.Infrastructure;
+
+namespace Ralven.App.Services;
+
+internal interface IApplicationUpdateIgnoreStore
+{
+    Task<IReadOnlySet<string>> LoadAsync(CancellationToken cancellationToken = default);
+
+    Task SaveAsync(
+        IReadOnlyCollection<string> packageKeys,
+        CancellationToken cancellationToken = default);
+}
+
+internal sealed class JsonApplicationUpdateIgnoreStore : IApplicationUpdateIgnoreStore
+{
+    private const int MaximumStoredPackages = 1024;
+    private const long MaximumFileSizeBytes = 1024 * 1024;
+    private readonly string path;
+
+    public JsonApplicationUpdateIgnoreStore()
+        : this(Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            ProductIdentity.Name,
+            "application-update-ignores.json"))
+    {
+    }
+
+    internal JsonApplicationUpdateIgnoreStore(string path)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(path);
+        if (!Path.IsPathFullyQualified(path))
+        {
+            throw new ArgumentException("The ignore store path must be absolute.", nameof(path));
+        }
+
+        this.path = SafePath.EnsureNoReparsePoints(path);
+    }
+
+    public async Task<IReadOnlySet<string>> LoadAsync(
+        CancellationToken cancellationToken = default)
+    {
+        if (!File.Exists(path))
+        {
+            return new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        }
+
+        await using var stream = new FileStream(
+            path,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            4096,
+            FileOptions.Asynchronous | FileOptions.SequentialScan);
+        if (stream.Length > MaximumFileSizeBytes)
+        {
+            throw new InvalidDataException("The application update ignore store is too large.");
+        }
+
+        var values = await JsonSerializer.DeserializeAsync<string[]>(
+            stream,
+            RalvenJson.Options,
+            cancellationToken).ConfigureAwait(false)
+            ?? throw new InvalidDataException("The application update ignore store is invalid.");
+        if (values.Length > MaximumStoredPackages)
+        {
+            throw new InvalidDataException("The application update ignore store contains too many entries.");
+        }
+
+        return values
+            .Where(IsValidKey)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+    }
+
+    public async Task SaveAsync(
+        IReadOnlyCollection<string> packageKeys,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(packageKeys);
+        if (packageKeys.Count > MaximumStoredPackages
+            || packageKeys.Any(key => !IsValidKey(key)))
+        {
+            throw new ArgumentException("The ignore store contains an invalid package key.", nameof(packageKeys));
+        }
+
+        var directory = Path.GetDirectoryName(path)
+            ?? throw new InvalidOperationException("The ignore store has no parent directory.");
+        Directory.CreateDirectory(directory);
+        SafePath.EnsureNoReparsePoints(directory);
+        var temporary = Path.Combine(directory, $".application-update-ignores.{Guid.NewGuid():N}.tmp");
+        try
+        {
+            await using (var stream = new FileStream(
+                temporary,
+                FileMode.CreateNew,
+                FileAccess.Write,
+                FileShare.None,
+                4096,
+                FileOptions.Asynchronous | FileOptions.WriteThrough))
+            {
+                await JsonSerializer.SerializeAsync(
+                    stream,
+                    packageKeys.Order(StringComparer.OrdinalIgnoreCase).ToArray(),
+                    RalvenJson.Options,
+                    cancellationToken).ConfigureAwait(false);
+                await stream.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            SafePath.EnsureNoReparsePoints(path);
+            File.Move(temporary, path, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporary))
+            {
+                File.Delete(temporary);
+            }
+        }
+    }
+
+    private static bool IsValidKey(string? value) => value is { Length: > 2 and <= 600 }
+        && (value.StartsWith("winget|", StringComparison.OrdinalIgnoreCase)
+            || value.StartsWith("msstore|", StringComparison.OrdinalIgnoreCase))
+        && !value.Any(char.IsControl);
+}
+
+internal sealed class InMemoryApplicationUpdateIgnoreStore : IApplicationUpdateIgnoreStore
+{
+    private HashSet<string> values = new(StringComparer.OrdinalIgnoreCase);
+
+    public Task<IReadOnlySet<string>> LoadAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        return Task.FromResult<IReadOnlySet<string>>(
+            new HashSet<string>(values, StringComparer.OrdinalIgnoreCase));
+    }
+
+    public Task SaveAsync(
+        IReadOnlyCollection<string> packageKeys,
+        CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        values = new HashSet<string>(packageKeys, StringComparer.OrdinalIgnoreCase);
+        return Task.CompletedTask;
+    }
+}

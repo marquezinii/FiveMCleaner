@@ -1,6 +1,6 @@
 # Contribuindo com o Ralven
 
-Obrigado por ajudar a construir uma ferramenta transparente e segura para FiveM Legacy. Mudanças pequenas, bem justificadas e reversíveis são preferíveis a listas extensas de “tweaks”.
+Obrigado por ajudar a construir uma plataforma transparente e segura de gerenciamento e otimização do Windows com IA. Mudanças pequenas, bem justificadas e reversíveis são preferíveis a listas extensas de “tweaks”.
 
 ## Antes de começar
 
@@ -8,7 +8,7 @@ Obrigado por ajudar a construir uma ferramenta transparente e segura para FiveM 
 - Procure uma issue existente antes de abrir outra.
 - Para mudanças grandes ou novas ações de sistema, proponha primeiro o comportamento, evidências e rollback em uma issue.
 - Vulnerabilidades seguem [SECURITY.md](SECURITY.md), nunca uma issue pública.
-- O escopo atual é **FiveM para GTAV Legacy**. Alterações para Enhanced devem manter o bloqueio seguro, salvo decisão arquitetural posterior documentada.
+- A integração atual de Jogos suporta **FiveM para GTAV Legacy**. Alterações para Enhanced devem manter o bloqueio seguro, salvo decisão arquitetural posterior documentada.
 
 ## Ambiente local
 
@@ -25,6 +25,7 @@ Set-Location <diretorio-clonado>
 dotnet restore Ralven.slnx
 dotnet build Ralven.slnx --configuration Release --no-restore
 dotnet run --project tests/Ralven.Tests/Ralven.Tests.csproj --configuration Release --no-build -- --minimum-expected-tests 1
+./scripts/Test-RepositoryPolicy.ps1
 ```
 
 Não execute testes destrutivos na instalação real do FiveM. Use diretórios temporários e doubles para registro, processos e sistema de arquivos. Testes que realmente exigirem elevação devem ser isolados, explícitos e nunca fazer parte do fluxo padrão.
@@ -41,7 +42,9 @@ Não execute testes destrutivos na instalação real do FiveM. Use diretórios t
    `git config core.hooksPath scripts/githooks`.
 4. Atualize testes e documentação junto com o comportamento.
 5. Rode build e testes em `Release`.
-6. Abra um pull request preenchendo todo o checklist.
+6. Registre objetivo, escopo, critérios e resultado em `OBJECTIVE.md`.
+7. Abra o pull request para `dev/proxima-versao` com título em Conventional
+   Commits. A CI seleciona automaticamente as validações das áreas alteradas.
 
 Não inclua binários gerados, caches, dumps, logs pessoais ou credenciais no commit.
 

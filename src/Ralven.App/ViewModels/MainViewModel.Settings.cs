@@ -8,24 +8,21 @@ using Ralven.App.Services;
 using Ralven.Contracts;
 using Ralven.Core.Catalog;
 using Ralven.Core.Planning;
+using Ralven.Windows.Diagnostics;
 
 namespace Ralven.App.ViewModels;
 
 public sealed partial class MainViewModel
 {
     private string? settingsSaveErrorMessage;
+    private BugCode? settingsSaveBugCode;
+    private bool suppressSettingsPersistence;
 
     public AppThemePreference ThemePreference => themePreference;
 
-    public AppLanguagePreference LanguagePreference => languagePreference;
+    public string LanguagePreference => languagePreference;
 
-    public AppLanguage CurrentLanguage => localization.CurrentLanguage;
-
-    public bool IsEnglishSelected => CurrentLanguage == AppLanguage.English;
-
-    public bool IsPortugueseSelected => CurrentLanguage == AppLanguage.PortugueseBrazil;
-
-    public bool IsSpanishSelected => CurrentLanguage == AppLanguage.Spanish;
+    public string CurrentLanguage => localization.CurrentLanguage;
 
     public bool IsCloseAppOnCloseSelected
     {
@@ -231,43 +228,59 @@ public sealed partial class MainViewModel
         SettingsChanged(refreshPlan: false);
     }
 
-    public void SelectLanguage(AppLanguage language)
+    public void SelectLanguage(string cultureName)
     {
-        if (!Enum.IsDefined(language))
+        if (!LocalizationCatalog.TryNormalizePreference(cultureName, out var preference))
         {
             return;
         }
 
-        SelectLanguagePreference(language switch
-        {
-            AppLanguage.English => AppLanguagePreference.English,
-            AppLanguage.PortugueseBrazil => AppLanguagePreference.PortugueseBrazil,
-            AppLanguage.Spanish => AppLanguagePreference.Spanish,
-            _ => AppLanguagePreference.English
-        });
+        SelectLanguagePreference(preference);
     }
 
-    public void SelectLanguagePreference(AppLanguagePreference preference)
+    public void SelectLanguagePreference(string preference)
     {
-        if (!Enum.IsDefined(preference))
+        if (!LocalizationCatalog.TryNormalizePreference(preference, out var normalized))
         {
             return;
         }
 
-        if (languagePreference == preference)
+        if (languagePreference == normalized)
         {
             return;
         }
 
-        localization.Apply(preference);
-        languagePreference = preference;
+        localization.Apply(normalized);
+        languagePreference = normalized;
         RefreshLocalizedState();
         SettingsChanged(refreshPlan: false);
     }
 
+    public async Task RestoreGeneralSettingsDefaultsAsync()
+    {
+        var defaults = new AppSettings();
+        suppressSettingsPersistence = true;
+        try
+        {
+            SelectLanguagePreference(defaults.Language);
+            SelectTheme(defaults.Theme);
+            MinimizeToTrayOnClose = defaults.MinimizeToTrayOnClose;
+            LaunchAtStartup = defaults.LaunchAtStartup;
+            StartMinimized = defaults.StartMinimized ?? false;
+            CheckForUpdates = defaults.CheckForUpdates;
+            NotifyWhenUpdateAvailable = defaults.NotifyWhenUpdateAvailable;
+        }
+        finally
+        {
+            suppressSettingsPersistence = false;
+        }
+
+        await RetrySaveSettingsAsync().ConfigureAwait(false);
+    }
+
     private void ApplySettings(AppSettings settings)
     {
-        languagePreference = Enum.IsDefined(settings.Language)
+        languagePreference = LocalizationCatalog.TryNormalizePreference(settings.Language, out _)
             ? settings.Language
             : AppLanguagePreference.Automatic;
         localization.Apply(languagePreference);
@@ -280,6 +293,7 @@ public sealed partial class MainViewModel
         notifyWhenUpdateAvailable = settings.NotifyWhenUpdateAvailable;
         shareAnonymousTelemetry = settings.ShareAnonymousTelemetry;
         shareCrashReports = settings.ShareCrashReports;
+        manualFiveMInstallationRoot = settings.ManualFiveMInstallationRoot;
         privacyConsentVersion = settings.PrivacyConsentVersion;
         dismissedLiveAlertId = settings.DismissedLiveAlertId;
         lastSeenReleaseNotesVersion = settings.LastSeenReleaseNotesVersion;
@@ -294,9 +308,6 @@ public sealed partial class MainViewModel
 
         OnPropertyChanged(nameof(LanguagePreference));
         OnPropertyChanged(nameof(CurrentLanguage));
-        OnPropertyChanged(nameof(IsEnglishSelected));
-        OnPropertyChanged(nameof(IsPortugueseSelected));
-        OnPropertyChanged(nameof(IsSpanishSelected));
         OnPropertyChanged(nameof(ThemePreference));
         OnPropertyChanged(nameof(IsSystemThemeSelected));
         OnPropertyChanged(nameof(IsDarkThemeSelected));
@@ -311,6 +322,7 @@ public sealed partial class MainViewModel
         OnPropertyChanged(nameof(ShareAnonymousTelemetry));
         OnPropertyChanged(nameof(ShareCrashReports));
         OnPropertyChanged(nameof(ShareOptionalReports));
+        OnPropertyChanged(nameof(HasManualFiveMInstallation));
         ResetLocalizedPlaceholders(preserveDiagnostic: true);
     }
 
@@ -327,11 +339,17 @@ public sealed partial class MainViewModel
         ShareCrashReports = ShareCrashReports,
         PrivacyConsentVersion = privacyConsentVersion,
         DismissedLiveAlertId = dismissedLiveAlertId,
-        LastSeenReleaseNotesVersion = lastSeenReleaseNotesVersion
+        LastSeenReleaseNotesVersion = lastSeenReleaseNotesVersion,
+        ManualFiveMInstallationRoot = manualFiveMInstallationRoot
     };
 
     private void SettingsChanged(bool refreshPlan = true)
     {
+        if (suppressSettingsPersistence)
+        {
+            return;
+        }
+
         if (refreshPlan)
         {
             RefreshPlan();
@@ -408,6 +426,7 @@ public sealed partial class MainViewModel
                 if (revision == Volatile.Read(ref settingsRevision))
                 {
                     SettingsSaveErrorMessage = null;
+                    settingsSaveBugCode = null;
                 }
             }
             finally
@@ -420,7 +439,11 @@ public sealed partial class MainViewModel
         {
             if (revision == Volatile.Read(ref settingsRevision))
             {
-                SettingsSaveErrorMessage = localization.GetString("Settings.SaveFailed");
+                settingsSaveBugCode = BugCodeClassifier.ClassifyException(exception, "settings");
+                SettingsSaveErrorMessage = OptimizationFailureMessageFormatter.AppendCode(
+                    localization.GetString("Settings.SaveFailed"),
+                    settingsSaveBugCode,
+                    code => localization.Format("Report.ErrorCodeSuffix", code));
             }
         }
     }
@@ -440,7 +463,10 @@ public sealed partial class MainViewModel
     {
         if (SettingsSaveErrorMessage is not null)
         {
-            SettingsSaveErrorMessage = localization.GetString("Settings.SaveFailed");
+            SettingsSaveErrorMessage = OptimizationFailureMessageFormatter.AppendCode(
+                localization.GetString("Settings.SaveFailed"),
+                settingsSaveBugCode,
+                code => localization.Format("Report.ErrorCodeSuffix", code));
         }
 
         if (!IsBusy)
@@ -479,15 +505,7 @@ public sealed partial class MainViewModel
 
         if (lastLiveMetrics is null)
         {
-            CpuUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            GpuUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            MemoryUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            DiskUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            NetworkUsageLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            LiveMetricsUpdatedLabel = localization.GetString("Dashboard.LivePerformance.Waiting");
-            MemoryUsageDetailLabel = string.Empty;
-            CpuTrendLabel = localization.GetString("Dashboard.LivePerformance.NotAvailable");
-            GpuTrendLabel = localization.GetString("Dashboard.LivePerformance.NotAvailable");
+            ResetLiveMetricPresentation();
         }
         else
         {
@@ -495,6 +513,7 @@ public sealed partial class MainViewModel
         }
 
         NotifyLivePerformanceStateChanged();
+        NotifyLiveMetricSelectionChanged();
         RefreshFiveMSessionMonitorPresentation();
         ApplyLastOptimization(historyRecords);
         RefreshWindowsGamingPresentation();
@@ -504,12 +523,10 @@ public sealed partial class MainViewModel
 
     private void RefreshLocalizedState()
     {
+        RefreshUltraPresentation();
         RefreshGreeting();
         OnPropertyChanged(nameof(LanguagePreference));
         OnPropertyChanged(nameof(CurrentLanguage));
-        OnPropertyChanged(nameof(IsEnglishSelected));
-        OnPropertyChanged(nameof(IsPortugueseSelected));
-        OnPropertyChanged(nameof(IsSpanishSelected));
         OnPropertyChanged(nameof(SelectedProfileLabel));
         OnPropertyChanged(nameof(SelectedProfileName));
         OnPropertyChanged(nameof(IsSelectedProfileRecommended));

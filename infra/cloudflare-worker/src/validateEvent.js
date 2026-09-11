@@ -7,9 +7,13 @@ import { ALLOWED_ENVIRONMENTS } from './environments.js';
 import { ALLOWED_BUG_CODES } from './bugCodes.js';
 
 export const ALLOWED_EVENT_NAMES = new Set([
+  'app-initialized',
+  'optimization-started',
   'optimization-completed',
   'optimization-failed',
   'optimization-cancelled',
+  'gtav-benchmark-completed',
+  'gtav-benchmark-failed',
 ]);
 
 export const ALLOWED_ERROR_CATEGORIES = new Set([
@@ -113,6 +117,7 @@ export function validateEvent(event) {
     backupRestored,
     elevationUsed,
     processCountAtStart,
+    operationId,
   } = event;
 
   // Compatibility bridge: released clients without eventId still reach the
@@ -124,6 +129,14 @@ export function validateEvent(event) {
       : null;
 
   if (normalizedEventId === null) return null;
+
+  const normalizedOperationId = operationId === undefined || operationId === null
+    ? null
+    : typeof operationId === 'string' && UUID_PATTERN.test(operationId) && operationId !== EMPTY_UUID
+      ? operationId.toLowerCase()
+      : null;
+
+  if (operationId !== undefined && operationId !== null && normalizedOperationId === null) return null;
 
   if (typeof eventName !== 'string' || !ALLOWED_EVENT_NAMES.has(eventName)) {
     return null;
@@ -296,6 +309,7 @@ export function validateEvent(event) {
     backupRestored: backupRestored ?? null,
     elevationUsed: elevationUsed ?? null,
     processCountAtStart: processCountAtStart ?? null,
+    operationId: normalizedOperationId,
   };
 }
 

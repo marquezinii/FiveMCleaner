@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Updater.Title" xml:space="preserve"><value>Actualización de Ralven</value></data>
+  <data name="Updater.Failure" xml:space="preserve"><value>No se pudo completar la actualización de Ralven.&#xA;&#xA;{0}&#xA;&#xA;Abre la aplicación de nuevo e inténtalo otra vez.</value></data>
+  <data name="Updater.Error.InvalidHandoff" xml:space="preserve"><value>Los datos de la actualización no son válidos.</value></data>
+  <data name="Updater.Error.Timeout" xml:space="preserve"><value>La actualización tardó más de lo esperado y se detuvo. Abre Ralven de nuevo para volver a intentarlo.</value></data>
+  <data name="Updater.Error.AccessDenied" xml:space="preserve"><value>Windows no permitió completar la actualización. Comprueba los permisos e inténtalo de nuevo.</value></data>
+  <data name="Updater.Error.Security" xml:space="preserve"><value>La verificación de seguridad del instalador falló. No se cambió nada.</value></data>
+  <data name="Updater.Error.MissingInstaller" xml:space="preserve"><value>El instalador verificado ya no está disponible. Abre Ralven y descarga la actualización de nuevo.</value></data>
+  <data name="Updater.Error.Unexpected" xml:space="preserve"><value>El actualizador encontró un problema inesperado. Abre Ralven e inténtalo de nuevo.</value></data>
+</root>
+

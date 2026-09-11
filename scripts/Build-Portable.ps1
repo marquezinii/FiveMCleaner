@@ -80,8 +80,28 @@ try {
             # instead of the publish-then-harden-in-place used below.
             $publishArguments += '-p:RalvenHarden=true'
         }
-        & dotnet @publishArguments
-        if ($LASTEXITCODE -ne 0) { throw "$($target.Name) publish failed." }
+        $publishExitCode = $null
+        try {
+            & dotnet @publishArguments
+            $publishExitCode = $LASTEXITCODE
+        }
+        finally {
+            if ($Harden -and $target.Name -eq 'Launcher') {
+                # The single-file hook temporarily mutates the canonical
+                # Core/Windows outputs. Restore them even when bundling fails;
+                # the MSBuild AfterTargets hook handles the success path.
+                & dotnet msbuild $target.Project `
+                    /nologo `
+                    /t:RestoreCanonicalAssembliesAfterBundling `
+                    "/p:Configuration=$Configuration" `
+                    "/p:RuntimeIdentifier=$Runtime" `
+                    /p:RalvenHarden=true
+                if ($LASTEXITCODE -ne 0) {
+                    throw 'Restoring clean Core/Windows outputs after Launcher hardening failed.'
+                }
+            }
+        }
+        if ($publishExitCode -ne 0) { throw "$($target.Name) publish failed." }
     }
 
     if ($Harden) {

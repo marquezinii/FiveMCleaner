@@ -47,7 +47,7 @@ public sealed class OptimizationInterruptionUiTests
     }
 
     [Fact]
-    public void OptimizerPlan_ShowsUserFacingRiskAndPrivilegeChips()
+    public void OptimizerPlan_UsesProgressiveDisclosureForTechnicalDetails()
     {
         var root = FindRepositoryRoot();
         var source = File.ReadAllText(Path.Combine(
@@ -60,9 +60,20 @@ public sealed class OptimizationInterruptionUiTests
 
         Assert.Contains("Text=\"{Binding Name}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding Description}\"", source, StringComparison.Ordinal);
+        Assert.Contains("Text=\"{Binding PrimaryCautionLabel}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding RiskLabel}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding PrivilegeLabel}\"", source, StringComparison.Ordinal);
         Assert.Contains("Text=\"{Binding PlanHeader}\"", source, StringComparison.Ordinal);
+        Assert.Contains("[Optimizer.ShowDetails]", source, StringComparison.Ordinal);
+        Assert.Contains("[Optimizer.ExecutionDetails]", source, StringComparison.Ordinal);
+        Assert.Contains("[Optimizer.ResultDetails]", source, StringComparison.Ordinal);
+        Assert.Contains("ReportDetailSummaryLabel", source, StringComparison.Ordinal);
+        Assert.Contains("AutomationProperties.LiveSetting=\"Polite\"", source, StringComparison.Ordinal);
+        Assert.DoesNotContain("[Optimizer.Table.Action]", source, StringComparison.Ordinal);
+
+        var detailsDisclosure = source.IndexOf("[Optimizer.ShowDetails]", StringComparison.Ordinal);
+        var riskDetail = source.IndexOf("Text=\"{Binding RiskLabel}\"", StringComparison.Ordinal);
+        Assert.True(detailsDisclosure >= 0 && riskDetail > detailsDisclosure);
         Assert.Contains("HasPlannedActions", source, StringComparison.Ordinal);
         Assert.Contains("EmptyPlanMessage", source, StringComparison.Ordinal);
         Assert.Contains("[Plan.Empty.Title], Source={StaticResource LocalizedStrings}, Mode=OneWay", source, StringComparison.Ordinal);
@@ -76,12 +87,19 @@ public sealed class OptimizationInterruptionUiTests
         var mainWindow = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "MainWindow.xaml"));
         var navigation = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "MainWindow.Navigation.xaml.cs"));
         var games = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "GamesPage.xaml.cs"));
+        var fiveM = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "Views", "Pages", "FiveMPage.xaml.cs"));
         var capture = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "MainWindow.Capture.xaml.cs"));
 
         Assert.Contains("x:Name=\"OptimizerNav\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("Tag=\"Optimizer\"", mainWindow, StringComparison.Ordinal);
         Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.GeneralWindows)", navigation, StringComparison.Ordinal);
-        Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.FiveMLegacy)", games, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToFiveM()", games, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.FiveMLegacy)", fiveM, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToOptimizer(OptimizationScope.GeneralWindows)", fiveM, StringComparison.Ordinal);
+        Assert.Contains("RequestNavigateToHistory()", fiveM, StringComparison.Ordinal);
+        Assert.Contains("internal void RequestNavigateToFiveM()", navigation, StringComparison.Ordinal);
+        Assert.Contains("Navigate(FiveMPage)", navigation, StringComparison.Ordinal);
+        Assert.Contains("\"FiveM\" => (Element: (UIElement)FiveMPage, Nav: GamesNav)", capture, StringComparison.Ordinal);
         Assert.Contains("\"FiveMOptimizer\"", capture, StringComparison.Ordinal);
     }
 

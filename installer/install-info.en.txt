@@ -11,8 +11,8 @@ Settings, logs, backups, and downloaded updates live in
 %LOCALAPPDATA%\Ralven, outside the install folder. During uninstall you
 choose whether to keep that data; the default is to preserve it.
 
-The desktop shortcut is selected by default. Start with Windows is off by
-default and can be enabled if you want it. Both can be changed later and are
+The desktop shortcut and Start with Windows are selected by default. You can
+clear either option before installing. Both can be changed later and are
 removed during uninstall.
 
 Later updates are offered inside the app after you confirm them. You usually do
