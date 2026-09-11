@@ -65,7 +65,7 @@
                     <!-- CaptionText, não TickLabel: "Última varredura às
                          21:48" é uma frase, e mono numa frase quebra o ritmo
                          da linha sem medir nada. -->
-                    <TextBlock Text="{Binding LastScanLabel}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="0,0,10,0" MaxWidth="104" TextTrimming="CharacterEllipsis" ToolTip="{Binding LastScanLabel}" />
+                    <TextBlock Text="{Binding LastScanLabel}" Style="{StaticResource CaptionText}" VerticalAlignment="Center" Margin="0,0,10,0" MaxWidth="200" TextTrimming="CharacterEllipsis" ToolTip="{Binding LastScanLabel}" />
                     <Button Style="{StaticResource SecondaryButtonStyle}" Padding="8,0" Click="RefreshDiagnostic_Click" IsEnabled="{Binding CanRefresh}">
                         <StackPanel Orientation="Horizontal">
                             <Path Style="{StaticResource Icon16}" Data="{StaticResource IconRefresh}" Stroke="{Binding Foreground, RelativeSource={RelativeSource AncestorType=Button}}" />
