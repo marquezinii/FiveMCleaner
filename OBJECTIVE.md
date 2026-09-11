@@ -1,8 +1,7 @@
-# Objective
+# Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** Corrigir o estado infinito de carregamento da última varredura na Visão geral após reanalisar o PC.
-- **Escopo:** Fluxo de diagnóstico e apresentação da última varredura na Visão geral, com regressão focada se viável.
-- **Fora do escopo:** Alterações nos diagnósticos do Windows e no comportamento de otimização.
-- **Critérios de conclusão:** A interface deixa o estado de carregamento quando a reanálise termina e a regressão aplicável é validada.
-- **Resultado entregue:** O rótulo da Visão geral passou a reservar largura suficiente para exibir a última varredura e seu horário, sem confundir o truncamento visual com atividade de análise. Build Release e 1.570 testes passaram.
+- **Objetivo:** Remover os anéis brancos indevidos de toggles e controles relacionados, preservando o foco visível por teclado.
+- **Escopo:** Estilos WPF compartilhados e validação focada; sem mudança de comportamento de produto ou textos públicos.
+- **Critérios de conclusão:** A interação pelo ponteiro não deixa anel de foco branco; a navegação por teclado mantém indicador claro; build e testes aplicáveis passam.
+- **Resultado entregue:** Os controles compartilhados agora usam o foco visual do WPF exclusivo da navegação por teclado, então a ativação pelo ponteiro não deixa anel de foco. Build e 1.570 testes passaram; a página Configurações/Privacidade foi capturada no tema escuro.

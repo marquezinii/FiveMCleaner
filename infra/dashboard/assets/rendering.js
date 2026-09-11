@@ -3,7 +3,7 @@
 const chartStates = new WeakMap();
 const numberFormatter = new Intl.NumberFormat('pt-BR');
 
-export const CHART_COLORS = ['#67E8F9', '#60A5FA', '#4ADE80', '#FBBF24', '#F87171', '#A78BFA'];
+export const CHART_COLORS = ['#F5F5F5', '#C9CBD2', '#A4A6AF', '#858892', '#D9DADD', '#70737C'];
 export const DONUT_COLORS = CHART_COLORS;
 
 export function drawBarChart(canvas, series, options = {}) {
@@ -192,19 +192,19 @@ function paintHorizontalBarChart(ctx, width, height, state) {
     const fillWidth = Math.max(0, (point.value / max) * availableWidth);
     const active = index === state.hoveredIndex;
 
-    ctx.fillStyle = active ? '#2D3748' : '#252A33';
+    ctx.fillStyle = active ? '#383A40' : '#27292E';
     roundedRect(ctx, barX, barY, availableWidth, barHeight, 3);
     ctx.fillStyle = state.options.color || CHART_COLORS[index % CHART_COLORS.length];
     roundedRect(ctx, barX, barY, fillWidth, barHeight, 3);
 
     ctx.font = `${active ? 650 : 520} 12px Inter, "Segoe UI", sans-serif`;
-    ctx.fillStyle = active ? '#FFFFFF' : '#D6D9E0';
+    ctx.fillStyle = active ? '#FFFFFF' : '#E4E5E9';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
     ctx.fillText(fitText(ctx, String(point.label), labelWidth - 8), 0, y + rowHeight / 2);
 
     ctx.font = '600 11px Inter, "Segoe UI", sans-serif';
-    ctx.fillStyle = '#A6A7AC';
+    ctx.fillStyle = '#A5A7AE';
     ctx.textAlign = 'right';
     ctx.fillText(numberFormatter.format(point.value), width, y + rowHeight / 2);
 
@@ -227,7 +227,7 @@ function paintVerticalBarChart(ctx, width, height, state) {
     ctx.globalAlpha = index === state.hoveredIndex ? 1 : 0.82;
     roundedRect(ctx, x, y, barWidth, barHeight, 4);
     ctx.globalAlpha = 1;
-    ctx.fillStyle = '#A6A7AC';
+    ctx.fillStyle = '#A5A7AE';
     ctx.font = '10px Inter, "Segoe UI", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
@@ -242,9 +242,9 @@ function paintLineChart(ctx, width, height, state) {
   const chartHeight = height - padding.top - padding.bottom;
   const max = Math.max(...state.series.map((point) => point.y), 1);
 
-  ctx.strokeStyle = '#252A33';
+  ctx.strokeStyle = '#2A2C31';
   ctx.lineWidth = 1;
-  ctx.fillStyle = '#8F98A8';
+  ctx.fillStyle = '#989AA2';
   ctx.font = '10px Inter, "Segoe UI", sans-serif';
   ctx.textAlign = 'right';
   ctx.textBaseline = 'middle';
@@ -296,7 +296,7 @@ function paintLineChart(ctx, width, height, state) {
   });
 
   const labelIndexes = [...new Set([0, Math.floor((points.length - 1) / 2), points.length - 1])];
-  ctx.fillStyle = '#8F98A8';
+  ctx.fillStyle = '#989AA2';
   ctx.font = '10px Inter, "Segoe UI", sans-serif';
   ctx.textBaseline = 'top';
   labelIndexes.forEach((index) => {
@@ -343,7 +343,7 @@ function paintDonutChart(ctx, width, height, state) {
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(numberFormatter.format(total), x, y - 5);
-  ctx.fillStyle = '#A6A7AC';
+  ctx.fillStyle = '#A5A7AE';
   ctx.font = '11px Inter, "Segoe UI", sans-serif';
   ctx.fillText(state.options.totalLabel || 'eventos', x, y + 15);
   return regions;
@@ -404,7 +404,7 @@ function roundedRect(ctx, x, y, width, height, radius) {
 }
 
 function drawEmptyState(ctx, width, height) {
-  ctx.fillStyle = '#A6A7AC';
+  ctx.fillStyle = '#A5A7AE';
   ctx.font = '12px Inter, "Segoe UI", sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';

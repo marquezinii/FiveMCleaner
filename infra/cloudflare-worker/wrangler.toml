@@ -72,7 +72,7 @@ ASAAS_BILLING_ENABLED = "false"
 ASAAS_ENVIRONMENT = "production"
 ASAAS_AMOUNT_CENTS = "1990"
 ASAAS_RETURN_URL = "https://api.vemryx.com/billing/return"
-DASHBOARD_ORIGIN = "https://ralven-dashboard.pages.dev,https://dashboard.vemryx.com,https://fivemcleaner-dashboard.pages.dev"
+DASHBOARD_ORIGIN = "https://dashboard.vemryx.com"
 RALVEN_AI_MODEL = "gpt-5.6-luna"
 # A chave sozinha não ativa a rota. Revise tudo e altere explicitamente no deploy.
 RALVEN_AI_ENABLED = "false"
