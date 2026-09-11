@@ -1,8 +1,8 @@
 # Objective
 
 - **Agente:** Codex
-- **Objetivo:** Preserve the enqueue order of persisted telemetry events when multiple events share the same clock tick.
-- **Escopo:** Queue filename generation and the existing ordering regression check.
-- **Fora do escopo:** Telemetry payloads, transport, collection policy, and worker contracts.
-- **Critérios de conclusão:** Pending events are read in enqueue order under rapid sequential writes, and the relevant test is repeatably validated.
-- **Resultado entregue:** Monotonic queue filename timestamps prevent GUID ordering from reordering same-tick events.
+- **Objetivo:** Integrate the Worker dependency update into `dev/proxima-versao` without changing the protected `main` branch.
+- **Escopo:** Update the Worker lockfile and its direct Wrangler development dependency while preserving the current Worker configuration.
+- **Fora do escopo:** Worker behavior, migrations, application code, and release publication.
+- **Critérios de conclusão:** `wrangler` and its resolved dependency tree are updated in the Worker manifest and lockfile, and Worker tests pass.
+- **Resultado entregue:** Updated Wrangler and the resolved Worker lockfile while preserving the existing D1 configuration; Worker tests were run after installing the locked dependencies.
