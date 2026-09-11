@@ -241,7 +241,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
 
     public bool CanStart => !IsBusy
         && !isPersonalBusy
-        && (!IsUltraSelected || hasProAccess)
+        && (!IsUltraSelected || ProFeatureAvailability.Enabled && hasProAccess)
         && !isWindowsGamingBusy
         && !isInitializing
         && diagnostic is not null

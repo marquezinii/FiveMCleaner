@@ -392,9 +392,9 @@
                             Background="Transparent">
             <ui:NavigationView.MenuItems>
                 <ui:NavigationViewItem x:Name="DashboardNav" Content="{Binding [Navigation.Overview], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon Home24}" Tag="Dashboard" Click="NavItem_Click" />
-                <ui:NavigationViewItem x:Name="RalvenAiNav" Content="{Binding [Navigation.RalvenAi], Source={StaticResource LocalizedStrings}}" Tag="RalvenAi" Click="NavItem_Click">
+                <ui:NavigationViewItem x:Name="RalvenAiNav" Content="{Binding [Navigation.RalvenAiDevelopment], Source={StaticResource LocalizedStrings}}" Tag="RalvenAi" Click="NavItem_Click">
                     <ui:NavigationViewItem.Icon>
-                        <ui:ImageIcon Source="{DynamicResource RalvenAiLogoImage}" Width="20" Height="20" />
+                        <ui:SymbolIcon Symbol="LockClosed24" />
                     </ui:NavigationViewItem.Icon>
                 </ui:NavigationViewItem>
                 <ui:NavigationViewItem x:Name="OptimizerNav" Content="{Binding [Navigation.Optimizer], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon Rocket24}" Tag="Optimizer" Click="NavItem_Click" />
@@ -405,7 +405,7 @@
                 <ui:NavigationViewItem x:Name="SettingsNav" Content="{Binding [Navigation.Settings], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon Settings24}" Tag="Settings" Click="NavItem_Click" />
             </ui:NavigationView.MenuItems>
             <ui:NavigationView.FooterMenuItems>
-                <ui:NavigationViewItem x:Name="ProNav" Content="{Binding [Pro.Discover], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon ArrowRight24}" Tag="Pro" Click="NavItem_Click" />
+                <ui:NavigationViewItem x:Name="ProNav" Content="{Binding [Pro.DiscoverDevelopment], Source={StaticResource LocalizedStrings}}" Icon="{ui:SymbolIcon LockClosed24}" Tag="Pro" Click="NavItem_Click" />
                 <ui:NavigationViewItem IsHitTestVisible="False"
                                        Focusable="False"
                                        IsTabStop="False"
@@ -571,7 +571,7 @@
                                                     </Expander>
                                                 </StackPanel>
                                                 <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                                                <Button Content="{Binding [Pro.Manage], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Click="OpenPro_Click" Margin="0,0,0,8" />
+                                                <Button Content="{Binding [Pro.DiscoverDevelopment], Source={StaticResource LocalizedStrings}}" Style="{StaticResource PrimaryButtonStyle}" Click="OpenPro_Click" Margin="0,0,0,8" />
                                                 <Button
                                                         x:Name="AccountEntitlementRefreshButton"
                                                         Content="{Binding [Settings.Account.Plan.Refresh], Source={StaticResource LocalizedStrings}}"

@@ -226,7 +226,7 @@ public sealed class PersonalWorkspaceTests
         Assert.False(viewModel.HasRalvenAiAccess);
         viewModel.SetRalvenAiAccess(true);
         Assert.True(viewModel.HasRalvenAiAccess);
-        Assert.True(viewModel.CanStart);
+        Assert.False(viewModel.CanStart);
         await viewModel.SavePersonalProfileAsync();
         Assert.False(viewModel.HasProAccess);
         Assert.False(viewModel.HasRalvenAiAccess);

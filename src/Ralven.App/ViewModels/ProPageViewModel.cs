@@ -2,6 +2,11 @@ using Ralven.App.Services;
 
 namespace Ralven.App.ViewModels;
 
+internal static class ProFeatureAvailability
+{
+    public const bool Enabled = false;
+}
+
 internal sealed class ProPageViewModel : BindableBase
 {
     private bool consent;
@@ -19,41 +24,41 @@ internal sealed class ProPageViewModel : BindableBase
     }
     public bool IsBusy => busy;
     public bool IsDemo => demo;
-    public bool CanRefresh => !busy && signedIn && !demo;
-    public bool CanSignIn => !busy && !signedIn && !demo;
-    public bool CanCheckout => !busy && signedIn && !demo && consent && snapshot is { CheckoutAvailable: true, Offer: not null };
-    public bool CanCancel => !busy && signedIn && !demo && snapshot?.Subscription?.CanCancel == true;
-    public bool ShowCheckout => !demo && signedIn && snapshot is { CheckoutAvailable: true, Offer: not null };
-    public bool ShowCancel => snapshot?.Subscription?.CanCancel == true;
-    public string Price => snapshot?.Offer is { } offer
+    public bool CanRefresh => ProFeatureAvailability.Enabled && !busy && signedIn && !demo;
+    public bool CanSignIn => ProFeatureAvailability.Enabled && !busy && !signedIn && !demo;
+    public bool CanCheckout => ProFeatureAvailability.Enabled && !busy && signedIn && !demo && consent && snapshot is { CheckoutAvailable: true, Offer: not null };
+    public bool CanCancel => ProFeatureAvailability.Enabled && !busy && signedIn && !demo && snapshot?.Subscription?.CanCancel == true;
+    public bool ShowCheckout => ProFeatureAvailability.Enabled && !demo && signedIn && snapshot is { CheckoutAvailable: true, Offer: not null };
+    public bool ShowCancel => ProFeatureAvailability.Enabled && snapshot?.Subscription?.CanCancel == true;
+    public string Price => ProFeatureAvailability.Enabled && snapshot?.Offer is { } offer
         ? L.FormatCurrency(offer.AmountCents / 100m, offer.Currency)
-        : L.GetString("Pro.Price.Unavailable");
+        : L.GetString("Pro.Development.Action");
     public string ConsentText => L.Format("Pro.Checkout.Consent", Price);
-    public string StatusTitle => L.GetString(demo ? "Pro.Status.Demo" : !signedIn ? "Pro.Status.SignedOut"
+    public string StatusTitle => L.GetString(!ProFeatureAvailability.Enabled ? "Pro.Development.Title" : demo ? "Pro.Status.Demo" : !signedIn ? "Pro.Status.SignedOut"
         : snapshot is null ? "Pro.Status.Unavailable"
         : snapshot.Subscription is null ? "Pro.Status.Free"
         : snapshot.Subscription.State is "cancelled" or "canceled" ? "Pro.Status.Cancelled"
         : snapshot.Subscription.AccessUntil > DateTimeOffset.UtcNow ? "Pro.Status.Paid"
         : snapshot.Subscription.State == "paused" ? "Pro.Status.Paused" : "Pro.Status.Pending");
-    public string StatusDetail => L.GetString(demo ? "Pro.Demo.Description" : !signedIn ? "Pro.SignIn.Description"
+    public string StatusDetail => L.GetString(!ProFeatureAvailability.Enabled ? "Pro.Development.Detail" : demo ? "Pro.Demo.Description" : !signedIn ? "Pro.SignIn.Description"
         : snapshot is null ? "Pro.Unavailable.Description"
         : snapshot.Subscription?.State is "cancelled" or "canceled" ? "Pro.Cancelled.Description"
         : snapshot.Subscription is not null && snapshot.Subscription.AccessUntil <= DateTimeOffset.UtcNow ? "Pro.Pending.Description"
         : snapshot.Subscription is not null && snapshot.Subscription.AccessUntil is null ? "Pro.Pending.Description"
         : !snapshot.CheckoutAvailable && snapshot.Subscription is null ? "Pro.SalesUnavailable.Description" : "Pro.Status.Description");
-    public string AccessDetail => snapshot?.Subscription?.AccessUntil is { } until
+    public string AccessDetail => ProFeatureAvailability.Enabled && snapshot?.Subscription?.AccessUntil is { } until
         ? L.Format("Pro.AccessUntil", until.ToLocalTime().ToString("g", L.CurrentCulture)) : string.Empty;
-    public string RenewalDetail => snapshot?.Subscription is { RenewsAt: { } renewal, State: "authorized" or "active" }
+    public string RenewalDetail => ProFeatureAvailability.Enabled && snapshot?.Subscription is { RenewsAt: { } renewal, State: "authorized" or "active" }
         ? L.Format("Pro.RenewsAt", renewal.ToLocalTime().ToString("d", L.CurrentCulture)) : string.Empty;
     public string Message => messageKey is null ? string.Empty : L.GetString(messageKey);
     public bool HasMessage => messageKey is not null;
-    public BillingOffer? Offer => snapshot?.Offer;
+    public BillingOffer? Offer => ProFeatureAvailability.Enabled ? snapshot?.Offer : null;
 
     public void SetSession(bool isSignedIn, bool isDemo)
     {
         signedIn = isSignedIn;
         demo = isDemo;
-        snapshot = isDemo ? new(new("ralven-pro-monthly", 1990, "BRL", 1), false, null) : null;
+        snapshot = null;
         consent = false;
         messageKey = null;
         Refresh();

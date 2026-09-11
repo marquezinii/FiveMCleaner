@@ -292,7 +292,6 @@ public partial class MainWindow
         var hasProAccess = IsEffectiveProEntitlement(accountEntitlement, TimeProvider.System.GetUtcNow());
         viewModel.SetProAccess(demoMode || hasProAccess);
         viewModel.SetRalvenAiAccess(demoMode || (hasProAccess && accountEntitlement.HasRalvenAi));
-        viewModel.SetFreePlan(!demoMode && accountEntitlement.Tier == AccountEntitlementTier.Free);
         var localization = LocalizationService.Current;
         switch (accountEntitlement.Tier)
         {

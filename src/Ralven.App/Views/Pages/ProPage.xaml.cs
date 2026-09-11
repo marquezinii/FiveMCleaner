@@ -10,7 +10,6 @@ public partial class ProPage : UserControl
     public ProPage() => InitializeComponent();
     private MainWindow? Shell => Window.GetWindow(this) as MainWindow;
     private void Free_Click(object sender, RoutedEventArgs e) => Shell?.RequestNavigateToOptimizer(OptimizationScope.GeneralWindows);
-    private void Explore_Click(object sender, RoutedEventArgs e) => Shell?.RequestExplorePro();
     private void SignIn_Click(object sender, RoutedEventArgs e) => Shell?.RequestProSignIn();
     private async void Refresh_Click(object sender, RoutedEventArgs e) { if (Shell is { } shell) await shell.RequestRefreshBillingAsync(); }
     private async void Checkout_Click(object sender, RoutedEventArgs e) { if (Shell is { } shell) await shell.RequestCheckoutAsync(); }
