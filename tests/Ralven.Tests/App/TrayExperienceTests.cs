@@ -6,6 +6,18 @@ namespace Ralven.Tests.App;
 public sealed class TrayExperienceTests
 {
     [Fact]
+    public void TrayMenu_UsesCompactKeyboardOnlyFocusPresentation()
+    {
+        var root = TestHelpers.FindRepositoryRoot();
+        var trayTheme = File.ReadAllText(Path.Combine(root, "src", "Ralven.App", "Themes", "TrayMenu.xaml"));
+
+        Assert.Contains("<Setter Property=\"MinWidth\" Value=\"324\" />", trayTheme, StringComparison.Ordinal);
+        Assert.Contains("x:Key=\"TrayMenuItemFocusVisualStyle\"", trayTheme, StringComparison.Ordinal);
+        Assert.Contains("FocusVisualStyle\" Value=\"{StaticResource TrayMenuItemFocusVisualStyle}\"", trayTheme, StringComparison.Ordinal);
+        Assert.DoesNotContain("<Trigger Property=\"IsKeyboardFocusWithin\"", trayTheme, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void TrayMenu_KeepsTheNativeHostAndDelegatesPresentationToWpf()
     {
         var root = TestHelpers.FindRepositoryRoot();

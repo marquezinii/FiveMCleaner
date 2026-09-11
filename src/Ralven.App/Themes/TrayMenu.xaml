@@ -9,7 +9,7 @@
     <SolidColorBrush x:Key="TrayMenuMutedTextBrush" Color="{DynamicResource RalvenLightGrayColor}" />
 
     <Style x:Key="TrayContextMenuStyle" TargetType="ContextMenu">
-        <Setter Property="MinWidth" Value="356" />
+        <Setter Property="MinWidth" Value="324" />
         <Setter Property="Background" Value="{StaticResource TrayMenuSurfaceBrush}" />
         <Setter Property="Foreground" Value="{StaticResource TrayMenuTextBrush}" />
         <Setter Property="BorderBrush" Value="{StaticResource TrayMenuBorderBrush}" />
@@ -21,12 +21,12 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ContextMenu">
-                    <Grid Margin="18">
+                    <Grid Margin="12">
                         <Border Background="{TemplateBinding Background}"
                                 BorderBrush="{TemplateBinding BorderBrush}"
                                 BorderThickness="{TemplateBinding BorderThickness}"
                                 CornerRadius="{StaticResource RadiusXl}"
-                                Padding="8"
+                                Padding="6"
                                 Effect="{DynamicResource Elevation3Shadow}"
                                 SnapsToDevicePixels="True">
                             <ScrollViewer CanContentScroll="True"
@@ -48,13 +48,31 @@
         </Setter>
     </Style>
 
+    <!-- FocusVisualStyle is presented by WPF for keyboard navigation, unlike
+         IsKeyboardFocusWithin, which also becomes true after a mouse click. -->
+    <Style x:Key="TrayMenuItemFocusVisualStyle" TargetType="Control">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Control">
+                    <Border Margin="2,1"
+                            BorderBrush="{StaticResource TrayMenuTextBrush}"
+                            BorderThickness="1"
+                            CornerRadius="{StaticResource RadiusMd}"
+                            SnapsToDevicePixels="True">
+                        <AdornedElementPlaceholder />
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <Style x:Key="TrayMenuItemStyle" TargetType="MenuItem">
-        <Setter Property="Height" Value="48" />
-        <Setter Property="Padding" Value="12,0" />
+        <Setter Property="Height" Value="44" />
+        <Setter Property="Padding" Value="10,0" />
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Foreground" Value="{StaticResource TrayMenuTextBrush}" />
         <Setter Property="Cursor" Value="Hand" />
-        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="FocusVisualStyle" Value="{StaticResource TrayMenuItemFocusVisualStyle}" />
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="MenuItem">
@@ -67,7 +85,7 @@
                             CornerRadius="{StaticResource RadiusMd}">
                         <Grid>
                             <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="24" />
+                                <ColumnDefinition Width="20" />
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="Auto" />
                             </Grid.ColumnDefinitions>
@@ -76,14 +94,14 @@
                                               VerticalAlignment="Center"
                                               HorizontalAlignment="Left" />
                             <AccessText Grid.Column="1"
-                                        Margin="12,0,14,0"
+                                        Margin="10,0,12,0"
                                         Text="{TemplateBinding Header}"
                                         FontFamily="{StaticResource AppFontBody}"
                                         FontWeight="SemiBold"
                                         Foreground="{TemplateBinding Foreground}"
                                         VerticalAlignment="Center" />
                             <TextBlock Grid.Column="2"
-                                       MaxWidth="126"
+                                       MaxWidth="112"
                                        Text="{TemplateBinding InputGestureText}"
                                        Style="{StaticResource CaptionText}"
                                        Foreground="{StaticResource TrayMenuMutedTextBrush}"
@@ -95,9 +113,6 @@
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsHighlighted" Value="True">
                             <Setter TargetName="Root" Property="Background" Value="{StaticResource TrayMenuHoverBrush}" />
-                        </Trigger>
-                        <Trigger Property="IsKeyboardFocusWithin" Value="True">
-                            <Setter TargetName="Root" Property="BorderBrush" Value="{StaticResource TrayMenuTextBrush}" />
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Foreground" Value="{StaticResource TrayMenuMutedTextBrush}" />
@@ -142,7 +157,7 @@
             <Setter.Value>
                 <ControlTemplate TargetType="Separator">
                     <Border Height="1"
-                            Margin="12,7"
+                            Margin="10,5"
                             Background="{StaticResource TrayMenuBorderBrush}"
                             SnapsToDevicePixels="True" />
                 </ControlTemplate>
