@@ -1,8 +1,8 @@
-# Objetivo
+# Objective
 
 - **Agente:** Codex
-- **Objetivo:** Tornar a detecção do FiveM resiliente a instalações válidas em locais e estados suportados, sem ampliar o escopo de acesso nem aceitar falsos positivos.
-- **Escopo:** Centralizar descoberta, validação, cache e fallback manual usados pela área Jogos/FiveM, com testes de regressão e textos localizados necessários.
-- **Fora de escopo:** Alterar arquivos do FiveM/GTA V, executar reparos, instalar software ou suportar GTAV Enhanced.
-- **Critérios de conclusão:** Fontes de descoberta são combinadas por camadas, candidatos são validados e classificados de modo determinístico, consumidores usam o resultado central, e as validações aplicáveis passam.
-- **Resultado entregue:** Localizador central em camadas, cache invalidável, seleção manual validada, consumidor de runtime unificado e 10 testes focados; build Release e suíte .NET aprovadas. O fluxo de sincronização gerou rascunhos para revisão humana contextual das novas traduções.
+- **Objetivo:** Publicar o painel administrativo integrado na `dev/proxima-versao` sem depender de uma release do aplicativo e retirar os endereços legados.
+- **Escopo:** Automação de deploy do Worker/painel, configuração de origem e documentação do dashboard; exclusão do projeto Cloudflare Pages legado após validação.
+- **Fora do escopo:** Release do aplicativo Windows, alterações de dados D1 e mudanças de contratos de telemetria.
+- **Critérios de conclusão:** O Pages canônico serve o commit integrado, aponta somente para `api.vemryx.com`, e o projeto Pages legado deixa de resolver.
+- **Resultado entregue:** O dashboard integrado na `dev/proxima-versao` foi publicado em `dashboard.vemryx.com`; o projeto Pages `ralven-dashboard` foi excluído e o subdomínio técnico remanescente redireciona permanentemente ao domínio canônico. A automação passa a publicar mudanças de Worker e dashboard após a CI da `dev`.
