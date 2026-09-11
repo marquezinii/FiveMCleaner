@@ -1,8 +1,8 @@
 # Objective
 
 - **Agente:** Codex
-- **Objetivo:** Reconstruir o dashboard administrativo do Ralven como centro de comando premium, com arquitetura de informação, estados vazios e interações proporcionais aos dados reais disponíveis.
-- **Escopo:** `infra/dashboard`, contratos/agregações administrativas do Worker estritamente necessários, documentação e testes associados.
-- **Fora do escopo:** Release do aplicativo, mudança de dados pessoais/telemetria sem contrato, alteração de billing, autenticação ou operações privilegiadas.
-- **Critérios de conclusão:** A experiência organiza decisões por domínio operacional, explica dados ausentes, oferece drill-down e filtros úteis, preserva acessibilidade/responsividade e passa pelas validações aplicáveis.
-- **Resultado entregue:** Centro de comando monocromático em preto, branco e cinzas, com leitura executiva, fila de prioridades derivada somente de agregados reais, estados vazios explicativos e proteção contra converter agregados ausentes em zero. Validado com as 63 verificações do dashboard e em prévia local com dados e sem dados, nos layouts widescreen e reduzido.
+- **Objetivo:** Preserve the enqueue order of persisted telemetry events when multiple events share the same clock tick.
+- **Escopo:** Queue filename generation and the existing ordering regression check.
+- **Fora do escopo:** Telemetry payloads, transport, collection policy, and worker contracts.
+- **Critérios de conclusão:** Pending events are read in enqueue order under rapid sequential writes, and the relevant test is repeatably validated.
+- **Resultado entregue:** Monotonic queue filename timestamps prevent GUID ordering from reordering same-tick events.
