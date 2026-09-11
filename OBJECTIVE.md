@@ -1,7 +1,7 @@
 # Objetivo da tarefa
 
 - **Agente:** Codex
-- **Objetivo:** Garantir cobertura completa de localização em português, inglês, espanhol e francês e tornar a manutenção dos catálogos verificável e escalável.
-- **Escopo:** Auditar textos públicos do aplicativo e componentes auxiliares, corrigir catálogos e consumo de cultura, adicionar francês, criar sincronização/validação versionada e validar os quatro idiomas. Não inclui tradução dinâmica em runtime, publicação ou alteração de versão.
-- **Critérios de conclusão:** Todos os catálogos possuem o mesmo conjunto de chaves e placeholders; textos públicos usam a infraestrutura de localização; francês pode ser selecionado sem alterar lógica da aplicação; validações automatizadas falham para chaves ausentes, órfãs, duplicadas ou placeholders divergentes; build, testes e validação visual aplicáveis são executados.
-- **Resultado entregue:** Catálogo declarativo com inglês canônico e cobertura equivalente em português, espanhol e francês para aplicativo, atualizador e ações Windows; sincronização, revisão por hash, glossário, pseudo-localização e gates de CI/release adicionados. Foram validadas 2.008 chaves em três conjuntos, build Release sem avisos, 1.446 testes, contrato do instalador e 70 capturas visuais (mais recapturas dos ajustes de expansão no Overview).
+- **Objetivo:** Refinar o indicador de versão no rodapé inferior esquerdo para que permaneça claro, discreto e visualmente integrado à interface do Ralven.
+- **Escopo:** Ajustar somente a apresentação do indicador de versão e os recursos visuais diretamente necessários. Não inclui alteração do valor da versão, navegação, atualização, release ou redesign da barra lateral.
+- **Critérios de conclusão:** O rótulo e o número apresentam hierarquia clara, legibilidade preservada nos temas suportados e aparência coerente com o restante do aplicativo; o resultado é renderizado e inspecionado no layout real; build e validações aplicáveis passam.
+- **Resultado entregue:** O card genérico foi substituído por um indicador compacto sem moldura externa, composto pela linha de acento do design system, rótulo secundário e versão monoespaçada em badge tonal. O resultado foi inspecionado em capturas 1440×900 nos temas claro e escuro; build Release sem avisos, 1.570 testes, formatação, segurança e localização foram validados.
