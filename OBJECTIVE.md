@@ -1,7 +1,8 @@
-# Objetivo da tarefa
+# Objective
 
 - **Agente:** Codex
-- **Objetivo:** Corrigir a posição da mensagem de status no painel de desempenho ao vivo.
-- **Escopo:** Ajustar o layout do gráfico e do resumo de métricas na visão geral; preservar textos e comportamento de coleta.
-- **Critérios de conclusão:** A mensagem de status não se sobrepõe aos valores Atual, Média e Pico; build e validação visual aplicável passam.
-- **Resultado entregue:** Declarada a coluna automática do resumo, separando a mensagem de status dos indicadores. Build Release e 1.570 testes passaram; inspeção visual direta não ficou disponível porque o ambiente não expôs o app nativo à automação.
+- **Objetivo:** Integrate the Worker dependency update into `dev/proxima-versao` without changing the protected `main` branch.
+- **Escopo:** Update the Worker lockfile and its direct Wrangler development dependency while preserving the current Worker configuration.
+- **Fora do escopo:** Worker behavior, migrations, application code, and release publication.
+- **Critérios de conclusão:** `wrangler` and its resolved dependency tree are updated in the Worker manifest and lockfile, and Worker tests pass.
+- **Resultado entregue:** Updated Wrangler and the resolved Worker lockfile while preserving the existing D1 configuration; Worker tests were run after installing the locked dependencies.
