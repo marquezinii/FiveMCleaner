@@ -18,6 +18,7 @@ namespace Ralven.Tests.App;
 /// repeat-password check — so a regression fails the build instead of
 /// shipping.
 /// </summary>
+[Collection(WpfApplicationCollection.Name)]
 public sealed class AccountWindowTests
 {
     [Fact]
@@ -242,6 +243,24 @@ public sealed class AccountWindowTests
         Assert.Equal(expected, AccountWindow.IsMoveCommand(WM_SYSCOMMAND, (IntPtr)wParam));
         // A different message carrying the exact same wParam bits must never match.
         Assert.False(AccountWindow.IsMoveCommand(WM_COMMAND, (IntPtr)wParam));
+    }
+
+    [Fact]
+    public void ProfilePrefill_AppliesOnlyWhileTheSameAccountStillNeedsCompletion()
+    {
+        var expected = new AuthenticationSnapshot(
+            AuthenticationState.ProfileCompletionRequired,
+            new FirebaseUser("uid-1", "person@example.com", true));
+
+        Assert.True(AccountWindow.IsCurrentProfilePrefill("uid-1", expected));
+        Assert.False(AccountWindow.IsCurrentProfilePrefill("uid-1", expected with
+        {
+            User = new FirebaseUser("uid-2", "other@example.com", true),
+        }));
+        Assert.False(AccountWindow.IsCurrentProfilePrefill("uid-1", expected with
+        {
+            State = AuthenticationState.SignedIn,
+        }));
     }
 
     /// <summary>

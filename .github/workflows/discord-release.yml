@@ -3,6 +3,8 @@ name: Discord - Nova versão estável
 on:
   release:
     types: [published]
+  repository_dispatch:
+    types: [ralven-release-published]
 
   # Permite testar manualmente sem precisar criar uma release falsa.
   workflow_dispatch:
@@ -15,7 +17,7 @@ jobs:
     # Hoje usamos somente versões estáveis.
     # Mesmo que alguém publique uma pre-release no futuro,
     # ela não será anunciada neste canal.
-    if: github.event_name == 'workflow_dispatch' || (github.event.release.prerelease == false && github.event.release.draft == false)
+    if: github.event_name != 'release' || (github.event.release.prerelease == false && github.event.release.draft == false)
 
     runs-on: ubuntu-latest
     timeout-minutes: 2
@@ -26,6 +28,7 @@ jobs:
 
         env:
           DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_RELEASE_WEBHOOK }}
+          GITHUB_TOKEN: ${{ github.token }}
 
         run: |
           python3 <<'PY'
@@ -33,6 +36,7 @@ jobs:
           import os
           import sys
           import urllib.error
+          import urllib.parse
           import urllib.request
           from pathlib import Path
 
@@ -40,6 +44,7 @@ jobs:
           EVENT_PATH = os.environ.get("GITHUB_EVENT_PATH", "")
           EVENT_NAME = os.environ.get("GITHUB_EVENT_NAME", "")
           REPOSITORY = os.environ.get("GITHUB_REPOSITORY", "Ralven")
+          GITHUB_TOKEN = os.environ.get("GITHUB_TOKEN", "")
 
           # Cor laranja da identidade visual do Ralven.
           COLOR = 0xFF8A00
@@ -122,6 +127,24 @@ jobs:
                   "assets": [],
               }
               test_mode = True
+          elif EVENT_NAME == "repository_dispatch":
+              tag = str(event.get("client_payload", {}).get("tag", "")).strip()
+              if not tag:
+                  raise RuntimeError("repository_dispatch sem tag de release.")
+              request = urllib.request.Request(
+                  f"https://api.github.com/repos/{REPOSITORY}/releases/tags/{urllib.parse.quote(tag, safe='')}",
+                  headers={
+                      "Accept": "application/vnd.github+json",
+                      "Authorization": f"Bearer {GITHUB_TOKEN}",
+                      "X-GitHub-Api-Version": "2022-11-28",
+                      "User-Agent": "Ralven-GitHub-Actions/1.0",
+                  },
+              )
+              with urllib.request.urlopen(request, timeout=20) as response:
+                  release = json.load(response)
+              if release.get("prerelease") or release.get("draft"):
+                  raise RuntimeError("O dispatch não referencia uma release estável publicada.")
+              test_mode = False
           else:
               release = event["release"]
               test_mode = False

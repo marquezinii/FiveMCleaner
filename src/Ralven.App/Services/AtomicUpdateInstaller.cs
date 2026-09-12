@@ -2,7 +2,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Security.Cryptography;
 using Ralven.App.Services;
-using Ralven.Contracts;
 using Ralven.UpdateRuntime;
 
 namespace Ralven.App.Services;
@@ -16,8 +15,8 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
 
     public AtomicUpdateInstaller(string runtimeRoot, string launcherPath)
     {
-        this.runtimeRoot = Path.GetFullPath(runtimeRoot);
-        this.launcherPath = Path.GetFullPath(launcherPath);
+        this.runtimeRoot = UpdatePathSafety.EnsureNoReparsePoints(runtimeRoot);
+        this.launcherPath = UpdatePathSafety.EnsureNoReparsePoints(launcherPath);
         dataRoot = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ralven");
         diagnostics = new UpdaterDiagnostics(dataRoot);
@@ -33,6 +32,7 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
         try
         {
             cancellationToken.ThrowIfCancellationRequested();
+            UpdatePathSafety.EnsureNoReparsePoints(launcherPath);
             if (!File.Exists(launcherPath)) throw new FileNotFoundException("O launcher transacional não foi encontrado.", launcherPath);
             previous = activation.ReadActiveVersion();
             // Hash do pacote inteiro + extração do ZIP + reverificação de
@@ -74,13 +74,13 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
                 catch (Exception rollbackException) when (rollbackException is not (
                     OutOfMemoryException or StackOverflowException or AccessViolationException))
                 {
-                    await RecordFailureAsync(update, previous, "rollback", "rollback-failed", rollbackException);
+                    await RecordFailureAsync(update, previous, "rollback", UpdaterEventCodes.RollbackFailed, rollbackException);
                     return SilentUpdateLaunch.Failed(
                         null, $"{exception.Message} A restauração imediata também falhou: {rollbackException.Message}");
                 }
             }
-            await RecordFailureAsync(
-                update, previous, activated ? "activation" : "staging", Classify(exception), exception);
+            var stage = activated ? "activation" : "staging";
+            await RecordFailureAsync(update, previous, stage, Classify(exception, stage), exception);
             return SilentUpdateLaunch.Failed(null, exception.Message);
         }
     }
@@ -90,17 +90,17 @@ public sealed class AtomicUpdateInstaller : ISilentUpdateInstaller
         diagnostics.RecordAsync(
             new UpdaterEvent(
                 Guid.NewGuid().ToString("N"), stage, "failed", code,
-                previous, update.Version.CoreVersion, "Production",
-                BugCodeClassifier.ClassifyUpdaterException(exception, stage)),
+                previous, update.Version.CoreVersion, UpdaterDiagnostics.ResolveEnvironment()),
             exception.ToString(),
             telemetryAuthorized: UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot));
 
-    private static string Classify(Exception exception) => exception switch
+    private static string Classify(Exception exception, string stage) => exception switch
     {
-        CryptographicException => "signature-invalid",
-        InvalidDataException => "invalid-data",
-        UnauthorizedAccessException => "access-denied",
-        IOException => "io",
-        _ => "unexpected",
+        UpdateSecurityException security => security.DiagnosticCode,
+        CryptographicException or InvalidDataException => UpdaterEventCodes.StagingIntegrityFailed,
+        UnauthorizedAccessException => UpdaterEventCodes.AccessDenied,
+        FileNotFoundException or InvalidOperationException => UpdaterEventCodes.LauncherStartFailed,
+        IOException => UpdaterEventCodes.LocalIoFailed,
+        _ => stage == "activation" ? UpdaterEventCodes.ActivationFailed : UpdaterEventCodes.StagingFailed,
     };
 }

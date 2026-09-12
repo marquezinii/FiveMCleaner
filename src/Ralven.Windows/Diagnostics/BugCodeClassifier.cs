@@ -2,7 +2,7 @@ using System.IO;
 using System.Net.Http;
 using Ralven.Contracts;
 
-namespace Ralven.App.Services;
+namespace Ralven.Windows.Diagnostics;
 
 /// <summary>
 /// Maps exceptions and failure contexts to stable <see cref="BugCode"/> values.
@@ -43,8 +43,21 @@ public static class BugCodeClassifier
             // Memory
             OutOfMemoryException => BugCode.SYS_MEMORY,
 
-            // Generic fallthrough
-            _ => BugCode.APP_OPT_ACTION_EXECUTION
+            // Generic fallthrough: only assume "optimization" when nothing
+            // more specific matched and the caller actually said so; an
+            // unrecognized context must not silently look like an
+            // optimization failure.
+            _ => context switch
+            {
+                "optimization" => BugCode.APP_OPT_ACTION_EXECUTION,
+                "fivem-action" => BugCode.APP_OPT_ACTION_EXECUTION,
+                "gtav-action" => BugCode.APP_OPT_ACTION_EXECUTION,
+                "windows-action" => BugCode.APP_OPT_ACTION_EXECUTION,
+                "app-inventory" => BugCode.APP_INV_SCAN,
+                "security-health" => BugCode.SEC_HEALTH_QUERY,
+                "settings" => BugCode.APP_SETTINGS_PERSISTENCE,
+                _ => BugCode.Unknown
+            }
         };
     }
 
@@ -64,8 +77,7 @@ public static class BugCodeClassifier
             if (actionId.StartsWith("gtav.", StringComparison.OrdinalIgnoreCase))
                 return ClassifyGtaVActionException(exception, actionId);
 
-            if (actionId.StartsWith("windows.gaming.", StringComparison.OrdinalIgnoreCase)
-                || actionId.StartsWith("windows.system.", StringComparison.OrdinalIgnoreCase))
+            if (actionId.StartsWith("windows.", StringComparison.OrdinalIgnoreCase))
                 return ClassifyWindowsActionException(exception, actionId);
         }
 
@@ -121,6 +133,7 @@ public static class BugCodeClassifier
 
         return exception switch
         {
+            BrokerIntegrityException => BugCode.BRK_INTEGRITY_VALIDATION,
             FileNotFoundException => BugCode.BRK_LAUNCH,
             System.ComponentModel.Win32Exception win32Ex when win32Ex.NativeErrorCode == 1223 => BugCode.BRK_UAC_CANCELLED, // ERROR_CANCELLED
             System.ComponentModel.Win32Exception => BugCode.BRK_IPC_COMMUNICATION,
@@ -129,6 +142,24 @@ public static class BugCodeClassifier
                 when invOpEx.Message.Contains("transaction", StringComparison.OrdinalIgnoreCase)
                 => BugCode.BRK_TRANSACTION_INCOMPLETE,
             _ => BugCode.BRK_ACTION_EXECUTION
+        };
+    }
+
+    public static BugCode ClassifyBrokerFailure(string? errorCode, bool wasCancelled)
+    {
+        if (wasCancelled)
+        {
+            return BugCode.BRK_UAC_CANCELLED;
+        }
+
+        return errorCode switch
+        {
+            "transaction-not-committed" => BugCode.BRK_TRANSACTION_INCOMPLETE,
+            "rollback-not-completed" => BugCode.BRK_ROLLBACK_INCOMPLETE,
+            "broker-not-elevated" => BugCode.BRK_UAC_DENIED,
+            "broker-operation-failed" or "broker-operation-timeout" => BugCode.BRK_ACTION_EXECUTION,
+            null or "" => BugCode.BRK_PROCESS_CRASH,
+            _ => BugCode.BRK_REQUEST_VALIDATION
         };
     }
 
@@ -193,6 +224,8 @@ public static class BugCodeClassifier
             "registry" => BugCode.WIN_REGISTRY,
             "service" => BugCode.WIN_SERVICE,
             "power" => BugCode.WIN_POWER_PLAN,
+            "app-inventory" => BugCode.APP_INV_SCAN,
+            "settings" => BugCode.APP_SETTINGS_PERSISTENCE,
             _ => BugCode.WIN_PRIVILEGE
         };
     }
@@ -258,7 +291,10 @@ public static class BugCodeClassifier
         if (actionId.Contains("power", StringComparison.OrdinalIgnoreCase)) return BugCode.WIN_POWER_PLAN;
         if (actionId.Contains("gaming", StringComparison.OrdinalIgnoreCase) || actionId.Contains("game-mode", StringComparison.OrdinalIgnoreCase)) return BugCode.WIN_GAMING_MODE;
         if (actionId.Contains("driver", StringComparison.OrdinalIgnoreCase)) return BugCode.WIN_DRIVER_QUERY;
-        if (actionId.Contains("display", StringComparison.OrdinalIgnoreCase) || actionId.Contains("hags", StringComparison.OrdinalIgnoreCase)) return BugCode.WIN_DISPLAY_CONFIG;
+        if (actionId.Contains("display", StringComparison.OrdinalIgnoreCase)
+            || actionId.Contains("hags", StringComparison.OrdinalIgnoreCase)
+            || actionId.Contains("appearance", StringComparison.OrdinalIgnoreCase)
+            || actionId.Contains("visual-effects", StringComparison.OrdinalIgnoreCase)) return BugCode.WIN_DISPLAY_CONFIG;
         if (actionId.Contains("pcie", StringComparison.OrdinalIgnoreCase)) return BugCode.WIN_PCIE_QUERY;
         if (actionId.Contains("thermal", StringComparison.OrdinalIgnoreCase)) return BugCode.WIN_THERMAL;
         if (actionId.Contains("pagefile", StringComparison.OrdinalIgnoreCase)) return BugCode.WIN_PAGEFILE;

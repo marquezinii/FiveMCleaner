@@ -22,8 +22,19 @@ public sealed partial class MainViewModel
     public bool IsLiveAlertBannerVisible
     {
         get => isLiveAlertBannerVisible;
-        private set => SetProperty(ref isLiveAlertBannerVisible, value);
+        private set
+        {
+            if (SetProperty(ref isLiveAlertBannerVisible, value))
+            {
+                OnPropertyChanged(nameof(IsLiveAlertNotificationVisible));
+                OnPropertyChanged(nameof(IsLiveAlertStatusVisible));
+            }
+        }
     }
+
+    public bool IsLiveAlertNotificationVisible => IsLiveAlertBannerVisible;
+
+    public bool IsLiveAlertStatusVisible => !IsBusy && IsLiveAlertBannerVisible;
 
     /// <summary>
     /// The persistent warning-triangle icon. Stays visible for as long as
@@ -41,6 +52,38 @@ public sealed partial class MainViewModel
         get => liveAlertMessage;
         private set => SetProperty(ref liveAlertMessage, value);
     }
+
+    public string LiveAlertTitle => localization.GetString(liveAlertSeverity switch
+    {
+        LiveAlertSeverity.Info => "LiveAlert.Title.Info",
+        LiveAlertSeverity.Critical => "LiveAlert.Title.Critical",
+        _ => "LiveAlert.Title.Important",
+    });
+
+    public string LiveAlertToneBrushKey => liveAlertSeverity switch
+    {
+        LiveAlertSeverity.Info => "InfoBaseBrush",
+        LiveAlertSeverity.Critical => "DangerBaseBrush",
+        _ => "WarningBaseBrush",
+    };
+
+    public string LiveAlertSurfaceBrushKey => liveAlertSeverity switch
+    {
+        LiveAlertSeverity.Info => "InfoSurfaceBrush",
+        LiveAlertSeverity.Critical => "DangerSurfaceBrush",
+        _ => "WarningSurfaceBrush",
+    };
+
+    public string LiveAlertBorderBrushKey => liveAlertSeverity switch
+    {
+        LiveAlertSeverity.Info => "InfoBorderBrush",
+        LiveAlertSeverity.Critical => "DangerBorderBrush",
+        _ => "WarningBorderBrush",
+    };
+
+    public string LiveAlertIconKey => liveAlertSeverity == LiveAlertSeverity.Info
+        ? "IconInfo"
+        : "IconAlertTriangle";
 
     /// <summary>
     /// Polls the current admin-broadcast live alert. Called at startup and
@@ -75,10 +118,17 @@ public sealed partial class MainViewModel
     {
         liveAlertId = snapshot.Active ? snapshot.Id : null;
         LiveAlertMessage = snapshot.Active ? snapshot.Message : string.Empty;
+        liveAlertSeverity = snapshot.Active ? snapshot.Severity : LiveAlertSeverity.Important;
         IsLiveAlertIconVisible = snapshot.Active;
         IsLiveAlertBannerVisible = snapshot.Active
             && !string.IsNullOrEmpty(liveAlertId)
             && !string.Equals(liveAlertId, dismissedLiveAlertId, StringComparison.Ordinal);
+        OnPropertyChanged(nameof(IsLiveAlertNotificationVisible));
+        OnPropertyChanged(nameof(LiveAlertTitle));
+        OnPropertyChanged(nameof(LiveAlertToneBrushKey));
+        OnPropertyChanged(nameof(LiveAlertSurfaceBrushKey));
+        OnPropertyChanged(nameof(LiveAlertBorderBrushKey));
+        OnPropertyChanged(nameof(LiveAlertIconKey));
     }
 
     /// <summary>
@@ -95,6 +145,18 @@ public sealed partial class MainViewModel
 
         IsLiveAlertBannerVisible = false;
         dismissedLiveAlertId = liveAlertId;
+        OnPropertyChanged(nameof(IsLiveAlertNotificationVisible));
         SettingsChanged(refreshPlan: false);
+    }
+
+    public void ShowLiveAlertNotification()
+    {
+        if (!IsLiveAlertIconVisible || string.IsNullOrEmpty(liveAlertId) || IsLiveAlertBannerVisible)
+        {
+            return;
+        }
+
+        IsLiveAlertBannerVisible = true;
+        OnPropertyChanged(nameof(IsLiveAlertNotificationVisible));
     }
 }

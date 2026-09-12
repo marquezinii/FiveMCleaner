@@ -1,0 +1,133 @@
+<UserControl x:Class="Ralven.App.Controls.UltraPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml">
+    <StackPanel>
+        <Border Style="{StaticResource AlertRowStyle}" Margin="0,0,0,16">
+            <Grid>
+                <Grid.ColumnDefinitions><ColumnDefinition Width="Auto" /><ColumnDefinition Width="*" /></Grid.ColumnDefinitions>
+                <ui:SymbolIcon Symbol="LockClosed24" Margin="0,2,14,0" Foreground="{DynamicResource WarningBaseBrush}" />
+                <StackPanel Grid.Column="1">
+                    <TextBlock Text="{Binding [Pro.Development.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource BodyStrongText}" />
+                    <TextBlock Text="{Binding [Pro.Development.Detail], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,4,0,0" />
+                    <Button Content="{Binding [Pro.DiscoverDevelopment], Source={StaticResource LocalizedStrings}}" Style="{StaticResource LinkButtonStyle}"
+                            HorizontalAlignment="Left" Margin="0,8,0,0" Click="Upgrade_Click" />
+                </StackPanel>
+            </Grid>
+        </Border>
+        <StackPanel IsEnabled="False" Opacity="0.55">
+        <TextBlock Text="{Binding [Ultra.Exclusive], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}"
+                   Foreground="{DynamicResource ProAccentGradientBrush}" Margin="0,0,0,12" />
+        <TextBlock Text="{Binding [Personal.Introduction], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,0,0,12" />
+        <Button Content="{Binding [Personal.Upgrade], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                Click="Upgrade_Click" HorizontalAlignment="Stretch" Margin="0,0,0,16"
+                Visibility="{Binding ShowPersonalUpgrade, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        <Expander x:Name="RoutineExpander" IsExpanded="True" Header="{Binding [Ultra.Profiles], Source={StaticResource LocalizedStrings}}">
+            <StackPanel Margin="0,10,0,16" IsEnabled="{Binding CanEditPersonalPreferences}">
+                <ComboBox ItemsSource="{Binding PersonalUsageLabels}" SelectedIndex="{Binding PersonalUsageIndex, Mode=TwoWay}"
+                          AutomationProperties.Name="{Binding [Ultra.Usage.Label], Source={StaticResource LocalizedStrings}}" />
+                <TextBlock Text="{Binding PersonalUsageDetail}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,8,0,14" />
+                <TextBlock Text="{Binding [Ultra.Smart.Title], Source={StaticResource LocalizedStrings}}" Style="{StaticResource OverlineText}"
+                           Foreground="{DynamicResource ProAccentGradientBrush}" />
+                <TextBlock Text="{Binding PersonalRecommendationSummary}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,6,0,8" />
+                <Button Content="{Binding [Ultra.Smart.Apply], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                        Click="ApplyRecommendation_Click" Margin="0,0,0,12" />
+                <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding PersonalPreserveAppearance, Mode=TwoWay}" Margin="0,4">
+                    <TextBlock Text="{Binding [Ultra.PreserveAppearance], Source={StaticResource LocalizedStrings}}" TextWrapping="Wrap" />
+                </CheckBox>
+                <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding PersonalPreserveCapture, Mode=TwoWay}" Margin="0,4">
+                    <TextBlock Text="{Binding [Ultra.PreserveCapture], Source={StaticResource LocalizedStrings}}" TextWrapping="Wrap" />
+                </CheckBox>
+                <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding PersonalAllowPerformancePower, Mode=TwoWay}" Margin="0,4">
+                    <TextBlock Text="{Binding [Ultra.AllowPower], Source={StaticResource LocalizedStrings}}" TextWrapping="Wrap" />
+                </CheckBox>
+                <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding PersonalCleanTemporaryFiles, Mode=TwoWay}" Margin="0,4">
+                    <TextBlock Text="{Binding [Ultra.CleanTemp], Source={StaticResource LocalizedStrings}}" TextWrapping="Wrap" />
+                </CheckBox>
+                <CheckBox Style="{StaticResource ToggleSwitchStyle}" IsChecked="{Binding PersonalUseConsistentPointerResponse, Mode=TwoWay}" Margin="0,4">
+                    <TextBlock Text="{Binding [Ultra.ConsistentPointer], Source={StaticResource LocalizedStrings}}" TextWrapping="Wrap" />
+                </CheckBox>
+                <TextBlock Text="{Binding [Ultra.Preferences.Help], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,10" />
+                <Button Content="{Binding [Ultra.Profile.Save], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                        IsEnabled="{Binding CanSavePersonalProfile}" Click="SaveProfile_Click" />
+            </StackPanel>
+        </Expander>
+        <TextBlock Text="{Binding PersonalChangeSummary}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,16,0,8" />
+        <Expander x:Name="TrackingExpander" Header="{Binding [Ultra.Tracking.Title], Source={StaticResource LocalizedStrings}}" Margin="0,8,0,0">
+            <StackPanel Margin="0,10,0,16">
+                <TextBlock Text="{Binding [Ultra.Tracking.Help], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                <TextBlock Text="{Binding PersonalTrackingSummary}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,10" />
+                <Button Content="{Binding [Ultra.Tracking.Start], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                        IsEnabled="{Binding CanUsePersonalTools}" Click="StartTracking_Click" Margin="0,3" />
+                <Button Content="{Binding [Ultra.Tracking.Check], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                        IsEnabled="{Binding CanCheckPersonalTracking}" Click="CheckTracking_Click" Margin="0,3" />
+                <Button Content="{Binding [Ultra.Tracking.Stop], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                        IsEnabled="{Binding CanStopPersonalTracking}" Click="StopTracking_Click" Margin="0,3" />
+                <Button Content="{Binding [Personal.Tracking.Analyze], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                        IsEnabled="{Binding CanRefresh}" Click="Analyze_Click" Margin="0,3" />
+                <Button Content="{Binding [Personal.Tracking.Review], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                        IsEnabled="{Binding CanEditPersonalPreferences}" Click="Review_Click" Margin="0,3" />
+                <ItemsControl ItemsSource="{Binding PersonalChanges}" Margin="0,10,0,0">
+                    <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,4" Style="{StaticResource CaptionText}" /></DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Expander>
+        <Expander x:Name="MeasurementExpander" Header="{Binding [Ultra.Measure.Title], Source={StaticResource LocalizedStrings}}" Margin="0,8,0,0">
+            <StackPanel Margin="0,10,0,16">
+                <TextBlock Text="{Binding [Ultra.Measure.Help], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" />
+                <Label Content="{Binding [Ultra.Measure.Context], Source={StaticResource LocalizedStrings}}" Target="{Binding ElementName=ContextInput}" Margin="0,8,0,0" />
+                <TextBox x:Name="ContextInput" Text="{Binding MeasurementContext, UpdateSourceTrigger=PropertyChanged}" MaxLength="80"
+                         IsEnabled="{Binding CanEditPersonalPreferences}" AutomationProperties.Name="{Binding [Ultra.Measure.Context], Source={StaticResource LocalizedStrings}}" />
+                <Button Content="{Binding [Ultra.Measure.Start], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                        IsEnabled="{Binding CanUsePersonalTools}" Click="Measure_Click" Margin="0,10" />
+                <TextBlock Text="{Binding [Ultra.Measure.Empty], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" Margin="0,8"
+                           Visibility="{Binding HasNoPersonalMeasurements, Converter={StaticResource BooleanToVisibilityConverter}}" />
+                <StackPanel Visibility="{Binding HasPersonalMeasurements, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <TextBlock Text="{Binding [Personal.Measure.CompareHelp], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,8" />
+                <Label Content="{Binding [Personal.Measure.Selected], Source={StaticResource LocalizedStrings}}" Target="{Binding ElementName=SelectedMeasurement}" />
+                <ComboBox x:Name="SelectedMeasurement" ItemsSource="{Binding PersonalMeasurementChoices}" SelectedIndex="{Binding SelectedPersonalMeasurementIndex, Mode=TwoWay}"
+                          AutomationProperties.Name="{Binding [Personal.Measure.Selected], Source={StaticResource LocalizedStrings}}" />
+                <Label Content="{Binding [Personal.Measure.Baseline], Source={StaticResource LocalizedStrings}}" Target="{Binding ElementName=BaselineMeasurement}" />
+                <ComboBox x:Name="BaselineMeasurement" ItemsSource="{Binding PersonalMeasurementChoices}" SelectedIndex="{Binding BaselinePersonalMeasurementIndex, Mode=TwoWay}"
+                          AutomationProperties.Name="{Binding [Personal.Measure.Baseline], Source={StaticResource LocalizedStrings}}" Margin="0,0,0,10" />
+                <ItemsControl ItemsSource="{Binding PersonalMetricRows}" Margin="0,8">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="{DynamicResource BorderDefaultBrush}" BorderThickness="0,0,0,1" Padding="0,8">
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /></Grid.ColumnDefinitions>
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" Style="{StaticResource BodyStrongText}" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding [Personal.Measure.Before], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" Margin="0,0,6,0" />
+                                            <TextBlock Text="{Binding Baseline}" Style="{StaticResource CaptionText}" />
+                                        </StackPanel>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="1" HorizontalAlignment="Right">
+                                        <TextBlock Text="{Binding Current}" Style="{StaticResource BodyStrongText}" HorizontalAlignment="Right" />
+                                        <TextBlock Text="{Binding Difference}" Style="{StaticResource CaptionText}" HorizontalAlignment="Right" />
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBlock Text="{Binding PersonalComparisonSummary}" Style="{StaticResource SecondaryText}" TextWrapping="Wrap" />
+                <Expander Header="{Binding [Personal.History.AllMeasurements], Source={StaticResource LocalizedStrings}}" Margin="0,10,0,0">
+                <ItemsControl ItemsSource="{Binding PersonalMeasurements}" Margin="0,10,0,0">
+                    <ItemsControl.ItemTemplate><DataTemplate><TextBlock Text="{Binding}" TextWrapping="Wrap" Margin="0,6" Style="{StaticResource CaptionText}" /></DataTemplate></ItemsControl.ItemTemplate>
+                </ItemsControl>
+                </Expander>
+                </StackPanel>
+            </StackPanel>
+        </Expander>
+        <TextBlock Text="{Binding PersonalHistorySummary}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,16,0,6" />
+        <Button Content="{Binding [Personal.Export.Button], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                IsEnabled="{Binding HasPersonalRecords}" Click="Export_Click" />
+        <TextBlock Text="{Binding [Personal.Export.Help], Source={StaticResource LocalizedStrings}}" Style="{StaticResource CaptionText}" TextWrapping="Wrap" Margin="0,6,0,0" />
+        <TextBlock Text="{Binding UltraStatus}" TextWrapping="Wrap" Style="{StaticResource CaptionText}" Margin="0,12,0,0" AutomationProperties.LiveSetting="Polite" />
+        <Button Content="{Binding [Ultra.Operation.Cancel], Source={StaticResource LocalizedStrings}}" Style="{StaticResource SecondaryButtonStyle}"
+                Click="Cancel_Click" Margin="0,8,0,0" Visibility="{Binding IsPersonalBusy, Converter={StaticResource BooleanToVisibilityConverter}}" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

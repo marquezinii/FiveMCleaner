@@ -34,7 +34,14 @@ public static class TelemetryEventValidator
             throw new ArgumentException("Identificador de evento de telemetria inválido.", nameof(telemetryEvent));
         }
 
-        if (telemetryEvent.EventName is not ("optimization-completed" or "optimization-failed" or "optimization-cancelled"))
+        if (telemetryEvent.EventName is not (
+            TelemetryEventNames.AppInitialized or
+            TelemetryEventNames.OptimizationStarted or
+            TelemetryEventNames.OptimizationCompleted or
+            TelemetryEventNames.OptimizationFailed or
+            TelemetryEventNames.OptimizationCancelled or
+            TelemetryEventNames.GtaVBenchmarkCompleted or
+            TelemetryEventNames.GtaVBenchmarkFailed))
         {
             throw new ArgumentException("Evento de telemetria não permitido.", nameof(telemetryEvent));
         }
@@ -127,6 +134,11 @@ public static class TelemetryEventValidator
         {
             throw new ArgumentException("Faixa de contagem de processos não permitida.", nameof(telemetryEvent));
         }
+
+        if (telemetryEvent.OperationId == Guid.Empty)
+        {
+            throw new ArgumentException("Identificador de operação de telemetria inválido.", nameof(telemetryEvent));
+        }
     }
 
     private static void ValidateShortField(string? value, string fieldName)
@@ -153,6 +165,7 @@ public static class TelemetryEventValidator
 /// </summary>
 public sealed class LocalTelemetryQueue
 {
+    private static long lastQueuedUtcTicks;
     private readonly string queueDirectory;
     private readonly JsonSerializerOptions jsonOptions;
 
@@ -170,7 +183,8 @@ public sealed class LocalTelemetryQueue
         ArgumentNullException.ThrowIfNull(telemetryEvent);
         Directory.CreateDirectory(queueDirectory);
 
-        var fileName = $"{DateTimeOffset.UtcNow:yyyyMMddHHmmssfff}_{Guid.NewGuid():N}.json";
+        var enqueuedAt = new DateTimeOffset(NextQueuedUtcTicks(), TimeSpan.Zero);
+        var fileName = $"{enqueuedAt:yyyyMMddHHmmssfffffff}_{Guid.NewGuid():N}.json";
         var temporaryPath = Path.Combine(queueDirectory, $".{fileName}.tmp");
         var finalPath = Path.Combine(queueDirectory, fileName);
 
@@ -187,6 +201,19 @@ public sealed class LocalTelemetryQueue
         }
 
         File.Move(temporaryPath, finalPath, overwrite: true);
+    }
+
+    private static long NextQueuedUtcTicks()
+    {
+        while (true)
+        {
+            var previous = Volatile.Read(ref lastQueuedUtcTicks);
+            var next = Math.Max(DateTime.UtcNow.Ticks, previous + 1);
+            if (Interlocked.CompareExchange(ref lastQueuedUtcTicks, next, previous) == previous)
+            {
+                return next;
+            }
+        }
     }
 
     /// <summary>
@@ -230,6 +257,33 @@ public sealed class LocalTelemetryQueue
     }
 
     public void Remove(string filePath) => TryDelete(filePath);
+
+    /// <summary>
+    /// Reserves one low-volume health event per UTC day and app version. The
+    /// marker has no user or machine identifier; it only prevents repeated
+    /// launches from turning a health signal into a usage trace.
+    /// </summary>
+    public bool TryReserveDailyEvent(string eventName, string appVersion, DateOnly utcDate)
+    {
+        if (string.IsNullOrWhiteSpace(eventName) || string.IsNullOrWhiteSpace(appVersion)
+            || eventName.Any(character => !(char.IsAsciiLetterOrDigit(character) || character is '-'))
+            || appVersion.Any(character => !(char.IsAsciiLetterOrDigit(character) || character is '.' or '-')))
+        {
+            return false;
+        }
+
+        try
+        {
+            Directory.CreateDirectory(queueDirectory);
+            var markerPath = Path.Combine(queueDirectory, $".{eventName}-{appVersion}-{utcDate:yyyyMMdd}.daily");
+            using var marker = new FileStream(markerPath, FileMode.CreateNew, FileAccess.Write, FileShare.None);
+            return true;
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            return false;
+        }
+    }
 
     /// <summary>
     /// Bounds the queue by age *and* by count. Age alone is not a real bound:
@@ -394,6 +448,7 @@ public sealed class CloudflareTelemetryTransport
         backupRestored = telemetryEvent.BackupRestored,
         elevationUsed = telemetryEvent.ElevationUsed,
         processCountAtStart = telemetryEvent.ProcessCountAtStart,
+        operationId = telemetryEvent.OperationId?.ToString("D"),
         environment
     };
 
@@ -477,6 +532,30 @@ public sealed class QueuedCloudflareTelemetryService : IAnonymousTelemetryServic
             CancellationToken.None,
             TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
             TaskScheduler.Default);
+    }
+
+    /// <summary>Queues a health event only once per UTC day/version.</summary>
+    public Task TrackOncePerUtcDayAsync(
+        AnonymousTelemetryEvent telemetryEvent,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(telemetryEvent);
+        if (!enabled)
+        {
+            return Task.CompletedTask;
+        }
+
+        telemetryEvent = includeOptionalData ? telemetryEvent : telemetryEvent.WithoutOptionalData();
+        TelemetryEventValidator.Validate(telemetryEvent);
+        if (!queue.TryReserveDailyEvent(
+                telemetryEvent.EventName,
+                telemetryEvent.AppVersion,
+                DateOnly.FromDateTime(DateTime.UtcNow)))
+        {
+            return Task.CompletedTask;
+        }
+
+        return TrackAsync(telemetryEvent, cancellationToken);
     }
 
     /// <summary>

@@ -31,9 +31,10 @@ CREATE TABLE IF NOT EXISTS telemetry_events (
     run_timestamp TEXT,
     days_since_last_run_bucket INTEGER,
     backup_created INTEGER,
-    backup_restored INTEGER,
-    elevation_used INTEGER,
-    process_count_at_start INTEGER
+      backup_restored INTEGER,
+      elevation_used INTEGER,
+      process_count_at_start INTEGER,
+      operation_id TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_telemetry_events_received_at
@@ -44,6 +45,9 @@ CREATE INDEX IF NOT EXISTS idx_telemetry_events_environment
 
 CREATE INDEX IF NOT EXISTS idx_telemetry_events_app_version
     ON telemetry_events (app_version);
+
+CREATE INDEX IF NOT EXISTS idx_telemetry_events_operation_id
+    ON telemetry_events (operation_id);
 
 -- One row per action ID applied in an optimization-completed event, so
 -- "most used function" can be aggregated with a simple GROUP BY instead of
@@ -147,6 +151,41 @@ CREATE TABLE IF NOT EXISTS account_profiles (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_account_profiles_username_normalized
     ON account_profiles (username_normalized);
 
+-- One-time TOTP recovery material. Enrollment identifiers and codes are
+-- represented only by keyed SHA-256 HMACs; plaintext codes leave the Worker
+-- once, in the generation response. Reservations serialize concurrent use
+-- without consuming a code before the Firebase administrator operation wins.
+CREATE TABLE IF NOT EXISTS account_mfa_recovery_codes (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    account_uid TEXT NOT NULL REFERENCES account_profiles(uid) ON DELETE CASCADE,
+    enrollment_tag TEXT NOT NULL CHECK(length(enrollment_tag) = 64),
+    code_hash TEXT NOT NULL CHECK(length(code_hash) = 64),
+    generation_id TEXT NOT NULL CHECK(length(generation_id) = 36),
+    created_at TEXT NOT NULL,
+    reserved_until TEXT,
+    used_at TEXT,
+    UNIQUE(enrollment_tag, code_hash),
+    CHECK(used_at IS NULL OR reserved_until IS NULL)
+);
+
+CREATE INDEX IF NOT EXISTS idx_account_mfa_recovery_lookup
+    ON account_mfa_recovery_codes(enrollment_tag, code_hash, used_at);
+
+-- Local revocation cutoff closes the normal one-hour offline JWT window after
+-- recovery. Firebase validSince separately revokes refresh tokens.
+CREATE TABLE IF NOT EXISTS account_auth_cutoffs (
+    account_uid TEXT PRIMARY KEY,
+    valid_after INTEGER NOT NULL CHECK(valid_after > 0),
+    updated_at TEXT NOT NULL
+);
+
+-- Durable outbox for deletion retries. It intentionally has no profile FK:
+-- the identity may already be gone when D1 cleanup resumes.
+CREATE TABLE IF NOT EXISTS account_deletion_jobs (
+    account_uid TEXT PRIMARY KEY,
+    requested_at TEXT NOT NULL
+);
+
 -- Billing state is keyed only by the Firebase UID already verified by the
 -- Worker. Provider references are opaque identifiers; no email, checkout URL,
 -- webhook body, credential, or secret is persisted here.
@@ -159,6 +198,7 @@ CREATE TABLE IF NOT EXISTS billing_checkout_intents (
     amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
     currency TEXT NOT NULL CHECK (currency = 'BRL'),
     provider_checkout_id TEXT CHECK (provider_checkout_id IS NULL OR length(provider_checkout_id) BETWEEN 1 AND 128),
+    create_attempt_started_at TEXT,
     state TEXT NOT NULL CHECK (state IN ('created', 'pending', 'completed', 'cancelled')),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
@@ -169,10 +209,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_checkout_intents_provider_checkout
     ON billing_checkout_intents (provider, provider_checkout_id);
 CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_checkout_intents_account_contract
     ON billing_checkout_intents (id, account_uid, provider, offer_key);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_one_open_checkout
+    ON billing_checkout_intents(account_uid) WHERE state <> 'cancelled';
 
--- Mercado Pago signs the request ID and resource ID, not the webhook body.
--- Persist only that signed envelope plus internal processing
--- state; resource details must be fetched from the provider before any grant.
+-- Persist only the authenticated event envelope plus internal processing
+-- state. Resource details are fetched from the provider before any grant.
 CREATE TABLE IF NOT EXISTS billing_webhook_events (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     provider TEXT NOT NULL CHECK (length(provider) BETWEEN 1 AND 32),
@@ -212,6 +253,22 @@ CREATE TABLE IF NOT EXISTS billing_subscriptions (
 CREATE UNIQUE INDEX IF NOT EXISTS idx_billing_subscriptions_account_contract
     ON billing_subscriptions (id, account_uid);
 
+CREATE TABLE IF NOT EXISTS billing_payments (
+    provider_payment_id TEXT PRIMARY KEY NOT NULL,
+    subscription_id TEXT NOT NULL REFERENCES billing_subscriptions(id) ON DELETE CASCADE,
+    state TEXT NOT NULL CHECK(state IN ('approved', 'pending', 'rejected', 'refunded', 'cancelled', 'charged_back')),
+    amount_cents INTEGER NOT NULL CHECK(amount_cents > 0),
+    refunded_cents INTEGER NOT NULL CHECK(refunded_cents >= 0),
+    currency TEXT NOT NULL CHECK(currency = 'BRL'),
+    period_start TEXT NOT NULL,
+    period_end TEXT NOT NULL CHECK(period_end > period_start),
+    provider_updated_at TEXT NOT NULL,
+    last_event_id INTEGER NOT NULL REFERENCES billing_webhook_events(id),
+    updated_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_billing_payment_subscription_period
+    ON billing_payments(subscription_id, period_start, period_end);
+
 -- This is the server-authoritative access snapshot read by the app. Paid
 -- access is always time-bounded and traceable to a normalized subscription
 -- plus the webhook event that most recently changed it.
@@ -243,8 +300,39 @@ CREATE TABLE IF NOT EXISTS live_alert (
     id INTEGER PRIMARY KEY,
     message TEXT NOT NULL DEFAULT '',
     active INTEGER NOT NULL DEFAULT 0,
+    severity TEXT NOT NULL DEFAULT 'important' CHECK (severity IN ('info', 'important', 'critical')),
     updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
 INSERT OR IGNORE INTO live_alert (id, message, active, updated_at)
     VALUES (1, '', 0, datetime('now'));
+
+-- Monthly Ralven AI spend ledger. Interactive content is never stored.
+CREATE TABLE IF NOT EXISTS ralven_ai_usage (
+    request_id TEXT PRIMARY KEY NOT NULL,
+    account_uid TEXT NOT NULL REFERENCES account_profiles (uid) ON DELETE CASCADE,
+    billing_period TEXT NOT NULL CHECK (
+        length(billing_period) = 7 AND substr(billing_period, 5, 1) = '-'
+    ),
+    state TEXT NOT NULL CHECK (state IN ('reserved', 'completed', 'failed')),
+    reserved_cost_microusd INTEGER NOT NULL CHECK (reserved_cost_microusd > 0),
+    actual_cost_microusd INTEGER CHECK (actual_cost_microusd IS NULL OR actual_cost_microusd >= 0),
+    input_tokens INTEGER CHECK (input_tokens IS NULL OR input_tokens >= 0),
+    cached_input_tokens INTEGER CHECK (cached_input_tokens IS NULL OR cached_input_tokens >= 0),
+    cache_write_tokens INTEGER CHECK (cache_write_tokens IS NULL OR cache_write_tokens >= 0),
+    output_tokens INTEGER CHECK (output_tokens IS NULL OR output_tokens >= 0),
+    reasoning_tokens INTEGER CHECK (reasoning_tokens IS NULL OR reasoning_tokens >= 0),
+    created_at TEXT NOT NULL,
+    completed_at TEXT,
+    CHECK (
+        (state = 'reserved' AND completed_at IS NULL)
+        OR (state <> 'reserved' AND completed_at IS NOT NULL)
+    )
+);
+
+CREATE INDEX IF NOT EXISTS idx_ralven_ai_usage_account_period
+    ON ralven_ai_usage (account_uid, billing_period);
+CREATE INDEX IF NOT EXISTS idx_ralven_ai_usage_period
+    ON ralven_ai_usage (billing_period);
+CREATE INDEX IF NOT EXISTS idx_ralven_ai_usage_created_at
+    ON ralven_ai_usage (created_at);

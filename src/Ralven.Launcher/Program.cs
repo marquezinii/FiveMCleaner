@@ -1,8 +1,9 @@
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.Security.Cryptography;
+using System.Text.Json;
 using Ralven.App.Services;
-using Ralven.Contracts;
 using Ralven.UpdateRuntime;
 
 namespace Ralven.Launcher;
@@ -14,18 +15,37 @@ internal static class Program
     [STAThread]
     private static async Task<int> Main(string[] args)
     {
+        var dataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ralven");
+        var diagnostics = new UpdaterDiagnostics(dataRoot);
+        var telemetryAuthorized = UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot);
+        try
+        {
+            return Supervise(args, diagnostics, dataRoot, telemetryAuthorized);
+        }
+        finally
+        {
+            // Supervision has released its thread-owned lifecycle mutex. Remote
+            // delivery cannot delay launching the app or block another launcher.
+            await diagnostics.FlushPendingAsync(telemetryAuthorized);
+        }
+    }
+
+    // Named mutex ownership is thread-affine. This launcher has no UI dispatcher;
+    // keep local supervision on its acquiring thread and await network only after it returns.
+    private static int Supervise(string[] args, UpdaterDiagnostics diagnostics, string dataRoot, bool telemetryAuthorized)
+    {
         var forwardedArguments = args
             .Where(argument => !argument.StartsWith("--wait-for-pid=", StringComparison.OrdinalIgnoreCase)
                 && !argument.StartsWith("--wait-for-start=", StringComparison.OrdinalIgnoreCase))
             .ToArray();
         var runtimeRoot = Path.Combine(AppContext.BaseDirectory, "Runtime");
-        var dataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Ralven");
-        var diagnostics = new UpdaterDiagnostics(dataRoot);
-        var telemetryAuthorized = UpdaterDiagnostics.IsTelemetryAuthorized(dataRoot);
+        using var lifecycleLease = RuntimeUpdateLease.TryAcquire(runtimeRoot);
+        if (lifecycleLease is null) return 0;
+        var localization = LocalizationService.Current;
+        ApplyStoredLanguage(localization, dataRoot);
         UpdateTransaction? currentTransaction = null;
         try
         {
-            await diagnostics.FlushPendingAsync(telemetryAuthorized);
             // Read the journal before WaitForParent (not after): WaitForParent
             // is exactly the step that can fail (the previous process not
             // exiting in time), and the catch block below needs
@@ -37,7 +57,7 @@ internal static class Program
             var recovery = new RecoveryCoordinator(runtimeRoot);
             var initialDecision = recovery.Reconcile(DateTimeOffset.UtcNow, HealthTimeout);
             if (initialDecision == RecoveryDecision.RolledBack && currentTransaction is not null)
-                await RecordAsync(diagnostics, currentTransaction, "rollback", "rolled-back", "health-timeout", null, dataRoot, telemetryAuthorized);
+                Record(diagnostics, currentTransaction, "rollback", "rolled-back", UpdaterEventCodes.HealthCheckTimeout, null, dataRoot, telemetryAuthorized);
             var activation = new RuntimeActivationStore(runtimeRoot);
             var version = activation.ReadActiveVersion();
             var floor = new VersionFloorStore(dataRoot).Read(version);
@@ -51,6 +71,7 @@ internal static class Program
             if (!journal.TryRead(out _))
                 activation.PruneInactiveVersions();
             var executable = Path.Combine(activation.VersionsRoot, version, "Ralven.exe");
+            UpdatePathSafety.EnsureNoReparsePoints(executable);
             if (!File.Exists(executable)) throw new FileNotFoundException("A versão ativa não contém o aplicativo.", executable);
 
             var hasCandidate = journal.TryRead(out var transaction) && transaction.CandidateVersion == version;
@@ -70,25 +91,25 @@ internal static class Program
             var receipt = new UpdateHealthReceiptStore(runtimeRoot);
             var deadline = DateTimeOffset.UtcNow + HealthTimeout;
 
-            async Task<bool> TryConfirmHealthAsync()
+            bool TryConfirmHealth()
             {
                 if (!receipt.Confirms(transaction)) return false;
                 recovery.Reconcile(DateTimeOffset.UtcNow, HealthTimeout);
-                await RecordAsync(diagnostics, transaction, "health-check", "completed", "healthy", null, dataRoot, telemetryAuthorized);
+                Record(diagnostics, transaction, "health-check", "completed", UpdaterEventCodes.HealthConfirmed, null, dataRoot, telemetryAuthorized);
                 return true;
             }
 
             while (DateTimeOffset.UtcNow < deadline && !HasExitedSafely(process))
             {
-                if (await TryConfirmHealthAsync()) return 0;
-                await Task.Delay(250);
+                if (TryConfirmHealth()) return 0;
+                Thread.Sleep(250);
             }
-            if (await TryConfirmHealthAsync()) return 0;
+            if (TryConfirmHealth()) return 0;
             recovery.Reconcile(DateTimeOffset.UtcNow, TimeSpan.Zero);
-            await RecordAsync(diagnostics, transaction, "rollback", "rolled-back", "health-timeout", null, dataRoot, telemetryAuthorized);
+            Record(diagnostics, transaction, "rollback", "rolled-back", UpdaterEventCodes.HealthCheckTimeout, null, dataRoot, telemetryAuthorized);
             MessageBox.Show(
-                "A nova versão não confirmou uma inicialização saudável. A versão anterior foi restaurada e será usada na próxima abertura.",
-                "Recuperação do Ralven", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                localization.GetString("Launcher.Recovery.Message"),
+                localization.GetString("Launcher.Recovery.Title"), MessageBoxButtons.OK, MessageBoxIcon.Warning);
             return 1;
         }
         catch (Exception exception)
@@ -120,9 +141,9 @@ internal static class Program
                     OutOfMemoryException or StackOverflowException or AccessViolationException))
                 {
                 }
-                await RecordAsync(diagnostics, currentTransaction, "activation", "failed", Classify(exception), exception.ToString(), dataRoot, telemetryAuthorized);
+                Record(diagnostics, currentTransaction, "activation", "failed", Classify(exception), exception.ToString(), dataRoot, telemetryAuthorized);
             }
-            MessageBox.Show(DescribeFailure(exception), "Ralven", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            MessageBox.Show(DescribeFailure(localization, exception), "Ralven", MessageBoxButtons.OK, MessageBoxIcon.Error);
             return 2;
         }
     }
@@ -137,14 +158,14 @@ internal static class Program
         ParentProcessWait.WaitForExit(pid, expectedStart, 30_000, "O Ralven anterior não encerrou a tempo.");
     }
 
-    private static Task RecordAsync(
+    private static void Record(
         UpdaterDiagnostics diagnostics, UpdateTransaction transaction, string stage,
         string outcome, string code, string? detail, string dataRoot, bool telemetryAuthorized) =>
         diagnostics.RecordAsync(
             new UpdaterEvent(transaction.Id, stage, outcome, code, transaction.PreviousVersion,
-                transaction.CandidateVersion, "Production", BugCodeClassifier.ClassifyUpdaterException(new Exception(code), stage)),
+                transaction.CandidateVersion, UpdaterDiagnostics.ResolveEnvironment()),
             detail,
-            telemetryAuthorized);
+            telemetryAuthorized, flushPending: false).GetAwaiter().GetResult();
 
     // O processo pode sair entre o Process.Start e a leitura de HasExited, e
     // o Windows nega a consulta (Win32Exception) ou a propriedade
@@ -164,19 +185,38 @@ internal static class Program
 
     private static string Classify(Exception exception) => exception switch
     {
-        CryptographicException => "signature-invalid",
-        InvalidDataException => "invalid-data",
-        UnauthorizedAccessException => "access-denied",
-        IOException => "io",
-        _ => "unexpected",
+        TimeoutException => UpdaterEventCodes.ParentExitTimeout,
+        CryptographicException => UpdaterEventCodes.ActiveRuntimeInvalid,
+        InvalidDataException or FileNotFoundException => UpdaterEventCodes.ActiveRuntimeInvalid,
+        UnauthorizedAccessException => UpdaterEventCodes.AccessDenied,
+        IOException => UpdaterEventCodes.LocalIoFailed,
+        InvalidOperationException => UpdaterEventCodes.LauncherStartFailed,
+        _ => UpdaterEventCodes.Unexpected,
     };
 
-    private static string DescribeFailure(Exception exception) => exception switch
+    private static string DescribeFailure(ILocalizationService localization, Exception exception) => exception switch
     {
-        TimeoutException => "O Ralven anterior não encerrou a tempo. Aguarde alguns instantes e tente abrir novamente.",
-        UnauthorizedAccessException => "O Windows não permitiu abrir esta versão. Verifique a permissão e tente novamente.",
-        CryptographicException or InvalidDataException => "Não foi possível verificar esta atualização com segurança. Nada foi alterado.",
-        FileNotFoundException => "Os arquivos necessários para abrir o Ralven não foram encontrados. Tente reparar ou reinstalar o aplicativo.",
-        _ => "Não foi possível abrir o Ralven agora. Tente novamente; se continuar, reinstale o aplicativo."
+        TimeoutException => localization.GetString("Launcher.Error.ParentTimeout"),
+        UnauthorizedAccessException => localization.GetString("Launcher.Error.AccessDenied"),
+        CryptographicException or InvalidDataException => localization.GetString("Launcher.Error.Security"),
+        FileNotFoundException => localization.GetString("Launcher.Error.MissingFiles"),
+        _ => localization.GetString("Launcher.Error.Unexpected")
     };
+
+    private static void ApplyStoredLanguage(LocalizationService localization, string dataRoot)
+    {
+        try
+        {
+            var path = Path.Combine(dataRoot, "settings.json");
+            if (!File.Exists(path) || new FileInfo(path).Length > 1_048_576) return;
+            using var document = JsonDocument.Parse(File.ReadAllText(path));
+            if (document.RootElement.TryGetProperty("language", out var language)
+                && language.GetString() is { } preference)
+                localization.Apply(preference, CultureInfo.CurrentUICulture);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException or JsonException)
+        {
+            // A falha ao ler uma preferência nunca pode impedir o rollback ou o startup.
+        }
+    }
 }

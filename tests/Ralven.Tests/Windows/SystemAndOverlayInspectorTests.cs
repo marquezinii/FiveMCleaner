@@ -31,14 +31,22 @@ public sealed class SystemAndOverlayInspectorTests
     }
 
     [Fact]
-    public void WindowsSystemResourceInspector_ExposesPagefileTotals()
+    public void WindowsSystemResourceInspector_ExposesCommitLimit()
     {
         var inspector = new WindowsSystemResourceInspector();
 
         var snapshot = inspector.GetSnapshot();
 
-        Assert.True(snapshot.TotalPageFileBytes >= 0);
-        Assert.True(snapshot.AvailablePageFileBytes >= 0);
+        Assert.True(snapshot.CommitLimitBytes >= 0);
+        Assert.True(snapshot.AvailableCommitBytes >= 0);
+        Assert.True(snapshot.AvailableCommitBytes <= snapshot.CommitLimitBytes);
+    }
+
+    [Fact]
+    public void WindowsHardwareStabilityInspector_UsesOfficialSystemLogProvider()
+    {
+        Assert.Contains("Microsoft-Windows-WHEA-Logger", WindowsHardwareStabilityInspector.WheaEventQuery, StringComparison.Ordinal);
+        Assert.DoesNotContain("Microsoft-Windows-Kernel-WHEA", WindowsHardwareStabilityInspector.WheaEventQuery, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -15,6 +15,8 @@ public sealed partial class MainViewModel
 {
     public string ReportSummaryLabel { get => reportSummaryLabel; private set => SetProperty(ref reportSummaryLabel, value); }
 
+    public string ReportDetailSummaryLabel { get => reportDetailSummaryLabel; private set => SetProperty(ref reportDetailSummaryLabel, value); }
+
     public string ReportRestartLabel { get => reportRestartLabel; private set => SetProperty(ref reportRestartLabel, value); }
 
     public bool IsReportAvailable
@@ -64,9 +66,7 @@ public sealed partial class MainViewModel
 
     private string GetLocalizedActionName(string actionId, string fallback)
     {
-        var key = $"Actions.{actionId}.Name";
-        var value = localization.GetString(key);
-        return value == key ? fallback : value;
+        return localization.GetStringOrFallback($"Actions.{actionId}.Name", fallback);
     }
 
     private (string Label, string Glyph, string BrushKey) DescribeOutcome(ActionExecutionOutcome outcome)
@@ -118,29 +118,44 @@ public sealed partial class MainViewModel
         if (report is null)
         {
             ReportSummaryLabel = string.Empty;
+            ReportDetailSummaryLabel = string.Empty;
             ReportRestartLabel = string.Empty;
             return;
         }
 
-        ReportSummaryLabel = localization.Format(
+        ReportSummaryLabel = report.RollbackFailedCount > 0
+            ? localization.GetString("Report.Primary.RollbackFailed")
+            : report.Succeeded
+                ? localization.Format(
+                    report.ChangedCount == 0 ? "Report.Primary.NoChanges" : "Report.Primary.Success",
+                    report.ChangedCount)
+                : report.ChangedCount > 0
+                    ? localization.Format("Report.Primary.Partial", report.ChangedCount)
+                    : localization.GetString("Report.Primary.Failed");
+        ReportDetailSummaryLabel = localization.Format(
             "Report.SummaryFormat",
             report.VerifiedCount,
             report.ChangedCount,
             report.SkippedCount,
             report.WarningCount,
             report.FailedCount);
-        ReportRestartLabel = localization.GetString(
-            report.RequiresRestart ? "Report.RestartNeeded" : "Report.RestartNotNeeded");
+        ReportRestartLabel = report.RequiresRestart
+            ? localization.GetString("Report.RestartNeeded")
+            : string.Empty;
 
         foreach (var line in report.Lines)
         {
             var (label, glyph, brushKey) = DescribeOutcome(line.Outcome);
+            var reasonWithCode = OptimizationFailureMessageFormatter.AppendCode(
+                line.Reason,
+                line.BugCode,
+                code => localization.Format("Report.ErrorCodeSuffix", code));
             ReportLines.Add(new ReportLineDisplayItem(
                 GetLocalizedActionName(line.ActionId, line.ActionName),
                 label,
                 glyph,
                 brushKey,
-                line.Reason));
+                reasonWithCode));
         }
     }
 
@@ -168,6 +183,27 @@ public sealed partial class MainViewModel
     }
 
     public bool CanShareReport => lastReport is not null;
+
+    public async Task<bool> OpenHistoryReportAsync(HistoryDisplayItem item)
+    {
+        ArgumentNullException.ThrowIfNull(item);
+        if (IsBusy)
+        {
+            return false;
+        }
+
+        var report = await service.LoadReportAsync(item.TransactionId).ConfigureAwait(true);
+        if (report is null)
+        {
+            return false;
+        }
+
+        ApplyReport(report);
+        ApplyComparison(null);
+        lastTransactionId = report.TransactionId;
+        StepLedger.Clear();
+        return true;
+    }
 
     public string SuggestedReportFileName => lastReport is null
         ? "Ralven-Report.txt"

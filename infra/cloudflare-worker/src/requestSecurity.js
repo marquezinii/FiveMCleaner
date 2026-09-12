@@ -22,8 +22,9 @@ export async function readBoundedJson(message, maximumBytes) {
     }
     json += decoder.decode();
     return JSON.parse(json);
-  } catch (err) {
-    console.error('readBoundedJson failed:', err?.message || 'unknown');
+  } catch {
+    // Parser errors can contain fragments of credentials or provider PII.
+    console.error('readBoundedJson failed: invalid or unreadable JSON');
     return null;
   }
 }

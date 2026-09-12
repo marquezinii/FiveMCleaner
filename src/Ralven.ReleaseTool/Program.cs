@@ -42,6 +42,11 @@ if (args.Length == 5 && args[0] == "sign-broker")
 {
     var brokerFileManifestPath = Path.GetFullPath(args[1]);
     using var stream = File.OpenRead(brokerFileManifestPath);
+    if (stream.Length is <= 0 or > BrokerTrustPolicy.MaximumFileManifestBytes)
+    {
+        throw new InvalidDataException("Manifesto de arquivos do componente administrativo inválido.");
+    }
+
     var hash = Convert.ToHexString(SHA256.HashData(stream)).ToLowerInvariant();
     var unsigned = new SignedBrokerManifest(
         1,

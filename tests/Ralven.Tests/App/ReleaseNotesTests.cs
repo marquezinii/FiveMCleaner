@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.Json;
 using Ralven.App.Services;
 using Ralven.App.Views;
@@ -13,10 +14,13 @@ public sealed class ReleaseNotesCatalogTests
     {
         var entry = ReleaseNotesCatalog.Versions[0];
 
-        Assert.Equal("1.6.1", entry.Version);
+        Assert.Equal("1.7.0", entry.Version);
         Assert.Equal(
             [
-                ReleaseNoteCategory.Improved
+                ReleaseNoteCategory.Added,
+                ReleaseNoteCategory.Improved,
+                ReleaseNoteCategory.Fixed,
+                ReleaseNoteCategory.Security
             ],
             entry.Categories);
     }
@@ -30,10 +34,29 @@ public sealed class ReleaseNotesCatalogTests
     [Fact]
     public void Find_KnownVersion_ReturnsTheMatchingEntry()
     {
-        var entry = ReleaseNotesCatalog.Find("1.6.1");
+        var entry = ReleaseNotesCatalog.Find("1.7.0");
 
         Assert.NotNull(entry);
-        Assert.Equal("1.6.1", entry!.Version);
+        Assert.Equal("1.7.0", entry!.Version);
+    }
+
+    [Fact]
+    public void Versions_HaveLocalizedSummaryAndCategoryText()
+    {
+        foreach (var culture in new[] { "en-US", "pt-BR", "es-ES", "fr-FR" })
+        {
+            var localization = new LocalizationService(CultureInfo.GetCultureInfo(culture));
+            Assert.NotEqual("ReleaseNotes.Summary", localization.GetString("ReleaseNotes.Summary"));
+
+            foreach (var entry in ReleaseNotesCatalog.Versions)
+            {
+                foreach (var category in entry.Categories)
+                {
+                    var key = $"ReleaseNotes.{entry.Version.Replace('.', '_')}.{category}";
+                    Assert.NotEqual(key, localization.GetString(key));
+                }
+            }
+        }
     }
 }
 

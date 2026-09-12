@@ -6,6 +6,8 @@ on:
   pull_request:
     branches: [main, dev/proxima-versao]
   workflow_dispatch:
+  schedule:
+    - cron: "0 12 * * 1"
 
 permissions:
   contents: read
@@ -21,8 +23,76 @@ env:
   TESTINGPLATFORM_TELEMETRY_OPTOUT: "1"
 
 jobs:
+  scope:
+    name: Repository policy and scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      dotnet: ${{ steps.scope.outputs.dotnet }}
+      worker: ${{ steps.scope.outputs.worker }}
+      dashboard: ${{ steps.scope.outputs.dashboard }}
+      website: ${{ steps.scope.outputs.website }}
+      installer: ${{ steps.scope.outputs.installer }}
+      sbom: ${{ steps.scope.outputs.sbom }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Validate repository policy
+        shell: pwsh
+        env:
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          $parameters = @{}
+          if ($env:GITHUB_EVENT_NAME -eq 'pull_request') {
+            $parameters = @{
+              PullRequestBaseRef = $env:PR_BASE_REF
+              PullRequestHeadRef = $env:PR_HEAD_REF
+              PullRequestTitle = $env:PR_TITLE
+              BaseSha = $env:PR_BASE_SHA
+              HeadSha = $env:PR_HEAD_SHA
+            }
+          }
+          ./scripts/Test-RepositoryPolicy.ps1 @parameters
+          ./scripts/Test-RepositoryAutomation.ps1
+
+      - name: Select affected validation jobs
+        id: scope
+        shell: pwsh
+        env:
+          BEFORE_SHA: ${{ github.event.before }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if ($env:GITHUB_EVENT_NAME -eq 'pull_request') {
+            $files = @(& git diff --name-only "$env:PR_BASE_SHA...$env:PR_HEAD_SHA")
+          }
+          elseif ($env:GITHUB_EVENT_NAME -eq 'push' -and $env:BEFORE_SHA -ne ('0' * 40)) {
+            $files = @(& git diff --name-only "$env:BEFORE_SHA...$env:GITHUB_SHA")
+          }
+          else {
+            $files = @()
+          }
+          if ($LASTEXITCODE -ne 0) { throw 'Could not determine the changed files.' }
+
+          $scope = ./scripts/Get-CiScope.ps1 `
+            -EventName $env:GITHUB_EVENT_NAME `
+            -ChangedFiles $files
+          foreach ($property in $scope.PSObject.Properties) {
+            "$($property.Name.ToLowerInvariant())=$($property.Value.ToString().ToLowerInvariant())" >> $env:GITHUB_OUTPUT
+          }
+
   dotnet:
     name: .NET build and test
+    needs: scope
+    if: needs.scope.outputs.dotnet == 'true'
     runs-on: windows-latest
     timeout-minutes: 20
 
@@ -38,6 +108,10 @@ jobs:
       - name: Show SDK information
         run: dotnet --info
 
+      - name: Validate localization catalogs
+        shell: pwsh
+        run: ./scripts/Sync-Localization.ps1 -Mode Check
+
       - name: Restore with NuGet vulnerability gate
         shell: pwsh
         run: >-
@@ -45,6 +119,9 @@ jobs:
           -p:NuGetAudit=true
           -p:NuGetAuditMode=all
           -p:WarningsAsErrors=NU1901%3BNU1902%3BNU1903%3BNU1904
+
+      - name: Verify formatting
+        run: dotnet format Ralven.slnx --verify-no-changes --no-restore
 
       - name: Safety verification and build
         shell: pwsh
@@ -80,7 +157,8 @@ jobs:
 
   sbom:
     name: Release SBOM
-    needs: dotnet
+    needs: [scope, dotnet]
+    if: needs.scope.outputs.sbom == 'true'
     runs-on: windows-latest
     timeout-minutes: 25
 
@@ -123,6 +201,8 @@ jobs:
 
   worker:
     name: Cloudflare Worker
+    needs: scope
+    if: needs.scope.outputs.worker == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -146,6 +226,8 @@ jobs:
 
   dashboard:
     name: Dashboard
+    needs: scope
+    if: needs.scope.outputs.dashboard == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     defaults:
@@ -166,3 +248,155 @@ jobs:
         run: npm test
       - name: Audit dependencies
         run: npm audit --audit-level=high
+
+  deploy_worker:
+    name: Deploy Cloudflare Worker
+    needs: [scope, worker]
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/dev/proxima-versao' &&
+      needs.scope.outputs.worker == 'true' &&
+      needs.worker.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: infra/cloudflare-worker
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: infra/cloudflare-worker/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+
+  deploy_dashboard:
+    name: Deploy dashboard
+    needs: [scope, dashboard]
+    if: >-
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/dev/proxima-versao' &&
+      needs.scope.outputs.dashboard == 'true' &&
+      needs.dashboard.result == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: infra/cloudflare-worker/package-lock.json
+      - name: Install deployment tooling
+        working-directory: infra/cloudflare-worker
+        run: npm ci
+      - name: Deploy and verify
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TRUSTED_COMMIT: ${{ github.sha }}
+        run: |
+          deploy_root="$RUNNER_TEMP/ralven-dashboard"
+          mkdir -p "$deploy_root"
+          cp infra/dashboard/index.html infra/dashboard/_headers "$deploy_root"
+          cp -R infra/dashboard/assets "$deploy_root/assets"
+          printf '{"sourceCommit":"%s"}\n' "$TRUSTED_COMMIT" > "$deploy_root/deployment.json"
+          cd infra/cloudflare-worker
+          npx wrangler pages deploy "$deploy_root" --project-name=fivemcleaner-dashboard --branch=production
+          for attempt in 1 2 3 4 5 6; do
+            if curl --fail --silent --show-error --header 'Cache-Control: no-cache' \
+              "https://dashboard.vemryx.com/deployment.json?source=$TRUSTED_COMMIT" | \
+              grep --fixed-strings --quiet "$TRUSTED_COMMIT"; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo 'The canonical dashboard did not serve the trusted commit.' >&2
+          exit 1
+
+  website:
+    name: Website
+    needs: scope
+    if: needs.scope.outputs.website == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: website
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .node-version
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+      - name: Install dependencies
+        run: npm ci
+      - name: Lint
+        run: npm run lint
+      - name: Typecheck
+        run: npm run typecheck
+      - name: Test production build
+        run: npm test
+      - name: Audit dependencies
+        run: npm audit --audit-level=high
+
+  installer:
+    name: Installer build and smoke test
+    needs: [scope, dotnet]
+    if: needs.scope.outputs.installer == 'true'
+    runs-on: windows-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Setup .NET from global.json
+        uses: actions/setup-dotnet@a98b56852c35b8e3190ac28c8c2271da59106c68 # v6.0.0
+        with:
+          global-json-file: global.json
+      - name: Build installer
+        shell: pwsh
+        run: ./scripts/Build-Installer.ps1 -AllowDirtySource
+      - name: Test installer
+        shell: pwsh
+        run: |
+          [xml]$props = Get-Content -LiteralPath ./Directory.Build.props -Raw
+          $version = [string]$props.Project.PropertyGroup.Version
+          ./scripts/Test-Installer.ps1 `
+            -InstallerPath "./artifacts/installer/Ralven-Setup-$version-win-x64.exe" `
+            -PublishDirectory ./artifacts/Ralven-win-x64 `
+            -ExpectedVersion $version
+      - name: Upload installer diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: installer-diagnostics-${{ github.run_id }}
+          path: artifacts/.installer-smoke-*/**
+          if-no-files-found: ignore
+          retention-days: 14
+
+  required:
+    name: Required CI gate
+    if: always()
+    needs: [scope, dotnet, sbom, worker, dashboard, deploy_worker, deploy_dashboard, website, installer]
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Require every selected job to pass
+        env:
+          JOB_RESULTS: ${{ toJson(needs) }}
+        run: |
+          echo "$JOB_RESULTS" | jq --exit-status 'all(.[]; .result == "success" or .result == "skipped")' > /dev/null

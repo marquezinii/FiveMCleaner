@@ -208,7 +208,7 @@ test('getCsrfToken reads the session-bound token from the protected endpoint', a
   assert.deepEqual(result.data, { csrfToken: 'token' });
 });
 
-test('setLiveAlert posts message and active to /admin/live-alert', async () => {
+test('setLiveAlert posts message, active and severity to /admin/live-alert', async () => {
   let capturedUrl;
   let capturedOptions;
   const fakeFetch = async (url, options) => {
@@ -217,22 +217,22 @@ test('setLiveAlert posts message and active to /admin/live-alert', async () => {
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   };
 
-  await setLiveAlert(BASE, { message: 'oi', active: true }, 'csrf-token', fakeFetch);
+  await setLiveAlert(BASE, { message: 'oi', active: true, severity: 'critical' }, 'csrf-token', fakeFetch);
 
   assert.equal(capturedUrl, `${BASE}/admin/live-alert`);
   assert.equal(capturedOptions.method, 'POST');
   assert.equal(capturedOptions.headers['X-Ralven-Csrf-Token'], 'csrf-token');
-  assert.deepEqual(JSON.parse(capturedOptions.body), { message: 'oi', active: true });
+  assert.deepEqual(JSON.parse(capturedOptions.body), { message: 'oi', active: true, severity: 'critical' });
 });
 
-test('setLiveAlert omits message from the body when deactivating without resending text', async () => {
+test('setLiveAlert sends an empty message when deactivating to clear stale content', async () => {
   let capturedOptions;
   const fakeFetch = async (_url, options) => {
     capturedOptions = options;
     return new Response(JSON.stringify({ success: true }), { status: 200 });
   };
 
-  await setLiveAlert(BASE, { active: false }, 'csrf-token', fakeFetch);
+  await setLiveAlert(BASE, { message: '', active: false }, 'csrf-token', fakeFetch);
 
-  assert.deepEqual(JSON.parse(capturedOptions.body), { active: false });
+  assert.deepEqual(JSON.parse(capturedOptions.body), { message: '', active: false });
 });

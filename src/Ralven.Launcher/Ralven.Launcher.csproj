@@ -74,9 +74,10 @@
     -->
     <Exec Command="pwsh -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildThisFileDirectory)..\..\scripts\Invoke-Obfuscation.ps1&quot; -PublishDirectory &quot;$(_RalvenWindowsCanonicalOutput)&quot; -MappingOutputDirectory &quot;$(MSBuildThisFileDirectory)..\..\artifacts\obfuscation-maps&quot;" />
     <Copy SourceFiles="$(_RalvenWindowsCanonicalOutput)\Ralven.Core.dll" DestinationFolder="$(_RalvenCoreCanonicalOutput)" />
+    <OnError ExecuteTargets="RestoreCanonicalAssembliesAfterBundling" />
   </Target>
   <Target Name="RestoreCanonicalAssembliesAfterBundling"
-          Condition="'$(RalvenHarden)' == 'true'"
+          Condition="Exists('$(_RalvenHardenBackupDir)\Ralven.Windows.dll')"
           AfterTargets="GenerateSingleFileBundle">
     <!--
       GenerateBundle already read and embedded the hardened bytes by this

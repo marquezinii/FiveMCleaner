@@ -3,16 +3,39 @@ import { validateBugReport } from './bugReports/validateSubmission.js';
 import { MAX_BUG_REPORT_LIMIT, recentBugReports } from './bugReports/queries.js';
 import { validateUpdaterEvent } from './updaterEvents/validateSubmission.js';
 import { recentUpdaterEvents } from './updaterEvents/queries.js';
+import { describeUpdaterEventCode } from './updaterEvents/catalog.js';
 import { createPasswordAuthProvider } from './auth/passwordAuthProvider.js';
 import { requireFirebaseUser } from './auth/firebaseIdToken.js';
 import {
   validateAccountProfile,
   createAccountProfile,
-  deleteAccountProfile,
+  deleteAccount,
   fetchAccountProfile,
   normalizeUsername,
   isUsernameAvailable,
+  resumeAccountDeletions,
 } from './auth/accountProfile.js';
+import {
+  completeRecovery,
+  deleteRecoveryCodes,
+  findRecoveryCode,
+  generateRecoveryCodes,
+  isRecentAuthentication,
+  recoveryRateLimitKey,
+  releaseRecoveryCode,
+  replaceRecoveryCodes,
+  reserveRecoveryCode,
+  tokenPassesAccountCutoff,
+  validateEnrollmentId,
+  validateRecoveryRequest,
+} from './auth/accountSecurity.js';
+import {
+  accountHasTotpEnrollment,
+  accountSessionIsCurrent,
+  deleteFirebaseAccount,
+  provePendingTotpEnrollment,
+  removeMfaAndRevokeSessions,
+} from './auth/firebaseAdmin.js';
 import { rateLimitKey, withinRateLimit, withinRequiredRateLimit } from './rateLimit.js';
 import * as queries from './stats/queries.js';
 import { toCsv } from './stats/csv.js';
@@ -22,12 +45,17 @@ import { createCsrfToken, isValidCsrfToken } from './auth/crypto.js';
 import { validateLiveAlertUpdate } from './liveAlert/validateSubmission.js';
 import { buildLiveAlertUpsert, toLiveAlertResponse } from './liveAlert/store.js';
 import { fetchAccountEntitlements } from './billing/entitlements.js';
-import { handleMercadoPagoWebhook } from './billing/mercadoPagoWebhook.js';
+import { handleAsaasWebhook, refreshEntitlementStatement, revokeEntitlementStatement } from './billing/asaasBilling.js';
+import { createAccountCheckout, cancelAccountBilling, fetchAccountBilling, syncAccountBilling } from './billing/accountBilling.js';
+import { BillingError } from './billing/asaasApi.js';
+import { billingReturnPage } from './billing/returnPage.js';
+import { handleRalvenAi } from './ralvenAi.js';
 
 const MAX_TELEMETRY_BODY_BYTES = 512 * 1024;
 const MAX_BUG_REPORT_BODY_BYTES = 128 * 1024;
 const MAX_UPDATER_EVENT_BODY_BYTES = 4 * 1024;
 const MAX_ACCOUNT_PROFILE_BODY_BYTES = 4 * 1024;
+const MAX_ACCOUNT_SECURITY_BODY_BYTES = 8 * 1024;
 const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 
 // Ralven anonymous telemetry + bug reports + admin dashboard API
@@ -40,24 +68,30 @@ const MAX_LIVE_ALERT_BODY_BYTES = 4 * 1024;
 //   POST    /bugs                  -- ingest one bug report, text-only (no auth; validated server-side)
 //   POST    /account/profile       -- create the username/first/last-name profile for a Firebase account (requires a valid Firebase ID token)
 //   GET     /account/profile       -- read the caller's own username/first/last-name profile (requires a valid Firebase ID token)
-//   DELETE  /account/profile       -- delete the caller's own profile before its Firebase account is deleted
+//   DELETE  /account               -- delete Firebase first, then the caller's D1 data
+//   POST    /account/mfa/recovery-codes -- generate one-time TOTP recovery codes after recent authentication
+//   POST    /account/mfa/recover   -- recover a TOTP-blocked sign-in without returning Firebase tokens
 //   GET     /account/entitlements  -- read the caller's server-authoritative access tier (requires a valid Firebase ID token)
+//   GET     /account/billing       -- offer and reconciled subscription status (Firebase ID token)
+//   POST    /account/billing/checkout -- hosted monthly checkout for the accepted server offer
+//   POST    /account/billing/cancel -- stop future renewals after provider confirmation
+//   POST    /ai/message            -- Pro + Ralven AI contextual guidance over a bounded diagnostic summary
 //   GET     /account/username-available -- advisory "is this username free?" probe for the registration form (no auth; rate limited per IP)
-//   POST    /billing/mercado-pago/webhook -- verify and reconcile one Mercado Pago subscription notification
+//   POST    /billing/asaas/webhook -- authenticate and reconcile one Asaas billing event
 //   POST    /admin/login           -- { password } -> session cookie
 //   POST    /admin/logout          -- clears the session cookie
 //   GET     /admin/csrf            -- session-bound CSRF token (requires a valid session)
 //   GET     /api/stats/:name       -- one chart's data (requires a valid session)
 //   GET     /api/stats/:name.csv   -- same data as CSV (requires a valid session)
 //   GET     /api/bugs              -- recent bug reports, newest first (requires a valid session)
-//   GET     /live-alert            -- current admin-broadcast alert, { id, message, active } (no auth; rate limited per IP)
-//   POST    /admin/live-alert      -- { message?, active } -> upsert the single live alert row (requires a valid session)
+//   GET     /live-alert            -- current admin-broadcast alert, { id, message, active, severity } (no auth; rate limited per IP)
+//   POST    /admin/live-alert      -- { message?, active, severity? } -> upsert the single live alert row (requires a valid session)
 //   OPTIONS *                      -- CORS preflight for the routes above
 //
 // The dashboard is served from a different origin than this Worker (a
 // Cloudflare Pages domain, or a different localhost port while testing
-// locally), so every response carries CORS headers scoped to exactly the
-// single origin configured in the DASHBOARD_ORIGIN var -- see cors.js.
+// locally), so every response carries CORS headers scoped to the origins
+// configured in the DASHBOARD_ORIGIN var -- see cors.js.
 
 const STATS_BUILDERS = {
   'runs-per-day': queries.optimizationRunsPerDay,
@@ -65,12 +99,27 @@ const STATS_BUILDERS = {
   'app-versions': queries.appVersionBreakdown,
   'average-time': queries.averageOptimizationTimeMs,
   'success-rate': queries.successRate,
+  'app-initializations-per-day': queries.appInitializationsPerDay,
+  'abandoned-optimizations': queries.abandonedOptimizationFlows,
+  'gtav-benchmark-outcomes': queries.gtaVBenchmarkOutcomes,
   'errors-by-version': queries.errorsByVersion,
   'error-categories': queries.errorCategoryBreakdown,
+  'bug-codes': queries.bugCodeBreakdown,
   'recent-failures': queries.recentFailures,
   'top-cpu': queries.topCpuModels,
   'top-gpu': queries.topGpuModels,
   'ram-buckets': queries.ramBucketBreakdown,
+  'outcomes': queries.optimizationOutcomeBreakdown,
+  'profiles': queries.profileBreakdown,
+  'actions': queries.actionUsage,
+  'reliability-by-version': queries.reliabilityByVersion,
+  'account-summary': queries.accountSummary,
+  'accounts-per-day': queries.accountsPerDay,
+  'ai-summary': queries.aiUsageSummary,
+  'ai-per-day': queries.aiUsagePerDay,
+  'billing-subscriptions': queries.billingSubscriptionBreakdown,
+  'billing-payments': queries.billingPaymentSummary,
+  'updater-summary': queries.updaterSummary,
 };
 
 // Every route below answers with a JSON body -- this is the one shared shape
@@ -109,9 +158,16 @@ export default {
     const response = await route(request, env, url);
     return withCorsHeaders(response, corsHeaders);
   },
+  async scheduled(_controller, env, ctx) {
+    ctx.waitUntil(resumeAccountDeletions(
+      env.TELEMETRY_DB,
+      (uid) => deleteFirebaseAccount(env, uid),
+    ));
+  },
 };
 
 async function route(request, env, url) {
+  if (request.method === 'GET' && url.pathname === '/billing/return') return billingReturnPage();
   if (request.method === 'POST'
     && url.pathname.startsWith('/admin/')
     && !isAllowedDashboardOrigin(request.headers.get('Origin'), env.DASHBOARD_ORIGIN)) {
@@ -134,6 +190,11 @@ async function route(request, env, url) {
   if (request.method === 'POST' && url.pathname === '/updater-events') {
     return handleUpdaterEventIngest(request, env);
   }
+  if (request.method === 'POST' && url.pathname === '/ai/message') {
+    return handleRalvenAi(request, env, {
+      requireUser: (candidate) => requireAccountUser(candidate, env),
+    });
+  }
   if (request.method === 'POST' && url.pathname === '/account/profile') {
     return handleAccountProfileCreate(request, env);
   }
@@ -141,10 +202,26 @@ async function route(request, env, url) {
     return handleAccountProfileGet(request, env);
   }
   if (request.method === 'DELETE' && url.pathname === '/account/profile') {
-    return handleAccountProfileDelete(request, env);
+    return jsonResponse({ error: 'use-account-deletion' }, 410);
+  }
+  if (request.method === 'DELETE' && url.pathname === '/account') {
+    return handleAccountDelete(request, env);
+  }
+  if (request.method === 'POST' && url.pathname === '/account/mfa/recovery-codes') {
+    return handleRecoveryCodesCreate(request, env);
+  }
+  if (request.method === 'DELETE' && url.pathname === '/account/mfa/recovery-codes') {
+    return handleRecoveryCodesDelete(request, env);
+  }
+  if (request.method === 'POST' && url.pathname === '/account/mfa/recover') {
+    return handleMfaRecovery(request, env);
   }
   if (request.method === 'GET' && url.pathname === '/account/entitlements') {
     return handleAccountEntitlementsGet(request, env);
+  }
+  if ((request.method === 'GET' && url.pathname === '/account/billing')
+    || (request.method === 'POST' && ['/account/billing/checkout', '/account/billing/cancel'].includes(url.pathname))) {
+    return handleAccountBilling(request, env, url.pathname);
   }
   if (request.method === 'GET' && url.pathname === '/account/username-available') {
     return handleUsernameAvailability(request, env, url);
@@ -155,8 +232,8 @@ async function route(request, env, url) {
   if (request.method === 'POST' && url.pathname === '/admin/live-alert') {
     return handleLiveAlertUpdate(request, env);
   }
-  if (request.method === 'POST' && url.pathname === '/billing/mercado-pago/webhook') {
-    return handleMercadoPagoWebhook(request, env);
+  if (request.method === 'POST' && url.pathname === '/billing/asaas/webhook') {
+    return handleAsaasWebhook(request, env);
   }
 
   if (request.method === 'GET' && url.pathname === '/admin/csrf') {
@@ -236,7 +313,7 @@ async function handleLiveAlertGet(request, env) {
   if (limited) return limited;
 
   const row = await env.TELEMETRY_DB
-    .prepare('SELECT message, active, updated_at FROM live_alert WHERE id = 1')
+    .prepare('SELECT message, active, severity, updated_at FROM live_alert WHERE id = 1')
     .first();
   return jsonResponse(toLiveAlertResponse(row));
 }
@@ -286,7 +363,7 @@ async function handleAdminCsrfToken(request, env) {
 // server-side, see auth/firebaseIdToken.js) -- the uid is always taken from
 // the verified token, never from the request body.
 async function handleAccountProfileCreate(request, env) {
-  const auth = await requireFirebaseUser(request);
+  const auth = await requireAccountUser(request, env);
   if (!auth.authorized) return auth.response;
   if (!auth.emailVerified) return jsonResponse({ error: 'email-verification-required' }, 403);
 
@@ -308,7 +385,7 @@ async function handleAccountProfileCreate(request, env) {
 }
 
 async function handleAccountProfileGet(request, env) {
-  const auth = await requireFirebaseUser(request);
+  const auth = await requireAccountUser(request, env);
   if (!auth.authorized) return auth.response;
 
   const profile = await fetchAccountProfile(env.TELEMETRY_DB, auth.uid);
@@ -319,25 +396,189 @@ async function handleAccountProfileGet(request, env) {
   return jsonResponse(profile);
 }
 
-async function handleAccountProfileDelete(request, env) {
-  const auth = await requireFirebaseUser(request);
-  if (!auth.authorized) return auth.response;
-
-  const deleted = await deleteAccountProfile(env.TELEMETRY_DB, auth.uid);
-  if (!deleted) {
-    return jsonResponse({ error: 'billing-cancellation-required' }, 409);
-  }
-  return new Response(null, { status: 204 });
-}
-
-async function handleAccountEntitlementsGet(request, env) {
-  const auth = await requireFirebaseUser(request);
+async function handleAccountDelete(request, env) {
+  const auth = await requireAccountUser(request, env, true);
   if (!auth.authorized) return auth.response;
 
   try {
+    const result = await deleteAccount(
+      env.TELEMETRY_DB,
+      auth.uid,
+      (uid) => deleteFirebaseAccount(env, uid),
+    );
+    if (!result.ok) return jsonResponse({ error: result.code }, 409);
+    return result.pending
+      ? jsonResponse({ status: 'deletion-pending' }, 202)
+      : new Response(null, { status: 204 });
+  } catch {
+    return jsonResponse({ error: 'account-deletion-unavailable' }, 503);
+  }
+}
+
+async function requireAccountUser(request, env, recent = false) {
+  const auth = await requireFirebaseUser(request);
+  if (!auth.authorized) return auth;
+  if (!await withinRequiredRateLimit(env.ACCOUNT_ROUTE_LIMITER, `account:${auth.uid}`)) {
+    return { authorized: false, response: jsonResponse({ error: 'account-rate-limited' }, 429) };
+  }
+  try {
+    if (!await accountSessionIsCurrent(env, auth.uid, auth.issuedAt)) {
+      return { authorized: false, response: jsonResponse({ error: 'unauthorized' }, 401) };
+    }
+    if (!await tokenPassesAccountCutoff(env.TELEMETRY_DB, auth)) {
+      return { authorized: false, response: jsonResponse({ error: 'unauthorized' }, 401) };
+    }
+  } catch {
+    return { authorized: false, response: jsonResponse({ error: 'account-security-unavailable' }, 503) };
+  }
+  if (recent && !isRecentAuthentication(auth)) {
+    return { authorized: false, response: jsonResponse({ error: 'reauthentication-required' }, 401) };
+  }
+  return auth;
+}
+
+async function handleRecoveryCodesCreate(request, env) {
+  const auth = await requireAccountUser(request, env, true);
+  if (!auth.authorized) return auth.response;
+  if (!hasExactJsonContentType(request)) return jsonResponse({ error: 'invalid-content-type' }, 415);
+  const payload = await readBoundedJson(request, MAX_ACCOUNT_SECURITY_BODY_BYTES);
+  const enrollmentId = validateEnrollmentId(payload?.mfaEnrollmentId);
+  if (enrollmentId === null || !payload || typeof payload !== 'object' || Array.isArray(payload)
+    || Object.keys(payload).length !== 1) {
+    return jsonResponse({ error: 'invalid-request' }, 400);
+  }
+
+  try {
+    if (!await accountHasTotpEnrollment(env, auth.uid, enrollmentId)) {
+      return jsonResponse({ error: 'mfa-enrollment-not-found' }, 404);
+    }
+    const recoveryCodes = generateRecoveryCodes();
+    await replaceRecoveryCodes(
+      env.TELEMETRY_DB,
+      auth.uid,
+      enrollmentId,
+      env.MFA_RECOVERY_CODE_HMAC_SECRET,
+      recoveryCodes,
+    );
+    return jsonResponse({ recoveryCodes });
+  } catch {
+    return jsonResponse({ error: 'recovery-codes-unavailable' }, 503);
+  }
+}
+
+async function handleRecoveryCodesDelete(request, env) {
+  const auth = await requireAccountUser(request, env, true);
+  if (!auth.authorized) return auth.response;
+  if (!hasExactJsonContentType(request)) return jsonResponse({ error: 'invalid-content-type' }, 415);
+  const payload = await readBoundedJson(request, MAX_ACCOUNT_SECURITY_BODY_BYTES);
+  const enrollmentId = validateEnrollmentId(payload?.mfaEnrollmentId);
+  if (enrollmentId === null || !payload || typeof payload !== 'object' || Array.isArray(payload)
+    || Object.keys(payload).length !== 1) {
+    return jsonResponse({ error: 'invalid-request' }, 400);
+  }
+  try {
+    await deleteRecoveryCodes(
+      env.TELEMETRY_DB,
+      auth.uid,
+      enrollmentId,
+      env.MFA_RECOVERY_CODE_HMAC_SECRET,
+    );
+    return new Response(null, { status: 204 });
+  } catch {
+    return jsonResponse({ error: 'recovery-codes-unavailable' }, 503);
+  }
+}
+
+async function handleMfaRecovery(request, env) {
+  if (!hasExactJsonContentType(request)) return jsonResponse({ error: 'invalid-content-type' }, 415);
+  const payload = validateRecoveryRequest(await readBoundedJson(request, MAX_ACCOUNT_SECURITY_BODY_BYTES));
+  if (payload === null) return jsonResponse({ error: 'invalid-request' }, 400);
+
+  try {
+    const limitKey = await recoveryRateLimitKey(
+      env.MFA_RECOVERY_CODE_HMAC_SECRET,
+      payload.mfaEnrollmentId,
+      rateLimitKey(request),
+    );
+    if (!await withinRequiredRateLimit(env.ACCOUNT_RECOVERY_LIMITER, limitKey)) {
+      return jsonResponse({ error: 'account-rate-limited' }, 429);
+    }
+    const proof = await provePendingTotpEnrollment(
+      env,
+      payload.mfaPendingCredential,
+      payload.mfaEnrollmentId,
+    );
+    if (!proof.valid) return jsonResponse({ error: 'invalid-recovery-proof' }, 401);
+
+    const recovery = await findRecoveryCode(
+      env.TELEMETRY_DB,
+      payload.mfaEnrollmentId,
+      payload.recoveryCode,
+      env.MFA_RECOVERY_CODE_HMAC_SECRET,
+    );
+    if (!recovery) return jsonResponse({ error: 'invalid-recovery-code' }, 401);
+    if (proof.uid !== null && proof.uid !== recovery.uid) {
+      return jsonResponse({ error: 'invalid-recovery-proof' }, 401);
+    }
+    if (!await reserveRecoveryCode(env.TELEMETRY_DB, recovery.id)) {
+      return jsonResponse({ error: 'recovery-in-progress' }, 409);
+    }
+
+    const validAfter = Math.floor(Date.now() / 1000);
+    try {
+      await removeMfaAndRevokeSessions(env, recovery.uid, validAfter);
+    } catch {
+      await releaseRecoveryCode(env.TELEMETRY_DB, recovery.id);
+      return jsonResponse({ error: 'recovery-unavailable' }, 503);
+    }
+    await completeRecovery(env.TELEMETRY_DB, recovery.id, recovery.uid, validAfter);
+    return jsonResponse({ success: true });
+  } catch {
+    return jsonResponse({ error: 'recovery-unavailable' }, 503);
+  }
+}
+
+async function handleAccountEntitlementsGet(request, env) {
+  const auth = await requireAccountUser(request, env);
+  if (!auth.authorized) return auth.response;
+
+  try {
+    const now = new Date().toISOString();
+    await env.TELEMETRY_DB.batch([
+      refreshEntitlementStatement(env.TELEMETRY_DB, auth.uid, now),
+      revokeEntitlementStatement(env.TELEMETRY_DB, auth.uid, now),
+    ]);
     return jsonResponse(await fetchAccountEntitlements(env.TELEMETRY_DB, auth.uid));
   } catch {
     return jsonResponse({ error: 'entitlements-unavailable' }, 500);
+  }
+}
+
+async function handleAccountBilling(request, env, path) {
+  const auth = await requireAccountUser(request, env, request.method === 'POST');
+  if (!auth.authorized) return auth.response;
+  try {
+    if (request.method === 'GET') {
+      if (!await withinRequiredRateLimit(env.BILLING_READ_LIMITER, `billing:${auth.uid}`)) {
+        return jsonResponse({ error: 'billing-rate-limited' }, 429);
+      }
+      await syncAccountBilling(env, auth);
+      return jsonResponse(await fetchAccountBilling(env, auth.uid));
+    }
+    if (!await withinRequiredRateLimit(env.BILLING_WRITE_LIMITER, `billing:${auth.uid}`)) {
+      return jsonResponse({ error: 'billing-rate-limited' }, 429);
+    }
+    if (!/^application\/json(?:\s*;\s*charset=utf-8)?$/i.test(request.headers.get('Content-Type') ?? '')) {
+      return jsonResponse({ error: 'invalid-content-type' }, 415);
+    }
+    const payload = await readBoundedJson(request, 1024);
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return jsonResponse({ error: 'invalid-request' }, 400);
+    if (path.endsWith('/checkout')) return jsonResponse(await createAccountCheckout(env, auth, payload));
+    if (Object.keys(payload).length !== 0) return jsonResponse({ error: 'invalid-request' }, 400);
+    return jsonResponse(await cancelAccountBilling(env, auth));
+  } catch (error) {
+    return jsonResponse({ error: error instanceof BillingError ? error.code : 'billing-temporarily-unavailable' },
+      error instanceof BillingError ? error.status : 503);
   }
 }
 
@@ -350,7 +591,7 @@ async function handleUpdaterEventsList(request, env, url) {
   }, url.searchParams.get('limit'));
   try {
     const { results } = await env.TELEMETRY_DB.prepare(sql).bind(...params).all();
-    return jsonResponse(results);
+    return jsonResponse(results.map((event) => ({ ...event, ...describeUpdaterEventCode(event.error_code) })));
   } catch (err) {
     return jsonResponse({ error: 'Database query failed' }, 500);
   }
@@ -381,8 +622,8 @@ async function handleTelemetryIngest(request, env) {
               five_m_install_detected, gta_edition, optimization_target_count,
               windows_build, disk_type, free_space_gib_bucket, run_timestamp,
               days_since_last_run_bucket, backup_created, backup_restored,
-              elevation_used, process_count_at_start)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+              elevation_used, process_count_at_start, operation_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
            ON CONFLICT(event_id) DO NOTHING`,
         )
         .bind(
@@ -412,6 +653,7 @@ async function handleTelemetryIngest(request, env) {
           event.backupRestored === null ? null : Number(event.backupRestored),
           event.elevationUsed === null ? null : Number(event.elevationUsed),
           event.processCountAtStart,
+          event.operationId,
         ),
     );
     for (const actionId of event.actionIds) {

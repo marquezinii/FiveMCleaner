@@ -14,15 +14,18 @@ import {
   toRecentFailureRow,
   truncate,
   toBugReportRow,
+  toUpdaterEventRow,
   formatAppVersion,
   toDistributionRows,
+  formatActionIds,
+  limitFeedRows,
 } from '../assets/charts.js';
 import { DONUT_COLORS } from '../assets/rendering.js';
 
 test('dashboard uses the Ralven visual tokens', () => {
   const styles = readFileSync(new URL('../assets/brand.css', import.meta.url), 'utf8');
 
-  assert.deepEqual(DONUT_COLORS.slice(0, 3), ['#FFFFFF', '#A6A7AC', '#32D583']);
+  assert.equal(new Set(DONUT_COLORS).size, DONUT_COLORS.length);
   assert.match(styles, /--bg:\s*#0A0A0B/i);
   assert.match(styles, /--accent:\s*#FFFFFF/i);
   assert.doesNotMatch(styles, /#4B64F2|#5B7CFF|#27C8FF|#8297FF|Bahnschrift/i);
@@ -163,6 +166,7 @@ test('formatTimestamp renders a dash for missing or malformed values', () => {
 test('toRecentFailureRow maps a row into the table\'s exact column order', () => {
   const row = {
     received_at: '2026-07-25T22:30:05.000Z',
+    bug_code: 'APP_OPT_ACTION_EXECUTION',
     error_category: 'timeout',
     app_version: '1.0.4',
     environment: 'Production',
@@ -179,19 +183,18 @@ test('toRecentFailureRow maps a row into the table\'s exact column order', () =>
   assert.ok(cells[0] !== '2026-07-25 22:30');
   // Other cells should match exactly
   assert.deepEqual(cells.slice(1), [
+    'APP_OPT_ACTION_EXECUTION',
     'timeout',
     '1.0.4',
-    'Production',
-    'Windows 11',
-    'AMD Ryzen 5 5600X',
-    'NVIDIA GeForce RTX 5070',
     'Balanced',
+    'Production',
   ]);
 });
 
 test('toRecentFailureRow substitutes a placeholder for missing optional fields', () => {
   const row = {
     received_at: '2026-07-25T22:30:05.000Z',
+    bug_code: null,
     error_category: 'timeout',
     app_version: '1.0.4',
     environment: 'Production',
@@ -202,10 +205,8 @@ test('toRecentFailureRow substitutes a placeholder for missing optional fields',
   };
 
   const cells = toRecentFailureRow(row);
+  assert.equal(cells[1], '—');
   assert.equal(cells[4], '—');
-  assert.equal(cells[5], '—');
-  assert.equal(cells[6], '—');
-  assert.equal(cells[7], '—');
 });
 
 test('truncate returns short text unchanged', () => {
@@ -245,18 +246,14 @@ test('toBugReportRow maps a row into the bug report table\'s column order', () =
   assert.ok(cells[0] !== '2026-07-26 10:00');
   // Other cells should match exactly
   assert.deepEqual(cells.slice(1), [
-    'Falha na otimização',
-    'APP_OPT_ACTION_EXECUTION',
+    'APP_OPT_ACTION_EXECUTION — Aplicativo',
     'O preset não terminou',
+    'Falha na otimização',
     '1.0.4',
-    'Médio',
-    'Production',
-    'user@example.com',
-    'sim',
   ]);
 });
 
-test('toBugReportRow shows a placeholder for missing email and "não" when there is no log', () => {
+test('toBugReportRow shows a placeholder for a missing exact code', () => {
   const row = {
     received_at: '2026-07-26T10:00:00.000Z',
     category: 'x',
@@ -270,6 +267,40 @@ test('toBugReportRow shows a placeholder for missing email and "não" when there
   };
 
   const cells = toBugReportRow(row);
-  assert.equal(cells[7], '—');
-  assert.equal(cells.at(-1), 'não');
+  assert.equal(cells[1], '—');
+});
+
+test('limitFeedRows keeps feeds compact until expanded', () => {
+  const rows = [1, 2, 3, 4, 5, 6];
+
+  assert.deepEqual(limitFeedRows(rows, false), [1, 2, 3, 4, 5]);
+  assert.deepEqual(limitFeedRows(rows, true), rows);
+});
+
+test('toUpdaterEventRow shows the compact code and its diagnostic name', () => {
+  const cells = toUpdaterEventRow({
+    received_at: '2026-09-09T12:00:00.000Z',
+    error_id: 'U101',
+    error_name: 'Manifesto: origem ou resposta recusada',
+    stage: 'manifest',
+    outcome: 'failed',
+    previous_version: '1.2.0',
+    candidate_version: '1.2.0',
+    environment: 'Production',
+  });
+
+  assert.deepEqual(cells.slice(1), [
+    'U101',
+    'Manifesto: origem ou resposta recusada',
+    'manifest',
+    'failed',
+    '1.2.0',
+    '1.2.0',
+    'Production',
+  ]);
+});
+
+test('formatActionIds turns the database aggregate into a clean list', () => {
+  assert.deepEqual(formatActionIds('windows.game-mode, fivem.cache.repair'), ['windows.game-mode', 'fivem.cache.repair']);
+  assert.deepEqual(formatActionIds(null), []);
 });

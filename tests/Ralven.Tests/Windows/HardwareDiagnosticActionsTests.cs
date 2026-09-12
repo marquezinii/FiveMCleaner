@@ -17,7 +17,7 @@ public sealed class HardwareDiagnosticActionsTests
     {
         var message = CpuDetailsDiagnosisAction.Classify(new CpuSnapshot(8, 16, 1000, 4800));
 
-        Assert.Contains("núcleo(s)", message, StringComparison.Ordinal);
+        Assert.Contains("8 núcleos físicos", message, StringComparison.Ordinal);
         Assert.Contains("bem abaixo do máximo", message, StringComparison.Ordinal);
     }
 
@@ -57,45 +57,33 @@ public sealed class HardwareDiagnosticActionsTests
     }
 
     [Fact]
-    public void RamDetails_FlagsSingleChannelWithOneModule()
+    public void RamDetails_DoesNotInferChannelsOrXmpFromModuleCount()
     {
         var snapshot = new RamDetailsSnapshot(
         [
-            new RamModuleInfo(16L * 1024 * 1024 * 1024, 3200, 3200)
+            new RamModuleInfo(16L * 1024 * 1024 * 1024, 3200)
         ]);
 
         var message = RamDetailsDiagnosisAction.Classify(snapshot);
 
-        Assert.Contains("single-channel", message, StringComparison.Ordinal);
+        Assert.Contains("3200 MHz configurados", message, StringComparison.Ordinal);
+        Assert.Contains("não expõe a topologia de canais", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("single-channel", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("provavelmente ativo", message, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void RamDetails_FlagsLikelyDisabledXmpWhenConfiguredIsBelowRated()
+    public void RamDetails_ReportsWhenConfiguredClockIsUnavailable()
     {
         var snapshot = new RamDetailsSnapshot(
         [
-            new RamModuleInfo(16L * 1024 * 1024 * 1024, 2133, 3600),
-            new RamModuleInfo(16L * 1024 * 1024 * 1024, 2133, 3600)
+            new RamModuleInfo(16L * 1024 * 1024 * 1024, 0),
+            new RamModuleInfo(16L * 1024 * 1024 * 1024, 0)
         ]);
 
         var message = RamDetailsDiagnosisAction.Classify(snapshot);
 
-        Assert.Contains("multi-channel", message, StringComparison.Ordinal);
-        Assert.Contains("possivelmente desativado", message, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void RamDetails_ReportsXmpLikelyActiveWhenConfiguredMeetsRated()
-    {
-        var snapshot = new RamDetailsSnapshot(
-        [
-            new RamModuleInfo(16L * 1024 * 1024 * 1024, 3600, 3600),
-            new RamModuleInfo(16L * 1024 * 1024 * 1024, 3600, 3600)
-        ]);
-
-        var message = RamDetailsDiagnosisAction.Classify(snapshot);
-
-        Assert.Contains("provavelmente ativo", message, StringComparison.Ordinal);
+        Assert.Contains("frequência configurada indisponível", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -115,7 +103,7 @@ public sealed class HardwareDiagnosticActionsTests
 
         var message = StorageHealthDiagnosisAction.Classify(snapshot);
 
-        Assert.Contains("Atenção: 1 unidade(s)", message, StringComparison.Ordinal);
+        Assert.Contains("Atenção: 1 unidade", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -250,7 +238,7 @@ public sealed class HardwareDiagnosticActionsTests
 
         var message = ThrottlingSignalDiagnosisAction.Classify(cpu, usage, stability, thermal);
 
-        Assert.Contains("Queda de frequência sob carga detectada", message, StringComparison.Ordinal);
+        Assert.Contains("Foi detectada queda de frequência sob carga", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -271,8 +259,8 @@ public sealed class HardwareDiagnosticActionsTests
     {
         var message = ResourceUsageDiagnosisAction.Classify(new ResourceUsageSnapshot(null, null, null, 0));
 
-        Assert.Contains("CPU: não disponível", message, StringComparison.Ordinal);
-        Assert.Contains("GPU: não disponível", message, StringComparison.Ordinal);
+        Assert.Contains("CPU: indisponível", message, StringComparison.Ordinal);
+        Assert.Contains("GPU: indisponível", message, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -281,13 +269,13 @@ public sealed class HardwareDiagnosticActionsTests
         var message = ResourceUsageDiagnosisAction.Classify(new ResourceUsageSnapshot(42, 10, 5, 3.25));
 
         Assert.Contains("CPU: 42%", message, StringComparison.Ordinal);
-        Assert.Contains("3.25 MB/s", message, StringComparison.Ordinal);
+        Assert.Contains("3,25 MB/s", message, StringComparison.Ordinal);
     }
 
     [Fact]
     public void PciLink_ReportsHonestlyWhenNoDataAvailable()
     {
-        Assert.Contains("não pôde ser lida", PciLinkDiagnosisAction.Classify([]), StringComparison.Ordinal);
+        Assert.Contains("Não foi possível ler", PciLinkDiagnosisAction.Classify([]), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -310,7 +298,7 @@ public sealed class HardwareDiagnosticActionsTests
         var message = HardwareStabilityDiagnosisAction.Classify(
             snapshot, new DateTimeOffset(2026, 7, 23, 0, 0, 0, TimeSpan.Zero));
 
-        Assert.Contains("com mais de 3 anos", message, StringComparison.Ordinal);
+        Assert.Contains("há mais de 3 anos", message, StringComparison.Ordinal);
         Assert.Contains("Resizable BAR", message, StringComparison.Ordinal);
     }
 
@@ -332,7 +320,19 @@ public sealed class HardwareDiagnosticActionsTests
 
         var message = HardwareStabilityDiagnosisAction.Classify(snapshot, DateTimeOffset.UtcNow);
 
-        Assert.Contains("2 evento(s)", message, StringComparison.Ordinal);
+        Assert.Contains("Eventos WHEA nos últimos 30 dias: 5", message, StringComparison.Ordinal);
+        Assert.Contains("indicação de memória: 2", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void HardwareStability_ReportsNonMemoryWheaEvents()
+    {
+        var snapshot = new HardwareStabilitySnapshot(3, 0, null);
+
+        var message = HardwareStabilityDiagnosisAction.Classify(snapshot, DateTimeOffset.UtcNow);
+
+        Assert.Contains("Eventos WHEA nos últimos 30 dias: 3", message, StringComparison.Ordinal);
+        Assert.Contains("sem indicação de memória", message, StringComparison.Ordinal);
     }
 }
 
@@ -343,12 +343,11 @@ public sealed class BottleneckClassificationActionTests
         AvailableMemoryBytes: 8L * 1024 * 1024 * 1024,
         LogicalProcessorCount: 12,
         SystemDriveFreeBytes: 100L * 1024 * 1024 * 1024,
-        TotalPageFileBytes: 20L * 1024 * 1024 * 1024,
-        AvailablePageFileBytes: 16L * 1024 * 1024 * 1024);
+        CommitLimitBytes: 20L * 1024 * 1024 * 1024,
+        AvailableCommitBytes: 16L * 1024 * 1024 * 1024);
 
     private static readonly ResourceUsageSnapshot HealthyUsage = new(30, 10, 40, 1.0);
     private static readonly ThermalSnapshot NoThermalData = new(false, null);
-    private static readonly NetworkHealthSnapshot HealthyNetwork = new(true, 0, 0);
     private static readonly IReadOnlyList<GpuAdapterDetails> BigVramGpu =
         [new GpuAdapterDetails("NVIDIA GeForce RTX 4070", 12L * 1024 * 1024 * 1024, GpuKindGuess.LikelyDiscrete)];
 
@@ -356,7 +355,7 @@ public sealed class BottleneckClassificationActionTests
     public void Classify_PrioritizesThermalWhenTemperatureIsElevated()
     {
         var input = new BottleneckClassificationInput(
-            HealthyResources, HealthyUsage, new ThermalSnapshot(true, 90), HealthyNetwork, BigVramGpu, null);
+            HealthyResources, HealthyUsage, new ThermalSnapshot(true, 90), BigVramGpu, null);
 
         var message = BottleneckClassificationAction.Classify(input);
 
@@ -367,7 +366,7 @@ public sealed class BottleneckClassificationActionTests
     public void Classify_FlagsBackgroundProcessConsumingCpu()
     {
         var input = new BottleneckClassificationInput(
-            HealthyResources, HealthyUsage, NoThermalData, HealthyNetwork, BigVramGpu,
+            HealthyResources, HealthyUsage, NoThermalData, BigVramGpu,
             new BackgroundProcessUsage("chrome", 400)); // 400% / 12 cores ≈ 33%, above threshold
 
         var message = BottleneckClassificationAction.Classify(input);
@@ -377,21 +376,21 @@ public sealed class BottleneckClassificationActionTests
     }
 
     [Fact]
-    public void Classify_FlagsNetworkWhenPacketsAreDiscarded()
+    public void Classify_DoesNotTreatCumulativeNetworkCountersAsCurrentBottleneck()
     {
         var input = new BottleneckClassificationInput(
-            HealthyResources, HealthyUsage, NoThermalData, new NetworkHealthSnapshot(true, 5, 0), BigVramGpu, null);
+            HealthyResources, HealthyUsage, NoThermalData, BigVramGpu, null);
 
         var message = BottleneckClassificationAction.Classify(input);
 
-        Assert.Contains("rede", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("rede", message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void Classify_FlagsDiskWhenDiskTimeIsHigh()
     {
         var input = new BottleneckClassificationInput(
-            HealthyResources, HealthyUsage with { DiskPercent = 95 }, NoThermalData, HealthyNetwork, BigVramGpu, null);
+            HealthyResources, HealthyUsage with { DiskPercent = 95 }, NoThermalData, BigVramGpu, null);
 
         var message = BottleneckClassificationAction.Classify(input);
 
@@ -403,7 +402,7 @@ public sealed class BottleneckClassificationActionTests
     {
         var lowMemory = HealthyResources with { AvailableMemoryBytes = 512L * 1024 * 1024 };
         var input = new BottleneckClassificationInput(
-            lowMemory, HealthyUsage, NoThermalData, HealthyNetwork, BigVramGpu, null);
+            lowMemory, HealthyUsage, NoThermalData, BigVramGpu, null);
 
         var message = BottleneckClassificationAction.Classify(input);
 
@@ -416,7 +415,7 @@ public sealed class BottleneckClassificationActionTests
         IReadOnlyList<GpuAdapterDetails> smallVramGpu =
             [new GpuAdapterDetails("Old GPU", 2L * 1024 * 1024 * 1024, GpuKindGuess.LikelyDiscrete)];
         var input = new BottleneckClassificationInput(
-            HealthyResources, HealthyUsage with { GpuPercent = 98 }, NoThermalData, HealthyNetwork, smallVramGpu, null);
+            HealthyResources, HealthyUsage with { GpuPercent = 98 }, NoThermalData, smallVramGpu, null);
 
         var message = BottleneckClassificationAction.Classify(input);
 
@@ -424,10 +423,27 @@ public sealed class BottleneckClassificationActionTests
     }
 
     [Fact]
+    public void Classify_DoesNotUseIntegratedGpuVramWhenDedicatedGpuHasHeadroom()
+    {
+        IReadOnlyList<GpuAdapterDetails> hybridGpus =
+        [
+            new GpuAdapterDetails("Integrated GPU", 1L * 1024 * 1024 * 1024, GpuKindGuess.LikelyIntegrated),
+            new GpuAdapterDetails("Dedicated GPU", 12L * 1024 * 1024 * 1024, GpuKindGuess.LikelyDiscrete)
+        ];
+        var input = new BottleneckClassificationInput(
+            HealthyResources, HealthyUsage with { GpuPercent = 98 }, NoThermalData, hybridGpus, null);
+
+        var message = BottleneckClassificationAction.Classify(input);
+
+        Assert.Contains("Gargalo provável: GPU", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("VRAM", message, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Classify_FlagsGpuWhenSaturatedWithCpuHeadroom()
     {
         var input = new BottleneckClassificationInput(
-            HealthyResources, HealthyUsage with { GpuPercent = 98, CpuPercent = 40 }, NoThermalData, HealthyNetwork, BigVramGpu, null);
+            HealthyResources, HealthyUsage with { GpuPercent = 98, CpuPercent = 40 }, NoThermalData, BigVramGpu, null);
 
         var message = BottleneckClassificationAction.Classify(input);
 
@@ -438,7 +454,7 @@ public sealed class BottleneckClassificationActionTests
     public void Classify_FlagsCpuWhenSaturatedWithGpuHeadroom()
     {
         var input = new BottleneckClassificationInput(
-            HealthyResources, HealthyUsage with { CpuPercent = 95, GpuPercent = 40 }, NoThermalData, HealthyNetwork, BigVramGpu, null);
+            HealthyResources, HealthyUsage with { CpuPercent = 95, GpuPercent = 40 }, NoThermalData, BigVramGpu, null);
 
         var message = BottleneckClassificationAction.Classify(input);
 
@@ -449,7 +465,7 @@ public sealed class BottleneckClassificationActionTests
     public void Classify_ReportsNoLocalSignalWithoutGuessingExternalCause()
     {
         var input = new BottleneckClassificationInput(
-            HealthyResources, HealthyUsage, NoThermalData, HealthyNetwork, BigVramGpu, null);
+            HealthyResources, HealthyUsage, NoThermalData, BigVramGpu, null);
 
         var message = BottleneckClassificationAction.Classify(input);
 
@@ -616,7 +632,7 @@ public sealed class HardwareInspectorSmokeTests
     [Fact]
     public void WindowsResourceUsageInspector_NeverThrows()
     {
-        Assert.NotNull(new WindowsResourceUsageInspector().GetSnapshot());
+        Assert.NotNull(new WindowsResourceUsageInspector().GetSnapshot(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -761,7 +777,7 @@ public sealed class HardwareInspectorSmokeTests
 
         Assert.False(result.Changed);
         Assert.Contains("DDU", result.Messages[0], StringComparison.Ordinal);
-        Assert.Contains("não baixa, instala nem remove", result.Messages[0], StringComparison.Ordinal);
+        Assert.Contains("nunca baixa, instala ou remove", result.Messages[0], StringComparison.Ordinal);
     }
 
     [Fact]
@@ -772,7 +788,7 @@ public sealed class HardwareInspectorSmokeTests
             batterySaverActive: true,
             detectedTools: []);
 
-        Assert.Contains("conecte-o antes de jogar", message, StringComparison.Ordinal);
+        Assert.Contains("Conecte-o antes de jogar", message, StringComparison.Ordinal);
         Assert.Contains("Economia de Energia", message, StringComparison.Ordinal);
         Assert.Contains("Nenhum utilitário conhecido", message, StringComparison.Ordinal);
     }
@@ -785,8 +801,8 @@ public sealed class HardwareInspectorSmokeTests
             batterySaverActive: false,
             detectedTools: ["ASUS Armoury Crate"]);
 
-        Assert.DoesNotContain("conecte-o antes de jogar", message, StringComparison.Ordinal);
+        Assert.DoesNotContain("Conecte-o antes de jogar", message, StringComparison.Ordinal);
         Assert.Contains("ASUS Armoury Crate", message, StringComparison.Ordinal);
-        Assert.Contains("não controla isso diretamente", message, StringComparison.Ordinal);
+        Assert.Contains("não controla essas configurações diretamente", message, StringComparison.Ordinal);
     }
 }

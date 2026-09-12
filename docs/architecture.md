@@ -18,25 +18,30 @@ Este documento descreve a arquitetura-alvo e os limites entre componentes. Uma c
 O shell separa a experiência em **Visão geral**, **Otimizar**, **Sistema**,
 **Aplicativos** e **Jogos**. Otimizar usa o escopo `GeneralWindows`: funciona
 sem FiveM ou GTA V e seleciona exclusivamente ações declaradas para o PC geral.
-Jogos abre o catálogo de títulos e configura o mesmo motor no escopo
-`FiveMLegacy`; somente esse escopo aceita ações de instalação, cache, processo,
-configuração ou gráficos do FiveM/GTA V Legacy. GTAV Enhanced bloqueia o escopo
-especializado, mas nunca bloqueia uma análise geral do Windows.
+Jogos abre o catálogo de títulos. O card do FiveM leva a um hub dedicado que
+mantém Jogos como categoria ativa e separa os acessos ao otimizador do jogo, ao
+otimizador geral e ao histórico/restauração. O otimizador especializado configura
+o mesmo motor no escopo `FiveMLegacy`; somente esse escopo aceita ações de
+instalação, cache, processo, configuração ou gráficos do FiveM/GTA V Legacy.
+GTAV Enhanced bloqueia o escopo especializado, mas nunca bloqueia uma análise
+geral do Windows.
 
-Aplicativos apresenta dentro do Ralven um inventário local somente
-leitura dos programas desktop registrados e dos itens de inicialização em
-`Run`, `RunOnce` e pastas Startup. Busca, contagens e resultados parciais ficam
-na própria página; as superfícies do Windows e da Microsoft Store permanecem
-como ações secundárias para alterações que o Ralven não executa. Jogos abre um
-catálogo interno que hoje contém somente FiveM sobre GTAV Legacy; o card leva ao
-otimizador especializado existente e mantém Jogos como a categoria ativa. Sistema apresenta internamente o diagnóstico de
-hardware já coletado pelo aplicativo e consulta, somente para leitura, a saúde
-agregada de antivírus, firewall e configuração de atualizações automáticas pela
-API nativa da Central de Segurança do Windows. Os atalhos para as superfícies
-nativas permanecem como ações secundárias. A mesma área oferece um painel
-dedicado de jogos do Windows: ele lê o Modo de Jogo e a gravação histórica em
-segundo plano e, com confirmação explícita, aplica somente as duas ações tipadas
-já existentes.
+Aplicativos organiza o software em cinco superfícies: **Descobrir**,
+**Atualizações**, **Gerenciados**, **Inventário** e **Inicialização**. As três
+primeiras pesquisam, instalam, listam, atualizam e desinstalam pacotes das
+origens confiáveis `winget` e `msstore`; atualizações podem ser selecionadas e
+executadas sequencialmente ou ocultadas por pacote em preferência local. Cada
+mutação exige confirmação explícita e mostra identidade, origem e limitação de
+rollback. Inventário continua sendo a leitura local dos programas registrados,
+e Inicialização permanece somente leitura. Busca, contagens e resultados
+parciais ficam na própria página; as superfícies nativas do Windows permanecem
+como ações secundárias. Sistema apresenta internamente apenas as informações essenciais do hardware já
+coletado pelo aplicativo e consulta, somente para leitura, a proteção de
+antivírus, firewall e configuração de atualizações automáticas pela API nativa
+da Central de Segurança do Windows. A página não abre superfícies externas:
+mostra apenas dados lidos no próprio Ralven e o painel de jogos do Windows, que
+lê o Modo de Jogo e a gravação histórica em segundo plano e, com confirmação
+explícita, aplica somente as duas ações tipadas já existentes.
 
 `WindowsSystemHealthInspector` faz três consultas independentes e preserva
 resultados parciais. Falha da API ou serviço indisponível resulta em estado
@@ -61,10 +66,56 @@ usuário padrão e devolve um snapshot normalizado com completude separada por
 área. Ele não lê nem executa `UninstallString`, não lê nem escreve
 `StartupApproved`, não altera o registro e não atravessa o broker.
 
-Integração com catálogos de pacotes, como WinGet, ainda não faz parte desta
-fundação. Quando existir, cada operação deverá usar contratos tipados, origem
-identificada e confirmação explícita; o broker não pode virar um executor de
-linha de comando genérico.
+`WinGetApplicationPackageService`, também em `Ralven.Windows`, localiza somente
+o alias oficial `winget.exe` do usuário e executa listas fixas de argumentos
+pelo `ProcessCommandRunner`. As consultas são serializadas porque compartilham
+o índice local do WinGet e percorrem somente `winget` e `msstore`, preservando
+resultado parcial quando uma origem falha. Instalação, atualização e
+desinstalação aceitam apenas um ID validado do snapshot atual, usam
+correspondência exata e preservam as verificações de integridade do WinGet.
+Texto descoberto nunca vira comando, não há shell, `--force`,
+`--ignore-security-hash`, `--allow-reboot`, broker ou elevação permanente do
+Ralven. O instalador do fabricante ainda pode abrir ou solicitar UAC. Esse
+fluxo é separado do motor transacional de otimizações e do atualizador assinado
+do próprio Ralven porque o instalador de terceiros controla a alteração e o
+Ralven não oferece rollback.
+
+`JsonApplicationUpdateIgnoreStore`, em `Ralven.App`, persiste apenas chaves
+normalizadas `origem|id` em `%LOCALAPPDATA%\Ralven`; não guarda comandos,
+argumentos, versões nem dados pessoais. A gravação usa arquivo temporário na
+mesma pasta antes da substituição. Ignorar afeta apenas a apresentação e a
+seleção em lote, nunca executa uma operação no sistema.
+
+### Bandeja do sistema
+
+`TrayIconService` mantém o `System.Windows.Forms.NotifyIcon` somente como
+integração com a área de notificação do Windows. O clique direito continua
+entrando pelo `ContextMenuStrip` associado ao ícone, mas o evento de abertura
+é cancelado e encaminhado ao `ContextMenu` WPF do shell. Assim, o Windows
+continua responsável pelo ciclo de vida do ícone, tooltip e notificações,
+enquanto o Ralven controla tema, tipografia, ícones, foco e estados do menu.
+
+Com **Minimizar para a bandeja** ativo, o ícone permanece disponível enquanto
+o aplicativo estiver aberto. Clique esquerdo restaura/ativa a janela; clique
+direito abre o menu rápido junto ao ponteiro; perder foco ou escolher uma ação
+fecha o menu pelo comportamento do próprio `ContextMenu`. As ações reutilizam
+os fluxos existentes do shell: abrir, navegar ao Otimizador, alternar o monitor
+local de sessão, verificar atualizações, abrir Configurações e sair. O menu não
+executa otimizações nem instalações diretamente e mantém as confirmações já
+exigidas por esses fluxos.
+
+O posicionamento usa `PlacementMode.MousePoint`, que acompanha o monitor do
+ícone e deixa o `Popup` WPF corrigir colisões com as bordas da área de trabalho.
+O manifesto `PerMonitorV2` continua sendo a fonte de escala por monitor. A API
+gerenciada de `NotifyIcon` não expõe um retângulo estável do ícone; portanto a
+âncora visual é o ponteiro usado para invocar o menu, sem tentar acessar a
+estrutura interna da barra de tarefas.
+
+## Diálogos WPF
+
+As janelas secundárias compartilham `DialogWindow`, com modalidade nativa,
+backdrop visual e limites por monitor/DPI. A escolha por fluxo, os estilos e
+a validação reproduzível estão em [Janelas secundárias e diálogos](dialogs.md).
 
 ## Componentes
 
@@ -81,12 +132,22 @@ use o Firebase UID como identificador interno. No Worker, a verificação fica e
 `aud`/`iss`/`exp`/`sub`). Com `emailVerified=false`, o estado é
 `EmailVerificationRequired` e recursos autenticados ficam bloqueados.
 
-O estado carregado pelo `accounts:lookup` também identifica se o provedor
-`password` está vinculado. Contas criadas por e-mail redefinem a senha somente
-depois de reautenticar com a senha atual; contas criadas apenas pelo Google
-confirmam novamente a mesma identidade Google e então vinculam a primeira senha
-com `accounts:update`. Um token Google de outro UID é rejeitado antes de substituir
-a sessão local.
+O estado carregado pelo `accounts:lookup` identifica os provedores vinculados e
+os fatores MFA. Senha, Google e TOTP são tratados como capacidades independentes
+da mesma UID: vinculação, desvinculação e mudanças sensíveis exigem
+reautenticação; a última forma de acesso não pode ser removida. A primeira senha
+é vinculada por `accounts:signUp` com o ID token atual, preservando a proteção
+contra enumeração do Identity Platform. Troca de e-mail usa verificação prévia do
+novo endereço (`VERIFY_AND_CHANGE_EMAIL`). Um token Google de outro UID é
+rejeitado antes de substituir a sessão local.
+
+TOTP usa os endpoints MFA nativos do Identity Platform. O segredo só aparece
+durante a ativação, que apenas termina após um código válido. O login entra em
+`MfaChallengeRequired` até confirmar o segundo fator. Códigos de recuperação são
+aleatórios, armazenados apenas como hash no Worker, exibidos uma única vez e
+consumidos atomicamente; seu uso remove o fator perdido e revoga refresh tokens,
+obrigando novo login. Criar, substituir ou apagar esses códigos exige token com
+autenticação recente.
 
 `POST /account/profile` é a primeira rota de produto sobre esse verificador:
 como o Firebase só administra e-mail/senha/uid, essa rota guarda o que ele
@@ -99,33 +160,48 @@ existirem, a conta fica em `ProfileCompletionRequired`, não em `SignedIn`.
 da confirmação de e-mail; se o usuário escolhido já existir, a resposta é
 `409 username-taken` e a conta Firebase já criada é preservada — a janela de
 conta pede outro nome de usuário em vez de descartar o cadastro. A exclusão
-remove primeiro o perfil pelo UID autenticado e só então a conta Firebase;
-se o Firebase recusar a exclusão, o perfil é restaurado antes de informar a
-falha.
+autenticada é coordenada pelo Worker: bloqueia assinaturas que exigem
+cancelamento, grava cutoff e job durável, remove a conta Firebase e só depois os
+dados em D1. Um agendamento retoma jobs interrompidos sem permitir que tokens
+anteriores recriem dados; assim, uma falha de identidade não deixa uma conta
+ativa sem seus dados associados.
 
 ## Cobrança e entitlements
 
-A fundação de cobrança fica no Worker e no D1, separada da autenticação
+A cobrança fica no Worker e no D1, separada da autenticação
 Firebase e das políticas de otimização. O aplicativo pode ler apenas o snapshot
 server-side de acesso da própria UID em `GET /account/entitlements`; IDs e
-estados do provedor não são contratos do cliente. Notificações do Mercado Pago
-são autenticadas por HMAC e sempre reconciliadas contra o recurso canônico e um
+estados do provedor não são contratos do cliente. Eventos do Asaas são
+autenticados por token dedicado, deduplicados e reconciliados contra o recurso canônico e um
 checkout intent criado pelo servidor. O corpo da notificação, um redirect de
 checkout ou o estado `authorized` de uma assinatura não concedem Pro. Veja
 [Cobrança e acesso pago](billing.md) para o contrato e os bloqueadores de
-ativação. Enquanto um checkout ou assinatura local existir, a exclusão do perfil
-é bloqueada; o fluxo futuro deve cancelar no provedor antes de remover o vínculo.
+ativação. `CloudflareBillingService` consulta oferta/status e solicita checkout ou
+cancelamento autenticado; `MainWindow.Billing.xaml.cs` coordena a página Pro e
+descarta respostas após troca de conta. URLs externas são restritas ao checkout
+hospedado do Asaas. Preço e chave de oferta versionada são
+definidos pelo servidor; a confirmação na UI é invalidada se a oferta mudar.
+Pagamentos reconciliados mantêm períodos estáveis no ledger D1. Cancelamento
+confirmado interrompe renovação e preserva o período pago; somente então a
+exclusão do perfil pode remover o vínculo. Uma criação incerta continua bloqueada.
 
 | Projeto                  | Responsabilidade                                                    | Não deve conhecer                                        |
 | ------------------------ | ------------------------------------------------------------------- | -------------------------------------------------------- |
 | `Ralven.App`       | WPF, navegação, prévia, progresso e confirmação                     | APIs administrativas ou detalhes de registro             |
 | `Ralven.Contracts` | DTOs, IDs, estados (inclusive transacionais), erros e contratos entre processos | WPF ou implementação Windows                  |
 | `Ralven.Core`      | casos de uso, composição de perfis, políticas, transação e rollback | controles visuais ou comandos shell                      |
-| `Ralven.Windows`   | descoberta de hardware/instalação e adaptadores Windows/FiveM       | decisão de qual perfil o usuário deve escolher           |
+| `Ralven.Windows`   | descoberta de hardware/instalação e adaptadores Windows/Jogos       | decisão de qual perfil o usuário deve escolher           |
 | `Ralven.Broker`    | executor elevado com allowlist mínima                               | navegação, telemetria ou lógica de produto ampla         |
 | `Ralven.Tests`     | contratos, políticas, falhas, rollback e doubles de sistema         | dependência de uma instalação real para testes unitários |
 
 ## Fronteira de confiança
+
+O fluxo remoto opcional do Ralven AI está documentado em
+[`docs/ralven-ai.md`](ralven-ai.md). O modelo produz texto, a escolha de um
+perfil padrão e no máximo uma solicitação de ferramenta local fechada. O App
+revalida essa solicitação, que só pode atualizar diagnóstico, navegar para uma
+tela existente ou preparar a revisão de um plano; ela nunca produz um plano
+executável nem atravessa diretamente a fronteira privilegiada.
 
 ```mermaid
 flowchart LR
@@ -134,7 +210,7 @@ flowchart LR
   C --> W["Windows adapters · operações sem elevação"]
   C --> K["Contracts · mensagens tipadas"]
   K -->|"consentimento + UAC"| B["Broker elevado · allowlist"]
-  W --> F["FiveM Legacy e Windows"]
+  W --> F["Windows e integrações de Jogos"]
   B --> S["Configurações administrativas permitidas"]
   C --> R["Snapshots e relatório local"]
   W -. "Enhanced detectado" .-> X["Bloqueio seguro"]
@@ -222,7 +298,15 @@ Isso é o que torna a validação possível: tanto o broker elevado quanto `Wind
 - `Failed` — erro genuíno; a própria ação foi revertida;
 - `RolledBack` — revertida com sucesso após falha;
 - `RollbackFailed` — requer atenção e fica destacado no relatório;
-- `NotRun` — não executada porque uma falha crítica anterior abortou o restante da run.
+- `NotRun` — não executada porque uma falha crítica ou cancelamento interrompeu o restante da run.
+
+O relatório só indica sucesso para uma transação `Committed` sem ações
+pendentes, não executadas ou com falha. As mensagens de diagnóstico gravadas no
+journal são preservadas no resultado e no relatório técnico; uma razão explícita
+de falha ou omissão tem precedência sobre mensagens anteriores. Após consultar
+o resultado, o usuário pode preparar outra otimização preservando o perfil e as
+preferências selecionadas. Cancelamento da execução local também entrega um
+resultado e atualiza o histórico.
 
 Esse enum é independente do estado transacional do journal
 (`ActionJournalState`), que continua controlando elegibilidade de
@@ -247,7 +331,16 @@ ainda.
 
 ## Perfis
 
-Leve, Médio e Agressivo são seleções versionadas de ações e parâmetros. Eles não implementam operações diretamente.
+Leve, Médio e Agressivo são seleções versionadas de ações e parâmetros. Eles não implementam operações diretamente e continuam gratuitos.
+
+[Ultra](ultra.md) adiciona preferências pessoais ao plano geral do Windows,
+sem ampliar o enum de perfis. `PersonalOptimizationPolicy` compõe opções
+canônicas; runtime e broker revalidam essa composição. `PersonalWorkspaceService`
+cuida de rotinas, observações e medições locais limitadas. A preferência exclusiva
+de resposta consistente do ponteiro seleciona uma ação tipada, verificada e
+reversível por `SystemParametersInfo`; ela não entra em planos gratuitos. O acesso
+Pro é revalidado na entrada dos serviços; histórico e rollback
+não dependem da assinatura.
 
 ```text
 Perfil → Política de hardware → Ações propostas → Prévia do usuário → Plano imutável
@@ -268,7 +361,20 @@ módulo de manutenção separado e não entra implicitamente nesses perfis.
 
 Responsabilidades:
 
-- localizar instalação padrão e personalizada;
+- localizar instalação padrão e personalizada por camadas: seleção manual
+  validada, processo em execução, cache com fingerprint do executável, App
+  Paths/registro de desinstalação, atalhos do usuário/Start Menu e diretórios
+  conhecidos; a busca nunca percorre o disco inteiro nem perfis de outros
+  usuários;
+- aceitar uma raiz Legacy somente com `FiveM.exe`, `FiveM.app` e
+  `FiveM.app\data`, todos canonizados e sem reparse points; dados CitizenFX
+  isolados, caminhos quebrados e instalações parciais não são instalação;
+- priorizar uma escolha manual, processo ou cache ainda válido; se restarem
+  várias raízes automáticas válidas sem uma fonte decisiva, declarar estado
+  ambíguo e pedir que o usuário selecione uma raiz, em vez de alterar uma
+  instalação arbitrária;
+- invalidar o cache quando o executável some ou muda de tamanho/data e voltar
+  à descoberta completa após movimentação, reinstalação ou atualização;
 - validar `CitizenFX.ini` e `IVPath` sem reescrevê-los por conveniência;
 - mapear somente diretórios conhecidos sob `FiveM.app`;
 - identificar processos por caminho da imagem, não só por nome;
@@ -279,6 +385,29 @@ Responsabilidades:
 O parser XML altera apenas chaves presentes. Um arquivo inválido gera ação de reparo separada; nunca é substituído por um template genérico.
 
 ### Monitor local de sessão FiveM
+
+A coleta de métricas ao vivo só roda com a Visão geral selecionada e a janela
+visível, ativa e não minimizada. Navegação, minimização, perda de foco e bandeja
+pausam o timer e cancelam a amostra em curso; a retomada descarta resultados
+antigos e obtém uma amostra nova sem sobrepor coletas. A leitura da GPU consulta
+a categoria de contadores em lote, pareando as duas amostras pelo nome da
+instância. Instâncias sem par não viram utilização inventada.
+
+O painel oferece uma série selecionada entre CPU, GPU, memória, disco e rede,
+com percentuais em escala fixa e throughput em escala dinâmica explicitamente
+rotulada. Quando uma raiz FiveM Legacy já foi diagnosticada, o alvo FiveM troca
+a captura geral por CPU e working set agregado apenas dos processos com nome e
+imagem validados dentro dessa raiz. Essa leitura usa contabilidade do processo
+fornecida pelo Windows; não lê conteúdo da memória, não usa hook/injeção e não
+estima GPU, disco, rede, FPS ou frame time por processo.
+
+Essa suspensão é exclusiva das métricas de apresentação. O monitor de sessão
+continua consultando a presença a cada cinco segundos; mudanças de estado
+atualizam as restrições do otimizador mesmo com a janela oculta. Rodadas sem
+mudança não recalculam apresentação oculta. Ao reabrir, a duração é atualizada
+a partir do início registrado. Resultados de uma execução anterior do monitor
+são descartados após parar/reiniciar. Procedimento e limites de medição em
+[Desempenho do aplicativo](app-performance.md).
 
 O monitor da Visão geral é iniciado manualmente e permanece ativo enquanto o
 Ralven estiver aberto, inclusive na bandeja. Ele usa exclusivamente a raiz
@@ -334,6 +463,13 @@ somente texto (sem anexo/captura de tela, sem R2). Qualquer erro de transporte �
 suprimido localmente para não alterar a execução nem os logs. Detalhes de
 privacidade: [telemetry.md](telemetry.md) e [bug-reports.md](bug-reports.md).
 
+O dashboard administrativo permanece fora do processo distribuído e consulta
+somente rotas autenticadas do Worker. As consultas de produto agregam, no D1,
+telemetria, contas, updater, cobrança e uso do Ralven AI; nenhum identificador
+de conta/provedor ou conteúdo interativo sai dessas consultas. Filtros de
+versão e ambiente se aplicam apenas aos domínios que possuem esses campos, e o
+período é traduzido para a coluna temporal própria de cada tabela.
+
 ### Relatório de falhas e configuração centralizada
 
 `ICrashReportingService` (implementação `SentryCrashReportingService`) é
@@ -350,6 +486,16 @@ por configuração de build), permitindo separar no Sentry os erros do
 desenvolvedor dos erros de usuários finais sem duplicar DSN nem projeto.
 Todo evento passa por `CrashReportSanitizer` (reaproveitando
 `ReportSanitizer`) antes de sair do processo. Detalhes: [telemetry.md](telemetry.md).
+
+`App` registra as fronteiras globais do WPF (`DispatcherUnhandledException`,
+`UnhandledException` e `UnobservedTaskException`). A primeira, e falhas de
+startup que ainda alcancem o Dispatcher, usam `ErrorDialog`: uma superfície
+localizada com orientação simples, detalhes técnicos sanitizados sob demanda e
+ações de cópia, reabertura ou fechamento. `UnhandledException` de thread sem
+Dispatcher só registra e tenta reportar, pois o processo pode já estar sendo
+encerrado. As falhas esperadas de fluxos específicos continuam no contexto que
+as recupera (estado inline, resultado transacional ou diálogo da funcionalidade),
+sem promover todo problema a uma falha fatal.
 
 ## Interrupção de otimização pela interface
 
@@ -479,14 +625,36 @@ O MVP grava somente sob `%LOCALAPPDATA%\Ralven`:
 - `Transactions/<id>.json`: plano, estados por ação e snapshots pequenos necessários ao rollback;
 - `Requests/<id>.json`: solicitação efêmera e de uso único consumida atomicamente pelo broker;
 - `settings.json`: preferências do próprio Ralven;
-- `crash.log`: exceções fatais locais, criado apenas quando necessário.
+- `Logs/crash.log`: exceções fatais locais, criado apenas quando necessário.
+
+Os dados descartáveis do próprio aplicativo usam uma allowlist separada dos
+dados duráveis. Downloads de atualização, logs e temporários reconhecidos podem
+ser calculados e removidos manualmente; configurações, login, filas de
+telemetria, journals, quarentenas e estado anti-downgrade ficam fora dela. O
+inventário completo e o contrato de segurança estão em
+[`docs/cache.md`](cache.md).
 
 Esses arquivos têm durabilidades diferentes e isso muda o que pode ser alterado:
 
 - `Transactions/<id>.json` é **durável entre versões**. É o único registro que mantém uma execução passada auditável e reversível, e um journal escrito por uma versão anterior precisa continuar carregando. Enums serializam como string camelCase (`allowIntegerValues: false`), e `UnmappedMemberHandling.Disallow` significa que **remover** uma propriedade do journal quebra JSON antigo — acrescentar é seguro, remover não. Ver `TransactionState`/`ActionJournalState`/`ActionExecutionOutcome` em "Resultado".
 - `Requests/<id>.json` é **efêmero**: reivindicado e apagado pelo broker, com janela de validade curta. Seu schema pode evoluir junto com o build.
+- `settings.json` é lido de forma tolerante a chaves desconhecidas, diferenças
+  de capitalização e comentários, mas sempre gravado de forma atômica. A restauração
+  de padrões afeta somente preferências gerais; consentimento de privacidade,
+  conta e marcadores internos permanecem preservados.
 
 Caches não são copiados para o journal. Durante uma limpeza, arquivos allowlisted são movidos para uma quarentena dentro do próprio volume; a ação restaura essa quarentena se falhar antes do commit e a remove somente ao confirmar a transação.
+
+## Localização
+
+O catálogo declarativo em `localization/locales.json` define os idiomas e os
+conjuntos de recursos do aplicativo, do atualizador e das ações Windows. O
+seletor e a detecção automática consomem esse catálogo, sem branches por idioma;
+o locale também acompanha a solicitação tipada ao broker para formatar o journal
+e os resultados elevados. Os recursos são versionados, validados offline e
+sincronizados por `scripts/Sync-Localization.ps1`; consulte
+`docs/localization.md` para o contrato de chaves, placeholders, glossário,
+revisão e pseudo-localização.
 
 ## Testabilidade
 

@@ -8,6 +8,7 @@
 const NAME_PATTERN = /^\p{L}[\p{L} '-]{0,59}$/u;
 const USERNAME_PATTERN = /^[a-zA-Z][a-zA-Z0-9_]{2,23}$/;
 const CURRENT_TERMS_VERSION = '2026-08-02';
+const PROFILE_FIELDS = ['username', 'firstName', 'lastName', 'termsVersion'];
 
 /**
  * Validates and normalizes the profile-completion payload. Returns null on
@@ -18,7 +19,9 @@ const CURRENT_TERMS_VERSION = '2026-08-02';
  * @returns {{ username: string, usernameNormalized: string, firstName: string, lastName: string, termsVersion: string } | null}
  */
 export function validateAccountProfile(payload) {
-  if (payload === null || typeof payload !== 'object') {
+  if (payload === null || typeof payload !== 'object' || Array.isArray(payload)
+    || Object.keys(payload).length !== PROFILE_FIELDS.length
+    || !PROFILE_FIELDS.every(field => Object.hasOwn(payload, field))) {
     return null;
   }
 
@@ -61,28 +64,14 @@ export function validateAccountProfile(payload) {
  * @returns {Promise<{ ok: true } | { ok: false, code: 'username-taken' | 'uid-taken' | 'unknown' }>}
  */
 export async function createAccountProfile(db, uid, profile) {
-  const existing = await fetchAccountProfile(db, uid);
-  if (existing !== null) {
-    if (existing.username !== profile.username
-      || existing.firstName !== profile.firstName
-      || existing.lastName !== profile.lastName) {
-      return { ok: false, code: 'uid-taken' };
-    }
-
-    await db
-      .prepare('UPDATE account_profiles SET terms_version = ?, terms_accepted_at = ? WHERE uid = ?')
-      .bind(profile.termsVersion, new Date().toISOString(), uid)
-      .run();
-    return { ok: true };
-  }
-
   try {
     const now = new Date().toISOString();
-    await db
+    const inserted = await db
       .prepare(
         `INSERT INTO account_profiles
            (uid, username, username_normalized, first_name, last_name, terms_version, terms_accepted_at, created_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+         ON CONFLICT DO NOTHING`,
       )
       .bind(
         uid,
@@ -95,33 +84,85 @@ export async function createAccountProfile(db, uid, profile) {
         now,
       )
       .run();
-    return { ok: true };
-  } catch (err) {
-    const message = String(err?.message || '');
-    if (message.includes('idx_account_profiles_username_normalized')) {
+
+    if (inserted.meta?.changes === 1) {
+      return { ok: true };
+    }
+
+    const existing = await fetchAccountProfile(db, uid);
+    if (existing === null) {
+      // The only other unique key on this table is username_normalized.
+      // Using the post-conflict state instead of a SQLite error string keeps
+      // the API stable across D1/SQLite error-message variants.
       return { ok: false, code: 'username-taken' };
     }
-    if (message.includes('account_profiles.uid') || message.includes('PRIMARY KEY')) {
+    if (existing.username !== profile.username
+      || existing.firstName !== profile.firstName
+      || existing.lastName !== profile.lastName) {
       return { ok: false, code: 'uid-taken' };
     }
+
+    await db
+      .prepare('UPDATE account_profiles SET terms_version = ?, terms_accepted_at = ? WHERE uid = ?')
+      .bind(profile.termsVersion, now, uid)
+      .run();
+    return { ok: true };
+  } catch {
     return { ok: false, code: 'unknown' };
   }
 }
 
-/** Deletes the verified UID's profile only when no billing flow is linked. */
-export async function deleteAccountProfile(db, uid) {
-  await db.prepare(
-    `DELETE FROM account_profiles
-     WHERE uid = ?
-       AND NOT EXISTS (
-         SELECT 1 FROM billing_checkout_intents WHERE account_uid = ?
-       )`,
-  ).bind(uid, uid).run();
-
+/** Account deletion is blocked until every linked billing flow is cancelled. */
+export async function isAccountDeletionBlocked(db, uid) {
   const billing = await db.prepare(
-    'SELECT 1 AS blocked FROM billing_checkout_intents WHERE account_uid = ? LIMIT 1',
+    "SELECT 1 AS blocked FROM billing_checkout_intents WHERE account_uid = ? AND state <> 'cancelled' LIMIT 1",
   ).bind(uid).first();
-  return billing === null;
+  return billing !== null;
+}
+
+/** Called only after Firebase has confirmed deletion of the account. */
+export async function deleteAccountProfile(db, uid) {
+  await db.prepare('DELETE FROM account_profiles WHERE uid = ?').bind(uid).run();
+}
+
+export async function deleteAccount(db, uid, deleteFirebase) {
+  if (await isAccountDeletionBlocked(db, uid)) return { ok: false, code: 'billing-cancellation-required' };
+  const now = new Date();
+  const validAfter = Math.floor(now.getTime() / 1000);
+  await db.prepare(
+    `INSERT INTO account_auth_cutoffs (account_uid, valid_after, updated_at) VALUES (?, ?, ?)
+     ON CONFLICT(account_uid) DO UPDATE SET valid_after = excluded.valid_after, updated_at = excluded.updated_at`,
+  ).bind(uid, validAfter, now.toISOString()).run();
+  await db.prepare(
+    `INSERT INTO account_deletion_jobs (account_uid, requested_at) VALUES (?, ?)
+     ON CONFLICT(account_uid) DO NOTHING`,
+  ).bind(uid, now.toISOString()).run();
+
+  try {
+    await completeAccountDeletion(db, uid, deleteFirebase);
+    return { ok: true, pending: false };
+  } catch {
+    return { ok: true, pending: true };
+  }
+}
+
+export async function completeAccountDeletion(db, uid, deleteFirebase) {
+  await deleteFirebase(uid);
+  await deleteAccountProfile(db, uid);
+  await db.prepare('DELETE FROM account_deletion_jobs WHERE account_uid = ?').bind(uid).run();
+}
+
+export async function resumeAccountDeletions(db, deleteFirebase, limit = 20) {
+  const rows = await db.prepare(
+    'SELECT account_uid FROM account_deletion_jobs ORDER BY requested_at LIMIT ?',
+  ).bind(limit).all();
+  for (const row of rows.results ?? []) {
+    try {
+      await completeAccountDeletion(db, row.account_uid, deleteFirebase);
+    } catch {
+      // The durable job remains for the next scheduled retry.
+    }
+  }
 }
 
 /**

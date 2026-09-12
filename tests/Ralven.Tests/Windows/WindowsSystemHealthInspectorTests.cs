@@ -1,3 +1,4 @@
+using Ralven.Contracts;
 using Ralven.Windows.Infrastructure;
 using Xunit;
 
@@ -5,6 +6,26 @@ namespace Ralven.Tests.Windows;
 
 public sealed class WindowsSystemHealthInspectorTests
 {
+    [Fact]
+    public async Task Inspector_WhenNativeCallThrows_ProviderHealthCarriesClassifiedBugCode()
+    {
+        var inspector = new WindowsSystemHealthInspector(Read);
+
+        var snapshot = await inspector.InspectAsync(TestContext.Current.CancellationToken);
+
+        Assert.Equal(BugCode.SEC_HEALTH_QUERY, snapshot.Antivirus.BugCode);
+        Assert.Equal(WindowsSecurityHealthState.Unavailable, snapshot.Antivirus.State);
+        return;
+
+        int Read(
+            WindowsSystemHealthInspector.SecurityProvider _,
+            out WindowsSystemHealthInspector.NativeSecurityProviderHealth health)
+        {
+            health = default;
+            throw new DllNotFoundException("wscapi.dll missing");
+        }
+    }
+
     [Theory]
     [InlineData(
         0,

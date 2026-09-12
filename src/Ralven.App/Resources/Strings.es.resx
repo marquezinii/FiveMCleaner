@@ -6,115 +6,187 @@
   <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms</value></resheader>
   <data name="Navigation.Section" xml:space="preserve"><value>NAVEGACIÓN</value></data>
   <data name="Navigation.Overview" xml:space="preserve"><value>Resumen</value></data>
+  <data name="Navigation.RalvenAi" xml:space="preserve"><value>Ralven AI</value></data>
   <data name="Navigation.System" xml:space="preserve"><value>Sistema</value></data>
   <data name="Navigation.Applications" xml:space="preserve"><value>Aplicaciones</value></data>
   <data name="Navigation.Games" xml:space="preserve"><value>Juegos</value></data>
   <data name="Navigation.Optimizer" xml:space="preserve"><value>Optimizar</value></data>
   <data name="Navigation.History" xml:space="preserve"><value>Historial</value></data>
   <data name="Navigation.Settings" xml:space="preserve"><value>Configuración</value></data>
+  <data name="RalvenAi.Title" xml:space="preserve"><value>Ralven AI</value></data>
+  <data name="RalvenAi.Subtitle" xml:space="preserve"><value>Orientación contextual basada en el diagnóstico local de este PC y en los planes compatibles con Ralven.</value></data>
+  <data name="RalvenAi.Empty.Title" xml:space="preserve"><value>Pregunta sobre este PC</value></data>
+  <data name="RalvenAi.Empty.Detail" xml:space="preserve"><value>Elige un punto de partida o escribe tu propia pregunta.</value></data>
+  <data name="RalvenAi.Privacy.Title" xml:space="preserve"><value>Qué se envía</value></data>
+  <data name="RalvenAi.Privacy.Detail" xml:space="preserve"><value>Tu pregunta, un resumen limitado del hardware, las acciones ya compatibles con Ralven y un identificador seudónimo de seguridad se envían a OpenAI para esta respuesta. Se excluyen rutas, archivos, credenciales y datos que identifican directamente la cuenta. Ralven no guarda la conversación. No introduzcas información personal ni secreta.</value></data>
+  <data name="RalvenAi.AccessRequired.Title" xml:space="preserve"><value>Se requiere acceso a Ralven AI</value></data>
+  <data name="RalvenAi.AccessRequired.Detail" xml:space="preserve"><value>Esta cuenta no tiene acceso a Ralven AI en este momento. Actualiza el estado del plan o inténtalo de nuevo más tarde.</value></data>
+  <data name="RalvenAi.AccessRequired.Free.Plan" xml:space="preserve"><value>TU PLAN ACTUAL: FREE</value></data>
+  <data name="RalvenAi.AccessRequired.Free.Title" xml:space="preserve"><value>Ralven AI forma parte de Pro</value></data>
+  <data name="RalvenAi.AccessRequired.Free.Detail" xml:space="preserve"><value>Habla sobre el diagnóstico de tu PC y recibe una recomendación segura de perfil para revisar antes de aplicarla.</value></data>
+  <data name="RalvenAi.AccessRequired.ViewPro" xml:space="preserve"><value>Conocer Ralven Pro</value></data>
+  <data name="RalvenAi.InputPlaceholder" xml:space="preserve"><value>Mensaje para Ralven AI</value></data>
+  <data name="RalvenAi.Welcome.Greeting1" xml:space="preserve"><value>¿Por dónde empezamos?</value></data>
+  <data name="RalvenAi.Welcome.Greeting2" xml:space="preserve"><value>¿Qué mejoramos hoy?</value></data>
+  <data name="RalvenAi.Welcome.Greeting3" xml:space="preserve"><value>Entendamos este PC.</value></data>
+  <data name="RalvenAi.Welcome.Greeting4" xml:space="preserve"><value>¿Listo para revisar tu configuración?</value></data>
+  <data name="RalvenAi.Welcome.Greeting5" xml:space="preserve"><value>¿Cómo puede ayudar Ralven AI?</value></data>
+  <data name="RalvenAi.Suggestion.Bottleneck" xml:space="preserve"><value>Identifica el principal cuello de botella</value></data>
+  <data name="RalvenAi.Suggestion.Profiles" xml:space="preserve"><value>Compara los perfiles seguros</value></data>
+  <data name="RalvenAi.Suggestion.Start" xml:space="preserve"><value>¿Por dónde debería empezar?</value></data>
+  <data name="RalvenAi.Send" xml:space="preserve"><value>Enviar</value></data>
+  <data name="RalvenAi.Sending" xml:space="preserve"><value>Revisando el diagnóstico...</value></data>
+  <data name="RalvenAi.You" xml:space="preserve"><value>Tú</value></data>
+  <data name="RalvenAi.Assistant" xml:space="preserve"><value>Ralven AI</value></data>
+  <data name="RalvenAi.Recommendation.Title" xml:space="preserve"><value>PERFIL ESTÁNDAR RECOMENDADO</value></data>
+  <data name="RalvenAi.ReviewPlan" xml:space="preserve"><value>Revisar plan</value></data>
+  <data name="RalvenAi.Sources.Title" xml:space="preserve"><value>FUENTES UTILIZADAS EN ESTA RESPUESTA</value></data>
+  <data name="RalvenAi.Sources.LocalDiagnostic" xml:space="preserve"><value>Diagnóstico local actual</value></data>
+  <data name="RalvenAi.Sources.SupportedPlans" xml:space="preserve"><value>Catálogo de planes compatibles</value></data>
+  <data name="RalvenAi.Tool.RefreshDiagnostic" xml:space="preserve"><value>Actualizar diagnóstico local</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Light" xml:space="preserve"><value>Revisar plan Ligero</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Balanced" xml:space="preserve"><value>Revisar plan Equilibrado</value></data>
+  <data name="RalvenAi.Tool.ReviewProfile.Aggressive" xml:space="preserve"><value>Revisar plan Agresivo</value></data>
+  <data name="RalvenAi.Tool.OpenOverview" xml:space="preserve"><value>Abrir Resumen</value></data>
+  <data name="RalvenAi.Tool.OpenSystem" xml:space="preserve"><value>Abrir Sistema</value></data>
+  <data name="RalvenAi.Tool.OpenApplications" xml:space="preserve"><value>Abrir Aplicaciones</value></data>
+  <data name="RalvenAi.Tool.OpenGames" xml:space="preserve"><value>Abrir Juegos</value></data>
+  <data name="RalvenAi.Tool.OpenFiveM" xml:space="preserve"><value>Abrir FiveM</value></data>
+  <data name="RalvenAi.Tool.OpenHistory" xml:space="preserve"><value>Abrir Historial</value></data>
+  <data name="RalvenAi.Tool.Completed" xml:space="preserve"><value>La acción se abrió en Ralven. No se aplicó ningún cambio sin tu confirmación.</value></data>
+  <data name="RalvenAi.DemoReply" xml:space="preserve"><value>El perfil Equilibrado es un punto de partida sensato para este diagnóstico. Mantiene el plan dentro de las acciones compatibles con Ralven y permite revisar cada cambio antes de ejecutar nada.</value></data>
+  <data name="RalvenAi.Error.DiagnosticUnavailable" xml:space="preserve"><value>El diagnóstico local aún no está listo. Actualiza el diagnóstico e inténtalo de nuevo.</value></data>
+  <data name="RalvenAi.Error.Unavailable" xml:space="preserve"><value>Ralven AI no está disponible ahora. No se realizó ningún cambio.</value></data>
+  <data name="RalvenAi.Error.Unauthorized" xml:space="preserve"><value>No se pudo verificar tu sesión. Inicia sesión de nuevo y vuelve a intentarlo.</value></data>
+  <data name="RalvenAi.Error.ProRequired" xml:space="preserve"><value>Se requiere acceso Pro activo.</value></data>
+  <data name="RalvenAi.Error.AiAccessRequired" xml:space="preserve"><value>Esta cuenta no tiene acceso activo a Ralven AI.</value></data>
+  <data name="RalvenAi.Error.RateLimited" xml:space="preserve"><value>Demasiadas solicitudes. Espera un momento y vuelve a intentarlo.</value></data>
+  <data name="RalvenAi.Error.BudgetExhausted" xml:space="preserve"><value>Se alcanzó el límite mensual de Ralven AI.</value></data>
+  <data name="RalvenAi.Error.RequestReplayed" xml:space="preserve"><value>Esta solicitud ya fue recibida, por lo que no se realizó una segunda llamada de IA. Espera un momento y envía una nueva pregunta.</value></data>
+  <data name="RalvenAi.Error.InvalidResponse" xml:space="preserve"><value>La respuesta no superó las comprobaciones de seguridad de Ralven. No se realizó ningún cambio.</value></data>
   <data name="Games.Title" xml:space="preserve"><value>Juegos</value></data>
-  <data name="Games.Subtitle" xml:space="preserve"><value>Elige un juego compatible para abrir su experiencia dedicada de diagnóstico y optimización.</value></data>
+  <data name="Games.Subtitle" xml:space="preserve"><value>Elige un juego compatible para abrir sus herramientas dedicadas.</value></data>
   <data name="Games.FiveM.Title" xml:space="preserve"><value>FiveM</value></data>
   <data name="Games.FiveM.Edition" xml:space="preserve"><value>GTAV Legacy</value></data>
-  <data name="Games.FiveM.Description" xml:space="preserve"><value>Detecta el entorno local, revisa un plan transparente y aplica optimizaciones conservadoras y reversibles para FiveM sobre GTAV Legacy.</value></data>
-  <data name="Games.FiveM.Action" xml:space="preserve"><value>Abrir optimizador de FiveM</value></data>
-  <data name="Games.FiveM.ActionTooltip" xml:space="preserve"><value>Abrir diagnóstico y optimización de FiveM sobre GTAV Legacy</value></data>
-  <data name="Safety.Active" xml:space="preserve"><value>Protección activa</value></data>
-  <data name="Safety.SnapshotRollback" xml:space="preserve"><value>Instantánea y reversión antes de los cambios.</value></data>
+  <data name="Games.FiveM.Description" xml:space="preserve"><value>Abre un espacio dedicado al diagnóstico, la optimización, la preparación de Windows y la recuperación para FiveM.</value></data>
+  <data name="Games.FiveM.Action" xml:space="preserve"><value>Abrir FiveM</value></data>
+  <data name="Games.FiveM.ActionTooltip" xml:space="preserve"><value>Abrir las herramientas de FiveM para GTAV Legacy</value></data>
+  <data name="FiveMHub.BackToGames" xml:space="preserve"><value>Volver a Juegos</value></data>
+  <data name="FiveMHub.Title" xml:space="preserve"><value>FiveM</value></data>
+  <data name="FiveMHub.Subtitle" xml:space="preserve"><value>Un espacio dedicado para preparar, diagnosticar y mantener FiveM sobre GTAV Legacy.</value></data>
+  <data name="FiveMHub.HeroTitle" xml:space="preserve"><value>Tus herramientas de FiveM, organizadas por objetivo</value></data>
+  <data name="FiveMHub.HeroDescription" xml:space="preserve"><value>Usa el optimizador del juego para la configuración de FiveM y GTA V, prepara Windows por separado y revisa todos los cambios registrados desde un solo lugar.</value></data>
+  <data name="FiveMHub.Scopes.Title" xml:space="preserve"><value>Un PC, dos ámbitos de optimización</value></data>
+  <data name="FiveMHub.Scopes.Description" xml:space="preserve"><value>Cada ejecución comprueba primero el estado actual. La configuración que ya está en su objetivo se verifica sin volver a aplicarse; la restauración sigue vinculada a la transacción que realmente la cambió.</value></data>
+  <data name="FiveMHub.Actions.Title" xml:space="preserve"><value>¿Qué quieres hacer?</value></data>
+  <data name="FiveMHub.Detection.Title" xml:space="preserve"><value>¿No encuentras FiveM?</value></data>
+  <data name="FiveMHub.Detection.Description" xml:space="preserve"><value>Elige la carpeta que contiene FiveM.exe solo cuando la detección automática no pueda identificar una instalación Legacy válida. Ralven la valida antes de usarla.</value></data>
+  <data name="FiveMHub.Detection.Select" xml:space="preserve"><value>Elegir carpeta de FiveM</value></data>
+  <data name="FiveMHub.Detection.AutomaticAction" xml:space="preserve"><value>Usar detección automática</value></data>
+  <data name="FiveMHub.Detection.Automatic" xml:space="preserve"><value>La detección automática está activa.</value></data>
+  <data name="FiveMHub.Detection.Manual" xml:space="preserve"><value>Usando la carpeta elegida: {0}</value></data>
+  <data name="FiveMHub.Detection.Invalid" xml:space="preserve"><value>La carpeta elegida no es una instalación FiveM Legacy válida. Elige la carpeta que contiene FiveM.exe y FiveM.app\data.</value></data>
+  <data name="FiveMHub.Actions.Description" xml:space="preserve"><value>Elige el área que corresponde a tu objetivo. Ninguna acción comienza antes de revisar y confirmar el plan.</value></data>
+  <data name="FiveMHub.Optimizer.Title" xml:space="preserve"><value>Optimizar FiveM</value></data>
+  <data name="FiveMHub.Optimizer.Description" xml:space="preserve"><value>Analiza la instalación Legacy detectada y revisa diagnósticos, ajustes y acciones reversibles específicos del juego.</value></data>
+  <data name="FiveMHub.Optimizer.Scope" xml:space="preserve"><value>Ámbito de FiveM y GTA V Legacy</value></data>
+  <data name="FiveMHub.Optimizer.Action" xml:space="preserve"><value>Abrir optimizador de FiveM</value></data>
+  <data name="FiveMHub.Windows.Title" xml:space="preserve"><value>Preparar Windows</value></data>
+  <data name="FiveMHub.Windows.Description" xml:space="preserve"><value>Revisa el plan general del PC para la configuración compatible de Windows, energía, respuesta y diagnósticos locales.</value></data>
+  <data name="FiveMHub.Windows.Scope" xml:space="preserve"><value>Ámbito general de Windows</value></data>
+  <data name="FiveMHub.Windows.Action" xml:space="preserve"><value>Abrir optimizador general</value></data>
+  <data name="FiveMHub.History.Title" xml:space="preserve"><value>Historial y restauración</value></data>
+  <data name="FiveMHub.History.Description" xml:space="preserve"><value>Revisa las ejecuciones de FiveM y Windows, sus resultados reales y los cambios que todavía pueden restaurarse.</value></data>
+  <data name="FiveMHub.History.Scope" xml:space="preserve"><value>Historial compartido de Ralven</value></data>
+  <data name="FiveMHub.History.Action" xml:space="preserve"><value>Abrir historial</value></data>
+  <data name="FiveMHub.ReShade.Title" xml:space="preserve"><value>ReShade</value></data>
+  <data name="FiveMHub.ReShade.Description" xml:space="preserve"><value>Añade efectos de posprocesamiento a FiveM con el instalador oficial de ReShade.</value></data>
+  <data name="FiveMHub.ReShade.Note" xml:space="preserve"><value>Abre la página oficial de descarga de la versión más reciente. Consulta las reglas del servidor antes de instalar.</value></data>
+  <data name="FiveMHub.ReShade.Action" xml:space="preserve"><value>Instalar ReShade</value></data>
+  <data name="Safety.SnapshotRollback" xml:space="preserve"><value>La configuración se guarda antes de cambiar y puede restaurarse.</value></data>
   <data name="BugReport.Link" xml:space="preserve"><value>Reportar un error</value></data>
   <data name="BugReport.LinkTooltip" xml:space="preserve"><value>Abrir formulario de reporte de errores</value></data>
   <data name="Dashboard.Title" xml:space="preserve"><value>Resumen</value></data>
   <data name="Dashboard.Subtitle" xml:space="preserve"><value>Rendimiento, claridad y control para tu PC.</value></data>
   <data name="System.Title" xml:space="preserve"><value>Sistema</value></data>
-  <data name="System.Subtitle" xml:space="preserve"><value>Revisa ajustes de juegos, salud de seguridad e información de la PC sin salir de Ralven.</value></data>
-  <data name="System.WindowsUpdate.Title" xml:space="preserve"><value>Windows Update</value></data>
-  <data name="System.WindowsUpdate.Description" xml:space="preserve"><value>Comprueba actualizaciones del sistema y de seguridad directamente en la Configuración de Windows.</value></data>
-  <data name="System.WindowsUpdate.Action" xml:space="preserve"><value>Abrir Windows Update</value></data>
+  <data name="System.Subtitle" xml:space="preserve"><value>Consulta lo esencial de tu PC, protección y juegos. Todo permanece dentro de Ralven.</value></data>
+  <data name="System.Refresh" xml:space="preserve"><value>Actualizar todo</value></data>
   <data name="System.Storage.Title" xml:space="preserve"><value>Almacenamiento</value></data>
   <data name="System.Storage.Description" xml:space="preserve"><value>Revisa el uso del disco y las recomendaciones de almacenamiento de Windows antes de eliminar algo.</value></data>
   <data name="System.Storage.Action" xml:space="preserve"><value>Revisar almacenamiento</value></data>
-  <data name="System.Security.Title" xml:space="preserve"><value>Seguridad de Windows</value></data>
-  <data name="System.Security.Description" xml:space="preserve"><value>Consulta el estado de protección informado por Windows sin cambiar la configuración de seguridad.</value></data>
-  <data name="System.Security.Action" xml:space="preserve"><value>Abrir Seguridad de Windows</value></data>
-  <data name="System.About.Title" xml:space="preserve"><value>Información de la PC</value></data>
-  <data name="System.About.Description" xml:space="preserve"><value>Consulta detalles de Windows, procesador, gráficos, memoria y almacenamiento recopilados localmente por Ralven.</value></data>
-  <data name="System.About.Action" xml:space="preserve"><value>Ver información de la PC</value></data>
-  <data name="System.Health.Title" xml:space="preserve"><value>Salud de Windows</value></data>
-  <data name="System.Health.Description" xml:space="preserve"><value>Lee la salud agregada informada por el Centro de seguridad de Windows. Ralven no cambia ajustes de seguridad ni de actualización.</value></data>
+  <data name="System.About.Title" xml:space="preserve"><value>Tu PC</value></data>
+  <data name="System.About.Description" xml:space="preserve"><value>Consulta la información principal de Windows y de tu equipo.</value></data>
+  <data name="System.Health.Title" xml:space="preserve"><value>Protección de Windows</value></data>
+  <data name="System.Health.Description" xml:space="preserve"><value>Consulta el estado del antivirus, el firewall y las actualizaciones automáticas.</value></data>
   <data name="System.Health.Antivirus" xml:space="preserve"><value>Antivirus</value></data>
   <data name="System.Health.Firewall" xml:space="preserve"><value>Firewall</value></data>
-  <data name="System.Health.AutomaticUpdates" xml:space="preserve"><value>Configuración de actualizaciones automáticas</value></data>
-  <data name="System.Health.Refresh" xml:space="preserve"><value>Actualizar salud</value></data>
-  <data name="System.Health.Status.Loading" xml:space="preserve"><value>Esperando la primera lectura local.</value></data>
-  <data name="System.Health.Status.Reading" xml:space="preserve"><value>Leyendo la salud informada por el Centro de seguridad de Windows...</value></data>
-  <data name="System.Health.Status.Ready" xml:space="preserve"><value>El Centro de seguridad de Windows proporcionó las tres lecturas de salud.</value></data>
-  <data name="System.Health.Status.Partial" xml:space="preserve"><value>Windows informó solo parte de estos datos. Las áreas no disponibles no se trataron como seguras ni inseguras.</value></data>
-  <data name="System.Health.Status.Unavailable" xml:space="preserve"><value>El Centro de seguridad de Windows no pudo proporcionar esta información.</value></data>
-  <data name="System.Health.Updated.Pending" xml:space="preserve"><value>Aún no hay una lectura de salud</value></data>
-  <data name="System.Health.UpdatedAt" xml:space="preserve"><value>Salud leída a las {0}</value></data>
-  <data name="System.Health.State.Waiting" xml:space="preserve"><value>Esperando</value></data>
-  <data name="System.Health.State.Good" xml:space="preserve"><value>Saludable</value></data>
-  <data name="System.Health.State.Attention" xml:space="preserve"><value>Requiere atención</value></data>
-  <data name="System.Health.State.NotMonitored" xml:space="preserve"><value>No monitorizado</value></data>
-  <data name="System.Health.State.Snoozed" xml:space="preserve"><value>Pospuesto</value></data>
-  <data name="System.Health.State.Unavailable" xml:space="preserve"><value>No disponible</value></data>
+  <data name="System.Health.AutomaticUpdates" xml:space="preserve"><value>Actualizaciones automáticas</value></data>
+  <data name="System.Health.Status.Loading" xml:space="preserve"><value>Esperando la primera comprobación.</value></data>
+  <data name="System.Health.Status.Reading" xml:space="preserve"><value>Comprobando la protección de Windows...</value></data>
+  <data name="System.Health.Status.Ready" xml:space="preserve"><value>Windows informó el estado de las tres protecciones.</value></data>
+  <data name="System.Health.Status.Partial" xml:space="preserve"><value>Windows solo pudo comprobar parte de esta información. Los elementos no disponibles no se consideran protegidos.</value></data>
+  <data name="System.Health.Status.Unavailable" xml:space="preserve"><value>Ralven no pudo comprobar esta información con Windows.</value></data>
+  <data name="System.Health.Updated.Pending" xml:space="preserve"><value>Aún no se ha comprobado</value></data>
+  <data name="System.Health.UpdatedAt" xml:space="preserve"><value>Comprobado a las {0}</value></data>
+  <data name="System.Health.State.Waiting" xml:space="preserve"><value>Comprobando</value></data>
+  <data name="System.Health.State.Good" xml:space="preserve"><value>Todo bien</value></data>
+  <data name="System.Health.State.Attention" xml:space="preserve"><value>Revisar</value></data>
+  <data name="System.Health.State.NotMonitored" xml:space="preserve"><value>Sin supervisión</value></data>
+  <data name="System.Health.State.Snoozed" xml:space="preserve"><value>Pausado</value></data>
+  <data name="System.Health.State.Unavailable" xml:space="preserve"><value>No se pudo comprobar</value></data>
   <data name="System.Pc.Windows" xml:space="preserve"><value>Windows</value></data>
   <data name="System.Pc.Cpu" xml:space="preserve"><value>Procesador</value></data>
   <data name="System.Pc.Gpu" xml:space="preserve"><value>Gráficos</value></data>
   <data name="System.Pc.Memory" xml:space="preserve"><value>Memoria instalada</value></data>
   <data name="System.Pc.Disk" xml:space="preserve"><value>Almacenamiento disponible</value></data>
   <data name="System.Pc.LogicalProcessors" xml:space="preserve"><value>Procesadores lógicos</value></data>
-  <data name="System.Pc.Refresh" xml:space="preserve"><value>Actualizar información de la PC</value></data>
   <data name="System.Pc.Status.Loading" xml:space="preserve"><value>Recopilando información local de la PC...</value></data>
   <data name="System.Pc.Status.Refreshing" xml:space="preserve"><value>Actualizando información local de la PC...</value></data>
-  <data name="System.Pc.Status.Ready" xml:space="preserve"><value>Ralven recopiló esta información localmente.</value></data>
+  <data name="System.Pc.Status.Ready" xml:space="preserve"><value>Información actualizada en esta PC.</value></data>
   <data name="System.Pc.Status.Stale" xml:space="preserve"><value>La actualización falló. La información recopilada anteriormente sigue visible.</value></data>
   <data name="System.Pc.Status.Unavailable" xml:space="preserve"><value>Ralven no pudo recopilar la información de la PC.</value></data>
-  <data name="System.Gaming.Title" xml:space="preserve"><value>Juegos de Windows</value></data>
-  <data name="System.Gaming.Description" xml:space="preserve"><value>Analiza y aplica localmente dos ajustes de juegos compatibles de Windows, sin depender de FiveM ni de acceso administrativo.</value></data>
+  <data name="System.Gaming.Title" xml:space="preserve"><value>Preparar Windows para juegos</value></data>
+  <data name="System.Gaming.Description" xml:space="preserve"><value>Ralven puede activar el Modo Juego y detener las grabaciones automáticas en segundo plano sin salir de la aplicación.</value></data>
   <data name="System.Gaming.GameMode" xml:space="preserve"><value>Modo Juego</value></data>
-  <data name="System.Gaming.BackgroundCapture" xml:space="preserve"><value>Grabación histórica en segundo plano</value></data>
-  <data name="System.Gaming.Target.Enabled" xml:space="preserve"><value>Destino recomendado: activado</value></data>
-  <data name="System.Gaming.Target.Disabled" xml:space="preserve"><value>Destino recomendado: desactivado</value></data>
-  <data name="System.Gaming.Refresh" xml:space="preserve"><value>Actualizar estado</value></data>
-  <data name="System.Gaming.Apply" xml:space="preserve"><value>Aplicar ajustes</value></data>
-  <data name="System.Gaming.Restore" xml:space="preserve"><value>Restaurar</value></data>
+  <data name="System.Gaming.BackgroundCapture" xml:space="preserve"><value>Grabaciones en segundo plano</value></data>
+  <data name="System.Gaming.Target.Enabled" xml:space="preserve"><value>Ralven recomienda mantenerlo activado.</value></data>
+  <data name="System.Gaming.Target.Disabled" xml:space="preserve"><value>Ralven recomienda desactivar las grabaciones automáticas.</value></data>
+  <data name="System.Gaming.Apply" xml:space="preserve"><value>Preparar para jugar</value></data>
+  <data name="System.Gaming.Restore" xml:space="preserve"><value>Deshacer</value></data>
   <data name="System.Gaming.State.Unknown" xml:space="preserve"><value>Esperando lectura</value></data>
   <data name="System.Gaming.State.Enabled" xml:space="preserve"><value>Activado</value></data>
   <data name="System.Gaming.State.Disabled" xml:space="preserve"><value>Desactivado</value></data>
-  <data name="System.Gaming.State.NotConfigured" xml:space="preserve"><value>No configurado explícitamente</value></data>
-  <data name="System.Gaming.State.Unavailable" xml:space="preserve"><value>Lectura no disponible</value></data>
-  <data name="System.Gaming.Status.Reading" xml:space="preserve"><value>Leyendo los ajustes actuales de Windows...</value></data>
-  <data name="System.Gaming.Status.Ready" xml:space="preserve"><value>Revisa los estados detectados antes de aplicar. No se promete una mejora universal de rendimiento.</value></data>
-  <data name="System.Gaming.Status.Configured" xml:space="preserve"><value>Los dos ajustes ya están en los destinos recomendados.</value></data>
-  <data name="System.Gaming.Status.Unavailable" xml:space="preserve"><value>Ralven no pudo leer uno o más valores de forma segura. No hay cambios disponibles.</value></data>
+  <data name="System.Gaming.State.NotConfigured" xml:space="preserve"><value>Valor predeterminado de Windows</value></data>
+  <data name="System.Gaming.State.Unavailable" xml:space="preserve"><value>No se pudo comprobar</value></data>
+  <data name="System.Gaming.Status.Reading" xml:space="preserve"><value>Comprobando los ajustes actuales...</value></data>
+  <data name="System.Gaming.Status.Ready" xml:space="preserve"><value>Windows aún no tiene los dos ajustes recomendados.</value></data>
+  <data name="System.Gaming.Status.Configured" xml:space="preserve"><value>Windows ya tiene los dos ajustes recomendados.</value></data>
+  <data name="System.Gaming.Status.Unavailable" xml:space="preserve"><value>Ralven no pudo comprobar uno o más ajustes de forma segura. No se cambió nada.</value></data>
   <data name="System.Gaming.Status.FiveMRunning" xml:space="preserve"><value>Cierra FiveM antes de aplicar o restaurar estos ajustes. Ralven vuelve a comprobarlo justo antes de cambiar Windows.</value></data>
   <data name="System.Gaming.Status.ProcessCheckFailed" xml:space="preserve"><value>Ralven no pudo confirmar que FiveM está cerrado. No se cambiará ningún ajuste de Windows.</value></data>
-  <data name="System.Gaming.Status.Applying" xml:space="preserve"><value>Aplicando los dos ajustes compatibles y registrando los valores actuales...</value></data>
-  <data name="System.Gaming.Status.Applied" xml:space="preserve"><value>Ajustes aplicados. Puedes solicitar la restauración aquí o desde Historial; no se sobrescribirá un valor cambiado después por otro programa.</value></data>
+  <data name="System.Gaming.Status.Applying" xml:space="preserve"><value>Preparando Windows y guardando los ajustes anteriores...</value></data>
+  <data name="System.Gaming.Status.Applied" xml:space="preserve"><value>Windows está listo con estos ajustes. Puedes deshacerlos aquí o desde Historial.</value></data>
   <data name="System.Gaming.Status.Failed" xml:space="preserve"><value>No se pudieron confirmar los ajustes. Ralven intentó deshacer cualquier cambio parcial; consulta el resultado en Historial.</value></data>
-  <data name="System.Gaming.Status.Restoring" xml:space="preserve"><value>Intentando restaurar los valores anteriores...</value></data>
-  <data name="System.Gaming.Status.Restored" xml:space="preserve"><value>Se restauraron los ajustes anteriores de juegos de Windows.</value></data>
+  <data name="System.Gaming.Status.Restoring" xml:space="preserve"><value>Deshaciendo estos ajustes...</value></data>
+  <data name="System.Gaming.Status.Restored" xml:space="preserve"><value>Se restauraron los ajustes anteriores.</value></data>
   <data name="System.Gaming.Status.RestoreFailed" xml:space="preserve"><value>No se pudieron restaurar por completo los ajustes anteriores. Consulta los detalles en Historial; no se sobrescribió un valor en conflicto.</value></data>
-  <data name="System.Gaming.Confirm.Title" xml:space="preserve"><value>¿Aplicar los ajustes de juegos de Windows?</value></data>
-  <data name="System.Gaming.Confirm.Message" xml:space="preserve"><value>Se activará el Modo Juego y se desactivará la grabación histórica en segundo plano. Los valores anteriores se guardarán localmente para que Ralven pueda intentar restaurarlos. No se eliminarán Game Bar ni las grabaciones manuales.</value></data>
+  <data name="System.Gaming.Confirm.Title" xml:space="preserve"><value>¿Preparar Windows para juegos?</value></data>
+  <data name="System.Gaming.Confirm.Message" xml:space="preserve"><value>Ralven activará el Modo Juego y desactivará las grabaciones automáticas en segundo plano. Los ajustes anteriores se guardan en esta PC para que puedas deshacer el cambio. Las grabaciones manuales siguen disponibles.</value></data>
   <data name="System.Gaming.Confirm.Cancel" xml:space="preserve"><value>Cancelar</value></data>
-  <data name="System.Gaming.Confirm.Apply" xml:space="preserve"><value>Aplicar ajustes</value></data>
-  <data name="System.Gaming.RestoreConfirm.Title" xml:space="preserve"><value>¿Restaurar los ajustes anteriores?</value></data>
+  <data name="System.Gaming.Confirm.Apply" xml:space="preserve"><value>Preparar</value></data>
+  <data name="System.Gaming.RestoreConfirm.Title" xml:space="preserve"><value>¿Deshacer estos ajustes?</value></data>
   <data name="System.Gaming.RestoreConfirm.Message" xml:space="preserve"><value>Ralven intentará restaurar solamente los valores modificados por esta operación. Un valor cambiado después por otro programa no será sobrescrito.</value></data>
   <data name="Applications.Title" xml:space="preserve"><value>Aplicaciones</value></data>
-  <data name="Applications.Subtitle" xml:space="preserve"><value>Inspecciona las aplicaciones instaladas y de inicio directamente en Ralven. Los cambios que pertenecen a Windows siguen a un clic cuando la plataforma lo exige.</value></data>
-  <data name="Applications.Installed.Title" xml:space="preserve"><value>Aplicaciones instaladas</value></data>
-  <data name="Applications.Installed.Description" xml:space="preserve"><value>Revisa las aplicaciones instaladas, el espacio usado y las opciones de desinstalación proporcionadas por Windows.</value></data>
+  <data name="Applications.Subtitle" xml:space="preserve"><value>Actualiza, instala o elimina aplicaciones compatibles en un solo lugar. Ralven confirma cada cambio contigo.</value></data>
+  <data name="Applications.Navigation.RefreshAll" xml:space="preserve"><value>Actualizar</value></data>
+  <data name="Applications.Filter.Current" xml:space="preserve"><value>Buscar en esta lista</value></data>
+  <data name="Applications.TechnicalDetails" xml:space="preserve"><value>Mostrar detalles técnicos</value></data>
+  <data name="Applications.Loading" xml:space="preserve"><value>Procesando tu solicitud de aplicaciones</value></data>
+  <data name="Applications.Advanced.Title" xml:space="preserve"><value>Más opciones</value></data>
+  <data name="Applications.Advanced.Description" xml:space="preserve"><value>Inventario local y accesos directos a los controles de Windows.</value></data>
   <data name="Applications.Installed.Action" xml:space="preserve"><value>Abrir controles de aplicaciones de Windows</value></data>
-  <data name="Applications.Startup.Title" xml:space="preserve"><value>Aplicaciones de inicio</value></data>
-  <data name="Applications.Startup.Description" xml:space="preserve"><value>Elige qué aplicaciones pueden iniciarse junto con tu sesión de Windows.</value></data>
   <data name="Applications.Startup.Action" xml:space="preserve"><value>Abrir controles de inicio de Windows</value></data>
-  <data name="Applications.StoreUpdates.Title" xml:space="preserve"><value>Actualizaciones de Microsoft Store</value></data>
-  <data name="Applications.StoreUpdates.Description" xml:space="preserve"><value>Microsoft Store controla las actualizaciones de la biblioteca y mantiene el flujo confiable de confirmación para instalarlas.</value></data>
   <data name="Applications.StoreUpdates.Action" xml:space="preserve"><value>Abrir actualizaciones de Store</value></data>
-  <data name="Applications.Defaults.Title" xml:space="preserve"><value>Aplicaciones predeterminadas</value></data>
-  <data name="Applications.Defaults.Description" xml:space="preserve"><value>Windows protege las elecciones de aplicaciones predeterminadas y exige su propia pantalla de confirmación.</value></data>
   <data name="Applications.Defaults.Action" xml:space="preserve"><value>Revisar aplicaciones predeterminadas</value></data>
   <data name="Applications.Inventory.Status.Title" xml:space="preserve"><value>Inventario local</value></data>
   <data name="Applications.Inventory.Status.Loading" xml:space="preserve"><value>Leyendo aplicaciones instaladas y de inicio…</value></data>
@@ -122,10 +194,10 @@
   <data name="Applications.Inventory.Status.Partial" xml:space="preserve"><value>No se pudieron leer algunas ubicaciones protegidas. Los resultados visibles son parciales.</value></data>
   <data name="Applications.Inventory.Status.Unavailable" xml:space="preserve"><value>Ralven no pudo leer el inventario de aplicaciones. No se modificó nada.</value></data>
   <data name="Applications.Inventory.Status.UpdatedAt" xml:space="preserve"><value>Actualizado a las {0}</value></data>
-  <data name="Applications.Inventory.ReadOnly" xml:space="preserve"><value>Este inventario es de solo lectura. Ralven no ejecuta comandos de desinstalación ni cambia el inicio de aplicaciones de terceros.</value></data>
-  <data name="Applications.Inventory.InstalledTab" xml:space="preserve"><value>Instaladas</value></data>
+  <data name="Applications.Inventory.ReadOnly" xml:space="preserve"><value>Este inventario del registro es de solo lectura. Ralven nunca ejecuta comandos de desinstalación descubiertos aquí ni cambia el inicio de aplicaciones de terceros.</value></data>
+  <data name="Applications.Inventory.InstalledTab" xml:space="preserve"><value>Instalados</value></data>
   <data name="Applications.Inventory.StartupTab" xml:space="preserve"><value>Inicio</value></data>
-  <data name="Applications.Inventory.Search" xml:space="preserve"><value>Buscar en este inventario</value></data>
+  <data name="Applications.Inventory.Search" xml:space="preserve"><value>Buscar aplicaciones</value></data>
   <data name="Applications.Inventory.Refresh" xml:space="preserve"><value>Actualizar</value></data>
   <data name="Applications.Inventory.InstalledCount" xml:space="preserve"><value>aplicaciones instaladas</value></data>
   <data name="Applications.Inventory.StartupCount" xml:space="preserve"><value>entradas de inicio</value></data>
@@ -148,8 +220,107 @@
   <data name="Applications.Inventory.Incomplete.Startup" xml:space="preserve"><value>No se pudieron listar por completo las entradas de inicio. Actualiza para volver a intentarlo.</value></data>
   <data name="Applications.Inventory.Unavailable.Installed" xml:space="preserve"><value>Las aplicaciones instaladas no están disponibles ahora. Actualiza para volver a intentarlo.</value></data>
   <data name="Applications.Inventory.Unavailable.Startup" xml:space="preserve"><value>Las entradas de inicio no están disponibles ahora. Actualiza para volver a intentarlo.</value></data>
-  <data name="Applications.Platform.Title" xml:space="preserve"><value>Acciones controladas por Windows</value></data>
-  <data name="Applications.Platform.Description" xml:space="preserve"><value>Desinstalar, cambiar aplicaciones predeterminadas y aceptar actualizaciones de Store siguen en superficies confiables de Windows mientras se amplía la administración interna de Ralven.</value></data>
+  <data name="Applications.Packages.Count" xml:space="preserve"><value>paquetes administrados</value></data>
+  <data name="Applications.Packages.Tab" xml:space="preserve"><value>Desinstalar</value></data>
+  <data name="Applications.Packages.Title" xml:space="preserve"><value>Aplicaciones administradas</value></data>
+  <data name="Applications.Packages.Description" xml:space="preserve"><value>Selecciona una aplicación para eliminar. Para las demás, usa las opciones de Windows de abajo.</value></data>
+  <data name="Applications.Packages.Status.Loading" xml:space="preserve"><value>Leyendo paquetes administrados por WinGet y Microsoft Store…</value></data>
+  <data name="Applications.Packages.Status.Ready" xml:space="preserve"><value>Paquetes administrados cargados desde los orígenes confiables.</value></data>
+  <data name="Applications.Packages.Status.Empty" xml:space="preserve"><value>No se encontró ningún paquete administrado en los orígenes confiables.</value></data>
+  <data name="Applications.Packages.Status.Partial" xml:space="preserve"><value>No se pudo leer uno de los orígenes confiables. Los resultados visibles son parciales.</value></data>
+  <data name="Applications.Packages.Status.WinGetUnavailable" xml:space="preserve"><value>WinGet no está disponible para este usuario de Windows. No se modificó nada.</value></data>
+  <data name="Applications.Packages.Status.Unavailable" xml:space="preserve"><value>Ralven no pudo leer ninguno de los orígenes confiables. No se modificó nada.</value></data>
+  <data name="Applications.Packages.Empty.Current" xml:space="preserve"><value>No se encontró ningún paquete administrado por los orígenes confiables.</value></data>
+  <data name="Applications.Packages.Empty.NoMatches" xml:space="preserve"><value>Ningún paquete administrado coincide con esta búsqueda.</value></data>
+  <data name="Applications.Packages.Empty.WinGetUnavailable" xml:space="preserve"><value>Instala o habilita Instalador de aplicaciones en Windows para usar el catálogo de aplicaciones.</value></data>
+  <data name="Applications.Packages.Empty.Unavailable" xml:space="preserve"><value>Los orígenes confiables no están disponibles ahora. Actualiza para volver a intentarlo.</value></data>
+  <data name="Applications.Packages.Source.WinGet" xml:space="preserve"><value>Comunidad WinGet</value></data>
+  <data name="Applications.Packages.Source.MicrosoftStore" xml:space="preserve"><value>Microsoft Store</value></data>
+  <data name="Applications.Packages.Install.Action" xml:space="preserve"><value>Instalar</value></data>
+  <data name="Applications.Packages.Install.ActionFor" xml:space="preserve"><value>Instalar {0}</value></data>
+  <data name="Applications.Packages.Uninstall.Action" xml:space="preserve"><value>Desinstalar</value></data>
+  <data name="Applications.Packages.Uninstall.ActionFor" xml:space="preserve"><value>Desinstalar {0}</value></data>
+  <data name="Applications.Packages.Operation.Install.Running" xml:space="preserve"><value>Instalando {0} mediante WinGet. El instalador del fabricante puede requerir tu atención.</value></data>
+  <data name="Applications.Packages.Operation.Install.Succeeded" xml:space="preserve"><value>{0} se instaló correctamente.</value></data>
+  <data name="Applications.Packages.Operation.Install.RebootRequired" xml:space="preserve"><value>{0} se instaló y Windows indica que es necesario reiniciar.</value></data>
+  <data name="Applications.Packages.Operation.Install.NoLongerAvailable" xml:space="preserve"><value>{0} ya no está disponible en este origen.</value></data>
+  <data name="Applications.Packages.Operation.Install.Cancelled" xml:space="preserve"><value>Se canceló la instalación de {0}.</value></data>
+  <data name="Applications.Packages.Operation.Install.WinGetUnavailable" xml:space="preserve"><value>{0} no se instaló porque WinGet no está disponible.</value></data>
+  <data name="Applications.Packages.Operation.Install.Failed" xml:space="preserve"><value>No se pudo instalar {0}. WinGet devolvió {1}.</value></data>
+  <data name="Applications.Packages.Operation.Update.Running" xml:space="preserve"><value>Actualizando {0} mediante WinGet. El instalador del fabricante puede requerir tu atención.</value></data>
+  <data name="Applications.Packages.Operation.Update.Succeeded" xml:space="preserve"><value>{0} se actualizó correctamente.</value></data>
+  <data name="Applications.Packages.Operation.Update.RebootRequired" xml:space="preserve"><value>{0} se actualizó y Windows indica que es necesario reiniciar.</value></data>
+  <data name="Applications.Packages.Operation.Update.NoLongerAvailable" xml:space="preserve"><value>{0} ya no tiene una actualización aplicable.</value></data>
+  <data name="Applications.Packages.Operation.Update.Cancelled" xml:space="preserve"><value>Se canceló la actualización de {0}.</value></data>
+  <data name="Applications.Packages.Operation.Update.WinGetUnavailable" xml:space="preserve"><value>{0} no se actualizó porque WinGet no está disponible.</value></data>
+  <data name="Applications.Packages.Operation.Update.Failed" xml:space="preserve"><value>No se pudo actualizar {0}. WinGet devolvió {1}.</value></data>
+  <data name="Applications.Packages.Operation.Uninstall.Running" xml:space="preserve"><value>Desinstalando {0} mediante WinGet. El desinstalador del fabricante puede requerir tu atención.</value></data>
+  <data name="Applications.Packages.Operation.Uninstall.Succeeded" xml:space="preserve"><value>{0} se desinstaló correctamente.</value></data>
+  <data name="Applications.Packages.Operation.Uninstall.RebootRequired" xml:space="preserve"><value>{0} se desinstaló y Windows indica que es necesario reiniciar.</value></data>
+  <data name="Applications.Packages.Operation.Uninstall.NoLongerAvailable" xml:space="preserve"><value>{0} ya no está instalado mediante este origen.</value></data>
+  <data name="Applications.Packages.Operation.Uninstall.Cancelled" xml:space="preserve"><value>Se canceló la eliminación de {0}.</value></data>
+  <data name="Applications.Packages.Operation.Uninstall.WinGetUnavailable" xml:space="preserve"><value>{0} no se eliminó porque WinGet no está disponible.</value></data>
+  <data name="Applications.Packages.Operation.Uninstall.Failed" xml:space="preserve"><value>No se pudo eliminar {0}. WinGet devolvió {1}.</value></data>
+  <data name="Applications.Packages.Uninstall.Confirm.Title" xml:space="preserve"><value>¿Desinstalar esta aplicación?</value></data>
+  <data name="Applications.Packages.Uninstall.Confirm.Message" xml:space="preserve"><value>Ralven pedirá a WinGet que desinstale {0} ({1}) de {2}. El desinstalador del fabricante puede abrirse y Windows puede solicitar permiso de administrador. Ralven no puede revertir esta acción.</value></data>
+  <data name="Applications.Packages.Uninstall.Confirm.Cancel" xml:space="preserve"><value>Conservar aplicación</value></data>
+  <data name="Applications.Packages.Uninstall.Confirm.Action" xml:space="preserve"><value>Desinstalar aplicación</value></data>
+  <data name="Applications.Discover.Tab" xml:space="preserve"><value>Instalar</value></data>
+  <data name="Applications.Discover.Title" xml:space="preserve"><value>Instalar aplicaciones</value></data>
+  <data name="Applications.Discover.Description" xml:space="preserve"><value>Escribe el nombre de una aplicación y confirma el resultado antes de instalar.</value></data>
+  <data name="Applications.Discover.Search" xml:space="preserve"><value>Nombre de la aplicación</value></data>
+  <data name="Applications.Discover.SearchAction" xml:space="preserve"><value>Buscar</value></data>
+  <data name="Applications.Discover.Status.Ready" xml:space="preserve"><value>Escribe el nombre de la aplicación que quieres instalar.</value></data>
+  <data name="Applications.Discover.Status.Searching" xml:space="preserve"><value>Buscando en los catálogos confiables de aplicaciones…</value></data>
+  <data name="Applications.Discover.Status.Results" xml:space="preserve"><value>Aplicaciones encontradas. Revisa el paquete exacto y el origen antes de instalar.</value></data>
+  <data name="Applications.Discover.Status.NoResults" xml:space="preserve"><value>Ninguna aplicación coincidió con la búsqueda en los orígenes confiables disponibles.</value></data>
+  <data name="Applications.Discover.Status.Unavailable" xml:space="preserve"><value>Ralven no pudo buscar en los catálogos de aplicaciones. No se modificó nada.</value></data>
+  <data name="Applications.Discover.Empty.NoResults" xml:space="preserve"><value>No hay resultados del catálogo disponibles para esta búsqueda.</value></data>
+  <data name="Applications.Discover.Confirm.Title" xml:space="preserve"><value>¿Instalar esta aplicación?</value></data>
+  <data name="Applications.Discover.Confirm.Message" xml:space="preserve"><value>Ralven pedirá a WinGet que instale {0} ({1}) de {2}. El instalador del fabricante puede abrirse y Windows puede solicitar permiso de administrador. Ralven no puede revertir esta acción. Al continuar, aceptas los términos del paquete y del origen.</value></data>
+  <data name="Applications.Discover.Confirm.Cancel" xml:space="preserve"><value>Ahora no</value></data>
+  <data name="Applications.Discover.Confirm.Action" xml:space="preserve"><value>Instalar aplicación</value></data>
+  <data name="Applications.Updates.Count" xml:space="preserve"><value>actualizaciones disponibles</value></data>
+  <data name="Applications.Updates.Tab" xml:space="preserve"><value>Actualizaciones</value></data>
+  <data name="Applications.Updates.Title" xml:space="preserve"><value>Actualizaciones de aplicaciones</value></data>
+  <data name="Applications.Updates.Description" xml:space="preserve"><value>Elige qué actualizar ahora. Ralven muestra las versiones y confirma tu selección antes de empezar.</value></data>
+  <data name="Applications.Updates.Status.Checking" xml:space="preserve"><value>Buscando actualizaciones en los catálogos confiables de aplicaciones…</value></data>
+  <data name="Applications.Updates.Status.Available" xml:space="preserve"><value>Se encontraron actualizaciones. Revisa cada versión y origen antes de instalar.</value></data>
+  <data name="Applications.Updates.Status.Current" xml:space="preserve"><value>No se encontraron actualizaciones para las aplicaciones compatibles.</value></data>
+  <data name="Applications.Updates.Status.Unavailable" xml:space="preserve"><value>Ralven no pudo consultar los catálogos confiables de aplicaciones. No se modificó nada.</value></data>
+  <data name="Applications.Updates.Empty.Unavailable" xml:space="preserve"><value>Las actualizaciones de aplicaciones no están disponibles ahora. Actualiza para volver a intentarlo.</value></data>
+  <data name="Applications.Updates.Empty.WinGetUnavailable" xml:space="preserve"><value>Instala o habilita Instalador de aplicaciones en Windows para usar las actualizaciones de WinGet.</value></data>
+  <data name="Applications.Updates.Empty.NoMatches" xml:space="preserve"><value>Ninguna actualización disponible coincide con la búsqueda.</value></data>
+  <data name="Applications.Updates.Empty.Current" xml:space="preserve"><value>No se encontraron actualizaciones de aplicaciones compatibles.</value></data>
+  <data name="Applications.Updates.Column.Id" xml:space="preserve"><value>ID del paquete</value></data>
+  <data name="Applications.Updates.Column.Installed" xml:space="preserve"><value>Instalada</value></data>
+  <data name="Applications.Updates.Column.Available" xml:space="preserve"><value>Disponible</value></data>
+  <data name="Applications.Updates.Action" xml:space="preserve"><value>Actualizar</value></data>
+  <data name="Applications.Updates.ActionFor" xml:space="preserve"><value>Actualizar {0}</value></data>
+  <data name="Applications.Updates.Confirm.Title" xml:space="preserve"><value>¿Actualizar esta aplicación?</value></data>
+  <data name="Applications.Updates.Confirm.Message" xml:space="preserve"><value>Ralven pedirá a WinGet que actualice {0} de la versión {1} a {2}, usando el origen {3}. El instalador del fabricante puede abrirse y Windows puede solicitar permiso de administrador. Esta acción está controlada por ese instalador y Ralven no puede revertirla. Al continuar, aceptas los términos del paquete y del origen.</value></data>
+  <data name="Applications.Updates.Confirm.Cancel" xml:space="preserve"><value>Ahora no</value></data>
+  <data name="Applications.Updates.Confirm.Action" xml:space="preserve"><value>Actualizar aplicación</value></data>
+  <data name="Applications.Updates.SelectAll" xml:space="preserve"><value>Seleccionar actualizaciones visibles</value></data>
+  <data name="Applications.Updates.UpdateSelected" xml:space="preserve"><value>Actualizar seleccionadas</value></data>
+  <data name="Applications.Updates.ShowIgnored" xml:space="preserve"><value>Mostrar actualizaciones ignoradas</value></data>
+  <data name="Applications.Updates.Empty.AllIgnored" xml:space="preserve"><value>Todas las actualizaciones disponibles están ignoradas. Activa “Mostrar actualizaciones ignoradas” para revisarlas.</value></data>
+  <data name="Applications.Updates.Ignore.Action" xml:space="preserve"><value>Ignorar</value></data>
+  <data name="Applications.Updates.Ignore.ActionFor" xml:space="preserve"><value>Ignorar actualizaciones de {0}</value></data>
+  <data name="Applications.Updates.Restore.Action" xml:space="preserve"><value>Restaurar</value></data>
+  <data name="Applications.Updates.Restore.ActionFor" xml:space="preserve"><value>Restaurar actualizaciones de {0}</value></data>
+  <data name="Applications.Updates.Status.Ignored" xml:space="preserve"><value>Las actualizaciones de {0} permanecerán ocultas hasta que se restauren.</value></data>
+  <data name="Applications.Updates.Status.Restored" xml:space="preserve"><value>Las actualizaciones de {0} vuelven a estar visibles.</value></data>
+  <data name="Applications.Updates.Status.IgnoreSaveFailed" xml:space="preserve"><value>Ralven no pudo guardar la preferencia de actualización ignorada. No cambió nada.</value></data>
+  <data name="Applications.Updates.Status.IgnoreLoadFailed" xml:space="preserve"><value>Las actualizaciones se cargaron, pero no se pudieron leer las preferencias anteriores de actualizaciones ignoradas. Revisa la lista visible antes de continuar.</value></data>
+  <data name="Applications.Updates.Status.BatchSucceeded" xml:space="preserve"><value>{0} aplicaciones seleccionadas se actualizaron correctamente.</value></data>
+  <data name="Applications.Updates.Status.BatchPartial" xml:space="preserve"><value>Lote completado: {0} correctas y {1} con errores o que aún requieren atención.</value></data>
+  <data name="Applications.Updates.Status.Cancelled" xml:space="preserve"><value>La secuencia de actualizaciones se canceló en un punto seguro.</value></data>
+  <data name="Applications.Updates.BatchConfirm.Title" xml:space="preserve"><value>¿Actualizar las aplicaciones seleccionadas?</value></data>
+  <data name="Applications.Updates.BatchConfirm.Message" xml:space="preserve"><value>Ralven actualizará {0} aplicaciones seleccionadas, una por una, mediante WinGet. Cada fabricante controla su instalador, puede solicitar permiso de administrador y Ralven no puede revertirlo. Al continuar, aceptas los términos de los paquetes y los orígenes.</value></data>
+  <data name="Applications.Updates.BatchConfirm.Cancel" xml:space="preserve"><value>Ahora no</value></data>
+  <data name="Applications.Updates.BatchConfirm.Action" xml:space="preserve"><value>Actualizar seleccionadas</value></data>
+  <data name="Applications.Platform.Title" xml:space="preserve"><value>Más controles de Windows</value></data>
   <data name="Greeting.Morning.WithName" xml:space="preserve"><value>Buenos días, {0}. ¿Qué haremos hoy?</value></data>
   <data name="Greeting.Morning.NoName" xml:space="preserve"><value>Buenos días. ¿Qué haremos hoy?</value></data>
   <data name="Greeting.Afternoon.WithName" xml:space="preserve"><value>Buenas tardes, {0}. ¿Qué haremos hoy?</value></data>
@@ -159,7 +330,7 @@
   <data name="Settings.About.Title" xml:space="preserve"><value>Acerca de</value></data>
   <data name="Settings.About.Description" xml:space="preserve"><value>Qué es Ralven, quién lo desarrolla y dónde encontrar ayuda.</value></data>
   <data name="Settings.About.AppName" xml:space="preserve"><value>Ralven</value></data>
-  <data name="Settings.About.Tagline" xml:space="preserve"><value>Más rendimiento. Menos complicaciones.</value></data>
+  <data name="Settings.About.Tagline" xml:space="preserve"><value>Plataforma de gestión y optimización de Windows con IA.</value></data>
   <data name="Settings.About.Repository" xml:space="preserve"><value>Código fuente en GitHub</value></data>
   <data name="Settings.About.Changelog" xml:space="preserve"><value>Historial de versiones</value></data>
   <data name="Settings.About.Discord.Title" xml:space="preserve"><value>Únete a nuestro Discord oficial</value></data>
@@ -167,8 +338,12 @@
   <data name="Settings.About.Discord.Action" xml:space="preserve"><value>Abrir Discord</value></data>
   <data name="Discord.TitleBarTooltip" xml:space="preserve"><value>Únete a nuestro Discord oficial</value></data>
   <data name="LiveAlert.Dismiss" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="LiveAlert.Reopen" xml:space="preserve"><value>Abrir aviso activo</value></data>
+  <data name="LiveAlert.Title.Info" xml:space="preserve"><value>Información de Ralven</value></data>
+  <data name="LiveAlert.Title.Important" xml:space="preserve"><value>Aviso importante de Ralven</value></data>
+  <data name="LiveAlert.Title.Critical" xml:space="preserve"><value>Aviso crítico de Ralven</value></data>
   <data name="Account.TitleBar.SignInPrompt" xml:space="preserve"><value>Iniciar sesión / Registrarse</value></data>
-  <data name="Dashboard.Refresh" xml:space="preserve"><value>Escanear PC de nuevo</value></data>
+  <data name="Dashboard.Refresh" xml:space="preserve"><value>Reanalizar</value></data>
   <data name="Dashboard.OpenOptimizer" xml:space="preserve"><value>Optimizar PC</value></data>
   <data name="Dashboard.SystemOverview" xml:space="preserve"><value>Tu computadora</value></data>
   <data name="Dashboard.Readiness" xml:space="preserve"><value>PREPARACIÓN</value></data>
@@ -191,35 +366,40 @@
   <data name="Profiles.Aggressive.Name" xml:space="preserve"><value>Agresivo</value></data>
   <data name="Profiles.Aggressive.Badge" xml:space="preserve"><value>FPS PRIMERO</value></data>
   <data name="Profiles.Aggressive.Description" xml:space="preserve"><value>Reduce efectos y configuraciones costosas para PC limitadas.</value></data>
-  <data name="Plan.VerifiedActions" xml:space="preserve"><value>{0} acciones verificadas  •  {1}</value></data>
+  <data name="Plan.VerifiedActions" xml:space="preserve"><value>Acciones verificadas: {0}  •  {1}</value></data>
   <data name="Plan.Review" xml:space="preserve"><value>Revisar plan</value></data>
   <data name="Plan.OptimizeNow" xml:space="preserve"><value>Optimizar ahora</value></data>
-  <data name="Optimizer.Title" xml:space="preserve"><value>Optimizador de FiveM</value></data>
-  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Prepara tu equipo para jugar con menos interrupciones, procesos innecesarios y problemas de caché.</value></data>
-  <data name="Optimizer.General.Title" xml:space="preserve"><value>Optimiza tu PC</value></data>
-  <data name="Optimizer.General.Subtitle" xml:space="preserve"><value>Revisa un plan transparente de Windows con acciones seguras que no requieren FiveM ni GTA V.</value></data>
+  <data name="Optimizer.Title" xml:space="preserve"><value>Optimización de Windows</value></data>
+  <data name="Optimizer.Subtitle" xml:space="preserve"><value>Revisa mejoras seguras para Windows antes de aplicarlas.</value></data>
+  <data name="Optimizer.General.Title" xml:space="preserve"><value>Optimización de Windows</value></data>
+  <data name="Optimizer.General.Subtitle" xml:space="preserve"><value>Elige un perfil y revisa qué cambiará antes de comenzar.</value></data>
   <data name="Optimizer.FiveM.Title" xml:space="preserve"><value>Optimizador de FiveM</value></data>
   <data name="Optimizer.FiveM.Subtitle" xml:space="preserve"><value>Prepara FiveM sobre GTAV Legacy con diagnósticos, ajustes y acciones reversibles dedicadas.</value></data>
   <data name="Optimizer.NoRemoteScripts" xml:space="preserve"><value>100% LOCAL</value></data>
   <data name="Optimizer.SystemReady" xml:space="preserve"><value>Sistema listo</value></data>
   <data name="Optimizer.Recommended" xml:space="preserve"><value>OPTIMIZACIÓN RECOMENDADA</value></data>
   <data name="Optimizer.Computer" xml:space="preserve"><value>Tu equipo</value></data>
-  <data name="Optimizer.Impact" xml:space="preserve"><value>IMPACTO ESPERADO</value></data>
-  <data name="Optimizer.Execution" xml:space="preserve"><value>EJECUCIÓN</value></data>
+  <data name="Optimizer.Impact" xml:space="preserve"><value>NIVEL DE CAMBIO</value></data>
+  <data name="Optimizer.Execution" xml:space="preserve"><value>ACCESO</value></data>
   <data name="Optimizer.ChangeMode" xml:space="preserve"><value>Cambiar modo</value></data>
   <data name="Optimizer.RunningTitle" xml:space="preserve"><value>Optimizando tu equipo</value></data>
-  <data name="Optimizer.ShowDetails" xml:space="preserve"><value>Mostrar detalles</value></data>
+  <data name="Optimizer.ShowDetails" xml:space="preserve"><value>Detalles técnicos</value></data>
   <data name="Optimizer.CompletedTitle" xml:space="preserve"><value>Optimización completada</value></data>
   <data name="Optimizer.Result.Failed" xml:space="preserve"><value>La optimización no se completó</value></data>
   <data name="Optimizer.Result.PartialTitle" xml:space="preserve"><value>Completado con errores</value></data>
   <data name="Optimizer.NextStep" xml:space="preserve"><value>SIGUIENTE PASO RECOMENDADO</value></data>
-  <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Plan de optimización</value></data>
-  <data name="Optimizer.AutomaticAnalysis.Header" xml:space="preserve"><value>{0} comprobaciones automáticas</value></data>
-  <data name="Optimizer.AutomaticAnalysis.Description" xml:space="preserve"><value>Ralven comprueba estos elementos automáticamente durante la optimización para conocer el estado actual del equipo. No necesitas hacer nada.</value></data>
-  <data name="Optimizer.Details.Detection" xml:space="preserve"><value>CÓMO SE DETECTA</value></data>
-  <data name="Optimizer.Details.Confirmation" xml:space="preserve"><value>CÓMO SE CONFIRMA</value></data>
-  <data name="Optimizer.Details.Undo" xml:space="preserve"><value>CÓMO DESHACER</value></data>
-  <data name="Optimizer.Details.Limitations" xml:space="preserve"><value>RIESGOS Y LIMITACIONES</value></data>
+  <data name="Optimizer.PlanTitle" xml:space="preserve"><value>Qué se ajustará</value></data>
+  <data name="Optimizer.AutomaticAnalysis.Header" xml:space="preserve"><value>Comprobaciones automáticas: {0}</value></data>
+  <data name="Optimizer.AutomaticAnalysis.Description" xml:space="preserve"><value>Comprobaciones de hardware, controladores y estabilidad. No cambian tu PC.</value></data>
+  <data name="Optimizer.ExecutionDetails" xml:space="preserve"><value>Ver pasos completados</value></data>
+  <data name="Optimizer.ResultDetails" xml:space="preserve"><value>Detalles e informe técnico</value></data>
+  <data name="Optimizer.ResultActions" xml:space="preserve"><value>RESULTADO POR AJUSTE</value></data>
+  <data name="Optimizer.Details.Risk" xml:space="preserve"><value>RIESGO</value></data>
+  <data name="Optimizer.Details.Access" xml:space="preserve"><value>ACCESO Y RESTAURACIÓN</value></data>
+  <data name="Optimizer.Details.Detection" xml:space="preserve"><value>CÓMO SE COMPRUEBA</value></data>
+  <data name="Optimizer.Details.Confirmation" xml:space="preserve"><value>DESPUÉS DE APLICAR</value></data>
+  <data name="Optimizer.Details.Undo" xml:space="preserve"><value>CÓMO RESTAURAR</value></data>
+  <data name="Optimizer.Details.Limitations" xml:space="preserve"><value>LÍMITES</value></data>
   <data name="Optimizer.Table.Action" xml:space="preserve"><value>ACCIÓN</value></data>
   <data name="Optimizer.Table.Description" xml:space="preserve"><value>QUÉ HACE</value></data>
   <data name="Optimizer.Table.Risk" xml:space="preserve"><value>RIESGO</value></data>
@@ -227,7 +407,7 @@
   <data name="Optimizer.CurrentPlan" xml:space="preserve"><value>Plan actual</value></data>
   <data name="Optimizer.RunPlan" xml:space="preserve"><value>Ejecutar plan</value></data>
   <data name="Progress.Title" xml:space="preserve"><value>Progreso</value></data>
-  <data name="Progress.CancelAfterStep" xml:space="preserve"><value>Cancelar después de este paso</value></data>
+  <data name="Progress.CancelAfterStep" xml:space="preserve"><value>Detener de forma segura</value></data>
   <data name="Progress.Elapsed" xml:space="preserve"><value>Transcurrido: {0}</value></data>
   <data name="Progress.Remaining" xml:space="preserve"><value>Quedan aproximadamente {0}</value></data>
   <data name="Progress.Calculating" xml:space="preserve"><value>Calculando estimación...</value></data>
@@ -236,10 +416,13 @@
   <data name="History.OpenLogs" xml:space="preserve"><value>Abrir carpeta de registros</value></data>
   <data name="History.LocalRuns" xml:space="preserve"><value>Ejecuciones locales</value></data>
   <data name="History.Undo" xml:space="preserve"><value>Deshacer</value></data>
+  <data name="History.ViewReport" xml:space="preserve"><value>Ver informe</value></data>
+  <data name="History.ReportUnavailable.Title" xml:space="preserve"><value>Informe no disponible</value></data>
+  <data name="History.ReportUnavailable.Message" xml:space="preserve"><value>No se pudo leer el informe local de esta ejecución. No se cambió ninguna configuración del sistema.</value></data>
   <data name="History.Table.Date" xml:space="preserve"><value>FECHA</value></data>
   <data name="History.Table.Run" xml:space="preserve"><value>EJECUCIÓN</value></data>
   <data name="History.Table.Summary" xml:space="preserve"><value>RESULTADO</value></data>
-  <data name="History.Table.Action" xml:space="preserve"><value>ROLLBACK</value></data>
+  <data name="History.Table.Action" xml:space="preserve"><value>ACCIONES</value></data>
   <data name="History.Notes.Title" xml:space="preserve"><value>Qué registra cada ejecución</value></data>
   <data name="History.Notes.Recorded" xml:space="preserve"><value>Las acciones aplicadas, el resultado tipado de cada una y el snapshot necesario para deshacer.</value></data>
   <data name="History.Notes.Rollback" xml:space="preserve"><value>El rollback restaura solo lo que esa ejecución cambió y conserva lo que modificaste después.</value></data>
@@ -248,9 +431,9 @@
   <data name="Settings.SaveFailed" xml:space="preserve"><value>No se pudo guardar la configuración. Es posible que las opciones más recientes no persistan después de reiniciar.</value></data>
   <data name="Settings.SaveRetry" xml:space="preserve"><value>Reintentar</value></data>
   <data name="Settings.General.Title" xml:space="preserve"><value>General</value></data>
-  <data name="Settings.General.Description" xml:space="preserve"><value>Elige cómo se ve, se inicia y se mantiene actualizado Ralven.</value></data>
+  <data name="Settings.General.Description" xml:space="preserve"><value>Elige cómo se ve, se inicia, funciona en segundo plano y busca actualizaciones Ralven.</value></data>
   <data name="Settings.General.Interface" xml:space="preserve"><value>Interfaz</value></data>
-  <data name="Settings.General.Startup" xml:space="preserve"><value>Inicio y segundo plano</value></data>
+  <data name="Settings.General.Startup" xml:space="preserve"><value>Inicio y área de notificación</value></data>
   <data name="Settings.General.Updates" xml:space="preserve"><value>Actualizaciones</value></data>
   <data name="Settings.Language.Title" xml:space="preserve"><value>Idioma</value></data>
   <data name="Settings.Language.Description" xml:space="preserve"><value>Sigue a Windows automáticamente o elige un idioma.</value></data>
@@ -264,15 +447,23 @@
   <data name="Settings.Appearance.System" xml:space="preserve"><value>Sistema</value></data>
   <data name="Settings.Appearance.Dark" xml:space="preserve"><value>Oscuro</value></data>
   <data name="Settings.Appearance.Light" xml:space="preserve"><value>Claro</value></data>
-  <data name="Settings.CloseBehavior.Title" xml:space="preserve"><value>Minimizar a la bandeja del sistema</value></data>
+  <data name="Settings.CloseBehavior.Title" xml:space="preserve"><value>Seguir ejecutándose en segundo plano</value></data>
   <data name="Settings.StartWithWindows.Title" xml:space="preserve"><value>Iniciar con Windows</value></data>
-  <data name="Settings.StartWithWindows.Description" xml:space="preserve"><value>Abrir Ralven después de iniciar sesión.</value></data>
-  <data name="Settings.StartMinimized.Title" xml:space="preserve"><value>Iniciar minimizado</value></data>
-  <data name="Settings.StartMinimized.Description" xml:space="preserve"><value>Al abrir con Windows, mantener Ralven en el área de notificación.</value></data>
+  <data name="Settings.StartWithWindows.Description" xml:space="preserve"><value>Abrir Ralven automáticamente después de iniciar sesión en Windows.</value></data>
+  <data name="Settings.StartMinimized.Title" xml:space="preserve"><value>Iniciar en segundo plano</value></data>
+  <data name="Settings.StartMinimized.Description" xml:space="preserve"><value>Al abrirse con Windows, iniciar solo en el área de notificación.</value></data>
   <data name="Settings.AutomaticUpdates.Title" xml:space="preserve"><value>Buscar actualizaciones automáticamente</value></data>
   <data name="Settings.AutomaticUpdates.Description" xml:space="preserve"><value>Comprobar si existe una versión pública más reciente al iniciar Ralven.</value></data>
-  <data name="Settings.UpdateNotifications.Title" xml:space="preserve"><value>Notificaciones de actualización</value></data>
-  <data name="Settings.UpdateNotifications.Description" xml:space="preserve"><value>Mostrar una notificación de Windows cuando Ralven encuentre una nueva versión.</value></data>
+  <data name="Settings.UpdateNotifications.Title" xml:space="preserve"><value>Notificarme sobre nuevas versiones</value></data>
+  <data name="Settings.UpdateNotifications.Description" xml:space="preserve"><value>Mostrar una notificación de Windows cuando la búsqueda automática encuentre una nueva versión.</value></data>
+  <data name="Settings.RestoreDefaults.Section" xml:space="preserve"><value>Valores predeterminados</value></data>
+  <data name="Settings.RestoreDefaults.Title" xml:space="preserve"><value>Restaurar la configuración predeterminada</value></data>
+  <data name="Settings.RestoreDefaults.Description" xml:space="preserve"><value>Restaura el idioma, la apariencia, el inicio, el segundo plano y las actualizaciones. La cuenta y la privacidad no cambian.</value></data>
+  <data name="Settings.RestoreDefaults.Button" xml:space="preserve"><value>Restaurar</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Title" xml:space="preserve"><value>¿Restaurar la configuración predeterminada?</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Message" xml:space="preserve"><value>Tus preferencias generales volverán a los valores predeterminados de Ralven. La configuración de cuenta y privacidad se conservará.</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Settings.RestoreDefaults.Dialog.Confirm" xml:space="preserve"><value>Restaurar</value></data>
   <data name="Safety.Limits.Title" xml:space="preserve"><value>Límites de seguridad</value></data>
   <data name="Safety.Limits.Description" xml:space="preserve"><value>Ralven nunca deshabilita Defender, el Firewall, UAC, Windows Update, el archivo de paginación o servicios críticos; no usa BCDEdit/HPET, inyección, hooks ni prioridad en tiempo real.</value></data>
   <data name="Safety.EnhancedBlocked" xml:space="preserve"><value>FiveM Enhanced: bloqueado en esta versión hasta que se pruebe su diseño oficial.</value></data>
@@ -345,12 +536,12 @@
   <data name="Plan.CloseGtaV" xml:space="preserve"><value>Cierra GTA V primero</value></data>
   <data name="Plan.Unavailable" xml:space="preserve"><value>Plan no disponible</value></data>
   <data name="Plan.RunDiagnosisAgain" xml:space="preserve"><value>Ejecuta el diagnóstico de nuevo.</value></data>
-  <data name="Plan.Elevation.UacAtRun" xml:space="preserve"><value>UAC solo al ejecutar</value></data>
-  <data name="Plan.Elevation.None" xml:space="preserve"><value>sin elevación</value></data>
-  <data name="Plan.Elevation.OnePrompt" xml:space="preserve"><value>Windows mostrará una sola solicitud de UAC.</value></data>
-  <data name="Plan.Elevation.CurrentUser" xml:space="preserve"><value>Se ejecuta como el usuario actual.</value></data>
-  <data name="Plan.Safety.Mixed" xml:space="preserve"><value>Las limpiezas permanentes se identifican en el plan. Las configuraciones tienen reversión.</value></data>
-  <data name="Plan.Safety.Reversible" xml:space="preserve"><value>Todos los cambios de este plan pueden deshacerse.</value></data>
+  <data name="Plan.Elevation.UacAtRun" xml:space="preserve"><value>Confirmación de Windows</value></data>
+  <data name="Plan.Elevation.None" xml:space="preserve"><value>Sin acceso de administrador</value></data>
+  <data name="Plan.Elevation.OnePrompt" xml:space="preserve"><value>Se solicita una vez al comenzar.</value></data>
+  <data name="Plan.Elevation.CurrentUser" xml:space="preserve"><value>Sin confirmación adicional.</value></data>
+  <data name="Plan.Safety.Mixed" xml:space="preserve"><value>Las limpiezas permanentes se identifican. Los demás ajustes pueden deshacerse.</value></data>
+  <data name="Plan.Safety.Reversible" xml:space="preserve"><value>Todos los ajustes pueden deshacerse.</value></data>
   <data name="Plan.NoAdditionalWarnings" xml:space="preserve"><value>No hay advertencias adicionales para este plan.</value></data>
   <data name="Plan.Empty.Title" xml:space="preserve"><value>No hay acciones disponibles para este diagnóstico</value></data>
   <data name="Plan.Empty.Summary" xml:space="preserve"><value>No se realizará ningún cambio hasta que el diagnóstico encuentre acciones seguras.</value></data>
@@ -359,8 +550,8 @@
   <data name="Plan.Empty.GeneralNoSafeActions" xml:space="preserve"><value>Esta PC ya cumple los objetivos seguros de Windows disponibles para el perfil seleccionado.</value></data>
   <data name="Plan.Empty.DiagnosticInProgress" xml:space="preserve"><value>Espera a que termine el diagnóstico antes de preparar acciones.</value></data>
   <data name="Plan.Empty.DiagnosticUnavailable" xml:space="preserve"><value>No se pudo completar el diagnóstico. Vuelve a analizar tu computadora antes de preparar acciones.</value></data>
-  <data name="Plan.ActionsCatalog" xml:space="preserve"><value>{0} ajustes • catálogo v{1}</value></data>
-  <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>{0} acciones completadas. {1}</value></data>
+  <data name="Plan.ActionsCatalog" xml:space="preserve"><value>Ajustes: {0}</value></data>
+  <data name="Plan.ActionsCompletedSummary" xml:space="preserve"><value>Acciones completadas: {0}. {1}</value></data>
   <data name="Diagnosis.Partial" xml:space="preserve"><value>Diagnóstico parcial</value></data>
   <data name="Diagnosis.CouldNotScanAgain" xml:space="preserve"><value>No se pudo escanear de nuevo en este momento</value></data>
   <data name="Diagnosis.FiveMLegacyDetected" xml:space="preserve"><value>FIVEM LEGACY DETECTADO</value></data>
@@ -372,15 +563,15 @@
   <data name="Diagnosis.GtaVNotFound" xml:space="preserve"><value>GTA V LEGACY NO DETECTADO</value></data>
   <data name="Diagnosis.CloseFiveMSafely" xml:space="preserve"><value>Cierra FiveM para optimizar de forma segura</value></data>
   <data name="Diagnosis.CloseGtaVSafely" xml:space="preserve"><value>Cierra GTA V para optimizar de forma segura</value></data>
-  <data name="Diagnosis.RecommendedProfile" xml:space="preserve"><value>Perfil {0} recomendado para esta PC</value></data>
+  <data name="Diagnosis.RecommendedProfile" xml:space="preserve"><value>Perfil {0} recomendado para este PC</value></data>
   <data name="Diagnosis.LegacyReady" xml:space="preserve"><value>El diagnóstico encontró el diseño Legacy conocido y preparó acciones compatibles.</value></data>
-  <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>Ralven preparó un plan de Windows según la capacidad local de esta PC. FiveM tiene una experiencia dedicada en Juegos.</value></data>
+  <data name="Diagnosis.GeneralReady" xml:space="preserve"><value>Ralven preparó un plan de Windows según la capacidad local de esta PC. Las integraciones de juegos compatibles están disponibles por separado en Juegos.</value></data>
   <data name="Diagnosis.EnhancedUnsupported" xml:space="preserve"><value>La edición Enhanced usa un nuevo launcher y una caché configurable. Esta versión no le aplicará reglas de Legacy.</value></data>
-  <data name="Diagnosis.InstallLegacy" xml:space="preserve"><value>La optimización general de Windows ya está disponible. Instala o selecciona FiveM Legacy solo para habilitar las acciones dedicadas al juego.</value></data>
+  <data name="Diagnosis.InstallLegacy" xml:space="preserve"><value>La optimización de Windows ya está disponible. Elige Juegos cuando quieras configurar una integración compatible y sus acciones específicas.</value></data>
   <data name="Diagnosis.FreeDisk" xml:space="preserve"><value>{0} GB libres</value></data>
   <data name="History.ProfileTitle" xml:space="preserve"><value>Perfil {0}</value></data>
   <data name="History.WindowsGamingTitle" xml:space="preserve"><value>Ajustes de juegos de Windows</value></data>
-  <data name="History.AdjustmentsState" xml:space="preserve"><value>{0} ajustes • {1}</value></data>
+  <data name="History.AdjustmentsState" xml:space="preserve"><value>Ajustes: {0} • {1}</value></data>
   <data name="History.Empty.Title" xml:space="preserve"><value>Aún no hay optimizaciones</value></data>
   <data name="History.Empty.Date" xml:space="preserve"><value>Historial local</value></data>
   <data name="History.Empty.Summary" xml:space="preserve"><value>Tu primera ejecución aparecerá aquí</value></data>
@@ -425,16 +616,27 @@
   <data name="Runtime.RestoreCompleted" xml:space="preserve"><value>Configuración restaurada</value></data>
   <data name="Runtime.RestoreCompletedDetail" xml:space="preserve"><value>La reversión respetó cambios más recientes y no intentó recuperar limpiezas permanentes.</value></data>
   <data name="Tray.Open" xml:space="preserve"><value>Abrir Ralven</value></data>
+  <data name="Tray.Optimize" xml:space="preserve"><value>Optimizar PC</value></data>
+  <data name="Tray.CheckUpdates" xml:space="preserve"><value>Buscar actualizaciones</value></data>
+  <data name="Tray.Settings" xml:space="preserve"><value>Configuración</value></data>
   <data name="Tray.Exit" xml:space="preserve"><value>Salir</value></data>
+  <data name="Tray.MenuName" xml:space="preserve"><value>Menú rápido de Ralven</value></data>
+  <data name="Tray.Status.Ready" xml:space="preserve"><value>Listo</value></data>
+  <data name="Tray.SessionUnavailable" xml:space="preserve"><value>No disponible</value></data>
+  <data name="Tray.Tooltip" xml:space="preserve"><value>Ralven — {0}</value></data>
+  <data name="Tray.UpdateCheck.Title" xml:space="preserve"><value>Actualizaciones de Ralven</value></data>
   <data name="Tray.Title" xml:space="preserve"><value>Ralven sigue en ejecución</value></data>
-  <data name="Tray.Message" xml:space="preserve"><value>Haz doble clic en el icono de la bandeja para volver.</value></data>
+  <data name="Tray.Message" xml:space="preserve"><value>Haz clic en el icono de la bandeja para volver.</value></data>
   <data name="Notification.UpdateAvailable.Title" xml:space="preserve"><value>Actualización de Ralven disponible</value></data>
   <data name="Notification.UpdateAvailable.Message" xml:space="preserve"><value>La versión {0} está disponible. Haz clic para abrir Ralven.</value></data>
-  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Al hacer clic en X, Ralven se minimizará a la bandeja del sistema en lugar de cerrarse.</value></data>
+  <data name="Settings.CloseBehavior.Description" xml:space="preserve"><value>Al cerrar la ventana, Ralven sigue ejecutándose en el área de notificación.</value></data>
   <data name="Settings.Telemetry.Title" xml:space="preserve"><value>Informes opcionales</value></data>
   <data name="Settings.Telemetry.Description" xml:space="preserve"><value>Comparte contexto anónimo de uso y rendimiento, además de informes depurados de errores y fallos. Está activado por defecto y puedes desactivarlo cuando quieras.</value></data>
+  <data name="Settings.Telemetry.Summary" xml:space="preserve"><value>Ayuda a mejorar Ralven con datos técnicos anónimos.</value></data>
   <data name="Settings.Privacy.Title" xml:space="preserve"><value>Privacidad</value></data>
   <data name="Settings.Privacy.Description" xml:space="preserve"><value>Consulta los diagnósticos esenciales usados para mantener Ralven confiable y controla todos los informes opcionales en un solo lugar.</value></data>
+  <data name="Settings.Privacy.DataDetails" xml:space="preserve"><value>Ver detalles</value></data>
+  <data name="Settings.Privacy.ReportContents" xml:space="preserve"><value>Ver datos de los informes</value></data>
   <data name="Settings.CrashReports.Title" xml:space="preserve"><value>Enviar reportes de fallos automáticos</value></data>
   <data name="Settings.CrashReports.Description" xml:space="preserve"><value>Envía trazas de pila depuradas cuando Ralven falla o encuentra un error inesperado.</value></data>
   <data name="PrivacyConsent.WindowTitle" xml:space="preserve"><value>Privacidad y diagnósticos - Ralven</value></data>
@@ -443,12 +645,13 @@
   <data name="PrivacyConsent.Heading.Renewal" xml:space="preserve"><value>Actualizamos nuestra política de privacidad</value></data>
   <data name="PrivacyConsent.Intro.FirstInstallation" xml:space="preserve"><value>Los informes técnicos ayudan a encontrar errores y mejorar Ralven. Los diagnósticos esenciales y los informes opcionales están separados a continuación.</value></data>
   <data name="PrivacyConsent.Intro.Upgrade" xml:space="preserve"><value>Agrupamos la telemetría anónima de uso y los informes depurados de fallos en un único control opcional. Revísalo antes de continuar.</value></data>
-  <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>Simplificamos los controles de privacidad sin añadir datos nuevos. Revisa la única opción a continuación antes de continuar.</value></data>
+  <data name="PrivacyConsent.Intro.Renewal" xml:space="preserve"><value>Actualizamos los diagnósticos de estabilidad y los informes opcionales. Revisa la única opción a continuación antes de continuar.</value></data>
   <data name="PrivacyConsent.Essential.Title" xml:space="preserve"><value>Diagnósticos esenciales</value></data>
-  <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>Recopilamos el mínimo necesario para actualizaciones, seguridad, estabilidad y diagnóstico: versión de la app y Windows, arquitectura, eventos del actualizador y resultados técnicos de optimización. No se puede desactivar.</value></data>
+  <data name="PrivacyConsent.Essential.Description" xml:space="preserve"><value>Recopilamos el mínimo necesario para actualizaciones, seguridad, estabilidad y diagnóstico: versión de la app y Windows, arquitectura, eventos del actualizador, resultados técnicos de optimización y una confirmación diaria de inicio saludable. No se puede desactivar.</value></data>
+  <data name="PrivacyConsent.Essential.Summary" xml:space="preserve"><value>Necesarios para actualizaciones, seguridad y estabilidad.</value></data>
   <data name="PrivacyConsent.Essential.Status" xml:space="preserve"><value>SIEMPRE ACTIVO</value></data>
   <data name="PrivacyConsent.Telemetry.Title" xml:space="preserve"><value>Informes opcionales</value></data>
-  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Comparte contexto anónimo de hardware, perfil y funciones usadas, además de informes depurados de errores y fallos. Está activado por defecto y puedes desactivarlo cuando quieras.</value></data>
+  <data name="PrivacyConsent.Telemetry.Description" xml:space="preserve"><value>Comparte contexto anónimo de hardware, perfil, inicio de optimización y resultados del benchmark oficial, además de informes depurados de errores y fallos. Está activado por defecto y puedes desactivarlo cuando quieras.</value></data>
   <data name="PrivacyConsent.PrivacyNote" xml:space="preserve"><value>Ralven no incluye contraseñas, datos de la cuenta, archivos personales, rutas locales completas ni un identificador único del equipo en estos informes.</value></data>
   <data name="PrivacyConsent.CrashReports.Title" xml:space="preserve"><value>Enviar reportes automáticos de errores y fallos</value></data>
   <data name="PrivacyConsent.CrashReports.Description" xml:space="preserve"><value>Trazas de pila depuradas y versión de la app cuando Ralven falla o encuentra un error inesperado.</value></data>
@@ -538,7 +741,7 @@
   <data name="BugReport.Reason.Windows" xml:space="preserve"><value>Problema de permisos de Windows o UAC</value></data>
   <data name="BugReport.Reason.Crash" xml:space="preserve"><value>Ralven se cerró o detuvo inesperadamente</value></data>
   <data name="BugReport.Validation.BugCode" xml:space="preserve"><value>Selecciona un código de error.</value></data>
-  <data name="BugReport.Clipboard.BugCode" xml:space="preserve"><value>Código del error: {0}</value></data>
+  <data name="BugReport.Clipboard.BugCode" xml:space="preserve"><value>Código del error: {0} ({1})</value></data>
   <data name="Streaming.Readiness.Protected.Title" xml:space="preserve"><value>La protección de streaming está activa</value></data>
   <data name="Streaming.Readiness.Protected.Detail" xml:space="preserve"><value>Hay una app de streaming abierta. Ralven la preserva; confirma tu estado de transmisión antes de optimizar.</value></data>
   <data name="Streaming.Readiness.Attention.Title" xml:space="preserve"><value>Haz una prueba antes de salir en vivo</value></data>
@@ -604,24 +807,24 @@
   <data name="Actions.safety.performance-diagnostics.guide.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con el mensaje de orientación.</value></data>
   <data name="Actions.safety.performance-diagnostics.guide.UndoSummary" xml:space="preserve"><value>Solo lectura: no hay nada que deshacer.</value></data>
   <data name="Actions.safety.performance-diagnostics.guide.RiskLimitations" xml:space="preserve"><value>No inyecta ningún overlay ni mide los FPS desde la aplicación; la medición la realiza el propio FiveM.</value></data>
-  <data name="Actions.safety.network-health.diagnose.Name" xml:space="preserve"><value>Diagnosticar salud de la red local</value></data>
-  <data name="Actions.safety.network-health.diagnose.Description" xml:space="preserve"><value>Lee el tipo, la velocidad del enlace y los contadores de paquetes descartados o con error de la interfaz de red activa, sin enviar tráfico a ningún servidor.</value></data>
-  <data name="Actions.safety.network-health.diagnose.DetectionSummary" xml:space="preserve"><value>Lee el tipo, la velocidad y los contadores de Windows de la interfaz activa más rápida (paquetes descartados o con errores).</value></data>
+  <data name="Actions.safety.network-health.diagnose.Name" xml:space="preserve"><value>Diagnosticar contadores de la red local</value></data>
+  <data name="Actions.safety.network-health.diagnose.Description" xml:space="preserve"><value>Lee el tipo, la velocidad del enlace y los contadores acumulados de paquetes descartados o con error de las interfaces activas, sin enviar tráfico a ningún servidor.</value></data>
+  <data name="Actions.safety.network-health.diagnose.DetectionSummary" xml:space="preserve"><value>Lee el tipo, la velocidad y los contadores acumulados por Windows para las interfaces activas (paquetes descartados o con errores).</value></data>
   <data name="Actions.safety.network-health.diagnose.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.safety.network-health.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no envía ni recibe tráfico de red.</value></data>
-  <data name="Actions.safety.network-health.diagnose.RiskLimitations" xml:space="preserve"><value>Los contadores del adaptador no miden la latencia real de aplicaciones o servidores ni sustituyen un diagnóstico de red interno.</value></data>
+  <data name="Actions.safety.network-health.diagnose.RiskLimitations" xml:space="preserve"><value>Los contadores no indican cuándo ocurrió cada evento ni miden latencia, jitter o pérdida en la ruta hacia un servicio externo.</value></data>
   <data name="Actions.safety.thermal.diagnose.Name" xml:space="preserve"><value>Diagnosticar temperatura y throttling</value></data>
   <data name="Actions.safety.thermal.diagnose.Description" xml:space="preserve"><value>Intenta leer la zona térmica ACPI expuesta por Windows; la mayoría de las placas base no la exponen sin software del fabricante, y esto se informa honestamente.</value></data>
   <data name="Actions.safety.thermal.diagnose.DetectionSummary" xml:space="preserve"><value>Consulta MSAcpi_ThermalZoneTemperature (WMI) y valida que el valor esté dentro de un rango plausible.</value></data>
   <data name="Actions.safety.thermal.diagnose.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.safety.thermal.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no hay nada que deshacer.</value></data>
   <data name="Actions.safety.thermal.diagnose.RiskLimitations" xml:space="preserve"><value>Sin el software del fabricante de la placa base o de la GPU, la mayoría de los sistemas no expone esta lectura; la aplicación nunca inventa un valor.</value></data>
-  <data name="Actions.safety.pagefile-commit.diagnose.Name" xml:space="preserve"><value>Diagnosticar archivo de paginación y memoria comprometida</value></data>
-  <data name="Actions.safety.pagefile-commit.diagnose.Description" xml:space="preserve"><value>Lee el tamaño total y disponible del archivo de paginación para advertir cuando el sistema esté cerca del límite de compromiso, sin redimensionar nada.</value></data>
-  <data name="Actions.safety.pagefile-commit.diagnose.DetectionSummary" xml:space="preserve"><value>Lee el total y el espacio disponible del archivo de paginación de Windows (GlobalMemoryStatusEx).</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.Name" xml:space="preserve"><value>Diagnosticar el límite de compromiso de memoria</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.Description" xml:space="preserve"><value>Lee el límite y el margen de compromiso disponibles para el proceso, respaldados por RAM y el archivo de paginación, sin redimensionar nada.</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.DetectionSummary" xml:space="preserve"><value>Lee ullTotalPageFile y ullAvailPageFile mediante GlobalMemoryStatusEx; estos campos representan el límite y el margen de compromiso, no solo el tamaño del archivo de paginación.</value></data>
   <data name="Actions.safety.pagefile-commit.diagnose.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.safety.pagefile-commit.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: nunca cambia el tamaño ni deshabilita el archivo de paginación.</value></data>
-  <data name="Actions.safety.pagefile-commit.diagnose.RiskLimitations" xml:space="preserve"><value>Windows ya administra automáticamente el archivo de paginación en la mayoría de los sistemas; la aplicación no modifica esa administración.</value></data>
+  <data name="Actions.safety.pagefile-commit.diagnose.RiskLimitations" xml:space="preserve"><value>El valor es el menor límite entre el sistema y el proceso. Windows administra el archivo de paginación en la mayoría de los sistemas; la aplicación no modifica esa administración.</value></data>
   <data name="Actions.fivem.legacy.cache-integrity.diagnose.Name" xml:space="preserve"><value>Diagnosticar integridad del índice de caché</value></data>
   <data name="Actions.fivem.legacy.cache-integrity.diagnose.Description" xml:space="preserve"><value>Verifica si el índice de caché de FiveM (content_index.xml) existe y está bien formado, recomendando la reparación existente cuando sea necesario.</value></data>
   <data name="Actions.fivem.legacy.cache-integrity.diagnose.DetectionSummary" xml:space="preserve"><value>Intenta abrir e interpretar como XML el content_index.xml de server-cache y server-cache-priv, si existen.</value></data>
@@ -646,12 +849,12 @@
   <data name="Actions.windows.gaming.gpu-details.diagnose.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.windows.gaming.gpu-details.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no escribe ningún valor del registro ni perfil del controlador.</value></data>
   <data name="Actions.windows.gaming.gpu-details.diagnose.RiskLimitations" xml:space="preserve"><value>La clasificación como integrada o dedicada es una estimación basada en el nombre del controlador, no una lectura de hardware garantizada.</value></data>
-  <data name="Actions.safety.ram-details.diagnose.Name" xml:space="preserve"><value>Diagnosticar frecuencia, canales y XMP/EXPO de la RAM</value></data>
-  <data name="Actions.safety.ram-details.diagnose.Description" xml:space="preserve"><value>Lee la velocidad de reloj configurada y nominal de cada módulo de RAM, estimando el estado de canal único y si XMP/EXPO parece deshabilitado.</value></data>
-  <data name="Actions.safety.ram-details.diagnose.DetectionSummary" xml:space="preserve"><value>Consulta Win32_PhysicalMemory (WMI) para obtener la capacidad, ConfiguredClockSpeed y Speed de cada módulo.</value></data>
+  <data name="Actions.safety.ram-details.diagnose.Name" xml:space="preserve"><value>Diagnosticar módulos y frecuencia de la RAM</value></data>
+  <data name="Actions.safety.ram-details.diagnose.Description" xml:space="preserve"><value>Lee la capacidad y la frecuencia configurada de cada módulo de RAM sin inferir los canales ni el estado de XMP/EXPO.</value></data>
+  <data name="Actions.safety.ram-details.diagnose.DetectionSummary" xml:space="preserve"><value>Consulta Win32_PhysicalMemory (WMI) para obtener Capacity y ConfiguredClockSpeed de cada módulo.</value></data>
   <data name="Actions.safety.ram-details.diagnose.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.safety.ram-details.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no modifica el BIOS, el perfil de memoria ni la frecuencia.</value></data>
-  <data name="Actions.safety.ram-details.diagnose.RiskLimitations" xml:space="preserve"><value>El canal y XMP/EXPO son estimaciones heurísticas; la confirmación exacta depende del BIOS/UEFI.</value></data>
+  <data name="Actions.safety.ram-details.diagnose.RiskLimitations" xml:space="preserve"><value>Win32_PhysicalMemory no confirma la topología de canales ni el perfil XMP/EXPO activo; esos datos requieren el BIOS/UEFI o una herramienta del fabricante.</value></data>
   <data name="Actions.fivem.legacy.storage-health.diagnose.Name" xml:space="preserve"><value>Diagnosticar tipo y estado de la unidad</value></data>
   <data name="Actions.fivem.legacy.storage-health.diagnose.Description" xml:space="preserve"><value>Identifica HDD, SSD o NVMe para cada unidad física y lee el estado de salud predictivo (SMART/NVMe Health), sin reparar nada.</value></data>
   <data name="Actions.fivem.legacy.storage-health.diagnose.DetectionSummary" xml:space="preserve"><value>Consulta MSFT_PhysicalDisk (Storage Management API), que cubre S.M.A.R.T. de SATA y NVMe Health sin controladores adicionales.</value></data>
@@ -678,7 +881,7 @@
   <data name="Actions.windows.gaming.session-settings.diagnose.RiskLimitations" xml:space="preserve"><value>Solo informa del estado actual; para aplicar cambios, utiliza las acciones correspondientes del perfil.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.Name" xml:space="preserve"><value>Diagnosticar señales combinadas de throttling</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.Description" xml:space="preserve"><value>Combina la caída de frecuencia bajo carga, eventos de error de hardware (WHEA) y la temperatura disponible para señalar "posible throttling", sin un sensor directo por núcleo.</value></data>
-  <data name="Actions.safety.throttling-signal.diagnose.DetectionSummary" xml:space="preserve"><value>Combina Win32_Processor (frecuencia), una muestra de uso de CPU, eventos recientes de Kernel-WHEA y la zona térmica ACPI, cuando está disponible.</value></data>
+  <data name="Actions.safety.throttling-signal.diagnose.DetectionSummary" xml:space="preserve"><value>Combina Win32_Processor (frecuencia), una muestra de uso de CPU, eventos WHEA recientes y la zona térmica ACPI, cuando está disponible.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no modifica el plan de energía, la afinidad ni la prioridad.</value></data>
   <data name="Actions.safety.throttling-signal.diagnose.RiskLimitations" xml:space="preserve"><value>Sin un sensor directo por núcleo, el resultado siempre se presenta como «posible», nunca como una certeza.</value></data>
@@ -696,16 +899,16 @@
   <data name="Actions.windows.gaming.pcie-link.diagnose.RiskLimitations" xml:space="preserve"><value>No todos los controladores o placas base exponen estas propiedades; cuando faltan, la aplicación lo informa en lugar de adivinar.</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.Name" xml:space="preserve"><value>Diagnosticar antigüedad del BIOS y estabilidad del hardware</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.Description" xml:space="preserve"><value>Lee la fecha de lanzamiento del BIOS y eventos recientes de error de hardware (WHEA) del registro de eventos de Windows.</value></data>
-  <data name="Actions.safety.hardware-stability.diagnose.DetectionSummary" xml:space="preserve"><value>Consulta Win32_BIOS (WMI) y los eventos de la fuente Microsoft-Windows-Kernel-WHEA en el registro System.</value></data>
+  <data name="Actions.safety.hardware-stability.diagnose.DetectionSummary" xml:space="preserve"><value>Consulta Win32_BIOS (WMI) y los eventos de la fuente Microsoft-Windows-WHEA-Logger en el registro System.</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no actualiza el BIOS ni borra el registro de eventos.</value></data>
   <data name="Actions.safety.hardware-stability.diagnose.RiskLimitations" xml:space="preserve"><value>Resizable BAR, Above 4G y Smart Access Memory no pueden detectarse de forma fiable sin una herramienta del fabricante; la aplicación informa esta limitación en lugar de adivinar.</value></data>
   <data name="Actions.safety.bottleneck-classification.diagnose.Name" xml:space="preserve"><value>Clasificar el tipo probable de cuello de botella</value></data>
-  <data name="Actions.safety.bottleneck-classification.diagnose.Description" xml:space="preserve"><value>Combina el uso de CPU/GPU/disco/red, memoria, temperatura y el proceso que más consume CPU para señalar el recurso más limitante en este momento.</value></data>
-  <data name="Actions.safety.bottleneck-classification.diagnose.DetectionSummary" xml:space="preserve"><value>Combina las lecturas de otros diagnósticos (uso de recursos, temperatura, red y memoria) con el proceso que más CPU consume en ese momento (Win32_PerfFormattedData_PerfProc_Process).</value></data>
+  <data name="Actions.safety.bottleneck-classification.diagnose.Description" xml:space="preserve"><value>Combina el uso de CPU/GPU/disco, memoria, temperatura y el proceso que más consume CPU para señalar el recurso más limitante en este momento.</value></data>
+  <data name="Actions.safety.bottleneck-classification.diagnose.DetectionSummary" xml:space="preserve"><value>Combina uso de recursos, temperatura, memoria, VRAM disponible y el proceso que más CPU consume en ese momento (Win32_PerfFormattedData_PerfProc_Process).</value></data>
   <data name="Actions.safety.bottleneck-classification.diagnose.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.safety.bottleneck-classification.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no termina ni prioriza ningún proceso.</value></data>
-  <data name="Actions.safety.bottleneck-classification.diagnose.RiskLimitations" xml:space="preserve"><value>Es una clasificación por eliminación basada en señales locales; una limitación externa se infiere cuando no destaca ningún recurso local, no se mide directamente.</value></data>
+  <data name="Actions.safety.bottleneck-classification.diagnose.RiskLimitations" xml:space="preserve"><value>Es una clasificación por eliminación basada en señales locales. No infiere causas externas ni usa contadores acumulados de red como evidencia de un cuello de botella actual.</value></data>
   <data name="Actions.gtav.legacy.launch-parameters.diagnose.Name" xml:space="preserve"><value>Diagnosticar parámetros de inicio de GTA V</value></data>
   <data name="Actions.gtav.legacy.launch-parameters.diagnose.Description" xml:space="preserve"><value>Lee el commandline.txt de GTA V Legacy independiente (nunca FiveM, que ignora este archivo) y advierte cuando se dejaron parámetros de reparación activos permanentemente.</value></data>
   <data name="Actions.gtav.legacy.launch-parameters.diagnose.DetectionSummary" xml:space="preserve"><value>Lee el commandline.txt de la carpeta de instalación de GTA V independiente, si existe.</value></data>
@@ -743,7 +946,7 @@
   <data name="Actions.fivem.legacy.crash-patterns.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no abre, elimina ni envía ningún volcado.</value></data>
   <data name="Actions.fivem.legacy.crash-patterns.diagnose.RiskLimitations" xml:space="preserve"><value>Es una búsqueda textual de patrones conocidos, no un análisis de volcados de memoria; que no aparezca un patrón no garantiza la ausencia del problema.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.Name" xml:space="preserve"><value>Limpiar archivos temporales antiguos</value></data>
-  <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Elimina solo los archivos temporales del usuario más antiguos que el período de retención seleccionado por el perfil.</value></data>
+  <data name="Actions.storage.user-temporary-files.clean.Description" xml:space="preserve"><value>Elimina archivos temporales antiguos que no están en uso.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.DetectionSummary" xml:space="preserve"><value>Recorre la carpeta Temp del usuario en busca de archivos que superen el período de retención.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.ConfirmationSummary" xml:space="preserve"><value>Confirma que los archivos antiguos seleccionados ya no existan después de la limpieza.</value></data>
   <data name="Actions.storage.user-temporary-files.clean.UndoSummary" xml:space="preserve"><value>Irreversible: los archivos temporales antiguos no se conservan en cuarentena.</value></data>
@@ -779,7 +982,7 @@
   <data name="Actions.fivem.legacy.auth-data.repair.UndoSummary" xml:space="preserve"><value>Puede revertirse desde la cuarentena hasta la confirmación final de la optimización; después, FiveM solicita un nuevo inicio de sesión para regenerar los datos.</value></data>
   <data name="Actions.fivem.legacy.auth-data.repair.RiskLimitations" xml:space="preserve"><value>Es una excepción documentada en docs/safety.md: ros_id.dat y las titularidades normalmente nunca se eliminan automáticamente; esta acción solo existe para el caso específico de un error detectado, nunca forma parte de perfiles automáticos y siempre usa una cuarentena reversible.</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.Name" xml:space="preserve"><value>Habilitar Modo Juego</value></data>
-  <data name="Actions.windows.gaming.game-mode.enable.Description" xml:space="preserve"><value>Habilita la función de juegos de Windows que prioriza los recursos mientras los juegos se ejecutan.</value></data>
+  <data name="Actions.windows.gaming.game-mode.enable.Description" xml:space="preserve"><value>Ayuda a Windows a priorizar recursos mientras juegas.</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.DetectionSummary" xml:space="preserve"><value>Lee el valor AutoGameModeEnabled del registro del usuario actual.</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.ConfirmationSummary" xml:space="preserve"><value>Confirma que el Modo Juego haya quedado habilitado después de la escritura.</value></data>
   <data name="Actions.windows.gaming.game-mode.enable.UndoSummary" xml:space="preserve"><value>Totalmente reversible: el valor anterior del registro se restaura durante la reversión.</value></data>
@@ -791,13 +994,13 @@
   <data name="Actions.windows.gaming.high-performance-gpu.prefer.UndoSummary" xml:space="preserve"><value>Totalmente reversible: la preferencia anterior se restaura durante la reversión.</value></data>
   <data name="Actions.windows.gaming.high-performance-gpu.prefer.RiskLimitations" xml:space="preserve"><value>Solo produce una diferencia en equipos con más de una GPU.</value></data>
   <data name="Actions.windows.gaming.background-capture.disable.Name" xml:space="preserve"><value>Deshabilitar captura en segundo plano</value></data>
-  <data name="Actions.windows.gaming.background-capture.disable.Description" xml:space="preserve"><value>Deshabilita la grabación continua en segundo plano de Windows sin eliminar Game Bar.</value></data>
+  <data name="Actions.windows.gaming.background-capture.disable.Description" xml:space="preserve"><value>Evita grabaciones automáticas en segundo plano sin eliminar Game Bar.</value></data>
   <data name="Actions.windows.gaming.background-capture.disable.DetectionSummary" xml:space="preserve"><value>Lee el valor de grabación en segundo plano (Game DVR) del registro del usuario.</value></data>
   <data name="Actions.windows.gaming.background-capture.disable.ConfirmationSummary" xml:space="preserve"><value>Confirma que la captura en segundo plano haya quedado deshabilitada.</value></data>
   <data name="Actions.windows.gaming.background-capture.disable.UndoSummary" xml:space="preserve"><value>Totalmente reversible: el valor anterior se restaura durante la reversión.</value></data>
   <data name="Actions.windows.gaming.background-capture.disable.RiskLimitations" xml:space="preserve"><value>No elimina Game Bar ni afecta las grabaciones manuales que inicies.</value></data>
   <data name="Actions.windows.power.performance-session.enable.Name" xml:space="preserve"><value>Activar un plan de energía de alto rendimiento</value></data>
-  <data name="Actions.windows.power.performance-session.enable.Description" xml:space="preserve"><value>Usa un plan de energía de rendimiento mientras está conectado y registra el estado anterior para reversión.</value></data>
+  <data name="Actions.windows.power.performance-session.enable.Description" xml:space="preserve"><value>Usa un modo de energía más potente mientras la PC está conectada.</value></data>
   <data name="Actions.windows.power.performance-session.enable.DetectionSummary" xml:space="preserve"><value>Lee el plan de energía activo y comprueba que el equipo esté conectado a la corriente.</value></data>
   <data name="Actions.windows.power.performance-session.enable.ConfirmationSummary" xml:space="preserve"><value>Confirma que el plan de rendimiento haya quedado activo.</value></data>
   <data name="Actions.windows.power.performance-session.enable.UndoSummary" xml:space="preserve"><value>Totalmente reversible: el plan anterior se restaura durante la reversión.</value></data>
@@ -916,8 +1119,8 @@
   <data name="Actions.windows.gaming.hybrid-laptop.diagnose.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.windows.gaming.hybrid-laptop.diagnose.UndoSummary" xml:space="preserve"><value>Solo lectura: no modifica la energía ni la GPU, y tampoco instala ni elimina nada.</value></data>
   <data name="Actions.windows.gaming.hybrid-laptop.diagnose.RiskLimitations" xml:space="preserve"><value>No controla el conmutador MUX ni el BIOS mediante métodos genéricos no documentados; detectar la utilidad instalada del fabricante no confirma que la laptop tenga un conmutador MUX o una GPU dedicada.</value></data>
-  <data name="Actions.windows.power.pcie-aspm.adjust.Name" xml:space="preserve"><value>Ajustar la administración de energía del estado de enlace PCI Express</value></data>
-  <data name="Actions.windows.power.pcie-aspm.adjust.Description" xml:space="preserve"><value>Deshabilita el ahorro de energía de los enlaces PCI Express (ASPM) en el esquema activo. Esto evita transiciones de ahorro del enlace, pero el efecto perceptible depende del hardware y el consumo puede aumentar.</value></data>
+  <data name="Actions.windows.power.pcie-aspm.adjust.Name" xml:space="preserve"><value>Reducir el ahorro de energía del hardware</value></data>
+  <data name="Actions.windows.power.pcie-aspm.adjust.Description" xml:space="preserve"><value>Evita transiciones de ahorro de energía en conexiones internas. Puede aumentar el consumo y la temperatura.</value></data>
   <data name="Actions.windows.power.pcie-aspm.adjust.DetectionSummary" xml:space="preserve"><value>Lee los índices AC y DC de ASPM del esquema activo mediante las API nativas PowerReadACValueIndex y PowerReadDCValueIndex.</value></data>
   <data name="Actions.windows.power.pcie-aspm.adjust.ConfirmationSummary" xml:space="preserve"><value>Vuelve a leer AC y DC y confirma Off (0) después de reactivar el esquema.</value></data>
   <data name="Actions.windows.power.pcie-aspm.adjust.UndoSummary" xml:space="preserve"><value>Totalmente reversible: restaura y confirma por separado los valores AC y DC anteriores.</value></data>
@@ -928,18 +1131,24 @@
   <data name="Actions.windows.gaming.mouse-polling-rate.guide.ConfirmationSummary" xml:space="preserve"><value>Siempre finaliza con un mensaje informativo; nunca falla por sí solo.</value></data>
   <data name="Actions.windows.gaming.mouse-polling-rate.guide.UndoSummary" xml:space="preserve"><value>Solo lectura: no modifica ninguna configuración del mouse ni del sistema.</value></data>
   <data name="Actions.windows.gaming.mouse-polling-rate.guide.RiskLimitations" xml:space="preserve"><value>No lee la tasa de sondeo real del mouse, porque no hay una API pública documentada para ello, ni correlaciona los tirones con el movimiento del mouse en tiempo real; la orientación siempre depende de la carga de CPU observada durante el diagnóstico.</value></data>
-  <data name="Actions.windows.appearance.visual-effects.reduce.Name" xml:space="preserve"><value>Reducir efectos visuales de Windows</value></data>
-  <data name="Actions.windows.appearance.visual-effects.reduce.Description" xml:space="preserve"><value>Reduce animaciones y transparencia mientras conserva la legibilidad y el suavizado de fuentes.</value></data>
+  <data name="Actions.windows.appearance.visual-effects.reduce.Name" xml:space="preserve"><value>Reducir animaciones de Windows</value></data>
+  <data name="Actions.windows.appearance.visual-effects.reduce.Description" xml:space="preserve"><value>Reduce animaciones y transparencias mientras conserva la legibilidad.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.DetectionSummary" xml:space="preserve"><value>Lee el estado actual de las animaciones y transparencias de Windows.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.ConfirmationSummary" xml:space="preserve"><value>Vuelve a leer el estado y confirma que se hayan reducido los efectos sin desactivar el suavizado de fuentes.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.UndoSummary" xml:space="preserve"><value>Totalmente reversible: el estado anterior de los efectos se restaura durante la reversión.</value></data>
   <data name="Actions.windows.appearance.visual-effects.reduce.RiskLimitations" xml:space="preserve"><value>Cambia la apariencia del escritorio; conserva la legibilidad y el suavizado de fuentes.</value></data>
-  <data name="Actions.windows.appearance.menu-show-delay.reduce.Name" xml:space="preserve"><value>Hacer más receptivos los menús de Windows</value></data>
-  <data name="Actions.windows.appearance.menu-show-delay.reduce.Description" xml:space="preserve"><value>Limita el retraso de apertura de los menús a 100 ms sin aumentar un valor que ya sea menor.</value></data>
+  <data name="Actions.windows.appearance.menu-show-delay.reduce.Name" xml:space="preserve"><value>Abrir menús con menos demora</value></data>
+  <data name="Actions.windows.appearance.menu-show-delay.reduce.Description" xml:space="preserve"><value>Agiliza los menús en cascada sin cambiar una elección que ya sea más rápida.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.DetectionSummary" xml:space="preserve"><value>Lee el retraso actual de apertura de los menús mediante la API oficial de Windows.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.ConfirmationSummary" xml:space="preserve"><value>Vuelve a leer la configuración y confirma que el retraso coincide con el objetivo aplicado.</value></data>
   <data name="Actions.windows.appearance.menu-show-delay.reduce.UndoSummary" xml:space="preserve"><value>Totalmente reversible: la reversión restaura el retraso anterior de apertura de los menús.</value></data>
-  <data name="Actions.windows.appearance.menu-show-delay.reduce.RiskLimitations" xml:space="preserve"><value>Cambia la velocidad de apertura de los menús; el efecto percibido puede variar según el equipo y el uso.</value></data>
+  <data name="Actions.windows.appearance.menu-show-delay.reduce.RiskLimitations" xml:space="preserve"><value>Cambia la velocidad de apertura de los menús de Windows; el efecto percibido puede variar según el equipo y el uso.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.Name" xml:space="preserve"><value>Usar una respuesta consistente del puntero</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.Description" xml:space="preserve"><value>Desactiva la aceleración del puntero de Windows sin cambiar la velocidad elegida por el usuario.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.DetectionSummary" xml:space="preserve"><value>Lee los umbrales y el nivel de aceleración mediante la API SystemParametersInfo de Windows.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.ConfirmationSummary" xml:space="preserve"><value>Vuelve a leer la configuración y confirma que los umbrales y el nivel de aceleración están en cero.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.UndoSummary" xml:space="preserve"><value>Totalmente reversible: restaura los tres valores anteriores sin cambiar la velocidad del puntero.</value></data>
+  <data name="Actions.windows.input.mouse-acceleration.disable.RiskLimitations" xml:space="preserve"><value>Cambia la sensación del ratón en el escritorio; los juegos con Raw Input pueden ignorar esta configuración.</value></data>
   <data name="Runtime.ApplyingAction" xml:space="preserve"><value>Aplicando {0}</value></data>
   <data name="Runtime.ActionCompleted" xml:space="preserve"><value>Completado: {0}</value></data>
   <data name="Runtime.ValidatingTransaction" xml:space="preserve"><value>Validando transacción {0}.</value></data>
@@ -951,15 +1160,15 @@
   <data name="Runtime.BrokerRestoring" xml:space="preserve"><value>Restaurando configuración administrativa</value></data>
   <data name="Plan.Notice.DiagnosticsRetention" xml:space="preserve"><value>Los diagnósticos con más de {0} días serán eliminados permanentemente.</value></data>
   <data name="Plan.Notice.ServerCacheRepair" xml:space="preserve"><value>Las cachés del servidor se reconstruirán y la primera carga puede ser más lenta; limpiar server-cache-priv también puede hacer que clips más antiguos del Editor de Rockstar no estén disponibles.</value></data>
-  <data name="Plan.Notice.AcPower" xml:space="preserve"><value>El modo de energía de rendimiento se aplica solo mientras la computadora está conectada.</value></data>
+  <data name="Plan.Notice.AcPower" xml:space="preserve"><value>El modo de rendimiento solo funciona mientras la PC está conectada.</value></data>
   <data name="Plan.Notice.AggressiveWindows" xml:space="preserve"><value>El perfil Agresivo prioriza el rendimiento y la capacidad de respuesta de Windows y puede aumentar el consumo de energía.</value></data>
   <data name="Plan.Notice.AggressiveVisual" xml:space="preserve"><value>El perfil Agresivo prioriza el FPS y la capacidad de respuesta sobre la calidad visual.</value></data>
   <data name="Results.FiveMStopped" xml:space="preserve"><value>FiveM está cerrado; es seguro continuar.</value></data>
   <data name="Results.GtaVStopped" xml:space="preserve"><value>GTA V está cerrado; es seguro continuar.</value></data>
   <data name="Results.NoAllowlistedFiles" xml:space="preserve"><value>Ningún archivo permitido coincidió con los criterios de limpieza.</value></data>
-  <data name="Results.CleanupPrepared" xml:space="preserve"><value>{0} archivo(s) preparados para limpieza ({1} bytes).</value></data>
+  <data name="Results.CleanupPrepared" xml:space="preserve"><value>Archivos preparados para la limpieza: {0} ({1} bytes).</value></data>
   <data name="Results.RegistryNoChange" xml:space="preserve"><value>Ningún valor compatible necesitó ser cambiado.</value></data>
-  <data name="Results.RegistryUpdated" xml:space="preserve"><value>{0} configuración(es) permitidas actualizadas.</value></data>
+  <data name="Results.RegistryUpdated" xml:space="preserve"><value>Configuraciones permitidas actualizadas: {0}.</value></data>
   <data name="Results.PowerOnBattery" xml:space="preserve"><value>El modo de alto rendimiento no se habilitó porque la computadora está en batería.</value></data>
   <data name="Results.PowerUnsupported" xml:space="preserve"><value>Esta computadora no expone un plan de energía de alto rendimiento compatible.</value></data>
   <data name="Results.PowerAlreadyActive" xml:space="preserve"><value>El plan de energía de alto rendimiento ya estaba activo.</value></data>
@@ -968,7 +1177,7 @@
   <data name="Results.GraphicsFiveMSettingsMissing" xml:space="preserve"><value>gta5_settings.xml aún no existe; abre FiveM una vez antes de aplicar el preset.</value></data>
   <data name="Results.GraphicsGtaSettingsMissing" xml:space="preserve"><value>settings.xml aún no existe; abre GTA V Legacy una vez antes de aplicar el preset.</value></data>
   <data name="Results.GraphicsAlreadyApplied" xml:space="preserve"><value>La configuración gráfica permitida ya coincidía con el preset solicitado.</value></data>
-  <data name="Results.GraphicsUpdated" xml:space="preserve"><value>Se creó un respaldo y se actualizaron {0} opción(es) gráfica(s).</value></data>
+  <data name="Results.GraphicsUpdated" xml:space="preserve"><value>Opciones gráficas actualizadas: {0}. Se creó una copia de seguridad.</value></data>
   <data name="Results.VisualEffectsAlreadyApplied" xml:space="preserve"><value>Los efectos visuales de Windows ya coincidían con el estado solicitado.</value></data>
   <data name="Results.VisualEffectsUpdated" xml:space="preserve"><value>Los efectos visuales de Windows se actualizaron a través de la API oficial.</value></data>
   <data name="Update.Available.Title" xml:space="preserve"><value>Ralven {0} está disponible</value></data>
@@ -984,6 +1193,8 @@
   <data name="Update.Completed.Detail" xml:space="preserve"><value>La actualización se instaló y verificó. No hace falta nada más.</value></data>
   <data name="Update.BlockedWhileBusy" xml:space="preserve"><value>Termina o cancela la optimización actual antes de actualizar.</value></data>
   <data name="Update.ReleaseNotes" xml:space="preserve"><value>Ver cambios</value></data>
+  <data name="Update.Dismiss" xml:space="preserve"><value>Cerrar por ahora</value></data>
+  <data name="Update.Reopen" xml:space="preserve"><value>Mostrar actualización disponible</value></data>
   <data name="Update.Failed.Title" xml:space="preserve"><value>La actualización no se descargó</value></data>
   <data name="Update.Failed.Detail" xml:space="preserve"><value>No se instaló nada. {0}</value></data>
   <data name="Dialog.UpdateInstall.Title" xml:space="preserve"><value>Instalar actualización verificada</value></data>
@@ -1062,9 +1273,26 @@
   <data name="Report.Failed" xml:space="preserve"><value>Falló</value></data>
   <data name="Report.RequiresRestart" xml:space="preserve"><value>Se necesita reiniciar</value></data>
   <data name="Report.RestorePossible" xml:space="preserve"><value>Restauración posible</value></data>
+  <data name="Report.Primary.Success" xml:space="preserve"><value>Se completaron {0} ajustes de forma segura.</value></data>
+  <data name="Report.Primary.NoChanges" xml:space="preserve"><value>Todo está listo. No fue necesario hacer cambios.</value></data>
+  <data name="Report.Primary.Partial" xml:space="preserve"><value>Se completaron {0} ajustes; otros necesitan atención.</value></data>
+  <data name="Report.Primary.Failed" xml:space="preserve"><value>No se completó ningún ajuste. Abre los detalles para saber por qué.</value></data>
+  <data name="Report.Primary.RollbackFailed" xml:space="preserve"><value>No se pudo confirmar la restauración. Revisa los detalles antes de intentarlo de nuevo.</value></data>
   <data name="Report.SummaryFormat" xml:space="preserve"><value>Verificado {0} · Cambiado {1} · Omitido {2} · Advertencias {3} · Falló {4}</value></data>
   <data name="Report.RestartNeeded" xml:space="preserve"><value>Se recomienda reiniciar Windows para aplicar completamente los cambios.</value></data>
   <data name="Report.RestartNotNeeded" xml:space="preserve"><value>No se requiere reiniciar.</value></data>
+  <data name="BugCode.Category.App" xml:space="preserve"><value>Aplicación</value></data>
+  <data name="BugCode.Category.Updater" xml:space="preserve"><value>Actualización</value></data>
+  <data name="BugCode.Category.Broker" xml:space="preserve"><value>Privilegios administrativos</value></data>
+  <data name="BugCode.Category.Network" xml:space="preserve"><value>Red</value></data>
+  <data name="BugCode.Category.FiveM" xml:space="preserve"><value>FiveM</value></data>
+  <data name="BugCode.Category.GtaV" xml:space="preserve"><value>GTA V</value></data>
+  <data name="BugCode.Category.Windows" xml:space="preserve"><value>Windows</value></data>
+  <data name="BugCode.Category.Config" xml:space="preserve"><value>Configuración</value></data>
+  <data name="BugCode.Category.System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="BugCode.Category.Security" xml:space="preserve"><value>Seguridad</value></data>
+  <data name="BugCode.Category.Unknown" xml:space="preserve"><value>Sin clasificar</value></data>
+  <data name="Report.ErrorCodeSuffix" xml:space="preserve"><value>Código de error: {0}</value></data>
   <data name="Report.CopyButton" xml:space="preserve"><value>Copiar reporte técnico</value></data>
   <data name="Comparison.Reason.NewThermalSignal" xml:space="preserve"><value>Apareció una nueva señal de temperatura elevada que no estaba presente antes.</value></data>
   <data name="Comparison.Reason.MemoryDropped" xml:space="preserve"><value>La memoria disponible cayó bruscamente en comparación con antes.</value></data>
@@ -1076,13 +1304,30 @@
   <data name="Settings.CheckForUpdates.Title" xml:space="preserve"><value>Buscar actualizaciones</value></data>
   <data name="Settings.CheckForUpdates.Description" xml:space="preserve"><value>Verifica manualmente, ahora mismo, si hay disponible una versión pública más reciente de Ralven.</value></data>
   <data name="Settings.CheckForUpdates.Button" xml:space="preserve"><value>Buscar actualizaciones</value></data>
+  <data name="Settings.Cache.Title" xml:space="preserve"><value>Caché de Ralven</value></data>
+  <data name="Settings.Cache.Description" xml:space="preserve"><value>Elimina solo descargas de actualizaciones, registros descartables y archivos temporales creados por Ralven. Se conservan la configuración, el inicio de sesión, los avatares, el historial, los datos de reversión y la telemetría pendiente.</value></data>
+  <data name="Settings.Cache.Button" xml:space="preserve"><value>Limpiar caché</value></data>
+  <data name="Settings.Cache.Confirm.Title" xml:space="preserve"><value>Limpiar caché de Ralven</value></data>
+  <data name="Settings.Cache.Confirm.Message" xml:space="preserve"><value>¿Limpiar ahora la caché descartable de Ralven indicada? Se conservarán la configuración, el inicio de sesión, el historial, los datos de reversión y la telemetría pendiente.</value></data>
+  <data name="Settings.Cache.Calculating" xml:space="preserve"><value>Calculando el espacio recuperable…</value></data>
+  <data name="Settings.Cache.Cleaning" xml:space="preserve"><value>Limpiando la caché…</value></data>
+  <data name="Settings.Cache.Empty" xml:space="preserve"><value>No se encontró caché recuperable de Ralven.</value></data>
+  <data name="Settings.Cache.Size" xml:space="preserve"><value>{0} recuperables en {1} archivos.</value></data>
+  <data name="Settings.Cache.SizePartial" xml:space="preserve"><value>Se encontraron {0} en {1} archivos. Se omitieron {2} ubicaciones protegidas o no disponibles.</value></data>
+  <data name="Settings.Cache.Cleaned" xml:space="preserve"><value>Caché limpiada: se liberaron {0}.</value></data>
+  <data name="Settings.Cache.Partial" xml:space="preserve"><value>Limpieza parcial: se liberaron {0} y quedan {1}. No se pudieron eliminar {2} ubicaciones de forma segura.</value></data>
+  <data name="Settings.Cache.Cancelled" xml:space="preserve"><value>La limpieza de caché se canceló de forma segura.</value></data>
+  <data name="Settings.Cache.Error" xml:space="preserve"><value>Ralven no pudo acceder a la caché ahora. No se eliminó ninguna configuración ni dato del usuario.</value></data>
+  <data name="Settings.Cache.DemoUnavailable" xml:space="preserve"><value>El acceso a la caché está desactivado en el modo de demostración.</value></data>
   <data name="Update.ManualCheck.UpToDate" xml:space="preserve"><value>Ya tienes la última versión publicada.</value></data>
   <data name="Update.ManualCheck.Failed" xml:space="preserve"><value>No se pudo buscar actualizaciones: {0}</value></data>
   <data name="GtaVBenchmark.Title" xml:space="preserve"><value>Benchmark oficial de GTA V</value></data>
   <data name="GtaVBenchmark.Description" xml:space="preserve"><value>Inicia GTA V independiente (nunca dentro de FiveM) con la propia bandera -benchmark de Rockstar, ejecuta 3 rondas e informa la mediana. GTA V debe estar cerrado primero.</value></data>
+  <data name="GtaVBenchmark.Summary" xml:space="preserve"><value>Ejecuta la prueba integrada de GTA V. Cierra el juego antes.</value></data>
+  <data name="GtaVBenchmark.Details" xml:space="preserve"><value>Cómo funciona</value></data>
   <data name="GtaVBenchmark.RunButton" xml:space="preserve"><value>Ejecutar benchmark oficial</value></data>
   <data name="GtaVBenchmark.Running" xml:space="preserve"><value>Ejecutando el benchmark oficial de GTA V (3 rondas)... esto puede tardar varios minutos.</value></data>
-  <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Mediana de {4} ronda(s) — FPS promedio: {0:0.#}, FPS mínimo: {1:0.#}, 1% bajo: {2:0.#}, 0.1% bajo: {3:0.#}.</value></data>
+  <data name="GtaVBenchmark.Result" xml:space="preserve"><value>Rondas del benchmark: {4}. Mediana — FPS promedio: {0:0.#}, FPS mínimo: {1:0.#}, 1% bajo: {2:0.#}, 0,1% bajo: {3:0.#}.</value></data>
   <data name="GtaVBenchmark.Error" xml:space="preserve"><value>No se pudo ejecutar el benchmark oficial: {0}</value></data>
   <data name="GtaVBenchmark.Failure.NotDetected" xml:space="preserve"><value>No se detectó GTA V en esta computadora.</value></data>
   <data name="GtaVBenchmark.Failure.StillRunning" xml:space="preserve"><value>GTA V sigue en ejecución. Ciérralo antes de ejecutar el benchmark oficial.</value></data>
@@ -1096,15 +1341,15 @@
   <data name="Profiles.Presentation.Light.Benefits" xml:space="preserve"><value>Libera espacio y aplica ajustes ligeros con impacto mínimo, manteniendo la calidad visual casi intacta.</value></data>
   <data name="Profiles.Presentation.Balanced.Benefits" xml:space="preserve"><value>Equilibra la calidad visual, el uso de GPU y la estabilidad de fotogramas con ajustes moderados y totalmente reversibles.</value></data>
   <data name="Profiles.Presentation.Aggressive.Benefits" xml:space="preserve"><value>Prioriza el FPS y la capacidad de respuesta sobre la calidad visual, aplicando todos los ajustes seguros disponibles.</value></data>
-  <data name="Profiles.Presentation.GeneralWindows.Light.Benefits" xml:space="preserve"><value>Limpia archivos temporales antiguos y aplica ajustes ligeros de juegos de Windows, preservando la experiencia visual.</value></data>
-  <data name="Profiles.Presentation.GeneralWindows.Balanced.Benefits" xml:space="preserve"><value>Combina limpieza segura, ajustes de juegos de Windows y un plan de energía de rendimiento reversible.</value></data>
-  <data name="Profiles.Presentation.GeneralWindows.Aggressive.Benefits" xml:space="preserve"><value>Aplica todas las acciones compatibles de Windows, incluidas reducciones reversibles de efectos visuales para una PC más ágil.</value></data>
+  <data name="Profiles.Presentation.GeneralWindows.Light.Benefits" xml:space="preserve"><value>Realiza una limpieza ligera y activa funciones de juego sin cambiar la apariencia de Windows.</value></data>
+  <data name="Profiles.Presentation.GeneralWindows.Balanced.Benefits" xml:space="preserve"><value>Reduce la actividad en segundo plano y ajusta energía y respuesta, conservando la apariencia de Windows.</value></data>
+  <data name="Profiles.Presentation.GeneralWindows.Aggressive.Benefits" xml:space="preserve"><value>Incluye todos los ajustes del perfil Equilibrado y reduce animaciones para priorizar la respuesta.</value></data>
   <data name="Profiles.Presentation.FiveMLegacy.Light.Benefits" xml:space="preserve"><value>Libera espacio y aplica ajustes ligeros de FiveM, manteniendo casi intacta la calidad visual.</value></data>
   <data name="Profiles.Presentation.FiveMLegacy.Balanced.Benefits" xml:space="preserve"><value>Equilibra la calidad visual, el uso de GPU y la estabilidad de fotogramas en FiveM con ajustes moderados y totalmente reversibles.</value></data>
   <data name="Profiles.Presentation.FiveMLegacy.Aggressive.Benefits" xml:space="preserve"><value>Prioriza la capacidad de respuesta de FiveM sobre la calidad visual, aplicando todos los ajustes dedicados y seguros disponibles.</value></data>
-  <data name="Profiles.Presentation.Impact.Low" xml:space="preserve"><value>Impacto bajo</value></data>
-  <data name="Profiles.Presentation.Impact.Moderate" xml:space="preserve"><value>Impacto moderado</value></data>
-  <data name="Profiles.Presentation.Impact.High" xml:space="preserve"><value>Impacto alto</value></data>
+  <data name="Profiles.Presentation.Impact.Low" xml:space="preserve"><value>Bajo</value></data>
+  <data name="Profiles.Presentation.Impact.Moderate" xml:space="preserve"><value>Moderado</value></data>
+  <data name="Profiles.Presentation.Impact.High" xml:space="preserve"><value>Alto</value></data>
   <data name="Category.Safety" xml:space="preserve"><value>Seguridad</value></data>
   <data name="Category.Storage" xml:space="preserve"><value>Almacenamiento</value></data>
   <data name="Category.WindowsGaming" xml:space="preserve"><value>Juegos en Windows</value></data>
@@ -1164,10 +1409,10 @@
   <data name="Dashboard.Kpi.Cores.Detail" xml:space="preserve"><value>Informados por Windows</value></data>
   <data name="Dashboard.Kpi.Memory.Title" xml:space="preserve"><value>MEMORIA LIBRE</value></data>
   <data name="Dashboard.Kpi.Memory.Detail" xml:space="preserve"><value>de {0:0.0} GB en total</value></data>
-  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHÉ DE FIVEM</value></data>
-  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisada por el optimizador</value></data>
+  <data name="Dashboard.Kpi.Cache.Title" xml:space="preserve"><value>CACHÉ DE JUEGOS</value></data>
+  <data name="Dashboard.Kpi.Cache.Detail" xml:space="preserve"><value>Revisada por la integración de juegos</value></data>
   <data name="Dashboard.Kpi.Cache.None" xml:space="preserve"><value>Ninguna</value></data>
-  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>No se encontró caché en el disco</value></data>
+  <data name="Dashboard.Kpi.Cache.NoneDetail" xml:space="preserve"><value>No se encontró caché de integración de juegos en el disco</value></data>
   <data name="Dashboard.Pressure.Low" xml:space="preserve"><value>Baja</value></data>
   <data name="Dashboard.Pressure.Moderate" xml:space="preserve"><value>Moderada</value></data>
   <data name="Dashboard.Pressure.High" xml:space="preserve"><value>Alta</value></data>
@@ -1176,6 +1421,29 @@
   <data name="Dashboard.LivePerformance.Trend" xml:space="preserve"><value>MEDIA Y PICO</value></data>
   <data name="Dashboard.LivePerformance.Window" xml:space="preserve"><value>Último minuto</value></data>
   <data name="Dashboard.LivePerformance.Now" xml:space="preserve"><value>ahora</value></data>
+  <data name="Dashboard.LivePerformance.FiveMDescription" xml:space="preserve"><value>Uso local de CPU y memoria de los procesos verificados de FiveM Legacy, sin hooks ni inyección.</value></data>
+  <data name="Dashboard.LivePerformance.Target.System" xml:space="preserve"><value>Sistema</value></data>
+  <data name="Dashboard.LivePerformance.Target.FiveM" xml:space="preserve"><value>FiveM</value></data>
+  <data name="Dashboard.LivePerformance.Target.FiveMHelp" xml:space="preserve"><value>Disponible cuando se detecta una instalación de FiveM Legacy.</value></data>
+  <data name="Dashboard.LivePerformance.Paused" xml:space="preserve"><value>EN PAUSA</value></data>
+  <data name="Dashboard.LivePerformance.PausedDetail" xml:space="preserve"><value>Actualización en pausa</value></data>
+  <data name="Dashboard.LivePerformance.UpdatedNow" xml:space="preserve"><value>Actualizado ahora</value></data>
+  <data name="Dashboard.LivePerformance.Ago60Seconds" xml:space="preserve"><value>hace 60 s</value></data>
+  <data name="Dashboard.LivePerformance.Current" xml:space="preserve"><value>ACTUAL</value></data>
+  <data name="Dashboard.LivePerformance.Average" xml:space="preserve"><value>MEDIA</value></data>
+  <data name="Dashboard.LivePerformance.Peak" xml:space="preserve"><value>PICO</value></data>
+  <data name="Dashboard.LivePerformance.ChartAutomation" xml:space="preserve"><value>Historial de {0}. Actual: {1}; media: {2}; pico: {3}.</value></data>
+  <data name="Dashboard.LivePerformance.TrendValueNetwork" xml:space="preserve"><value>media {0:0.0} MB/s · pico {1:0.0} MB/s</value></data>
+  <data name="Dashboard.LivePerformance.TrendValueGigabytes" xml:space="preserve"><value>media {0:0.0} GB · pico {1:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.GigabytesValue" xml:space="preserve"><value>{0:0.0} GB</value></data>
+  <data name="Dashboard.LivePerformance.FiveMProcessCount" xml:space="preserve"><value>Procesos verificados: {0}</value></data>
+  <data name="Dashboard.LivePerformance.Status.Collecting" xml:space="preserve"><value>Recopilando muestras suficientes para una lectura sostenida.</value></data>
+  <data name="Dashboard.LivePerformance.Status.FiveMNotRunning" xml:space="preserve"><value>FiveM no está en ejecución.</value></data>
+  <data name="Dashboard.LivePerformance.Status.FiveMReadOnly" xml:space="preserve"><value>Medición local y de solo lectura de los procesos verificados de FiveM.</value></data>
+  <data name="Dashboard.LivePerformance.Status.MetricUnavailable" xml:space="preserve"><value>Este recurso no está disponible en Windows ahora.</value></data>
+  <data name="Dashboard.LivePerformance.Status.Network" xml:space="preserve"><value>La tasa de transferencia usa su propia escala dinámica.</value></data>
+  <data name="Dashboard.LivePerformance.Status.SustainedHigh" xml:space="preserve"><value>Uso elevado sostenido durante los últimos segundos.</value></data>
+  <data name="Dashboard.LivePerformance.Status.NoSustainedHigh" xml:space="preserve"><value>Sin uso elevado sostenido en las muestras más recientes.</value></data>
   <data name="Dashboard.LastRun.Title" xml:space="preserve"><value>ÚLTIMA OPTIMIZACIÓN</value></data>
   <data name="Dashboard.LastRun.None.Title" xml:space="preserve"><value>Aún sin optimizaciones</value></data>
   <data name="Dashboard.LastRun.None.Detail" xml:space="preserve"><value>Ejecuta el optimizador para crear un punto de restauración y un informe que podrás consultar aquí.</value></data>
@@ -1237,7 +1505,7 @@
   <data name="Account.Username.Available" xml:space="preserve"><value>Este nombre de usuario está disponible.</value></data>
   <data name="Account.Username.Taken" xml:space="preserve"><value>Este nombre de usuario ya está en uso.</value></data>
   <data name="Account.Password.PolicyMinimum" xml:space="preserve"><value>Usa al menos {0} caracteres.</value></data>
-  <data name="Account.Password.PolicyRemaining" xml:space="preserve"><value>Faltan {0} carácter(es) para el mínimo de {1}.</value></data>
+  <data name="Account.Password.PolicyRemaining" xml:space="preserve"><value>Caracteres restantes: {0} (mínimo: {1}).</value></data>
   <data name="Account.Password.PolicyMet" xml:space="preserve"><value>¡Bien! Tu contraseña cumple el mínimo requerido.</value></data>
   <data name="Account.Password.ConfirmMatch" xml:space="preserve"><value>Las contraseñas coinciden.</value></data>
   <data name="Account.Password.ConfirmMismatch" xml:space="preserve"><value>Las contraseñas no coinciden.</value></data>
@@ -1307,23 +1575,24 @@
   <data name="Settings.Account.Title" xml:space="preserve"><value>Cuenta</value></data>
   <data name="Settings.Account.Plan.Title" xml:space="preserve"><value>Plan</value></data>
   <data name="Settings.Account.Plan.Free" xml:space="preserve"><value>Gratuito</value></data>
-  <data name="Settings.Account.Plan.FreeDetail" xml:space="preserve"><value>No hay ningún acceso Pro activo vinculado a esta cuenta.</value></data>
+  <data name="Settings.Account.Plan.FreeDetail" xml:space="preserve"><value>Diagnóstico completo, perfiles gratuitos, historial y restauración. Descubre Pro para rutinas personales y comparaciones locales continuas.</value></data>
   <data name="Settings.Account.Plan.ProUntil" xml:space="preserve"><value>Pro hasta {0}</value></data>
   <data name="Settings.Account.Plan.ProDetail" xml:space="preserve"><value>Acceso Pro confirmado por los servidores de Ralven.</value></data>
   <data name="Settings.Account.Plan.Unavailable" xml:space="preserve"><value>No se pudo confirmar tu plan</value></data>
   <data name="Settings.Account.Plan.UnavailableDetail" xml:space="preserve"><value>No se pudo verificar tu acceso actual. Ninguna función Pro se habilita mientras este estado no esté disponible.</value></data>
   <data name="Settings.Account.Plan.Refresh" xml:space="preserve"><value>Actualizar</value></data>
+  <data name="Settings.Account.Plan.Details" xml:space="preserve"><value>Ver detalles del plan</value></data>
   <data name="Settings.Account.ChangePhoto" xml:space="preserve"><value>Cambiar foto</value></data>
   <data name="Settings.Account.PhotoLocalOnly" xml:space="preserve"><value>La foto de perfil se guarda solo en este equipo.</value></data>
   <data name="Settings.Account.Unavailable" xml:space="preserve"><value>El acceso a la cuenta no está disponible en esta instalación.</value></data>
   <data name="Report.ViewHistoryButton" xml:space="preserve"><value>Ver historial</value></data>
   <data name="Settings.Account.CurrentPasswordPlaceholder" xml:space="preserve"><value>Confirma para cambiar tu contraseña, correo o eliminar la cuenta</value></data>
   <data name="Settings.Account.Delete" xml:space="preserve"><value>Eliminar cuenta</value></data>
-  <data name="Settings.Tools.Title" xml:space="preserve"><value>Herramientas</value></data>
-  <data name="Settings.Tools.Description" xml:space="preserve"><value>Acciones de mantenimiento y soporte para usar solo cuando sea necesario.</value></data>
+  <data name="Settings.Tools.Title" xml:space="preserve"><value>Diagnóstico y soporte</value></data>
+  <data name="Settings.Tools.Description" xml:space="preserve"><value>Mide GTA V, informa problemas y encuentra ayuda cuando la necesites.</value></data>
   <data name="Settings.Account.CurrentPasswordLabel" xml:space="preserve"><value>Contraseña actual</value></data>
   <data name="Settings.Account.RemovePhoto" xml:space="preserve"><value>Quitar</value></data>
-  <data name="Progress.CancelHelp" xml:space="preserve"><value>La cancelación se solicita de forma segura después de la acción actual.</value></data>
+  <data name="Progress.CancelHelp" xml:space="preserve"><value>El paso actual termina antes de detenerse.</value></data>
   <data name="Settings.Account.Security.Title" xml:space="preserve"><value>Seguridad</value></data>
   <data name="Settings.Account.Security.Description" xml:space="preserve"><value>Administra la credencial utilizada para acceder a tu cuenta.</value></data>
   <data name="Settings.Account.PasswordLabel" xml:space="preserve"><value>Contraseña</value></data>
@@ -1433,7 +1702,7 @@
   <data name="ActionResults.StartupLoad.PartialSuffix" xml:space="preserve"><value> Lectura parcial: no se pudieron consultar algunas fuentes de inicio.</value></data>
   <data name="ActionResults.StartupLoad.NoItems" xml:space="preserve"><value>No se encontraron elementos de inicio en las fuentes supervisadas.</value></data>
   <data name="ActionResults.StartupLoad.NoItemsAccessible" xml:space="preserve"><value>No se encontraron elementos de inicio en las fuentes accesibles.</value></data>
-  <data name="ActionResults.StartupLoad.Summary" xml:space="preserve"><value>Se detectaron {0} elemento(s) de inicio (registro: {1}; carpetas: {2}). La cantidad por sí sola no determina el impacto; revisa el impacto medido en el Administrador de tareas.</value></data>
+  <data name="ActionResults.StartupLoad.Summary" xml:space="preserve"><value>Elementos de inicio detectados: {0} (registro: {1}; carpetas: {2}). La cantidad por sí sola no determina el impacto; revisa el impacto medido en el Administrador de tareas.</value></data>
   <data name="ActionResults.TrimStatus.AccessDenied" xml:space="preserve"><value>Windows no permitió consultar la política de TRIM sin elevación; no se modificó ningún volumen.</value></data>
   <data name="ActionResults.TrimStatus.Unsupported" xml:space="preserve"><value>Esta instalación de Windows no admite la consulta de la política de TRIM.</value></data>
   <data name="ActionResults.TrimStatus.Unavailable" xml:space="preserve"><value>No se pudo consultar la política de TRIM en este momento.</value></data>
@@ -1448,4 +1717,312 @@
   <data name="ActionResults.MouseAcceleration.Inactive" xml:space="preserve"><value>La aceleración del puntero de Windows está desactivada (umbrales {0}/{1}).</value></data>
   <data name="ActionResults.MenuShowDelay.AlreadyOptimized" xml:space="preserve"><value>El retraso de apertura de los menús de Windows ya estaba optimizado.</value></data>
   <data name="ActionResults.MenuShowDelay.Applied" xml:space="preserve"><value>Se ajustó la respuesta de apertura de los menús de Windows.</value></data>
-</root>
+  <data name="ActionResults.PointerResponse.Unavailable" xml:space="preserve"><value>No se pudo consultar la configuración del puntero de Windows; no se realizó ningún cambio.</value></data>
+  <data name="ActionResults.PointerResponse.AlreadyConsistent" xml:space="preserve"><value>La aceleración del puntero de Windows ya estaba desactivada.</value></data>
+  <data name="ActionResults.PointerResponse.Applied" xml:space="preserve"><value>Se desactivó la aceleración del puntero de Windows. Se conservó la velocidad elegida.</value></data>
+  <data name="Ultra.Name" xml:space="preserve"><value>Personal</value></data>
+  <data name="Ultra.Exclusive" xml:space="preserve"><value>Espacio personal · Ralven Pro</value></data>
+  <data name="Ultra.Description" xml:space="preserve"><value>Un plan para Windows según tu rutina y preferencias, con seguimiento local y comparaciones guiadas.</value></data>
+  <data name="Ultra.AccessRequired" xml:space="preserve"><value>El espacio personal forma parte de Pro. Abre Ralven Pro para consultar tu plan.</value></data>
+  <data name="Ultra.Profiles" xml:space="preserve"><value>Tus rutinas</value></data>
+  <data name="Ultra.Usage.Label" xml:space="preserve"><value>Elige una rutina</value></data>
+  <data name="Ultra.Usage.Everyday" xml:space="preserve"><value>Uso diario</value></data>
+  <data name="Ultra.Usage.Gaming" xml:space="preserve"><value>Juegos</value></data>
+  <data name="Ultra.Usage.Streaming" xml:space="preserve"><value>Transmisión y grabación</value></data>
+  <data name="Ultra.Usage.Work" xml:space="preserve"><value>Trabajo y estudio</value></data>
+  <data name="Ultra.Usage.Everyday.Detail" xml:space="preserve"><value>Conserva la comodidad del escritorio y abre menús más rápido. El consumo adicional y la limpieza empiezan desactivados.</value></data>
+  <data name="Ultra.Usage.Gaming.Detail" xml:space="preserve"><value>Incluye el Modo Juego de Windows y elige si conservas clips y efectos del escritorio. El plan final muestra cada ajuste.</value></data>
+  <data name="Ultra.Usage.Streaming.Detail" xml:space="preserve"><value>Conserva la grabación en segundo plano de Windows por defecto. Ralven nunca cierra OBS, Streamlabs ni tus aplicaciones de trabajo.</value></data>
+  <data name="Ultra.Usage.Work.Detail" xml:space="preserve"><value>Conserva la apariencia y la grabación. El Modo Juego se mantiene; no se modifican programas de trabajo, inicio ni servicios.</value></data>
+  <data name="Ultra.Smart.Title" xml:space="preserve"><value>Plan inteligente</value></data>
+  <data name="Ultra.Smart.NeedsDiagnosis" xml:space="preserve"><value>Ejecuta un análisis del PC para adaptar esta rutina al hardware y la carga actuales.</value></data>
+  <data name="Ultra.Smart.HighPressure" xml:space="preserve"><value>Se detectó una presión alta de recursos. La recomendación reduce efectos del escritorio y conserva aplicaciones, servicios y seguridad.</value></data>
+  <data name="Ultra.Smart.StreamingDetected" xml:space="preserve"><value>Se detectó software de transmisión. La recomendación conserva la grabación y adapta energía y entrada a esta rutina.</value></data>
+  <data name="Ultra.Smart.Ready" xml:space="preserve"><value>La recomendación adapta la captura en segundo plano, la energía conectado a la corriente y la respuesta del puntero a esta rutina.</value></data>
+  <data name="Ultra.Smart.Apply" xml:space="preserve"><value>Crear recomendación para este PC</value></data>
+  <data name="Ultra.Smart.Applied" xml:space="preserve"><value>Recomendación creada. Revisa las opciones marcadas y la vista previa final de las acciones.</value></data>
+  <data name="Ultra.PreserveAppearance" xml:space="preserve"><value>Conservar animaciones y apariencia de Windows</value></data>
+  <data name="Ultra.PreserveCapture" xml:space="preserve"><value>Conservar la grabación en segundo plano de Windows</value></data>
+  <data name="Ultra.AllowPower" xml:space="preserve"><value>Permitir mayor consumo conectado a la corriente</value></data>
+  <data name="Ultra.CleanTemp" xml:space="preserve"><value>Eliminar temporales de más de 30 días</value></data>
+  <data name="Ultra.ConsistentPointer" xml:space="preserve"><value>Usar una respuesta consistente del puntero (desactivar aceleración de Windows)</value></data>
+  <data name="Ultra.Preferences.Help" xml:space="preserve"><value>Un mayor consumo puede aumentar el calor y el ruido. Borrar temporales no se puede deshacer. Guardar una rutina no la aplica; revisa las acciones antes de optimizar.</value></data>
+  <data name="Ultra.Profile.Save" xml:space="preserve"><value>Guardar esta rutina</value></data>
+  <data name="Ultra.Profile.Saved" xml:space="preserve"><value>Rutina guardada en este PC. No se modificó ninguna configuración de Windows.</value></data>
+  <data name="Ultra.Tracking.Title" xml:space="preserve"><value>Seguir cambios de este PC</value></data>
+  <data name="Ultra.Tracking.Help" xml:space="preserve"><value>Lecturas locales opcionales cada 15 minutos con Ralven abierto y en nuevos análisis. Sigue Modo Juego, grabación en segundo plano, aceleración del puntero y poco espacio en disco. Hardware y Windows se actualizan en un nuevo análisis. Ningún ajuste se reaplica automáticamente.</value></data>
+  <data name="Ultra.Tracking.Empty" xml:space="preserve"><value>Todavía no hay referencia. Elige el estado actual del PC para empezar.</value></data>
+  <data name="Ultra.Tracking.Active" xml:space="preserve"><value>Seguimiento activo · última lectura: {0}</value></data>
+  <data name="Ultra.Tracking.Paused" xml:space="preserve"><value>Seguimiento pausado · última lectura guardada: {0}</value></data>
+  <data name="Ultra.Tracking.Start" xml:space="preserve"><value>Usar el estado actual como referencia</value></data>
+  <data name="Ultra.Tracking.Check" xml:space="preserve"><value>Comprobar cambios ahora</value></data>
+  <data name="Ultra.Tracking.Stop" xml:space="preserve"><value>Pausar seguimiento</value></data>
+  <data name="Ultra.Tracking.Started" xml:space="preserve"><value>Referencia guardada. El seguimiento solo lee configuraciones; nunca las cambia.</value></data>
+  <data name="Ultra.Tracking.Stopped" xml:space="preserve"><value>Seguimiento pausado. Se conservaron los registros existentes.</value></data>
+  <data name="Ultra.Tracking.NoChanges" xml:space="preserve"><value>Todavía no se han registrado cambios entre lecturas.</value></data>
+  <data name="Ultra.Change.Hardware" xml:space="preserve"><value>El hardware detectado difiere del análisis anterior.</value></data>
+  <data name="Ultra.Change.Windows" xml:space="preserve"><value>Cambió la versión detectada de Windows.</value></data>
+  <data name="Ultra.Change.GameMode" xml:space="preserve"><value>Cambió la configuración del Modo Juego de Windows.</value></data>
+  <data name="Ultra.Change.BackgroundCapture" xml:space="preserve"><value>Cambió la configuración de grabación en segundo plano de Windows.</value></data>
+  <data name="Ultra.Change.LowDiskSpace" xml:space="preserve"><value>El espacio libre en la unidad del sistema bajó de 10 GB.</value></data>
+  <data name="Ultra.Change.PointerAcceleration" xml:space="preserve"><value>Cambió la configuración de aceleración del puntero de Windows.</value></data>
+  <data name="Ultra.Measure.Title" xml:space="preserve"><value>Comparar la misma actividad</value></data>
+  <data name="Ultra.Measure.Help" xml:space="preserve"><value>1. Elige una rutina y nombra la tarea. 2. Ejecuta la misma actividad durante 30 muestras (unos 30 segundos). 3. Repite en las mismas condiciones después de revisar tu plan. Los valores muestran uso de recursos, no FPS ni prueba de mejora. No compares reposo con un juego o renderizado.</value></data>
+  <data name="Ultra.Measure.Context" xml:space="preserve"><value>Nombre de la tarea (repite el nombre para comparar)</value></data>
+  <data name="Ultra.Measure.ContextRequired" xml:space="preserve"><value>Indica un nombre de tarea de 1 a 80 caracteres y analiza el PC antes de medir.</value></data>
+  <data name="Ultra.Measure.Start" xml:space="preserve"><value>Recoger 30 muestras</value></data>
+  <data name="Ultra.Measure.Progress" xml:space="preserve"><value>Recogiendo recursos: {0}/30 muestras. Continúa la misma actividad.</value></data>
+  <data name="Ultra.Measure.Saved" xml:space="preserve"><value>Medición guardada localmente. Repite la misma tarea para comparar.</value></data>
+  <data name="Ultra.Measure.Empty" xml:space="preserve"><value>Aún no hay mediciones. El historial de optimizaciones existente sigue disponible para todos.</value></data>
+  <data name="Ultra.Measure.NeedMatch" xml:space="preserve"><value>Todavía no hay un par compatible. Usa el mismo nombre de tarea, rutina, hardware y versión de Windows. No se emparejan lecturas largas o incompletas.</value></data>
+  <data name="Ultra.Measure.Difference" xml:space="preserve"><value>De {0} a {1}
+Diferencia en puntos porcentuales: CPU {2} · GPU {3} · RAM {4} · Disco {5}.
+Un menor uso por sí solo no demuestra un mejor rendimiento.</value></data>
+  <data name="Ultra.Measure.Record" xml:space="preserve"><value>{0} · {1} · {2}
+Media CPU {3} · GPU {4} · RAM {5} · Disco {6}</value></data>
+  <data name="Ultra.Unavailable" xml:space="preserve"><value>No disponible</value></data>
+  <data name="Ultra.Storage.Error" xml:space="preserve"><value>No se pudieron leer los datos personales. Se conservó el archivo existente. La optimización gratuita sigue disponible.</value></data>
+  <data name="Ultra.Operation.Cancel" xml:space="preserve"><value>Cancelar esta lectura</value></data>
+  <data name="Ultra.Operation.Cancelled" xml:space="preserve"><value>Operación cancelada. Se conservaron los registros existentes.</value></data>
+  <data name="Ultra.Operation.Failed" xml:space="preserve"><value>No se pudo completar esta operación. Revisa el análisis del PC y el acceso al almacenamiento local e inténtalo de nuevo. No se registró ningún éxito.</value></data>
+  <data name="Optimizer.PrepareAgain" xml:space="preserve"><value>Preparar otra optimización</value></data>
+  <data name="Pro.Title" xml:space="preserve"><value>Ralven Pro</value></data>
+  <data name="Pro.Headline" xml:space="preserve"><value>Lo esencial ya es gratis. Pro simplifica tu rutina.</value></data>
+  <data name="Pro.Subtitle" xml:space="preserve"><value>Diagnostica, optimiza y restaura tu PC con Free. Elige Pro para repetir menos ajustes y usar con más tranquilidad la configuración que encaja con tu día.</value></data>
+  <data name="Pro.Free.Tagline" xml:space="preserve"><value>Para diagnosticar y optimizar con control total</value></data>
+  <data name="Pro.Free.Price" xml:space="preserve"><value>R$ 0</value></data>
+  <data name="Pro.Free.PerMonth" xml:space="preserve"><value>Sin suscripción</value></data>
+  <data name="Pro.Free.Status" xml:space="preserve"><value>Todo lo siguiente sigue disponible sin pagar.</value></data>
+  <data name="Pro.Free.Continue" xml:space="preserve"><value>Continuar con Free</value></data>
+  <data name="Pro.Pro.Tagline" xml:space="preserve"><value>Para una rutina más práctica y personalizada</value></data>
+  <data name="Pro.Badge" xml:space="preserve"><value>RECOMENDADO</value></data>
+  <data name="Pro.Benefits.Title" xml:space="preserve"><value>Todo lo de Free, más:</value></data>
+  <data name="Pro.Ai.Title" xml:space="preserve"><value>Habla con Ralven AI sobre tu PC</value></data>
+  <data name="Pro.Ai.Description" xml:space="preserve"><value>Recibe una explicación sencilla del diagnóstico y una recomendación segura de perfil para revisar antes de aplicar cualquier cambio.</value></data>
+  <data name="Pro.Routines.Title" xml:space="preserve"><value>Guarda una rutina para cada momento</value></data>
+  <data name="Pro.Routines.Description" xml:space="preserve"><value>Conserva distintas preferencias para juegos, transmisiones, trabajo y uso diario, con recomendaciones basadas en el último análisis.</value></data>
+  <data name="Pro.Tracking.Title" xml:space="preserve"><value>Detecta cambios sin comprobarlo todo de nuevo</value></data>
+  <data name="Pro.Tracking.Description" xml:space="preserve"><value>Activa lecturas locales mientras Ralven está abierto. Consulta cambios en los ajustes de juegos, el puntero y el espacio en disco, sin ajustes automáticos.</value></data>
+  <data name="Pro.Measurements.Title" xml:space="preserve"><value>Compara lo que realmente cambió</value></data>
+  <data name="Pro.Measurements.Description" xml:space="preserve"><value>Registra muestras comparables de 30 segundos de CPU, GPU, memoria y disco, y conserva o exporta tu historial local.</value></data>
+  <data name="Pro.Honesty" xml:space="preserve"><value>Pro aporta contexto y comodidad, no ajustes milagrosos. Los resultados siguen dependiendo del hardware y de la actividad, y el uso de recursos no es un benchmark de FPS.</value></data>
+  <data name="Pro.Explore" xml:space="preserve"><value>Ver herramientas Pro en el Optimizador</value></data>
+  <data name="Pro.PlanName" xml:space="preserve"><value>Ralven Pro · mensual</value></data>
+  <data name="Pro.PerMonth" xml:space="preserve"><value>al mes · cobro recurrente en BRL</value></data>
+  <data name="Pro.Price.Unavailable" xml:space="preserve"><value>Consulta la disponibilidad</value></data>
+  <data name="Pro.Status.Demo" xml:space="preserve"><value>Modo de presentación</value></data>
+  <data name="Pro.Status.SignedOut" xml:space="preserve"><value>Primero, tu cuenta</value></data>
+  <data name="Pro.Status.Unavailable" xml:space="preserve"><value>No se pudo consultar tu suscripción</value></data>
+  <data name="Pro.Status.Free" xml:space="preserve"><value>Tu plan Free sigue completo</value></data>
+  <data name="Pro.Status.Cancelled" xml:space="preserve"><value>Renovación cancelada</value></data>
+  <data name="Pro.Status.Paid" xml:space="preserve"><value>Período pagado confirmado</value></data>
+  <data name="Pro.Status.Paused" xml:space="preserve"><value>Suscripción pausada</value></data>
+  <data name="Pro.Status.Pending" xml:space="preserve"><value>Esperando confirmación del pago</value></data>
+  <data name="Pro.Demo.Description" xml:space="preserve"><value>Solo presentación. El precio es ilustrativo y no se crea ningún checkout ni pago en este modo.</value></data>
+  <data name="Pro.SignIn.Description" xml:space="preserve"><value>Inicia sesión para consultar la oferta actual y gestionar la suscripción vinculada a tu cuenta Ralven.</value></data>
+  <data name="Pro.Unavailable.Description" xml:space="preserve"><value>Comprueba tu conexión y vuelve a actualizar. Las herramientas Free y el historial guardado siguen disponibles.</value></data>
+  <data name="Pro.Cancelled.Description" xml:space="preserve"><value>Las próximas renovaciones se han detenido. El período pagado confirmado permanece disponible hasta su fecha final.</value></data>
+  <data name="Pro.Pending.Description" xml:space="preserve"><value>El acceso comienza cuando Asaas confirma un cobro aprobado. Volver del checkout no activa Pro por sí solo.</value></data>
+  <data name="Pro.SalesUnavailable.Description" xml:space="preserve"><value>Las suscripciones aún no están disponibles para comprar. Explora el espacio personal y sigue usando Free.</value></data>
+  <data name="Pro.Status.Description" xml:space="preserve"><value>Gestiona tu suscripción aquí. Asaas procesa el checkout y los cobros recurrentes.</value></data>
+  <data name="Pro.AccessUntil" xml:space="preserve"><value>Acceso pagado hasta {0}</value></data>
+  <data name="Pro.RenewsAt" xml:space="preserve"><value>Próxima renovación prevista: {0}</value></data>
+  <data name="Pro.Loading" xml:space="preserve"><value>Consultando suscripción</value></data>
+  <data name="Pro.SignIn" xml:space="preserve"><value>Entrar para ver planes</value></data>
+  <data name="Pro.Checkout.Consent" xml:space="preserve"><value>Entiendo el cobro recurrente de {0} al mes y que puedo cancelar las próximas renovaciones aquí.</value></data>
+  <data name="Pro.Checkout" xml:space="preserve"><value>Continuar al pago</value></data>
+  <data name="Pro.Checkout.Security" xml:space="preserve"><value>Tu navegador abrirá Asaas. Ralven no recibe los datos de tu tarjeta.</value></data>
+  <data name="Pro.Checkout.Opened" xml:space="preserve"><value>Checkout abierto en el navegador. Complétalo allí y actualiza para comprobar la confirmación. No vuelvas a pagar si la confirmación sigue pendiente.</value></data>
+  <data name="Pro.Refresh" xml:space="preserve"><value>Actualizar suscripción</value></data>
+  <data name="Pro.Cancel" xml:space="preserve"><value>Cancelar renovación</value></data>
+  <data name="Pro.Manage" xml:space="preserve"><value>Planes y suscripción</value></data>
+  <data name="Pro.Discover" xml:space="preserve"><value>Conoce Ralven Pro</value></data>
+  <data name="Pro.Cancel.Title" xml:space="preserve"><value>¿Cancelar las próximas renovaciones?</value></data>
+  <data name="Pro.Cancel.Message" xml:space="preserve"><value>Asaas detendrá los próximos cobros recurrentes. Tu acceso pagado confirmado permanece hasta su fecha final. Cancelar no reembolsa cobros anteriores. Tu historial local y las opciones de restauración siguen disponibles.</value></data>
+  <data name="Pro.Cancel.Keep" xml:space="preserve"><value>Mantener suscripción</value></data>
+  <data name="Pro.Cancel.Confirm" xml:space="preserve"><value>Cancelar renovación</value></data>
+  <data name="Pro.Cancel.Success" xml:space="preserve"><value>Cancelación confirmada. No se solicitarán nuevas renovaciones de esta suscripción.</value></data>
+  <data name="Pro.Comparison.Title" xml:space="preserve"><value>Ya incluido con Free:</value></data>
+  <data name="Pro.FreeName" xml:space="preserve"><value>Free</value></data>
+  <data name="Pro.ProName" xml:space="preserve"><value>Pro</value></data>
+  <data name="Pro.Comparison.Diagnostics" xml:space="preserve"><value>Diagnóstico del PC y comprobaciones de salud del sistema</value></data>
+  <data name="Pro.Comparison.Profiles" xml:space="preserve"><value>Perfiles de optimización Ligero, Equilibrado y Agresivo</value></data>
+  <data name="Pro.Comparison.FiveM" xml:space="preserve"><value>Herramientas seguras para FiveM sobre GTAV Legacy</value></data>
+  <data name="Pro.Comparison.Safety" xml:space="preserve"><value>Revisión del plan, historial básico, informes y restauración</value></data>
+  <data name="Pro.Comparison.Personal" xml:space="preserve"><value>Rutinas personales guardadas y recomendaciones según tu uso</value></data>
+  <data name="Pro.Comparison.Tracking" xml:space="preserve"><value>Nuevas lecturas de cambios y mediciones guiadas</value></data>
+  <data name="Pro.Included" xml:space="preserve"><value>Incluido</value></data>
+  <data name="Pro.NotIncluded" xml:space="preserve"><value>—</value></data>
+  <data name="Pro.Preview" xml:space="preserve"><value>Vista previa</value></data>
+  <data name="Pro.CancellationPolicy" xml:space="preserve"><value>Cancela las próximas renovaciones aquí en cualquier momento. El acceso pagado continúa hasta la fecha final confirmada; reembolsos y disputas afectan al período reembolsado. Los registros guardados y la restauración siguen accesibles tras el vencimiento. Para ayuda con cobros o solicitudes de reembolso, usa nuestro canal de soporte; no publiques datos de tarjeta ni contraseñas.</value></data>
+  <data name="Pro.Trust.Title" xml:space="preserve"><value>La misma seguridad. Más comodidad.</value></data>
+  <data name="Pro.Support" xml:space="preserve"><value>Abrir soporte en Discord</value></data>
+  <data name="Pro.Error.RateLimited" xml:space="preserve"><value>Demasiadas solicitudes. Espera un momento y actualiza tu suscripción.</value></data>
+  <data name="Pro.Error.Existing" xml:space="preserve"><value>Esta cuenta ya tiene una suscripción. Actualiza su estado para gestionarla.</value></data>
+  <data name="Pro.Error.Pending" xml:space="preserve"><value>El proveedor aún no ha confirmado la solicitud anterior. Actualiza antes de intentarlo de nuevo. No se ha creado una segunda suscripción.</value></data>
+  <data name="Pro.Error.OfferChanged" xml:space="preserve"><value>La oferta cambió. Actualiza para revisar el precio actual y confirmar de nuevo.</value></data>
+  <data name="Pro.Error.Request" xml:space="preserve"><value>No se pudo confirmar la solicitud. Actualiza para consultar su estado antes de intentarlo de nuevo. Un cobro o cancelación pendiente no debe considerarse completado.</value></data>
+  <data name="Personal.Introduction" xml:space="preserve"><value>Tus rutinas, tus decisiones. Guarda un plan personal, sigue los cambios y compara la misma actividad. Guardar una rutina nunca modifica Windows.</value></data>
+  <data name="Personal.Upgrade" xml:space="preserve"><value>Conocer Ralven Pro</value></data>
+  <data name="Personal.History.Count" xml:space="preserve"><value>{0}/30 mediciones · {1}/60 cambios guardados en este PC</value></data>
+  <data name="Personal.Tracking.Latest" xml:space="preserve"><value>Último cambio registrado: {0} · {1}</value></data>
+  <data name="Personal.Tracking.Analyze" xml:space="preserve"><value>Analizar este PC de nuevo</value></data>
+  <data name="Personal.Tracking.Review" xml:space="preserve"><value>Revisar mi plan personal</value></data>
+  <data name="Personal.Measure.CompareHelp" xml:space="preserve"><value>Elige una medición y una referencia anterior. Solo se comparan actividades, hardware y versiones de Windows equivalentes. Las diferencias son puntos porcentuales, no mejoras de rendimiento.</value></data>
+  <data name="Personal.Measure.Selected" xml:space="preserve"><value>Medición para consultar</value></data>
+  <data name="Personal.Measure.Baseline" xml:space="preserve"><value>Referencia anterior</value></data>
+  <data name="Personal.Measure.Before" xml:space="preserve"><value>Referencia:</value></data>
+  <data name="Personal.Measure.Delta" xml:space="preserve"><value>{0} p.p.</value></data>
+  <data name="Personal.Metric.Cpu" xml:space="preserve"><value>CPU</value></data>
+  <data name="Personal.Metric.Gpu" xml:space="preserve"><value>GPU</value></data>
+  <data name="Personal.Metric.Memory" xml:space="preserve"><value>Memoria</value></data>
+  <data name="Personal.Metric.Disk" xml:space="preserve"><value>Actividad de disco</value></data>
+  <data name="Personal.History.AllMeasurements" xml:space="preserve"><value>Todas las mediciones guardadas</value></data>
+  <data name="Personal.Export.Title" xml:space="preserve"><value>Ralven · Informe del espacio personal</value></data>
+  <data name="Personal.Export.Button" xml:space="preserve"><value>Exportar mi historial local</value></data>
+  <data name="Personal.Export.Help" xml:space="preserve"><value>Tu historial guardado sigue disponible para lectura y exportación cuando expire Pro. El informe de texto excluye identificadores de hardware. Revisa los nombres de tareas antes de compartir.</value></data>
+  <data name="Personal.Export.Filter" xml:space="preserve"><value>Informe de texto (*.txt)|*.txt</value></data>
+  <data name="Personal.Export.Saved" xml:space="preserve"><value>Historial personal exportado. Revisa el archivo antes de compartir.</value></data>
+  <data name="Personal.Export.Failed" xml:space="preserve"><value>No se pudo exportar el historial. Comprueba la ubicación y vuelve a intentarlo.</value></data>
+  <data name="Pro.Checkout.Privacy" xml:space="preserve"><value>Introduces los datos del pagador en la página segura de Asaas. Ralven guarda referencias, importes, estados y fechas del cobro; nunca datos de tarjeta. Cualquier reembolso completado, incluso parcial, elimina el acceso del período pagado correspondiente.</value></data>
+  <data name="RalvenAi.Logo.Animate" xml:space="preserve"><value>Animar el logo de Ralven AI</value></data>
+  <data name="Common.Close" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Account.Mfa.Challenge.Title" xml:space="preserve"><value>Confirma el segundo paso</value></data>
+  <data name="Account.Verification.SendFailed" xml:space="preserve"><value>Tu cuenta se creó, pero no se pudo enviar la verificación. Usa Reenviar correo para intentarlo de nuevo.</value></data>
+  <data name="Account.Error.ProviderConflict" xml:space="preserve"><value>Este correo ya pertenece a una cuenta con otro método de acceso. Inicia sesión en esa cuenta y vincula Google en Configuración.</value></data>
+  <data name="Account.Error.GoogleAlreadyLinkedElsewhere" xml:space="preserve"><value>Esta cuenta de Google ya está vinculada a otra cuenta de Ralven.</value></data>
+  <data name="Account.Mfa.Challenge.Subtitle" xml:space="preserve"><value>Tu contraseña o cuenta de Google fue confirmada. Introduce el código de tu aplicación autenticadora.</value></data>
+  <data name="Account.Mfa.Challenge.Description" xml:space="preserve"><value>Abre tu aplicación autenticadora e introduce el código actual de 6 dígitos.</value></data>
+  <data name="Account.Mfa.CodeLabel" xml:space="preserve"><value>Código del autenticador</value></data>
+  <data name="Account.Mfa.Verify" xml:space="preserve"><value>Verificar e iniciar sesión</value></data>
+  <data name="Account.Mfa.UseRecoveryCode" xml:space="preserve"><value>No tengo acceso al autenticador</value></data>
+  <data name="Account.Mfa.RecoveryCodeLabel" xml:space="preserve"><value>Código de recuperación</value></data>
+  <data name="Account.Mfa.Recover" xml:space="preserve"><value>Recuperar acceso</value></data>
+  <data name="Account.Mfa.UnsupportedFactor" xml:space="preserve"><value>Esta cuenta usa un segundo factor que esta versión de Ralven no admite.</value></data>
+  <data name="Account.Mfa.InvalidCode" xml:space="preserve"><value>Introduce un código válido de 6 dígitos.</value></data>
+  <data name="Account.Mfa.ChallengeExpired" xml:space="preserve"><value>Esta confirmación caducó. Inicia de nuevo la sesión o la confirmación de identidad.</value></data>
+  <data name="Account.Mfa.RecoveryUnavailable" xml:space="preserve"><value>No se pudo recuperar el acceso ahora. Inténtalo más tarde.</value></data>
+  <data name="Account.Mfa.InvalidRecoveryCode" xml:space="preserve"><value>El código de recuperación no es válido, ya fue usado o caducó.</value></data>
+  <data name="Account.Mfa.Recovered" xml:space="preserve"><value>El segundo factor se eliminó de forma segura. Inicia sesión de nuevo para continuar.</value></data>
+  <data name="Settings.Account.GoogleLabel" xml:space="preserve"><value>Cuenta de Google</value></data>
+  <data name="Settings.Account.GoogleLinked" xml:space="preserve"><value>Vinculada</value></data>
+  <data name="Settings.Account.GoogleNotLinked" xml:space="preserve"><value>No vinculada</value></data>
+  <data name="Settings.Account.GoogleLink" xml:space="preserve"><value>Vincular</value></data>
+  <data name="Settings.Account.GoogleUnlink" xml:space="preserve"><value>Desvincular</value></data>
+  <data name="Settings.Account.GoogleLinkedSuccess" xml:space="preserve"><value>Cuenta de Google vinculada.</value></data>
+  <data name="Settings.Account.GoogleUnlinked" xml:space="preserve"><value>Cuenta de Google desvinculada.</value></data>
+  <data name="Settings.Account.LastSignInMethod" xml:space="preserve"><value>Crea una contraseña antes de quitar tu único método de acceso.</value></data>
+  <data name="Settings.Account.GoogleRequiredForSensitiveActions" xml:space="preserve"><value>Ralven confirmará tu cuenta de Google antes de cambios sensibles.</value></data>
+  <data name="Settings.Account.EmailChangeSent" xml:space="preserve"><value>Enviamos una confirmación al nuevo correo. La dirección solo cambia al abrir el enlace.</value></data>
+  <data name="Settings.Account.TwoFactorLabel" xml:space="preserve"><value>Autenticación de dos factores</value></data>
+  <data name="Settings.Account.TwoFactorEnabled" xml:space="preserve"><value>Activada con una aplicación autenticadora</value></data>
+  <data name="Settings.Account.TwoFactorDisabled" xml:space="preserve"><value>Desactivada</value></data>
+  <data name="Settings.Account.TwoFactorManage" xml:space="preserve"><value>Administrar</value></data>
+  <data name="TwoFactor.Title" xml:space="preserve"><value>Autenticación de dos factores</value></data>
+  <data name="TwoFactor.Description" xml:space="preserve"><value>Añade una confirmación mediante una aplicación autenticadora. Los cambios requieren tu identidad y, una vez activada, el código actual.</value></data>
+  <data name="TwoFactor.GoogleConfirmation" xml:space="preserve"><value>Tu identidad se confirmará de nuevo mediante tu cuenta de Google.</value></data>
+  <data name="TwoFactor.CurrentCodeLabel" xml:space="preserve"><value>Código actual del autenticador</value></data>
+  <data name="TwoFactor.Enable" xml:space="preserve"><value>Activar dos factores</value></data>
+  <data name="TwoFactor.EnabledDescription" xml:space="preserve"><value>El segundo factor se solicita después de la contraseña o Google en cada nuevo inicio.</value></data>
+  <data name="TwoFactor.RegenerateCodes" xml:space="preserve"><value>Generar nuevos códigos de recuperación</value></data>
+  <data name="TwoFactor.Disable" xml:space="preserve"><value>Desactivar dos factores</value></data>
+  <data name="TwoFactor.DisableConfirmation" xml:space="preserve"><value>Desactivar el segundo paso reduce la protección de la cuenta. ¿Continuar?</value></data>
+  <data name="TwoFactor.Setup.Title" xml:space="preserve"><value>Configura el autenticador</value></data>
+  <data name="TwoFactor.Setup.Description" xml:space="preserve"><value>Añade una cuenta manualmente en tu autenticador con la clave siguiente. La clave solo se muestra durante la configuración.</value></data>
+  <data name="TwoFactor.CopySecret" xml:space="preserve"><value>Copiar clave</value></data>
+  <data name="TwoFactor.NewCodeLabel" xml:space="preserve"><value>Código generado por el autenticador</value></data>
+  <data name="TwoFactor.Confirm" xml:space="preserve"><value>Confirmar activación</value></data>
+  <data name="TwoFactor.RecoveryCodes.Title" xml:space="preserve"><value>Códigos de recuperación</value></data>
+  <data name="TwoFactor.RecoveryCodes.Description" xml:space="preserve"><value>Guarda estos códigos en un lugar seguro. Cada código funciona una vez; generar nuevos invalida los anteriores.</value></data>
+  <data name="TwoFactor.CopyCodes" xml:space="preserve"><value>Copiar códigos</value></data>
+  <data name="TwoFactor.RecoveryCodes.Regenerated" xml:space="preserve"><value>Nuevos códigos generados. Los anteriores ya no funcionan.</value></data>
+  <data name="TwoFactor.FactorName" xml:space="preserve"><value>Aplicación autenticadora</value></data>
+  <data name="TwoFactor.Enabled" xml:space="preserve"><value>Autenticación de dos factores activada.</value></data>
+  <data name="TwoFactor.Disabled" xml:space="preserve"><value>Autenticación de dos factores desactivada.</value></data>
+  <data name="TwoFactor.Error.Session" xml:space="preserve"><value>Tu sesión caducó. Inicia sesión de nuevo.</value></data>
+  <data name="TwoFactor.Error.Unavailable" xml:space="preserve"><value>No se pudo completar este cambio ahora.</value></data>
+  <data name="TwoFactor.Error.RecoveryCodesRequired" xml:space="preserve"><value>No se pudieron crear códigos de recuperación; la activación se deshizo para evitar perder el acceso.</value></data>
+  <data name="TwoFactor.Error.RecoveryCodesRollbackFailed" xml:space="preserve"><value>No se pudieron crear los códigos ni deshacer la autenticación de dos factores. Mantén esta ventana abierta e intenta desactivarla con el código actual.</value></data>
+  <data name="TwoFactor.Error.CopyFailed" xml:space="preserve"><value>Windows no pudo copiar este valor. Selecciónalo y cópialo manualmente.</value></data>
+  <data name="PasswordSecurity.GoogleFallback" xml:space="preserve"><value>Usa tu contraseña actual o deja el campo vacío para confirmar con la cuenta de Google vinculada.</value></data>
+  <data name="Settings.Account.DeleteBillingRequired" xml:space="preserve"><value>Cancela la suscripción o el pago activo antes de eliminar la cuenta.</value></data>
+  <data name="Settings.Account.DeleteUnavailable" xml:space="preserve"><value>La eliminación de la cuenta no está disponible ahora. Tu cuenta no cambió.</value></data>
+  <data name="Startup.Initializing" xml:space="preserve"><value>Inicializando</value></data>
+  <data name="Startup.Close" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Dialog.Close" xml:space="preserve"><value>Cerrar</value></data>
+  <data name="Dialog.Cancel" xml:space="preserve"><value>Cancelar</value></data>
+  <data name="Dialog.Confirm" xml:space="preserve"><value>Continuar</value></data>
+  <data name="Dialog.OptionalDetails" xml:space="preserve"><value>Detalles opcionales</value></data>
+  <data name="Launcher.Recovery.Title" xml:space="preserve"><value>Recuperación de Ralven</value></data>
+  <data name="Launcher.Recovery.Message" xml:space="preserve"><value>La nueva versión no confirmó un inicio correcto. Se restauró la versión anterior y se usará la próxima vez que abras Ralven.</value></data>
+  <data name="Launcher.Error.ParentTimeout" xml:space="preserve"><value>El proceso anterior de Ralven no se cerró a tiempo. Espera unos instantes e intenta abrirlo de nuevo.</value></data>
+  <data name="Launcher.Error.AccessDenied" xml:space="preserve"><value>Windows no permitió abrir esta versión. Comprueba los permisos e inténtalo de nuevo.</value></data>
+  <data name="Launcher.Error.Security" xml:space="preserve"><value>No se pudo verificar esta actualización de forma segura. No se cambió nada.</value></data>
+  <data name="Launcher.Error.MissingFiles" xml:space="preserve"><value>No se encontraron los archivos necesarios para abrir Ralven. Intenta reparar o reinstalar la aplicación.</value></data>
+  <data name="Launcher.Error.Unexpected" xml:space="preserve"><value>No se pudo abrir Ralven. Inténtalo de nuevo; si el problema continúa, reinstala la aplicación.</value></data>
+  <data name="Diagnostics.Notice.GtaVDetected" xml:space="preserve"><value>Se detectó GTA V Legacy; su ejecutable y settings.xml se incluirán en las acciones compatibles.</value></data>
+  <data name="Diagnostics.Notice.GtaVNotDetected" xml:space="preserve"><value>No se pudo confirmar automáticamente el ejecutable de GTA V Legacy.</value></data>
+  <data name="Diagnostics.Notice.LargeCache" xml:space="preserve"><value>La caché regenerable de servidores supera los 8 GB; la reparación inteligente puede liberar espacio.</value></data>
+  <data name="Diagnostics.Notice.LowDiskSpace" xml:space="preserve"><value>Queda poco espacio libre en la unidad de Windows; las limpiezas seguras pueden mejorar la capacidad de respuesta general.</value></data>
+  <data name="Diagnostics.Notice.Stable" xml:space="preserve"><value>Este PC está estable; el perfil sugerido prioriza la consistencia sin ajustes arriesgados.</value></data>
+  <data name="Broker.Error.Cancelled" xml:space="preserve"><value>Se canceló la confirmación de Windows.</value></data>
+  <data name="Broker.Error.ConnectionTimeout" xml:space="preserve"><value>El componente administrativo no se conectó a tiempo al canal de progreso local. Esto puede ocurrir si el antivirus o Windows SmartScreen interrumpe la elevación de un ejecutable sin firma digital; consulta el historial de protección de Windows Defender (o de tu antivirus) antes de volver a intentarlo.</value></data>
+  <data name="Broker.Error.OperationTimeout" xml:space="preserve"><value>El componente administrativo superó el límite de tiempo de seguridad. Consulta el historial antes de volver a intentarlo.</value></data>
+  <data name="Broker.Error.InvalidArguments" xml:space="preserve"><value>Los argumentos enviados al componente administrativo no eran válidos.</value></data>
+  <data name="Broker.Error.ConnectionFailed" xml:space="preserve"><value>El componente administrativo no pudo conectarse al canal de progreso local.</value></data>
+  <data name="Broker.Error.InvalidAdminToken" xml:space="preserve"><value>El componente administrativo no recibió un token de administrador válido.</value></data>
+  <data name="Broker.Error.Interrupted" xml:space="preserve"><value>El componente administrativo se interrumpió antes de confirmar el resultado (código de salida {0}). Esto suele ocurrir cuando el antivirus o Windows SmartScreen detiene un ejecutable elevado sin firma digital; consulta el historial de protección de Windows Defender (o de tu antivirus) antes de volver a intentarlo.</value></data>
+  <data name="Runtime.BrokerActionDetail" xml:space="preserve"><value>Paso administrativo: {0}</value></data>
+  <data name="Runtime.BrokerStartedDetail" xml:space="preserve"><value>El plan administrativo se validó y se inició.</value></data>
+  <data name="Runtime.BrokerCompletedDetail" xml:space="preserve"><value>Los cambios administrativos se completaron y quedaron registrados.</value></data>
+  <data name="Runtime.BrokerRollbackStartedDetail" xml:space="preserve"><value>Restaurando los cambios administrativos.</value></data>
+  <data name="Runtime.BrokerRollbackCompletedDetail" xml:space="preserve"><value>Se restauraron los cambios administrativos.</value></data>
+  <data name="Runtime.BrokerRejectedDetail" xml:space="preserve"><value>La solicitud administrativa se rechazó de forma segura.</value></data>
+  <data name="Runtime.BrokerFailedDetail" xml:space="preserve"><value>La operación administrativa se detuvo de forma segura. Consulta el informe antes de volver a intentarlo.</value></data>
+
+  <data name="ErrorDialog.WindowTitle" xml:space="preserve"><value>Ralven debe cerrarse</value></data>
+  <data name="ErrorDialog.Fatal.Headline" xml:space="preserve"><value>Ralven encontró un problema</value></data>
+  <data name="ErrorDialog.Fatal.Message" xml:space="preserve"><value>Ralven debe cerrarse para mantener segura tu sesión actual. No se aplicará ningún cambio nuevo.</value></data>
+  <data name="ErrorDialog.Fatal.Guidance" xml:space="preserve"><value>Puedes abrir Ralven de nuevo ahora. Si vuelve a ocurrir, copia los detalles técnicos e inclúyelos en un informe de error desde Configuración.</value></data>
+  <data name="ErrorDialog.Recoverable.Headline" xml:space="preserve"><value>No pudimos completar esa acción</value></data>
+  <data name="ErrorDialog.Recoverable.Message" xml:space="preserve"><value>Ralven sigue abierto y esta acción fallida no realizó ningún cambio.</value></data>
+  <data name="ErrorDialog.Recoverable.Guidance" xml:space="preserve"><value>Vuelve a intentarlo dentro de un momento. Si el problema continúa, puedes enviar un informe con los detalles ya preparados.</value></data>
+  <data name="ErrorDialog.Test.WindowTitle" xml:space="preserve"><value>Vista previa de la experiencia de error</value></data>
+  <data name="ErrorDialog.Test.Headline" xml:space="preserve"><value>Esta es una vista previa controlada de error</value></data>
+  <data name="ErrorDialog.Test.Message" xml:space="preserve"><value>No ocurrió ningún fallo real ni se envió información. Esta vista previa permite comprobar la experiencia de error de forma segura.</value></data>
+  <data name="ErrorDialog.Test.Guidance" xml:space="preserve"><value>Comprueba la jerarquía, el expansor de detalles técnicos y la acción de copiar. Cierra la vista previa cuando termines.</value></data>
+  <data name="ErrorDialog.Details.Title" xml:space="preserve"><value>Detalles técnicos</value></data>
+  <data name="ErrorDialog.Details.Help" xml:space="preserve"><value>Información opcional para soporte. Las rutas personales se eliminan antes de mostrar o copiar este texto.</value></data>
+  <data name="ErrorDialog.Details.Template" xml:space="preserve"><value>{0}
+Versión: {1}
+Hora (UTC): {2}
+Excepción: {3}
+
+{4}</value></data>
+  <data name="ErrorDialog.Copy" xml:space="preserve"><value>Copiar detalles</value></data>
+  <data name="ErrorDialog.Copy.Success" xml:space="preserve"><value>Detalles técnicos copiados.</value></data>
+  <data name="ErrorDialog.Copy.Failed" xml:space="preserve"><value>Windows no pudo copiar los detalles: {0}</value></data>
+  <data name="ErrorDialog.Report" xml:space="preserve"><value>Informar del problema</value></data>
+  <data name="ErrorDialog.Restart" xml:space="preserve"><value>Abrir Ralven de nuevo</value></data>
+  <data name="ErrorDialog.Restart.Failed" xml:space="preserve"><value>Ralven no pudo abrirse de nuevo automáticamente. Cierra esta ventana y ábrelo desde el menú Inicio.</value></data>
+  <data name="ErrorDialog.Exit" xml:space="preserve"><value>Cerrar Ralven</value></data>
+  <data name="ErrorDialog.ClosePreview" xml:space="preserve"><value>Cerrar vista previa</value></data>
+  <data name="ReleaseNotes.Acknowledge" xml:space="preserve"><value>Entendido</value></data>
+  <data name="ReleaseNotes.Summary" xml:space="preserve"><value>Un breve resumen de los cambios de esta versión.</value></data>
+  <data name="ReleaseNotes.1_6_1.Improved" xml:space="preserve"><value>• Se actualizaron la infraestructura de publicación y la base de compatibilidad de los navegadores, con validación completa en la integración continua.</value></data>
+  <data name="Navigation.RalvenAiDevelopment" xml:space="preserve"><value>Ralven AI · Próximamente</value></data>
+  <data name="RalvenAi.Development.Title" xml:space="preserve"><value>Ralven AI está en desarrollo</value></data>
+  <data name="RalvenAi.Development.Detail" xml:space="preserve"><value>Ralven AI llegará con Ralven Pro. Aún no se puede activar ni usar.</value></data>
+  <data name="Ultra.Development.Name" xml:space="preserve"><value>Personalizado · Próximamente</value></data>
+  <data name="Pro.Development.Title" xml:space="preserve"><value>Pro está en desarrollo</value></data>
+  <data name="Pro.Development.Detail" xml:space="preserve"><value>Las funciones Pro, los pagos y Ralven AI estarán disponibles próximamente. Aún no se puede comprar ni activar nada.</value></data>
+  <data name="Pro.Development.Action" xml:space="preserve"><value>Próximamente</value></data>
+  <data name="Pro.DiscoverDevelopment" xml:space="preserve"><value>Descubre Ralven Pro · Próximamente</value></data>
+  <data name="Navigation.ProDevelopment" xml:space="preserve"><value>Pro · Próximamente</value></data>
+  <data name="ReleaseNotes.1_7_0.Added" xml:space="preserve"><value>• Se añadió un centro de Aplicaciones para buscar, instalar, actualizar y desinstalar paquetes compatibles con confirmación.
+• Se añadió soporte de interfaz en francés y autenticación en dos pasos con códigos de recuperación.</value></data>
+  <data name="ReleaseNotes.1_7_0.Improved" xml:space="preserve"><value>• Se mejoró la detección de FiveM Legacy con selección manual validada y flujos más claros de Sistema, bandeja e instalador.
+• Se redujo el trabajo de supervisión en segundo plano, conservando las métricas en vivo seleccionadas.</value></data>
+  <data name="ReleaseNotes.1_7_0.Fixed" xml:space="preserve"><value>• Pro y Ralven AI ahora permanecen claramente no disponibles mientras están en desarrollo.
+• Se corrigieron problemas de contraste, foco, diseño y orden de telemetría pendiente.</value></data>
+  <data name="ReleaseNotes.1_7_0.Security" xml:space="preserve"><value>• Se restringieron las acciones de paquetes al alias oficial de WinGet y se reforzó la validación de actualizaciones y publicaciones.</value></data></root>

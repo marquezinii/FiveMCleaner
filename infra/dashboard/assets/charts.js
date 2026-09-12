@@ -5,6 +5,34 @@
 /** Substitutes a placeholder for any missing optional field instead of a blank cell. */
 const fallback = (value) => value ?? '—';
 
+// Mirrors Ralven.Contracts.BugCodeCatalog's category prefixes (the part of
+// the code before the first underscore). Kept as a small hand-maintained
+// map, same convention already used for bug_code itself in this dashboard —
+// there is no shared package between the Worker/dashboard and the .NET app.
+const BUG_CODE_CATEGORY_LABELS = {
+  APP: 'Aplicativo',
+  UPD: 'Atualização',
+  BRK: 'Privilégios administrativos',
+  NET: 'Rede',
+  FIVEM: 'FiveM',
+  GTAV: 'GTA V',
+  WIN: 'Windows',
+  CFG: 'Configuração',
+  SYS: 'Sistema',
+  SEC: 'Segurança',
+};
+
+/**
+ * Formats a bug code with its category label, e.g. 'APP_OPT_ACTION_EXECUTION — Aplicativo'.
+ * If the code's prefix is not recognized, returns the code unchanged.
+ * If there is no code, returns the placeholder.
+ */
+function bugCodeWithCategory(code) {
+  if (!code) return fallback(code);
+  const category = BUG_CODE_CATEGORY_LABELS[code.split('_')[0]];
+  return category ? `${code} — ${category}` : code;
+}
+
 /** Turns `{label, value}`-shaped rows (any two keys) into a bar-chart series. */
 export function toBarSeries(rows, labelKey, valueKey) {
   return (rows ?? []).map((row) => ({
@@ -49,6 +77,11 @@ export function toCombinedBarSeries(rows, labelKeys, valueKey, separator = ' · 
 /** Keeps only the top N entries of an already-sorted-descending series. */
 export function topN(series, n) {
   return (series ?? []).slice(0, n);
+}
+
+/** Shows the five newest feed rows until its compact toggle is expanded. */
+export function limitFeedRows(rows, expanded) {
+  return expanded ? (rows ?? []) : (rows ?? []).slice(0, 5);
 }
 
 /**
@@ -122,13 +155,11 @@ export function formatTimestamp(isoString) {
 export function toRecentFailureRow(row) {
   return [
     formatTimestamp(row.received_at),
+    fallback(row.bug_code),
     fallback(row.error_category),
     formatAppVersion(row.app_version),
-    fallback(row.environment),
-    fallback(row.os_version),
-    fallback(row.cpu_model),
-    fallback(row.gpu_model),
     fallback(row.profile),
+    fallback(row.environment),
   ];
 }
 
@@ -152,23 +183,25 @@ export function truncate(text, maxLength) {
 export function toBugReportRow(row) {
   return [
     formatTimestamp(row.received_at),
-    fallback(row.category),
-    fallback(row.bug_code),
+    bugCodeWithCategory(row.bug_code),
     truncate(row.summary, 60),
+    fallback(row.category),
     formatAppVersion(row.app_version),
-    fallback(row.profile),
-    fallback(row.environment),
-    fallback(row.email),
-    row.log_text ? 'sim' : 'não',
   ];
+}
+
+export function formatActionIds(value) {
+  if (!value) return [];
+  return String(value).split(',').map((item) => item.trim()).filter(Boolean);
 }
 
 export function toUpdaterEventRow(row) {
   return [
     formatTimestamp(row.received_at),
+    fallback(row.error_id ?? row.error_code?.toUpperCase()),
+    fallback(row.error_name),
     fallback(row.stage),
     fallback(row.outcome),
-    fallback(row.error_code),
     formatAppVersion(row.previous_version),
     formatAppVersion(row.candidate_version),
     fallback(row.environment),

@@ -1,5 +1,6 @@
 using Ralven.App.Services;
 using Ralven.App.ViewModels;
+using Ralven.Windows.Infrastructure;
 using Xunit;
 
 namespace Ralven.Tests.App;
@@ -53,6 +54,48 @@ public sealed class MainViewModelSettingsTests
     }
 
     [Fact]
+    public async Task RestoreGeneralSettingsDefaultsAsync_RestoresGeneralPreferencesAndPreservesPrivateState()
+    {
+        var initialSettings = new AppSettings
+        {
+            Language = AppLanguagePreference.English,
+            Theme = AppThemePreference.Dark,
+            MinimizeToTrayOnClose = false,
+            LaunchAtStartup = false,
+            StartMinimized = true,
+            CheckForUpdates = false,
+            NotifyWhenUpdateAvailable = false,
+            ShareAnonymousTelemetry = false,
+            ShareCrashReports = false,
+            PrivacyConsentVersion = PrivacyConsentPolicy.CurrentVersion,
+            DismissedLiveAlertId = "alert-42",
+            LastSeenReleaseNotesVersion = "1.2.3"
+        };
+        var service = new FakeAppOptimizationService(initialSettings, settingsFileExists: true);
+        var startupRegistration = new SessionStartupRegistrationService();
+        var viewModel = new MainViewModel(service, startupRegistration: startupRegistration);
+        await viewModel.InitializeAsync();
+
+        await viewModel.RestoreGeneralSettingsDefaultsAsync();
+
+        var saved = Assert.IsType<AppSettings>(service.SavedSettings);
+        Assert.Equal(new AppSettings().Language, saved.Language);
+        Assert.Equal(new AppSettings().Theme, saved.Theme);
+        Assert.True(saved.MinimizeToTrayOnClose);
+        Assert.True(saved.LaunchAtStartup);
+        Assert.False(saved.StartMinimized);
+        Assert.True(saved.CheckForUpdates);
+        Assert.True(saved.NotifyWhenUpdateAvailable);
+        Assert.False(saved.ShareAnonymousTelemetry);
+        Assert.False(saved.ShareCrashReports);
+        Assert.Equal(PrivacyConsentPolicy.CurrentVersion, saved.PrivacyConsentVersion);
+        Assert.Equal("alert-42", saved.DismissedLiveAlertId);
+        Assert.Equal("1.2.3", saved.LastSeenReleaseNotesVersion);
+        Assert.True(startupRegistration.IsEnabled());
+        Assert.Equal(1, service.SaveCallCount);
+    }
+
+    [Fact]
     public async Task RetrySaveSettingsAsync_FailureIsVisibleAndSuccessfulRetryClearsIt()
     {
         var localization = new LocalizationService(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
@@ -68,13 +111,42 @@ public sealed class MainViewModelSettingsTests
 
         await viewModel.RetrySaveSettingsAsync();
 
-        Assert.Equal(localization.GetString("Settings.SaveFailed"), viewModel.SettingsSaveErrorMessage);
+        Assert.Equal(
+            $"{localization.GetString("Settings.SaveFailed")} — {localization.Format("Report.ErrorCodeSuffix", Ralven.Contracts.BugCode.APP_SETTINGS_PERSISTENCE)}",
+            viewModel.SettingsSaveErrorMessage);
 
         service.SettingsSaveException = null;
         await viewModel.RetrySaveSettingsAsync();
 
         Assert.Null(viewModel.SettingsSaveErrorMessage);
         Assert.NotNull(service.SavedSettings);
+    }
+
+    [Fact]
+    public async Task CacheTools_ReportSizeCleanCacheAndPreserveSettings()
+    {
+        using var temporary = new TemporaryDirectory();
+        var root = temporary.Combine("Ralven");
+        Directory.CreateDirectory(Path.Combine(root, "Updates"));
+        await File.WriteAllBytesAsync(Path.Combine(root, "Updates", "update.zip"), new byte[1536]);
+        await File.WriteAllTextAsync(Path.Combine(root, "settings.json"), "keep");
+        var localization = new LocalizationService(System.Globalization.CultureInfo.GetCultureInfo("en-US"));
+        using var viewModel = new MainViewModel(
+            new FakeAppOptimizationService(new AppSettings(), settingsFileExists: true),
+            localization,
+            startupRegistration: new SessionStartupRegistrationService(),
+            ralvenCacheService: new RalvenCacheService(root));
+
+        await viewModel.RefreshCacheStorageAsync();
+
+        Assert.True(viewModel.CanClearRalvenCache);
+        Assert.Contains("1.5 KB", viewModel.CacheStorageLabel, StringComparison.Ordinal);
+
+        await viewModel.CleanRalvenCacheAsync();
+
+        Assert.False(viewModel.CanClearRalvenCache);
+        Assert.Contains("1.5 KB", viewModel.CacheStorageLabel, StringComparison.Ordinal);
+        Assert.True(File.Exists(Path.Combine(root, "settings.json")));
     }
 
     private static MainViewModel CreateViewModel(AppSettings settings) => new(

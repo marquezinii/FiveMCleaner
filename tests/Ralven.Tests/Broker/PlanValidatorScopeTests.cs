@@ -54,6 +54,25 @@ public sealed class PlanValidatorScopeTests
         Assert.Equal("plan-scope-unsupported", exception.ErrorCode);
     }
 
+    [Fact]
+    public void Validate_RebuildsPersonalOptionsAtThePrivilegedBoundary()
+    {
+        var plan = PlanBuilder.Build(new OptimizationPlanRequestDto
+        {
+            Scope = OptimizationScope.GeneralWindows,
+            Profile = OptimizationProfile.Aggressive,
+            Edition = FiveMEdition.Unknown,
+            PersonalPreferences = new() { AllowPerformancePower = true }
+        }, PlanBuildContext.New(new FixedTimeProvider(Now)));
+        var validator = new PlanValidator(new FixedTimeProvider(Now));
+
+        Assert.Equal(plan, validator.Validate(plan).Plan);
+        Assert.Throws<BrokerRequestException>(() => validator.Validate(plan with
+        {
+            Options = plan.Options with { TemporaryFileMinimumAgeDays = 29 }
+        }));
+    }
+
     private static OptimizationPlanDto BuildGeneralPlan(FiveMEdition edition) =>
         PlanBuilder.Build(
             new OptimizationPlanRequestDto

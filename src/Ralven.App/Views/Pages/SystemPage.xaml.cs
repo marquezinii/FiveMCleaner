@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 using Ralven.App.Services;
@@ -15,10 +14,6 @@ public partial class SystemPage : UserControl
         InitializeComponent();
     }
 
-    private void OpenWindowsUpdate_Click(object sender, RoutedEventArgs e) => OpenSettings("ms-settings:windowsupdate");
-    private void OpenSecurity_Click(object sender, RoutedEventArgs e) => OpenSettings("ms-settings:windowsdefender");
-    private void OpenAbout_Click(object sender, RoutedEventArgs e) => OpenSettings("ms-settings:about");
-
     private async void SystemPage_IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e)
     {
         if (IsVisible && DataContext is MainViewModel viewModel)
@@ -29,26 +24,13 @@ public partial class SystemPage : UserControl
         }
     }
 
-    private async void RefreshWindowsGaming_Click(object sender, RoutedEventArgs e)
+    private async void RefreshSystem_Click(object sender, RoutedEventArgs e)
     {
         if (DataContext is MainViewModel viewModel)
         {
-            await viewModel.RefreshWindowsGamingSettingsAsync();
-        }
-    }
-
-    private async void RefreshWindowsSystemHealth_Click(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
-            await viewModel.RefreshWindowsSystemHealthAsync();
-        }
-    }
-
-    private async void RefreshDiagnostic_Click(object sender, RoutedEventArgs e)
-    {
-        if (DataContext is MainViewModel viewModel)
-        {
+            await Task.WhenAll(
+                viewModel.RefreshWindowsGamingSettingsAsync(),
+                viewModel.RefreshWindowsSystemHealthAsync());
             await viewModel.RefreshDiagnosticAsync();
         }
     }
@@ -96,9 +78,4 @@ public partial class SystemPage : UserControl
             await viewModel.RestoreWindowsGamingSettingsAsync();
         }
     }
-
-    private static void OpenSettings(string uri) => ExternalLauncher.TryOpen(() => Process.Start(new ProcessStartInfo(uri)
-    {
-        UseShellExecute = true
-    }));
 }

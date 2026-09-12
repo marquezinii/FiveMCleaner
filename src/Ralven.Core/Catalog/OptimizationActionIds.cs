@@ -68,4 +68,5 @@ public static class OptimizationActionIds
     public const string DiagnoseStartupLoad = "windows.system.startup-load.diagnose";
     public const string DiagnoseTrimStatus = "windows.storage.trim-status.diagnose";
     public const string DiagnoseMouseAcceleration = "windows.input.mouse-acceleration.diagnose";
+    public const string DisableMouseAcceleration = "windows.input.mouse-acceleration.disable";
 }

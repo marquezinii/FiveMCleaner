@@ -26,6 +26,11 @@ public sealed record WindowsActionJournalEntry
     /// <summary>Reason an action was skipped or not run, for the report.</summary>
     public string? OutcomeReason { get; set; }
 
+    /// <summary>Stable classification of the failure, when one was caught. Null for
+    /// actions that succeeded, were skipped, or failed through a path with no
+    /// live exception object to classify (e.g. an interrupted-run recovery marker).</summary>
+    public BugCode? BugCode { get; set; }
+
     public bool Changed { get; set; }
 
     public string? SnapshotJson { get; set; }
@@ -64,6 +69,9 @@ public sealed record WindowsTransactionJournal
     /// profile was persisted explicitly.
     /// </summary>
     public OptimizationProfile? Profile { get; set; }
+
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public PersonalUsage? PersonalUsage { get; init; }
 
     public required TransactionState State { get; set; }
 

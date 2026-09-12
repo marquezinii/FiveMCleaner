@@ -22,6 +22,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private readonly IAnonymousTelemetryService telemetry;
     private readonly ILiveAlertService? liveAlertService;
     private readonly ILiveSystemMetricsProvider liveSystemMetricsProvider;
+    private readonly RalvenCacheService ralvenCacheService;
     private readonly ProgressTimingEstimator progressTimingEstimator = new();
     private readonly SemaphoreSlim settingsSaveGate = new(1, 1);
     private readonly Queue<string> pendingHeadlines = new();
@@ -84,6 +85,9 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private string memoryUsageDetailLabel = string.Empty;
     private string cpuTrendLabel = string.Empty;
     private string gpuTrendLabel = string.Empty;
+    private string memoryTrendLabel = string.Empty;
+    private string diskTrendLabel = string.Empty;
+    private string networkTrendLabel = string.Empty;
     private double cpuUsagePercent;
     private double gpuUsagePercent;
     private double memoryUsagePercent;
@@ -94,17 +98,28 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private string diskUsageLabel = string.Empty;
     private string networkUsageLabel = string.Empty;
     private string liveMetricsUpdatedLabel = string.Empty;
+    private string liveMetricsUpdatedExactLabel = string.Empty;
     private IReadOnlyList<double> cpuUsageSeries = [];
     private IReadOnlyList<double> gpuUsageSeries = [];
+    private IReadOnlyList<double> memoryUsageSeries = [];
+    private IReadOnlyList<double> diskUsageSeries = [];
+    private IReadOnlyList<double> networkUsageSeries = [];
     private readonly Queue<double> cpuUsageHistory = new();
     private readonly Queue<double> gpuUsageHistory = new();
+    private readonly Queue<double> memoryUsageHistory = new();
+    private readonly Queue<double> diskUsageHistory = new();
+    private readonly Queue<double> networkUsageHistory = new();
     private DispatcherTimer? liveMetricsTimer;
     private bool liveMetricsEnabled;
     private bool liveMetricsCaptureInProgress;
     private bool liveMetricsUnavailable;
+    private bool liveMetricsAwaitingFreshSample;
+    private int liveMetricsGeneration;
+    private LiveMetricsTarget liveMetricsTarget;
+    private LiveMetricKind selectedLiveMetric;
     private LiveSystemMetricsSnapshot? lastLiveMetrics;
     private int readinessScore;
-    private AppLanguagePreference languagePreference = AppLanguagePreference.Automatic;
+    private string languagePreference = AppLanguagePreference.Automatic;
     private AppThemePreference themePreference = AppThemePreference.System;
     private bool minimizeToTrayOnClose;
     private bool launchAtStartup;
@@ -113,6 +128,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private bool notifyWhenUpdateAvailable = true;
     private bool shareAnonymousTelemetry;
     private bool shareCrashReports;
+    private string? manualFiveMInstallationRoot;
     private int? privacyConsentVersion;
     private string? lastSeenReleaseNotesVersion;
     private ReleaseUpdate? availableUpdate;
@@ -123,6 +139,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private double updateDownloadPercent;
     private string updateBannerTitle = string.Empty;
     private string updateBannerDetail = string.Empty;
+    private bool isUpdateBannerDismissed;
     private bool isCheckingForUpdatesManually;
     private string? manualUpdateCheckMessage;
     private long settingsRevision;
@@ -131,11 +148,11 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private DispatcherTimer? operationTimer;
     private OptimizationReportDto? lastReport;
     private string reportSummaryLabel = string.Empty;
+    private string reportDetailSummaryLabel = string.Empty;
     private string reportRestartLabel = string.Empty;
     private bool isReportAvailable;
     private string profilePresentationBenefits = string.Empty;
     private string profilePresentationImpact = string.Empty;
-    private string profilePresentationCategories = string.Empty;
     private OptimizationComparisonResult? lastComparison;
     private Guid? lastTransactionId;
     private bool isComparisonAvailable;
@@ -150,6 +167,7 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
     private bool isLiveAlertBannerVisible;
     private bool isLiveAlertIconVisible;
     private string liveAlertMessage = string.Empty;
+    private LiveAlertSeverity liveAlertSeverity = LiveAlertSeverity.Important;
 
     public MainViewModel(
         IAppOptimizationService service,
@@ -162,15 +180,19 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
         ILiveAlertService? liveAlertService = null,
         WindowsGamingControlsService? windowsGamingControls = null,
         Func<string, FiveMSessionPresence>? fiveMSessionProbe = null,
-        IWindowsSystemHealthInspector? windowsSystemHealthInspector = null)
+        IWindowsSystemHealthInspector? windowsSystemHealthInspector = null,
+        PersonalWorkspaceService? personalWorkspaceService = null,
+        RalvenCacheService? ralvenCacheService = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
+        this.personalWorkspaceService = personalWorkspaceService ?? new PersonalWorkspaceService(_ => Task.FromResult(false), inMemory: true);
         this.localization = localization ?? LocalizationService.Current;
         this.startupRegistration = startupRegistration ?? new WindowsStartupRegistrationService();
         this.releaseUpdateService = releaseUpdateService;
         this.silentUpdateInstaller = silentUpdateInstaller;
         this.telemetry = telemetry ?? DisabledAnonymousTelemetryService.Instance;
         this.liveAlertService = liveAlertService;
+        this.ralvenCacheService = ralvenCacheService ?? new RalvenCacheService();
         this.liveSystemMetricsProvider = liveSystemMetricsProvider ?? new WindowsLiveSystemMetricsProvider();
         this.windowsGamingControls = windowsGamingControls ?? new WindowsGamingControlsService();
         this.fiveMSessionProbe = fiveMSessionProbe ?? WindowsFiveMSessionProbe.Probe;
@@ -206,6 +228,8 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
             if (SetProperty(ref isBusy, value))
             {
                 OnPropertyChanged(nameof(IsOptimizerIdle));
+                OnPropertyChanged(nameof(IsUpdateAttentionVisible));
+                OnPropertyChanged(nameof(IsLiveAlertStatusVisible));
                 RaiseCommandState();
             }
         }
@@ -213,9 +237,11 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
 
     public bool IsOptimizerIdle => !IsBusy && !IsReportAvailable;
 
-    public bool CanRefresh => !IsBusy && !isInitializing && !isWindowsGamingBusy;
+    public bool CanRefresh => !IsBusy && !isInitializing && !isWindowsGamingBusy && !isPersonalBusy;
 
     public bool CanStart => !IsBusy
+        && !isPersonalBusy
+        && (!IsUltraSelected || ProFeatureAvailability.Enabled && hasProAccess)
         && !isWindowsGamingBusy
         && !isInitializing
         && diagnostic is not null
@@ -234,8 +260,11 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
 
     public string AboutVersionDeveloper => localization.Format("About.VersionDeveloper", AppVersion);
 
-    public async Task InitializeAsync()
+    public Task InitializeAsync() => InitializeAsync(startBackgroundServices: true);
+
+    internal async Task InitializeAsync(bool startBackgroundServices)
     {
+        StartupTrace.Mark("initialize-start");
         isInitializing = true;
         RaiseCommandState();
         try
@@ -243,41 +272,31 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
             var settingsTask = service.LoadSettingsAsync();
             var diagnosticTask = service.DiagnoseAsync();
             var historyTask = service.LoadHistoryAsync();
-            await Task.WhenAll(settingsTask, diagnosticTask, historyTask);
-
-            var loadedSettings = await settingsTask;
-            var settingsFileExistedBeforeLoad = service.SettingsFileExists();
-            ApplySettings(loadedSettings);
-            RefreshPrivacyAuthorization(settingsFileExistedBeforeLoad);
-            PendingReleaseNotes = ReleaseNotesEvaluator.Evaluate(
-                loadedSettings,
-                settingsFileExistedBeforeLoad,
-                AppVersion,
-                ReleaseNotesCatalog.Versions);
+            // Preferences/consent do not depend on a successful system probe.
+            // Observe every task even if loading or applying settings fails.
+            try
+            {
+                var loadedSettings = await settingsTask;
+                var settingsFileExistedBeforeLoad = service.SettingsFileExists();
+                ApplySettings(loadedSettings);
+                StartupTrace.Mark("settings-applied");
+                RefreshPrivacyAuthorization(settingsFileExistedBeforeLoad);
+                PendingReleaseNotes = ReleaseNotesEvaluator.Evaluate(
+                    loadedSettings,
+                    settingsFileExistedBeforeLoad,
+                    AppVersion,
+                    ReleaseNotesCatalog.Versions);
+            }
+            finally
+            {
+                await Task.WhenAll(settingsTask, diagnosticTask, historyTask);
+            }
+            StartupTrace.Mark("initial-data-ready");
             ApplyDiagnostic(await diagnosticTask);
+            StartupTrace.Mark("diagnostic-applied");
             SetSystemPcStatus("System.Pc.Status.Ready");
             ApplyHistory(await historyTask);
-            if (checkForUpdates && releaseUpdateService is not null)
-            {
-                _ = CheckForUpdatesAsync().ContinueWith(
-                    static t => { _ = t.Exception; },
-                    CancellationToken.None,
-                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
-            }
-
-            if (liveAlertService is not null)
-            {
-                _ = CheckLiveAlertAsync().ContinueWith(
-                    static t => { _ = t.Exception; },
-                    CancellationToken.None,
-                    TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
-                    TaskScheduler.Default);
-
-                liveAlertTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = LiveAlertPollInterval };
-                liveAlertTimer.Tick += (_, _) => _ = CheckLiveAlertAsync();
-                liveAlertTimer.Start();
-            }
+            StartupTrace.Mark("history-applied");
         }
         catch (Exception exception)
         {
@@ -295,6 +314,38 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
             OnPropertyChanged(nameof(EmptyPlanMessage));
             RaiseCommandState();
         }
+        await InitializePersonalWorkspaceAsync();
+        StartupTrace.Mark("personal-workspace-ready");
+        if (startBackgroundServices) StartBackgroundServices();
+    }
+
+    private bool backgroundServicesStarted;
+
+    internal void StartBackgroundServices()
+    {
+        if (backgroundServicesStarted || personalLifetime.IsCancellationRequested) return;
+        backgroundServicesStarted = true;
+        if (checkForUpdates && releaseUpdateService is not null)
+        {
+            _ = CheckForUpdatesAsync().ContinueWith(
+                static t => { _ = t.Exception; },
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+        }
+
+        if (liveAlertService is not null)
+        {
+            _ = CheckLiveAlertAsync().ContinueWith(
+                static t => { _ = t.Exception; },
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously,
+                TaskScheduler.Default);
+            liveAlertTimer = new DispatcherTimer(DispatcherPriority.Background) { Interval = LiveAlertPollInterval };
+            liveAlertTimer.Tick += (_, _) => _ = CheckLiveAlertAsync();
+            liveAlertTimer.Start();
+        }
+        _ = ObservePersonalPcAsync();
     }
 
     public async Task RefreshDiagnosticAsync()
@@ -328,10 +379,16 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
             OnPropertyChanged(nameof(EmptyPlanMessage));
             RaiseCommandState();
         }
+        await ObservePersonalPcAsync();
     }
 
     private void RaiseCommandState()
     {
+        OnPropertyChanged(nameof(CanEditPersonalPreferences));
+        OnPropertyChanged(nameof(CanSavePersonalProfile));
+        OnPropertyChanged(nameof(CanUsePersonalTools));
+        OnPropertyChanged(nameof(CanCheckPersonalTracking));
+        OnPropertyChanged(nameof(CanStopPersonalTracking));
         OnPropertyChanged(nameof(CanRefresh));
         OnPropertyChanged(nameof(CanStart));
         OnPropertyChanged(nameof(CanCancel));
@@ -343,10 +400,16 @@ public sealed partial class MainViewModel : BindableBase, IDisposable
         OnPropertyChanged(nameof(CanRefreshWindowsSystemHealth));
         // Updating restarts the app, so the button has to follow IsBusy.
         OnPropertyChanged(nameof(CanDownloadUpdate));
+        OnPropertyChanged(nameof(CanClearRalvenCache));
     }
 
     public void Dispose()
     {
+        SetLiveMetricsEnabled(false);
+        disposed = true;
+        personalLifetime.Cancel();
+        personalTrackingTimer?.Stop();
+        personalTrackingTimer = null;
         StopFiveMSessionMonitor();
         liveMetricsEnabled = false;
         liveMetricsTimer?.Stop();

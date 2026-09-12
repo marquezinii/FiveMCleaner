@@ -6,6 +6,7 @@ using System.Globalization;
 using System.Windows.Threading;
 using Ralven.App.Services;
 using Ralven.Contracts;
+using Ralven.Windows.Diagnostics;
 using Ralven.Core.Catalog;
 using Ralven.Core.Planning;
 
@@ -28,6 +29,7 @@ public sealed partial class MainViewModel
     public bool CanRevertLastOptimization => ComparisonRegressionSuspected
         && !IsBusy
         && !isWindowsGamingBusy
+        && !isPersonalBusy
         && lastTransactionId is { } id
         && HistoryItems.Any(item => item.TransactionId == id && item.CanRollback);
 
@@ -37,29 +39,28 @@ public sealed partial class MainViewModel
 
     public bool CanRunGtaVBenchmark => !IsBusy
         && !isWindowsGamingBusy
+        && !isPersonalBusy
         && !IsGtaVBenchmarkRunning;
 
     public string ProfilePresentationBenefits { get => profilePresentationBenefits; private set => SetProperty(ref profilePresentationBenefits, value); }
 
     public string ProfilePresentationImpact { get => profilePresentationImpact; private set => SetProperty(ref profilePresentationImpact, value); }
 
-    public string ProfilePresentationCategories { get => profilePresentationCategories; private set => SetProperty(ref profilePresentationCategories, value); }
-
     public bool IsLightSelected
     {
-        get => selectedProfile == OptimizationProfile.Light;
+        get => !IsUltraSelected && selectedProfile == OptimizationProfile.Light;
         set { if (value) SelectProfile(OptimizationProfile.Light); }
     }
 
     public bool IsBalancedSelected
     {
-        get => selectedProfile == OptimizationProfile.Balanced;
+        get => !IsUltraSelected && selectedProfile == OptimizationProfile.Balanced;
         set { if (value) SelectProfile(OptimizationProfile.Balanced); }
     }
 
     public bool IsAggressiveSelected
     {
-        get => selectedProfile == OptimizationProfile.Aggressive;
+        get => !IsUltraSelected && selectedProfile == OptimizationProfile.Aggressive;
         set { if (value) SelectProfile(OptimizationProfile.Aggressive); }
     }
 
@@ -94,8 +95,7 @@ public sealed partial class MainViewModel
 
     public string PlanHeader => localization.Format(
         "Plan.ActionsCatalog",
-        SelectedActionCount,
-        currentPlan?.CatalogVersion ?? 1);
+        SelectedActionCount);
 
     public string AutomaticAnalysisHeader => localization.Format(
         "Optimizer.AutomaticAnalysis.Header",
@@ -105,7 +105,7 @@ public sealed partial class MainViewModel
         ? string.Empty
         : currentPlan?.Notices.Count > 0
         ? string.Join("  •  ", currentPlan.Notices.Select(LocalizeNotice))
-        : localization.GetString("Plan.NoAdditionalWarnings");
+        : string.Empty;
 
     public string EmptyPlanMessage => diagnostic is null
         ? localization.GetString(diagnosticFailed
@@ -124,7 +124,7 @@ public sealed partial class MainViewModel
         get
         {
             var upper = SelectedProfileName.ToUpper(localization.CurrentCulture);
-            return selectedProfile == RecommendedProfile
+            return !IsUltraSelected && selectedProfile == RecommendedProfile
                 ? $"{upper} • {localization.GetString("Profiles.RecommendedBadge")}"
                 : upper;
         }
@@ -135,7 +135,7 @@ public sealed partial class MainViewModel
     /// to <see cref="SelectedProfileName"/>, instead of text concatenated
     /// into the all-caps <see cref="SelectedProfileLabel"/> heading.
     /// </summary>
-    public bool IsSelectedProfileRecommended => selectedProfile == RecommendedProfile;
+    public bool IsSelectedProfileRecommended => !IsUltraSelected && selectedProfile == RecommendedProfile;
 
     /// <summary>
     /// Posição do perfil selecionado na escala Leve → Médio → Agressivo, de 0 a 1.
@@ -156,16 +156,32 @@ public sealed partial class MainViewModel
         ? localization.GetString("Plan.Elevation.OnePrompt")
         : localization.GetString("Plan.Elevation.CurrentUser");
 
-    public string SelectedProfileName => ProfileName(selectedProfile);
+    public string SelectedProfileName => IsUltraSelected ? localization.GetString("Ultra.Name") : ProfileName(selectedProfile);
+
+    public void PrepareNewOptimization()
+    {
+        if (!CanEditPersonalPreferences)
+        {
+            return;
+        }
+
+        ApplyReport(null);
+        ApplyComparison(null);
+        lastTransactionId = null;
+        StepLedger.Clear();
+        RefreshPlan();
+    }
 
     public void SetOptimizationScope(OptimizationScope scope)
     {
-        if (IsBusy || optimizationScope == scope)
+        if (IsBusy || isPersonalBusy || optimizationScope == scope)
         {
             return;
         }
 
         optimizationScope = scope;
+        isUltraSelected = false;
+        RefreshUltraPresentation();
         ApplyReport(null);
         ApplyComparison(null);
         lastTransactionId = null;
@@ -180,13 +196,15 @@ public sealed partial class MainViewModel
 
     public void SelectProfile(OptimizationProfile profile)
     {
-        if (selectedProfile == profile)
+        if (IsBusy || isPersonalBusy || (selectedProfile == profile && !isUltraSelected))
         {
             return;
         }
 
         profileInitializedFromDiagnostic = true;
+        isUltraSelected = false;
         selectedProfile = profile;
+        RefreshUltraPresentation();
         OnPropertyChanged(nameof(IsLightSelected));
         OnPropertyChanged(nameof(IsBalancedSelected));
         OnPropertyChanged(nameof(IsAggressiveSelected));
@@ -208,7 +226,7 @@ public sealed partial class MainViewModel
         operationCancellation = new CancellationTokenSource();
         var progress = new Progress<AppProgressUpdate>(ApplyProgress);
         var completedSuccessfully = false;
-        var telemetryEventName = "optimization-failed";
+        var telemetryEventName = TelemetryEventNames.OptimizationFailed;
         string? telemetryErrorCategory = null;
         BugCode? telemetryBugCode = null;
         try
@@ -217,39 +235,57 @@ public sealed partial class MainViewModel
             // só retorna true quando CanStart é true (e CanStart exige plano).
             var result = await service.ExecuteAsync(currentPlan!, progress, operationCancellation.Token);
             completedSuccessfully = result.Succeeded;
-            telemetryEventName = result.Succeeded ? "optimization-completed" : "optimization-failed";
-            if (!result.Succeeded && result.Report is not null)
+            telemetryEventName = result.WasCancelled
+                ? TelemetryEventNames.OptimizationCancelled
+                : result.Succeeded ? TelemetryEventNames.OptimizationCompleted : TelemetryEventNames.OptimizationFailed;
+            if (!result.Succeeded)
             {
-                // Use the first failed action's ID for bug classification
-                var failedActionId = result.Report.Lines
-                    .Where(l => l.Outcome is ActionExecutionOutcome.Failed or ActionExecutionOutcome.RollbackFailed)
-                    .Select(l => l.ActionId)
-                    .FirstOrDefault();
-                if (!string.IsNullOrWhiteSpace(failedActionId))
+                telemetryErrorCategory = result.FailureErrorCategory ?? "unexpected";
+                telemetryBugCode = result.FailureBugCode;
+                if (telemetryBugCode is null && result.Report is not null)
                 {
-                    telemetryBugCode = BugCodeClassifier.ClassifyOptimizationException(new InvalidOperationException(), failedActionId);
+                    var failures = result.Report.Lines
+                        .Where(line => line.Outcome is ActionExecutionOutcome.Failed or ActionExecutionOutcome.RollbackFailed)
+                        .ToArray();
+                    telemetryBugCode = failures.Length > 1
+                        ? BugCode.APP_OPT_PARTIAL_FAILURE
+                        : failures.Length == 1
+                            ? BugCodeClassifier.ClassifyOptimizationException(
+                                new InvalidOperationException(),
+                                failures[0].ActionId)
+                            : BugCode.APP_OPT_ACTION_EXECUTION;
                 }
             }
             await HandleOptimizationResultAsync(result);
         }
         catch (OperationCanceledException)
         {
-            telemetryEventName = "optimization-cancelled";
+            telemetryEventName = TelemetryEventNames.OptimizationCancelled;
             telemetryErrorCategory = "cancelled";
             telemetryBugCode = BugCode.APP_OPT_CANCELLED;
             HandleOptimizationCancelled();
         }
         catch (Exception exception)
         {
-            telemetryEventName = "optimization-failed";
+            telemetryEventName = TelemetryEventNames.OptimizationFailed;
             telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
             telemetryBugCode = BugCodeClassifier.ClassifyException(exception, "optimization");
-            HandleOptimizationFailed();
+            if (exception is ProAccessRequiredException)
+            {
+                SetProAccess(false);
+                UltraStatus = localization.GetString("Ultra.AccessRequired");
+                FinalizeHeadline(UltraStatus);
+            }
+            else
+            {
+                HandleOptimizationFailed();
+            }
         }
         finally
         {
             FinalizeOptimizationRun(completedSuccessfully, telemetryEventName, telemetryErrorCategory, telemetryBugCode);
         }
+        await ObservePersonalPcAsync();
     }
 
     private bool TryPrepareOptimizationRun()
@@ -271,6 +307,7 @@ public sealed partial class MainViewModel
         ProgressPercent = 0;
         ClearProgressHistory();
         StartOperationTiming();
+        TrackOptimizationStartedTelemetry();
         StepLedger.Clear();
         ApplyReport(null);
         ApplyComparison(null);
@@ -308,7 +345,12 @@ public sealed partial class MainViewModel
     {
         var executionTime = operationStopwatch?.Elapsed ?? TimeSpan.Zero;
         StopOperationTiming(completedSuccessfully);
-        TrackOptimizationTelemetry(telemetryEventName, executionTime, telemetryErrorCategory, bugCode);
+        TrackOptimizationTelemetry(
+            telemetryEventName,
+            executionTime,
+            telemetryErrorCategory,
+            bugCode,
+            currentPlan?.PlanId);
         // operationCancellation foi atribuído antes do try em StartOptimizationAsync.
         operationCancellation!.Dispose();
         operationCancellation = null;
@@ -336,22 +378,41 @@ public sealed partial class MainViewModel
         IsGtaVBenchmarkRunning = true;
         GtaVBenchmarkStatusLabel = localization.GetString("GtaVBenchmark.Running");
         RaiseCommandState();
+        var stopwatch = Stopwatch.StartNew();
+        var telemetryEventName = TelemetryEventNames.GtaVBenchmarkFailed;
+        string? telemetryErrorCategory = "unexpected";
         try
         {
             var result = await service.RunGtaVBenchmarkAsync(3);
             GtaVBenchmarkStatusLabel = DescribeGtaVBenchmarkResult(result);
+            telemetryEventName = result.Succeeded
+                ? TelemetryEventNames.GtaVBenchmarkCompleted
+                : TelemetryEventNames.GtaVBenchmarkFailed;
+            telemetryErrorCategory = result.Succeeded ? null : ClassifyBenchmarkFailure(result.FailureReason);
         }
         catch (Exception exception) when (exception is not (
             OutOfMemoryException or StackOverflowException or AccessViolationException))
         {
             GtaVBenchmarkStatusLabel = localization.Format("GtaVBenchmark.Error", localization.DescribeException(exception));
+            telemetryErrorCategory = TelemetryErrorClassifier.ClassifyException(exception);
         }
         finally
         {
+            stopwatch.Stop();
+            TrackGtaVBenchmarkTelemetry(telemetryEventName, stopwatch.Elapsed, telemetryErrorCategory);
             IsGtaVBenchmarkRunning = false;
             RaiseCommandState();
         }
     }
+
+    private static string? ClassifyBenchmarkFailure(string? reason) => reason switch
+    {
+        "benchmark-did-not-exit-in-time" => "timeout",
+        "profile-folder-not-found" or "benchmark-output-file-not-found" => "io",
+        "benchmark-output-file-not-recognized" => "invalid-data",
+        "gtav-not-detected" or "gtav-still-running" or "gta-executable-not-found" => null,
+        _ => "unexpected"
+    };
 
     private string DescribeGtaVBenchmarkResult(AppGtaVBenchmarkResult result)
     {
@@ -443,42 +504,10 @@ public sealed partial class MainViewModel
 
     private void RefreshPlan()
     {
-        var edition = optimizationScope == OptimizationScope.FiveMLegacy
-            ? diagnostic?.Edition ?? FiveMEdition.Unknown
-            : FiveMEdition.Unknown;
-        var options = new OptimizationOptionsDto
-        {
-            CleanUserTemporaryFiles = true,
-            TemporaryFileMinimumAgeDays = selectedProfile switch
-            {
-                OptimizationProfile.Light => 30,
-                OptimizationProfile.Balanced => 14,
-                _ => 7
-            },
-            RemoveOldFiveMCrashDumps = optimizationScope == OptimizationScope.FiveMLegacy,
-            DiagnosticRetentionDays = selectedProfile == OptimizationProfile.Aggressive ? 7 : 14,
-            ServerCacheRepair = CacheRepairPolicy.Off,
-            ServerCacheThresholdGiB = 8,
-            EnableGameMode = true,
-            PreferHighPerformanceGpu = optimizationScope == OptimizationScope.FiveMLegacy,
-            DisableBackgroundCapture = true,
-            UseSessionPerformancePowerPlan = selectedProfile != OptimizationProfile.Light,
-            ApplyLegacyGraphicsPreset = optimizationScope == OptimizationScope.FiveMLegacy,
-            ApplyGtaVGraphicsPreset = optimizationScope == OptimizationScope.FiveMLegacy
-                && diagnostic?.GtaVDetected == true,
-            ReduceWindowsVisualEffects = selectedProfile == OptimizationProfile.Aggressive,
-            ReduceMenuShowDelay = selectedProfile != OptimizationProfile.Light
-        };
-
-        currentPlan = PlanBuilder.Build(
-            new OptimizationPlanRequestDto
-            {
-                Profile = selectedProfile,
-                Scope = optimizationScope,
-                Edition = edition,
-                Options = options
-            },
-            PlanBuildContext.New(TimeProvider.System));
+        currentPlan = BuildPlan(
+            selectedProfile,
+            optimizationScope,
+            IsUltraSelected ? personalPreferences : null);
 
         PlannedActions.Clear();
         PlannedAdjustments.Clear();
@@ -511,16 +540,98 @@ public sealed partial class MainViewModel
         RaiseCommandState();
     }
 
+    private OptimizationPlanDto BuildPlan(
+        OptimizationProfile profile,
+        OptimizationScope scope,
+        PersonalOptimizationPreferencesDto? preferences = null)
+    {
+        var edition = scope == OptimizationScope.FiveMLegacy
+            ? diagnostic?.Edition ?? FiveMEdition.Unknown
+            : FiveMEdition.Unknown;
+        var options = new OptimizationOptionsDto
+        {
+            CleanUserTemporaryFiles = true,
+            TemporaryFileMinimumAgeDays = profile switch
+            {
+                OptimizationProfile.Light => 30,
+                OptimizationProfile.Balanced => 14,
+                _ => 7
+            },
+            RemoveOldFiveMCrashDumps = scope == OptimizationScope.FiveMLegacy,
+            DiagnosticRetentionDays = profile == OptimizationProfile.Aggressive ? 7 : 14,
+            ServerCacheRepair = CacheRepairPolicy.Off,
+            ServerCacheThresholdGiB = 8,
+            EnableGameMode = true,
+            PreferHighPerformanceGpu = scope == OptimizationScope.FiveMLegacy,
+            DisableBackgroundCapture = true,
+            UseSessionPerformancePowerPlan = profile != OptimizationProfile.Light,
+            ApplyLegacyGraphicsPreset = scope == OptimizationScope.FiveMLegacy,
+            ApplyGtaVGraphicsPreset = scope == OptimizationScope.FiveMLegacy
+                && diagnostic?.GtaVDetected == true,
+            ReduceWindowsVisualEffects = profile == OptimizationProfile.Aggressive,
+            ReduceMenuShowDelay = profile != OptimizationProfile.Light
+        };
+
+        return PlanBuilder.Build(
+            new OptimizationPlanRequestDto
+            {
+                Profile = profile,
+                Scope = scope,
+                Edition = edition,
+                Options = options,
+                PersonalPreferences = preferences
+            },
+            PlanBuildContext.New(TimeProvider.System));
+    }
+
+    public RalvenAiPcContext? CreateRalvenAiContext()
+    {
+        if (diagnostic is null)
+        {
+            return null;
+        }
+
+        var profiles = Enum.GetValues<OptimizationProfile>()
+            .Select(profile => new RalvenAiProfileContext(
+                profile.ToString().ToLowerInvariant(),
+                BuildPlan(profile, OptimizationScope.GeneralWindows).Actions
+                    .Select(action => new RalvenAiActionContext(
+                        action.Metadata.Id,
+                        action.Metadata.Name,
+                        action.Metadata.ExpectedImpact,
+                        action.Metadata.Risk.ToString(),
+                        action.Metadata.Reversibility is ActionReversibility.ReadOnly
+                            or ActionReversibility.FullyReversible
+                            or ActionReversibility.SessionScoped))
+                    .ToArray()))
+            .ToArray();
+
+        return new RalvenAiPcContext(
+            diagnostic.CpuName,
+            diagnostic.GpuName,
+            diagnostic.TotalMemoryGiB,
+            diagnostic.AvailableMemoryGiB,
+            diagnostic.LogicalProcessorCount,
+            diagnostic.FreeDiskGiB,
+            diagnostic.OsLabel,
+            diagnostic.SystemArchitecture,
+            diagnostic.ReadinessScore,
+            diagnostic.PerformancePressure.ToString().ToLowerInvariant(),
+            diagnostic.RecommendedProfile.ToString().ToLowerInvariant(),
+            profiles);
+    }
+
     private void RefreshProfilePresentation()
     {
         var presentation = ProfilePresentationProvider.For(selectedProfile, optimizationScope);
         ProfilePresentationBenefits = localization.GetString(
             $"Profiles.Presentation.{optimizationScope}.{selectedProfile}.Benefits");
         ProfilePresentationImpact = localization.GetString($"Profiles.Presentation.Impact.{presentation.ImpactLevel}");
-        ProfilePresentationCategories = string.Join(
-            "  •  ",
-            presentation.AnalyzedCategories.Select(category =>
-                localization.GetString($"Category.{category}")));
+        if (IsUltraSelected)
+        {
+            ProfilePresentationBenefits = localization.GetString("Ultra.Description");
+            ProfilePresentationImpact = localization.GetString($"Risk.{currentPlan?.MaximumRisk ?? ActionRisk.Informational}");
+        }
     }
 
     private ActionDisplayItem ToDisplayItem(ActionMetadataDto action)
@@ -557,6 +668,9 @@ public sealed partial class MainViewModel
             : action.Reversibility is ActionReversibility.Irreversible or ActionReversibility.RebuildableData
                 ? localization.GetString("Privilege.PermanentCleanup")
                 : localization.GetString("Privilege.Reversible");
+        var primaryCaution = action.Reversibility is ActionReversibility.Irreversible or ActionReversibility.RebuildableData
+            ? privilege
+            : string.Empty;
         var categoryLabel = action.Category switch
         {
             ActionCategory.Safety => localization.GetString("Category.Safety"),
@@ -567,31 +681,23 @@ public sealed partial class MainViewModel
             ActionCategory.FiveMGraphics => localization.GetString("Category.FiveMGraphics"),
             _ => action.Category.ToString()
         };
-        var nameKey = $"Actions.{action.Id}.Name";
-        var descriptionKey = $"Actions.{action.Id}.Description";
-        var detectionSummaryKey = $"Actions.{action.Id}.DetectionSummary";
-        var confirmationSummaryKey = $"Actions.{action.Id}.ConfirmationSummary";
-        var undoSummaryKey = $"Actions.{action.Id}.UndoSummary";
-        var riskLimitationsKey = $"Actions.{action.Id}.RiskLimitations";
-        var localizedName = localization.GetString(nameKey);
-        var localizedDescription = localization.GetString(descriptionKey);
-        var localizedDetectionSummary = localization.GetString(detectionSummaryKey);
-        var localizedConfirmationSummary = localization.GetString(confirmationSummaryKey);
-        var localizedUndoSummary = localization.GetString(undoSummaryKey);
-        var localizedRiskLimitations = localization.GetString(riskLimitationsKey);
+        // Cada texto da ação cai para o conteúdo do catálogo quando a chave de
+        // localização correspondente não existe no idioma atual.
+        string Localized(string suffix, string fallback) =>
+            localization.GetStringOrFallback($"Actions.{action.Id}.{suffix}", fallback);
         return new ActionDisplayItem(
             action.Id,
-            localizedName == nameKey ? action.Name : localizedName,
-            localizedDescription == descriptionKey ? action.Description : localizedDescription,
-            localizedDetectionSummary == detectionSummaryKey ? action.DetectionSummary : localizedDetectionSummary,
-            localizedConfirmationSummary == confirmationSummaryKey ? action.ConfirmationSummary : localizedConfirmationSummary,
-            localizedUndoSummary == undoSummaryKey ? action.UndoSummary : localizedUndoSummary,
-            localizedRiskLimitations == riskLimitationsKey ? action.RiskLimitations : localizedRiskLimitations,
+            Localized("Name", action.Name),
+            Localized("Description", action.Description),
+            Localized("DetectionSummary", action.DetectionSummary),
+            Localized("ConfirmationSummary", action.ConfirmationSummary),
+            Localized("UndoSummary", action.UndoSummary),
+            Localized("RiskLimitations", action.RiskLimitations),
             icon,
             risk,
             riskBrushKey,
             privilege,
-            requiresElevation,
+            primaryCaution,
             categoryLabel);
     }
 

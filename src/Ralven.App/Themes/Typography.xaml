@@ -31,6 +31,9 @@
 
     <FontFamily x:Key="AppFontBody">/Ralven;component/Assets/Fonts/#Inter, Inter, Segoe UI Variable Text, Segoe UI</FontFamily>
     <FontFamily x:Key="AppFontDisplay">/Ralven;component/Assets/Fonts/#Inter, Inter, Segoe UI Variable Display, Segoe UI</FontFamily>
+    <!-- Conteúdo gerado pelo Ralven AI: isolado do restante da identidade para
+         permitir a leitura com Geist sem trocar a tipografia geral do app. -->
+    <FontFamily x:Key="RalvenAiFont">/Ralven;component/Assets/Fonts/#Geist Variable, Inter, Segoe UI Variable Text, Segoe UI</FontFamily>
     <!-- Reservada a leituras numéricas de instrumento (Readout*, TickLabel):
          medição, nunca decoração de "tecnicidade" sobre texto corrido.
          Cascadia Mono acompanha o Windows 11; Consolas é o fallback do SO. -->

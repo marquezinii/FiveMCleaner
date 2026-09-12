@@ -467,7 +467,7 @@ public sealed class SessionPerformancePowerPlanAction : WindowsOptimizationActio
         if (!powerStatus.IsOnAcPower())
         {
             return WindowsActionApplyResult.Skipped(
-                "O modo de alto desempenho não foi ativado porque o computador está na bateria.");
+                WindowsActionText.Format("ActionResults.PerformancePowerPlan.OnBattery"));
         }
 
         var previous = await controller.GetActiveSchemeAsync(cancellationToken).ConfigureAwait(false);
@@ -501,7 +501,7 @@ public sealed class SessionPerformancePowerPlanAction : WindowsOptimizationActio
         if (outcome == PowerPlanActivationOutcome.SchemeUnavailable)
         {
             return WindowsActionApplyResult.Skipped(
-                "Este computador não expõe um plano de alto desempenho compatível.");
+                WindowsActionText.Format("ActionResults.PerformancePowerPlan.Unavailable"));
         }
 
         if (outcome == PowerPlanActivationOutcome.Failed)
@@ -534,12 +534,12 @@ public sealed class SessionPerformancePowerPlanAction : WindowsOptimizationActio
         if (applied == previous)
         {
             return WindowsActionApplyResult.NoChange(
-                "O plano de alto desempenho já estava ativo.");
+                WindowsActionText.Format("ActionResults.PerformancePowerPlan.AlreadyActive"));
         }
 
         return WindowsActionApplyResult.ChangedWith(
             new PowerPlanSnapshot(previous, applied),
-            "Plano de alto desempenho ativado; o estado anterior foi salvo para rollback.");
+            WindowsActionText.Format("ActionResults.PerformancePowerPlan.Applied"));
     }
 
     public override async Task RollbackAsync(
@@ -645,13 +645,13 @@ public sealed class PciExpressPowerManagementAction : WindowsOptimizationAction
         if (previous is null)
         {
             return WindowsActionApplyResult.Skipped(
-                "Este computador não expõe a configuração de PCI Express Link State Power Management.");
+                WindowsActionText.Format("ActionResults.PciPower.Unavailable"));
         }
 
         if (previous.Policy == OffPolicy)
         {
             return WindowsActionApplyResult.NoChange(
-                "PCI Express Link State Power Management já estava desativado (Off).");
+                WindowsActionText.Format("ActionResults.PciPower.AlreadyOff"));
         }
 
         await controller.SetPciExpressAspmPolicyAsync(
@@ -663,7 +663,7 @@ public sealed class PciExpressPowerManagementAction : WindowsOptimizationAction
 
         return WindowsActionApplyResult.ChangedWith(
             new PciExpressAspmSnapshot(previous.SchemeId, previous.Policy, OffPolicy),
-            "PCI Express Link State Power Management definido como Off; o valor anterior foi salvo para rollback.");
+            WindowsActionText.Format("ActionResults.PciPower.Applied"));
     }
 
     public override async Task RollbackAsync(

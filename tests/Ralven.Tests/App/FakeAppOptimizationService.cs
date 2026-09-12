@@ -16,6 +16,7 @@ public sealed class FakeAppOptimizationService : IAppOptimizationService
 {
     private readonly bool settingsFileExists;
     private readonly IReadOnlyList<AppHistoryRecord> history;
+    private readonly OptimizationReportDto? report;
     private readonly bool isFiveMRunning;
     private readonly bool gtaVIsRunning;
     private readonly string? fiveMRoot;
@@ -26,6 +27,10 @@ public sealed class FakeAppOptimizationService : IAppOptimizationService
     private readonly AppProgressUpdate? rollbackProgressUpdate;
     public AppSettings? SavedSettings { get; private set; }
     public int SaveCallCount { get; private set; }
+
+    public int HistoryLoadCount { get; private set; }
+
+    public AppOptimizationResult? ExecutionResult { get; set; }
 
     public Exception? SettingsSaveException { get; set; }
 
@@ -42,7 +47,8 @@ public sealed class FakeAppOptimizationService : IAppOptimizationService
         Task<AppGtaVBenchmarkResult>? benchmarkResult = null,
         bool? rollbackResult = null,
         AppProgressUpdate? rollbackProgressUpdate = null,
-        Exception? settingsSaveException = null)
+        Exception? settingsSaveException = null,
+        OptimizationReportDto? report = null)
     {
         InitialSettings = initialSettings;
         this.settingsFileExists = settingsFileExists;
@@ -56,6 +62,7 @@ public sealed class FakeAppOptimizationService : IAppOptimizationService
         this.benchmarkResult = benchmarkResult;
         this.rollbackResult = rollbackResult;
         this.rollbackProgressUpdate = rollbackProgressUpdate;
+        this.report = report;
         SettingsSaveException = settingsSaveException;
     }
 
@@ -87,14 +94,22 @@ public sealed class FakeAppOptimizationService : IAppOptimizationService
             ? Task.FromResult(CreateMinimalDiagnostic(isFiveMRunning, gtaVIsRunning, fiveMRoot, edition, recommendedProfile))
             : Task.FromException<AppDiagnostic>(DiagnosticException);
 
-    public Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(CancellationToken cancellationToken = default) =>
-        Task.FromResult(history);
+    public Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(CancellationToken cancellationToken = default)
+    {
+        HistoryLoadCount++;
+        return Task.FromResult(history);
+    }
+
+    public Task<OptimizationReportDto?> LoadReportAsync(
+        Guid transactionId,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(report?.TransactionId == transactionId ? report : null);
 
     public Task<AppOptimizationResult> ExecuteAsync(
         OptimizationPlanDto plan,
         IProgress<AppProgressUpdate> progress,
         CancellationToken cancellationToken = default) =>
-        throw new NotSupportedException();
+        ExecutionResult is { } result ? Task.FromResult(result) : throw new NotSupportedException();
 
     public Task<bool> RollbackAsync(
         Guid transactionId,

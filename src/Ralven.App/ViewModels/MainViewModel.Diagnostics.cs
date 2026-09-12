@@ -297,11 +297,12 @@ public sealed partial class MainViewModel
         HistoryItems.Clear();
         foreach (var record in records.OrderByDescending(item => item.CreatedAt).Take(30))
         {
+            var state = localization.GetString(record.State);
             HistoryItems.Add(new HistoryDisplayItem(
                 record.TransactionId,
                 HistoryTitle(record),
                 record.CreatedAt.LocalDateTime.ToString("g", localization.CurrentCulture),
-                localization.Format("History.AdjustmentsState", record.ChangedActions, record.State),
+                localization.Format("History.AdjustmentsState", record.ChangedActions, state),
                 record.CanRollback,
                 record.Kind));
         }
@@ -340,14 +341,16 @@ public sealed partial class MainViewModel
         LastOptimizationSummary = localization.Format(
             "History.AdjustmentsState",
             latest.ChangedActions,
-            latest.State);
+            localization.GetString(latest.State));
     }
 
     private string HistoryTitle(AppHistoryRecord record)
     {
         return record.Kind == AppHistoryKind.WindowsGaming
             ? localization.GetString("History.WindowsGamingTitle")
-            : localization.Format("History.ProfileTitle", ProfileName(record.Profile));
+            : localization.Format("History.ProfileTitle", record.PersonalUsage is { } usage
+                ? localization.GetString("Ultra.Name") + " · " + localization.GetString($"Ultra.Usage.{usage}")
+                : ProfileName(record.Profile));
     }
 
     /// <summary>

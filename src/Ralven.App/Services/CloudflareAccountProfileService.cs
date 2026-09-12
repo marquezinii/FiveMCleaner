@@ -1,3 +1,4 @@
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -15,9 +16,12 @@ namespace Ralven.App.Services;
 /// </summary>
 public sealed class CloudflareAccountProfileService : IAccountProfileService
 {
-    private static readonly HttpClient SharedClient = CreateClient();
+    private static readonly HttpClient SharedClient =
+        CloudflareTransportDefaults.CreateClient(TimeSpan.FromSeconds(20));
+
     private readonly HttpClient httpClient;
     private readonly Uri endpoint;
+    private readonly Uri accountEndpoint;
     private readonly ILocalizationService localization;
 
     public CloudflareAccountProfileService(Uri endpoint, ILocalizationService? localization = null)
@@ -28,13 +32,10 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
     internal CloudflareAccountProfileService(HttpClient httpClient, Uri endpoint, ILocalizationService? localization = null)
     {
         this.httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-        ArgumentNullException.ThrowIfNull(endpoint);
-        if (endpoint.Scheme != Uri.UriSchemeHttps)
-        {
-            throw new ArgumentException("Endpoint de perfil de conta inválido.", nameof(endpoint));
-        }
-
-        this.endpoint = endpoint;
+        this.endpoint = CloudflareTransportDefaults.ValidateHttpsEndpoint(
+            endpoint,
+            "Endpoint de perfil de conta inválido.");
+        accountEndpoint = BuildAccountEndpoint(this.endpoint);
         this.localization = localization ?? LocalizationService.Current;
     }
 
@@ -176,7 +177,7 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(idToken);
 
-        using var request = new HttpRequestMessage(HttpMethod.Delete, endpoint);
+        using var request = new HttpRequestMessage(HttpMethod.Delete, accountEndpoint);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", idToken);
 
         try
@@ -185,12 +186,76 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
                 request,
                 HttpCompletionOption.ResponseHeadersRead,
                 cancellationToken).ConfigureAwait(false);
-            return new AccountProfileDeletionResult(
-                response.IsSuccessStatusCode ? AccountProfileDeletionOutcome.Deleted : AccountProfileDeletionOutcome.Failed);
+            if (response.IsSuccessStatusCode)
+            {
+                return new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Deleted);
+            }
+
+            var errorCode = await ReadDeletionErrorCodeAsync(response, cancellationToken).ConfigureAwait(false);
+            var outcome = errorCode switch
+            {
+                "billing-cancellation-required" => AccountProfileDeletionOutcome.BillingCancellationRequired,
+                "reauthentication-required" or "recent-authentication-required" =>
+                    AccountProfileDeletionOutcome.ReauthenticationRequired,
+                "rate-limited" or "account-rate-limited" => AccountProfileDeletionOutcome.RateLimited,
+                "account-deletion-unavailable" or "account-security-unavailable" or "server-misconfigured" =>
+                    AccountProfileDeletionOutcome.Unavailable,
+                _ when response.StatusCode == HttpStatusCode.TooManyRequests =>
+                    AccountProfileDeletionOutcome.RateLimited,
+                _ when response.StatusCode == HttpStatusCode.ServiceUnavailable =>
+                    AccountProfileDeletionOutcome.Unavailable,
+                _ => AccountProfileDeletionOutcome.Failed,
+            };
+            return new AccountProfileDeletionResult(outcome, errorCode);
         }
-        catch (Exception exception) when (exception is HttpRequestException or TaskCanceledException)
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
-            return new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Failed);
+            throw;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or IOException or OperationCanceledException)
+        {
+            return new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Unavailable);
+        }
+    }
+
+    private static Uri BuildAccountEndpoint(Uri profileEndpoint)
+    {
+        const string profileSuffix = "/profile";
+        if (!profileEndpoint.AbsolutePath.EndsWith(profileSuffix, StringComparison.Ordinal))
+        {
+            throw new ArgumentException("Endpoint de perfil de conta inválido.", nameof(profileEndpoint));
+        }
+
+        var builder = new UriBuilder(profileEndpoint)
+        {
+            Path = profileEndpoint.AbsolutePath[..^profileSuffix.Length],
+            Query = string.Empty,
+            Fragment = string.Empty,
+        };
+        return builder.Uri;
+    }
+
+    private static async Task<string?> ReadDeletionErrorCodeAsync(
+        HttpResponseMessage response,
+        CancellationToken cancellationToken)
+    {
+        const int maximumBytes = 4 * 1024;
+        if (response.Content.Headers.ContentLength is > maximumBytes)
+        {
+            return null;
+        }
+
+        try
+        {
+            await response.Content.LoadIntoBufferAsync(maximumBytes, cancellationToken).ConfigureAwait(false);
+            var error = (await response.Content.ReadFromJsonAsync<AccountProfileErrorDto>(cancellationToken)
+                .ConfigureAwait(false))?.Error;
+            return error is { Length: > 0 and <= 64 }
+                && error.All(character => char.IsAsciiLetterLower(character) || character is '-') ? error : null;
+        }
+        catch (Exception exception) when (exception is HttpRequestException or IOException or System.Text.Json.JsonException)
+        {
+            return null;
         }
     }
 
@@ -266,14 +331,4 @@ public sealed class CloudflareAccountProfileService : IAccountProfileService
         [property: JsonPropertyName("firstName")] string? FirstName,
         [property: JsonPropertyName("lastName")] string? LastName,
         [property: JsonPropertyName("termsVersion")] string? TermsVersion);
-
-    private static HttpClient CreateClient()
-    {
-        var handler = new SocketsHttpHandler
-        {
-            AllowAutoRedirect = false,
-            AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-        };
-        return new HttpClient(handler) { Timeout = TimeSpan.FromSeconds(20) };
-    }
 }

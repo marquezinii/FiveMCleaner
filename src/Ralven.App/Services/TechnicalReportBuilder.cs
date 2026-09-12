@@ -73,7 +73,10 @@ public static class TechnicalReportBuilder
         builder.AppendLine($"{localization.GetString("Report.Field.Transaction")}: {report.TransactionId:N}");
         builder.AppendLine(
             $"{localization.GetString("Report.Field.Date")}: {report.CreatedAtUtc.UtcDateTime:yyyy-MM-dd HH:mm} UTC");
-        builder.AppendLine($"{localization.GetString("Report.Field.Profile")}: {report.Profile}");
+        var profileName = report.PersonalUsage is { } usage
+            ? $"{localization.GetString("Ultra.Name")} · {localization.GetString($"Ultra.Usage.{usage}")}"
+            : report.Profile.ToString();
+        builder.AppendLine($"{localization.GetString("Report.Field.Profile")}: {profileName}");
         if (diagnostic is not null)
         {
             builder.AppendLine($"{localization.GetString("Report.Field.System")}: "
@@ -94,8 +97,12 @@ public static class TechnicalReportBuilder
 
         foreach (var line in report.Lines)
         {
+            var reasonWithCode = OptimizationFailureMessageFormatter.AppendCode(
+                line.Reason,
+                line.BugCode,
+                code => localization.Format("Report.ErrorCodeSuffix", code));
             builder.AppendLine($"[{OutcomeLabel(localization, line.Outcome)}] {line.ActionName} ({line.ActionId})"
-                + (string.IsNullOrWhiteSpace(line.Reason) ? string.Empty : $" — {line.Reason}"));
+                + (string.IsNullOrWhiteSpace(reasonWithCode) ? string.Empty : $" — {reasonWithCode}"));
         }
 
         return ReportSanitizer.Sanitize(builder.ToString().TrimEnd());

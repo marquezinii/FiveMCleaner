@@ -51,6 +51,7 @@ test('validateEvent accepts a well-formed completed event with the full hardware
     backupRestored: null,
     elevationUsed: null,
     processCountAtStart: null,
+    operationId: null,
   });
 });
 
@@ -92,6 +93,22 @@ test('validateEvent rejects an unknown event name', () => {
   assert.equal(validateEvent(validEvent({ eventName: 'something-else' })), null);
 });
 
+test('validateEvent accepts the expanded closed catalog and an optional operation UUID', () => {
+  const operationId = '22222222-2222-4222-8222-222222222222';
+  for (const eventName of [
+    'app-initialized',
+    'optimization-started',
+    'gtav-benchmark-completed',
+    'gtav-benchmark-failed',
+  ]) {
+    assert.equal(validateEvent(validEvent({ eventName, operationId })).operationId, operationId);
+  }
+});
+
+test('validateEvent rejects a malformed optional operation UUID', () => {
+  assert.equal(validateEvent(validEvent({ operationId: 'machine-identifier' })), null);
+});
+
 test('validateEvent rejects an unknown error category', () => {
   assert.equal(
     validateEvent(validEvent({ eventName: 'optimization-failed', errorCategory: 'sql-injection' })),
@@ -101,6 +118,7 @@ test('validateEvent rejects an unknown error category', () => {
 
 test('validateEvent accepts an allowlisted bug code and rejects arbitrary text', () => {
   assert.equal(validateEvent(validEvent()).bugCode, 'APP_OPT_ACTION_EXECUTION');
+  assert.equal(validateEvent(validEvent({ bugCode: 'BRK_INTEGRITY_VALIDATION' })).bugCode, 'BRK_INTEGRITY_VALIDATION');
   assert.equal(validateEvent(validEvent({ bugCode: 'user supplied reason' })), null);
 });
 

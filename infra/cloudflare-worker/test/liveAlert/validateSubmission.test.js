@@ -10,6 +10,14 @@ test('validateLiveAlertUpdate accepts a message plus active:true and trims it', 
   assert.deepEqual(result, { message: 'Entre no Discord oficial', active: true });
 });
 
+test('validateLiveAlertUpdate accepts only the three supported severities', () => {
+  assert.deepEqual(
+    validateLiveAlertUpdate({ message: 'Atenção', active: true, severity: 'critical' }),
+    { message: 'Atenção', active: true, severity: 'critical' },
+  );
+  assert.equal(validateLiveAlertUpdate({ message: 'Atenção', active: true, severity: 'urgent' }), null);
+});
+
 test('validateLiveAlertUpdate accepts active:false with no message (deactivate)', () => {
   const result = validateLiveAlertUpdate({ active: false });
   assert.deepEqual(result, { active: false });

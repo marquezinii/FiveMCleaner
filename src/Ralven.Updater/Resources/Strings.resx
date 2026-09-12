@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="Updater.Title" xml:space="preserve"><value>Ralven update</value></data>
+  <data name="Updater.Failure" xml:space="preserve"><value>The Ralven update could not be completed.&#xA;&#xA;{0}&#xA;&#xA;Open the app again and retry.</value></data>
+  <data name="Updater.Error.InvalidHandoff" xml:space="preserve"><value>The update data is invalid.</value></data>
+  <data name="Updater.Error.Timeout" xml:space="preserve"><value>The update took longer than expected and was stopped. Open Ralven again to retry.</value></data>
+  <data name="Updater.Error.AccessDenied" xml:space="preserve"><value>Windows did not allow the update to finish. Check the permission and try again.</value></data>
+  <data name="Updater.Error.Security" xml:space="preserve"><value>The installer security verification failed. Nothing was changed.</value></data>
+  <data name="Updater.Error.MissingInstaller" xml:space="preserve"><value>The verified installer is no longer available. Open Ralven and download the update again.</value></data>
+  <data name="Updater.Error.Unexpected" xml:space="preserve"><value>The updater encountered an unexpected problem. Open Ralven and try again.</value></data>
+</root>
+

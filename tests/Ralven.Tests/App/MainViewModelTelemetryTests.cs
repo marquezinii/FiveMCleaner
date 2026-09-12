@@ -40,14 +40,54 @@ public sealed class MainViewModelTelemetryTests
             TimeSpan.FromSeconds(5),
             TestContext.Current.CancellationToken);
         Assert.Equal(TelemetryEventValidator.MaxActionIds, sent.ActionIds?.Count);
+        Assert.Equal(service.LastTransactionId, sent.EventId);
         TelemetryEventValidator.Validate(sent);
+    }
+
+    [Fact]
+    public async Task StartOptimizationAsync_ServiceFailurePreservesSpecificCauseAndCategory()
+    {
+        var service = new SucceedingAppOptimizationService(succeeds: false);
+        var telemetry = new CapturingTelemetryService();
+        using var viewModel = new MainViewModel(service, telemetry: telemetry);
+        await viewModel.InitializeAsync();
+
+        await viewModel.StartOptimizationAsync();
+
+        var sent = await telemetry.WaitForEventAsync().WaitAsync(
+            TimeSpan.FromSeconds(5),
+            TestContext.Current.CancellationToken);
+        Assert.Equal(service.LastTransactionId, sent.EventId);
+        Assert.Equal("invalid-data", sent.ErrorCategory);
+        Assert.Equal(BugCode.BRK_INTEGRITY_VALIDATION, sent.BugCode);
+    }
+
+    [Fact]
+    public async Task StartOptimizationAsync_CancelledResultUsesCancellationTelemetry()
+    {
+        var service = new SucceedingAppOptimizationService(succeeds: false, wasCancelled: true);
+        var telemetry = new CapturingTelemetryService();
+        using var viewModel = new MainViewModel(service, telemetry: telemetry);
+        await viewModel.InitializeAsync();
+
+        await viewModel.StartOptimizationAsync();
+
+        var sent = await telemetry.WaitForEventAsync().WaitAsync(
+            TimeSpan.FromSeconds(5),
+            TestContext.Current.CancellationToken);
+        Assert.Equal("optimization-cancelled", sent.EventName);
+        Assert.Equal("cancelled", sent.ErrorCategory);
+        Assert.Equal(BugCode.APP_OPT_CANCELLED, sent.BugCode);
     }
 
     /// <summary>Runs a plan to successful completion instead of throwing, so
     /// the whole <see cref="MainViewModel.StartOptimizationAsync"/> telemetry
     /// path (including the <c>finally</c> block) is exercised.</summary>
-    private sealed class SucceedingAppOptimizationService : IAppOptimizationService
+    private sealed class SucceedingAppOptimizationService(bool succeeds = true, bool wasCancelled = false)
+        : IAppOptimizationService
     {
+        public Guid LastTransactionId { get; private set; }
+
         public string LogsDirectory => throw new NotSupportedException();
 
         public bool SettingsFileExists() => true;
@@ -88,19 +128,30 @@ public sealed class MainViewModelTelemetryTests
         public Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(CancellationToken cancellationToken = default) =>
             Task.FromResult<IReadOnlyList<AppHistoryRecord>>([]);
 
+        public Task<OptimizationReportDto?> LoadReportAsync(
+            Guid transactionId,
+            CancellationToken cancellationToken = default) => throw new NotSupportedException();
+
         public Task<AppOptimizationResult> ExecuteAsync(
             OptimizationPlanDto plan,
             IProgress<AppProgressUpdate> progress,
-            CancellationToken cancellationToken = default) =>
-            Task.FromResult(new AppOptimizationResult
+            CancellationToken cancellationToken = default)
+        {
+            LastTransactionId = plan.PlanId;
+            return Task.FromResult(new AppOptimizationResult
             {
-                TransactionId = Guid.NewGuid(),
-                Succeeded = true,
-                WasCancelled = false,
-                Summary = "done",
-                CompletedActions = plan.Actions.Count,
-                BytesFreed = 0
+                TransactionId = plan.PlanId,
+                Succeeded = succeeds,
+                WasCancelled = wasCancelled,
+                Summary = succeeds ? "done" : "failed",
+                CompletedActions = succeeds ? plan.Actions.Count : 0,
+                BytesFreed = 0,
+                FailureBugCode = succeeds
+                    ? null
+                    : wasCancelled ? BugCode.APP_OPT_CANCELLED : BugCode.BRK_INTEGRITY_VALIDATION,
+                FailureErrorCategory = succeeds ? null : wasCancelled ? "cancelled" : "invalid-data"
             });
+        }
 
         public Task<bool> RollbackAsync(
             Guid transactionId,
@@ -133,7 +184,10 @@ public sealed class MainViewModelTelemetryTests
 
         public Task TrackAsync(AnonymousTelemetryEvent telemetryEvent, CancellationToken cancellationToken = default)
         {
-            captured.TrySetResult(telemetryEvent);
+            if (telemetryEvent.EventName != TelemetryEventNames.OptimizationStarted)
+            {
+                captured.TrySetResult(telemetryEvent);
+            }
             return Task.CompletedTask;
         }
 

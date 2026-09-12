@@ -43,10 +43,16 @@ public sealed record AccountProfileFetchResult(
 public enum AccountProfileDeletionOutcome
 {
     Deleted,
+    BillingCancellationRequired,
+    ReauthenticationRequired,
+    RateLimited,
+    Unavailable,
     Failed,
 }
 
-public sealed record AccountProfileDeletionResult(AccountProfileDeletionOutcome Outcome);
+public sealed record AccountProfileDeletionResult(
+    AccountProfileDeletionOutcome Outcome,
+    string? ErrorCode = null);
 
 /// <summary>
 /// Verdict of the advisory username probe. <see cref="Unknown"/> means the
@@ -85,7 +91,10 @@ public interface IAccountProfileService
         string idToken,
         CancellationToken cancellationToken = default);
 
-    /// <summary>Deletes only the caller's profile, scoped server-side to the verified Firebase UID.</summary>
+    /// <summary>
+    /// Deletes the complete remote account through the Worker's coordinated
+    /// Firebase-first deletion flow, scoped to the verified Firebase UID.
+    /// </summary>
     Task<AccountProfileDeletionResult> DeleteAsync(
         string idToken,
         CancellationToken cancellationToken = default);
@@ -115,7 +124,7 @@ public sealed class DisabledAccountProfileService : IAccountProfileService
         CancellationToken cancellationToken = default) =>
         Task.FromResult(new AccountProfileResult(
             AccountProfileOutcome.Failed,
-            "Não foi possível salvar seu perfil agora. Tente novamente mais tarde."));
+            Message: null));
 
     public Task<AccountProfileFetchResult> FetchAsync(
         string idToken,
@@ -125,7 +134,7 @@ public sealed class DisabledAccountProfileService : IAccountProfileService
     public Task<AccountProfileDeletionResult> DeleteAsync(
         string idToken,
         CancellationToken cancellationToken = default) =>
-        Task.FromResult(new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Failed));
+        Task.FromResult(new AccountProfileDeletionResult(AccountProfileDeletionOutcome.Unavailable));
 
     public Task<UsernameAvailability> CheckUsernameAsync(
         string username,

@@ -12,7 +12,7 @@ Esta página registra as evidências usadas para definir o escopo e as política
 
 Esta expansão distingue diagnóstico suportado de automação baseada em chaves
 privadas ou heurísticas de internet. O escopo geral usa somente capacidades já
-tipadas no Ralven e não exige FiveM/GTA instalado.
+tipadas no Ralven e independe de integrações de Jogos instaladas.
 
 ### Energia
 
@@ -96,11 +96,95 @@ poderá virar ação futura após existir detecção de filesystem/volume, privi
 tipado, verificação e uma apresentação explícita de que ReTrim não possui
 rollback.
 
+### Limites dos diagnósticos gerais do Windows
+
+**Fato.** Em `MEMORYSTATUSEX`, `ullTotalPageFile` e `ullAvailPageFile` representam
+limite e folga de memória comprometida disponíveis ao sistema/processo, não o
+tamanho isolado do arquivo de paginação. Os contadores de pacotes descartados e
+com erro de `IPInterfaceStatistics` são totais acumulados da interface; uma
+leitura única não informa quando ocorreram nem comprova perda atual. O provedor
+documentado para erros WHEA no log `System` é
+`Microsoft-Windows-WHEA-Logger`.
+
+Fontes:
+
+- [MEMORYSTATUSEX](https://learn.microsoft.com/en-us/windows/win32/api/sysinfoapi/ns-sysinfoapi-memorystatusex)
+- [IPInterfaceStatistics.IncomingPacketsDiscarded](https://learn.microsoft.com/en-us/dotnet/api/system.net.networkinformation.ipinterfacestatistics.incomingpacketsdiscarded)
+- [Consulta de eventos WHEA no log System](https://learn.microsoft.com/en-us/windows-hardware/drivers/whea/querying-the-system-event-log-for-hardware-error-events)
+
+**Fato.** `Win32_PhysicalMemory` expõe a capacidade e a frequência configurada,
+mas não documenta topologia de canais nem o perfil XMP/EXPO ativo. Quantidade de
+módulos e o campo `Speed` não são evidência suficiente para afirmar esses estados.
+
+Fonte: [Win32_PhysicalMemory](https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-physicalmemory).
+
+**Decisão.** O Ralven apresenta essas leituras como inventário e contadores
+acumulados. Não classifica um gargalo de rede a partir de uma única leitura, não
+infere canais/XMP/EXPO e não descreve limite de commit como tamanho do pagefile.
+
+## Centro de aplicativos inspirado no UniGetUI
+
+**Fato.** O UniGetUI oficial organiza sua experiência em catálogos de pacotes
+disponíveis, instalados, atualizáveis e bundles. Gerenciadores implementam um
+contrato comum com capacidades próprias; loaders preenchem as listas, enquanto
+a camada de operações mantém fila e histórico. A interface oferece busca,
+filtros, operações em lote, versões ignoradas, atualização automática,
+agendamento, fontes, importação/exportação e opções por pacote. No Windows, o
+projeto suporta atualmente WinGet, Scoop, Chocolatey, PowerShell, npm, Bun,
+pip, Cargo, .NET Tool e vcpkg.
+
+Fontes:
+
+- [Repositório e recursos oficiais do UniGetUI](https://github.com/Devolutions/UniGetUI)
+- [Arquitetura oficial do UniGetUI](https://github.com/Devolutions/UniGetUI/blob/main/AGENTS.md)
+- [Referência da CLI do UniGetUI](https://github.com/Devolutions/UniGetUI/blob/main/docs/CLI.md)
+
+**Decisão personalizada.** O Ralven replica a base de navegação e operação que
+é útil ao seu propósito — Descobrir, Atualizações, Gerenciados, seleção em lote
+e lista persistente de ignorados — sem copiar a amplitude ou os riscos de um
+gerenciador universal. A primeira base usa um único executor nativo, WinGet,
+para as origens padrão confiáveis `winget` e `msstore`. Scoop exigiria executar
+scripts PowerShell do usuário; Chocolatey normalmente executa scripts de pacote
+com elevação. Nenhum deles será encaixado no broker como comando ou rede
+genéricos. Atualização automática, agendador, fontes arbitrárias, bundles e
+importação/exportação também ficam de fora até terem política de consentimento,
+proveniência, recuperação e testes próprios.
+
+## Operações de aplicativos pelo WinGet
+
+**Fato.** O Windows Package Manager oferece os comandos `list` e `upgrade` no
+Windows 10 e 11. `list --upgrade-available` limita o resultado aos aplicativos
+com atualização aplicável, e `upgrade --id ... --exact --source winget` limita a
+execução a uma identidade e fonte específicas. O WinGet mantém verificações de
+hash e não reinicia o computador sem `--allow-reboot`.
+
+Fontes:
+
+- [Comando list do WinGet](https://learn.microsoft.com/windows/package-manager/winget/list)
+- [Comando upgrade do WinGet](https://learn.microsoft.com/windows/package-manager/winget/upgrade)
+- [Códigos de retorno do WinGet](https://github.com/microsoft/winget-cli/blob/master/doc/windows/package-manager/winget/returnCodes.md)
+
+As origens padrão documentadas incluem `winget` e `msstore`. Busca e listagem
+usam `search`/`list` com origem fixa e sem aceitar termos automaticamente.
+Instalação, atualização e desinstalação usam `--id`, `--exact` e `--source`; as
+duas primeiras aceitam termos somente após a confirmação explícita do Ralven.
+As operações não usam `--force`, não ignoram hash e não autorizam reinício. O
+Ralven não tenta reconstruir rollback de um instalador de terceiros; ele informa
+essa limitação antes da execução e reporta o código de retorno sem mascarar
+falhas.
+
+Fonte adicional:
+
+- [Gerenciamento de origens do WinGet](https://learn.microsoft.com/windows/package-manager/winget/source)
+- [Comando install do WinGet](https://learn.microsoft.com/windows/package-manager/winget/install)
+
 ### Proteções do Windows e aceleração do ponteiro
 
 **Fato.** `WscGetSecurityProviderHealth` retorna a saúde agregada da categoria
 de proteção solicitada. `SystemParametersInfo` com `SPI_GETMOUSE` retorna os dois
-limiares e o nível de aceleração do ponteiro em um vetor de três inteiros.
+limiares e o nível de aceleração do ponteiro em um vetor de três inteiros;
+`SPI_SETMOUSE` grava esses mesmos três valores. `SPIF_UPDATEINIFILE` persiste a
+mudança e `SPIF_SENDCHANGE` notifica os aplicativos.
 
 Fontes:
 
@@ -109,9 +193,10 @@ Fontes:
 
 **Decisão.** O plano geral consulta as três categorias de proteção separadamente
 e não interpreta falha da Central de Segurança como estado saudável. A leitura
-do mouse é apenas diagnóstico da configuração do usuário: o Ralven não altera
-proteções, Windows Update, velocidade, limiares ou aceleração automaticamente e
-não deduz o caminho de entrada usado por um jogo a partir desse valor.
+do mouse continua disponível como diagnóstico. O Ultra pode, por preferência
+explícita, zerar limiares e aceleração sem alterar a velocidade do ponteiro;
+captura os três valores anteriores, verifica aplicação e rollback e não deduz o
+caminho de entrada usado por um jogo a partir dessa configuração.
 
 ### Responsividade da interface
 
@@ -305,6 +390,6 @@ Esses resultados são antigos e dependentes de hardware. Por isso, os presets do
 
 ## Marca e representação
 
-O acordo do Cfx.re proíbe representação que sugira endosso ou afiliação. A comunicação pública deve apresentar o Ralven como projeto independente “para FiveM”, incluir disclaimer claro e evitar o logo oficial como marca própria.
+O acordo do Cfx.re proíbe representação que sugira endosso ou afiliação. A comunicação pública deve apresentar o Ralven como projeto independente; ao mencionar a integração com FiveM, deve deixar claro que ela faz parte de Jogos, incluir disclaimer claro e evitar o logo oficial como marca própria.
 
 Fonte: [Cfx.re Platform Service Agreement](https://runtime.fivem.net/fivem-service-agreement-4.pdf), seção “Representation”.

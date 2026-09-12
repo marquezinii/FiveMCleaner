@@ -29,8 +29,7 @@ public sealed class BottleneckDiagnosisAction : ReadOnlyDiagnosticAction
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException)
         {
-            return "Não foi possível ler os sinais de hardware para o diagnóstico de gargalo "
-                + $"({exception.Message}).";
+            return WindowsActionText.Format("ActionResults.Bottleneck.Unavailable");
         }
     }
 
@@ -38,20 +37,20 @@ public sealed class BottleneckDiagnosisAction : ReadOnlyDiagnosticAction
     {
         if (DiagnosticSignals.IsMemoryUnderPressure(snapshot))
         {
-            return "Gargalo provável: memória RAM sob pressão. Feche programas sem uso antes da próxima carga pesada.";
+            return WindowsActionText.Format("ActionResults.Bottleneck.MemoryPressure");
         }
 
         if (snapshot.LogicalProcessorCount <= 4)
         {
-            return "Gargalo provável: poucos processadores lógicos, o que pode limitar jogos e aplicativos com alta demanda de CPU.";
+            return WindowsActionText.Format("ActionResults.Bottleneck.CpuLimited");
         }
 
         if (snapshot.SystemDriveFreeBytes / (double)DiagnosticSignals.GiB < 8)
         {
-            return "Gargalo provável: pouco espaço livre em disco, o que pode atrasar carregamento de texturas e streaming de conteúdo.";
+            return WindowsActionText.Format("ActionResults.Bottleneck.LowDiskSpace");
         }
 
-        return "Nenhum gargalo evidente foi identificado; o hardware parece equilibrado para a carga atual.";
+        return WindowsActionText.Format("ActionResults.Bottleneck.Balanced");
     }
 }
 
@@ -72,11 +71,10 @@ public sealed class OverlaySoftwareDetectionAction : ReadOnlyDiagnosticAction
         var found = inspector.DetectRunningOverlayNames();
         if (found.Count == 0)
         {
-            return "Nenhum overlay ou software de captura conhecido foi detectado em execução.";
+            return WindowsActionText.Format("ActionResults.Overlays.NoneDetected");
         }
 
-        var message = $"Overlay(s) detectado(s): {string.Join(", ", found)}. Nenhum deles foi fechado; "
-            + "feche manualmente se notar instabilidade.";
+        var message = WindowsActionText.Format("ActionResults.Overlays.Detected", string.Join(", ", found));
         if (found.Any(name => name.Contains("ShadowPlay", StringComparison.OrdinalIgnoreCase)))
         {
             // "NVIDIA Share" is the actual process behind Instant Replay; its
@@ -84,8 +82,7 @@ public sealed class OverlaySoftwareDetectionAction : ReadOnlyDiagnosticAction
             // product has for it. Freestyle filters run inside the same
             // overlay and have no separate process signal, so this can only
             // suggest checking manually, never assert filters are active.
-            message += " O processo do NVIDIA Share/ShadowPlay pode indicar Instant Replay ativo; "
-                + "se filtros do Freestyle estiverem configurados, também podem estar em uso -- confira no NVIDIA App.";
+            message += WindowsActionText.Format("ActionResults.Overlays.NvidiaSuffix");
         }
 
         return message;
@@ -95,8 +92,6 @@ public sealed class OverlaySoftwareDetectionAction : ReadOnlyDiagnosticAction
 public sealed class FiveMLegacyLogReaderAction : ReadOnlyDiagnosticAction
 {
     private const long MaxTailBytes = 512 * 1024;
-    private const string NoLogsMessage = "Nenhum log recente do FiveM foi encontrado; nada a analisar.";
-
     private readonly string fiveMAppRoot;
 
     public FiveMLegacyLogReaderAction(string fiveMAppRoot)
@@ -112,7 +107,7 @@ public sealed class FiveMLegacyLogReaderAction : ReadOnlyDiagnosticAction
         var logsDirectory = Path.Combine(fiveMAppRoot, "logs");
         if (!Directory.Exists(logsDirectory))
         {
-            return NoLogsMessage;
+            return WindowsActionText.Format("ActionResults.FiveMLogs.NoneFound");
         }
 
         FileInfo? latest;
@@ -125,26 +120,28 @@ public sealed class FiveMLegacyLogReaderAction : ReadOnlyDiagnosticAction
         }
         catch (Exception exception) when (exception is UnauthorizedAccessException or IOException)
         {
-            return $"Não foi possível listar os logs do FiveM ({exception.Message}).";
+            return WindowsActionText.Format("ActionResults.FiveMLogs.ListFailed");
         }
 
         if (latest is null)
         {
-            return NoLogsMessage;
+            return WindowsActionText.Format("ActionResults.FiveMLogs.NoneFound");
         }
 
-        var header = $"Log mais recente: {latest.Name}, modificado há "
-            + $"{FormatAge(DateTimeOffset.UtcNow - latest.LastWriteTimeUtc)}.";
+        var header = WindowsActionText.Format(
+            "ActionResults.FiveMLogs.Header",
+            latest.Name,
+            FormatAge(DateTimeOffset.UtcNow - latest.LastWriteTimeUtc));
         try
         {
             var errorHits = CountPossibleErrors(latest.FullName);
             return errorHits > 0
-                ? $"{header} {errorHits} linha(s) com possíveis erros; não é um diagnóstico definitivo."
-                : $"{header} Nenhuma linha com possível erro foi encontrada.";
+                ? WindowsActionText.Format("ActionResults.FiveMLogs.PossibleErrors", header, errorHits)
+                : WindowsActionText.Format("ActionResults.FiveMLogs.NoPossibleErrors", header);
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            return $"{header} Não foi possível ler o conteúdo agora ({exception.Message}).";
+            return WindowsActionText.Format("ActionResults.FiveMLogs.ReadFailed", header);
         }
     }
 
@@ -181,11 +178,26 @@ public sealed class FiveMLegacyLogReaderAction : ReadOnlyDiagnosticAction
             age = TimeSpan.Zero;
         }
 
-        return age.TotalDays >= 1
-            ? $"{(int)age.TotalDays} dia(s)"
-            : age.TotalHours >= 1
-                ? $"{(int)age.TotalHours} hora(s)"
-                : $"{Math.Max(1, (int)age.TotalMinutes)} minuto(s)";
+        if (age.TotalDays >= 1)
+        {
+            var days = (int)age.TotalDays;
+            return WindowsActionText.Format(
+                days == 1 ? "ActionResults.Age.Day" : "ActionResults.Age.Days",
+                days);
+        }
+
+        if (age.TotalHours >= 1)
+        {
+            var hours = (int)age.TotalHours;
+            return WindowsActionText.Format(
+                hours == 1 ? "ActionResults.Age.Hour" : "ActionResults.Age.Hours",
+                hours);
+        }
+
+        var minutes = Math.Max(1, (int)age.TotalMinutes);
+        return WindowsActionText.Format(
+            minutes == 1 ? "ActionResults.Age.Minute" : "ActionResults.Age.Minutes",
+            minutes);
     }
 }
 
@@ -196,10 +208,7 @@ public sealed class PerformanceDiagnosticsGuideAction : ReadOnlyDiagnosticAction
 
     protected override string Describe()
     {
-        return "Use os comandos oficiais do FiveM no console (F8) para medir o desempenho real: "
-            + "cl_drawfps true (FPS), cl_drawperf true (FPS/ping/CPU/GPU), netgraph true (rede) e, "
-            + "com o modo de desenvolvimento disponível, resmon true (CPU/memória por recurso do servidor). "
-            + "O painel de prontidão para streaming do próprio Ralven mostra sinais adicionais de sessão.";
+        return WindowsActionText.Format("ActionResults.PerformanceGuide.Instructions");
     }
 }
 
@@ -223,7 +232,7 @@ public sealed class NetworkHealthDiagnosisAction : ReadOnlyDiagnosticAction
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException)
         {
-            return $"Não foi possível ler as estatísticas de rede ({exception.Message}).";
+            return WindowsActionText.Format("ActionResults.Network.Unavailable");
         }
     }
 
@@ -231,18 +240,20 @@ public sealed class NetworkHealthDiagnosisAction : ReadOnlyDiagnosticAction
     {
         if (!snapshot.HasActiveInterface)
         {
-            return "Não foi possível ler estatísticas de nenhuma placa de rede ativa no momento.";
+            return WindowsActionText.Format("ActionResults.Network.NoActiveInterface");
         }
 
         var link = DescribeLink(snapshot);
         if (snapshot.DiscardedPackets > 0 || snapshot.ErrorPackets > 0)
         {
-            return $"Sinais locais de instabilidade de rede: {snapshot.DiscardedPackets} pacote(s) descartado(s) "
-                + $"e {snapshot.ErrorPackets} com erro na(s) placa(s) ativa(s). Isso não mede latência ou "
-                + $"jitter até um serviço remoto; confirme pela ferramenta do aplicativo ou jogo afetado.{link}";
+            return WindowsActionText.Format(
+                "ActionResults.Network.ErrorsDetected",
+                snapshot.DiscardedPackets,
+                snapshot.ErrorPackets,
+                link);
         }
 
-        return $"Nenhum sinal local de perda de pacotes foi encontrado nas placas de rede ativas.{link}";
+        return WindowsActionText.Format("ActionResults.Network.Healthy", link);
     }
 
     private static string DescribeLink(NetworkHealthSnapshot snapshot)
@@ -255,7 +266,7 @@ public sealed class NetworkHealthDiagnosisAction : ReadOnlyDiagnosticAction
         var speedLabel = speed >= 1_000_000_000
             ? $"{speed / 1_000_000_000d:0.#} Gbps"
             : $"{speed / 1_000_000d:0.#} Mbps";
-        return $" Interface ativa mais rápida: {type}, link de {speedLabel}.";
+        return WindowsActionText.Format("ActionResults.Network.LinkSuffix", type, speedLabel);
     }
 }
 
@@ -277,14 +288,12 @@ public sealed class ThermalDiagnosisAction : ReadOnlyDiagnosticAction
     {
         if (!snapshot.IsAvailable || snapshot.HighestCelsius is not { } celsius)
         {
-            return "Este computador não expõe uma leitura confiável de temperatura sem software do "
-                + "fabricante da placa-mãe/GPU. Se notar quedas de desempenho sob carga prolongada, "
-                + "verifique a temperatura com o utilitário oficial do fabricante.";
+            return WindowsActionText.Format("ActionResults.Thermal.Unavailable");
         }
 
         return DiagnosticSignals.IsTemperatureElevated(snapshot)
-            ? $"Temperatura elevada detectada (~{celsius:0}°C); pode haver throttling térmico sob carga."
-            : $"Temperatura dentro de uma faixa normal (~{celsius:0}°C) no momento da leitura.";
+            ? WindowsActionText.Format("ActionResults.Thermal.Elevated", celsius)
+            : WindowsActionText.Format("ActionResults.Thermal.Normal", celsius);
     }
 }
 
@@ -310,24 +319,23 @@ public sealed class PagefileCommitDiagnosisAction : ReadOnlyDiagnosticAction
         }
         catch (Exception exception) when (exception is InvalidOperationException or IOException)
         {
-            return $"Não foi possível ler o estado do pagefile ({exception.Message}).";
+            return WindowsActionText.Format("ActionResults.Pagefile.Unavailable");
         }
     }
 
     internal static string Classify(SystemResourceSnapshot snapshot)
     {
-        if (snapshot.TotalPageFileBytes <= 0)
+        if (snapshot.CommitLimitBytes <= 0)
         {
-            return "Não foi possível ler o tamanho do arquivo de paginação neste momento.";
+            return WindowsActionText.Format("ActionResults.Pagefile.CommitUnavailable");
         }
 
-        var availableRatio = (double)snapshot.AvailablePageFileBytes / snapshot.TotalPageFileBytes;
-        var totalGiB = snapshot.TotalPageFileBytes / (double)DiagnosticSignals.GiB;
+        var availableRatio = (double)snapshot.AvailableCommitBytes / snapshot.CommitLimitBytes;
+        var totalGiB = snapshot.CommitLimitBytes / (double)DiagnosticSignals.GiB;
 
         return availableRatio < LowAvailablePageFileRatio
-            ? $"O commit de memória está próximo do limite do pagefile ({totalGiB:0.#} GB no total); "
-                + "risco de lentidão por paginação excessiva sob carga."
-            : $"Há folga suficiente no pagefile ({totalGiB:0.#} GB no total) para a carga atual.";
+            ? WindowsActionText.Format("ActionResults.Pagefile.NearLimit", totalGiB)
+            : WindowsActionText.Format("ActionResults.Pagefile.Healthy", totalGiB);
     }
 }
 
@@ -354,7 +362,7 @@ public sealed class CacheIndexIntegrityDiagnosisAction : ReadOnlyDiagnosticActio
 
         if (existing.Length == 0)
         {
-            return "Nenhum índice de cache foi encontrado (normal se o cache nunca foi usado ou já foi limpo).";
+            return WindowsActionText.Format("ActionResults.CacheIndex.NoneFound");
         }
 
         var corrupted = existing
@@ -363,9 +371,8 @@ public sealed class CacheIndexIntegrityDiagnosisAction : ReadOnlyDiagnosticActio
             .ToArray();
 
         return corrupted.Length > 0
-            ? $"Índice de cache aparentemente corrompido: {string.Join(", ", corrupted)}. "
-                + "Recomendamos usar o reparo de cache (perfil Médio/Agressivo com reparo habilitado) para reconstruí-lo."
-            : "O índice de cache do FiveM está bem formado; nenhuma corrupção conhecida foi encontrada.";
+            ? WindowsActionText.Format("ActionResults.CacheIndex.Corrupted", string.Join(", ", corrupted))
+            : WindowsActionText.Format("ActionResults.CacheIndex.Healthy");
     }
 
     private static bool IsWellFormedXml(string path)
@@ -421,23 +428,25 @@ public sealed class GpuVendorDetectionAction : ReadOnlyDiagnosticAction
     {
         if (snapshot.DriverDescriptions.Count == 0)
         {
-            return "Não foi possível identificar o fabricante da GPU neste momento.";
+            return WindowsActionText.Format("ActionResults.GpuVendor.Unavailable");
         }
 
         var vendors = snapshot.DriverDescriptions.Select(GpuVendorClassifier.VendorOf).ToArray();
         var described = snapshot.DriverDescriptions.Select(
             (description, index) => $"{vendors[index]} ({description})");
 
-        var message = $"GPU(s) detectada(s): {string.Join(", ", described)}. Ajustes de perfil 3D devem ser feitos "
-            + "apenas pelo painel oficial do fabricante (NVIDIA Control Panel, AMD Software ou Intel "
-            + "Graphics Command Center); o Ralven não escreve nem sobrescreve esses perfis.";
+        var message = WindowsActionText.Format(
+            "ActionResults.GpuVendor.Detected",
+            string.Join(", ", described));
 
         var links = OfficialDriverLinks
             .Where(entry => vendors.Contains(entry.Vendor, StringComparer.Ordinal))
             .Select(entry => entry.Link)
             .ToArray();
         return links.Length > 0
-            ? message + $" Baixe o driver mais recente direto do fabricante: {string.Join("; ", links)}."
+            ? message + WindowsActionText.Format(
+                "ActionResults.GpuVendor.DriverSuffix",
+                string.Join("; ", links))
             : message;
     }
 }
@@ -482,15 +491,12 @@ public sealed class GpuPreferenceMismatchDiagnosisAction : ReadOnlyDiagnosticAct
         var hasDedicated = descriptions.Any(description => !GpuVendorClassifier.IsIntegrated(description));
         if (!hasIntegrated || !hasDedicated)
         {
-            return "Não foi detectado um par de GPU integrada + dedicada; esta verificação só se aplica a "
-                + "notebooks com duas GPUs.";
+            return WindowsActionText.Format("ActionResults.GpuPreference.NotApplicable");
         }
 
         return IsHighPerformancePreferenceConfigured()
-            ? "Duas GPUs detectadas e o FiveM já está configurado para preferir a GPU de alto desempenho."
-            : "Duas GPUs detectadas (uma integrada e uma dedicada), mas o FiveM não está configurado para "
-                + "preferir a GPU de alto desempenho nas preferências gráficas do Windows -- ative a opção "
-                + "correspondente para evitar que o jogo rode na GPU integrada por engano.";
+            ? WindowsActionText.Format("ActionResults.GpuPreference.Configured")
+            : WindowsActionText.Format("ActionResults.GpuPreference.Mismatch");
     }
 
     private bool IsHighPerformancePreferenceConfigured()
@@ -554,24 +560,19 @@ public sealed class HybridLaptopDiagnosisAction : ReadOnlyDiagnosticAction
         var parts = new List<string>();
         if (!onAc)
         {
-            parts.Add("O notebook está na bateria; modos de GPU dedicada e desempenho máximo do fabricante "
-                + "costumam só se aplicar com o carregador conectado -- conecte-o antes de jogar para "
-                + "melhor desempenho.");
+            parts.Add(WindowsActionText.Format("ActionResults.HybridLaptop.OnBattery"));
         }
 
         if (batterySaverActive)
         {
-            parts.Add("A Economia de Energia do Windows está ativa, o que reduz desempenho geral -- "
-                + "desative-a antes de jogar.");
+            parts.Add(WindowsActionText.Format("ActionResults.HybridLaptop.BatterySaver"));
         }
 
         parts.Add(detectedTools.Count == 0
-            ? "Nenhum utilitário conhecido de troca de GPU/modo de desempenho do fabricante do notebook "
-                + "(Armoury Crate, MSI Center, Lenovo Vantage, etc.) foi detectado; se este notebook tiver "
-                + "GPU dedicada e MUX switch, consulte o utilitário do fabricante para ativá-lo."
-            : $"Utilitário(s) do fabricante detectado(s): {string.Join(", ", detectedTools)}. Use-o para "
-                + "ativar o modo de GPU dedicada/MUX switch e o perfil de desempenho, se disponíveis -- "
-                + "o Ralven não controla isso diretamente.");
+            ? WindowsActionText.Format("ActionResults.HybridLaptop.NoVendorTool")
+            : WindowsActionText.Format(
+                "ActionResults.HybridLaptop.VendorTools",
+                string.Join(", ", detectedTools)));
 
         return string.Join(" ", parts);
     }
@@ -608,15 +609,9 @@ public sealed class MousePollingRateGuidanceAction : ReadOnlyDiagnosticAction
     {
         if (cpuPercent is { } percent && percent >= HighCpuLoadPercent)
         {
-            return $"CPU sob carga alta agora ({percent:0}%). Se você usa um mouse configurado para 4000 Hz "
-                + "ou 8000 Hz de polling e nota stutter que parece coincidir com o movimento do mouse, teste "
-                + "reduzir para 1000 Hz -- taxas muito altas aumentam a sobrecarga de interrupções da CPU, "
-                + "que pode ser perceptível justamente quando a CPU já está no limite.";
+            return WindowsActionText.Format("ActionResults.MousePolling.HighCpu", percent);
         }
 
-        return "CPU não está sob carga alta neste momento. Se notar stutter que parece coincidir com o "
-            + "movimento do mouse em algum jogo, e ele estiver configurado para 4000 Hz ou 8000 Hz de "
-            + "polling, teste reduzir para 1000 Hz como diagnóstico -- este app não consegue ler a taxa de "
-            + "polling real do seu mouse nem correlacionar isso com stutter automaticamente.";
+        return WindowsActionText.Format("ActionResults.MousePolling.NormalCpu");
     }
 }

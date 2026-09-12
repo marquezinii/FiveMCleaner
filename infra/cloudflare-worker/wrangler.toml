@@ -15,7 +15,7 @@
 ## real benefit here, since D1 already distinguishes rows by that column;
 ## they were removed. `wrangler deploy` (no --env) is what is actually live
 ## at:
-##   https://fivemcleaner-telemetry.felipemarquesini10.workers.dev
+##   https://api.vemryx.com
 ##
 ## The .NET client is fully wired to send both anonymous telemetry
 ## (`POST /telemetry`) and bug reports (`POST /bugs`) to this Worker.
@@ -32,13 +32,22 @@
 ##                          brute-force tracking from storing a raw IP
 ##   ADMIN_CSRF_SECRET   -- a distinct long random string for session-bound
 ##                          CSRF tokens
-##   MERCADO_PAGO_ACCESS_TOKEN -- token server-side usado somente para consultar
-##                                recursos canônicos da API do Mercado Pago
-##   MERCADO_PAGO_WEBHOOK_SECRET -- segredo HMAC da URL de webhook de assinaturas
+##   ASAAS_ACCESS_TOKEN -- server-only production API key for checkout,
+##                         cancellation and canonical reads
+##   ASAAS_WEBHOOK_TOKEN -- distinct 32-255 character token sent by Asaas in
+##                          the asaas-access-token header
+##   OPENAI_API_KEY -- credencial server-side usada somente por POST /ai/message
+##   RALVEN_AI_SAFETY_IDENTIFIER_SECRET -- segredo distinto usado para derivar
+##                          identificadores opacos; nunca enviado ao provedor
+##   FIREBASE_WEB_API_KEY -- validates pending MFA credentials
+##   FIREBASE_ADMIN_CLIENT_EMAIL -- least-privilege service account identity
+##   FIREBASE_ADMIN_PRIVATE_KEY -- PKCS#8 service account private key
+##   MFA_RECOVERY_CODE_HMAC_SECRET -- distinct random secret (32+ characters)
+##                          for recovery-code and lookup HMACs
 ##
-## DASHBOARD_ORIGIN below is a plain, non-secret var -- the exact origin the
-## dashboard is served from, so CORS headers are only ever sent back to that
-## one origin. Safe to commit (it is not a credential). For local testing,
+## DASHBOARD_ORIGIN below is a plain, non-secret var -- the exact comma-separated
+## origins the dashboard is served from, so CORS headers are only ever sent back
+## to that allowlist. Safe to commit (it is not a credential). For local testing,
 ## override it per-machine in a git-ignored `.dev.vars` file instead of
 ## editing this one -- see README.md.
 ##
@@ -50,9 +59,54 @@
 name = "fivemcleaner-telemetry"
 main = "src/index.js"
 compatibility_date = "2026-08-11"
+# The configured custom domain api.vemryx.com is the only public Worker
+# origin. Keep the historical Worker name for its already-provisioned D1
+# resources, but do not expose it through a fivemcleaner-*.workers.dev URL.
+workers_dev = false
+
+[triggers]
+crons = ["*/15 * * * *"]
 
 [vars]
-DASHBOARD_ORIGIN = "https://fivemcleaner-dashboard.pages.dev"
+ASAAS_BILLING_ENABLED = "false"
+ASAAS_ENVIRONMENT = "production"
+ASAAS_AMOUNT_CENTS = "1990"
+ASAAS_RETURN_URL = "https://api.vemryx.com/billing/return"
+DASHBOARD_ORIGIN = "https://dashboard.vemryx.com"
+RALVEN_AI_MODEL = "gpt-5.6-luna"
+# A chave sozinha não ativa a rota. Revise tudo e altere explicitamente no deploy.
+RALVEN_AI_ENABLED = "false"
+# Tetos fail-closed da V1. US$0,25 equivale ao teto de R$1,50 com câmbio contábil de R$6/US$.
+RALVEN_AI_USER_MONTHLY_BUDGET_MICROUSD = "250000"
+RALVEN_AI_GLOBAL_MONTHLY_BUDGET_MICROUSD = "20000000"
+RALVEN_AI_RESERVED_COST_MICROUSD = "20000"
+# Preços do modelo acima em 2026-09-08; atualizar junto com uma mudança de modelo/preço.
+RALVEN_AI_INPUT_PRICE_MICROUSD_PER_MILLION = "200000"
+RALVEN_AI_CACHED_INPUT_PRICE_MICROUSD_PER_MILLION = "20000"
+RALVEN_AI_CACHE_WRITE_PRICE_MICROUSD_PER_MILLION = "250000"
+RALVEN_AI_OUTPUT_PRICE_MICROUSD_PER_MILLION = "1200000"
+
+[[ratelimits]]
+name = "BILLING_WRITE_LIMITER"
+namespace_id = "1006"
+simple = { limit = 10, period = 60 }
+
+[[ratelimits]]
+name = "BILLING_READ_LIMITER"
+namespace_id = "1007"
+simple = { limit = 20, period = 60 }
+
+# Mandatory per-UID budget shared by authenticated /account routes.
+[[ratelimits]]
+name = "ACCOUNT_ROUTE_LIMITER"
+namespace_id = "1009"
+simple = { limit = 60, period = 60 }
+
+# The opaque pending credential is HMACed before it becomes the limiter key.
+[[ratelimits]]
+name = "ACCOUNT_RECOVERY_LIMITER"
+namespace_id = "1010"
+simple = { limit = 5, period = 60 }
 
 [[d1_databases]]
 binding = "TELEMETRY_DB"
@@ -97,3 +151,10 @@ simple = { limit = 60, period = 60 }
 name = "LIVE_ALERT_LIMITER"
 namespace_id = "1005"
 simple = { limit = 30, period = 60 }
+
+# Aplicado por Firebase UID depois da validação do token. Ausência ou falha
+# do binding bloqueia a rota para não expor custo ilimitado ao provedor.
+[[ratelimits]]
+name = "RALVEN_AI_LIMITER"
+namespace_id = "1008"
+simple = { limit = 10, period = 60 }

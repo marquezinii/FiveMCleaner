@@ -1,4 +1,6 @@
 using System.Runtime.InteropServices;
+using Ralven.Contracts;
+using Ralven.Windows.Diagnostics;
 
 namespace Ralven.Windows.Infrastructure;
 
@@ -13,7 +15,8 @@ public enum WindowsSecurityHealthState
 
 public sealed record WindowsSecurityProviderHealth(
     WindowsSecurityHealthState State,
-    int HResult)
+    int HResult,
+    BugCode? BugCode = null)
 {
     public bool IsAvailable => State != WindowsSecurityHealthState.Unavailable;
 }
@@ -95,7 +98,8 @@ public sealed class WindowsSystemHealthInspector : IWindowsSystemHealthInspector
         {
             return new WindowsSecurityProviderHealth(
                 WindowsSecurityHealthState.Unavailable,
-                exception.HResult);
+                exception.HResult,
+                BugCodeClassifier.ClassifyException(exception, "security-health"));
         }
     }
 

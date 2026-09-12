@@ -82,6 +82,7 @@ public sealed class AccountSignUpFlowTests
 
         Assert.True(result.Succeeded);
         Assert.Equal(AuthenticationState.EmailVerificationRequired, result.State);
+        Assert.Null(result.Error);
         Assert.Equal("uid-1", result.User!.Uid);
         Assert.Contains("/v1/accounts:signUp", requests);
         Assert.Contains("/v1/accounts:lookup", requests);
@@ -119,7 +120,7 @@ public sealed class AccountSignUpFlowTests
         var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
         Assert.False(result.Succeeded);
-        Assert.Equal(AuthenticationState.SigningIn, result.State);
+        Assert.Equal(AuthenticationState.SignedOut, result.State);
         Assert.Contains(expectedFragment, result.Error!, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -159,8 +160,11 @@ public sealed class AccountSignUpFlowTests
 
         var result = await service.RegisterAsync("person@example.com", "abcdefghijkl", keepSignedIn: true, cancellationToken: global::Xunit.TestContext.Current.CancellationToken);
 
-        Assert.True(result.Succeeded);
+        Assert.False(result.Succeeded);
         Assert.Equal(AuthenticationState.EmailVerificationRequired, result.State);
+        Assert.Equal(
+            new LocalizationService(System.Globalization.CultureInfo.GetCultureInfo("pt-BR")).GetString("Account.Verification.SendFailed"),
+            result.Error);
     }
 
     [Fact]
@@ -218,6 +222,20 @@ public sealed class AccountSignUpFlowTests
         await store.WriteAsync("refresh-1", CancellationToken.None);
 
         Assert.True(Directory.Exists(blockedPath));
+    }
+
+    [Fact]
+    public async Task SessionStore_ReplacesThePersistedTokenWithoutLeavingTemporaryFiles()
+    {
+        using var directory = new TemporaryDirectory();
+        var path = directory.Combine("firebase.session");
+        var store = new SecureFirebaseSessionStore(path);
+
+        await store.WriteAsync("refresh-1", global::Xunit.TestContext.Current.CancellationToken);
+        await store.WriteAsync("refresh-2", global::Xunit.TestContext.Current.CancellationToken);
+
+        Assert.Equal("refresh-2", (await store.ReadAsync(global::Xunit.TestContext.Current.CancellationToken))?.RefreshToken);
+        Assert.Empty(Directory.EnumerateFiles(directory.Path, ".firebase.session.*.tmp"));
     }
 
     private static FirebaseAuthService CreateService(List<string> requests, Func<HttpRequestMessage, HttpResponseMessage> send, string? sessionPath = null)

@@ -1,22 +1,16 @@
 name: Build installer and publish release
 
 on:
+  push:
+    tags: ["v*"]
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Exact tag to build (vX.Y.Z or vX.Y.Z-preview)
+        description: Exact stable tag to build (vX.Y.Z)
         required: true
         type: string
-      channel:
-        description: Release channel
-        required: true
-        default: preview
-        type: choice
-        options:
-          - preview
-          - stable
       publish:
-        description: Create the public GitHub release after every check passes
+        description: Publish after the protected signing and production approvals
         required: true
         default: false
         type: boolean
@@ -25,19 +19,20 @@ permissions:
   contents: read
 
 concurrency:
-  group: release-${{ inputs.release_tag }}
+  group: release-${{ github.event_name == 'push' && github.ref_name || inputs.release_tag }}
   cancel-in-progress: false
 
 env:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1"
   DOTNET_NOLOGO: "1"
   NUGET_XMLDOC_MODE: skip
+  RELEASE_TAG: ${{ github.event_name == 'push' && github.ref_name || inputs.release_tag }}
 
 jobs:
   build_audit:
-    name: Build and audit installer
+    name: Audit clean source
     runs-on: windows-latest
-    timeout-minutes: 35
+    timeout-minutes: 20
     outputs:
       asset_version: ${{ steps.release.outputs.asset_version }}
       trusted_commit: ${{ steps.release.outputs.trusted_commit }}
@@ -46,7 +41,7 @@ jobs:
       - name: Checkout exact tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
-          ref: ${{ inputs.release_tag }}
+          ref: ${{ env.RELEASE_TAG }}
           fetch-depth: 0
 
       - name: Setup .NET from global.json
@@ -54,12 +49,9 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Validate tag and channel
+      - name: Validate stable tag and trusted source
         id: release
         shell: pwsh
-        env:
-          RELEASE_TAG: ${{ inputs.release_tag }}
-          RELEASE_CHANNEL: ${{ inputs.channel }}
         run: |
           . ./scripts/Installer.Common.ps1
           $version = Get-ProjectVersion -Workspace (Get-Location).Path
@@ -67,46 +59,40 @@ jobs:
             throw "Directory.Build.props Version must be numeric SemVer: $version"
           }
 
-          $assetVersion = if ($env:RELEASE_CHANNEL -eq 'preview') { "$version-preview" } else { $version }
-          $expectedTag = "v$assetVersion"
+          $expectedTag = "v$version"
           if ($env:RELEASE_TAG -ne $expectedTag) {
-            throw "Tag/channel mismatch. Expected '$expectedTag', got '$env:RELEASE_TAG'."
+            throw "Stable tag mismatch. Expected '$expectedTag', got '$env:RELEASE_TAG'."
           }
 
-          if ($env:RELEASE_CHANNEL -eq 'stable') {
-            ./scripts/Test-PublicVersionProgression.ps1 -Version $version
-          }
+          ./scripts/Test-PublicVersionProgression.ps1 -Version $version
 
           $tagCommit = (git rev-parse "$env:RELEASE_TAG^{commit}").Trim()
           $headCommit = (git rev-parse HEAD).Trim()
           if ($tagCommit -ne $headCommit) {
             throw 'Checked out commit does not match the requested tag.'
           }
-          if ($env:RELEASE_CHANNEL -eq 'stable') {
-            # Secret-bearing signing and deployment steps must never execute
-            # source selected only by an arbitrary tag. Resolve main from the
-            # remote inside this trusted workflow and require the stable tag
-            # to identify that exact reviewed commit before any secrets are
-            # made available to later steps.
-            git fetch --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
-            if ($LASTEXITCODE -ne 0) {
-              throw 'Could not resolve the trusted origin/main release commit.'
-            }
-            $trustedMainCommit = (git rev-parse refs/remotes/origin/main).Trim()
-            if ($tagCommit -ne $trustedMainCommit) {
-              throw 'Stable release tag must point to the current origin/main commit.'
-            }
+          # Secret-bearing jobs must never run code selected only by an
+          # arbitrary tag. Require the tag to identify current origin/main.
+          git fetch --no-tags origin '+refs/heads/main:refs/remotes/origin/main'
+          if ($LASTEXITCODE -ne 0) {
+            throw 'Could not resolve the trusted origin/main release commit.'
+          }
+          $trustedMainCommit = (git rev-parse refs/remotes/origin/main).Trim()
+          if ($tagCommit -ne $trustedMainCommit) {
+            throw 'Stable release tag must point to the current origin/main commit.'
           }
           if (git status --porcelain=v1 --untracked-files=all) {
             throw 'Release checkout is not clean.'
           }
 
-          "asset_version=$assetVersion" >> $env:GITHUB_OUTPUT
+          "asset_version=$version" >> $env:GITHUB_OUTPUT
           "trusted_commit=$tagCommit" >> $env:GITHUB_OUTPUT
 
       - name: Safety verification and build
         shell: pwsh
         run: |
+          ./scripts/Test-RepositoryPolicy.ps1
+          ./scripts/Sync-Localization.ps1 -Mode Check
           ./scripts/Verify-Safety.ps1 -SkipTests
           # Execute the xUnit v3 app directly; the .NET 10 test server reports zero tests here.
           dotnet run --project tests/Ralven.Tests/Ralven.Tests.csproj `
@@ -115,59 +101,11 @@ jobs:
             -- `
             --minimum-expected-tests 1
 
-      - name: Write Google sign-in overlay
-        shell: pwsh
-        env:
-          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
-          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
-        run: |
-          # Machine-local overlay (see RemoteServicesOptionsLoader / the
-          # Content glob in Ralven.App.csproj) that a normal checkout
-          # never has. Written here, right before the publish that Build-
-          # Installer.ps1 triggers, so the official installer ships with
-          # "Continuar com o Google" enabled instead of silently hiding it.
-          if ([string]::IsNullOrWhiteSpace($env:GOOGLE_OAUTH_CLIENT_ID) -or
-              [string]::IsNullOrWhiteSpace($env:GOOGLE_OAUTH_CLIENT_SECRET)) {
-            throw 'Google OAuth secrets are required to build the public installer.'
-          }
-          $overlay = [ordered]@{
-            googleOAuthClientId     = $env:GOOGLE_OAUTH_CLIENT_ID
-            googleOAuthClientSecret = $env:GOOGLE_OAUTH_CLIENT_SECRET
-          }
-          $overlay | ConvertTo-Json | Set-Content -LiteralPath ./src/Ralven.App/Config/appsettings.Production.local.json -Encoding utf8
-
-      - name: Build hardened self-contained package and installer
-        shell: pwsh
-        env:
-          ASSET_VERSION: ${{ steps.release.outputs.asset_version }}
-        # -Harden obfuscates Ralven.Core / Ralven.Windows inside the
-        # published runtime before it is hashed and signed, so every public
-        # release asset ships the hardened binaries. See docs/release-hardening.md.
-        run: ./scripts/Build-Installer.ps1 -Version $env:ASSET_VERSION -Harden
-
-      - name: Upload obfuscation symbol maps
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: obfuscation-maps-${{ steps.release.outputs.asset_version }}
-          path: artifacts/obfuscation-maps/**
-          if-no-files-found: error
-          retention-days: 90
-
-      - name: Upload unsigned build candidate
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: Ralven-unsigned-${{ steps.release.outputs.asset_version }}
-          path: |
-            artifacts/Ralven-win-x64/**
-            artifacts/installer/**
-          if-no-files-found: error
-          retention-days: 14
-
   sign_release:
-    name: Sign audited release candidate
+    name: Build, protect, validate and sign release
     needs: build_audit
     runs-on: windows-latest
-    timeout-minutes: 20
+    timeout-minutes: 45
     # Configure this GitHub Environment with required reviewers. Its secrets
     # are online CI keys, never an offline root or an Authenticode credential.
     environment: release-signing
@@ -183,11 +121,32 @@ jobs:
         with:
           global-json-file: global.json
 
-      - name: Download unsigned build candidate
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: Ralven-unsigned-${{ needs.build_audit.outputs.asset_version }}
-          path: artifacts
+      - name: Write Google sign-in overlay
+        shell: pwsh
+        env:
+          GOOGLE_OAUTH_CLIENT_ID: ${{ secrets.GOOGLE_OAUTH_CLIENT_ID }}
+          GOOGLE_OAUTH_CLIENT_SECRET: ${{ secrets.GOOGLE_OAUTH_CLIENT_SECRET }}
+        run: |
+          # This desktop credential necessarily ships with the app. Keeping
+          # its overlay in the protected build environment prevents accidental
+          # source commits; PKCE, not this embedded value, protects the flow.
+          if ([string]::IsNullOrWhiteSpace($env:GOOGLE_OAUTH_CLIENT_ID) -or
+              [string]::IsNullOrWhiteSpace($env:GOOGLE_OAUTH_CLIENT_SECRET)) {
+            throw 'Google OAuth desktop credentials are required to build the public installer.'
+          }
+          $overlay = [ordered]@{
+            googleOAuthClientId     = $env:GOOGLE_OAUTH_CLIENT_ID
+            googleOAuthClientSecret = $env:GOOGLE_OAUTH_CLIENT_SECRET
+          }
+          $overlay | ConvertTo-Json | Set-Content -LiteralPath ./src/Ralven.App/Config/appsettings.Production.local.json -Encoding utf8
+
+      - name: Build hardened self-contained package and installer
+        shell: pwsh
+        env:
+          ASSET_VERSION: ${{ needs.build_audit.outputs.asset_version }}
+        # Raw symbol maps exist only inside this protected job. No clean
+        # candidate can cross into signing or publication.
+        run: ./scripts/Build-Installer.ps1 -Version $env:ASSET_VERSION -Harden
 
       - name: Build release signer without secrets
         shell: pwsh
@@ -224,16 +183,35 @@ jobs:
           ASSET_VERSION: ${{ needs.build_audit.outputs.asset_version }}
         run: |
           ./scripts/Finalize-BrokerIntegrity.ps1 -Version $env:ASSET_VERSION
-          ./scripts/Test-HardenedRuntime.ps1 -RuntimeDirectory ./artifacts/Ralven-win-x64 -Version $env:ASSET_VERSION
           $installer = Resolve-Path "./artifacts/installer/Ralven-Setup-$env:ASSET_VERSION-win-x64.exe"
+          ./scripts/Test-NoUnobfuscatedAssemblies.ps1 `
+            -RuntimeDirectory ./artifacts/Ralven-win-x64 `
+            -Version $env:ASSET_VERSION `
+            -PortableZipPath ./artifacts/Ralven-win-x64.zip `
+            -RuntimeZipPath ./artifacts/Ralven-Runtime-win-x64.zip `
+            -InstallerPath $installer
+          ./scripts/Test-HardenedRuntime.ps1 -RuntimeDirectory ./artifacts/Ralven-win-x64 -Version $env:ASSET_VERSION
           ./scripts/Test-Installer.ps1 -InstallerPath $installer -PublishDirectory ./artifacts/Ralven-win-x64 -ExpectedVersion $env:ASSET_VERSION
+
+      - name: Encrypt private obfuscation maps
+        shell: pwsh
+        env:
+          ASSET_VERSION: ${{ needs.build_audit.outputs.asset_version }}
+          OBFUSCATION_MAP_ENCRYPTION_KEY: ${{ secrets.OBFUSCATION_MAP_ENCRYPTION_KEY }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:OBFUSCATION_MAP_ENCRYPTION_KEY)) {
+            throw 'The protected signing environment requires the obfuscation-map encryption key.'
+          }
+          ./scripts/Protect-ObfuscationMaps.ps1 `
+            -MappingDirectory ./artifacts/obfuscation-maps `
+            -OutputPath "./artifacts/Ralven-obfuscation-maps-$env:ASSET_VERSION.bin" `
+            -EncryptionKey $env:OBFUSCATION_MAP_ENCRYPTION_KEY
+          Remove-Item -LiteralPath ./artifacts/obfuscation-maps -Recurse -Force
 
       - name: Stage and sign release assets
         shell: pwsh
         env:
           ASSET_VERSION: ${{ needs.build_audit.outputs.asset_version }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
-          RELEASE_CHANNEL: ${{ inputs.channel }}
           # The existing GitHub secret protects the unchanged signing trust
           # anchor. Map it to the Ralven runtime variable so the repository
           # rename does not require exposing or re-entering that secret.
@@ -249,68 +227,48 @@ jobs:
           Copy-Item -LiteralPath ./artifacts/Ralven-Runtime-win-x64.zip -Destination ./artifacts/release
           Copy-Item -LiteralPath ./artifacts/Ralven-Runtime-win-x64.zip.sha256 -Destination ./artifacts/release
 
-          # O site usa um alias estável; os dois modos do updater usam somente
-          # artefatos versionados autorizados por manifestos assinados.
-          if ($env:RELEASE_CHANNEL -eq 'stable') {
-            if ([string]::IsNullOrWhiteSpace($env:RELEASE_SIGNING_PRIVATE_KEY) -or
-                [string]::IsNullOrWhiteSpace($env:RALVEN_SIGNING_PASSWORD)) {
-              throw 'Stable releases require the protected update-manifest signing key.'
-            }
-            $privateKey = Join-Path $env:RUNNER_TEMP 'ralven-release-private.pem'
-            try {
-              [IO.File]::WriteAllText(
-                $privateKey,
-                $env:RELEASE_SIGNING_PRIVATE_KEY,
-                [Text.UTF8Encoding]::new($false))
-              $minimum = (Get-Content -LiteralPath ./installer/minimum-update-version.txt -Raw).Trim()
-              $runtimeUrl = "https://vemryx.com/Ralven/releases/$env:RELEASE_TAG/Ralven-Runtime-$env:ASSET_VERSION-win-x64.zip"
-              $installerUrl = "https://vemryx.com/Ralven/releases/$env:RELEASE_TAG/Ralven-Setup-$env:ASSET_VERSION-win-x64.exe"
-              $runtimeManifest = './artifacts/release/Ralven-runtime-update-manifest.json'
-              $installerManifest = './artifacts/release/Ralven-installer-update-manifest.json'
-              dotnet run --project ./src/Ralven.ReleaseTool/Ralven.ReleaseTool.csproj `
-                --configuration Release --no-build -- `
-                sign ./artifacts/Ralven-Runtime-win-x64.zip stable $env:ASSET_VERSION `
-                $minimum $runtimeUrl $privateKey $runtimeManifest
-              if ($LASTEXITCODE -ne 0) { throw 'Signing the runtime manifest failed.' }
-              dotnet run --project ./src/Ralven.ReleaseTool/Ralven.ReleaseTool.csproj `
-                --configuration Release --no-build -- `
-                sign "./artifacts/installer/Ralven-Setup-$env:ASSET_VERSION-win-x64.exe" stable $env:ASSET_VERSION `
-                $minimum $installerUrl $privateKey $installerManifest
-              if ($LASTEXITCODE -ne 0) { throw 'Signing the installer manifest failed.' }
-              foreach ($manifest in @($runtimeManifest, $installerManifest)) {
-                dotnet run --project ./src/Ralven.ReleaseTool/Ralven.ReleaseTool.csproj `
-                  --configuration Release --no-build -- `
-                  verify $manifest ./src/Ralven.App/Assets/update-manifest-public-key.pem $minimum
-                if ($LASTEXITCODE -ne 0) { throw "Signed manifest '$manifest' does not match the embedded public key." }
-              }
-            }
-            finally {
-              if (Test-Path -LiteralPath $privateKey) { Remove-Item -LiteralPath $privateKey -Force }
-            }
-            Copy-Item `
-              -LiteralPath "./artifacts/installer/Ralven-Setup-$env:ASSET_VERSION-win-x64.exe" `
-              -Destination ./artifacts/release/Ralven-Setup-latest-win-x64.exe
+          if ([string]::IsNullOrWhiteSpace($env:RELEASE_SIGNING_PRIVATE_KEY) -or
+              [string]::IsNullOrWhiteSpace($env:RALVEN_SIGNING_PASSWORD)) {
+            throw 'Stable releases require the protected update-manifest signing key.'
           }
+          $privateKey = Join-Path $env:RUNNER_TEMP 'ralven-release-private.pem'
+          try {
+            [IO.File]::WriteAllText(
+              $privateKey,
+              $env:RELEASE_SIGNING_PRIVATE_KEY,
+              [Text.UTF8Encoding]::new($false))
+            $minimum = (Get-Content -LiteralPath ./installer/minimum-update-version.txt -Raw).Trim()
+            $runtimeUrl = "https://vemryx.com/Ralven/releases/$env:RELEASE_TAG/Ralven-Runtime-$env:ASSET_VERSION-win-x64.zip"
+            $installerUrl = "https://vemryx.com/Ralven/releases/$env:RELEASE_TAG/Ralven-Setup-$env:ASSET_VERSION-win-x64.exe"
+            $runtimeManifest = './artifacts/release/Ralven-runtime-update-manifest.json'
+            $installerManifest = './artifacts/release/Ralven-installer-update-manifest.json'
+            dotnet run --project ./src/Ralven.ReleaseTool/Ralven.ReleaseTool.csproj `
+              --configuration Release --no-build -- `
+              sign ./artifacts/Ralven-Runtime-win-x64.zip stable $env:ASSET_VERSION `
+              $minimum $runtimeUrl $privateKey $runtimeManifest
+            if ($LASTEXITCODE -ne 0) { throw 'Signing the runtime manifest failed.' }
+            dotnet run --project ./src/Ralven.ReleaseTool/Ralven.ReleaseTool.csproj `
+              --configuration Release --no-build -- `
+              sign "./artifacts/installer/Ralven-Setup-$env:ASSET_VERSION-win-x64.exe" stable $env:ASSET_VERSION `
+              $minimum $installerUrl $privateKey $installerManifest
+            if ($LASTEXITCODE -ne 0) { throw 'Signing the installer manifest failed.' }
+            foreach ($manifest in @($runtimeManifest, $installerManifest)) {
+              dotnet run --project ./src/Ralven.ReleaseTool/Ralven.ReleaseTool.csproj `
+                --configuration Release --no-build -- `
+                verify $manifest ./src/Ralven.App/Assets/update-manifest-public-key.pem $minimum
+              if ($LASTEXITCODE -ne 0) { throw "Signed manifest '$manifest' does not match the embedded public key." }
+            }
+          }
+          finally {
+            if (Test-Path -LiteralPath $privateKey) { Remove-Item -LiteralPath $privateKey -Force }
+          }
+          Copy-Item `
+            -LiteralPath "./artifacts/installer/Ralven-Setup-$env:ASSET_VERSION-win-x64.exe" `
+            -Destination ./artifacts/release/Ralven-Setup-latest-win-x64.exe
 
-          $changelog = Get-Content -LiteralPath ./CHANGELOG.md -Raw -Encoding utf8
-          $escapedVersion = [regex]::Escape($env:ASSET_VERSION)
-          $releaseChanges = [regex]::Match(
-            $changelog,
-            "(?ms)^## \[$escapedVersion\].*?(?=^## \[|\z)")
-          if (-not $releaseChanges.Success) {
-            throw "CHANGELOG.md does not contain an entry for $env:ASSET_VERSION."
-          }
-          # O Discord consome o corpo da GitHub Release. Convertemos as seções
-          # técnicas do changelog no formato público estável, sem cabeçalhos,
-          # links ou avisos duplicados que a automação já fornece.
-          $notes = $releaseChanges.Value.Trim()
-          $notes = $notes -replace "(?m)^## \[$escapedVersion\].*\r?\n+", ''
-          $notes = $notes -replace '(?m)^### Adicionado$', '## ✨ Novidades'
-          $notes = $notes -replace '(?m)^### Melhorado$', '## 🔧 Melhorias'
-          $notes = $notes -replace '(?m)^### Corrigido$', '## 🐛 Correções'
-          $notes = $notes -replace '(?m)^### Segurança$', '## 🔒 Segurança'
-          $notes = $notes -replace '(?m)^### Alterações técnicas$', '## ⚙️ Alterações técnicas'
-          $notes.Trim() | Set-Content -LiteralPath ./artifacts/release/RELEASE_NOTES.md -Encoding utf8
+          ./scripts/New-ReleaseNotes.ps1 `
+            -Version $env:ASSET_VERSION `
+            -OutputPath ./artifacts/release/RELEASE_NOTES.md
 
       - name: Upload signed release candidate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
@@ -320,9 +278,17 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Upload encrypted diagnostic maps
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: Ralven-protected-maps-${{ needs.build_audit.outputs.asset_version }}
+          path: artifacts/Ralven-obfuscation-maps-${{ needs.build_audit.outputs.asset_version }}.bin
+          if-no-files-found: error
+          retention-days: 90
+
   publish:
     name: Publish release
-    if: ${{ inputs.publish }}
+    if: ${{ github.event_name == 'push' || inputs.publish }}
     needs: [build_audit, sign_release]
     runs-on: windows-latest
     timeout-minutes: 15
@@ -346,6 +312,12 @@ jobs:
           name: Ralven-signed-${{ needs.build_audit.outputs.asset_version }}
           path: release
 
+      - name: Download encrypted diagnostic maps
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: Ralven-protected-maps-${{ needs.build_audit.outputs.asset_version }}
+          path: protected-maps
+
       - name: Setup Node.js from .node-version
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -359,7 +331,6 @@ jobs:
           subject-path: release/*-Setup-*-win-x64.exe
 
       - name: Prepare production diagnostics backend
-        if: ${{ inputs.channel == 'stable' }}
         shell: pwsh
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -423,7 +394,6 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
           ASSET_VERSION: ${{ needs.build_audit.outputs.asset_version }}
         run: |
           if ([string]::IsNullOrWhiteSpace($env:CLOUDFLARE_API_TOKEN) -or
@@ -433,6 +403,10 @@ jobs:
           Push-Location ./infra/cloudflare-worker
           try {
             npm ci
+            $protectedMaps = "Ralven-obfuscation-maps-$env:ASSET_VERSION.bin"
+            npx.cmd wrangler r2 object put "ralven-releases/private/obfuscation-maps/$env:RELEASE_TAG/$protectedMaps" `
+              --file "../../protected-maps/$protectedMaps" --remote
+            if ($LASTEXITCODE -ne 0) { throw 'Preserving the encrypted diagnostic maps in R2 failed.' }
             $uploads = @{
               "Ralven-Setup-$env:ASSET_VERSION-win-x64.exe" = "Ralven-Setup-$env:ASSET_VERSION-win-x64.exe"
               "Ralven-Setup-$env:ASSET_VERSION-win-x64.exe.sha256" = "Ralven-Setup-$env:ASSET_VERSION-win-x64.exe.sha256"
@@ -450,20 +424,63 @@ jobs:
           }
           finally { Pop-Location }
 
+      - name: Deploy and verify the production dashboard
+        shell: pwsh
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          TRUSTED_COMMIT: ${{ needs.build_audit.outputs.trusted_commit }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:CLOUDFLARE_API_TOKEN) -or
+              [string]::IsNullOrWhiteSpace($env:CLOUDFLARE_ACCOUNT_ID)) {
+            throw 'Cloudflare credentials are required to deploy the dashboard.'
+          }
+          $deployRoot = Join-Path $env:RUNNER_TEMP 'ralven-dashboard'
+          New-Item -ItemType Directory -Path $deployRoot -Force | Out-Null
+          Copy-Item -LiteralPath ./infra/dashboard/index.html -Destination $deployRoot
+          Copy-Item -LiteralPath ./infra/dashboard/_headers -Destination $deployRoot
+          Copy-Item -LiteralPath ./infra/dashboard/assets -Destination $deployRoot -Recurse
+          @{ sourceCommit = $env:TRUSTED_COMMIT } |
+            ConvertTo-Json -Compress |
+            Set-Content -LiteralPath (Join-Path $deployRoot 'deployment.json') -Encoding utf8
+
+          Push-Location ./infra/cloudflare-worker
+          try {
+            npx.cmd wrangler pages deploy $deployRoot --project-name=fivemcleaner-dashboard --branch=production
+            if ($LASTEXITCODE -ne 0) { throw 'Deploying the production dashboard failed.' }
+          }
+          finally { Pop-Location }
+
+          $verified = $false
+          foreach ($attempt in 1..6) {
+            try {
+              $marker = Invoke-RestMethod `
+                -Uri "https://dashboard.vemryx.com/deployment.json?source=$env:TRUSTED_COMMIT" `
+                -Headers @{ 'Cache-Control' = 'no-cache' }
+              if ($marker.sourceCommit -eq $env:TRUSTED_COMMIT) {
+                $verified = $true
+                break
+              }
+            }
+            catch {
+              Write-Host "Dashboard health check attempt $attempt failed: $($_.Exception.Message)"
+            }
+            Start-Sleep -Seconds 5
+          }
+          if (-not $verified) {
+            throw 'The public dashboard did not serve the trusted release commit.'
+          }
+
       - name: Create public release
+        id: github_release
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
-          RELEASE_CHANNEL: ${{ inputs.channel }}
           ASSET_VERSION: ${{ needs.build_audit.outputs.asset_version }}
         run: |
           if (gh release view $env:RELEASE_TAG --repo $env:GITHUB_REPOSITORY 2>$null) {
-            if ($env:RELEASE_CHANNEL -ne 'stable') {
-              throw "Release '$env:RELEASE_TAG' already exists; refusing to overwrite it."
-            }
-
             Write-Host "Existing stable release found; resuming Vemryx feed publication."
+            "created=false" >> $env:GITHUB_OUTPUT
             exit 0
           }
 
@@ -473,18 +490,24 @@ jobs:
             '--repo', $env:GITHUB_REPOSITORY,
             '--verify-tag',
             '--title', "Ralven $env:RELEASE_TAG",
-            '--notes-file', (Resolve-Path ./release/RELEASE_NOTES.md).Path
+            '--notes-file', (Resolve-Path ./release/RELEASE_NOTES.md).Path,
+            '--latest'
           )
-          if ($env:RELEASE_CHANNEL -eq 'preview') {
-            $arguments += '--prerelease'
-          } else {
-            $arguments += '--latest'
-          }
-
           gh @arguments
+          if ($LASTEXITCODE -ne 0) { throw 'Creating the public GitHub Release failed.' }
+          "created=true" >> $env:GITHUB_OUTPUT
+
+      - name: Notify the stable release workflow
+        if: steps.github_release.outputs.created == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST "repos/$env:GITHUB_REPOSITORY/dispatches" `
+            --field event_type=ralven-release-published `
+            --field "client_payload[tag]=$env:RELEASE_TAG"
 
       - name: Publish signed stable feed to Vemryx
-        if: ${{ inputs.channel == 'stable' }}
         shell: pwsh
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -521,10 +544,8 @@ jobs:
           }
 
       - name: Keep only the seven newest R2 releases
-        if: ${{ inputs.channel == 'stable' }}
         shell: pwsh
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          RELEASE_TAG: ${{ inputs.release_tag }}
         run: node ./scripts/Prune-R2Releases.mjs

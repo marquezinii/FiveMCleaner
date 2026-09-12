@@ -45,6 +45,7 @@ public sealed class SilentUpdateInstallerTests : IDisposable
         Assert.Contains("--installer-sha256", arguments);
         Assert.Contains("--parent-pid", arguments);
         Assert.Contains("--parent-start-time", arguments);
+        Assert.Contains("--culture", arguments);
         Assert.Contains("42", arguments);
         Assert.Contains("--log", arguments);
         Assert.DoesNotContain(arguments, argument => argument.StartsWith("/VERYSILENT", StringComparison.Ordinal));

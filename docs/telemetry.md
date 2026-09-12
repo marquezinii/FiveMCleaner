@@ -5,6 +5,13 @@ Para contrato, troubleshooting e checklist de release da infraestrutura, veja
 
 ## Consentimento
 
+A assinatura Pro tem um fluxo separado, iniciado explicitamente pelo usuário
+na página Ralven Pro. Os dados do pagador são informados diretamente na página
+segura do Asaas. O Worker/D1 guarda UID, referências opacas, valor/moeda, estados
+e datas necessários ao pagamento e ao acesso. Dados de cartão ficam no provedor. Nenhum desses dados
+entra na telemetria, nos crashes ou nos relatórios pessoais exportados; ver
+[cobrança e acesso pago](billing.md). Aceitar a telemetria não inicia assinatura.
+
 Quando uma versão altera a política, a tela de transparência volta a aparecer
 e só pode ser fechada por **Continuar**. Sem mudança na política, a escolha
 salva não é perguntada de novo.
@@ -23,20 +30,23 @@ do Windows ou caminhos locais completos.
 
 ## Dados enviados, finalidade, retenção e destinatários
 
-Ao término, falha ou cancelamento de uma otimização, o aplicativo monta um
-evento técnico com estes campos (versão 8 do aviso de privacidade —
+O catálogo atual possui eventos técnicos de inicialização, otimização e benchmark
+oficial (versão 9 do aviso de privacidade —
 ver `PrivacyConsentPolicy`):
 
 | Campos | Finalidade | Obrigatório | Retenção | Destinatários |
 | --- | --- | --- | --- | --- |
-| ID do evento | Garantir entrega idempotente sem identificar máquina ou usuário. | Sim, diagnóstico essencial. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
+| ID do evento | Correlacionar a execução com seu relatório local e garantir entrega idempotente sem identificar máquina ou usuário. Em otimizações, é o UUID aleatório da transação. | Sim, diagnóstico essencial. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
 | Tipo do evento, tempo de execução e versão do app | Distinguir conclusão, falha ou cancelamento; detectar operações anormalmente longas e correlacioná-las à versão. | Sim, diagnóstico essencial. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, banco D1 e painel administrativo autenticado com métricas agregadas. |
+| Inicialização saudável (`app-initialized`) | Detectar regressões que impedem o app de concluir a inicialização. É emitido no máximo uma vez por dia UTC e versão, somente depois de a UI e os diagnósticos locais concluírem. | Sim, diagnóstico essencial. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
 | Categoria de erro allowlisted (`cancelled`, `timeout`, `access-denied`, `io`, `invalid-data`, `unexpected`) | Classificar falhas sem enviar mensagem, stack trace, arquivo ou caminho. | Sim em falhas, diagnóstico essencial. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
 | Código técnico de bug allowlisted (`BugCode`) | Agrupar a causa técnica da falha sem texto livre. | Sim quando a causa é conhecida, diagnóstico essencial. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
 | Versão do Windows e arquitetura | Compatibilidade agregada do sistema operacional. | Sim, diagnóstico essencial. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
 | Build do Windows | Identificar incompatibilidades específicas de uma build. | Não. Só com **Relatórios opcionais** ativos. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
 | Modelo de CPU e GPU; faixa de RAM | Estatísticas agregadas do hardware mais comum. A RAM é arredondada para uma faixa fixa. | Não. Só com **Relatórios opcionais** ativos. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
-| Perfil escolhido e IDs allowlisted das ações aplicadas | Medir uso agregado de perfis e funcionalidades. | Não. Só com **Relatórios opcionais** ativos. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
+| Perfil escolhido e amostra de até 30 IDs allowlisted das ações planejadas | Medir uso agregado de perfis e funcionalidades. A contagem de alvos informa o total quando a lista é parcial. | Não. Só com **Relatórios opcionais** ativos. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
+| Início de otimização e resultado do benchmark oficial (`optimization-started`, `gtav-benchmark-*`) | Medir adoção dos fluxos principais, resultados e falhas do benchmark sem coletar FPS, arquivos de saída ou configurações do jogo. | Não. Só com **Relatórios opcionais** ativos. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
+| UUID efêmero da operação de otimização | Correlacionar um início opcional ao resultado da mesma execução e identificar fluxos abandonados. Não é HWID, não é reaproveitado entre operações e é removido antes de envio no opt-out. | Não. Só com **Relatórios opcionais** ativos. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
 | FiveM detectado; edição do GTA V; contagem de alvos | Verificar instalação sem caminho, edição suportada e escopo da execução. | Sim, diagnóstico essencial. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
 | Tipo de disco; faixa de espaço livre | Contextualizar I/O e falta de espaço sem enviar valor exato fora das faixas permitidas. | Não. Só com **Relatórios opcionais** ativos. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
 | Timestamp da execução; dias desde a última execução em faixa | Calcular padrões agregados de horário e frequência. | Não. Só com **Relatórios opcionais** ativos. | Fila local: até 14 dias. D1: não há expiração automática definida no contrato atual. | Worker Cloudflare, D1 e painel administrativo autenticado. |
@@ -58,6 +68,20 @@ mas nunca incluem número de série, MAC ou GUID de hardware. O transporte é o 
 acima. O FormSubmit foi removido por completo do app: não existe mais
 código nem configuração que envie telemetria de uso para ele.
 
+## Diagnósticos do updater
+
+Falhas e resultados do updater usam uma lista fechada de códigos curtos e estáveis,
+como `U101` para “Manifesto: origem ou resposta recusada”. O painel mostra tanto o
+código quanto o diagnóstico; o código torna a busca e a correlação com suporte mais
+rápidas sem enviar mensagens de exceção, caminhos, stack traces ou outros textos
+locais. As faixas atuais são: `U1xx` manifesto, `U2xx` download, `U3xx` preparação,
+`U4xx` ativação, `U5xx` recuperação, `U6xx` sistema, `U7xx` rede e `U999` falha não
+classificada. Códigos enviados por clientes anteriores continuam visíveis como
+**Legado**, mas não recebem uma causa retroativa que não foi transmitida na época.
+
+O Worker aceita somente esse catálogo e os códigos legados conhecidos. Assim, um
+cliente não pode inserir texto livre ou um código arbitrário no painel.
+
 ## Dados que o aplicativo nunca envia nessa telemetria
 
 - arquivos, imagens, documentos ou seus conteúdos;
@@ -68,7 +92,10 @@ código nem configuração que envie telemetria de uso para ele.
   tabela acima;
 - texto livre, mensagens de erro brutas, stack traces ou caminhos.
 
-A fila preserva o UUID aleatório de cada evento em todos os retries. Ao
+A fila preserva o UUID aleatório de cada evento — o mesmo UUID da transação nos
+resultados de otimização — em todos os retries. O evento de inicialização usa um
+marcador local sem identificador pessoal para limitar a emissão a uma vez por dia
+UTC e versão. Ao
 desativar **Relatórios opcionais**, campos opcionais também são removidos dos
 eventos que já estavam pendentes antes de qualquer novo envio. O Worker
 grava um lote em uma única transação D1; repetir o mesmo lote com UUID do
@@ -126,6 +153,15 @@ a mesma sanitização de caminhos já usada no relatório técnico
 que o SDK tente preencher automaticamente — nome da máquina, IP e
 identificador de usuário são sempre sobrescritos/limpos, nunca enviados.
 
+Quando o processo ainda tem uma interface WPF funcional, o Ralven apresenta a
+falha em uma janela própria antes de encerrar ou permitir a continuação segura.
+Os detalhes técnicos exibidos, copiados para a área de transferência e gravados
+no log local passam por `ReportSanitizer`; o envio automático continua opcional
+e depende exclusivamente do consentimento já descrito nesta seção. Falhas de
+baixo nível, como término abrupto de uma thread sem Dispatcher, estouro de
+pilha, corrupção de memória ou indisponibilidade do próprio subsistema gráfico,
+podem impedir essa janela e dependem do fallback do Windows/.NET.
+
 ### Configuração centralizada e ambientes
 
 O DSN do Sentry não é um literal espalhado pelo código: fica em
@@ -144,7 +180,7 @@ DSN do Sentry, apenas com a tag `Environment` diferente.
 
 O Worker que recebe a telemetria de uso (não os relatórios de falha, que
 vão direto ao Sentry) está **implantado** em
-`https://fivemcleaner-telemetry.felipemarquesini10.workers.dev`, com
+`https://api.vemryx.com`, com
 validação server-side, schema D1 (incluindo uma tabela normalizada de ações
 aplicadas, para "função mais usada"), endpoints de estatística agregada
 (`/api/stats/*`) e autenticação própria protegendo esses endpoints —
@@ -158,18 +194,28 @@ O Worker também recebe os relatos de bug (rota `/bugs`, ver
 [Relatos de bug e privacidade](bug-reports.md)) — somente texto, sem anexo
 de captura de tela e sem depender de R2, guardados só no D1.
 
-O painel administrativo privado consome esses endpoints para
-mostrar gráficos agregados — otimizações por dia, versões do Windows/app,
-funções mais usadas, hardware mais comum, tempo médio, taxa de sucesso e,
-para investigar bugs mais rápido, erros por categoria, ações mais
-associadas a falhas, um feed não agregado dos últimos erros e uma aba
-**"Bugs reportados"** com os relatos recebidos pela rota `/bugs` (categoria e
-código allowlisted, resumo, versão, perfil, ambiente, e-mail opcional e se um trecho de log foi
-enviado — sem captura de tela, esse formulário é só texto). Nenhum dado
-individual de usuário é exibido nem poderia ser, já que a telemetria nunca
-carrega um identificador de máquina; o painel deixa isso explícito em vez
-de fingir uma contagem de "usuários únicos" que os dados não permitem
-calcular corretamente.
+O painel administrativo privado em `https://dashboard.vemryx.com` combina,
+sempre atrás da sessão administrativa, métricas agregadas de otimizações,
+versões, adoção de ações/perfis, hardware, falhas e updater. O centro de
+comando também resume crescimento de contas, uso/custo do Ralven AI e saúde de
+assinaturas/pagamentos a partir das tabelas operacionais que já existem; essas
+consultas não retornam UID, username, e-mail, identificador do provedor nem
+conteúdo interativo da IA. Relatos de bug e falhas recentes continuam sendo as
+únicas visões não agregadas, limitadas aos campos já autorizados e sanitizados
+por seus contratos.
+
+A telemetria anônima não permite contar usuários únicos ou usuários ativos do
+aplicativo. O total de contas vem de `account_profiles`, e "contas ativas no
+Ralven AI" significa apenas contas autenticadas com uma requisição de IA no
+período selecionado. O painel explicita essas fronteiras para não transformar
+eventos, cadastros ou uso de uma funcionalidade em uma alegação de atividade
+geral que os dados não sustentam.
+
+O Worker também expõe métricas administrativas fechadas para inicializações
+saudáveis por dia/versão, otimizações iniciadas sem resultado terminal e
+resultados/duração do benchmark oficial. Elas respondem, respectivamente, a
+regressões de startup, abandono de fluxo e adoção/confiabilidade do benchmark;
+nenhuma delas permite contar pessoas ou reconstruir uma sessão.
 
 A autenticação do painel foi uma decisão explícita do usuário: sem domínio
 próprio, sem Cloudflare Access, sem OAuth Google/GitHub — uma senha de
@@ -178,3 +224,22 @@ guardado só como Secret do Worker), proteção contra força bruta e sessões
 revogáveis no lado do servidor, desenhada para poder ser trocada por outro
 provedor no futuro sem reescrever o resto do Worker. Detalhes completos em
 `infra/cloudflare-worker/README.md`.
+
+## Dados locais do Ultra
+
+[Rotinas, observações e medições Ultra](ultra.md) ficam somente no perfil local do
+Windows, em `Personal/workspace.json`, sem sincronização remota. O acompanhamento
+é opt-in e para com o aplicativo fechado ou sem Pro vigente. Nomes de tarefas,
+assinatura de hardware e valores das medições não ampliam os payloads de
+telemetria, crash reporting ou relatos. A validação do entitlement usa apenas o
+endpoint autenticado já existente; não envia os dados do workspace.
+
+## Ralven AI não é telemetria
+
+O envio interativo do Ralven AI ocorre somente após uma pergunta do usuário e
+segue contrato, finalidade e retenção próprios descritos em
+[`docs/ralven-ai.md`](ralven-ai.md). Perguntas, respostas e snapshots não entram
+nos eventos de telemetria nem são armazenados no D1; somente metadados de uso e
+custo são registrados para impor os limites mensais: identificador HMAC da
+requisição, UID interno, período, estado, reserva/custo e contagens por categoria
+de token. Esses registros não contêm texto de prompt ou resposta.

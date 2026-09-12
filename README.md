@@ -5,8 +5,8 @@
 <h1 align="center">Ralven</h1>
 
 <p align="center">
-  <strong>Mais desempenho. Menos complicação.</strong><br>
-  Gerenciamento, diagnóstico e otimização transparente do Windows, com uma área especializada para FiveM sobre GTAV Legacy.
+  <strong>Seu Windows, sob controle.</strong><br>
+  Plataforma de gerenciamento e otimização do Windows com IA, incluindo diagnóstico, manutenção, aplicativos, atualizações e Jogos.
 </p>
 
 <p align="center">
@@ -31,9 +31,11 @@
 > [!IMPORTANT]
 > O módulo FiveM do Ralven suporta somente **GTAV Legacy**. GTAV Enhanced é identificado e bloqueado com segurança até existir um adaptador dedicado, pesquisado e testado.
 
-## Seu PC em um lugar, FiveM com profundidade
+## Seu Windows em um lugar, Jogos com profundidade
 
-Otimizar analisa automaticamente o computador, recomenda Leve, Médio ou Agressivo conforme RAM, CPU, GPU/VRAM e espaço livre, e ajusta o Windows sem exigir FiveM ou GTA V. O plano geral reúne diagnósticos locais de hardware, armazenamento, drivers, tela, rede, memória e estabilidade com ações conservadoras já tipadas, como Modo de Jogo, captura em segundo plano, energia, responsividade visual e temporários antigos. Sistema mostra dentro do Ralven as informações locais do PC e a saúde agregada de antivírus, firewall e atualizações automáticas informada pela Central de Segurança do Windows. Aplicativos lista os programas desktop registrados e os itens de inicialização, com busca e estado parcial explícito; alterações continuam nas superfícies confiáveis do Windows. Jogos reúne os títulos compatíveis e hoje oferece FiveM sobre GTAV Legacy, preservando o fluxo especializado: detecta o ambiente, monta um plano próprio e mostra o que será alterado antes de executar. Cada ação declara em qual escopo pode entrar, suas pré-condições, risco, resultado e rollback quando aplicável.
+Ralven reúne diagnóstico, manutenção, aplicativos, atualizações, otimização e orientação contextual por IA em uma única experiência para Windows. Otimizar analisa automaticamente o computador, recomenda Leve, Médio ou Agressivo conforme RAM, CPU, GPU/VRAM e espaço livre, e ajusta o Windows com ações conservadoras já tipadas. Sistema mostra as informações locais do PC e a saúde agregada informada pela Central de Segurança do Windows. Aplicativos reúne descoberta, instalação, inventário gerenciado, atualização individual ou em lote, atualizações ignoradas e desinstalação de pacotes das origens confiáveis `winget` e `msstore`, sempre mostrando pacote e origem antes de executar. Jogos reúne títulos compatíveis; hoje inclui um hub dedicado do FiveM sobre GTAV Legacy, com ferramentas especializadas, histórico/restauração e acesso oficial ao ReShade. Cada ação declara em qual escopo pode entrar, suas pré-condições, risco, resultado e rollback quando aplicável.
+
+Na Visão geral, o painel ao vivo permite selecionar CPU, GPU, memória, disco ou rede e acompanhar valor atual, média, pico e histórico de 60 segundos. Quando uma instalação Legacy é detectada, a visualização opcional do FiveM agrega somente CPU e memória dos processos cuja imagem pertence à instalação diagnosticada. A coleta pausa fora do primeiro plano, inclusive na bandeja, para não consumir recursos enquanto o painel não está sendo observado.
 
 | Você vê | O que isso significa |
 | --- | --- |
@@ -49,6 +51,18 @@ Otimizar analisa automaticamente o computador, recomenda Leve, Médio ou Agressi
 | **Leve** | Ajustes suaves, com prioridade para preservar a experiência visual. |
 | **Médio** | Equilíbrio entre qualidade, responsividade e consistência. |
 | **Agressivo** | Reduz efeitos e opções pesadas para máquinas mais limitadas. |
+| **Pessoal (Pro)** | Em desenvolvimento; não inicia operações nem salva preferências enquanto o Pro estiver bloqueado. |
+
+Leve, Médio e Agressivo continuam gratuitos. O espaço pessoal, o Ralven Pro e o
+Ralven AI estão em desenvolvimento: a comparação de planos pode ser exibida,
+mas o cliente não oferece compra, ativação, atualização ou cancelamento, e as
+vendas permanecem desabilitadas. As fundações de cobrança e acesso seguem
+documentadas para implantação futura em [cobrança e acesso pago](docs/billing.md)
+e no [guia do Asaas](docs/asaas-setup.md), sem constituir uma oferta pública.
+
+Diagnóstico, perfis gratuitos, ferramentas FiveM Legacy, histórico, relatórios e
+restauração continuam Free. Nenhum recurso em desenvolvimento inicia operações
+ou altera o sistema até sua ativação explícita e validada.
 
 Perfis são composições de ações conhecidas — não listas genéricas de "tweaks". Manutenção de dados é sempre opt-in; caches protegidos, entitlements, plugins e autenticação nunca são tratados como lixo.
 
@@ -67,11 +81,13 @@ Leia a [política de segurança](docs/safety.md) e as [evidências técnicas](do
 
 | Área | Disponível hoje |
 | --- | --- |
-| Otimizar | Plano geral do Windows independente de FiveM/GTA, com diagnóstico, prévia, confirmação, progresso real, resultado por ação e rollback. |
+| Otimizar | Plano geral do Windows com diagnóstico, prévia, confirmação, progresso real, resultado por ação e rollback. |
 | Sistema | Informações internas do PC, saúde agregada informada pelo Windows e leitura/ajuste confirmado do Modo de Jogo e da gravação histórica; atalhos nativos ficam como ações secundárias. |
-| Aplicativos | Inventário interno somente leitura de programas desktop e inicialização, com busca, contagens e acessos secundários às superfícies do Windows e da Microsoft Store. |
-| Jogos | Catálogo interno com FiveM sobre GTAV Legacy e seu plano especializado, sem reutilizar ações do jogo no escopo geral. |
-| Conta | Cadastro e login por e-mail, verificação, recuperação, senha, troca de credenciais e exclusão; Google usa OAuth 2.0 + PKCE quando a credencial desktop é fornecida ao build. |
+| Aplicativos | Centro de pacotes com descoberta, instalados gerenciados, atualizações individuais/em lote, lista de ignorados e desinstalação via WinGet; limitado às origens confiáveis WinGet Community e Microsoft Store, com confirmação antes de cada mutação. O inventário local e os atalhos nativos continuam disponíveis. |
+| Jogos | Catálogo interno com um hub do FiveM sobre GTAV Legacy, reunindo o plano especializado, acesso ao otimizador geral, ao histórico/restauração e ao download oficial mais recente do ReShade, sem redistribuir seu instalador. |
+| Conta | Cadastro e login por e-mail ou Google, vinculação segura de provedores, verificação e troca de e-mail, recuperação e troca de senha, TOTP 2FA com códigos de recuperação e exclusão; Google usa OAuth 2.0 + PKCE quando a credencial desktop é fornecida ao build. |
+| Bandeja | Menu escuro com estado do aplicativo e acessos rápidos para abrir o Ralven, o Otimizador, o monitor local do FiveM, atualizações e Configurações; sair continua explícito e separado. |
+| Ralven AI | Em desenvolvimento e indisponível no cliente atual; quando ativado, exigirá revisão explícita antes de qualquer aplicação. |
 | Privacidade | ID token somente em memória, refresh token protegido por DPAPI e telemetria limitada por consentimento. |
 | Relatos de bug | Envio explícito com campos validados, e-mail e trecho de log opcionais — sem anexos automáticos. |
 | Atualizações | Feed assinado, validação de origem/tamanho/SHA-256, staging, ativação atômica, health-check e rollback. |
@@ -103,7 +119,7 @@ dotnet run --project tests/Ralven.Tests/Ralven.Tests.csproj --configuration Rele
 .\scripts\Verify-Safety.ps1
 ```
 
-Para abrir uma demonstração segura sem FiveM/GTA instalado:
+Para abrir uma demonstração local segura:
 
 ```powershell
 .\scripts\Install-DevelopmentShortcut.ps1 -Build
@@ -117,7 +133,7 @@ Ela usa dados sintéticos e não grava configurações nem executa ações do si
 App             WPF, conta, configurações e serviços de aplicação
 Contracts       DTOs, IDs e contratos duráveis
 Core            políticas, catálogo, planos e rollback
-Windows         descoberta e integrações de Windows/FiveM
+Windows         descoberta e integrações de Windows e Jogos
 Broker          operações administrativas tipadas e allowlisted
 Launcher/Updater atualização transacional e supervisão pós-update
 Worker/Dashboard backend de conta, telemetria, bugs e operação privada

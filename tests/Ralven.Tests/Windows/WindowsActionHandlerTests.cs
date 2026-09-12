@@ -649,6 +649,13 @@ public sealed class WindowsActionHandlerTests
     }
 
     [Fact]
+    public void VisualEffectsBooleanParameter_UsesWin32BooleanValueInsteadOfAddress()
+    {
+        Assert.Equal(IntPtr.Zero, WindowsVisualEffectsController.BooleanParameter(false));
+        Assert.Equal(new IntPtr(1), WindowsVisualEffectsController.BooleanParameter(true));
+    }
+
+    [Fact]
     public async Task VisualEffectsApply_PostconditionFailureRestoresPreviousSettings()
     {
         var controller = new FakeVisualEffectsController { IgnoreNextStateSet = true };

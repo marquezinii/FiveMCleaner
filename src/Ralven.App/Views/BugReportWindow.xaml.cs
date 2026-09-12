@@ -12,7 +12,7 @@ using Microsoft.Win32;
 
 namespace Ralven.App.Views;
 
-public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
+public partial class BugReportWindow : Ralven.App.Controls.DialogWindow
 {
     private readonly IBugReportService service;
     private readonly string appVersion;
@@ -29,7 +29,8 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         IBugReportService service,
         string appVersion,
         string profile,
-        string edition)
+        string edition,
+        string? initialLogText = null)
     {
         this.service = service ?? throw new ArgumentNullException(nameof(service));
         this.appVersion = appVersion;
@@ -37,8 +38,8 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         this.edition = edition;
         localization = LocalizationService.Current;
         InitializeComponent();
+        LogTextBox.Text = initialLogText ?? string.Empty;
         PopulateBugCodeComboBox();
-        ConstrainToWorkArea();
         Closing += BugReportWindow_Closing;
     }
 
@@ -251,7 +252,12 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
         builder.AppendLine(T("BugReport.Clipboard.Title"));
         builder.AppendLine(F("BugReport.Clipboard.Id", submission.ReportId.ToString("D")));
         builder.AppendLine(F("BugReport.Clipboard.Category", LocalizeCategory(submission.Category)));
-        builder.AppendLine(F("BugReport.Clipboard.BugCode", submission.BugCode.ToString()));
+        var categoryResourceKey = BugCodeCatalog.GetCategoryResourceKey(submission.BugCode)
+            ?? "BugCode.Category.Unknown";
+        builder.AppendLine(F(
+            "BugReport.Clipboard.BugCode",
+            submission.BugCode.ToString(),
+            T(categoryResourceKey)));
         builder.AppendLine(F("BugReport.Clipboard.Summary", submission.Summary.Trim()));
         builder.AppendLine(F("BugReport.Clipboard.Version", submission.AppVersion));
         builder.AppendLine(F("BugReport.Clipboard.Profile", submission.Profile));
@@ -291,17 +297,4 @@ public partial class BugReportWindow : Wpf.Ui.Controls.FluentWindow
 
     private sealed record BugCodeOption(BugCode Code, string Label);
 
-    private void ConstrainToWorkArea()
-    {
-        const double outerMargin = 24;
-        var workArea = SystemParameters.WorkArea;
-        var availableWidth = Math.Max(320, workArea.Width - outerMargin);
-        var availableHeight = Math.Max(320, workArea.Height - outerMargin);
-        MinWidth = Math.Min(MinWidth, availableWidth);
-        MinHeight = Math.Min(MinHeight, availableHeight);
-        MaxWidth = availableWidth;
-        MaxHeight = availableHeight;
-        Width = Math.Min(Width, availableWidth);
-        Height = Math.Min(Height, availableHeight);
-    }
 }

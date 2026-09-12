@@ -33,6 +33,24 @@ if (-not (Test-Path -LiteralPath $inPath -PathType Container)) {
 # of them are present (e.g. the broker output has no UpdateRuntime); never fail
 # just because a directory legitimately lacks one.
 $targetAssemblies = @('Ralven.Core.dll', 'Ralven.Windows.dll')
+$durableSnapshotTypes = @(
+    'Ralven.Windows.Actions.QuarantinedFileSnapshot',
+    'Ralven.Windows.Actions.CleanupScopeSnapshot',
+    'Ralven.Windows.Actions.CleanupActionSnapshot',
+    'Ralven.Windows.Actions.TerminatedProcessSnapshot',
+    'Ralven.Windows.Actions.QuarantinedAuthEntry',
+    'Ralven.Windows.Actions.QuarantinedAuthItem',
+    'Ralven.Windows.Actions.AuthDataRepairSnapshot',
+    'Ralven.Windows.Actions.CommandLineSnapshot',
+    'Ralven.Windows.Actions.SafeXmlSettingsSnapshot',
+    'Ralven.Windows.Actions.PointerAccelerationSnapshot',
+    'Ralven.Windows.Actions.PowerPlanSnapshot',
+    'Ralven.Windows.Actions.PciExpressAspmSnapshot',
+    'Ralven.Windows.Actions.RegistryMutationSnapshotEntry',
+    'Ralven.Windows.Actions.RegistryMutationSnapshot',
+    'Ralven.Windows.Actions.VisualEffectsSnapshot',
+    'Ralven.Windows.Actions.MenuShowDelaySnapshot'
+)
 $present = @($targetAssemblies | Where-Object { Test-Path -LiteralPath (Join-Path $inPath $_) -PathType Leaf })
 if ($present.Count -eq 0) {
     Write-Host "No hardenable assemblies in $inPath; nothing to obfuscate." -ForegroundColor Yellow
@@ -80,6 +98,21 @@ try {
         Pop-Location
     }
 
+    $mapping = Join-Path $outPath 'Mapping.txt'
+    if (-not (Test-Path -LiteralPath $mapping -PathType Leaf)) {
+        throw "Obfuscar did not emit the symbol map required to validate durable snapshot contracts for $inPath."
+    }
+    $mappingText = Get-Content -LiteralPath $mapping -Raw
+    foreach ($type in $durableSnapshotTypes) {
+        $escaped = [regex]::Escape("[Ralven.Windows]$type")
+        $typeBlock = [regex]::Match(
+            $mappingText,
+            "(?ms)^$escaped skipped:\s+type rule in configuration\s*\r?\n(?<members>(?:^[ `t].*(?:\r?\n|\z))*)")
+        if (-not $typeBlock.Success -or $typeBlock.Groups['members'].Value -match ' -> ') {
+            throw "Obfuscation would rename durable JSON snapshot type '$type'; rollback compatibility is not protected."
+        }
+    }
+
     foreach ($assembly in $targetAssemblies) {
         $obfuscated = Join-Path $outPath $assembly
         if (-not (Test-Path -LiteralPath $obfuscated -PathType Leaf)) {
@@ -106,12 +139,9 @@ try {
     }
 
     if (-not [string]::IsNullOrWhiteSpace($MappingOutputDirectory)) {
-        $mapping = Join-Path $outPath 'Mapping.txt'
-        if (Test-Path -LiteralPath $mapping -PathType Leaf) {
-            New-Item -ItemType Directory -Force -Path $MappingOutputDirectory | Out-Null
-            $label = (Split-Path -Leaf $inPath)
-            Copy-Item -LiteralPath $mapping -Destination (Join-Path $MappingOutputDirectory "Mapping-$label.txt") -Force
-        }
+        New-Item -ItemType Directory -Force -Path $MappingOutputDirectory | Out-Null
+        $label = (Split-Path -Leaf $inPath)
+        Copy-Item -LiteralPath $mapping -Destination (Join-Path $MappingOutputDirectory "Mapping-$label.txt") -Force
     }
 }
 finally {

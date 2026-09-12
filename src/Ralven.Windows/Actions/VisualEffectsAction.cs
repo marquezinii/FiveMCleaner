@@ -119,15 +119,17 @@ public sealed class WindowsVisualEffectsController : IVisualEffectsController
 
     private static void SetBoolean(uint action, bool value)
     {
-        if (!SystemParametersInfoBoolean(
+        if (!SystemParametersInfoPointer(
             action,
             0,
-            ref value,
+            BooleanParameter(value),
             SpifUpdateIniFile | SpifSendChange))
         {
             throw new Win32Exception(Marshal.GetLastWin32Error());
         }
     }
+
+    internal static IntPtr BooleanParameter(bool value) => value ? new IntPtr(1) : IntPtr.Zero;
 
     [StructLayout(LayoutKind.Sequential)]
     private struct AnimationInfo
@@ -196,7 +198,7 @@ public sealed class VisualEffectsAction : WindowsOptimizationAction
         if (previous == desired)
         {
             return Task.FromResult(WindowsActionApplyResult.NoChange(
-                "Os efeitos visuais já estavam no estado solicitado."));
+                WindowsActionText.Format("ActionResults.VisualEffects.AlreadyDesired")));
         }
 
         try
@@ -230,7 +232,7 @@ public sealed class VisualEffectsAction : WindowsOptimizationAction
 
         return Task.FromResult(WindowsActionApplyResult.ChangedWith(
             new VisualEffectsSnapshot(previous, desired),
-            "Efeitos visuais atualizados por API oficial do Windows."));
+            WindowsActionText.Format("ActionResults.VisualEffects.Applied")));
     }
 
     public override Task RollbackAsync(

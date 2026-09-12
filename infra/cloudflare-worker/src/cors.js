@@ -5,14 +5,14 @@
 // so every response needs explicit CORS headers -- browsers do not grant
 // cross-origin fetch with credentials by SameSite cookie policy alone.
 //
-// Only ever allows the single origin configured in the `DASHBOARD_ORIGIN`
-// environment variable (a plain, non-secret Worker var, see wrangler.toml) --
+// Only ever allows origins configured in the `DASHBOARD_ORIGIN` environment
+// variable (a comma-separated, non-secret Worker var, see wrangler.toml) --
 // never reflects an arbitrary request Origin back, which would defeat the
 // purpose of allow-listing when credentials are involved.
 
 /** Builds the CORS response headers for `origin`, or `{}` if it does not match. */
 export function isAllowedDashboardOrigin(origin, allowedOrigin) {
-  return Boolean(allowedOrigin && origin && origin === allowedOrigin);
+  return Boolean(origin && allowedOrigin?.split(',').some((candidate) => candidate.trim() === origin));
 }
 
 export function buildCorsHeaders(origin, allowedOrigin) {

@@ -10,6 +10,9 @@ public sealed record OptimizationPlanRequestDto
 
     public OptimizationOptionsDto Options { get; init; } = new();
 
+    [System.Text.Json.Serialization.JsonIgnore(Condition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull)]
+    public PersonalOptimizationPreferencesDto? PersonalPreferences { get; init; }
+
     /// <summary>
     /// Detected Windows client version. Actions that do not support it are
     /// excluded from the plan. Defaults to <see cref="SupportedWindowsVersions.All"/>,

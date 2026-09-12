@@ -13,6 +13,15 @@ public interface IAppOptimizationService
     Task SaveSettingsAsync(AppSettings settings, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Saves a validated manual fallback, or clears it when <paramref name="path"/>
+    /// is null so future scans return to automatic discovery.
+    /// </summary>
+    Task<FiveMInstallationSelectionResult> SetManualFiveMInstallationAsync(
+        string? path,
+        CancellationToken cancellationToken = default) =>
+        Task.FromResult(new FiveMInstallationSelectionResult(false, null));
+
+    /// <summary>
     /// Whether a settings file already exists on disk, without deserializing
     /// it. Used only to distinguish a brand-new installation from an older
     /// installation that already had settings but never confirmed a
@@ -26,6 +35,10 @@ public interface IAppOptimizationService
         CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<AppHistoryRecord>> LoadHistoryAsync(
+        CancellationToken cancellationToken = default);
+
+    Task<OptimizationReportDto?> LoadReportAsync(
+        Guid transactionId,
         CancellationToken cancellationToken = default);
 
     Task<bool> RollbackAsync(

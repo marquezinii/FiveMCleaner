@@ -9,7 +9,7 @@ using MouseButtonEventArgs = System.Windows.Input.MouseButtonEventArgs;
 namespace Ralven.App.Controls;
 
 /// <summary>
-/// Seletor único de perfil (Leve/Médio/Agressivo): um segmentado de três
+/// Seletor único de perfil: um segmentado de até quatro
 /// paradas com um indicador que desliza para a selecionada, mais a marca do
 /// perfil recomendado embaixo da parada correspondente. Substitui a
 /// combinação antiga de "hero com recomendação" + "três cards de nível" por
@@ -50,6 +50,12 @@ public partial class SpectrumSelector : UserControl
     public static readonly DependencyProperty Option2LabelProperty = DependencyProperty.Register(
         nameof(Option2Label), typeof(string), typeof(SpectrumSelector), new PropertyMetadata(string.Empty, OnLabelChanged));
 
+    public static readonly DependencyProperty Option3LabelProperty = DependencyProperty.Register(
+        nameof(Option3Label), typeof(string), typeof(SpectrumSelector), new PropertyMetadata(string.Empty, OnLabelChanged));
+
+    public static readonly DependencyProperty ShowOption3Property = DependencyProperty.Register(
+        nameof(ShowOption3), typeof(bool), typeof(SpectrumSelector), new PropertyMetadata(true, OnShowOption3Changed));
+
     public static readonly DependencyProperty RecommendedLabelProperty = DependencyProperty.Register(
         nameof(RecommendedLabel), typeof(string), typeof(SpectrumSelector), new PropertyMetadata(string.Empty, OnLabelChanged));
 
@@ -83,6 +89,18 @@ public partial class SpectrumSelector : UserControl
         set => SetValue(Option2LabelProperty, value);
     }
 
+    public string Option3Label
+    {
+        get => (string)GetValue(Option3LabelProperty);
+        set => SetValue(Option3LabelProperty, value);
+    }
+
+    public bool ShowOption3
+    {
+        get => (bool)GetValue(ShowOption3Property);
+        set => SetValue(ShowOption3Property, value);
+    }
+
     public string RecommendedLabel
     {
         get => (string)GetValue(RecommendedLabelProperty);
@@ -107,10 +125,21 @@ public partial class SpectrumSelector : UserControl
         control.Option0Text.Text = control.Option0Label;
         control.Option1Text.Text = control.Option1Label;
         control.Option2Text.Text = control.Option2Label;
+        control.Option3Text.Text = control.Option3Label;
         control.RecommendedText0.Text = control.RecommendedLabel;
         control.RecommendedText1.Text = control.RecommendedLabel;
         control.RecommendedText2.Text = control.RecommendedLabel;
         control.UpdateLabelEmphasis();
+    }
+
+    private static void OnShowOption3Changed(DependencyObject d, DependencyPropertyChangedEventArgs e)
+    {
+        var control = (SpectrumSelector)d;
+        var visibility = control.ShowOption3 ? Visibility.Visible : Visibility.Collapsed;
+        control.Option3Column.Width = control.ShowOption3 ? new GridLength(1, GridUnitType.Star) : new GridLength(0);
+        control.Option3MarkColumn.Width = control.Option3Column.Width;
+        control.Option3Button.Visibility = visibility;
+        control.UpdateThumbPosition(animate: false);
     }
 
     private void OnOptionChecked(object sender, RoutedEventArgs e)
@@ -127,6 +156,10 @@ public partial class SpectrumSelector : UserControl
         {
             SelectedIndex = 2;
         }
+        else if (ReferenceEquals(sender, Option3Button))
+        {
+            SelectedIndex = 3;
+        }
     }
 
     private void OnTrackHostSizeChanged(object sender, SizeChangedEventArgs e)
@@ -136,12 +169,15 @@ public partial class SpectrumSelector : UserControl
 
     private void UpdateThumbPosition(bool animate)
     {
+        var segmentCount = ShowOption3 ? 4 : 3;
+        SelectionIndicator.Visibility = SelectedIndex >= 0 && SelectedIndex < segmentCount ? Visibility.Visible : Visibility.Collapsed;
+        if (SelectedIndex < 0 || SelectedIndex >= segmentCount) return;
         if (TrackHost.ActualWidth <= 0)
         {
             return;
         }
 
-        var segment = TrackHost.ActualWidth / 3;
+        var segment = TrackHost.ActualWidth / segmentCount;
         var indicatorWidth = Math.Max(0, segment - 6);
         var target = (segment * SelectedIndex) + ((segment - indicatorWidth) / 2);
 
@@ -171,9 +207,16 @@ public partial class SpectrumSelector : UserControl
         }
 
         var x = e.GetPosition(TrackHost).X;
-        var segment = TrackHost.ActualWidth / 3;
-        SelectedIndex = Math.Clamp((int)(x / segment), 0, 2);
-        (SelectedIndex == 0 ? Option0Button : SelectedIndex == 1 ? Option1Button : Option2Button).Focus();
+        var segmentCount = ShowOption3 ? 4 : 3;
+        var segment = TrackHost.ActualWidth / segmentCount;
+        SelectedIndex = Math.Clamp((int)(x / segment), 0, segmentCount - 1);
+        (SelectedIndex switch
+        {
+            0 => Option0Button,
+            1 => Option1Button,
+            2 => Option2Button,
+            _ => Option3Button
+        }).Focus();
     }
 
     private void UpdateRecommendedMark()
@@ -188,9 +231,18 @@ public partial class SpectrumSelector : UserControl
         Option0Button.IsChecked = SelectedIndex == 0;
         Option1Button.IsChecked = SelectedIndex == 1;
         Option2Button.IsChecked = SelectedIndex == 2;
+        Option3Button.IsChecked = SelectedIndex == 3;
         SetEmphasis(Option0Text, SelectedIndex == 0);
         SetEmphasis(Option1Text, SelectedIndex == 1);
         SetEmphasis(Option2Text, SelectedIndex == 2);
+        if (SelectedIndex == 3)
+        {
+            SelectionIndicator.SetResourceReference(System.Windows.Controls.Border.BorderBrushProperty, "ProAccentBrush");
+        }
+        else
+        {
+            SelectionIndicator.BorderBrush = System.Windows.Media.Brushes.Transparent;
+        }
     }
 
     private static void SetEmphasis(TextBlock text, bool selected) =>

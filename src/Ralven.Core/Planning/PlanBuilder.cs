@@ -18,6 +18,16 @@ public static class PlanBuilder
         ArgumentNullException.ThrowIfNull(context);
         ValidateRequest(request);
 
+        if (request.PersonalPreferences is { } preferences)
+        {
+            if (request.Scope != OptimizationScope.GeneralWindows || request.Profile != OptimizationProfile.Aggressive)
+            {
+                throw new ArgumentException("Personal plans require the general Windows action set.", nameof(request));
+            }
+
+            request = request with { Options = PersonalOptimizationPolicy.CreateOptions(preferences) };
+        }
+
         var blocks = CreateBlocks(request.Scope, request.Edition);
         if (blocks.Count > 0)
         {
@@ -28,7 +38,7 @@ public static class PlanBuilder
             .Where(action => action.Supports(request.Profile))
             .Where(action => action.Supports(request.Scope))
             .Where(action => action.SupportsWindows(request.DetectedWindows))
-            .Where(action => IsEnabled(action.OptionGate, request.Options))
+            .Where(action => IsEnabled(action.OptionGate, request.Options, request.PersonalPreferences))
             .ToArray();
 
         var plannedActions = selectedDefinitions
@@ -68,7 +78,8 @@ public static class PlanBuilder
             Scope = plan.Scope,
             Profile = plan.Profile,
             Edition = plan.Edition,
-            Options = plan.Options with { }
+            Options = plan.Options with { },
+            PersonalPreferences = plan.PersonalPreferences
         };
     }
 
@@ -93,6 +104,7 @@ public static class PlanBuilder
             Profile = request.Profile,
             Edition = request.Edition,
             Options = request.Options with { },
+            PersonalPreferences = request.PersonalPreferences,
             IsExecutable = blocks.Count == 0 && actions.Count > 0,
             RequiresElevation = metadata.Any(action => action.RequiredPrivilege == RequiredPrivilege.Administrator),
             ContainsNonReversibleActions = metadata.Any(action =>
@@ -256,7 +268,7 @@ public static class PlanBuilder
             });
         }
 
-        if (request.Profile == OptimizationProfile.Aggressive)
+        if (request.Profile == OptimizationProfile.Aggressive && request.PersonalPreferences is null)
         {
             notices.Add(new PlanNoticeDto
             {
@@ -273,7 +285,10 @@ public static class PlanBuilder
         return notices;
     }
 
-    private static bool IsEnabled(ActionOptionGate gate, OptimizationOptionsDto options)
+    private static bool IsEnabled(
+        ActionOptionGate gate,
+        OptimizationOptionsDto options,
+        PersonalOptimizationPreferencesDto? personalPreferences)
     {
         return gate switch
         {
@@ -302,6 +317,7 @@ public static class PlanBuilder
             ActionOptionGate.ToggleHags => options.ToggleHagsExperiment,
             ActionOptionGate.GuideDriverReinstall => options.GuideDriverReinstall,
             ActionOptionGate.AdjustPciExpressPowerManagement => options.AdjustPciExpressPowerManagement,
+            ActionOptionGate.UseConsistentPointerResponse => personalPreferences?.UseConsistentPointerResponse == true,
             _ => throw new ArgumentOutOfRangeException(nameof(gate), gate, "Unknown option gate value.")
         };
     }
